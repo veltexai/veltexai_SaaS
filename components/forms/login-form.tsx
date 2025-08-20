@@ -16,14 +16,15 @@ import { useForm } from 'react-hook-form';
 import z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/lib/auth/use-auth';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { PasswordInput } from '@/components/ui/password-input';
 import Photo from '../../public/images/pexels-tima-miroshnichenko-6196692.jpg';
+import { signIn } from '@/lib/auth/actions/password';
+import { signInWithGoogle } from '@/lib/auth/actions/oauth';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -33,7 +34,6 @@ const formSchema = z.object({
 const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
-  const { signIn, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,11 +46,13 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-
-    const { error } = await signIn(values.email, values.password);
+    const formData = new FormData();
+    formData.append('email', values.email);
+    formData.append('password', values.password);
+    const { error } = await signIn({}, formData);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(error);
     } else {
       toast.success('Login successful');
       router.push('/dashboard');
@@ -72,7 +74,7 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
   return (
     <section className={cn('flex flex-col gap-6', className)} {...props}>
       <Card className="overflow-hidden p-0">
-        <CardContent className="grid p-0 md:grid-cols-2">
+        <CardContent className="grid p-0 md:grid-cols-2 h-full">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
               <div className="flex flex-col gap-6">
@@ -167,6 +169,16 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
                     )}
                     Login with Google
                   </Button>
+                  <Link href="/auth/login?method=magic">
+                    <Button
+                      variant="outline"
+                      type="button"
+                      className="w-full flex items-center gap-2"
+                    >
+                      <Mail className="size-4" />
+                      Login With Magic Link
+                    </Button>
+                  </Link>
                 </div>
                 <div className="text-center text-sm">
                   Don&apos;t have an account?{' '}

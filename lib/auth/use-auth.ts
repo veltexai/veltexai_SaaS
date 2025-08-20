@@ -1,161 +1,227 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
-import { Database } from '@/types/database';
+import { AUTH_ERRORS } from '@/lib/auth/constants';
+import type {
+  AuthState,
+  Profile,
+  AuthResponse,
+  MagicLinkOptions,
+  OAuthOptions,
+} from '@/lib/auth/types';
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
+export function useAuth(): AuthState & {
+  signInWithMagicLink: (options: MagicLinkOptions) => Promise<AuthResponse>;
+  signUpWithMagicLink: (options: MagicLinkOptions) => Promise<AuthResponse>;
+  signOut: () => Promise<AuthResponse>;
+  updateProfile: (updates: Partial<Profile>) => Promise<AuthResponse>;
+  updatePassword: (password: string) => Promise<AuthResponse>;
+  resetPassword: (email: string) => Promise<AuthResponse>;
+  refreshSession: () => Promise<void>;
+} {
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    profile: null,
+    loading: true,
+    error: null,
+  });
 
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+
+  const updateState = useCallback((updates: Partial<AuthState>) => {
+    setState((prev) => ({ ...prev, ...updates }));
+  }, []);
+
+  const fetchProfile = useCallback(
+    async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+          return;
+        }
+
+        updateState({ profile: data });
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    },
+    [supabase, updateState]
+  );
+
+  const refreshSession = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+
+      if (error) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        updateState({
+          user: session?.user ?? null,
+          error: null,
+        });
+
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        }
+      } else {
+        updateState({
+          user: data.session?.user ?? null,
+          error: null,
+        });
+
+        if (data.session?.user) {
+          await fetchProfile(data.session.user.id);
+        }
+      }
+    } catch (err) {
+      console.error('Session refresh error:', err);
+      updateState({ error: AUTH_ERRORS.SESSION_INIT_FAILED });
+    }
+  }, [supabase, updateState, fetchProfile]);
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+    let mounted = true;
 
-      if (session?.user) {
-        await fetchProfile(session.user.id);
+    const initializeAuth = async () => {
+      await refreshSession();
+      if (mounted) {
+        updateState({ loading: false });
       }
-
-      setLoading(false);
     };
 
-    getInitialSession();
+    initializeAuth();
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null);
+      if (mounted) {
+        updateState({
+          user: session?.user ?? null,
+          error: null,
+          loading: false,
+        });
 
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        } else {
+          updateState({ profile: null });
+        }
       }
-
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase, updateState, fetchProfile, refreshSession]);
 
-  const fetchProfile = async (userId: string) => {
-    try {
-      // Use service role to bypass RLS temporarily for testing
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      console.log('🚀 ~ fetchProfile ~ data:', data);
-      console.log('🚀 ~ fetchProfile ~ error:', error);
-
-      if (error) {
-        console.error('Error fetching profile:', error.message, error.code);
-        return;
-      }
-
-      setProfile(data);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { data, error };
-  };
-
-  const signUp = async (
-    email: string,
-    password: string,
-    fullName: string,
-    companyName: string
-  ) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          company_name: companyName,
+  const signInWithMagicLink = useCallback(
+    async (options: MagicLinkOptions): Promise<AuthResponse> => {
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email: options.email,
+        options: {
+          emailRedirectTo:
+            options.redirectTo || `${window.location.origin}/api/auth/callback`,
         },
-        emailRedirectTo: `${window.location.origin}/auth/login`,
-      },
-    });
-    return { data, error };
-  };
+      });
+      return { data, error };
+    },
+    [supabase]
+  );
 
-  const signOut = async () => {
+  const signUpWithMagicLink = useCallback(
+    async (options: MagicLinkOptions): Promise<AuthResponse> => {
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email: options.email,
+        options: {
+          data: {
+            full_name: options.fullName || '',
+            company_name: options.companyName || '',
+          },
+          emailRedirectTo:
+            options.redirectTo || `${window.location.origin}/api/auth/callback`,
+        },
+      });
+      return { data, error };
+    },
+    [supabase]
+  );
+
+  const signOut = useCallback(async (): Promise<AuthResponse> => {
     const { error } = await supabase.auth.signOut();
     return { error };
-  };
+  }, [supabase]);
 
-  const signInWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
-    return { data, error };
-  };
+  const updateProfile = useCallback(
+    async (updates: Partial<Profile>): Promise<AuthResponse> => {
+      if (!state.user) {
+        return { error: { message: AUTH_ERRORS.NO_USER } };
+      }
 
-  const resetPassword = async (email: string) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
-    });
-    return { data, error };
-  };
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', state.user.id)
+        .select()
+        .single();
 
-  const updatePassword = async (password: string) => {
-    const { data, error } = await supabase.auth.updateUser({
-      password,
-    });
-    return { data, error };
-  };
+      if (error) {
+        return { error: { message: error.message } };
+      }
 
-  const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return { error: { message: 'No user logged in' } };
+      updateState({ profile: data });
+      return { data };
+    },
+    [supabase, state.user, updateState]
+  );
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', user.id)
-      .select()
-      .single();
+  const updatePassword = useCallback(
+    async (password: string): Promise<AuthResponse> => {
+      const { data, error } = await supabase.auth.updateUser({
+        password: password,
+      });
 
-    if (!error && data) {
-      setProfile(data);
-    }
+      if (error) {
+        return { error: { message: error.message } };
+      }
 
-    return { data, error };
-  };
+      return { data };
+    },
+    [supabase]
+  );
+
+  const resetPassword = useCallback(
+    async (email: string): Promise<AuthResponse> => {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) {
+        return { error: { message: error.message } };
+      }
+
+      return { data };
+    },
+    [supabase]
+  );
 
   return {
-    user,
-    profile,
-    loading,
-    signIn,
-    signUp,
+    ...state,
+    signInWithMagicLink,
+    signUpWithMagicLink,
     signOut,
-    signInWithGoogle,
-    resetPassword,
-    updatePassword,
     updateProfile,
-    fetchProfile,
+    updatePassword,
+    resetPassword,
+    refreshSession,
   };
 }
