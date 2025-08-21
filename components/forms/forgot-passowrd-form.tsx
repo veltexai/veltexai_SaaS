@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -25,6 +24,7 @@ import {
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
+import { sendResetPasswordEmail } from '@/lib/auth/actions/password';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -36,7 +36,6 @@ export default function ForgotPasswordForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState('');
-  const { resetPassword } = useAuth();
 
   const form = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -49,10 +48,13 @@ export default function ForgotPasswordForm() {
     setError('');
     setSuccess(false);
 
-    const { error } = await resetPassword(data.email);
+    const formData = new FormData();
+    formData.append('email', data.email);
 
-    if (error) {
-      setError(error.message);
+    const result = await sendResetPasswordEmail({}, formData);
+
+    if (result.error) {
+      setError(result.error.message);
     } else {
       setSuccess(true);
       setSubmittedEmail(data.email);

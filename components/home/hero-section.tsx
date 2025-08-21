@@ -1,12 +1,13 @@
 'use client';
 
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import React from 'react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const HeroSection = () => {
   return (
@@ -45,20 +46,25 @@ const HeroSection = () => {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             variants={fadeInUp}
           >
-            <Button
-              size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
-            >
-              Get Started Free
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 py-3 bg-transparent"
-            >
-              Book a Demo
-            </Button>
+            <Link href={'/auth/signup'}>
+              <Button
+                size="lg"
+                className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
+              >
+                Get Started Free
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href={'/auth/signup?method=magic'}>
+              <Button
+                variant="outline"
+                size="lg"
+                className="text-lg px-8 py-3 bg-transparent"
+              >
+                <Mail className="mr-2 h-5 w-5" />
+                Sign Up with Email
+              </Button>
+            </Link>
           </motion.div>
         </motion.div>
 
@@ -74,7 +80,7 @@ const HeroSection = () => {
             <Image
               width={1000}
               height={600}
-              src="/placeholder.svg?height=600&width=1000"
+              src="/images/dashboard-light.webp"
               alt="Veltex AI Dashboard"
               className="relative rounded-2xl shadow-2xl border border-gray-200"
             />

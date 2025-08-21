@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import React, { useState } from 'react';
 import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import { Card, CardContent } from '../ui/card';
 import {
   Collapsible,
   CollapsibleContent,
@@ -36,7 +35,7 @@ const FAQSection = () => {
         </motion.div>
 
         <motion.div
-          className="space-y-4"
+          className="space-y-0 divide-y divide-gray-200"
           initial="initial"
           whileInView="animate"
           viewport={{ once: true }}
@@ -44,29 +43,36 @@ const FAQSection = () => {
         >
           {[
             {
-              question: 'Can I use my own branding?',
+              question:
+                'Why building a great landing page is critical for your business?',
               answer:
-                'Yes! All plans include custom branding options. You can add your logo, colors, and company information to every proposal.',
+                "In today's AI-driven world, standing out is harder than ever. While anyone can build a product, a professional landing page makes the difference between success and failure.\n\nLaunch UI helps you ship faster without compromising on quality.",
             },
             {
-              question: 'How does AI create proposals?',
+              question: 'Why use Launch UI instead of a no-code tool?',
               answer:
-                'Our AI is trained specifically on cleaning industry best practices. It analyzes your project details and generates professional proposals with accurate pricing and service descriptions.',
+                'Launch UI gives you complete control over your code and design, unlike no-code tools that limit customization and can become expensive as you scale.',
             },
             {
-              question: 'Do I need a credit card for the trial?',
+              question:
+                'How Launch UI is different from other components libraries and templates?',
               answer:
-                "No credit card required! Start your free trial immediately and explore all features. You only pay when you're ready to continue.",
+                'Launch UI provides production-ready components with built-in best practices, accessibility, and performance optimizations that save you weeks of development time.',
             },
             {
-              question: 'Is my data secure?',
+              question: 'Why exactly does it mean that "The code is yours"?',
               answer:
-                'Absolutely. We use enterprise-grade security with encrypted data storage, secure multi-tenant architecture, and regular security audits to protect your information.',
+                'You get the complete source code with no dependencies on our services. You own it forever and can modify, extend, or redistribute it as needed.',
             },
             {
-              question: 'Can I cancel anytime?',
+              question: 'Are Figma files included?',
               answer:
-                'Yes, you can cancel your subscription at any time. No long-term contracts or cancellation fees. Your data remains accessible during your billing period.',
+                'Yes, all components come with corresponding Figma files so designers and developers can work seamlessly together.',
+            },
+            {
+              question: 'Can I get a discount?',
+              answer:
+                'We offer student discounts and volume pricing for teams. Contact us for special pricing options.',
             },
           ].map((faq, index) => (
             <motion.div key={index} variants={fadeInUp}>
@@ -74,29 +80,25 @@ const FAQSection = () => {
                 open={openItems.includes(index)}
                 onOpenChange={() => toggleItem(index)}
               >
-                <Card className="border shadow-sm overflow-hidden">
-                  <CollapsibleTrigger className="w-full">
-                    <CardContent className="p-6 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900 text-left">
-                          {faq.question}
-                        </h3>
-                        <ChevronDownIcon
-                          className={`h-5 w-5 text-gray-500 transition-transform duration-200 ${
-                            openItems.includes(index) ? 'rotate-180' : ''
-                          }`}
-                        />
-                      </div>
-                    </CardContent>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <CardContent className="p-6 border-t bg-gray-50/50">
-                      <p className="text-gray-600 leading-relaxed">
-                        {faq.answer}
-                      </p>
-                    </CardContent>
-                  </CollapsibleContent>
-                </Card>
+                <CollapsibleTrigger className="w-full py-6 text-left hover:bg-gray-50/50 transition-colors">
+                  <div className="flex items-center justify-between px-0">
+                    <h3 className="text-lg font-medium text-gray-900 pr-8">
+                      {faq.question}
+                    </h3>
+                    <ChevronDownIcon
+                      className={`h-5 w-5 text-gray-400 transition-transform duration-200 flex-shrink-0 ${
+                        openItems.includes(index) ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="pb-6 pr-12">
+                    <div className="text-gray-600 leading-relaxed whitespace-pre-line">
+                      {faq.answer}
+                    </div>
+                  </div>
+                </CollapsibleContent>
               </Collapsible>
             </motion.div>
           ))}

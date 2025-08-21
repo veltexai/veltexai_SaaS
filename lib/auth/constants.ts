@@ -10,6 +10,7 @@ export const AUTH_ROUTES = {
 
 export const AUTH_REDIRECTS = {
   CALLBACK: `${config.domainName}/api/auth/callback`,
+  CONFIRM: `${config.domainName}/api/auth/confirm`,
   DEFAULT_REDIRECT: AUTH_ROUTES.DASHBOARD,
 } as const;
 

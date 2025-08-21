@@ -9,8 +9,8 @@ import Image from 'next/image';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
-      <nav className="border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+    <header className="sticky top-5 z-50">
+      <nav className="border-b border-gray-100 bg-white/20 backdrop-blur-sm sticky top-0 z-50 max-w-4xl mx-4 md:mx-auto shadow-sm rounded-3xl">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
@@ -47,6 +47,8 @@ const Header = () => {
               >
                 FAQ
               </Link>
+            </div>
+            <div className="hidden md:flex items-center gap-4">
               <Link href="/auth/login">
                 <Button variant="outline" size="sm">
                   Sign In
@@ -74,7 +76,7 @@ const Header = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-gray-100 bg-white">
+          <div className="md:hidden border-b border-gray-100 bg-white/20 backdrop-blur-sm shadow-sm rounded-b-3xl">
             <div className="px-4 py-4 space-y-4">
               <Link href="#features" className="block text-gray-600">
                 Features
@@ -82,19 +84,23 @@ const Header = () => {
               <Link href="#pricing" className="block text-gray-600">
                 Pricing
               </Link>
-              <link href="#testimonials" className="block text-gray-600">
+              <Link href="#testimonials" className="block text-gray-600">
                 Reviews
-              </link>
+              </Link>
               <Link href="#faq" className="block text-gray-600">
                 FAQ
               </Link>
               <div className="pt-4 space-y-2">
-                <Button variant="outline" className="w-full bg-transparent">
-                  Sign In
-                </Button>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                  Get Started
-                </Button>
+                <Link href="/auth/login">
+                  <Button variant="outline" className="w-full bg-white">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/auth/signup">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                    Get Started
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

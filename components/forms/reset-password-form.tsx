@@ -27,8 +27,8 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/lib/auth/use-auth';
 import { createClient } from '@/lib/supabase/client';
+import { updatePassword } from '@/lib/auth/actions/password';
 
 const resetPasswordSchema = z
   .object({
@@ -49,7 +49,6 @@ export default function ResetPasswordForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { updatePassword } = useAuth();
   const searchParams = useSearchParams();
   const supabase = createClient();
 
@@ -114,10 +113,13 @@ export default function ResetPasswordForm() {
 
     setIsLoading(true);
 
-    const { error } = await updatePassword(values.password);
+    const formData = new FormData();
+    formData.append('password', values.password);
 
-    if (error) {
-      toast.error(error.message);
+    const result = await updatePassword({}, formData);
+
+    if (result.error) {
+      toast.error(result.error.message);
     } else {
       toast.success('Password reset successfully');
       setIsSubmitted(true);

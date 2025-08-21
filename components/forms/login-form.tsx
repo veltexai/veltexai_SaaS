@@ -63,14 +63,26 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
 
   const handleGoogleSignIn = async () => {
     setIsLoadingGoogle(true);
-    const { error } = await signInWithGoogle();
+    try {
+      const result = await signInWithGoogle();
 
-    if (error) {
-      toast.error(error.message);
+      if (result.error) {
+        toast.error(result.error?.message || 'Failed to sign in with Google');
+        setIsLoadingGoogle(false);
+      } else if (result.data?.url) {
+        // Redirect to Google OAuth URL
+        window.location.href = result.data.url;
+        // Don't set loading to false since we're redirecting
+      } else {
+        toast.error('Failed to get Google sign-in URL');
+        setIsLoadingGoogle(false);
+      }
+    } catch (error) {
+      toast.error('An error occurred. Please try again.');
       setIsLoadingGoogle(false);
     }
-    // Don't set loading to false here - redirect will happen
   };
+
   return (
     <section className={cn('flex flex-col gap-6', className)} {...props}>
       <Card className="overflow-hidden p-0">

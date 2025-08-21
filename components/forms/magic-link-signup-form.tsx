@@ -55,14 +55,21 @@ export default function MagicLinkSignupForm({
   const signUpWithGoogle = async () => {
     setIsLoadingGoogle(true);
     try {
-      const { error } = await signInWithGoogle();
-      if (error) {
-        toast.error(error.message);
+      const result = await signInWithGoogle();
+
+      if (result.error) {
+        toast.error(result.error?.message || 'Failed to sign in with Google');
+        setIsLoadingGoogle(false);
+      } else if (result.data?.url) {
+        // Redirect to Google OAuth URL
+        window.location.href = result.data.url;
+        // Don't set loading to false since we're redirecting
+      } else {
+        toast.error('Failed to get Google sign-in URL');
+        setIsLoadingGoogle(false);
       }
     } catch (error) {
-      console.error('Google signup error:', error);
-      toast.error('Failed to sign up with Google');
-    } finally {
+      toast.error('An error occurred. Please try again.');
       setIsLoadingGoogle(false);
     }
   };

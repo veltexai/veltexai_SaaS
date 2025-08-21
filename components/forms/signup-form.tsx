@@ -64,14 +64,21 @@ export default function SignupForm({
   const signUpWithGoogle = async () => {
     setIsLoadingGoogle(true);
     try {
-      const { error } = await signInWithGoogle();
-      if (error) {
-        toast.error(error.message);
+      const result = await signInWithGoogle();
+
+      if (result.error) {
+        toast.error(result.error?.message || 'Failed to sign in with Google');
+        setIsLoadingGoogle(false);
+      } else if (result.data?.url) {
+        // Redirect to Google OAuth URL
+        window.location.href = result.data.url;
+        // Don't set loading to false since we're redirecting
+      } else {
+        toast.error('Failed to get Google sign-in URL');
+        setIsLoadingGoogle(false);
       }
     } catch (error) {
-      console.error('Google signup error:', error);
-      toast.error('Failed to sign up with Google');
-    } finally {
+      toast.error('An error occurred. Please try again.');
       setIsLoadingGoogle(false);
     }
   };
@@ -85,11 +92,9 @@ export default function SignupForm({
       formData.append('password', values.password);
       formData.append('fullName', values.fullName);
       formData.append('companyName', values.companyName || '');
-
       const result = await signUp({}, formData);
 
       if (result?.error) {
-        // result.error is always a string from both validatedAction and signUp
         toast.error(result.error);
         if (
           result.error.toLowerCase().includes('already exists') ||
@@ -98,8 +103,10 @@ export default function SignupForm({
           router.push('/auth/login');
         }
       } else {
-        // Success case - server action will redirect automatically
-        toast.success('Account created successfully!');
+        // Show verification toast and modal
+        toast.success('Please check your email to verify your account.');
+        setUserInfo({ name: values.fullName, email: values.email });
+        setShowVerificationDialog(true);
       }
     } catch (error) {
       console.error('Signup error:', error);
@@ -303,9 +310,9 @@ export default function SignupForm({
             />
             <AlertDialogTitle>Verify your email</AlertDialogTitle>
             <AlertDialogDescription className="text-center">
-              Hi <strong>{userInfo.name}</strong>, Please verify your email
-              address by clicking the link sent to{' '}
-              <strong>{userInfo.email}</strong>
+              Hi <strong>{userInfo.name}</strong>, you need to verify your email
+              address to continue. Please click the confirmation link sent to{' '}
+              <strong>{userInfo.email}</strong> to access your dashboard.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex justify-center">
