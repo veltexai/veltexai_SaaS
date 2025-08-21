@@ -24,16 +24,16 @@ export async function GET(request: NextRequest) {
       if (type === 'recovery') {
         const { access_token, refresh_token } = data.session;
         redirect(
-          `${config.domainName}/${AUTH_ROUTES.RESET_PASSWORD}?access_token=${access_token}&refresh_token=${refresh_token}`
+          `${config.domainName}${AUTH_ROUTES.RESET_PASSWORD}?access_token=${access_token}&refresh_token=${refresh_token}`
         );
       }
       // For other types (email confirmation), use next parameter or dashboard
-      redirect(`${config.domainName}/${next}`);
+      redirect(`${config.domainName}${next}`);
     }
   }
 
   // redirect the user to an error page with instructions
   redirect(
-    `${config.domainName}/${AUTH_ROUTES.LOGIN}?error=Invalid or expired reset link`
+    `${config.domainName}${AUTH_ROUTES.LOGIN}?error=Invalid or expired reset link`
   );
 }

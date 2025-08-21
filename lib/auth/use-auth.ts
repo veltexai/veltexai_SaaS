@@ -13,12 +13,8 @@ import type {
 } from '@/lib/auth/types';
 
 export function useAuth(): AuthState & {
-  signInWithMagicLink: (options: MagicLinkOptions) => Promise<AuthResponse>;
-  signUpWithMagicLink: (options: MagicLinkOptions) => Promise<AuthResponse>;
-  signOut: () => Promise<AuthResponse>;
   updateProfile: (updates: Partial<Profile>) => Promise<AuthResponse>;
   updatePassword: (password: string) => Promise<AuthResponse>;
-  resetPassword: (email: string) => Promise<AuthResponse>;
   refreshSession: () => Promise<void>;
 } {
   const [state, setState] = useState<AuthState>({
@@ -124,43 +120,6 @@ export function useAuth(): AuthState & {
     };
   }, [supabase, updateState, fetchProfile, refreshSession]);
 
-  const signInWithMagicLink = useCallback(
-    async (options: MagicLinkOptions): Promise<AuthResponse> => {
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email: options.email,
-        options: {
-          emailRedirectTo:
-            options.redirectTo || `${window.location.origin}/api/auth/callback`,
-        },
-      });
-      return { data, error };
-    },
-    [supabase]
-  );
-
-  const signUpWithMagicLink = useCallback(
-    async (options: MagicLinkOptions): Promise<AuthResponse> => {
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email: options.email,
-        options: {
-          data: {
-            full_name: options.fullName || '',
-            company_name: options.companyName || '',
-          },
-          emailRedirectTo:
-            options.redirectTo || `${window.location.origin}/api/auth/callback`,
-        },
-      });
-      return { data, error };
-    },
-    [supabase]
-  );
-
-  const signOut = useCallback(async (): Promise<AuthResponse> => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
-  }, [supabase]);
-
   const updateProfile = useCallback(
     async (updates: Partial<Profile>): Promise<AuthResponse> => {
       if (!state.user) {
@@ -199,29 +158,10 @@ export function useAuth(): AuthState & {
     [supabase]
   );
 
-  const resetPassword = useCallback(
-    async (email: string): Promise<AuthResponse> => {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
-      });
-
-      if (error) {
-        return { error: { message: error.message } };
-      }
-
-      return { data };
-    },
-    [supabase]
-  );
-
   return {
     ...state,
-    signInWithMagicLink,
-    signUpWithMagicLink,
-    signOut,
     updateProfile,
     updatePassword,
-    resetPassword,
     refreshSession,
   };
 }

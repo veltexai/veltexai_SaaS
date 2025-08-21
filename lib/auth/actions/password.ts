@@ -43,8 +43,7 @@ export const signIn = validatedAction(signInSchema, async (data) => {
       console.error('Error creating profile entry:', insertError);
     }
   }
-
-  redirect(`${config.domainName}/${AUTH_ROUTES.DASHBOARD}`);
+  redirect(`${config.domainName}${AUTH_ROUTES.DASHBOARD}`);
 });
 
 const signUpSchema = z.object({
@@ -78,7 +77,7 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
         full_name: fullName,
         company_name: companyName || '',
       },
-      emailRedirectTo: `${config.domainName}/${
+      emailRedirectTo: `${config.domainName}${
         AUTH_REDIRECTS.CALLBACK
       }?redirect=${encodeURIComponent(AUTH_REDIRECTS.DEFAULT_REDIRECT)}`,
     },
@@ -104,7 +103,7 @@ export const signOut = async (): Promise<AuthResponse> => {
     return { error: { message: error.message } };
   }
 
-  redirect(`${config.domainName}/${AUTH_ROUTES.LOGIN}`);
+  redirect(`${config.domainName}${AUTH_ROUTES.LOGIN}`);
 };
 
 const resetPasswordSchema = z.object({
@@ -118,7 +117,7 @@ export const sendResetPasswordEmail = validatedAction(
     const { email } = data;
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${config.domainName}/${
+      redirectTo: `${config.domainName}${
         AUTH_REDIRECTS.CONFIRM
       }?next=${encodeURIComponent(AUTH_ROUTES.RESET_PASSWORD)}`,
     });
