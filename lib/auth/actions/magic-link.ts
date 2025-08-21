@@ -22,9 +22,9 @@ export const signInWithMagicLink = validatedAction(
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${config.domainName}${
-          AUTH_REDIRECTS.CALLBACK
-        }?priceId=${encodeURIComponent(
+        emailRedirectTo: `${
+          config.domainName
+        }/api/auth/callback?priceId=${encodeURIComponent(
           priceId || ''
         )}&redirect=${encodeURIComponent(AUTH_REDIRECTS.DEFAULT_REDIRECT)}`,
       },
@@ -59,9 +59,9 @@ export const signUpWithMagicLink = validatedAction(
           full_name: fullName,
           company_name: companyName || '',
         },
-        emailRedirectTo: `${config.domainName}${
-          AUTH_REDIRECTS.CALLBACK
-        }?priceId=${encodeURIComponent(
+        emailRedirectTo: `${
+          config.domainName
+        }/api/auth/callback?priceId=${encodeURIComponent(
           priceId || ''
         )}&redirect=${encodeURIComponent(AUTH_REDIRECTS.DEFAULT_REDIRECT)}`,
       },

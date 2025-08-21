@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { User, Mail, LogOut } from 'lucide-react';
 import { getUser } from '@/queries/user';
 import { signOut } from '@/lib/auth/actions/password';
+import { redirect } from 'next/navigation';
+import config from '@/config/config';
 
 const Dashboard = async () => {
   // const authUser = await getUserAuth();
@@ -14,11 +16,7 @@ const Dashboard = async () => {
   console.log('🚀 ~ Dashboard ~ user:', user);
 
   if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Please log in to access the dashboard.</p>
-      </div>
-    );
+    return redirect(`${config.domainName}/auth/signup`);
   }
 
   // console.log('🚀 ~ Dashboard ~ profile:', profile);

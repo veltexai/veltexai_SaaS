@@ -77,9 +77,11 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
         full_name: fullName,
         company_name: companyName || '',
       },
-      emailRedirectTo: `${config.domainName}${
-        AUTH_REDIRECTS.CALLBACK
-      }?redirect=${encodeURIComponent(AUTH_REDIRECTS.DEFAULT_REDIRECT)}`,
+      emailRedirectTo: `${
+        config.domainName
+      }/api/auth/callback?redirect=${encodeURIComponent(
+        AUTH_REDIRECTS.DEFAULT_REDIRECT
+      )}`,
     },
   });
 
@@ -117,9 +119,11 @@ export const sendResetPasswordEmail = validatedAction(
     const { email } = data;
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${config.domainName}${
-        AUTH_REDIRECTS.CONFIRM
-      }?next=${encodeURIComponent(AUTH_ROUTES.RESET_PASSWORD)}`,
+      redirectTo: `${
+        config.domainName
+      }/api/auth/confirm?next=${encodeURIComponent(
+        AUTH_ROUTES.RESET_PASSWORD
+      )}`,
     });
 
     if (error) {
