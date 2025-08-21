@@ -1,3 +1,4 @@
+import config from '@/config/config';
 import { createClient } from '@/lib/supabase/server';
 import { getUser } from '@/queries/user';
 import { NextResponse } from 'next/server';
@@ -16,6 +17,7 @@ export async function GET(request: Request) {
   const redirectTo = decodeURIComponent(encodedRedirectTo);
 
   const supabase = await createClient();
+  const baseUrl = config.domainName || requestUrl.origin;
 
   if (code) {
     await supabase.auth.exchangeCodeForSession(code);
@@ -26,7 +28,7 @@ export async function GET(request: Request) {
   if (priceId && priceId !== '') {
     // await createCheckoutSession({ priceId, discountCode });
   } else {
-    return NextResponse.redirect(`${requestUrl.origin}${redirectTo}`);
+    return NextResponse.redirect(`${baseUrl}${redirectTo}`);
   }
 
   // Successful authentication, redirect to the intended page

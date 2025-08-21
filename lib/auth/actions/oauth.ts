@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { AUTH_REDIRECTS, AUTH_ERRORS } from '@/lib/auth/constants';
 import type { AuthResponse } from '@/lib/auth/types';
+import config from '@/config/config';
 
 export const signInWithGoogle = async (
   priceId?: string
@@ -13,7 +14,9 @@ export const signInWithGoogle = async (
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${AUTH_REDIRECTS.CALLBACK}?priceId=${encodeURIComponent(
+        redirectTo: `${config.domainName}/${
+          AUTH_REDIRECTS.CALLBACK
+        }?priceId=${encodeURIComponent(
           priceId || ''
         )}&redirect=${encodeURIComponent(AUTH_REDIRECTS.DEFAULT_REDIRECT)}`,
       },

@@ -5,6 +5,7 @@ import { validatedAction } from '@/lib/auth/middleware';
 import { createClient } from '@/lib/supabase/server';
 import { AUTH_REDIRECTS, AUTH_ERRORS } from '@/lib/auth/constants';
 import type { AuthResponse } from '@/lib/auth/types';
+import config from '@/config/config';
 
 const magicLinkSchema = z.object({
   email: z.string().email(),
@@ -21,7 +22,7 @@ export const signInWithMagicLink = validatedAction(
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${
+        emailRedirectTo: `${config.domainName}/${
           AUTH_REDIRECTS.CALLBACK
         }?priceId=${encodeURIComponent(
           priceId || ''
@@ -58,7 +59,7 @@ export const signUpWithMagicLink = validatedAction(
           full_name: fullName,
           company_name: companyName || '',
         },
-        emailRedirectTo: `${
+        emailRedirectTo: `${config.domainName}/${
           AUTH_REDIRECTS.CALLBACK
         }?priceId=${encodeURIComponent(
           priceId || ''

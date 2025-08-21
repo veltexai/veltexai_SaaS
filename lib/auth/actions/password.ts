@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AUTH_ROUTES, AUTH_ERRORS, AUTH_REDIRECTS } from '@/lib/auth/constants';
 import type { AuthResponse } from '@/lib/auth/types';
+import config from '@/config/config';
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
@@ -43,7 +44,7 @@ export const signIn = validatedAction(signInSchema, async (data) => {
     }
   }
 
-  redirect(AUTH_ROUTES.DASHBOARD);
+  redirect(`${config.domainName}/${AUTH_ROUTES.DASHBOARD}`);
 });
 
 const signUpSchema = z.object({
@@ -77,7 +78,7 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
         full_name: fullName,
         company_name: companyName || '',
       },
-      emailRedirectTo: `${
+      emailRedirectTo: `${config.domainName}/${
         AUTH_REDIRECTS.CALLBACK
       }?redirect=${encodeURIComponent(AUTH_REDIRECTS.DEFAULT_REDIRECT)}`,
     },
@@ -103,7 +104,7 @@ export const signOut = async (): Promise<AuthResponse> => {
     return { error: { message: error.message } };
   }
 
-  redirect(AUTH_ROUTES.LOGIN);
+  redirect(`${config.domainName}/${AUTH_ROUTES.LOGIN}`);
 };
 
 const resetPasswordSchema = z.object({
@@ -117,9 +118,9 @@ export const sendResetPasswordEmail = validatedAction(
     const { email } = data;
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${AUTH_REDIRECTS.CONFIRM}?next=${encodeURIComponent(
-        AUTH_ROUTES.RESET_PASSWORD
-      )}`,
+      redirectTo: `${config.domainName}/${
+        AUTH_REDIRECTS.CONFIRM
+      }?next=${encodeURIComponent(AUTH_ROUTES.RESET_PASSWORD)}`,
     });
 
     if (error) {
