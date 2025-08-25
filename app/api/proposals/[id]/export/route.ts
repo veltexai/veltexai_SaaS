@@ -1,0 +1,99 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { exportProposalToPDF } from '@/lib/pdf-export'
+import { Database } from '@/types/database'
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  try {
+    const supabase = createRouteHandlerClient<Database>({ cookies })
+    
+    // Get the authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Get the proposal
+    const { data: proposal, error: proposalError } = await supabase
+      .from('proposals')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .single()
+
+    if (proposalError || !proposal) {
+      return NextResponse.json(
+        { error: 'Proposal not found' },
+        { status: 404 }
+      )
+    }
+
+    // Get user profile for company info
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    // Parse request body for export options
+    const body = await request.json()
+    const { template = 'modern', includeCompanyInfo = true } = body
+
+    // Prepare company info
+    const companyInfo = includeCompanyInfo && profile ? {
+      name: profile.company_name || profile.full_name || 'Your Company',
+      email: user.email || undefined,
+    } : undefined
+
+    // Generate PDF
+    const pdfBlob = await exportProposalToPDF(proposal, {
+      companyInfo,
+      template
+    })
+
+    // Convert blob to buffer for storage
+    const arrayBuffer = await pdfBlob.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    // Save export record to database
+    const { error: exportError } = await supabase
+      .from('pdf_exports')
+      .insert({
+        proposal_id: proposal.id,
+        user_id: user.id,
+        file_size: buffer.length,
+        template_used: template,
+        exported_at: new Date().toISOString()
+      })
+
+    if (exportError) {
+      console.error('Failed to save export record:', exportError)
+      // Continue anyway - don't fail the export
+    }
+
+    // Return the PDF as a response
+    return new NextResponse(buffer, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${proposal.title.replace(/[^a-zA-Z0-9]/g, '_')}_proposal.pdf"`,
+        'Content-Length': buffer.length.toString(),
+      },
+    })
+
+  } catch (error) {
+    console.error('PDF export error:', error)
+    return NextResponse.json(
+      { error: 'Failed to export PDF' },
+      { status: 500 }
+    )
+  }
+}
