@@ -7,7 +7,7 @@ interface LoginPageProps {
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const user = await getUser();
+  const { user } = await getUser();
   if (user) {
     return redirect('/dashboard');
   }

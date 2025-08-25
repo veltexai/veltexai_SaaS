@@ -8,7 +8,7 @@ interface SignupPageProps {
 }
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
-  const user = await getUser();
+  const { user } = await getUser();
   if (user) {
     return redirect('/dashboard');
   }

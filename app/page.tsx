@@ -8,39 +8,42 @@ import TestimonialsSection from '@/components/home/testimonials-section';
 import CTASection from '@/components/home/cta-section';
 import FAQSection from '@/components/home/faq-section';
 import FooterSection from '@/components/home/footer-section';
+import LenisProvider from '@/components/providers/lenis-provider';
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header Section */}
-      <Header />
+    <LenisProvider>
+      <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        {/* Header Section */}
+        <Header />
 
-      {/* Hero Section */}
-      <HeroSection />
+        {/* Hero Section */}
+        <HeroSection />
 
-      {/* How it works Section */}
-      <HowItWorksSection />
+        {/* How it works Section */}
+        <HowItWorksSection />
 
-      {/* Feature Section */}
-      <FeatureSection />
+        {/* Feature Section */}
+        <FeatureSection />
 
-      {/* Value Proposition */}
-      <ValueProposition />
+        {/* Value Proposition */}
+        <ValueProposition />
 
-      {/* Pricing SEction */}
-      <PricingSection />
+        {/* Pricing SEction */}
+        <PricingSection />
 
-      {/* Testimonials Section */}
-      <TestimonialsSection />
+        {/* Testimonials Section */}
+        <TestimonialsSection />
 
-      {/* CTA Section */}
-      <CTASection />
+        {/* CTA Section */}
+        <CTASection />
 
-      {/* FAQ section */}
-      <FAQSection />
+        {/* FAQ section */}
+        <FAQSection />
 
-      {/* Footer */}
-      <FooterSection />
-    </main>
+        {/* Footer */}
+        <FooterSection />
+      </main>
+    </LenisProvider>
   );
 }

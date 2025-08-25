@@ -1,61 +1,29 @@
-import Stripe from 'stripe'
+import Stripe from 'stripe';
+import { SUBSCRIPTION_PLANS as CLIENT_SUBSCRIPTION_PLANS } from '@/lib/constants/subscription-plans';
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set')
+  throw new Error('STRIPE_SECRET_KEY is not set');
 }
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2025-07-30.basil',
   typescript: true,
-})
+});
 
-export const getStripeJs = async () => {
-  const stripeJs = await import('@stripe/stripe-js')
-  return stripeJs.loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
-}
-
-// Subscription plans configuration
+// Subscription plans configuration with Stripe price IDs
 export const SUBSCRIPTION_PLANS = {
   starter: {
-    name: 'Starter',
-    description: 'Perfect for freelancers and small teams',
-    price: 29,
-    priceId: process.env.STRIPE_STARTER_PRICE_ID!,
-    features: [
-      'Up to 10 proposals/month',
-      'AI-powered content generation',
-      'Basic templates',
-      'PDF export',
-    ],
+    ...CLIENT_SUBSCRIPTION_PLANS.starter,
+    priceId: process.env.STRIPE_STARTER_PRICE_ID || 'price_temp_starter',
   },
   professional: {
-    name: 'Professional',
-    description: 'Best for growing businesses',
-    price: 79,
-    priceId: process.env.STRIPE_PROFESSIONAL_PRICE_ID!,
-    features: [
-      'Up to 50 proposals/month',
-      'Advanced AI features',
-      'Premium templates',
-      'Team collaboration',
-      'Analytics dashboard',
-      'Priority support',
-    ],
+    ...CLIENT_SUBSCRIPTION_PLANS.professional,
+    priceId: process.env.STRIPE_PROFESSIONAL_PRICE_ID || 'price_temp_professional',
   },
   enterprise: {
-    name: 'Enterprise',
-    description: 'For large organizations',
-    price: 199,
-    priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID!,
-    features: [
-      'Unlimited proposals',
-      'Custom AI training',
-      'White-label solution',
-      'Advanced integrations',
-      'Dedicated support',
-      'Custom contracts',
-    ],
+    ...CLIENT_SUBSCRIPTION_PLANS.enterprise,
+    priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID || 'price_temp_enterprise',
   },
-} as const
+} as const;
 
-export type SubscriptionPlan = keyof typeof SUBSCRIPTION_PLANS
+export type SubscriptionPlan = keyof typeof SUBSCRIPTION_PLANS;

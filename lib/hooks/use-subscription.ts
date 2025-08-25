@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth/use-auth'
 import { createClient } from '@supabase/supabase-js'
-import { getStripeJs } from '@/lib/stripe'
+import { getStripeJs } from '@/lib/stripe-client' // Changed import
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
