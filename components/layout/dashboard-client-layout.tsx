@@ -14,6 +14,7 @@ import {
   LogOut,
   Plus,
   Shield,
+  ArrowLeftIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { signOut } from '@/lib/auth/actions/password';
@@ -34,7 +35,11 @@ const baseNavigation = [
 
 const adminNavigation = [{ name: 'Admin', href: '/admin', icon: Shield }];
 
-export function DashboardClientLayout({ children, user, profile }: DashboardClientLayoutProps) {
+export function DashboardClientLayout({
+  children,
+  user,
+  profile,
+}: DashboardClientLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
@@ -199,12 +204,21 @@ export function DashboardClientLayout({ children, user, profile }: DashboardClie
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
-              <Link href="/dashboard/proposals/new">
-                <Button size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  New Proposal
-                </Button>
-              </Link>
+              {pathname === '/dashboard/proposals/new' ? (
+                <Link href="/dashboard/proposals">
+                  <Button size="sm" variant="outline">
+                    <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                    Back to Proposals
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/dashboard/proposals/new">
+                  <Button size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Proposal
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>

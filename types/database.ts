@@ -204,6 +204,7 @@ export interface Database {
           template_used?: string
           exported_at?: string
         }
+        attachments: Json | null
       }
     }
     Views: {
