@@ -1,88 +1,90 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { createClient } from '@/lib/supabase/client'
-import { Edit, Download, Send, Loader2 } from 'lucide-react'
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { createClient } from '@/lib/supabase/client';
+import { Edit, Download, Send, Loader2 } from 'lucide-react';
 
 interface Proposal {
-  id: string
-  title: string
-  status: 'draft' | 'sent' | 'accepted' | 'rejected'
+  id: string;
+  title: string;
+  status: 'draft' | 'sent' | 'accepted' | 'rejected';
 }
 
 interface ProposalActionsProps {
-  proposal: Proposal
+  proposal: Proposal;
 }
 
 export function ProposalActions({ proposal }: ProposalActionsProps) {
-  const router = useRouter()
-  const [updating, setUpdating] = useState(false)
-  const [exporting, setExporting] = useState(false)
-  const [error, setError] = useState('')
+  const router = useRouter();
+  const [updating, setUpdating] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [error, setError] = useState('');
 
   const updateStatus = async (status: Proposal['status']) => {
-    setUpdating(true)
-    setError('')
-    
+    setUpdating(true);
+    setError('');
+
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       const { error } = await supabase
         .from('proposals')
         .update({ status })
-        .eq('id', proposal.id)
+        .eq('id', proposal.id);
 
-      if (error) throw error
-      
-      router.refresh()
+      if (error) throw error;
+
+      router.refresh();
     } catch (error) {
-      console.error('Error updating proposal status:', error)
-      setError('Failed to update proposal status')
+      console.error('Error updating proposal status:', error);
+      setError('Failed to update proposal status');
     } finally {
-      setUpdating(false)
+      setUpdating(false);
     }
-  }
+  };
 
   const exportToPDF = async () => {
-    setExporting(true)
-    setError('')
-    
+    setExporting(true);
+    setError('');
+
     try {
       const response = await fetch(`/api/proposals/${proposal.id}/export`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           template: 'modern',
-          includeCompanyInfo: true 
+          includeCompanyInfo: true,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to export PDF')
+        throw new Error('Failed to export PDF');
       }
 
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.style.display = 'none'
-      a.href = url
-      a.download = `${proposal.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_proposal.pdf`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `${proposal.title
+        .replace(/[^a-z0-9]/gi, '_')
+        .toLowerCase()}_proposal.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (error) {
-      console.error('Error exporting PDF:', error)
-      setError('Failed to export PDF')
+      console.error('Error exporting PDF:', error);
+      setError('Failed to export PDF');
     } finally {
-      setExporting(false)
+      setExporting(false);
     }
-  }
+  };
 
   return (
     <>
@@ -91,15 +93,15 @@ export function ProposalActions({ proposal }: ProposalActionsProps) {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      
+
       <div className="flex items-center space-x-4">
-        <Link href={`/dashboard/proposals/${proposal.id}/edit`}>
+        {/* <Link href={`/dashboard/proposals/${proposal.id}/edit`}>
           <Button variant="outline">
             <Edit className="mr-2 h-4 w-4" />
             Edit
           </Button>
-        </Link>
-        
+        </Link> */}
+
         <Button variant="outline" onClick={exportToPDF} disabled={exporting}>
           {exporting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -108,12 +110,9 @@ export function ProposalActions({ proposal }: ProposalActionsProps) {
           )}
           {exporting ? 'Exporting...' : 'Export PDF'}
         </Button>
-        
+
         {proposal.status === 'draft' && (
-          <Button 
-            onClick={() => updateStatus('sent')}
-            disabled={updating}
-          >
+          <Button onClick={() => updateStatus('sent')} disabled={updating}>
             {updating ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -122,10 +121,10 @@ export function ProposalActions({ proposal }: ProposalActionsProps) {
             Mark as Sent
           </Button>
         )}
-        
+
         {proposal.status === 'sent' && (
           <>
-            <Button 
+            <Button
               onClick={() => updateStatus('accepted')}
               disabled={updating}
               className="bg-green-600 hover:bg-green-700"
@@ -136,7 +135,7 @@ export function ProposalActions({ proposal }: ProposalActionsProps) {
                 'Mark Accepted'
               )}
             </Button>
-            <Button 
+            <Button
               variant="outline"
               onClick={() => updateStatus('rejected')}
               disabled={updating}
@@ -152,5 +151,5 @@ export function ProposalActions({ proposal }: ProposalActionsProps) {
         )}
       </div>
     </>
-  )
+  );
 }

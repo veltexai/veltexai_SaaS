@@ -14,18 +14,19 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
     let currentList: React.ReactNode[] = [];
     let listType: 'ul' | 'ol' | null = null;
     let listCounter = 1;
+    let elementCounter = 0; // Add unique counter
 
     const flushList = () => {
       if (currentList.length > 0) {
         if (listType === 'ul') {
           elements.push(
-            <ul key={elements.length} className="list-disc list-inside mb-3 ml-4 space-y-1">
+            <ul key={`ul-${elementCounter++}`} className="list-disc list-inside mb-3 ml-4 space-y-1">
               {currentList}
             </ul>
           );
         } else if (listType === 'ol') {
           elements.push(
-            <ol key={elements.length} className="list-decimal list-inside mb-3 ml-4 space-y-1">
+            <ol key={`ol-${elementCounter++}`} className="list-decimal list-inside mb-3 ml-4 space-y-1">
               {currentList}
             </ol>
           );
@@ -50,7 +51,7 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
         flushList();
         const text = trimmedLine.replace(/^###\s*/, '');
         elements.push(
-          <h3 key={index} className="text-base font-semibold mb-2 mt-4 text-gray-800">
+          <h3 key={`h3-${index}`} className="text-base font-semibold mb-2 mt-4 text-gray-800">
             {parseInlineMarkdown(text)}
           </h3>
         );
@@ -58,7 +59,7 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
         flushList();
         const text = trimmedLine.replace(/^##\s*/, '');
         elements.push(
-          <h2 key={index} className="text-lg font-bold mb-3 mt-4 text-gray-900">
+          <h2 key={`h2-${index}`} className="text-lg font-bold mb-3 mt-4 text-gray-900">
             {parseInlineMarkdown(text)}
           </h2>
         );
@@ -66,7 +67,7 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
         flushList();
         const text = trimmedLine.replace(/^#\s*/, '');
         elements.push(
-          <h1 key={index} className="text-xl font-bold mb-4 mt-4 text-gray-900">
+          <h1 key={`h1-${index}`} className="text-xl font-bold mb-4 mt-4 text-gray-900">
             {parseInlineMarkdown(text)}
           </h1>
         );
@@ -79,7 +80,7 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
         }
         const text = trimmedLine.replace(/^[-*]\s*/, '');
         currentList.push(
-          <li key={`${index}-${currentList.length}`} className="text-sm text-gray-700">
+          <li key={`li-${index}-${currentList.length}`} className="text-sm text-gray-700">
             {parseInlineMarkdown(text)}
           </li>
         );
@@ -93,7 +94,7 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
         }
         const text = trimmedLine.replace(/^\d+\.\s*/, '');
         currentList.push(
-          <li key={`${index}-${currentList.length}`} className="text-sm text-gray-700">
+          <li key={`li-${index}-${currentList.length}`} className="text-sm text-gray-700">
             {parseInlineMarkdown(text)}
           </li>
         );
@@ -103,7 +104,7 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
       else {
         flushList();
         elements.push(
-          <p key={index} className="text-sm text-gray-700 mb-2 leading-relaxed">
+          <p key={`p-${index}`} className="text-sm text-gray-700 mb-2 leading-relaxed">
             {parseInlineMarkdown(trimmedLine)}
           </p>
         );
@@ -132,7 +133,7 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
       
       // Add the bold text
       parts.push(
-        <strong key={match.index} className="font-semibold text-gray-900">
+        <strong key={`bold-${match.index}`} className="font-semibold text-gray-900">
           {match[2]}
         </strong>
       );

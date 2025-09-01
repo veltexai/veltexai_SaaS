@@ -329,7 +329,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
             ) : (
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !generatedContent}
                 className="flex items-center"
               >
                 {loading ? (

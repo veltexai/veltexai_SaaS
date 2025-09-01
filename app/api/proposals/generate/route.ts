@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { getUser } from '@/lib/auth/auth-helpers';
+import { createClient } from '@/lib/supabase/server';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -12,6 +13,18 @@ export async function POST(request: NextRequest) {
     const user = await getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Fetch complete profile data
+    const supabase = await createClient();
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -51,13 +64,16 @@ ${desired_start_date ? `Desired Start Date: ${desired_start_date}` : ''}
 ${special_requirements ? `Special Requirements: ${special_requirements}` : ''}
 
 --- COMPANY INFO ---
-Company: ${user.user_metadata.company_name}
-Contact Person: ${user.user_metadata.full_name}
+Company: ${profile.company_name || 'Your Company'}
+Contact Person: ${profile.full_name || 'Your Name'}
 Email: ${user.email}
-Phone: ${user.phone}
-Website: [Your Website]
-Logo: [Insert logo in final PDF]
-Company Background: [Brief background of your company, values, expertise]
+Phone: ${profile.phone || 'Your Phone'}
+Website: ${profile.website || 'Your Website'}
+Logo: ${profile.logo_url ? '[Logo available]' : '[No logo uploaded]'}
+Company Background: ${
+      profile.company_background ||
+      'Brief background of your company, values, expertise'
+    }
 
 --- REQUIRED STRUCTURE ---
 1. Cover Page (with logo, company info, client info, proposal title)

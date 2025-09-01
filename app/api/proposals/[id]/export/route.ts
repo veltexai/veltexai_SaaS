@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { getUser } from '@/lib/auth/auth-helpers'
+import { createClient } from '@/lib/supabase/server'
 import { exportProposalToPDF } from '@/lib/pdf-export'
 import { Database } from '@/types/database'
 
@@ -10,17 +10,17 @@ export async function POST(
 ) {
   const { id } = await params
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
-    
     // Get the authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const user = await getUser()
     
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
+
+    const supabase = await createClient()
 
     // Get the proposal
     const { data: proposal, error: proposalError } = await supabase

@@ -13,7 +13,7 @@ import type {
 } from '@/lib/auth/types';
 
 export function useAuth(): AuthState & {
-  updateProfile: (updates: Partial<Profile>) => Promise<AuthResponse>;
+  updateProfile: (updates: Partial<Profile>, userOverride?: User) => Promise<AuthResponse>;
   updatePassword: (password: string) => Promise<AuthResponse>;
   refreshSession: () => Promise<void>;
 } {
@@ -121,26 +121,39 @@ export function useAuth(): AuthState & {
   }, [supabase, updateState, fetchProfile, refreshSession]);
 
   const updateProfile = useCallback(
-    async (updates: Partial<Profile>): Promise<AuthResponse> => {
-      if (!state.user) {
-        return { error: { message: AUTH_ERRORS.NO_USER } };
+    async (updates: Partial<Profile>, userOverride?: User): Promise<AuthResponse> => {
+      try {
+        console.log('updateProfile called with:', updates);
+        
+        const currentUser = userOverride || state.user;
+        if (!currentUser) {
+          console.log('No user found');
+          return { error: { message: AUTH_ERRORS.NO_USER } };
+        }
+
+        const response = await fetch('/api/profile', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updates),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          return { error: { message: result.error } };
+        }
+
+        console.log('Profile updated successfully:', result.data);
+        updateState({ profile: result.data });
+        return { data: result.data };
+      } catch (error: any) {
+        console.error('Unexpected error in updateProfile:', error);
+        return { error: { message: error.message || 'An unexpected error occurred' } };
       }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', state.user.id)
-        .select()
-        .single();
-
-      if (error) {
-        return { error: { message: error.message } };
-      }
-
-      updateState({ profile: data });
-      return { data };
     },
-    [supabase, state.user, updateState]
+    [state.user, updateState]
   );
 
   const updatePassword = useCallback(
