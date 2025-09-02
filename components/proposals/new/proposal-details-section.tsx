@@ -1,12 +1,24 @@
-import { UseFormReturn } from 'react-hook-form'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
-import { ProposalFormData } from '@/lib/validations/proposal'
+import { UseFormReturn } from 'react-hook-form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '@/components/ui/form';
+import { ProposalFormData } from '@/lib/validations/proposal';
 
 interface ProposalDetailsSectionProps {
-  form: UseFormReturn<ProposalFormData>
+  form: UseFormReturn<ProposalFormData>;
 }
 
 export function ProposalDetailsSection({ form }: ProposalDetailsSectionProps) {
@@ -26,41 +38,46 @@ export function ProposalDetailsSection({ form }: ProposalDetailsSectionProps) {
             <FormItem>
               <FormLabel>Proposal Title *</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Office Cleaning Services for ABC Corp" {...field} />
+                <Input
+                  placeholder="e.g., Office Cleaning Services for ABC Corp"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
-        <FormField
-          control={form.control}
-          name="budget_range"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Budget Range *</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., $5,000 - $10,000" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="timeline"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Timeline *</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., 4-6 weeks" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
+
+        <div className="flex items-center gap-4">
+          <FormField
+            control={form.control}
+            name="budget_range"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel>Budget Range *</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., $5,000 - $10,000" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="timeline"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel>Timeline *</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., 4-6 weeks" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <FormField
           control={form.control}
           name="project_description"
@@ -68,10 +85,10 @@ export function ProposalDetailsSection({ form }: ProposalDetailsSectionProps) {
             <FormItem>
               <FormLabel>Project Description *</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Describe the project requirements, goals, and expectations..."
                   className="min-h-[100px]"
-                  {...field} 
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -80,5 +97,5 @@ export function ProposalDetailsSection({ form }: ProposalDetailsSectionProps) {
         />
       </CardContent>
     </Card>
-  )
+  );
 }
