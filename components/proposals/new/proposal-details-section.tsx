@@ -2,7 +2,6 @@ import { UseFormReturn } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
@@ -23,7 +22,7 @@ interface ProposalDetailsSectionProps {
 
 export function ProposalDetailsSection({ form }: ProposalDetailsSectionProps) {
   return (
-    <Card>
+    <>
       <CardHeader>
         <CardTitle>Proposal Details</CardTitle>
         <CardDescription>
@@ -96,6 +95,6 @@ export function ProposalDetailsSection({ form }: ProposalDetailsSectionProps) {
           )}
         />
       </CardContent>
-    </Card>
+    </>
   );
 }

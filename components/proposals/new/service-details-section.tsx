@@ -9,7 +9,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
@@ -30,7 +29,7 @@ interface ServiceDetailsSectionProps {
 
 export function ServiceDetailsSection({ form }: ServiceDetailsSectionProps) {
   return (
-    <Card>
+    <>
       <CardHeader>
         <CardTitle>Service Details</CardTitle>
         <CardDescription>
@@ -130,6 +129,6 @@ export function ServiceDetailsSection({ form }: ServiceDetailsSectionProps) {
           )}
         />
       </CardContent>
-    </Card>
+    </>
   );
 }

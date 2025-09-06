@@ -256,3 +256,9 @@ export type Subscription = Database['public']['Tables']['subscriptions']['Row'];
 export type BillingHistory =
   Database['public']['Tables']['billing_history']['Row'];
 export type PDFExport = Database['public']['Tables']['pdf_exports']['Row'];
+export type User = {
+  id: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+};

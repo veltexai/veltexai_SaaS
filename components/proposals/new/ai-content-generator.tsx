@@ -78,7 +78,7 @@ export function AIContentGenerator({
   };
 
   return (
-    <Card>
+    <>
       <CardHeader>
         <CardTitle>AI-Generated Content</CardTitle>
         <CardDescription>
@@ -118,6 +118,6 @@ export function AIContentGenerator({
           </div>
         )}
       </CardContent>
-    </Card>
+    </>
   );
 }

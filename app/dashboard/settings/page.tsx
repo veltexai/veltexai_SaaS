@@ -4,6 +4,7 @@ import { ProfileSettings } from '@/components/settings/profile-settings';
 import { SubscriptionBilling } from '@/components/settings/subscription-billing';
 import { SecuritySettings } from '@/components/settings/security-settings';
 import { NotificationsSettings } from '@/components/settings/notifications-settings';
+import { type User as UserType, type Profile } from '@/types/database';
 
 export default async function SettingsPage() {
   const { user, profile } = await getUser();
@@ -22,7 +23,7 @@ export default async function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ProfileSettings user={user} profile={profile} />
+        <ProfileSettings user={user as UserType} profile={profile as Profile} />
         <SubscriptionBilling />
         <SecuritySettings />
         <NotificationsSettings />

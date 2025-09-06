@@ -1,8 +1,6 @@
 import { UseFormReturn } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
@@ -23,7 +21,7 @@ interface ClientInfoSectionProps {
 
 export function ClientInfoSection({ form }: ClientInfoSectionProps) {
   return (
-    <Card>
+    <>
       <CardHeader>
         <CardTitle>Client Information</CardTitle>
         <CardDescription>
@@ -106,6 +104,6 @@ export function ClientInfoSection({ form }: ClientInfoSectionProps) {
           )}
         />
       </CardContent>
-    </Card>
+    </>
   );
 }

@@ -18,6 +18,7 @@ import { ServiceDetailsSection } from './service-details-section';
 import { AttachmentsSection } from './attachments-section';
 import { AIContentGenerator } from './ai-content-generator';
 import { cn } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
 
 interface ProposalFormProps {
   userId: string;
@@ -301,52 +302,57 @@ export function ProposalForm({ userId }: ProposalFormProps) {
           </Alert>
         )}
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {renderCurrentStep()}
+        <Card>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6 bg-white rounded-2xl p-4"
+          >
+            {renderCurrentStep()}
 
-          <div className="flex justify-between pt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={currentStep === 1 ? () => router.back() : prevStep}
-              className="flex items-center text-sm"
-              size="lg"
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              {currentStep === 1 ? 'Cancel' : 'Back'}
-            </Button>
-
-            {currentStep < STEPS.length ? (
+            <div className="flex justify-between px-6 gap-6">
               <Button
                 type="button"
-                onClick={nextStep}
-                className="flex items-center text-sm"
+                variant="outline"
+                onClick={currentStep === 1 ? () => router.back() : prevStep}
+                className="flex items-center text-sm flex-1"
                 size="lg"
               >
-                Next
-                <ChevronRight className="ml-2 h-4 w-4" />
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                {currentStep === 1 ? 'Cancel' : 'Back'}
               </Button>
-            ) : (
-              <Button
-                type="submit"
-                disabled={loading || !generatedContent}
-                className="flex items-center"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Create Proposal
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </form>
+
+              {currentStep < STEPS.length ? (
+                <Button
+                  type="button"
+                  onClick={nextStep}
+                  className="flex items-center text-sm flex-1"
+                  size="lg"
+                >
+                  Next
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={loading || !generatedContent}
+                  className="flex items-center flex-1"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Create Proposal
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </form>
+        </Card>
       </div>
     </FormProvider>
   );
