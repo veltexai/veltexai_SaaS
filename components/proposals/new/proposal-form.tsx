@@ -1,24 +1,33 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
-import { Loader2, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   proposalFormSchema,
   type ProposalFormData,
+  type ServiceType,
+  validateProposalWithServiceData,
 } from '@/lib/validations/proposal';
-import { ClientInfoSection } from './client-info-section';
-import { ProposalDetailsSection } from './proposal-details-section';
-import { ServiceDetailsSection } from './service-details-section';
-import { AttachmentsSection } from './attachments-section';
-import { AIContentGenerator } from './ai-content-generator';
+import { ServiceTypeSelector } from './service-type-selector';
+import { GlobalInputsSection } from './global-inputs-section';
+import { ServiceSpecificSection } from './service-specific-section';
+import { PricingSection } from './pricing-section';
+import {
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Calculator,
+  Loader2,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Card } from '@/components/ui/card';
 
 interface ProposalFormProps {
   userId: string;
@@ -27,13 +36,13 @@ interface ProposalFormProps {
 const STEPS = [
   {
     id: 1,
-    title: 'Client Info',
-    description: 'Client details and contact information',
+    title: 'Service Type',
+    description: 'Select service type',
   },
   {
     id: 2,
-    title: 'Proposal Details',
-    description: 'Project scope and requirements',
+    title: 'Client Information',
+    description: 'Client details and contact information',
   },
   {
     id: 3,
@@ -42,8 +51,8 @@ const STEPS = [
   },
   {
     id: 4,
-    title: 'Attachments',
-    description: 'Optional files and generate content',
+    title: 'Pricing',
+    description: 'Pricing configuration',
   },
 ];
 
@@ -119,51 +128,60 @@ export function ProposalForm({ userId }: ProposalFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [generatedContent, setGeneratedContent] = useState('');
+  const [isGeneratingContent, setIsGeneratingContent] = useState(false);
+  const [selectedServiceType, setSelectedServiceType] =
+    useState<ServiceType | null>(null);
+  const [pricingEnabled, setPricingEnabled] = useState(false);
 
-  const form = useForm<ProposalFormData>({
+  const form = useForm({
     resolver: zodResolver(proposalFormSchema),
     defaultValues: {
-      client_name: '',
-      client_email: '',
-      client_company: '',
-      contact_phone: '',
-      service_location: '',
       title: '',
-      budget_range: '',
-      timeline: '',
-      project_description: '',
-      services_offered: '',
-      service_frequency: 'monthly',
-      square_footage: '',
-      desired_start_date: '',
-      special_requirements: '',
-      attachments: [],
+      service_type: 'residential' as const,
+      global_inputs: {
+        client_name: '',
+        client_email: '',
+        client_company: '',
+        contact_phone: '',
+        service_location: '',
+        facility_size: 0,
+        service_frequency: '1x-month' as const,
+      },
+      service_specific_data: {},
+      pricing_enabled: false,
+      pricing_data: undefined,
+      generated_content: '',
+      status: 'draft' as const,
     },
   });
 
-  const validateCurrentStep = async () => {
-    const fieldsToValidate = {
-      1: [
-        'client_name',
-        'client_email',
-        'client_company',
-        'contact_phone',
-        'service_location',
-      ],
-      2: ['title', 'budget_range', 'timeline', 'project_description'],
-      3: [
-        'services_offered',
-        'service_frequency',
-        'square_footage',
-        'desired_start_date',
-      ],
-      4: [], // Attachments are optional
-    };
+  // Watch for service type changes
+  const watchedServiceType = form.watch('service_type');
 
-    const fields =
-      fieldsToValidate[currentStep as keyof typeof fieldsToValidate];
-    const isValid = await form.trigger(fields as any);
+  useEffect(() => {
+    if (watchedServiceType !== selectedServiceType) {
+      setSelectedServiceType(watchedServiceType);
+      // Reset service-specific data when service type changes
+      form.setValue('service_specific_data', {});
+    }
+  }, [watchedServiceType, selectedServiceType, form]);
+
+  const validateCurrentStep = async () => {
+    const fieldsToValidate =
+      {
+        1: ['service_type'],
+        2: [
+          'global_inputs.client_name',
+          'global_inputs.client_email',
+          'global_inputs.contact_phone',
+          'global_inputs.service_location',
+          'global_inputs.facility_size',
+        ],
+        3: [], // Service-specific validation handled separately
+        4: [], // Pricing validation handled separately
+      }[currentStep] || [];
+
+    const isValid = await form.trigger(fieldsToValidate as any);
     return isValid;
   };
 
@@ -180,75 +198,33 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     }
   };
 
-  const onSubmit = async (data: ProposalFormData) => {
+  const onSubmit = async (data: any) => {
     setLoading(true);
     setError('');
 
     try {
-      const supabase = createClient();
+      // Validate service-specific data
+      const validatedData = validateProposalWithServiceData(data);
 
-      const { data: proposalData, error: insertError } = await supabase
-        .from('proposals')
-        .insert({
-          user_id: userId,
-          title: data.title,
-          client_name: data.client_name,
-          client_email: data.client_email,
-          client_company: data.client_company,
-          contact_phone: data.contact_phone,
-          service_location: data.service_location,
-          project_description: data.project_description,
-          budget_range: data.budget_range,
-          timeline: data.timeline,
-          services_offered: data.services_offered,
-          service_frequency: data.service_frequency,
-          square_footage: data.square_footage,
-          desired_start_date: data.desired_start_date,
-          special_requirements: data.special_requirements,
-          content: generatedContent,
-          status: 'draft',
-          value: parseFloat(data.budget_range.replace(/[^0-9.-]+/g, '')) || 0,
-        })
-        .select()
-        .single();
+      const response = await fetch('/api/proposals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validatedData),
+      });
 
-      if (insertError) throw insertError;
-
-      // Handle file uploads if attachments exist
-      const uploadedFiles = [];
-      if (data.attachments && data.attachments.length > 0) {
-        for (const file of data.attachments) {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${proposalData.id}/${Date.now()}.${fileExt}`;
-
-          const { error: uploadError } = await supabase.storage
-            .from('proposal-attachments')
-            .upload(fileName, file);
-
-          if (uploadError) {
-            console.error('Error uploading file:', uploadError);
-          } else {
-            uploadedFiles.push({
-              name: file.name,
-              path: fileName,
-              size: file.size,
-            });
-          }
-        }
-
-        // Update proposal with attachment URLs
-        if (uploadedFiles.length > 0) {
-          await supabase
-            .from('proposals')
-            .update({ attachments: uploadedFiles })
-            .eq('id', proposalData.id);
-        }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create proposal');
       }
 
+      const { data: proposalData } = await response.json();
+
+      toast.success('Proposal created successfully!');
       router.push(`/dashboard/proposals/${proposalData.id}`);
     } catch (error) {
       console.error('Error creating proposal:', error);
       setError('Failed to create proposal. Please try again.');
+      toast.error('Failed to create proposal');
     } finally {
       setLoading(false);
     }
@@ -257,34 +233,24 @@ export function ProposalForm({ userId }: ProposalFormProps) {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <div className="grid grid-cols-1 gap-6">
-            <ClientInfoSection form={form} />
-          </div>
-        );
+        return <ServiceTypeSelector />;
       case 2:
-        return (
-          <div className="grid grid-cols-1 gap-6">
-            <ProposalDetailsSection form={form} />
-          </div>
-        );
+        return <GlobalInputsSection />;
       case 3:
         return (
-          <div className="grid grid-cols-1 gap-6">
-            <ServiceDetailsSection form={form} />
-          </div>
+          <ServiceSpecificSection
+            serviceType={selectedServiceType || 'residential'}
+          />
         );
       case 4:
         return (
-          <div className="space-y-6">
-            <AttachmentsSection form={form} />
-            <AIContentGenerator
-              form={form.watch()}
-              generatedContent={generatedContent}
-              onContentGenerated={setGeneratedContent}
-              onError={setError}
-            />
-          </div>
+          <PricingSection
+            serviceType={selectedServiceType || 'residential'}
+            enabled={pricingEnabled}
+            onEnabledChange={setPricingEnabled}
+            currentStep={currentStep}
+            onGeneratingChange={setIsGeneratingContent}
+          />
         );
       default:
         return null;
@@ -334,7 +300,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
               ) : (
                 <Button
                   type="submit"
-                  disabled={loading || !generatedContent}
+                  disabled={loading || isGeneratingContent}
                   className="flex items-center flex-1"
                 >
                   {loading ? (

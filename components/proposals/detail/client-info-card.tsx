@@ -1,13 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Proposal {
-  client_name: string
-  client_email: string
-  company_name: string
+  client_name: string;
+  client_email: string;
+  client_company: string;
 }
 
 interface ClientInfoCardProps {
-  proposal: Proposal
+  proposal: Proposal;
 }
 
 export function ClientInfoCard({ proposal }: ClientInfoCardProps) {
@@ -27,13 +27,13 @@ export function ClientInfoCard({ proposal }: ClientInfoCardProps) {
             <p className="text-sm">{proposal.client_email}</p>
           </div>
         )}
-        {proposal.company_name && (
+        {proposal.client_company && (
           <div>
             <label className="text-sm font-medium text-gray-600">Company</label>
-            <p className="text-sm">{proposal.company_name}</p>
+            <p className="text-sm">{proposal.client_company}</p>
           </div>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

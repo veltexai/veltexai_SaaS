@@ -3,7 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/client';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { Eye, Edit, Trash2, Loader2, Download } from 'lucide-react';
@@ -29,17 +35,21 @@ const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
   sent: 'bg-blue-100 text-blue-800',
   accepted: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800'
+  rejected: 'bg-red-100 text-red-800',
 };
 
 const statusLabels = {
   draft: 'Draft',
   sent: 'Sent',
   accepted: 'Accepted',
-  rejected: 'Rejected'
+  rejected: 'Rejected',
 };
 
-export function ProposalCard({ proposal, onUpdate, onDelete }: ProposalCardProps) {
+export function ProposalCard({
+  proposal,
+  onUpdate,
+  onDelete,
+}: ProposalCardProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -58,7 +68,7 @@ export function ProposalCard({ proposal, onUpdate, onDelete }: ProposalCardProps
         .eq('id', proposal.id);
 
       if (error) throw error;
-      
+
       onDelete(proposal.id);
     } catch (error) {
       console.error('Error deleting proposal:', error);
@@ -77,7 +87,7 @@ export function ProposalCard({ proposal, onUpdate, onDelete }: ProposalCardProps
         .eq('id', proposal.id);
 
       if (error) throw error;
-      
+
       onUpdate(proposal.id, { status });
     } catch (error) {
       console.error('Error updating proposal status:', error);
@@ -94,9 +104,9 @@ export function ProposalCard({ proposal, onUpdate, onDelete }: ProposalCardProps
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           template: 'modern',
-          includeCompanyInfo: true 
+          includeCompanyInfo: true,
         }),
       });
 
@@ -109,7 +119,9 @@ export function ProposalCard({ proposal, onUpdate, onDelete }: ProposalCardProps
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `${proposal.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_proposal.pdf`;
+      a.download = `${proposal.title
+        .replace(/[^a-z0-9]/gi, '_')
+        .toLowerCase()}_proposal.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -133,7 +145,11 @@ export function ProposalCard({ proposal, onUpdate, onDelete }: ProposalCardProps
             </CardDescription>
           </div>
           <div className="flex items-center space-x-2">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[proposal.status]}`}>
+            <span
+              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                statusColors[proposal.status]
+              }`}
+            >
               {statusLabels[proposal.status]}
             </span>
           </div>
@@ -143,16 +159,19 @@ export function ProposalCard({ proposal, onUpdate, onDelete }: ProposalCardProps
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-6 text-sm text-gray-600">
             <div>
-              <span className="font-medium">Value:</span> {formatCurrency(proposal.value)}
+              <span className="font-medium">Value:</span>{' '}
+              {formatCurrency(proposal.value)}
             </div>
             <div>
-              <span className="font-medium">Created:</span> {formatDate(proposal.created_at)}
+              <span className="font-medium">Created:</span>{' '}
+              {formatDate(proposal.created_at)}
             </div>
             <div>
-              <span className="font-medium">Updated:</span> {formatDate(proposal.updated_at)}
+              <span className="font-medium">Updated:</span>{' '}
+              {formatDate(proposal.updated_at)}
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             {/* Status Update Buttons */}
             {proposal.status === 'draft' && (
@@ -191,14 +210,14 @@ export function ProposalCard({ proposal, onUpdate, onDelete }: ProposalCardProps
                 </Button>
               </>
             )}
-            
+
             {/* Action Buttons */}
             <Link href={`/dashboard/proposals/${proposal.id}`}>
               <Button size="sm" variant="outline">
                 <Eye className="h-4 w-4" />
               </Button>
             </Link>
-            <Link href={`/dashboard/proposals/${proposal.id}/edit`}>
+            <Link href={`/proposals/${proposal.id}`}>
               <Button size="sm" variant="outline">
                 <Edit className="h-4 w-4" />
               </Button>

@@ -37,28 +37,12 @@ export function ServiceDetailsSection({ form }: ServiceDetailsSectionProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <FormField
-          control={form.control}
-          name="services_offered"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Services Offered *</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="List the specific services you will provide..."
-                  className="min-h-[80px]"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Services offered field removed - not in schema */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="service_frequency"
+            name="global_inputs.service_frequency"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Service Frequency *</FormLabel>
@@ -74,7 +58,12 @@ export function ServiceDetailsSection({ form }: ServiceDetailsSectionProps) {
                   <SelectContent>
                     <SelectItem value="daily">Daily</SelectItem>
                     <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="1x-month">Monthly</SelectItem>
+                    <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
+                    <SelectItem value="2x-week">2x per week</SelectItem>
+                    <SelectItem value="3x-week">3x per week</SelectItem>
+                    <SelectItem value="5x-week">5x per week</SelectItem>
+                    <SelectItem value="one-time">One-time</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -84,12 +73,17 @@ export function ServiceDetailsSection({ form }: ServiceDetailsSectionProps) {
 
           <FormField
             control={form.control}
-            name="square_footage"
+            name="global_inputs.facility_size"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Square Footage / Facility Size *</FormLabel>
+                <FormLabel>Facility Size (sq ft) *</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 5,000 sq ft" {...field} />
+                  <Input
+                    type="number"
+                    placeholder="e.g., 5000"
+                    {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -97,37 +91,7 @@ export function ServiceDetailsSection({ form }: ServiceDetailsSectionProps) {
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="desired_start_date"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Desired Start Date *</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="special_requirements"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Special Requirements/Notes</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Any special requirements, notes, or additional information..."
-                  className="min-h-[80px]"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Desired start date and special requirements fields removed - not in schema */}
       </CardContent>
     </>
   );

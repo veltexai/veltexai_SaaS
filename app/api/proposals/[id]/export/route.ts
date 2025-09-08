@@ -55,14 +55,13 @@ export async function POST(
     } : undefined
 
     // Generate PDF
-    const pdfBlob = await exportProposalToPDF(proposal, {
+    const pdfBytes = await exportProposalToPDF(proposal, {
       companyInfo,
       template
     })
 
-    // Convert blob to buffer for storage
-    const arrayBuffer = await pdfBlob.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    // Convert Uint8Array to buffer for storage
+    const buffer = Buffer.from(pdfBytes)
 
     // Save export record to database
     const { error: exportError } = await supabase

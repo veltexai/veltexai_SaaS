@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { getUser } from '@/lib/auth/auth-helpers';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+import {
+  serviceTypeSchema,
+  serviceFrequencySchema,
+} from '@/lib/validations/proposal';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -34,34 +39,68 @@ export async function POST(request: NextRequest) {
       contact_phone,
       service_location,
       title,
-      project_description,
-      budget_range,
-      timeline,
-      services_offered,
+      service_type,
       service_frequency,
-      square_footage,
-      desired_start_date,
-      special_requirements,
+      facility_size,
+      service_specific_data,
+      pricing_data,
     } = body;
+
+    // Validate required fields
+    if (!service_type || !client_name) {
+      return NextResponse.json(
+        { error: 'Missing required fields: service_type, client_name' },
+        { status: 400 }
+      );
+    }
+
+    // Create globalInputs object for the prompt
+    const globalInputs = {
+      clientName: client_name,
+      clientCompany: client_company,
+      clientEmail: '', // Not sent from frontend
+      clientPhone: contact_phone,
+      serviceLocation: service_location,
+      facilitySize: facility_size,
+      serviceFrequency: service_frequency,
+    };
+
+    // Get service type label
+    const getServiceTypeLabel = (type: string) => {
+      const labels = {
+        residential: 'Residential Cleaning',
+        commercial: 'Commercial Cleaning',
+        carpet: 'Carpet Cleaning',
+        window: 'Window Cleaning',
+        floor: 'Floor Care',
+      };
+      return labels[type as keyof typeof labels] || type;
+    };
 
     // Create the prompt for OpenAI
     const prompt = `
-You are a proposal writing assistant. Create a polished, persuasive business proposal in PDF-ready format based on the details below. 
+You are a proposal writing assistant. Create a polished, persuasive business proposal in markdown format based on the details below. 
 The proposal should feel personalized, professional, and structured for business clients.
 
+--- SERVICE TYPE ---
+Service Type: ${getServiceTypeLabel(service_type)}
+
 --- CLIENT INFO ---
-Client: ${client_name}${client_company ? ` from ${client_company}` : ''}
-Contact: ${contact_phone}
-Service Location: ${service_location}
+Client: ${globalInputs.clientName || 'Valued Client'}${
+      globalInputs.clientCompany ? ` from ${globalInputs.clientCompany}` : ''
+    }
+Phone: ${globalInputs.clientPhone || ''}
+Service Location: ${globalInputs.serviceLocation || ''}
 ${title ? `Project Title: ${title}` : ''}
-Project Description: ${project_description}
-${budget_range ? `Budget Range: ${budget_range}` : ''}
-${timeline ? `Timeline: ${timeline}` : ''}
-${services_offered ? `Services to be provided: ${services_offered}` : ''}
-${service_frequency ? `Service Frequency: ${service_frequency}` : ''}
-${square_footage ? `Square Footage: ${square_footage}` : ''}
-${desired_start_date ? `Desired Start Date: ${desired_start_date}` : ''}
-${special_requirements ? `Special Requirements: ${special_requirements}` : ''}
+Facility Size: ${
+      globalInputs.facilitySize ? `${globalInputs.facilitySize} sq ft` : ''
+    }
+Service Frequency: ${globalInputs.serviceFrequency || ''}
+
+--- SERVICE-SPECIFIC DETAILS ---
+${Object.entries(service_specific_data || {})
+  .map(([key, value]) => `${key}: ${value}`)
+  .join('\n')}
 
 --- COMPANY INFO ---
 Company: ${profile.company_name || 'Your Company'}
@@ -76,16 +115,32 @@ Company Background: ${
     }
 
 --- REQUIRED STRUCTURE ---
-1. Cover Page (with logo, company info, client info, proposal title)
-2. Executive Summary (high-level overview of client needs + our solution)
-3. Project Understanding (show empathy and clarity of client’s situation)
-4. Proposed Solution (detailed services tailored to client requirements)
-5. Timeline & Deliverables
-6. Investment & Terms (clear pricing/budget alignment)
-7. Why Choose Us (your company’s strengths, trust factors, experience)
-8. Next Steps (call-to-action, signature area)
+1. Executive Summary (high-level overview of client needs + our solution)
+2. Project Understanding (show empathy and clarity of client's situation)
+3. Proposed Solution (detailed services tailored to client requirements and service type)
+4. Service Details (specific to the ${getServiceTypeLabel(
+      service_type
+    )} service)
+5. Timeline & Schedule
+6. Investment & Terms
+7. Why Choose Us (your company's strengths, trust factors, experience)
+8. Next Steps (call-to-action)
 
-Tone: Professional, confident, persuasive, but not overly salesy. Use clear formatting (headings, subheadings, bullet points) to ensure readability.
+Tone: Professional, confident, persuasive, but not overly salesy. Use clear markdown formatting (headings, subheadings, bullet points) to ensure readability.
+Focus on the specific ${getServiceTypeLabel(
+      service_type
+    )} service and tailor the content accordingly.
+
+--- PRICING INFO ---
+${
+  pricing_data
+    ? `
+Price Range: $${pricing_data.price_range?.low} - $${pricing_data.price_range?.high}
+Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estimate?.max} hours
+`
+    : 'Pricing to be determined'
+}
+
 `;
 
     const completion = await openai.chat.completions.create({

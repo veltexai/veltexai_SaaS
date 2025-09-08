@@ -6,12 +6,13 @@ interface Proposal {
   id: string;
   client_name: string;
   client_email: string;
-  company_name: string;
-  budget_range: string;
-  timeline: string;
-  value: number;
-  project_description: string;
-  services_offered: string;
+  client_company: string;
+  service_location: string;
+  service_type: string;
+  service_frequency: string;
+  facility_size: number;
+  pricing_data: any;
+  generated_content: string;
 }
 
 interface ProposalSidebarProps {
@@ -24,30 +25,32 @@ export function ProposalSidebar({ proposal }: ProposalSidebarProps) {
       <ClientInfoCard proposal={proposal} />
       <ProjectDetailsCard proposal={proposal} />
 
-      {/* Project Description */}
+      {/* Service Details */}
       <Card>
         <CardHeader>
-          <CardTitle>Project Description</CardTitle>
+          <CardTitle>Service Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm leading-relaxed">
-            {proposal.project_description}
-          </p>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium text-gray-600">Service Type</label>
+              <p className="text-sm capitalize">{proposal.service_type}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600">Location</label>
+              <p className="text-sm">{proposal.service_location}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600">Frequency</label>
+              <p className="text-sm capitalize">{proposal.service_frequency}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600">Facility Size</label>
+              <p className="text-sm">{proposal.facility_size} sq ft</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
-
-      {proposal.services_offered && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Services Offered</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-relaxed">
-              {proposal.services_offered}
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

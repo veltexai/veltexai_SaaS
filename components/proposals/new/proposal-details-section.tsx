@@ -47,53 +47,7 @@ export function ProposalDetailsSection({ form }: ProposalDetailsSectionProps) {
           )}
         />
 
-        <div className="flex items-center gap-4">
-          <FormField
-            control={form.control}
-            name="budget_range"
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel>Budget Range *</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., $5,000 - $10,000" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
-          <FormField
-            control={form.control}
-            name="timeline"
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel>Timeline *</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., 4-6 weeks" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="project_description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Project Description *</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Describe the project requirements, goals, and expectations..."
-                  className="min-h-[100px]"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </CardContent>
     </>
   );

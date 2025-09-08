@@ -4,7 +4,7 @@ import { FileText } from 'lucide-react';
 
 interface Proposal {
   id: string;
-  content: string;
+  generated_content: string;
 }
 
 interface ProposalContentProps {
@@ -18,9 +18,9 @@ export function ProposalContent({ proposal }: ProposalContentProps) {
         <CardTitle>Proposal Content</CardTitle>
       </CardHeader>
       <CardContent>
-        {proposal.content ? (
+        {proposal.generated_content ? (
           <div className="prose max-w-none">
-            <MarkdownRenderer content={proposal.content} />
+            <MarkdownRenderer content={proposal.generated_content} />
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500">

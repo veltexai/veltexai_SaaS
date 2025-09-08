@@ -8,13 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from '@/components/ui/form';
+
 import { Upload, X, FileText } from 'lucide-react';
 import { ProposalFormData } from '@/lib/validations/proposal';
 
@@ -29,14 +23,12 @@ export function AttachmentsSection({ form }: AttachmentsSectionProps) {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
       setFiles((prev) => [...prev, ...newFiles]);
-      form.setValue('attachments', [...files, ...newFiles]);
     }
   };
 
   const removeFile = (index: number) => {
     const updatedFiles = files.filter((_, i) => i !== index);
     setFiles(updatedFiles);
-    form.setValue('attachments', updatedFiles);
   };
 
   return (
@@ -48,13 +40,11 @@ export function AttachmentsSection({ form }: AttachmentsSectionProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <FormField
-          control={form.control}
-          name="attachments"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Upload Files</FormLabel>
-              <FormControl>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Upload Files
+            </label>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
                     <Input
@@ -108,11 +98,8 @@ export function AttachmentsSection({ form }: AttachmentsSectionProps) {
                     </div>
                   )}
                 </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              </div>
+            </div>
       </CardContent>
     </>
   );

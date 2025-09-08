@@ -19,6 +19,7 @@ interface AIContentGeneratorProps {
   generatedContent: string;
   onContentGenerated: (content: string) => void;
   onError: (error: string) => void;
+  onGeneratingChange?: (generating: boolean) => void;
 }
 
 export function AIContentGenerator({
@@ -26,18 +27,20 @@ export function AIContentGenerator({
   generatedContent,
   onContentGenerated,
   onError,
+  onGeneratingChange,
 }: AIContentGeneratorProps) {
   const [generating, setGenerating] = useState(false);
 
   const generateProposalContent = async () => {
-    if (!form.project_description || !form.client_name) {
+    if (!form.global_inputs.client_name || !form.title) {
       onError(
-        'Please fill in at least the client name and project description to generate content.'
+        'Please fill in at least the client name and proposal title to generate content.'
       );
       return;
     }
 
     setGenerating(true);
+    onGeneratingChange?.(true);
     onError('');
 
     try {
@@ -47,19 +50,16 @@ export function AIContentGenerator({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          client_name: form.client_name,
-          client_company: form.client_company,
-          contact_phone: form.contact_phone,
-          service_location: form.service_location,
+          client_name: form.global_inputs.client_name,
+          client_company: form.global_inputs.client_company,
+          contact_phone: form.global_inputs.contact_phone,
+          service_location: form.global_inputs.service_location,
           title: form.title,
-          project_description: form.project_description,
-          budget_range: form.budget_range,
-          timeline: form.timeline,
-          services_offered: form.services_offered,
-          service_frequency: form.service_frequency,
-          square_footage: form.square_footage,
-          desired_start_date: form.desired_start_date,
-          special_requirements: form.special_requirements,
+          service_type: form.service_type,
+          service_frequency: form.global_inputs.service_frequency,
+          facility_size: form.global_inputs.facility_size,
+          service_specific_data: form.service_specific_data,
+          pricing_data: form.pricing_data,
         }),
       });
 
@@ -74,6 +74,7 @@ export function AIContentGenerator({
       onError('Failed to generate proposal content. Please try again.');
     } finally {
       setGenerating(false);
+      onGeneratingChange?.(false);
     }
   };
 
@@ -91,7 +92,7 @@ export function AIContentGenerator({
           type="button"
           onClick={generateProposalContent}
           disabled={
-            generating || !form.project_description || !form.client_name
+            generating || !form.global_inputs.client_name || !form.title
           }
           variant="outline"
           className="w-full"

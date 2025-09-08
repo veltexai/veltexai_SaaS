@@ -31,7 +31,7 @@ export function ClientInfoSection({ form }: ClientInfoSectionProps) {
       <CardContent className="space-y-4">
         <FormField
           control={form.control}
-          name="client_email"
+          name="global_inputs.client_email"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Client Email *</FormLabel>
@@ -46,7 +46,7 @@ export function ClientInfoSection({ form }: ClientInfoSectionProps) {
         <div className="flex items-center gap-4">
           <FormField
             control={form.control}
-            name="client_name"
+            name="global_inputs.client_name"
             render={({ field }) => (
               <FormItem className="w-full">
                 <FormLabel>Client Name *</FormLabel>
@@ -60,10 +60,10 @@ export function ClientInfoSection({ form }: ClientInfoSectionProps) {
 
           <FormField
             control={form.control}
-            name="client_company"
+            name="global_inputs.client_company"
             render={({ field }) => (
               <FormItem className="w-full">
-                <FormLabel>Client Company *</FormLabel>
+                <FormLabel>Client Company</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., ABC Corporation" {...field} />
                 </FormControl>
@@ -75,7 +75,7 @@ export function ClientInfoSection({ form }: ClientInfoSectionProps) {
 
         <FormField
           control={form.control}
-          name="contact_phone"
+          name="global_inputs.contact_phone"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Point of Contact Phone *</FormLabel>
@@ -89,7 +89,7 @@ export function ClientInfoSection({ form }: ClientInfoSectionProps) {
 
         <FormField
           control={form.control}
-          name="service_location"
+          name="global_inputs.service_location"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Service Location Address *</FormLabel>
