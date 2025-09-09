@@ -120,6 +120,7 @@ function setupGlobalInterceptor() {
             confirmText: 'Leave Page',
             cancelText: 'Stay Here',
             variant: 'destructive',
+            illustration: 'Warning-pana.svg',
           });
 
           if (confirmed) {

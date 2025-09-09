@@ -9,6 +9,7 @@ interface ConfirmationOptions {
   confirmText?: string;
   cancelText?: string;
   variant?: 'default' | 'destructive';
+  illustration?: string;
 }
 
 interface ConfirmationContextType {
@@ -19,6 +20,7 @@ interface ConfirmationContextType {
   confirmText?: string;
   cancelText?: string;
   variant?: 'default' | 'destructive';
+  illustration?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -78,6 +80,7 @@ export function ConfirmationProvider({ children }: ConfirmationProviderProps) {
         confirmText: options.confirmText,
         cancelText: options.cancelText,
         variant: options.variant,
+        illustration: options.illustration,
         onConfirm: handleConfirm,
         onCancel: handleCancel,
       }}

@@ -15,6 +15,7 @@ import {
   type ProposalFormData,
   type ServiceType,
   validateProposalWithServiceData,
+  getServiceSpecificSchema,
 } from '@/lib/validations/proposal';
 import { ServiceTypeSelector } from './service-type-selector';
 import { GlobalInputsSection } from './global-inputs-section';
@@ -28,6 +29,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import z from 'zod';
 
 interface ProposalFormProps {
   userId: string;
@@ -100,7 +102,7 @@ function StepIndicator({
               >
                 {step.id}
               </div>
-              <div className="mt-3 text-center max-w-[120px]">
+              <div className="mt-3 text-center max-w-[120px] min-h-[108px]">
                 <div
                   className={cn(
                     'text-sm font-medium',
@@ -162,14 +164,22 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     if (watchedServiceType !== selectedServiceType) {
       setSelectedServiceType(watchedServiceType);
       // Reset service-specific data when service type changes
-      form.setValue('service_specific_data', {});
+      form.setValue(
+        'service_specific_data',
+        {},
+        {
+          shouldValidate: false,
+          shouldTouch: false,
+          shouldDirty: false,
+        }
+      );
     }
   }, [watchedServiceType, selectedServiceType, form]);
 
   const validateCurrentStep = async () => {
     const fieldsToValidate =
       {
-        1: ['service_type'],
+        1: ['service_type', 'title'],
         2: [
           'global_inputs.client_name',
           'global_inputs.client_email',
@@ -178,10 +188,45 @@ export function ProposalForm({ userId }: ProposalFormProps) {
           'global_inputs.facility_size',
         ],
         3: [], // Service-specific validation handled separately
-        4: [], // Pricing validation handled separately
+        4: ['generated_content'], // Pricing validation handled separately
       }[currentStep] || [];
 
+    if (currentStep === 3) {
+      const serviceType = form.getValues('service_type');
+      const serviceSpecificData = form.getValues('service_specific_data');
+
+      try {
+        const serviceSchema = getServiceSpecificSchema(serviceType);
+        serviceSchema.parse(serviceSpecificData);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          // Set form errors for service-specific fields
+          error.errors.forEach((err) => {
+            const fieldPath = `service_specific_data.${err.path.join('.')}`;
+            form.setError(fieldPath as any, {
+              type: 'manual',
+              message: err.message,
+            });
+          });
+        }
+        return false;
+      }
+      return true;
+    }
+
     const isValid = await form.trigger(fieldsToValidate as any);
+    // const isValid = await form.trigger(fieldsToValidate as any, {
+    //   shouldFocus: false,
+    // });
+
+    // if (currentStep === 4) {
+    //   const generatedContent = form.getValues('generated_content');
+    //   if (!generatedContent || generatedContent.trim() === '') {
+    //     setError('Please generate proposal content before submitting.');
+    //     return false;
+    //   }
+    // }
+
     return isValid;
   };
 
@@ -199,6 +244,10 @@ export function ProposalForm({ userId }: ProposalFormProps) {
   };
 
   const onSubmit = async (data: any) => {
+    if (currentStep !== STEPS.length) {
+      console.warn('Form submission attempted before reaching final step');
+      return;
+    }
     setLoading(true);
     setError('');
 
@@ -300,7 +349,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
               ) : (
                 <Button
                   type="submit"
-                  disabled={loading || isGeneratingContent}
+                  disabled={loading || !form.watch('generated_content')?.trim()}
                   className="flex items-center flex-1"
                 >
                   {loading ? (

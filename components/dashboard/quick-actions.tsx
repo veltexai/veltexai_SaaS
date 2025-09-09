@@ -7,16 +7,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  FileText,
-  TrendingUp,
-  Plus,
-} from 'lucide-react';
+import { FileText, TrendingUp, Plus } from 'lucide-react';
 
 export function QuickActions() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <Card>
+      <Card className="flex flex-col justify-between">
         <CardHeader>
           <CardTitle className="text-lg">Create New Proposal</CardTitle>
           <CardDescription>
@@ -33,7 +29,7 @@ export function QuickActions() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="flex flex-col justify-between">
         <CardHeader>
           <CardTitle className="text-lg">View All Proposals</CardTitle>
           <CardDescription>
@@ -50,7 +46,7 @@ export function QuickActions() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="flex flex-col justify-between">
         <CardHeader>
           <CardTitle className="text-lg">Account Settings</CardTitle>
           <CardDescription>

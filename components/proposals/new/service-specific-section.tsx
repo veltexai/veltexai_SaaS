@@ -49,56 +49,88 @@ export function ServiceSpecificSection({
   const form = useFormContext<ProposalFormData>();
   const [newItem, setNewItem] = useState('');
 
-  const addArrayItem = (fieldName: string, item: string) => {
-    if (!item.trim()) return;
+  // const addArrayItem = (fieldName: string, item: string) => {
+  //   if (!item.trim()) return;
 
-    const currentData = form.getValues('service_specific_data') || {};
-    const currentArray = currentData[fieldName] || [];
+  //   const currentData = form.getValues('service_specific_data') || {};
+  //   const currentArray = currentData[fieldName] || [];
 
-    form.setValue('service_specific_data', {
-      ...currentData,
-      [fieldName]: [...currentArray, item.trim()],
-    });
-    setNewItem('');
-  };
+  //   form.setValue(
+  //     'service_specific_data',
+  //     {
+  //       ...currentData,
+  //       [fieldName]: [...currentArray, item.trim()],
+  //     },
+  //     {
+  //       shouldValidate: false,
+  //       shouldTouch: false,
+  //       shouldDirty: false,
+  //     }
+  //   );
+  //   setNewItem('');
+  // };
 
-  const removeArrayItem = (fieldName: string, index: number) => {
-    const currentData = form.getValues('service_specific_data') || {};
-    const currentArray = currentData[fieldName] || [];
+  // const removeArrayItem = (fieldName: string, index: number) => {
+  //   const currentData = form.getValues('service_specific_data') || {};
+  //   const currentArray = currentData[fieldName] || [];
 
-    form.setValue('service_specific_data', {
-      ...currentData,
-      [fieldName]: currentArray.filter((_: any, i: number) => i !== index),
-    });
-  };
+  //   form.setValue('service_specific_data', {
+  //     ...currentData,
+  //     [fieldName]: currentArray.filter((_: any, i: number) => i !== index),
+  //   });
+  // };
 
   const renderResidentialForm = () => (
     <div className="space-y-4">
+      <FormField
+        control={form.control}
+        name="service_specific_data.home_type"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Home Type</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl className="w-full h-full">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select home type" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="apartment">Apartment</SelectItem>
+                <SelectItem value="house">House</SelectItem>
+                <SelectItem value="condo">Condo</SelectItem>
+                <SelectItem value="townhouse">Townhouse</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="service_specific_data.home_type"
+          name="service_specific_data.bathrooms"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Home Type</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl className="w-full h-full">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select home type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="apartment">Apartment</SelectItem>
-                  <SelectItem value="house">House</SelectItem>
-                  <SelectItem value="condo">Condo</SelectItem>
-                  <SelectItem value="townhouse">Townhouse</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormLabel>Number of Bathrooms</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(
+                      value === '' ? undefined : parseInt(value, 10) || 1
+                    );
+                  }}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="service_specific_data.bedrooms"
@@ -124,31 +156,6 @@ export function ServiceSpecificSection({
           )}
         />
       </div>
-
-      <FormField
-        control={form.control}
-        name="service_specific_data.bathrooms"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Number of Bathrooms</FormLabel>
-            <FormControl>
-              <Input
-                type="number"
-                min="1"
-                max="10"
-                value={field.value || ''}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  field.onChange(
-                    value === '' ? undefined : parseInt(value, 10) || 1
-                  );
-                }}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
@@ -256,10 +263,13 @@ export function ServiceSpecificSection({
                 <Input
                   type="number"
                   min="1"
-                  {...field}
-                  onChange={(e) =>
-                    field.onChange(parseInt(e.target.value) || 1)
-                  }
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(
+                      value === '' ? undefined : parseInt(value, 10) || 1
+                    );
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -340,7 +350,7 @@ export function ServiceSpecificSection({
             <FormItem>
               <FormLabel>Carpet Type</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
+                <FormControl className="w-full">
                   <SelectTrigger>
                     <SelectValue placeholder="Select carpet type" />
                   </SelectTrigger>
@@ -365,7 +375,7 @@ export function ServiceSpecificSection({
             <FormItem>
               <FormLabel>Carpet Age</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
+                <FormControl className="w-full">
                   <SelectTrigger>
                     <SelectValue placeholder="Select carpet age" />
                   </SelectTrigger>
@@ -383,68 +393,74 @@ export function ServiceSpecificSection({
         />
       </div>
 
-      <FormField
-        control={form.control}
-        name="service_specific_data.pet_odors"
-        render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <div className="space-y-1 leading-none">
-              <FormLabel>Pet Odors Present</FormLabel>
-            </div>
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="service_specific_data.pet_odors"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <InfoCard
+                  title="Pet Odors Present"
+                  description="Client has pet odors present on the carpet"
+                  imageSrc="/illustrations/Playful-cat-pana.svg"
+                  imageAlt="Cleaning Supplies"
+                  isSelected={field.value}
+                  onClick={() => field.onChange(!field.value)}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
-      <FormField
-        control={form.control}
-        name="service_specific_data.protection_treatment"
-        render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <div className="space-y-1 leading-none">
-              <FormLabel>Apply Protection Treatment</FormLabel>
-            </div>
-          </FormItem>
-        )}
-      />
+        <FormField
+          control={form.control}
+          name="service_specific_data.protection_treatment"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <InfoCard
+                  title="Apply Protection Treatment"
+                  description="Client requires protection treatment on the carpet"
+                  imageSrc="/illustrations/403-Error-Forbidden-rafiki.svg"
+                  imageAlt="Cleaning Supplies"
+                  isSelected={field.value}
+                  onClick={() => field.onChange(!field.value)}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </div>
     </div>
   );
 
   const renderWindowForm = () => (
     <div className="space-y-4">
+      <FormField
+        control={form.control}
+        name="service_specific_data.window_count"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Number of Windows</FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                min="1"
+                value={field.value || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  field.onChange(
+                    value === '' ? undefined : parseInt(value, 10) || 1
+                  );
+                }}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="service_specific_data.window_count"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Number of Windows</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min="1"
-                  {...field}
-                  onChange={(e) =>
-                    field.onChange(parseInt(e.target.value) || 1)
-                  }
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         <FormField
           control={form.control}
           name="service_specific_data.story_height"
@@ -452,7 +468,7 @@ export function ServiceSpecificSection({
             <FormItem>
               <FormLabel>Building Height</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
+                <FormControl className="w-full">
                   <SelectTrigger>
                     <SelectValue placeholder="Select height" />
                   </SelectTrigger>
@@ -467,23 +483,49 @@ export function ServiceSpecificSection({
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="service_specific_data.exterior_access"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Exterior Access</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl className="w-full">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select access type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="ground_level">
+                    Ground Level Only
+                  </SelectItem>
+                  <SelectItem value="ladder_required">
+                    Ladder Required
+                  </SelectItem>
+                  <SelectItem value="lift_required">Lift Required</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="service_specific_data.screen_cleaning"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormItem>
               <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
+                <InfoCard
+                  title="Include Screen Cleaning"
+                  description="Client requires screen cleaning on the carpet"
+                  imageSrc="/illustrations/Window-Shopping-bro.svg"
+                  imageAlt="Cleaning Supplies"
+                  isSelected={field.value}
+                  onClick={() => field.onChange(!field.value)}
                 />
               </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Include Screen Cleaning</FormLabel>
-              </div>
             </FormItem>
           )}
         />
@@ -492,91 +534,50 @@ export function ServiceSpecificSection({
           control={form.control}
           name="service_specific_data.sill_cleaning"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormItem>
               <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
+                <InfoCard
+                  title="Include Sill Cleaning"
+                  description="Client requires sill cleaning"
+                  imageSrc="/illustrations/Ordinary-day-bro.svg"
+                  imageAlt="Cleaning Supplies"
+                  isSelected={field.value}
+                  onClick={() => field.onChange(!field.value)}
                 />
               </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Include Sill Cleaning</FormLabel>
-              </div>
             </FormItem>
           )}
         />
       </div>
-
-      <FormField
-        control={form.control}
-        name="service_specific_data.exterior_access"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Exterior Access</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select access type" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="ground_level">Ground Level Only</SelectItem>
-                <SelectItem value="ladder_required">Ladder Required</SelectItem>
-                <SelectItem value="lift_required">Lift Required</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
     </div>
   );
 
   const renderFloorForm = () => (
     <div className="space-y-4">
-      <FormField
-        control={form.control}
-        name="service_specific_data.floor_condition"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Floor Condition</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select condition" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="excellent">Excellent</SelectItem>
-                <SelectItem value="good">Good</SelectItem>
-                <SelectItem value="fair">Fair</SelectItem>
-                <SelectItem value="poor">Poor</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="service_specific_data.furniture_moving"
+          name="service_specific_data.floor_condition"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Furniture Moving Required</FormLabel>
-              </div>
+            <FormItem>
+              <FormLabel>Floor Condition</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl className="w-full">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select condition" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="excellent">Excellent</SelectItem>
+                  <SelectItem value="good">Good</SelectItem>
+                  <SelectItem value="fair">Fair</SelectItem>
+                  <SelectItem value="poor">Poor</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="service_specific_data.drying_time_preference"
@@ -584,7 +585,7 @@ export function ServiceSpecificSection({
             <FormItem>
               <FormLabel>Drying Time Preference</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
+                <FormControl className="w-full">
                   <SelectTrigger>
                     <SelectValue placeholder="Select preference" />
                   </SelectTrigger>
@@ -600,6 +601,25 @@ export function ServiceSpecificSection({
           )}
         />
       </div>
+
+      <FormField
+        control={form.control}
+        name="service_specific_data.furniture_moving"
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormControl>
+              <InfoCard
+                title="Furniture Moving Required"
+                description="Client requires furniture moving"
+                imageSrc="/illustrations/Furniture-store-rafiki.svg"
+                imageAlt="Cleaning Supplies"
+                isSelected={field.value}
+                onClick={() => field.onChange(!field.value)}
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
     </div>
   );
 

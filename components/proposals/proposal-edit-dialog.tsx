@@ -1,44 +1,68 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { type Database } from '@/types/database'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { toast } from 'sonner'
-import { Loader2, Save } from 'lucide-react'
-import { ProposalFormData, proposalFormSchema, ServiceType } from '@/lib/validations/proposal'
-import { ServiceTypeSelector } from '@/components/proposals/new/service-type-selector'
-import { GlobalInputsSection } from '@/components/proposals/new/global-inputs-section'
-import { ServiceSpecificSection } from '@/components/proposals/new/service-specific-section'
-import { PricingSection } from '@/components/proposals/new/pricing-section'
-import { validateProposalWithServiceData } from '@/lib/validations/proposal'
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { type Database } from '@/types/database';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import { Loader2, Save } from 'lucide-react';
+import {
+  ProposalFormData,
+  proposalFormSchema,
+  ServiceType,
+} from '@/lib/validations/proposal';
+import { ServiceTypeSelector } from '@/components/proposals/new/service-type-selector';
+import { GlobalInputsSection } from '@/components/proposals/new/global-inputs-section';
+import { ServiceSpecificSection } from '@/components/proposals/new/service-specific-section';
+import { PricingSection } from '@/components/proposals/new/pricing-section';
+import { validateProposalWithServiceData } from '@/lib/validations/proposal';
 
-type Proposal = Database['public']['Tables']['proposals']['Row']
+type Proposal = Database['public']['Tables']['proposals']['Row'];
 
 interface ProposalEditDialogProps {
-  proposal: Proposal
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onProposalUpdated: (proposal: Proposal) => void
+  proposal: Proposal;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onProposalUpdated: (proposal: Proposal) => void;
 }
 
 export function ProposalEditDialog({
   proposal,
   open,
   onOpenChange,
-  onProposalUpdated
+  onProposalUpdated,
 }: ProposalEditDialogProps) {
-  const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState('basic')
-  const supabase = createClientComponentClient<Database>()
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
+  const supabase = createClientComponentClient<Database>();
 
   const form = useForm({
     resolver: zodResolver(proposalFormSchema),
@@ -52,15 +76,15 @@ export function ProposalEditDialog({
         contact_phone: '',
         service_location: '',
         facility_size: 0,
-        service_frequency: 'one-time'
+        service_frequency: 'one-time',
       },
       service_specific_data: {},
       pricing_enabled: false,
       pricing_data: undefined,
       generated_content: '',
-      status: 'draft' as const
-    }
-  })
+      status: 'draft' as const,
+    },
+  });
 
   // Initialize form with proposal data
   useEffect(() => {
@@ -75,23 +99,24 @@ export function ProposalEditDialog({
           contact_phone: proposal.contact_phone || '',
           service_location: proposal.service_location || '',
           facility_size: proposal.facility_size || 0,
-          service_frequency: proposal.service_frequency || 'one-time'
+          service_frequency: proposal.service_frequency || 'one-time',
         },
-        service_specific_data: (proposal.service_specific_data as Record<string, any>) || {},
+        service_specific_data:
+          (proposal.service_specific_data as Record<string, any>) || {},
         pricing_enabled: proposal.pricing_enabled || false,
         pricing_data: (proposal.pricing_data as any) || undefined,
         generated_content: proposal.generated_content || '',
-        status: proposal.status || 'draft'
-      })
+        status: proposal.status || 'draft',
+      });
     }
-  }, [proposal, open, form])
+  }, [proposal, open, form]);
 
   const onSubmit = async (data: any) => {
     try {
-      setSaving(true)
+      setSaving(true);
 
       // Validate service-specific data
-      const validatedData = validateProposalWithServiceData(data)
+      const validatedData = validateProposalWithServiceData(data);
 
       // Update proposal in database
       const { data: updatedProposal, error } = await supabase
@@ -111,34 +136,34 @@ export function ProposalEditDialog({
           pricing_data: validatedData.pricing_data,
           generated_content: validatedData.generated_content,
           status: validatedData.status,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', proposal.id)
         .select()
-        .single()
+        .single();
 
       if (error) {
-        console.error('Error updating proposal:', error)
-        toast.error('Failed to update proposal')
-        return
+        console.error('Error updating proposal:', error);
+        toast.error('Failed to update proposal');
+        return;
       }
 
-      toast.success('Proposal updated successfully')
-      onProposalUpdated(updatedProposal)
+      toast.success('Proposal updated successfully');
+      onProposalUpdated(updatedProposal);
     } catch (error) {
-      console.error('Error updating proposal:', error)
-      toast.error('Failed to update proposal')
+      console.error('Error updating proposal:', error);
+      toast.error('Failed to update proposal');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
-  const selectedServiceType = form.watch('service_type')
+  const selectedServiceType = form.watch('service_type');
 
   // Reset service-specific data when service type changes
   useEffect(() => {
-    form.setValue('service_specific_data', {})
-  }, [selectedServiceType, form])
+    form.setValue('service_specific_data', {});
+  }, [selectedServiceType, form]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -152,7 +177,11 @@ export function ProposalEditDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="space-y-4"
+            >
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
                 <TabsTrigger value="client">Client Details</TabsTrigger>
@@ -183,13 +212,11 @@ export function ProposalEditDialog({
               </TabsContent>
 
               <TabsContent value="service">
-                <ServiceSpecificSection 
-                  serviceType={selectedServiceType}
-                />
+                <ServiceSpecificSection serviceType={selectedServiceType} />
               </TabsContent>
 
               <TabsContent value="pricing">
-                <PricingSection 
+                <PricingSection
                   serviceType={selectedServiceType}
                   enabled={true}
                   onEnabledChange={() => {}}
@@ -203,10 +230,10 @@ export function ProposalEditDialog({
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    if (activeTab === 'basic') return
-                    const tabs = ['basic', 'client', 'service', 'pricing']
-                    const currentIndex = tabs.indexOf(activeTab)
-                    setActiveTab(tabs[currentIndex - 1])
+                    if (activeTab === 'basic') return;
+                    const tabs = ['basic', 'client', 'service', 'pricing'];
+                    const currentIndex = tabs.indexOf(activeTab);
+                    setActiveTab(tabs[currentIndex - 1]);
                   }}
                   disabled={activeTab === 'basic'}
                 >
@@ -216,17 +243,17 @@ export function ProposalEditDialog({
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    if (activeTab === 'pricing') return
-                    const tabs = ['basic', 'client', 'service', 'pricing']
-                    const currentIndex = tabs.indexOf(activeTab)
-                    setActiveTab(tabs[currentIndex + 1])
+                    if (activeTab === 'pricing') return;
+                    const tabs = ['basic', 'client', 'service', 'pricing'];
+                    const currentIndex = tabs.indexOf(activeTab);
+                    setActiveTab(tabs[currentIndex + 1]);
                   }}
                   disabled={activeTab === 'pricing'}
                 >
                   Next
                 </Button>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
@@ -247,5 +274,5 @@ export function ProposalEditDialog({
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -130,7 +130,7 @@ export function ServiceTypeSelector() {
         name="title"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Proposal Title</FormLabel>
+            <FormLabel>Proposal Title *</FormLabel>
             <FormControl>
               <Input
                 placeholder="Enter a descriptive title for this proposal"

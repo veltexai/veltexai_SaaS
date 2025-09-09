@@ -156,9 +156,13 @@ export function PricingSection({
       };
 
       setCalculatedPricing(pricing);
-      // Use setValue with { shouldValidate: false, shouldTouch: false } to prevent triggering submission
-      form.setValue('pricing_data', pricing, { shouldValidate: false, shouldTouch: false });
-      
+      // Fix: Use setValue with proper options to prevent triggering form validation and submission
+      form.setValue('pricing_data', pricing, {
+        shouldValidate: false,
+        shouldTouch: false,
+        shouldDirty: false,
+      });
+
       toast.success('Pricing calculated successfully');
     } catch (error) {
       console.error('Error calculating pricing:', error);
@@ -186,12 +190,12 @@ export function PricingSection({
       !isCalculating
     ) {
       setLastCalculationTrigger(currentTrigger);
-  
+
       // Add a flag to prevent auto-submission during calculation
       const timer = setTimeout(() => {
         calculatePricing();
-      }, 1000); // Increase debounce time
-  
+      }, 1000);
+
       return () => clearTimeout(timer);
     }
   }, [
@@ -211,10 +215,19 @@ export function PricingSection({
 
   const handlePricingToggle = (checked: boolean) => {
     onEnabledChange(checked);
-    form.setValue('pricing_enabled', checked);
+    // Fix: Prevent validation triggers when toggling pricing
+    form.setValue('pricing_enabled', checked, {
+      shouldValidate: false,
+      shouldTouch: false,
+      shouldDirty: false,
+    });
     if (!checked) {
       setCalculatedPricing(null);
-      form.setValue('pricing_data', undefined);
+      form.setValue('pricing_data', undefined, {
+        shouldValidate: false,
+        shouldTouch: false,
+        shouldDirty: false,
+      });
     }
   };
 
@@ -265,7 +278,6 @@ export function PricingSection({
             <CardContent>
               {calculatedPricing ? (
                 <div className="space-y-4">
-                  {/* Price Range */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <div className="flex justify-between">
@@ -307,7 +319,6 @@ export function PricingSection({
 
                   <Separator />
 
-                  {/* Assumptions */}
                   <div className="space-y-2">
                     <h4 className="font-medium text-sm">
                       Pricing Assumptions:
@@ -355,7 +366,6 @@ export function PricingSection({
 
                   <Separator />
 
-                  {/* Estimated Total */}
                   <div className="flex justify-between items-center p-4 bg-primary/5 rounded-lg">
                     <span className="text-lg font-semibold">
                       Estimated Price Range:
@@ -387,9 +397,14 @@ export function PricingSection({
       <Card>
         <AIContentGenerator
           form={form.getValues()}
-          generatedContent={form.watch('generated_content') || ''}
+          generatedContent={form.getValues('generated_content') || ''}
           onContentGenerated={(content) => {
-            form.setValue('generated_content', content);
+            // Fix: Prevent validation triggers when setting generated content
+            form.setValue('generated_content', content, {
+              shouldValidate: false,
+              shouldTouch: false,
+              shouldDirty: false,
+            });
           }}
           onError={(error) => {
             toast.error(error);

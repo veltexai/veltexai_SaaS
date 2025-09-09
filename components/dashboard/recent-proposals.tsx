@@ -7,11 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  FileText,
-  Plus,
-  Eye,
-} from 'lucide-react';
+import { FileText, Plus, Eye } from 'lucide-react';
 
 interface RecentProposal {
   id: string;
@@ -19,7 +15,13 @@ interface RecentProposal {
   client_name: string;
   status: string;
   created_at: string;
-  value: number;
+  pricing_data?: {
+    price_range?: {
+      low: number;
+      high: number;
+    };
+    total?: number;
+  };
 }
 
 interface RecentProposalsProps {
@@ -123,7 +125,11 @@ export function RecentProposals({ proposals }: RecentProposalsProps) {
                       proposal.status.slice(1)}
                   </span>
                   <span className="text-sm font-medium text-gray-900">
-                    {formatCurrency(proposal.value || 0)}
+                    {formatCurrency(
+                      proposal.pricing_data?.price_range?.high ||
+                        proposal.pricing_data?.total ||
+                        0
+                    )}
                   </span>
                   <Link href={`/dashboard/proposals/${proposal.id}`}>
                     <Button variant="ghost" size="sm">

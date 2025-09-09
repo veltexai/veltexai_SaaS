@@ -13,6 +13,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { Eye, Edit, Trash2, Loader2, Download } from 'lucide-react';
+import { useConfirmation } from '../providers/confirmation-provider';
 
 interface Proposal {
   id: string;
@@ -53,13 +54,27 @@ export function ProposalCard({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const { confirm } = useConfirmation();
 
   const deleteProposal = async () => {
-    if (!confirm('Are you sure you want to delete this proposal?')) {
+    // if (!confirm('Are you sure you want to delete this proposal?')) {
+    //   return;
+    // }
+    const confirmed = await confirm({
+      title: 'Delete Proposal',
+      message:
+        'Are you sure you want to delete this proposal? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'destructive',
+      illustration: 'Inbox-cleanup-rafiki.svg',
+    });
+
+    if (!confirmed) {
       return;
     }
-
     setDeletingId(proposal.id);
+
     try {
       const supabase = createClient();
       const { error } = await supabase

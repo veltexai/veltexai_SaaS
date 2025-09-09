@@ -10,6 +10,7 @@ export function ConfirmationModal() {
     message,
     confirmText,
     cancelText,
+    illustration,
     onConfirm,
     onCancel,
   } = useConfirmation();
@@ -30,7 +31,7 @@ export function ConfirmationModal() {
         {/* Illustration */}
         <div className="mb-6 flex justify-center">
           <Image
-            src="/illustrations/Warning-pana.svg"
+            src={`/illustrations/${illustration}`}
             alt="Warning illustration"
             width={220}
             height={220}

@@ -60,7 +60,13 @@ async function getDashboardData(userId: string) {
   const wonProposals =
     proposals?.filter((p) => p.status === 'accepted').length || 0;
   const totalValue =
-    proposals?.reduce((sum, p) => sum + (p.value || 0), 0) || 0;
+    proposals?.reduce((sum, p) => {
+      // Extract total from pricing_data JSON
+      const pricingData = p.pricing_data as any;
+      const proposalValue =
+        pricingData?.price_range?.high || pricingData?.total || 0;
+      return sum + proposalValue;
+    }, 0) || 0;
 
   const stats: DashboardStats = {
     totalProposals,
