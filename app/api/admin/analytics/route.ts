@@ -1,8 +1,5 @@
-import { redirect } from 'next/navigation';
-import { getUser } from '@/queries/user';
-import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { AdminAnalytics } from '@/components/admin/admin-analytics';
-import { AdminClientWrapper } from '@/components/admin/admin-client-wrapper';
+import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 interface Analytics {
   totalUsers: number;
@@ -45,7 +42,7 @@ interface Analytics {
 }
 
 async function fetchAnalytics(): Promise<Analytics> {
-  const supabase = await createServiceClient();
+  const supabase = await createClient();
 
   // Get current date for monthly calculations
   const now = new Date();
@@ -245,50 +242,39 @@ async function fetchAnalytics(): Promise<Analytics> {
   };
 }
 
-export default async function AdminDashboard() {
-  const { user } = await getUser();
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
 
-  if (!user) {
-    redirect('/dashboard');
+    // Check admin access
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || profile?.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Forbidden - Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const analytics = await fetchAnalytics();
+    return NextResponse.json(analytics);
+  } catch (error) {
+    console.error('Error in GET /api/admin/analytics:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
-
-  const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'admin') {
-    redirect('/dashboard');
-  }
-
-  const analytics = await fetchAnalytics();
-
-  return (
-    <div className="space-y-8 p-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-2">Manage users and view analytics</p>
-      </div>
-
-      <AdminAnalytics
-        totalUsers={analytics.totalUsers}
-        totalProposals={analytics.totalProposals}
-        totalRevenue={analytics.totalRevenue}
-        activeSubscriptions={analytics.activeSubscriptions}
-        monthlyRevenue={analytics.monthlyRevenue}
-        conversionRate={analytics.conversionRate}
-        averageProposalValue={analytics.averageProposalValue}
-        newUsersThisMonth={analytics.newUsersThisMonth}
-        proposalsByStatus={analytics.proposalsByStatus}
-        usersByPlan={analytics.usersByPlan}
-      />
-
-      <AdminClientWrapper
-        users={analytics.recentUsers}
-        proposals={analytics.recentProposals}
-      />
-    </div>
-  );
 }

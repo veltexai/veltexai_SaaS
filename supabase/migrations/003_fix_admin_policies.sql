@@ -1,24 +1,40 @@
--- First, create a function to check admin status
-CREATE OR REPLACE FUNCTION is_admin(user_id UUID)
-RETURNS BOOLEAN AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM auth.users 
-    WHERE id = user_id 
-    AND raw_user_meta_data->>'role' = 'admin'
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
 -- Drop the problematic policy
 DROP POLICY IF EXISTS "Admins can view all profiles" ON profiles;
+DROP POLICY IF EXISTS "Admins can update all profiles" ON profiles;
+DROP POLICY IF EXISTS "Admins can delete all profiles" ON profiles;
 
--- Create new admin policies
+-- Create role-based admin policies
 CREATE POLICY "Admins can view all profiles" ON profiles
-  FOR SELECT USING (is_admin(auth.uid()));
+  FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles admin_profile
+      WHERE admin_profile.id = auth.uid()
+      AND admin_profile.role = 'admin'
+    )
+    OR id = auth.uid()
+  );
 
 CREATE POLICY "Admins can update all profiles" ON profiles
-  FOR UPDATE USING (is_admin(auth.uid()));
+  FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles admin_profile
+      WHERE admin_profile.id = auth.uid()
+      AND admin_profile.role = 'admin'
+    )
+    OR id = auth.uid()
+  );
 
 CREATE POLICY "Admins can delete all profiles" ON profiles
-  FOR DELETE USING (is_admin(auth.uid()));
+  FOR DELETE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles admin_profile
+      WHERE admin_profile.id = auth.uid()
+      AND admin_profile.role = 'admin'
+    )
+  );

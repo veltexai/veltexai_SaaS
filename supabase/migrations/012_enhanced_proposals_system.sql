@@ -49,7 +49,7 @@ CREATE POLICY "Users can delete own proposals" ON public.proposals
     FOR DELETE USING (auth.uid() = user_id);
 
 -- Create pricing_settings table
-CREATE TABLE public.pricing_settings (
+CREATE TABLE IF NOT EXISTS public.pricing_settings (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     labor_rate DECIMAL(10,2) DEFAULT 22.00,
@@ -71,10 +71,12 @@ CREATE TABLE public.pricing_settings (
 ALTER TABLE public.pricing_settings ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for pricing_settings
+DROP POLICY IF EXISTS "Users can view own pricing settings" ON public.pricing_settings;
 CREATE POLICY "Users can view own pricing settings" ON public.pricing_settings
     FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Admins can manage pricing settings" ON public.pricing_settings
+DROP POLICY IF EXISTS "Admin can manage pricing settings" ON public.pricing_settings;
+CREATE POLICY "Admin can manage pricing settings" ON public.pricing_settings
     FOR ALL USING (
         EXISTS (
             SELECT 1 FROM public.profiles 
@@ -92,10 +94,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create triggers for updated_at
+DROP TRIGGER IF EXISTS proposals_updated_at ON public.proposals;
 CREATE TRIGGER proposals_updated_at
     BEFORE UPDATE ON public.proposals
     FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
+DROP TRIGGER IF EXISTS pricing_settings_updated_at ON public.pricing_settings;
 CREATE TRIGGER pricing_settings_updated_at
     BEFORE UPDATE ON public.pricing_settings
     FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();

@@ -727,7 +727,7 @@ export default function ProposalDetailPage({
                   AI-generated content for this proposal
                 </CardDescription>
               </div>
-              {!editingAIContent && (
+              {!editingAIContent ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -737,6 +737,28 @@ export default function ProposalDetailPage({
                   <PenTool className="h-4 w-4" />
                   Edit
                 </Button>
+              ) : (
+                <div className="flex items-center gap-2 justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={handleAIContentCancel}
+                    disabled={savingAIContent}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleAIContentSave}
+                    disabled={savingAIContent}
+                  >
+                    {savingAIContent ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Save
+                  </Button>
+                </div>
               )}
             </CardHeader>
             <CardContent>
@@ -748,28 +770,6 @@ export default function ProposalDetailPage({
                     placeholder="Enter AI-generated proposal content..."
                     className="min-h-[300px] resize-none"
                   />
-
-                  <div className="flex items-center gap-2 justify-end">
-                    <Button
-                      variant="outline"
-                      onClick={handleAIContentCancel}
-                      disabled={savingAIContent}
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleAIContentSave}
-                      disabled={savingAIContent}
-                    >
-                      {savingAIContent ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Save className="h-4 w-4 mr-2" />
-                      )}
-                      Save
-                    </Button>
-                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">
