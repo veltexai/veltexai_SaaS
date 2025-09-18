@@ -3,8 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
 import { ConfirmationProvider } from '@/components/providers/confirmation-provider';
-import dynamic from 'next/dynamic';
-const FacebookPixel = dynamic(import('../components/FacebookPixel'));
+import FacebookPixel from '../components/FacebookPixel';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
