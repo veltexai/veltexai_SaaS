@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get('token_hash');
   const type = searchParams.get('type') as EmailOtpType | null;
   const next = searchParams.get('next') ?? '/dashboard';
+  const plan = searchParams.get('plan'); // Add plan parameter
 
   if (token_hash && type) {
     const supabase = await createClient();
@@ -27,7 +28,25 @@ export async function GET(request: NextRequest) {
           `${config.domainName}${AUTH_ROUTES.RESET_PASSWORD}?access_token=${access_token}&refresh_token=${refresh_token}`
         );
       }
-      // For other types (email confirmation), use next parameter or dashboard
+
+      const isNewUser = type === 'signup' || type === 'email';
+
+      if (isNewUser) {
+        // Set session metadata instead of URL parameter
+        await supabase.auth.updateUser({
+          data: {
+            signup_completed: true,
+            signup_timestamp: new Date().toISOString(),
+          },
+        });
+      }
+
+      if (plan) {
+        redirect(
+          `${config.domainName}/pricing?plan=${plan}&auto_checkout=true`
+        );
+      }
+
       redirect(`${config.domainName}${next}`);
     }
   }

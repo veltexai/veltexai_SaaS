@@ -92,15 +92,16 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col items-center text-center">
                   <Image
-                    width={60}
-                    height={60}
+                    width={200}
+                    height={40}
                     src="/images/IMG_3800.png"
                     alt="Image"
+                    className="mx-auto"
                   />
-                  <h1 className="text-2xl font-bold">Welcome back</h1>
-                  <p className="text-muted-foreground text-balance">
+                  {/* <h1 className="text-2xl font-bold">Welcome back</h1> */}
+                  {/* <p className="text-muted-foreground text-balance">
                     Login to your <strong>Veltex</strong> account
-                  </p>
+                  </p> */}
                 </div>
                 <div className="grid gap-3">
                   <FormField

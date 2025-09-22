@@ -25,6 +25,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { sendResetPasswordEmail } from '@/lib/auth/actions/password';
+import Image from 'next/image';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -108,8 +109,13 @@ export default function ForgotPasswordForm() {
     <div className="h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Veltex</h1>
-          <p className="mt-2 text-gray-600">Reset your password</p>
+          <Image
+            width={200}
+            height={40}
+            src="/images/IMG_3800.png"
+            alt="Image"
+            className="mx-auto"
+          />
         </div>
 
         <Card>

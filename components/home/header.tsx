@@ -15,8 +15,8 @@ const Header = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <Image
-                width={60}
-                height={60}
+                width={120}
+                height={25}
                 src="/images/IMG_3800.png"
                 alt="Image"
               />

@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from 'sonner';
 import { ConfirmationProvider } from '@/components/providers/confirmation-provider';
 import FacebookPixel from '../components/FacebookPixel';
+import FacebookPixelTracker from '@/components/FacebookPixelTracker';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,6 +32,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <FacebookPixel />
+        <FacebookPixelTracker />
         <ConfirmationProvider>
           {children}
           <Toaster />

@@ -93,8 +93,15 @@ export class PDFExporter {
 
         const arrayBuffer = await response.arrayBuffer();
         const base64 = Buffer.from(arrayBuffer).toString('base64');
+
+        // Force PNG format for transparency support
+        const dataUrl = `data:image/png;base64,${base64}`;
+
+        console.log('Image MIME type:', response.headers.get('content-type'));
+        console.log('Data URL length:', dataUrl.length);
+
+        // Always use PNG format for transparency
         const mimeType = response.headers.get('content-type') || 'image/png';
-        const dataUrl = `data:${mimeType};base64,${base64}`;
 
         // Calculate logo dimensions (larger size, max 50mm width)
         const maxWidth = 40;

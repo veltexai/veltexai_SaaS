@@ -1,29 +1,45 @@
 import Stripe from 'stripe';
-import { SUBSCRIPTION_PLANS as CLIENT_SUBSCRIPTION_PLANS } from '@/lib/constants/subscription-plans';
+import { createClient } from '@supabase/supabase-js';
+import type { Database, SubscriptionPlan } from '@/types/database';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set');
-}
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-07-30.basil',
-  typescript: true,
 });
 
-// Subscription plans configuration with Stripe price IDs
-export const SUBSCRIPTION_PLANS = {
-  starter: {
-    ...CLIENT_SUBSCRIPTION_PLANS.starter,
-    priceId: process.env.STRIPE_STARTER_PRICE_ID || 'price_temp_starter',
-  },
-  professional: {
-    ...CLIENT_SUBSCRIPTION_PLANS.professional,
-    priceId: process.env.STRIPE_PROFESSIONAL_PRICE_ID || 'price_temp_professional',
-  },
-  enterprise: {
-    ...CLIENT_SUBSCRIPTION_PLANS.enterprise,
-    priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID || 'price_temp_enterprise',
-  },
-} as const;
+const supabase = createClient<Database>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-export type SubscriptionPlan = keyof typeof SUBSCRIPTION_PLANS;
+let cachedPlans: SubscriptionPlan[] | null = null;
+let cacheTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+export async function getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+  const now = Date.now();
+
+  if (cachedPlans && now - cacheTime < CACHE_DURATION) {
+    return cachedPlans;
+  }
+
+  const { data, error } = await supabase
+    .from('subscription_plans')
+    .select('*')
+    .order('price_monthly', { ascending: true });
+
+  if (error) throw error;
+
+  cachedPlans = data;
+  cacheTime = now;
+
+  return data;
+}
+
+export async function getSubscriptionPlan(
+  planName: string
+): Promise<SubscriptionPlan | null> {
+  const plans = await getSubscriptionPlans();
+  return plans.find((plan) => plan.name === planName) || null;
+}
+
+export type { SubscriptionPlan };

@@ -15,11 +15,13 @@ import {
   Plus,
   Shield,
   ArrowLeftIcon,
+  CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { signOut } from '@/lib/auth/actions/password';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/types/database';
+import Image from 'next/image';
 
 interface DashboardClientLayoutProps {
   children: React.ReactNode;
@@ -30,6 +32,7 @@ interface DashboardClientLayoutProps {
 const baseNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Proposals', href: '/dashboard/proposals', icon: FileText },
+  { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
@@ -132,7 +135,12 @@ export function DashboardClientLayout({
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
           <div className="flex h-16 items-center px-4">
-            <h1 className="text-xl font-bold text-gray-900">Veltex</h1>
+            <Image
+              width={120}
+              height={25}
+              src="/images/IMG_3800.png"
+              alt="Image"
+            />
           </div>
           <nav className="flex-1 space-y-1 px-2 py-4">
             {navigation.map((item) => {

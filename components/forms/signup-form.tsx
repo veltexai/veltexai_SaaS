@@ -136,15 +136,16 @@ export default function SignupForm({
               <div className="flex flex-col gap-5">
                 <div className="flex flex-col items-center text-center">
                   <Image
-                    width={60}
-                    height={60}
+                    width={200}
+                    height={40}
                     src="/images/IMG_3800.png"
                     alt="Image"
+                    className="mx-auto"
                   />
-                  <h1 className="text-2xl font-bold">Welcome</h1>
+                  {/* <h1 className="text-2xl font-bold">Welcome</h1>
                   <p className="text-muted-foreground text-balance">
                     <strong>Create your account</strong>
-                  </p>
+                  </p> */}
                 </div>
                 <div className="flex items-center gap-3">
                   <FormField

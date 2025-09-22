@@ -26,7 +26,7 @@ export default async function SettingsPage() {
         <ProfileSettings user={user as UserType} profile={profile as Profile} />
         <SubscriptionBilling />
         <SecuritySettings />
-        <NotificationsSettings />
+        {/* <NotificationsSettings /> */}
       </div>
     </div>
   );

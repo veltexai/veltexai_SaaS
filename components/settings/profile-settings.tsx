@@ -67,6 +67,8 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
     uploadError,
     uploadImage: handleImageUpload,
     removeImage: handleImageRemove,
+    resetToSaved: resetLogoToSaved,
+    hasLogoChanged,
   } = useImageUpload({
     initialUrl: profile?.logo_url,
     bucket: 'profile-logos',
@@ -92,7 +94,6 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
 
   // Track changes
   const { isDirty } = form.formState;
-  const hasLogoChanged = logoPreview !== (profile?.logo_url || null);
   const hasChanges = isDirty || hasLogoChanged;
   // Navigation guard hook
   useNavigationGuard(
@@ -145,16 +146,19 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
   const onSubmit = useCallback(
     async (data: ProfileFormData) => {
       try {
+        const finalLogoUrl = logoPreview || data.logo_url || null;
         await updateProfile({
           ...data,
-          logo_url: logoPreview || data.logo_url || null,
+          logo_url: finalLogoUrl,
         });
-        form.reset(data);
+        const updatedData = { ...data, logo_url: finalLogoUrl || '' };
+        form.reset(updatedData);
+        resetLogoToSaved(finalLogoUrl);
       } catch (error) {
         console.error('Profile update failed:', error);
       }
     },
-    [updateProfile, logoPreview, form]
+    [updateProfile, logoPreview, form, resetLogoToSaved]
   );
 
   const isLoading = isUploading || isUpdating;

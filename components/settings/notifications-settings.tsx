@@ -1,7 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Bell } from 'lucide-react';
@@ -38,11 +44,13 @@ export function NotificationsSettings() {
                 Receive updates about your proposals
               </p>
             </div>
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               checked={preferences.email}
-              onChange={(e) => setPreferences({...preferences, email: e.target.checked})}
-              className="rounded" 
+              onChange={(e) =>
+                setPreferences({ ...preferences, email: e.target.checked })
+              }
+              className="rounded"
             />
           </div>
 
@@ -53,11 +61,13 @@ export function NotificationsSettings() {
                 Receive tips and product updates
               </p>
             </div>
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               checked={preferences.marketing}
-              onChange={(e) => setPreferences({...preferences, marketing: e.target.checked})}
-              className="rounded" 
+              onChange={(e) =>
+                setPreferences({ ...preferences, marketing: e.target.checked })
+              }
+              className="rounded"
             />
           </div>
 
@@ -68,11 +78,13 @@ export function NotificationsSettings() {
                 Receive billing and payment updates
               </p>
             </div>
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               checked={preferences.billing}
-              onChange={(e) => setPreferences({...preferences, billing: e.target.checked})}
-              className="rounded" 
+              onChange={(e) =>
+                setPreferences({ ...preferences, billing: e.target.checked })
+              }
+              className="rounded"
             />
           </div>
         </div>

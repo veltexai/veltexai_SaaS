@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { CreditCard } from 'lucide-react';
 import { useSubscription } from '@/lib/hooks/use-subscription';
-import { SUBSCRIPTION_PLANS } from '@/lib/constants/subscription-plans';
+import { useSubscriptionPlans } from '@/hooks/use-subscription-plans';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -20,16 +20,13 @@ export function SubscriptionBilling() {
     createPortalSession,
     loading: subscriptionLoading,
   } = useSubscription();
+  const { data: plans, isLoading: plansLoading } = useSubscriptionPlans();
 
   const handleManageBilling = async () => {
     await createPortalSession();
   };
 
-  const currentPlan = subscription
-    ? SUBSCRIPTION_PLANS[
-        subscription.plan_name as keyof typeof SUBSCRIPTION_PLANS
-      ]
-    : null;
+  const currentPlan = plans?.find((plan) => plan.name === subscription?.plan);
 
   return (
     <Card>
@@ -55,7 +52,9 @@ export function SubscriptionBilling() {
               <p className="text-2xl font-bold text-gray-900">
                 {currentPlan?.name}
               </p>
-              <p className="text-gray-600">${currentPlan?.price}/month</p>
+              <p className="text-gray-600">
+                ${currentPlan?.price_monthly}/month
+              </p>
             </div>
 
             <div className="space-y-2 text-sm">

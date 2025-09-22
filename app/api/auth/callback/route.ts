@@ -20,17 +20,29 @@ export async function GET(request: Request) {
   const baseUrl = config.domainName || requestUrl.origin;
 
   if (code) {
-    await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    // Check if this is a new user
+    let isNewUser = false;
+    if (data?.user && !error) {
+      const userCreatedAt = new Date(data.user.created_at);
+      const now = new Date();
+      const timeDiff = now.getTime() - userCreatedAt.getTime();
+      isNewUser = timeDiff < 30000;
+
+      // Set session flag for new users
+      if (isNewUser) {
+        await supabase.auth.updateUser({
+          data: {
+            signup_completed: true,
+            signup_timestamp: new Date().toISOString(),
+          },
+        });
+      }
+    }
+
     const userData = await getUser();
-    // await getOrCreateUserAvatar(userData);
-  }
-  // Set session cookie
-  if (priceId && priceId !== '') {
-    // await createCheckoutSession({ priceId, discountCode });
-  } else {
-    return NextResponse.redirect(`${baseUrl}${redirectTo}`);
   }
 
-  // Successful authentication, redirect to the intended page
-  // Ensure we're using the correct origin
+  return NextResponse.redirect(`${baseUrl}${redirectTo}`);
 }

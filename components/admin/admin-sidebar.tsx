@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface NavItem {
   name: string;
@@ -63,6 +64,12 @@ const navigation: NavItem[] = [
     href: '/admin/pricing-settings',
     icon: DollarSign,
     description: 'Configure pricing settings',
+  },
+  {
+    name: 'Subscriptions',
+    href: '/admin/subscriptions',
+    icon: DollarSign,
+    description: 'Subscription analytics & billing',
   },
   {
     name: 'Users',
@@ -110,7 +117,7 @@ export default function AdminSidebar({
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      router.push('/login');
+      router.push('/auth/login');
       toast.success('Signed out successfully');
     } catch (error) {
       console.error('Error signing out:', error);
@@ -148,15 +155,12 @@ export default function AdminSidebar({
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-6 border-b">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <LayoutDashboard className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold">Admin Panel</h1>
-                <Badge variant="secondary" className="text-xs">
-                  Veltex Services
-                </Badge>
-              </div>
+              <Image
+                width={130}
+                height={25}
+                src="/images/IMG_3800.png"
+                alt="Image"
+              />
             </div>
             <Button
               variant="ghost"

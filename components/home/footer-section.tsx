@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 
@@ -7,11 +8,13 @@ const FooterSection = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">V</span>
-              </div>
-              <span className="font-bold text-xl">Veltex AI</span>
+            <div className="flex items-center space-x-2 mb-4 bg-white w-fit rounded-sm px-1">
+              <Image
+                width={120}
+                height={25}
+                src="/images/IMG_3800.png"
+                alt="Image"
+              />
             </div>
             <p className="text-gray-400 mb-6 max-w-md">
               AI-powered proposal generation for the cleaning industry. Trusted

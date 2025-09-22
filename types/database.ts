@@ -70,8 +70,21 @@ export interface Database {
           contact_phone: string;
           service_location: string;
           facility_size: number;
-          service_type: 'residential' | 'commercial' | 'carpet' | 'window' | 'floor';
-          service_frequency: 'one-time' | '1x-month' | 'bi-weekly' | 'weekly' | '2x-week' | '3x-week' | '5x-week' | 'daily';
+          service_type:
+            | 'residential'
+            | 'commercial'
+            | 'carpet'
+            | 'window'
+            | 'floor';
+          service_frequency:
+            | 'one-time'
+            | '1x-month'
+            | 'bi-weekly'
+            | 'weekly'
+            | '2x-week'
+            | '3x-week'
+            | '5x-week'
+            | 'daily';
           service_specific_data: Json;
           global_inputs: Json;
           pricing_enabled: boolean;
@@ -91,8 +104,21 @@ export interface Database {
           contact_phone: string;
           service_location: string;
           facility_size: number;
-          service_type: 'residential' | 'commercial' | 'carpet' | 'window' | 'floor';
-          service_frequency: 'one-time' | '1x-month' | 'bi-weekly' | 'weekly' | '2x-week' | '3x-week' | '5x-week' | 'daily';
+          service_type:
+            | 'residential'
+            | 'commercial'
+            | 'carpet'
+            | 'window'
+            | 'floor';
+          service_frequency:
+            | 'one-time'
+            | '1x-month'
+            | 'bi-weekly'
+            | 'weekly'
+            | '2x-week'
+            | '3x-week'
+            | '5x-week'
+            | 'daily';
           service_specific_data?: Json;
           global_inputs?: Json;
           pricing_enabled?: boolean;
@@ -112,8 +138,21 @@ export interface Database {
           contact_phone?: string;
           service_location?: string;
           facility_size?: number;
-          service_type?: 'residential' | 'commercial' | 'carpet' | 'window' | 'floor';
-          service_frequency?: 'one-time' | '1x-month' | 'bi-weekly' | 'weekly' | '2x-week' | '3x-week' | '5x-week' | 'daily';
+          service_type?:
+            | 'residential'
+            | 'commercial'
+            | 'carpet'
+            | 'window'
+            | 'floor';
+          service_frequency?:
+            | 'one-time'
+            | '1x-month'
+            | 'bi-weekly'
+            | 'weekly'
+            | '2x-week'
+            | '3x-week'
+            | '5x-week'
+            | 'daily';
           service_specific_data?: Json;
           global_inputs?: Json;
           pricing_enabled?: boolean;
@@ -171,6 +210,7 @@ export interface Database {
           currency: string;
           status: 'paid' | 'pending' | 'failed';
           invoice_url: string | null;
+          invoice_date: string;
           created_at: string;
         };
         Insert: {
@@ -181,6 +221,7 @@ export interface Database {
           currency: string;
           status: 'paid' | 'pending' | 'failed';
           invoice_url?: string | null;
+          invoice_date: string;
           created_at?: string;
         };
         Update: {
@@ -191,6 +232,7 @@ export interface Database {
           currency?: string;
           status?: 'paid' | 'pending' | 'failed';
           invoice_url?: string | null;
+          invoice_date: string;
           created_at?: string;
         };
       };
@@ -261,6 +303,44 @@ export interface Database {
           updated_at?: string;
         };
       };
+      subscription_plans: {
+        Row: {
+          id: string;
+          name: string;
+          price_monthly: number;
+          price_annual: number;
+          proposal_limit: number;
+          features: string[];
+          stripe_price_id_monthly: string | null;
+          stripe_price_id_annual: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          price_monthly: number;
+          price_annual: number;
+          proposal_limit: number;
+          features: string[];
+          stripe_price_id_monthly?: string | null;
+          stripe_price_id_annual?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          price_monthly?: number;
+          price_annual?: number;
+          proposal_limit?: number;
+          features?: string[];
+          stripe_price_id_monthly?: string | null;
+          stripe_price_id_annual?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
@@ -284,7 +364,9 @@ export type Subscription = Database['public']['Tables']['subscriptions']['Row'];
 export type BillingHistory =
   Database['public']['Tables']['billing_history']['Row'];
 export type PDFExport = Database['public']['Tables']['pdf_exports']['Row'];
-export type PricingSettings = Database['public']['Tables']['pricing_settings']['Row'];
+export type PricingSettings =
+  Database['public']['Tables']['pricing_settings']['Row'];
+export type SubscriptionPlan = Database['public']['Tables']['subscription_plans']['Row'];
 export type User = {
   id: string;
   email: string;

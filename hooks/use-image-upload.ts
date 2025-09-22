@@ -17,6 +17,9 @@ export function useImageUpload({
   const [logoPreview, setLogoPreview] = useState<string | null>(
     initialUrl || null
   );
+  const [savedLogoUrl, setSavedLogoUrl] = useState<string | null>(
+    initialUrl || null
+  );
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -31,7 +34,6 @@ export function useImageUpload({
           bucket,
           folder,
           onProgress: (progress, message) => {
-            // Could integrate with a progress bar component
             console.log(`Upload progress: ${progress}% - ${message}`);
           },
         });
@@ -65,11 +67,20 @@ export function useImageUpload({
     }
   }, []);
 
+  const resetToSaved = useCallback((savedUrl: string | null) => {
+    setLogoPreview(savedUrl);
+    setSavedLogoUrl(savedUrl);
+  }, []);
+
+  const hasLogoChanged = logoPreview !== savedLogoUrl;
+
   return {
     logoPreview,
     isUploading,
     uploadError,
     uploadImage,
     removeImage,
+    resetToSaved,
+    hasLogoChanged,
   };
 }
