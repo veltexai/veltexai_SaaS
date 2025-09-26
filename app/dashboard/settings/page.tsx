@@ -24,7 +24,7 @@ export default async function SettingsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ProfileSettings user={user as UserType} profile={profile as Profile} />
-        <SubscriptionBilling />
+        <SubscriptionBilling userId={user.id} />
         <SecuritySettings />
         {/* <NotificationsSettings /> */}
       </div>

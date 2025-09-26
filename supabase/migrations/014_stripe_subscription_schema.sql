@@ -192,9 +192,9 @@ GRANT ALL PRIVILEGES ON subscription_plans TO authenticated;
 
 -- Insert initial subscription plan data
 INSERT INTO subscription_plans (name, price_monthly, price_annual, proposal_limit, features) VALUES
-('starter', 9.99, 99.99, 10, '["10 proposals/month", "Basic templates", "Email support"]'),
-('pro', 29.99, 299.99, 50, '["50 proposals/month", "Advanced templates", "Priority support", "Custom branding"]'),
-('enterprise', 99.99, 999.99, -1, '["Unlimited proposals", "All templates", "Dedicated support", "API access", "White-label"]')
+('starter', 19.90, 99.99, 10, '["20 proposals/month", "Basic templates", "Email support"]'),
+('professional', 39.90, 299.99, 50, '["75 proposals/month", "Advanced templates", "Priority support", "Custom branding"]'),
+('enterprise', 79.90, 999.99, -1, '["Unlimited proposals", "All templates", "Dedicated support", "API access", "White-label"]')
 ON CONFLICT (name) DO NOTHING;
 
 -- Create function to automatically update updated_at timestamp

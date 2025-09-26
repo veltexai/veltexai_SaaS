@@ -42,4 +42,20 @@ export async function getSubscriptionPlan(
   return plans.find((plan) => plan.name === planName) || null;
 }
 
+export async function getUserSubscription(userId: string) {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    throw error;
+  }
+
+  return data;
+}
+
 export type { SubscriptionPlan };

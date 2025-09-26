@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/client';
 import type { Database, SubscriptionPlan } from '@/types/database';
 
 export function useSubscriptionPlans() {
@@ -9,19 +9,23 @@ export function useSubscriptionPlans() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const supabase = createClientComponentClient<Database>();
-
   useEffect(() => {
+    console.log('Here Outside fetchPlans');
+    const supabase = createClient();
+
     async function fetchPlans() {
+      console.log('Here inside fetchPlans');
       try {
         setIsLoading(true);
         const { data, error } = await supabase
           .from('subscription_plans')
           .select('*')
           .order('price_monthly', { ascending: true });
+        console.log('🚀 ~ fetchPlans ~ error:', error);
+        console.log('🚀 ~ fetchPlans ~ data:', data);
 
         if (error) throw error;
-        setPlans(data);
+        setPlans(data || []);
       } catch (err) {
         setError(err as Error);
       } finally {
@@ -30,7 +34,7 @@ export function useSubscriptionPlans() {
     }
 
     fetchPlans();
-  }, [supabase]);
+  }, []);
 
   return { data: plans, isLoading, error };
 }

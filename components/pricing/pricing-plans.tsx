@@ -5,7 +5,6 @@ import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useSubscriptionPlans } from '@/hooks/use-subscription-plans';
 import { useSubscription } from '@/lib/hooks/use-subscription';
 import { SubscriptionPlan } from '@/types/database';
 
@@ -18,7 +17,6 @@ export function PricingPlans({
   isLoading: boolean;
   error: Error | null;
 }) {
-  console.log('🚀 ~ PricingPlans ~ plans:', plans);
   const [isAnnual, setIsAnnual] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const { createCheckoutSession } = useSubscription();

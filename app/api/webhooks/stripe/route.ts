@@ -170,12 +170,14 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   }
 
   // Determine plan based on price ID from database
-  const { data: planData } = await supabase
+  const { data: planData, error: planError } = await supabase
     .from('subscription_plans')
     .select('name')
     .eq('stripe_price_id_monthly', priceId)
     .single();
 
+  console.log('🚀 ~ handleSubscriptionChange ~ planData:', planData);
+  console.log('🚀 ~ handleSubscriptionChange ~ planError:', planError);
   let plan = planData?.name || 'starter';
 
   const subscriptionStatus = subscription.status as
@@ -290,7 +292,7 @@ async function handlePaymentSuccess(invoice: Stripe.Invoice) {
   }
 
   // Record successful payment
-  const { data: subscription, error: subError } = await supabase
+  let { data: subscription, error: subError } = await supabase
     .from('subscriptions')
     .select('user_id')
     .eq('stripe_subscription_id', subscriptionId)
@@ -298,7 +300,27 @@ async function handlePaymentSuccess(invoice: Stripe.Invoice) {
 
   console.log('🚀 ~ handlePaymentSuccess ~ subscription:', subscription);
 
-  if (subError) {
+  // If subscription not found, try to find user by customer_id
+  if (subError && subError.code === 'PGRST116') {
+    console.log(
+      'Subscription not found in DB yet, looking up user by customer_id'
+    );
+
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('stripe_customer_id', customerId)
+      .single();
+
+    if (profileError) {
+      console.error('Error finding user by customer_id:', profileError);
+      return;
+    }
+
+    if (userProfile) {
+      subscription = { user_id: userProfile.id };
+    }
+  } else if (subError) {
     console.error('Error finding subscription:', subError);
     return;
   }

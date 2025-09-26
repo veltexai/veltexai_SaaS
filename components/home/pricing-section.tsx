@@ -101,7 +101,7 @@ const PricingSection = () => {
               popular: false,
             },
             {
-              name: 'Pro',
+              name: 'Professional',
               price: billingCycle === 'monthly' ? 79 : 64,
               period:
                 billingCycle === 'monthly'

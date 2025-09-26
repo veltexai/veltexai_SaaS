@@ -30,3 +30,33 @@ export interface BillingRecord {
   invoice_date: string;
   user_email?: string;
 }
+
+// New interfaces moved from billing-client.tsx
+export interface UsageData {
+  currentUsage: number;
+  proposalLimit: number;
+  canCreateProposal: boolean;
+  subscriptionPlan: string;
+  subscriptionStatus: string;
+  remainingProposals: number;
+  isTrial: boolean;
+  trialEndAt: string | null;
+}
+
+export interface SubscriptionData {
+  id: string;
+  plan: string;
+  status: string;
+  current_period_start: string;
+  current_period_end: string;
+  stripe_customer_id: string;
+}
+
+export interface BillingHistory {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  invoice_date: string;
+  stripe_invoice_id: string;
+}

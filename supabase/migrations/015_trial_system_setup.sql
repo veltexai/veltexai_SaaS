@@ -111,8 +111,8 @@ BEGIN
     IF subscription_record IS NOT NULL THEN
         -- User has active subscription
         CASE subscription_record.plan
-            WHEN 'starter' THEN proposal_limit := 10;
-            WHEN 'professional' THEN proposal_limit := 50;
+            WHEN 'starter' THEN proposal_limit := 20;
+            WHEN 'professional' THEN proposal_limit := 75;
             WHEN 'enterprise' THEN proposal_limit := -1; -- unlimited
             ELSE proposal_limit := 0;
         END CASE;
@@ -175,8 +175,8 @@ BEGIN
         trial_end_at := NULL;
         
         CASE subscription_record.plan
-            WHEN 'starter' THEN limit_count := 10;
-            WHEN 'professional' THEN limit_count := 50;
+            WHEN 'starter' THEN limit_count := 20;
+            WHEN 'professional' THEN limit_count := 75;
             WHEN 'enterprise' THEN limit_count := -1;
             ELSE limit_count := 0;
         END CASE;

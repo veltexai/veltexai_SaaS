@@ -1,5 +1,3 @@
-'use client';
-
 import {
   Card,
   CardContent,
@@ -9,22 +7,15 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CreditCard } from 'lucide-react';
-import { useSubscription } from '@/lib/hooks/use-subscription';
-import { useSubscriptionPlans } from '@/hooks/use-subscription-plans';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
+import ManageBillingButton from '../buttons/manage-billing';
+import { getSubscriptionPlans, getUserSubscription } from '@/lib/stripe';
+import ChangePlanButton from '../buttons/change-plan';
 
-export function SubscriptionBilling() {
-  const {
-    subscription,
-    createPortalSession,
-    loading: subscriptionLoading,
-  } = useSubscription();
-  const { data: plans, isLoading: plansLoading } = useSubscriptionPlans();
-
-  const handleManageBilling = async () => {
-    await createPortalSession();
-  };
+export async function SubscriptionBilling({ userId }: { userId: string }) {
+  const plans = await getSubscriptionPlans();
+  const subscription = await getUserSubscription(userId);
 
   const currentPlan = plans?.find((plan) => plan.name === subscription?.plan);
 
@@ -49,7 +40,7 @@ export function SubscriptionBilling() {
                   {subscription.status}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-gray-900 capitalize">
                 {currentPlan?.name}
               </p>
               <p className="text-gray-600">
@@ -74,13 +65,12 @@ export function SubscriptionBilling() {
               )}
             </div>
 
-            <Button
-              onClick={handleManageBilling}
-              disabled={subscriptionLoading}
-              className="w-full"
-            >
-              {subscriptionLoading ? 'Loading...' : 'Manage Billing'}
-            </Button>
+            {/* <ManageBillingButton /> */}
+            <ChangePlanButton
+              plans={plans}
+              initialBillingHistory={[]}
+              currentPlan={currentPlan}
+            />
           </>
         ) : (
           <div className="text-center py-6">
