@@ -92,7 +92,7 @@ const PricingSection = () => {
                   : '/month (billed annually)',
               description: 'Perfect for small cleaning businesses',
               features: [
-                '10 proposals per month',
+                '20 proposals per month',
                 'Basic AI templates',
                 'PDF export',
                 'Email support',
@@ -109,7 +109,7 @@ const PricingSection = () => {
                   : '/month (billed annually)',
               description: 'For growing cleaning companies',
               features: [
-                '50 proposals per month',
+                '75 proposals per month',
                 'Advanced AI templates',
                 'Custom branding',
                 'Priority support',

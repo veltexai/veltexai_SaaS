@@ -26,79 +26,34 @@ const ChangePlanButton = ({
   initialBillingHistory,
   currentPlan,
   className = '',
+  onPlanChanged,
 }: {
   plans: SubscriptionPlan[];
   initialBillingHistory: BillingHistory[];
   currentPlan: SubscriptionPlan | undefined;
+  onPlanChanged?: () => Promise<void>;
   className?: string;
 }) => {
-  const [portalLoading, setPortalLoading] = useState(false);
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
   const [usage, setUsage] = useState<UsageData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(
-    null
-  );
-  const [billingHistory, setBillingHistory] = useState<BillingHistory[]>(
-    initialBillingHistory
-  );
-
-  const fetchBillingData = async () => {
-    console.log('Fetching billing data...');
-    try {
-      // Fetch usage data
-      const usageResponse = await fetch('/api/usage/check');
-      if (usageResponse.ok) {
-        const usageData = await usageResponse.json();
-        console.log('🚀 ~ fetchBillingData ~ usageData:', usageData);
-        setUsage(usageData);
-      }
-
-      // Fetch subscription data
-      const subResponse = await fetch('/api/billing/subscription');
-      if (subResponse.ok) {
-        const subData = await subResponse.json();
-        setSubscription(subData);
-      }
-
-      // Fetch billing history
-      const historyResponse = await fetch('/api/billing/history');
-      if (historyResponse.ok) {
-        const historyData = await historyResponse.json();
-        setBillingHistory(historyData);
-      }
-    } catch (error) {
-      console.error('Error fetching billing data:', error);
-      toast.error('Failed to load billing information');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loading, setLoading] = useState(false);
 
   const handlePlanChange = async (plan: SubscriptionPlan) => {
     console.log('Plan change requested:', plan);
 
     if (!plan.stripe_price_id_monthly) {
-      console.error('Missing stripe_price_id_monthly for plan:', plan.name);
-      toast.error('Plan configuration error. Please contact support.');
-      return;
-    }
-
-    if (plan.name === currentPlan?.name) {
-      toast.info('You are already on this plan');
+      toast.error('Invalid plan selected');
       return;
     }
 
     setLoading(true);
-    try {
-      console.log('Sending upgrade request:', {
-        newPriceId: plan.stripe_price_id_monthly,
-        newPlan: plan.name,
-      });
 
+    try {
       const response = await fetch('/api/stripe/upgrade-subscription', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           newPriceId: plan.stripe_price_id_monthly,
           newPlan: plan.name,
@@ -106,39 +61,15 @@ const ChangePlanButton = ({
       });
 
       const data = await response.json();
-      console.log('Upgrade response:', data);
 
-      if (data.success) {
-        const isUpgrade = data.isUpgrade;
-        const isDowngrade = data.isDowngrade;
+      if (response.ok) {
+        let message = `Successfully changed to ${plan.name} plan!`;
 
-        let message = 'Plan changed successfully!';
-
-        if (isUpgrade) {
-          message = `Plan upgraded to ${data.newPlan}! `;
+        if (data.prorationAmount !== undefined) {
           if (data.prorationAmount > 0) {
-            message += `You'll be charged $${Math.abs(
-              data.prorationAmount
-            ).toFixed(2)} for the remaining period.`;
-          }
-          if (data.usageLimitChanges?.unrestrictedCount > 0) {
-            message += ` ${data.usageLimitChanges.unrestrictedCount} previously restricted proposal(s) have been reactivated.`;
-          }
-        } else if (isDowngrade) {
-          message = `Plan changed to ${data.newPlan}. `;
-          if (data.prorationAmount < 0) {
-            message += `You'll receive a credit of $${Math.abs(
-              data.prorationAmount
-            ).toFixed(2)}.`;
-          }
-          if (data.usageLimitChanges?.restrictedCount > 0) {
-            message += ` ${data.usageLimitChanges.restrictedCount} proposal(s) have been temporarily restricted due to the new plan limits.`;
-          }
-        } else {
-          if (data.prorationAmount > 0) {
-            message += ` You'll be charged $${Math.abs(
-              data.prorationAmount
-            ).toFixed(2)} for the remaining period.`;
+            message += ` You'll be charged $${data.prorationAmount.toFixed(
+              2
+            )} for the remaining period.`;
           } else if (data.prorationAmount < 0) {
             message += ` You'll receive a credit of $${Math.abs(
               data.prorationAmount
@@ -148,9 +79,16 @@ const ChangePlanButton = ({
 
         toast.success(message);
 
-        // Refresh subscription data
+        // Close dialog and refresh data
         setPlanDialogOpen(false);
-        await fetchBillingData();
+
+        // Call parent refresh function if provided
+        if (onPlanChanged) {
+          await onPlanChanged();
+        } else {
+          // Fallback to local refresh
+          // await fetchBillingData();
+        }
       } else {
         toast.error(data.error || 'Failed to change plan');
       }
@@ -225,14 +163,12 @@ const ChangePlanButton = ({
                             ? 'secondary'
                             : 'default'
                         }
-                        disabled={
-                          plan.name === currentPlan?.name || portalLoading
-                        }
+                        disabled={plan.name === currentPlan?.name || loading}
                         onClick={() => handlePlanChange(plan)}
                       >
                         {plan.name === currentPlan?.name
                           ? 'Current Plan'
-                          : portalLoading
+                          : loading
                           ? 'Processing...'
                           : 'Select Plan'}
                       </Button>

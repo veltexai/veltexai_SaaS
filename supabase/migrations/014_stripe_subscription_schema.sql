@@ -192,8 +192,8 @@ GRANT ALL PRIVILEGES ON subscription_plans TO authenticated;
 
 -- Insert initial subscription plan data
 INSERT INTO subscription_plans (name, price_monthly, price_annual, proposal_limit, features) VALUES
-('starter', 19.90, 99.99, 10, '["20 proposals/month", "Basic templates", "Email support"]'),
-('professional', 39.90, 299.99, 50, '["75 proposals/month", "Advanced templates", "Priority support", "Custom branding"]'),
+('starter', 19.90, 99.99, 20, '["20 proposals/month", "Basic templates", "Email support"]'),
+('professional', 39.90, 299.99, 75, '["75 proposals/month", "Advanced templates", "Priority support", "Custom branding"]'),
 ('enterprise', 79.90, 999.99, -1, '["Unlimited proposals", "All templates", "Dedicated support", "API access", "White-label"]')
 ON CONFLICT (name) DO NOTHING;
 

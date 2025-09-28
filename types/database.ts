@@ -209,6 +209,7 @@ export interface Database {
           amount: number;
           currency: string;
           status: 'paid' | 'pending' | 'failed';
+          action: 'upgrade' | 'downgrade' | 'payment' | 'refund' | null;
           invoice_url: string | null;
           invoice_date: string;
           created_at: string;
@@ -220,6 +221,7 @@ export interface Database {
           amount: number;
           currency: string;
           status: 'paid' | 'pending' | 'failed';
+          action: 'upgrade' | 'downgrade' | 'payment' | 'refund' | null;
           invoice_url?: string | null;
           invoice_date: string;
           created_at?: string;
@@ -231,6 +233,7 @@ export interface Database {
           amount?: number;
           currency?: string;
           status?: 'paid' | 'pending' | 'failed';
+          action: 'upgrade' | 'downgrade' | 'payment' | 'refund' | null;
           invoice_url?: string | null;
           invoice_date: string;
           created_at?: string;
@@ -366,7 +369,8 @@ export type BillingHistory =
 export type PDFExport = Database['public']['Tables']['pdf_exports']['Row'];
 export type PricingSettings =
   Database['public']['Tables']['pricing_settings']['Row'];
-export type SubscriptionPlan = Database['public']['Tables']['subscription_plans']['Row'];
+export type SubscriptionPlan =
+  Database['public']['Tables']['subscription_plans']['Row'];
 export type User = {
   id: string;
   email: string;
