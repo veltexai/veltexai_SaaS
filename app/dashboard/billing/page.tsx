@@ -24,6 +24,7 @@ interface SubscriptionData {
   current_period_start: string;
   current_period_end: string;
   stripe_customer_id: string;
+  canceled_at?: string | null;
 }
 
 interface BillingHistory {
@@ -71,7 +72,9 @@ async function getBillingData() {
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
-      .eq('status', 'active')
+      .in('status', ['active', 'canceled'])
+      .order('created_at', { ascending: false })
+      .limit(1)
       .single();
 
     if (subscriptionError && subscriptionError.code !== 'PGRST116') {
@@ -113,6 +116,7 @@ async function getBillingData() {
           current_period_start: subscriptionData.current_period_start,
           current_period_end: subscriptionData.current_period_end,
           stripe_customer_id: subscriptionData.stripe_customer_id || '',
+          canceled_at: subscriptionData.canceled_at,
         }
       : null;
 

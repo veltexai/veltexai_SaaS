@@ -50,6 +50,7 @@ export interface SubscriptionData {
   current_period_start: string;
   current_period_end: string;
   stripe_customer_id: string;
+  canceled_at?: string | null;
 }
 
 export interface BillingHistory {

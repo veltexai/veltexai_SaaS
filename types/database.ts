@@ -173,6 +173,7 @@ export interface Database {
           plan: 'starter' | 'professional' | 'enterprise';
           current_period_start: string;
           current_period_end: string;
+          canceled_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -185,6 +186,7 @@ export interface Database {
           plan: 'starter' | 'professional' | 'enterprise';
           current_period_start: string;
           current_period_end: string;
+          canceled_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -197,6 +199,7 @@ export interface Database {
           plan?: 'starter' | 'professional' | 'enterprise';
           current_period_start?: string;
           current_period_end?: string;
+          canceled_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

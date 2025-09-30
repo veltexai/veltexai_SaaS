@@ -34,6 +34,7 @@ import {
   getStatusColor,
 } from '@/lib/utils';
 import ChangePlanButton from '@/components/buttons/change-plan';
+import CancelSubscriptionButton from '@/components/buttons/cancel-subscription';
 
 interface BillingClientProps {
   initialUsage: UsageData | null;
@@ -128,13 +129,18 @@ export function BillingClient({
           </p>
         </div>
         {currentPlan && (
-          <ChangePlanButton
-            plans={plans}
-            initialBillingHistory={billingHistory}
-            currentPlan={currentPlan}
-            onPlanChanged={refreshBillingData}
-            className="flex gap-2"
-          />
+          <div className="flex gap-3">
+            <ChangePlanButton
+              plans={plans}
+              initialBillingHistory={billingHistory}
+              currentPlan={currentPlan}
+              onPlanChanged={refreshBillingData}
+            />
+            <CancelSubscriptionButton
+              onCancellationChanged={refreshBillingData}
+              isAlreadyCancelled={!!subscription?.canceled_at}
+            />
+          </div>
         )}
       </div>
 
@@ -232,7 +238,11 @@ export function BillingClient({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {usage?.isTrial ? 'Trial Ends' : 'Next Billing'}
+              {usage?.isTrial
+                ? 'Trial Ends'
+                : subscription?.canceled_at
+                ? 'Access Ends'
+                : 'Next Billing'}
             </CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -247,6 +257,8 @@ export function BillingClient({
             <p className="text-xs text-muted-foreground">
               {usage?.isTrial
                 ? `${trialDaysRemaining} days remaining`
+                : subscription?.canceled_at
+                ? 'Subscription will end'
                 : currentPlan
                 ? formatCurrency(currentPlan.price_monthly) + ' due'
                 : 'No upcoming charges'}

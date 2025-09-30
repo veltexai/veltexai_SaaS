@@ -36,21 +36,33 @@ export async function SubscriptionBilling({ userId }: { userId: string }) {
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium">Current Plan</span>
-                <span className="text-sm px-2 py-1 bg-green-100 text-green-800 rounded-full">
-                  {subscription.status}
+                <span
+                  className={`text-sm px-2 py-1 rounded-full ${
+                    subscription.canceled_at
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-green-100 text-green-800'
+                  }`}
+                >
+                  {subscription.canceled_at ? 'Cancelled' : subscription.status}
                 </span>
               </div>
               <p className="text-2xl font-bold text-gray-900 capitalize">
                 {currentPlan?.name}
               </p>
               <p className="text-gray-600">
-                ${currentPlan?.price_monthly}/month
+                {subscription.canceled_at
+                  ? 'Access until period end'
+                  : `$${currentPlan?.price_monthly}/month`}
               </p>
             </div>
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Current period ends:</span>
+                <span className="text-gray-600">
+                  {subscription.canceled_at
+                    ? 'Access ends:'
+                    : 'Current period ends:'}
+                </span>
                 <span className="font-medium">
                   {formatDate(subscription.current_period_end)}
                 </span>
@@ -70,6 +82,7 @@ export async function SubscriptionBilling({ userId }: { userId: string }) {
               plans={plans}
               initialBillingHistory={[]}
               currentPlan={currentPlan}
+              className="w-full"
             />
           </>
         ) : (

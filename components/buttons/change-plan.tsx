@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,18 @@ import {
   BillingHistory,
 } from '@/types/subscription';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
+
+interface UsageInfo {
+  can_create_proposal: boolean;
+  is_trial: boolean;
+  remaining_proposals: number;
+  current_usage: number;
+  proposal_limit: number;
+  subscription_plan: string;
+  subscription_status: string;
+  trial_end_at: string | null;
+}
 
 const ChangePlanButton = ({
   plans,
@@ -37,10 +49,37 @@ const ChangePlanButton = ({
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null);
+
+  // Fetch user usage info when component mounts
+  useEffect(() => {
+    const fetchUsageInfo = async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          const { data, error } = await supabase
+            .rpc('get_user_usage_info', { user_uuid: user.id })
+            .single();
+
+          if (error) {
+            console.error('Error fetching usage info:', error);
+          } else {
+            setUsageInfo(data as UsageInfo);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching usage info:', error);
+      }
+    };
+
+    fetchUsageInfo();
+  }, []);
 
   const handlePlanChange = async (plan: SubscriptionPlan) => {
-    console.log('Plan change requested:', plan);
-
     if (!plan.stripe_price_id_monthly) {
       toast.error('Invalid plan selected');
       return;
@@ -65,16 +104,14 @@ const ChangePlanButton = ({
       if (response.ok) {
         let message = `Successfully changed to ${plan.name} plan!`;
 
-        if (data.prorationAmount !== undefined) {
-          if (data.prorationAmount > 0) {
-            message += ` You'll be charged $${data.prorationAmount.toFixed(
-              2
-            )} for the remaining period.`;
-          } else if (data.prorationAmount < 0) {
-            message += ` You'll receive a credit of $${Math.abs(
-              data.prorationAmount
-            ).toFixed(2)}.`;
-          }
+        if (data.isUpgrade && data.chargeAmount > 0) {
+          message += ` You've been charged $${data.chargeAmount.toFixed(
+            2
+          )} immediately.`;
+        } else if (data.isDowngrade && data.creditAmount > 0) {
+          message += ` You'll receive a $${data.creditAmount.toFixed(
+            2
+          )} credit on your next billing cycle.`;
         }
 
         toast.success(message);
@@ -85,9 +122,6 @@ const ChangePlanButton = ({
         // Call parent refresh function if provided
         if (onPlanChanged) {
           await onPlanChanged();
-        } else {
-          // Fallback to local refresh
-          // await fetchBillingData();
         }
       } else {
         toast.error(data.error || 'Failed to change plan');
@@ -106,7 +140,7 @@ const ChangePlanButton = ({
         <>
           <Dialog open={planDialogOpen} onOpenChange={setPlanDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className={className}>
                 <TrendingUp className="mr-2 h-4 w-4" />
                 Change Plan
               </Button>
@@ -115,7 +149,12 @@ const ChangePlanButton = ({
               <DialogHeader>
                 <DialogTitle>Choose Your Plan</DialogTitle>
                 <DialogDescription>
-                  Select a plan that fits your needs. Changes will be prorated.
+                  {usageInfo?.remaining_proposals &&
+                  usageInfo.remaining_proposals > 0
+                    ? `You have ${usageInfo.remaining_proposals} proposal${
+                        usageInfo.remaining_proposals !== 1 ? 's' : ''
+                      } remaining in your current plan. Changing plans will reset your usage and you'll lose these remaining proposals.`
+                    : 'Select a new plan to upgrade or downgrade your subscription. Your usage will be reset with the new plan.'}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
@@ -178,10 +217,6 @@ const ChangePlanButton = ({
               </div>
             </DialogContent>
           </Dialog>
-          {/* <Button onClick={handleManageBilling} disabled={portalLoading}>
-                <CreditCard className="mr-2 h-4 w-4" />
-                {portalLoading ? 'Loading...' : 'Manage Billing'}
-              </Button> */}
         </>
       )}
     </div>

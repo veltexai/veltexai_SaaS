@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
             price: newPriceId,
           },
         ],
-        proration_behavior: 'create_prorations',
+        proration_behavior: 'always_invoice',
         billing_cycle_anchor: 'unchanged', // Keep current billing cycle
       }
     );
