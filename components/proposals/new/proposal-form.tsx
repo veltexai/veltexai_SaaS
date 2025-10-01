@@ -266,7 +266,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
         throw new Error(error.error || 'Failed to create proposal');
       }
 
-      const { data: proposalData } = await response.json();
+      const proposalData = await response.json();
 
       toast.success('Proposal created successfully!');
       router.push(`/dashboard/proposals/${proposalData.id}`);

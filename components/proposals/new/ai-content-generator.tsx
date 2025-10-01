@@ -41,7 +41,7 @@ export function AIContentGenerator({
 
     setGenerating(true);
     onGeneratingChange?.(true);
-    onError('');
+    // onError('');
 
     try {
       const response = await fetch('/api/proposals/generate', {
