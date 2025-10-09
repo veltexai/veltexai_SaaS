@@ -48,7 +48,21 @@ CREATE POLICY "Users can update own proposals" ON public.proposals
 CREATE POLICY "Users can delete own proposals" ON public.proposals
     FOR DELETE USING (auth.uid() = user_id);
 
--- Create pricing_settings table
+-- Add user_id column to existing pricing_settings table if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'pricing_settings' 
+        AND column_name = 'user_id'
+        AND table_schema = 'public'
+    ) THEN
+        ALTER TABLE public.pricing_settings ADD COLUMN user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE;
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_pricing_settings_user_id ON public.pricing_settings(user_id);
+    END IF;
+END $$;
+
+-- Create pricing_settings table if it doesn't exist (fallback)
 CREATE TABLE IF NOT EXISTS public.pricing_settings (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,

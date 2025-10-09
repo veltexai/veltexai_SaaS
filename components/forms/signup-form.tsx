@@ -314,6 +314,11 @@ export default function SignupForm({
               Hi <strong>{userInfo.name}</strong>, you need to verify your email
               address to continue. Please click the confirmation link sent to{' '}
               <strong>{userInfo.email}</strong> to access your dashboard.
+              <br />
+              <br />
+              <span className="text-sm text-muted-foreground">
+                Don't see the email? Check your spam or junk folder.
+              </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex justify-center">

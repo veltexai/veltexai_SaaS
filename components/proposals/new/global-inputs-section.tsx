@@ -25,9 +25,10 @@ const serviceFrequencyOptions = [
   { value: '1x-month', label: 'Once per Month' },
   { value: 'bi-weekly', label: 'Bi-weekly (Every 2 weeks)' },
   { value: 'weekly', label: 'Weekly' },
-  { value: '2x-week', label: 'Twice per Week' },
-  { value: '3x-week', label: 'Three times per Week' },
-  { value: '5x-week', label: 'Five times per Week' },
+  { value: '2x-week', label: '2x Week' },
+  { value: '3x-week', label: '3x Week' },
+  { value: '5x-week', label: '5x Week' },
+  { value: '6x-week', label: '6x Week' },
   { value: 'daily', label: 'Daily' },
 ];
 
@@ -152,11 +153,17 @@ export function GlobalInputsSection() {
                   <FormControl>
                     <Input
                       type="number"
+                      min="1"
                       placeholder="Enter square footage"
-                      {...field}
-                      onChange={(e) =>
-                        field.onChange(parseInt(e.target.value) || 0)
-                      }
+                      value={field.value || ''}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        const digits = raw.replace(/[^\d]/g, '');
+                        const sanitized = digits.replace(/^0+(?!$)/, '');
+                        field.onChange(
+                          sanitized === '' ? undefined : parseInt(sanitized, 10)
+                        );
+                      }}
                     />
                   </FormControl>
                   <FormMessage />

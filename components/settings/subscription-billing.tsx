@@ -89,7 +89,7 @@ export async function SubscriptionBilling({ userId }: { userId: string }) {
           <div className="text-center py-6">
             <p className="text-gray-600 mb-4">No active subscription</p>
             <Button asChild>
-              <Link href="/pricing">Choose a Plan</Link>
+              <Link href="/dashboard/billing">Choose a Plan</Link>
             </Button>
           </div>
         )}

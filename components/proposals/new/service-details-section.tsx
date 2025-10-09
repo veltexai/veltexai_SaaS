@@ -80,9 +80,17 @@ export function ServiceDetailsSection({ form }: ServiceDetailsSectionProps) {
                 <FormControl>
                   <Input
                     type="number"
+                    min="1"
                     placeholder="e.g., 5000"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    value={field.value || ''}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      const digits = raw.replace(/[^\d]/g, '');
+                      const sanitized = digits.replace(/^0+(?!$)/, '');
+                      field.onChange(
+                        sanitized === '' ? undefined : parseInt(sanitized, 10)
+                      );
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
