@@ -2,7 +2,13 @@ import {
   type ServiceType,
   type ServiceFrequency,
 } from '@/lib/validations/proposal';
-import { type Database } from '@/types/database';
+import { 
+  type Database,
+  type RegionalMultiplier,
+  type PropertyBaseline,
+  type TrafficAnalysis,
+  type PricingBreakdown as DBPricingBreakdown
+} from '@/types/database';
 
 type PricingSettings = Database['public']['Tables']['pricing_settings']['Row'];
 
@@ -32,6 +38,12 @@ export interface PricingCalculationInput {
   serviceSpecificData: Record<string, any>;
   globalInputs: Record<string, any>;
   pricingSettings?: PricingSettings;
+  // Enhanced pricing inputs
+  regionalLocation?: string;
+  propertyType?: string;
+  trafficAnalysis?: TrafficAnalysis;
+  regionalMultipliers?: RegionalMultiplier[];
+  propertyBaselines?: PropertyBaseline[];
 }
 
 export interface PricingBreakdown {
@@ -54,6 +66,14 @@ export interface PricingBreakdown {
     units: number;
     complexity_factor: number;
   };
+  // Enhanced pricing breakdown
+  regional_multiplier?: number;
+  regional_multiplier_percentage?: number;
+  traffic_multiplier?: number;
+  traffic_level?: string;
+  property_baseline?: number;
+  property_complexity_factor?: number;
+  enhanced_total?: number;
 }
 
 export interface PricingAdjustment {
@@ -91,6 +111,11 @@ export class PricingEngine {
       carpet: 0.12,
       window: 0.25,
       floor: 0.18,
+    },
+    traffic_multipliers: {
+      light: { rate: 3500, description: "Light traffic areas (under 20 staff, minimal visitors)" },
+      medium: { rate: 2500, description: "Medium traffic areas (20-60 staff, moderate visitors)" },
+      heavy: { rate: 1750, description: "Heavy traffic areas (60+ staff, high visitor volume, 5x+ weekly cleaning)" }
     },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -133,7 +158,7 @@ export class PricingEngine {
   }
 
   /**
-   * Calculate comprehensive pricing for a service proposal
+   * Calculate comprehensive pricing for a service proposal with enhanced multipliers
    */
   calculatePricing(input: PricingCalculationInput): PricingBreakdown {
     const {
@@ -143,6 +168,11 @@ export class PricingEngine {
       serviceSpecificData,
       globalInputs,
       pricingSettings,
+      regionalLocation,
+      propertyType,
+      trafficAnalysis,
+      regionalMultipliers,
+      propertyBaselines,
     } = input;
 
     // Use provided settings or default
@@ -150,7 +180,30 @@ export class PricingEngine {
 
     // Get base rate and calculate base price
     const serviceTypeRates = settings.service_type_rates as any;
-    const baseRate = serviceTypeRates?.[serviceType] || 0.15;
+    let baseRate = serviceTypeRates?.[serviceType] || 0.15;
+
+    // Apply property baseline if available
+    let propertyBaseline = 0;
+    let propertyComplexityFactor = 1.0;
+    if (propertyType && propertyBaselines) {
+      const baseline = propertyBaselines.find(pb => pb.property_type === propertyType);
+      if (baseline) {
+        propertyBaseline = baseline.baseline_rate;
+        baseRate = baseline.baseline_rate; // Use property baseline as base rate
+        
+        // Apply property complexity factors
+        const complexityFactors = baseline.complexity_factors as any;
+        if (complexityFactors && serviceSpecificData) {
+          // Apply relevant complexity factors based on service data
+          Object.keys(complexityFactors).forEach(factor => {
+            if (serviceSpecificData[factor]) {
+              propertyComplexityFactor *= complexityFactors[factor] || 1.0;
+            }
+          });
+        }
+      }
+    }
+
     const { basePrice, units, unitType } = this.calculateBasePrice(
       serviceType,
       facilitySize,
@@ -163,18 +216,44 @@ export class PricingEngine {
       serviceType,
       serviceSpecificData,
       globalInputs
-    );
+    ) * propertyComplexityFactor;
 
     // Apply complexity adjustment
     const adjustedBasePrice = basePrice * complexityFactor;
 
     // Calculate frequency multiplier
-    const multipliers = settings.frequency_multipliers as Record<
-      string,
-      number
-    >;
+    const multipliers = settings.frequency_multipliers as Record<string, number>;
     const frequencyMultiplier = multipliers?.[serviceFrequency] || 1.0;
-    const frequencyAdjustedPrice = adjustedBasePrice * frequencyMultiplier;
+    let frequencyAdjustedPrice = adjustedBasePrice * frequencyMultiplier;
+
+    // Apply regional multiplier if available
+    let regionalMultiplier = 1.0;
+    let regionalMultiplierPercentage = 0;
+    if (regionalLocation && regionalMultipliers) {
+      const regional = regionalMultipliers.find(rm => 
+        rm.region_name.toLowerCase() === regionalLocation.toLowerCase() && rm.is_active
+      );
+      if (regional) {
+        regionalMultiplierPercentage = regional.multiplier_percentage;
+        regionalMultiplier = 1 + (regional.multiplier_percentage / 100);
+        frequencyAdjustedPrice *= regionalMultiplier;
+      }
+    }
+
+    // Apply traffic multiplier if available
+    let trafficMultiplier = 1.0;
+    let trafficLevel = '';
+    if (trafficAnalysis?.traffic_level && settings.traffic_multipliers) {
+      const trafficMultipliers = settings.traffic_multipliers as any;
+      const trafficData = trafficMultipliers[trafficAnalysis.traffic_level];
+      if (trafficData?.rate) {
+        trafficLevel = trafficAnalysis.traffic_level;
+        // Traffic multiplier is applied as a rate per square foot
+        const trafficAdjustment = (trafficData.rate / 1000) * facilitySize;
+        frequencyAdjustedPrice += trafficAdjustment;
+        trafficMultiplier = trafficData.rate;
+      }
+    }
 
     // Calculate service-specific adjustments
     const adjustments = this.calculateServiceAdjustments(
@@ -202,6 +281,9 @@ export class PricingEngine {
     // Calculate final total
     const total = subtotal + overheadAmount + marginAmount;
 
+    // Enhanced total includes all multipliers
+    const enhancedTotal = total;
+
     return {
       base_price: this.roundCurrency(basePrice),
       adjustments: this.roundCurrency(adjustments.total),
@@ -222,6 +304,14 @@ export class PricingEngine {
         units: units,
         complexity_factor: complexityFactor,
       },
+      // Enhanced pricing breakdown
+      regional_multiplier: regionalMultiplier,
+      regional_multiplier_percentage: regionalMultiplierPercentage,
+      traffic_multiplier: trafficMultiplier,
+      traffic_level: trafficLevel,
+      property_baseline: propertyBaseline,
+      property_complexity_factor: propertyComplexityFactor,
+      enhanced_total: this.roundCurrency(enhancedTotal),
     };
   }
 

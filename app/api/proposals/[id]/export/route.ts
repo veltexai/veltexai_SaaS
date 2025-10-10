@@ -41,11 +41,22 @@ export async function POST(
       .eq('id', user.id)
       .single();
 
+    // Get company profile for enhanced company data
+    const { data: companyProfile } = await supabase
+      .from('company_profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
     // Parse request body for export options
     const body = await request.json();
-    const { template = 'modern', includeCompanyInfo = true } = body;
+    const { 
+      template = 'professional', 
+      includeCompanyInfo = true,
+      includeServiceReferences = true 
+    } = body;
 
-    // Prepare company info
+    // Prepare company info from profile
     const companyInfo =
       includeCompanyInfo && profile
         ? {
@@ -59,12 +70,15 @@ export async function POST(
         : undefined;
 
     console.log('Company info:', companyInfo);
+    console.log('Company profile:', companyProfile);
     console.log('Profile logo_url:', profile?.logo_url);
 
-    // Generate PDF
+    // Generate PDF with enhanced options
     const pdfBytes = await exportProposalToPDF(proposal, {
       companyInfo,
+      companyProfile,
       template,
+      includeServiceReferences,
     });
 
     // Convert Uint8Array to buffer for storage

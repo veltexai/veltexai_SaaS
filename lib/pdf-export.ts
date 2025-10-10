@@ -16,9 +16,30 @@ export interface PDFExportOptions {
     website?: string;
     logo?: string;
   };
-  template?: 'modern' | 'classic' | 'minimal';
+  companyProfile?: {
+    company_name: string;
+    contact_info?: {
+      primary_contact?: string;
+      phone?: string;
+      email?: string;
+      address?: string;
+      billing_contact?: string;
+      emergency_contact?: string;
+    };
+    logo_url?: string | null;
+    company_background?: string;
+    service_references?: Array<{
+      client_name?: string;
+      service_type?: string;
+      duration?: string;
+      contact_info?: string;
+      testimonial?: string;
+    }>;
+  };
+  template?: 'modern' | 'classic' | 'minimal' | 'professional';
   includeServiceDetails?: boolean;
   includePricingBreakdown?: boolean;
+  includeServiceReferences?: boolean;
 }
 
 export class PDFExporter {
@@ -40,43 +61,64 @@ export class PDFExporter {
     const {
       proposal,
       companyInfo,
+      companyProfile,
       template = 'modern',
       includeServiceDetails = true,
       includePricingBreakdown = true,
+      includeServiceReferences = true,
     } = options;
 
-    // Add header
-    await this.addHeader(companyInfo);
+    // Apply template-specific styling
+    this.applyTemplateStyles(template);
 
-    // Add proposal title
-    this.addTitle(proposal.title);
+    // Add header with company branding
+    await this.addBrandedHeader(companyInfo, companyProfile, template);
 
-    // Add proposal details
-    // this.addProposalDetails(proposal);
+    // Add proposal title with enhanced styling
+    this.addEnhancedTitle(proposal.title, template);
 
-    // Add client information - pass proposal directly
-    // this.addClientInformation(proposal);
+    // Add proposal overview section
+    this.addProposalOverview(proposal, template);
 
-    // Add service details
-    // if (includeServiceDetails && proposal.service_specific_data) {
-    //   this.addServiceDetails(
-    //     proposal.service_type as ServiceType,
-    //     proposal.service_specific_data as any
-    //   );
-    // }
+    // Add client information section
+    this.addClientInformation(proposal, template);
 
-    // Add pricing breakdown
-    // if (includePricingBreakdown && proposal.pricing_data) {
-    //   this.addPricingBreakdown(proposal.pricing_data as any);
-    // }
-
-    // Add generated content if available
-    if (proposal.generated_content) {
-      this.addContent(proposal.generated_content);
+    // Add service details if available
+    if (includeServiceDetails && proposal.service_specific_data) {
+      this.addServiceDetails(
+        proposal.service_type as ServiceType,
+        proposal.service_specific_data as any,
+        template
+      );
     }
 
-    // Add footer
-    this.addFooter();
+    // Add enhanced facility details if available
+    if (proposal.facility_details) {
+      this.addFacilityDetails(proposal.facility_details as any, template);
+    }
+
+    // Add pricing breakdown with enhanced styling
+    if (includePricingBreakdown && proposal.pricing_data) {
+      this.addEnhancedPricingBreakdown(proposal.pricing_data as any, template);
+    }
+
+    // Add generated content with better formatting
+    if (proposal.generated_content) {
+      this.addEnhancedContent(proposal.generated_content, template);
+    }
+
+    // Add service references if available and requested
+    if (includeServiceReferences && companyProfile?.service_references?.length) {
+      this.addServiceReferences(companyProfile.service_references, template);
+    }
+
+    // Add company background if available
+    if (companyProfile?.company_background) {
+      this.addCompanyBackground(companyProfile.company_background, template);
+    }
+
+    // Add enhanced footer
+    this.addEnhancedFooter(companyInfo, companyProfile, template);
 
     return this.pdf.output('blob');
   }
@@ -361,37 +403,37 @@ export class PDFExporter {
   //   this.currentY += 30;
   // }
 
-  // private addServiceDetails(serviceType: ServiceType, serviceData: any) {
-  //   this.pdf.setFontSize(14);
-  //   this.pdf.setFont('helvetica', 'bold');
-  //   this.pdf.setTextColor(0, 0, 0);
-  //   this.pdf.text('Service Details', this.margin, this.currentY);
-  //   this.currentY += 10;
+  private addServiceDetails(serviceType: ServiceType, serviceData: any, template: string = 'modern') {
+    this.pdf.setFontSize(14);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.text('Service Details', this.margin, this.currentY);
+    this.currentY += 10;
 
-  //   this.pdf.setFontSize(10);
-  //   this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFontSize(10);
+    this.pdf.setTextColor(0, 0, 0);
 
-  //   // Render service-specific data based on type
-  //   switch (serviceType) {
-  //     case 'residential':
-  //       this.addResidentialDetails(serviceData);
-  //       break;
-  //     case 'commercial':
-  //       this.addCommercialDetails(serviceData);
-  //       break;
-  //     case 'carpet':
-  //       this.addCarpetDetails(serviceData);
-  //       break;
-  //     case 'window':
-  //       this.addWindowDetails(serviceData);
-  //       break;
-  //     case 'floor':
-  //       this.addFloorDetails(serviceData);
-  //       break;
-  //   }
+    // Render service-specific data based on type
+    switch (serviceType) {
+      case 'residential':
+        this.addResidentialDetails(serviceData);
+        break;
+      case 'commercial':
+        this.addCommercialDetails(serviceData);
+        break;
+      case 'carpet':
+        this.addCarpetDetails(serviceData);
+        break;
+      case 'window':
+        this.addWindowDetails(serviceData);
+        break;
+      case 'floor':
+        this.addFloorDetails(serviceData);
+        break;
+    }
 
-  //   this.currentY += 10;
-  // }
+    this.currentY += 10;
+  }
 
   private addResidentialDetails(data: any) {
     if (data.rooms?.length > 0) {
@@ -807,6 +849,542 @@ export class PDFExporter {
         });
       }
     });
+  }
+
+  // Enhanced methods for better PDF generation
+
+  private applyTemplateStyles(template: string) {
+    // Set template-specific colors and styles
+    switch (template) {
+      case 'professional':
+        this.pdf.setProperties({
+          title: 'Professional Service Proposal',
+          subject: 'Service Proposal Document',
+          creator: 'Veltex Services',
+        });
+        break;
+      case 'modern':
+        this.pdf.setProperties({
+          title: 'Modern Service Proposal',
+          subject: 'Service Proposal Document',
+          creator: 'Veltex Services',
+        });
+        break;
+      case 'classic':
+        this.pdf.setProperties({
+          title: 'Classic Service Proposal',
+          subject: 'Service Proposal Document',
+          creator: 'Veltex Services',
+        });
+        break;
+      default:
+        this.pdf.setProperties({
+          title: 'Service Proposal',
+          subject: 'Service Proposal Document',
+          creator: 'Veltex Services',
+        });
+    }
+  }
+
+  private async addBrandedHeader(
+    companyInfo?: PDFExportOptions['companyInfo'],
+    companyProfile?: PDFExportOptions['companyProfile'],
+    template: string = 'modern'
+  ) {
+    const logoUrl = companyProfile?.logo_url || companyInfo?.logo;
+    const companyName = companyProfile?.company_name || companyInfo?.name || 'Veltex Services';
+    
+    // Add background color for professional template
+    if (template === 'professional') {
+      this.pdf.setFillColor(41, 128, 185); // Professional blue
+      this.pdf.rect(0, 0, this.pageWidth, 40, 'F');
+    }
+
+    // Add logo if available
+    if (logoUrl) {
+      try {
+        const response = await fetch(logoUrl);
+        if (response.ok) {
+          const arrayBuffer = await response.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString('base64');
+          const dataUrl = `data:image/png;base64,${base64}`;
+
+          this.pdf.addImage(dataUrl, 'PNG', this.margin, this.currentY, 30, 20);
+        }
+      } catch (error) {
+        console.error('Failed to load logo:', error);
+      }
+    }
+
+    // Add company name and contact info
+    const textColor = template === 'professional' ? [255, 255, 255] : [0, 0, 0];
+    this.pdf.setTextColor(textColor[0], textColor[1], textColor[2]);
+    
+    this.pdf.setFontSize(18);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text(companyName, logoUrl ? this.margin + 35 : this.margin, this.currentY + 12);
+
+    // Add contact information
+    if (companyProfile?.contact_info || companyInfo) {
+      this.pdf.setFontSize(10);
+      this.pdf.setFont('helvetica', 'normal');
+      
+      const contactInfo = companyProfile?.contact_info;
+      const email = contactInfo?.email || companyInfo?.email;
+      const phone = contactInfo?.phone || companyInfo?.phone;
+      const website = companyInfo?.website;
+
+      let contactY = this.currentY + 18;
+      
+      if (email) {
+        this.pdf.text(`Email: ${email}`, logoUrl ? this.margin + 35 : this.margin, contactY);
+        contactY += 4;
+      }
+      
+      if (phone) {
+        this.pdf.text(`Phone: ${phone}`, logoUrl ? this.margin + 35 : this.margin, contactY);
+        contactY += 4;
+      }
+      
+      if (website) {
+        this.pdf.text(`Website: ${website}`, logoUrl ? this.margin + 35 : this.margin, contactY);
+      }
+    }
+
+    this.currentY += 45;
+    
+    // Add separator line
+    this.pdf.setDrawColor(200, 200, 200);
+    this.pdf.line(this.margin, this.currentY, this.pageWidth - this.margin, this.currentY);
+    this.currentY += 10;
+  }
+
+  private addEnhancedTitle(title: string, template: string = 'modern') {
+    // Add background for title based on template
+    if (template === 'professional') {
+      this.pdf.setFillColor(52, 152, 219);
+      this.pdf.rect(this.margin, this.currentY - 5, this.pageWidth - 2 * this.margin, 20, 'F');
+      this.pdf.setTextColor(255, 255, 255);
+    } else {
+      this.pdf.setTextColor(0, 0, 0);
+    }
+
+    this.pdf.setFontSize(20);
+    this.pdf.setFont('helvetica', 'bold');
+    
+    const titleWidth = this.pdf.getTextWidth(title);
+    const centerX = (this.pageWidth - titleWidth) / 2;
+    
+    this.pdf.text(title, centerX, this.currentY + 8);
+    this.currentY += 25;
+  }
+
+  private addProposalOverview(proposal: Proposal, template: string = 'modern') {
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFontSize(14);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('Proposal Overview', this.margin, this.currentY);
+    this.currentY += 10;
+
+    // Create overview box
+    const boxColor = template === 'professional' ? [248, 249, 250] : [252, 252, 252];
+    this.pdf.setFillColor(boxColor[0], boxColor[1], boxColor[2]);
+    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 35, 'F');
+
+    this.pdf.setFontSize(10);
+    let overviewY = this.currentY + 8;
+
+    // Left column
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('Proposal ID:', this.margin + 5, overviewY);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text(proposal.id.substring(0, 8), this.margin + 30, overviewY);
+
+    overviewY += 6;
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('Service Type:', this.margin + 5, overviewY);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text(this.getServiceTypeLabel(proposal.service_type as ServiceType), this.margin + 35, overviewY);
+
+    overviewY += 6;
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('Status:', this.margin + 5, overviewY);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text(proposal.status?.toUpperCase() || 'DRAFT', this.margin + 25, overviewY);
+
+    // Right column
+    overviewY = this.currentY + 8;
+    const rightColumnX = this.pageWidth / 2 + 10;
+
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('Created:', rightColumnX, overviewY);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text(formatDate(proposal.created_at), rightColumnX + 25, overviewY);
+
+    overviewY += 6;
+    if (proposal.pricing_data) {
+      const pricingData = proposal.pricing_data as any;
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text('Total Value:', rightColumnX, overviewY);
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.text(formatCurrencyUtil(pricingData.total || 0), rightColumnX + 30, overviewY);
+    }
+
+    this.currentY += 40;
+  }
+
+  private addClientInformation(proposal: Proposal, template: string = 'modern') {
+    this.pdf.setFontSize(14);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.text('Client Information', this.margin, this.currentY);
+    this.currentY += 10;
+
+    // Create client info box
+    const boxColor = template === 'professional' ? [248, 249, 250] : [252, 252, 252];
+    this.pdf.setFillColor(boxColor[0], boxColor[1], boxColor[2]);
+    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 25, 'F');
+
+    this.pdf.setFontSize(10);
+    let infoY = this.currentY + 8;
+
+    // Extract client info from global_inputs
+    const globalInputs = proposal.global_inputs as any;
+    
+    if (globalInputs?.client_name) {
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text('Client Name:', this.margin + 5, infoY);
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.text(globalInputs.client_name, this.margin + 30, infoY);
+      infoY += 6;
+    }
+
+    if (globalInputs?.client_email) {
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text('Email:', this.margin + 5, infoY);
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.text(globalInputs.client_email, this.margin + 25, infoY);
+    }
+
+    // Right column
+    infoY = this.currentY + 8;
+    const rightColumnX = this.pageWidth / 2 + 10;
+
+    if (globalInputs?.contact_phone) {
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text('Phone:', rightColumnX, infoY);
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.text(globalInputs.contact_phone, rightColumnX + 25, infoY);
+      infoY += 6;
+    }
+
+    if (globalInputs?.property_address) {
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text('Address:', rightColumnX, infoY);
+      this.pdf.setFont('helvetica', 'normal');
+      const addressText = this.pdf.splitTextToSize(globalInputs.property_address, 60);
+      this.pdf.text(addressText, rightColumnX + 25, infoY);
+    }
+
+    this.currentY += 30;
+  }
+
+  private addFacilityDetails(facilityDetails: any, template: string = 'modern') {
+    this.pdf.setFontSize(14);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.text('Facility Details', this.margin, this.currentY);
+    this.currentY += 10;
+
+    if (facilityDetails.building_type) {
+      this.pdf.setFontSize(10);
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text('Building Type:', this.margin, this.currentY);
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.text(facilityDetails.building_type, this.margin + 35, this.currentY);
+      this.currentY += 6;
+    }
+
+    if (facilityDetails.total_area) {
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text('Total Area:', this.margin, this.currentY);
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.text(`${facilityDetails.total_area} sq ft`, this.margin + 30, this.currentY);
+      this.currentY += 6;
+    }
+
+    if (facilityDetails.floors) {
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text('Number of Floors:', this.margin, this.currentY);
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.text(facilityDetails.floors.toString(), this.margin + 45, this.currentY);
+      this.currentY += 6;
+    }
+
+    if (facilityDetails.special_features?.length > 0) {
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text('Special Features:', this.margin, this.currentY);
+      this.currentY += 6;
+      
+      facilityDetails.special_features.forEach((feature: string) => {
+        this.pdf.setFont('helvetica', 'normal');
+        this.pdf.text(`• ${feature}`, this.margin + 5, this.currentY);
+        this.currentY += 5;
+      });
+    }
+
+    this.currentY += 10;
+  }
+
+  private addEnhancedPricingBreakdown(pricingData: any, template: string = 'modern') {
+    this.pdf.setFontSize(14);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.text('Pricing Breakdown', this.margin, this.currentY);
+    this.currentY += 10;
+
+    // Create pricing table
+    const tableStartY = this.currentY;
+    const rowHeight = 8;
+    const colWidth = (this.pageWidth - 2 * this.margin) / 2;
+
+    // Table header
+    const headerColor = template === 'professional' ? [52, 152, 219] : [240, 240, 240];
+    this.pdf.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
+    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, rowHeight, 'F');
+    
+    const textColor = template === 'professional' ? [255, 255, 255] : [0, 0, 0];
+    this.pdf.setTextColor(textColor[0], textColor[1], textColor[2]);
+    this.pdf.setFontSize(10);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('Description', this.margin + 5, this.currentY + 5);
+    this.pdf.text('Amount', this.margin + colWidth + 5, this.currentY + 5);
+    
+    this.currentY += rowHeight;
+    this.pdf.setTextColor(0, 0, 0);
+
+    // Add pricing rows
+    const pricingItems = [
+      { label: 'Base Cost', value: pricingData.base_cost || 0 },
+      { label: 'Labor Cost', value: pricingData.labor_cost || 0 },
+      { label: 'Material Cost', value: pricingData.material_cost || 0 },
+      { label: 'Equipment Cost', value: pricingData.equipment_cost || 0 },
+      { label: 'Overhead', value: pricingData.overhead_cost || 0 },
+      { label: 'Margin', value: pricingData.margin_cost || 0 },
+    ];
+
+    pricingItems.forEach((item, index) => {
+      if (item.value > 0) {
+        const bgColor = index % 2 === 0 ? [255, 255, 255] : [248, 248, 248];
+        this.pdf.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+        this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, rowHeight, 'F');
+        
+        this.pdf.setFont('helvetica', 'normal');
+        this.pdf.text(item.label, this.margin + 5, this.currentY + 5);
+        this.pdf.text(formatCurrencyUtil(item.value), this.margin + colWidth + 5, this.currentY + 5);
+        this.currentY += rowHeight;
+      }
+    });
+
+    // Total row
+    this.pdf.setFillColor(220, 220, 220);
+    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, rowHeight, 'F');
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('TOTAL', this.margin + 5, this.currentY + 5);
+    this.pdf.text(formatCurrencyUtil(pricingData.total || 0), this.margin + colWidth + 5, this.currentY + 5);
+    
+    this.currentY += rowHeight + 10;
+  }
+
+  private addEnhancedContent(content: string, template: string = 'modern') {
+    this.pdf.setFontSize(14);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.text('Proposal Content', this.margin, this.currentY);
+    this.currentY += 10;
+
+    // Parse and render content sections
+    const sections = this.parseContent(content);
+    
+    sections.forEach((section) => {
+      this.addEnhancedSection(section.title, section.content, template);
+    });
+  }
+
+  private addEnhancedSection(title: string, content: string, template: string = 'modern') {
+    // Check if we need a new page
+    if (this.currentY > this.pageHeight - 50) {
+      this.pdf.addPage();
+      this.currentY = this.margin;
+    }
+
+    // Add section title with background
+    if (template === 'professional') {
+      this.pdf.setFillColor(236, 240, 241);
+      this.pdf.rect(this.margin, this.currentY - 2, this.pageWidth - 2 * this.margin, 12, 'F');
+    }
+
+    this.pdf.setFontSize(12);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.text(title, this.margin + 2, this.currentY + 6);
+    this.currentY += 15;
+
+    // Add content
+    this.pdf.setFontSize(10);
+    this.pdf.setFont('helvetica', 'normal');
+    this.renderEnhancedMarkdownContent(content);
+    this.currentY += 10;
+  }
+
+  private renderEnhancedMarkdownContent(content: string) {
+    const maxWidth = this.pageWidth - 2 * this.margin - 10;
+    const lines = content.split('\n');
+
+    lines.forEach((line) => {
+      if (this.currentY > this.pageHeight - 30) {
+        this.pdf.addPage();
+        this.currentY = this.margin;
+      }
+
+      if (line.trim() === '') {
+        this.currentY += 4;
+        return;
+      }
+
+      // Handle different markdown elements
+      if (line.startsWith('# ')) {
+        this.pdf.setFontSize(14);
+        this.pdf.setFont('helvetica', 'bold');
+        const text = line.substring(2);
+        this.pdf.text(text, this.margin + 5, this.currentY);
+        this.currentY += 8;
+      } else if (line.startsWith('## ')) {
+        this.pdf.setFontSize(12);
+        this.pdf.setFont('helvetica', 'bold');
+        const text = line.substring(3);
+        this.pdf.text(text, this.margin + 5, this.currentY);
+        this.currentY += 7;
+      } else if (line.startsWith('- ') || line.startsWith('* ')) {
+        this.pdf.setFontSize(10);
+        this.pdf.setFont('helvetica', 'normal');
+        const text = line.substring(2);
+        this.pdf.text('•', this.margin + 5, this.currentY);
+        const wrappedText = this.pdf.splitTextToSize(text, maxWidth - 10);
+        this.pdf.text(wrappedText, this.margin + 12, this.currentY);
+        this.currentY += wrappedText.length * 4;
+      } else {
+        this.pdf.setFontSize(10);
+        this.pdf.setFont('helvetica', 'normal');
+        const wrappedText = this.pdf.splitTextToSize(line, maxWidth);
+        this.pdf.text(wrappedText, this.margin + 5, this.currentY);
+        this.currentY += wrappedText.length * 4;
+      }
+
+      this.currentY += 2;
+    });
+  }
+
+  private addServiceReferences(references: any[], template: string = 'modern') {
+    this.pdf.setFontSize(14);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.text('Service References', this.margin, this.currentY);
+    this.currentY += 10;
+
+    references.forEach((ref, index) => {
+      if (this.currentY > this.pageHeight - 60) {
+        this.pdf.addPage();
+        this.currentY = this.margin;
+      }
+
+      // Reference box
+      const boxColor = template === 'professional' ? [248, 249, 250] : [252, 252, 252];
+      this.pdf.setFillColor(boxColor[0], boxColor[1], boxColor[2]);
+      this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 40, 'F');
+
+      let refY = this.currentY + 8;
+
+      if (ref.client_name) {
+        this.pdf.setFontSize(11);
+        this.pdf.setFont('helvetica', 'bold');
+        this.pdf.text(ref.client_name, this.margin + 5, refY);
+        refY += 6;
+      }
+
+      if (ref.service_type) {
+        this.pdf.setFontSize(9);
+        this.pdf.setFont('helvetica', 'normal');
+        this.pdf.text(`Service: ${ref.service_type}`, this.margin + 5, refY);
+        refY += 5;
+      }
+
+      if (ref.duration) {
+        this.pdf.text(`Duration: ${ref.duration}`, this.margin + 5, refY);
+        refY += 5;
+      }
+
+      if (ref.testimonial) {
+        this.pdf.setFont('helvetica', 'italic');
+        const testimonialText = this.pdf.splitTextToSize(`"${ref.testimonial}"`, this.pageWidth - 2 * this.margin - 20);
+        this.pdf.text(testimonialText, this.margin + 5, refY);
+      }
+
+      this.currentY += 45;
+    });
+  }
+
+  private addCompanyBackground(background: string, template: string = 'modern') {
+    this.pdf.setFontSize(14);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.text('About Our Company', this.margin, this.currentY);
+    this.currentY += 10;
+
+    this.pdf.setFontSize(10);
+    this.pdf.setFont('helvetica', 'normal');
+    const maxWidth = this.pageWidth - 2 * this.margin - 10;
+    const wrappedText = this.pdf.splitTextToSize(background, maxWidth);
+    this.pdf.text(wrappedText, this.margin + 5, this.currentY);
+    this.currentY += wrappedText.length * 4 + 10;
+  }
+
+  private addEnhancedFooter(
+    companyInfo?: PDFExportOptions['companyInfo'],
+    companyProfile?: PDFExportOptions['companyProfile'],
+    template: string = 'modern'
+  ) {
+    const pageCount = this.pdf.getNumberOfPages();
+
+    for (let i = 1; i <= pageCount; i++) {
+      this.pdf.setPage(i);
+
+      // Footer background for professional template
+      if (template === 'professional') {
+        this.pdf.setFillColor(41, 128, 185);
+        this.pdf.rect(0, this.pageHeight - 20, this.pageWidth, 20, 'F');
+        this.pdf.setTextColor(255, 255, 255);
+      } else {
+        this.pdf.setTextColor(100, 100, 100);
+      }
+
+      // Add footer line
+      if (template !== 'professional') {
+        this.pdf.setDrawColor(200, 200, 200);
+        this.pdf.line(this.margin, this.pageHeight - 15, this.pageWidth - this.margin, this.pageHeight - 15);
+      }
+
+      // Add page number
+      this.pdf.setFontSize(8);
+      this.pdf.setFont('helvetica', 'normal');
+      const pageText = `Page ${i} of ${pageCount}`;
+      const textWidth = this.pdf.getTextWidth(pageText);
+      this.pdf.text(pageText, this.pageWidth - this.margin - textWidth, this.pageHeight - 10);
+
+      // Add company name in footer
+      const companyName = companyProfile?.company_name || companyInfo?.name || 'Veltex Services';
+      this.pdf.text(`Generated by ${companyName}`, this.margin, this.pageHeight - 10);
+    }
   }
 
   private addFooter() {

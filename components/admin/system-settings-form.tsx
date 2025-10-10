@@ -133,9 +133,7 @@ export default function SystemSettingsForm({
       setSaving(true);
 
       // In a real implementation, you would save to a system_settings table
-      const { error } = await supabase
-        .from('system_settings')
-        .upsert(settings);
+      const { error } = await supabase.from('system_settings').upsert(settings);
 
       if (error) throw error;
 
@@ -185,6 +183,7 @@ export default function SystemSettingsForm({
   };
 
   const testEmailSettings = async () => {
+    console.log('🚀 ~ testEmailSettings ~ settings:', settings);
     try {
       // In a real implementation, you would test the SMTP connection
       const response = await fetch('/api/admin/test-email', {
@@ -539,7 +538,9 @@ export default function SystemSettingsForm({
                       updateSetting('require_2fa', checked)
                     }
                   />
-                  <Label htmlFor="require_2fa">Require Two-Factor Authentication</Label>
+                  <Label htmlFor="require_2fa">
+                    Require Two-Factor Authentication
+                  </Label>
                 </div>
               </div>
             </CardContent>
@@ -555,7 +556,9 @@ export default function SystemSettingsForm({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="enable_ai_suggestions">AI Suggestions</Label>
+                    <Label htmlFor="enable_ai_suggestions">
+                      AI Suggestions
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Enable AI-powered suggestions for proposals
                     </p>
@@ -585,7 +588,9 @@ export default function SystemSettingsForm({
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="enable_email_notifications">Email Notifications</Label>
+                    <Label htmlFor="enable_email_notifications">
+                      Email Notifications
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Send email notifications to users
                     </p>
@@ -600,7 +605,9 @@ export default function SystemSettingsForm({
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="enable_sms_notifications">SMS Notifications</Label>
+                    <Label htmlFor="enable_sms_notifications">
+                      SMS Notifications
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Send SMS notifications to users
                     </p>
@@ -668,7 +675,9 @@ export default function SystemSettingsForm({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="business_hours_start">Business Hours Start</Label>
+                  <Label htmlFor="business_hours_start">
+                    Business Hours Start
+                  </Label>
                   <Input
                     id="business_hours_start"
                     type="time"
@@ -705,7 +714,9 @@ export default function SystemSettingsForm({
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="space-y-0.5">
-                  <Label htmlFor="maintenance_mode">Enable Maintenance Mode</Label>
+                  <Label htmlFor="maintenance_mode">
+                    Enable Maintenance Mode
+                  </Label>
                   <p className="text-sm text-muted-foreground">
                     When enabled, only admins can access the system
                   </p>

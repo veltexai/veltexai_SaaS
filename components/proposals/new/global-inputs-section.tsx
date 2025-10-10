@@ -32,6 +32,17 @@ const serviceFrequencyOptions = [
   { value: 'daily', label: 'Daily' },
 ];
 
+const propertyTypeOptions = [
+  { value: 'office', label: 'Office Building' },
+  { value: 'restaurant', label: 'Restaurant' },
+  { value: 'warehouse', label: 'Warehouse' },
+  { value: 'daycare', label: 'Daycare Center' },
+  { value: 'medical', label: 'Medical Facility' },
+  { value: 'church', label: 'Church/Religious' },
+  { value: 'retail', label: 'Retail Store' },
+  { value: 'school', label: 'School/Educational' },
+];
+
 export function GlobalInputsSection() {
   const form = useFormContext<ProposalFormData>();
 
@@ -185,6 +196,50 @@ export function GlobalInputsSection() {
                     </FormControl>
                     <SelectContent>
                       {serviceFrequencyOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="global_inputs.regional_location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Regional Location</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Seattle, WA"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="global_inputs.property_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Property Type</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl className="w-full">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select property type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {propertyTypeOptions.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>

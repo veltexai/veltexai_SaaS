@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getUser } from '@/queries/user';
 import { ProfileSettings } from '@/components/settings/profile-settings';
+import { CompanyProfileSettings } from '@/components/settings/company-profile-settings';
 import { SubscriptionBilling } from '@/components/settings/subscription-billing';
 import { SecuritySettings } from '@/components/settings/security-settings';
 import { NotificationsSettings } from '@/components/settings/notifications-settings';
@@ -22,11 +23,21 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ProfileSettings user={user as UserType} profile={profile as Profile} />
-        <SubscriptionBilling userId={user.id} />
-        <SecuritySettings />
-        {/* <NotificationsSettings /> */}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ProfileSettings
+            user={user as UserType}
+            profile={profile as Profile}
+          />
+          <SubscriptionBilling userId={user.id} />
+        </div>
+
+        {/* <CompanyProfileSettings /> */}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SecuritySettings />
+          {/* <NotificationsSettings /> */}
+        </div>
       </div>
     </div>
   );

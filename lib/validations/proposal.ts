@@ -15,6 +15,42 @@ export const serviceFrequencySchema = z.enum([
   "daily"
 ])
 
+// Enhanced facility details schema
+export const facilityDetailsSchema = z.object({
+  building_age: z.number().min(0).optional(),
+  building_type: z.enum(["office", "warehouse", "retail", "medical", "educational", "hospitality", "industrial", "other"]).optional(),
+  accessibility_requirements: z.array(z.string()).default([]),
+  special_areas: z.array(z.string()).default([]),
+  equipment_present: z.array(z.string()).default([]),
+  environmental_concerns: z.array(z.string()).default([]),
+})
+
+// Enhanced traffic analysis schema
+export const trafficAnalysisSchema = z.object({
+  staff_count: z.number().min(0).optional(),
+  visitor_frequency: z.enum(["low", "medium", "high"]).optional(),
+  peak_hours: z.array(z.string()).default([]),
+  special_events: z.boolean().default(false),
+  traffic_level: z.enum(["light", "medium", "heavy"]).optional(),
+})
+
+// Enhanced service scope schema
+export const serviceScopeSchema = z.object({
+  areas_included: z.array(z.string()).default([]),
+  areas_excluded: z.array(z.string()).default([]),
+  special_services: z.array(z.string()).default([]),
+  frequency_details: z.record(z.any()).default({}),
+})
+
+// Enhanced special requirements schema
+export const specialRequirementsSchema = z.object({
+  security_clearance: z.boolean().default(false),
+  after_hours_access: z.boolean().default(false),
+  special_equipment: z.array(z.string()).default([]),
+  certifications_required: z.array(z.string()).default([]),
+  insurance_requirements: z.array(z.string()).default([]),
+})
+
 // Base global inputs schema (always required)
 export const globalInputsSchema = z.object({
   client_name: z.string().min(1, "Client name is required"),
@@ -24,6 +60,9 @@ export const globalInputsSchema = z.object({
   service_location: z.string().min(1, "Service location is required"),
   facility_size: z.number().min(1, "Facility size must be greater than 0"),
   service_frequency: serviceFrequencySchema,
+  // Enhanced fields
+  regional_location: z.string().optional(),
+  property_type: z.enum(["office", "restaurant", "warehouse", "daycare", "medical", "church", "retail", "school"]).optional(),
 })
 
 // Service-specific schemas
@@ -108,6 +147,11 @@ export const proposalFormSchema = z.object({
   pricing_data: pricingDataSchema.optional(),
   generated_content: z.string().optional(),
   status: z.enum(["draft", "sent", "accepted", "rejected"]).default("draft"),
+  // Enhanced proposal fields
+  facility_details: facilityDetailsSchema.default({}),
+  traffic_analysis: trafficAnalysisSchema.default({}),
+  service_scope: serviceScopeSchema.default({}),
+  special_requirements: specialRequirementsSchema.default({}),
 })
 
 // Dynamic validation based on service type

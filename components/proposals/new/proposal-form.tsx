@@ -20,6 +20,7 @@ import {
 import { ServiceTypeSelector } from './service-type-selector';
 import { GlobalInputsSection } from './global-inputs-section';
 import { ServiceSpecificSection } from './service-specific-section';
+import { EnhancedFacilitySection } from './enhanced-facility-section';
 import { PricingSection } from './pricing-section';
 import {
   ChevronLeft,
@@ -53,6 +54,11 @@ const STEPS = [
   },
   {
     id: 4,
+    title: 'Facility Details',
+    description: 'Enhanced facility information',
+  },
+  {
+    id: 5,
     title: 'Pricing',
     description: 'Pricing configuration',
   },
@@ -148,12 +154,42 @@ export function ProposalForm({ userId }: ProposalFormProps) {
         service_location: '',
         facility_size: 0,
         service_frequency: '1x-month' as const,
+        regional_location: '',
+        property_type: undefined,
       },
       service_specific_data: {},
       pricing_enabled: false,
       pricing_data: undefined,
       generated_content: '',
       status: 'draft' as const,
+      facility_details: {
+        building_age: undefined,
+        building_type: undefined,
+        accessibility_requirements: [],
+        special_areas: [],
+        equipment_present: [],
+        environmental_concerns: [],
+      },
+      traffic_analysis: {
+        staff_count: undefined,
+        visitor_frequency: undefined,
+        peak_hours: [],
+        special_events: false,
+        traffic_level: undefined,
+      },
+      service_scope: {
+        areas_included: [],
+        areas_excluded: [],
+        special_services: [],
+        frequency_details: {},
+      },
+      special_requirements: {
+        security_clearance: false,
+        after_hours_access: false,
+        special_equipment: [],
+        certifications_required: [],
+        insurance_requirements: [],
+      },
     },
   });
 
@@ -292,6 +328,8 @@ export function ProposalForm({ userId }: ProposalFormProps) {
           />
         );
       case 4:
+        return <EnhancedFacilitySection />;
+      case 5:
         return (
           <PricingSection
             serviceType={selectedServiceType || 'residential'}

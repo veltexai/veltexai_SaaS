@@ -77,12 +77,42 @@ export function ProposalEditDialog({
         service_location: '',
         facility_size: 0,
         service_frequency: 'one-time',
+        regional_location: '',
+        property_type: undefined,
       },
       service_specific_data: {},
       pricing_enabled: false,
       pricing_data: undefined,
       generated_content: '',
       status: 'draft' as const,
+      facility_details: {
+        building_age: undefined,
+        building_type: undefined,
+        accessibility_requirements: [],
+        special_areas: [],
+        equipment_present: [],
+        environmental_concerns: [],
+      },
+      traffic_analysis: {
+        staff_count: undefined,
+        visitor_frequency: undefined,
+        peak_hours: [],
+        special_events: false,
+        traffic_level: undefined,
+      },
+      service_scope: {
+        areas_included: [],
+        areas_excluded: [],
+        special_services: [],
+        frequency_details: {},
+      },
+      special_requirements: {
+        security_clearance: false,
+        after_hours_access: false,
+        special_equipment: [],
+        certifications_required: [],
+        insurance_requirements: [],
+      },
     },
   });
 
@@ -99,7 +129,9 @@ export function ProposalEditDialog({
           contact_phone: proposal.contact_phone || '',
           service_location: proposal.service_location || '',
           facility_size: proposal.facility_size || 0,
-          service_frequency: proposal.service_frequency || 'one-time',
+          service_frequency: (proposal.service_frequency as "one-time" | "1x-month" | "bi-weekly" | "weekly" | "2x-week" | "3x-week" | "5x-week" | "daily") || 'one-time',
+          regional_location: proposal.regional_location || '',
+          property_type: (proposal.property_type as "office" | "restaurant" | "warehouse" | "daycare" | "medical" | "church" | "retail" | "school") || undefined,
         },
         service_specific_data:
           (proposal.service_specific_data as Record<string, any>) || {},
@@ -107,6 +139,34 @@ export function ProposalEditDialog({
         pricing_data: (proposal.pricing_data as any) || undefined,
         generated_content: proposal.generated_content || '',
         status: proposal.status || 'draft',
+        facility_details: (proposal.facility_details as any) || {
+          building_age: undefined,
+          building_type: undefined,
+          accessibility_requirements: [],
+          special_areas: [],
+          equipment_present: [],
+          environmental_concerns: [],
+        },
+        traffic_analysis: (proposal.traffic_analysis as any) || {
+          staff_count: undefined,
+          visitor_frequency: undefined,
+          peak_hours: [],
+          special_events: false,
+          traffic_level: undefined,
+        },
+        service_scope: (proposal.service_scope as any) || {
+          areas_included: [],
+          areas_excluded: [],
+          special_services: [],
+          frequency_details: {},
+        },
+        special_requirements: (proposal.special_requirements as any) || {
+          security_clearance: false,
+          after_hours_access: false,
+          special_equipment: [],
+          certifications_required: [],
+          insurance_requirements: [],
+        },
       });
     }
   }, [proposal, open, form]);

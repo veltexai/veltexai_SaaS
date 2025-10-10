@@ -36,6 +36,8 @@ yarn-error.log*
 
 .trae*
 
+scripts*
+
 # vercel
 .vercel
 
