@@ -13,7 +13,8 @@ const DEFAULT_COMPRESSION_OPTIONS: CompressionOptions = {
   maxSizeMB: 1,
   maxWidthOrHeight: 1920,
   useWebWorker: true,
-  fileType: 'image/webp',
+  // Remove fileType to preserve original format and transparency
+  // fileType: 'image/webp', // This destroys transparency
 };
 
 const MAX_RETRIES = 3;

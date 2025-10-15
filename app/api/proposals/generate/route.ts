@@ -44,6 +44,11 @@ export async function POST(request: NextRequest) {
       facility_size,
       service_specific_data,
       pricing_data,
+      // Enhanced facility data
+      facility_details,
+      traffic_analysis,
+      service_scope,
+      special_requirements,
     } = body;
 
     // Validate required fields
@@ -77,6 +82,115 @@ export async function POST(request: NextRequest) {
       return labels[type as keyof typeof labels] || type;
     };
 
+    // Helper function to format enhanced facility data
+    const formatEnhancedData = () => {
+      let enhancedInfo = '';
+
+      // Facility Details
+      if (facility_details && Object.keys(facility_details).length > 0) {
+        enhancedInfo += '\n--- FACILITY DETAILS ---\n';
+        if (facility_details.building_age) {
+          enhancedInfo += `Building Age: ${facility_details.building_age} years\n`;
+        }
+        if (facility_details.building_type) {
+          enhancedInfo += `Building Type: ${facility_details.building_type}\n`;
+        }
+        if (facility_details.accessibility_requirements?.length > 0) {
+          enhancedInfo += `Accessibility Requirements: ${facility_details.accessibility_requirements.join(
+            ', '
+          )}\n`;
+        }
+        if (facility_details.special_areas?.length > 0) {
+          enhancedInfo += `Special Areas: ${facility_details.special_areas.join(
+            ', '
+          )}\n`;
+        }
+        if (facility_details.equipment_present?.length > 0) {
+          enhancedInfo += `Equipment Present: ${facility_details.equipment_present.join(
+            ', '
+          )}\n`;
+        }
+        if (facility_details.environmental_concerns?.length > 0) {
+          enhancedInfo += `Environmental Concerns: ${facility_details.environmental_concerns.join(
+            ', '
+          )}\n`;
+        }
+      }
+
+      // Traffic Analysis
+      if (traffic_analysis && Object.keys(traffic_analysis).length > 0) {
+        enhancedInfo += '\n--- TRAFFIC ANALYSIS ---\n';
+        if (traffic_analysis.staff_count) {
+          enhancedInfo += `Staff Count: ${traffic_analysis.staff_count}\n`;
+        }
+        if (traffic_analysis.visitor_frequency) {
+          enhancedInfo += `Visitor Frequency: ${traffic_analysis.visitor_frequency}\n`;
+        }
+        if (traffic_analysis.traffic_level) {
+          enhancedInfo += `Traffic Level: ${traffic_analysis.traffic_level}\n`;
+        }
+        if (traffic_analysis.peak_hours?.length > 0) {
+          enhancedInfo += `Peak Hours: ${traffic_analysis.peak_hours.join(
+            ', '
+          )}\n`;
+        }
+        if (traffic_analysis.special_events) {
+          enhancedInfo += `Special Events: Yes\n`;
+        }
+      }
+
+      // Service Scope
+      if (service_scope && Object.keys(service_scope).length > 0) {
+        enhancedInfo += '\n--- SERVICE SCOPE ---\n';
+        if (service_scope.areas_included?.length > 0) {
+          enhancedInfo += `Areas Included: ${service_scope.areas_included.join(
+            ', '
+          )}\n`;
+        }
+        if (service_scope.areas_excluded?.length > 0) {
+          enhancedInfo += `Areas Excluded: ${service_scope.areas_excluded.join(
+            ', '
+          )}\n`;
+        }
+        if (service_scope.special_services?.length > 0) {
+          enhancedInfo += `Special Services: ${service_scope.special_services.join(
+            ', '
+          )}\n`;
+        }
+      }
+
+      // Special Requirements
+      if (
+        special_requirements &&
+        Object.keys(special_requirements).length > 0
+      ) {
+        enhancedInfo += '\n--- SPECIAL REQUIREMENTS ---\n';
+        if (special_requirements.security_clearance) {
+          enhancedInfo += `Security Clearance: Required\n`;
+        }
+        if (special_requirements.after_hours_access) {
+          enhancedInfo += `After Hours Access: Required\n`;
+        }
+        if (special_requirements.special_equipment?.length > 0) {
+          enhancedInfo += `Special Equipment: ${special_requirements.special_equipment.join(
+            ', '
+          )}\n`;
+        }
+        if (special_requirements.certifications_required?.length > 0) {
+          enhancedInfo += `Certifications Required: ${special_requirements.certifications_required.join(
+            ', '
+          )}\n`;
+        }
+        if (special_requirements.insurance_requirements?.length > 0) {
+          enhancedInfo += `Insurance Requirements: ${special_requirements.insurance_requirements.join(
+            ', '
+          )}\n`;
+        }
+      }
+
+      return enhancedInfo;
+    };
+
     // Create the prompt for OpenAI
     const prompt = `
 You are a proposal writing assistant. Create a polished, persuasive business proposal in markdown format based on the details below. 
@@ -101,6 +215,8 @@ Service Frequency: ${globalInputs.serviceFrequency || ''}
 ${Object.entries(service_specific_data || {})
   .map(([key, value]) => `${key}: ${value}`)
   .join('\n')}
+
+${formatEnhancedData()}
 
 --- COMPANY INFO ---
 Company: ${profile.company_name || 'Your Company'}
@@ -142,6 +258,7 @@ Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estima
 }
 
 `;
+    console.log('🚀 ~ POST ~ prompt:', prompt);
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',

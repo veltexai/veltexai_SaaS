@@ -1,20 +1,26 @@
-'use client'
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, Filter } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Search, Filter } from 'lucide-react';
 
 interface SubscriptionFiltersProps {
-  searchTerm: string
-  statusFilter: string
-  planFilter: string
-  onSearchChange: (value: string) => void
-  onStatusChange: (value: string) => void
-  onPlanChange: (value: string) => void
-  onRefresh: () => void
+  searchTerm: string;
+  statusFilter: string;
+  planFilter: string;
+  onSearchChange: (value: string) => void;
+  onStatusChange: (value: string) => void;
+  onPlanChange: (value: string) => void;
+  onRefresh: () => void;
 }
 
 export function SubscriptionFilters({
@@ -24,7 +30,7 @@ export function SubscriptionFilters({
   onSearchChange,
   onStatusChange,
   onPlanChange,
-  onRefresh
+  onRefresh,
 }: SubscriptionFiltersProps) {
   return (
     <Card>
@@ -49,7 +55,7 @@ export function SubscriptionFilters({
           <div className="space-y-2">
             <Label>Status</Label>
             <Select value={statusFilter} onValueChange={onStatusChange}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -63,7 +69,7 @@ export function SubscriptionFilters({
           <div className="space-y-2">
             <Label>Plan</Label>
             <Select value={planFilter} onValueChange={onPlanChange}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -84,5 +90,5 @@ export function SubscriptionFilters({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

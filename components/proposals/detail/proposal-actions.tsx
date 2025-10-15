@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { createClient } from '@/lib/supabase/client';
-import { Edit, Download, Send, Loader2 } from 'lucide-react';
+import { Edit, Download, Send, Loader2, Save, X } from 'lucide-react';
 
 interface Proposal {
   id: string;
@@ -16,9 +16,21 @@ interface Proposal {
 
 interface ProposalActionsProps {
   proposal: Proposal;
+  isEditing?: boolean;
+  onEditStart?: () => void;
+  onEditCancel?: () => void;
+  onEditSave?: () => void;
+  saving?: boolean;
 }
 
-export function ProposalActions({ proposal }: ProposalActionsProps) {
+export function ProposalActions({
+  proposal,
+  isEditing = false,
+  onEditStart,
+  onEditCancel,
+  onEditSave,
+  saving = false,
+}: ProposalActionsProps) {
   const router = useRouter();
   const [updating, setUpdating] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -95,13 +107,27 @@ export function ProposalActions({ proposal }: ProposalActionsProps) {
       )}
 
       <div className="flex items-center space-x-4">
-        {/* <Link href={`/dashboard/proposals/${proposal.id}/edit`}>
-          <Button variant="outline">
+        {!isEditing ? (
+          <Button variant="outline" onClick={onEditStart}>
             <Edit className="mr-2 h-4 w-4" />
-            Edit
+            Edit Proposal
           </Button>
-        </Link> */}
-
+        ) : (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={onEditCancel} disabled={saving}>
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button onClick={onEditSave} disabled={saving}>
+              {saving ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Save
+            </Button>
+          </div>
+        )}
         <Button variant="outline" onClick={exportToPDF} disabled={exporting}>
           {exporting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

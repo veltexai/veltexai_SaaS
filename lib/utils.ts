@@ -72,3 +72,10 @@ export function getSubscriptionStatusColor(status: string): string {
 export function getBillingStatusColor(status: string): string {
   return getStatusColor(status);
 }
+
+export function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return text.slice(0, maxLength) + '...';
+}

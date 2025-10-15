@@ -2,8 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { getUser } from '@/queries/user';
 import { createClient } from '@/lib/supabase/server';
 import { ProposalHeader } from '@/components/proposals/detail/proposal-header';
-import { ProposalActions } from '@/components/proposals/detail/proposal-actions';
-import { ProposalContent } from '@/components/proposals/detail/proposal-content';
+import { ProposalEditWrapper } from '@/components/proposals/detail/proposal-edit-wrapper';
 import { ProposalSidebar } from '@/components/proposals/detail/proposal-sidebar';
 interface Proposal {
   id: string;
@@ -72,15 +71,14 @@ export default async function ProposalViewPage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       <ProposalHeader proposal={proposal} />
-      <ProposalActions proposal={proposal} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <ProposalContent proposal={proposal} />
+        <div className="lg:col-span-2 space-y-6">
+          <ProposalEditWrapper proposal={proposal} />
         </div>
-        <div>
+        <div className="sticky top-[84px] mt-[60px] h-fit">
           <ProposalSidebar proposal={proposal} />
         </div>
       </div>

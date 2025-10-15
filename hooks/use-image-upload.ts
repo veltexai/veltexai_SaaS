@@ -29,17 +29,45 @@ export function useImageUpload({
       setUploadError(null);
 
       try {
+        // Delete existing logo to avoid orphaned files
+        // Priority: delete preview if it exists and is different from saved, otherwise delete saved
+        const logoToDelete = logoPreview && logoPreview !== savedLogoUrl 
+          ? logoPreview 
+          : savedLogoUrl;
+          
+        if (logoToDelete) {
+          try {
+            await deleteImageServer(logoToDelete);
+            console.log('Deleted existing logo:', logoToDelete);
+          } catch (error) {
+            console.warn('Failed to delete existing logo:', error);
+            // Continue with upload even if deletion fails
+          }
+        }
+
+        // Use transparency-preserving compression options for logos
+        const logoCompressionOptions = {
+          maxSizeMB: 2, // Slightly larger for logos to preserve quality
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+          preserveExif: true, // Preserve image metadata
+          alwaysKeepResolution: true, // Prevent resolution changes that might affect background
+          initialQuality: 0.9, // High quality to preserve colors and backgrounds
+          // Don't specify fileType to preserve original format and transparency
+        };
+
         const { imageUrl } = await uploadImageClient({
           file,
           bucket,
           folder,
+          compressionOptions: logoCompressionOptions,
           onProgress: (progress, message) => {
             console.log(`Upload progress: ${progress}% - ${message}`);
           },
         });
 
         setLogoPreview(imageUrl);
-        toast.success('Image uploaded successfully!');
+        toast.success('Logo uploaded successfully!');
         return imageUrl;
       } catch (error) {
         const errorMessage =
@@ -51,7 +79,7 @@ export function useImageUpload({
         setIsUploading(false);
       }
     },
-    [bucket, folder]
+    [bucket, folder, logoPreview, savedLogoUrl]
   );
 
   const removeImage = useCallback(async (imageUrl: string): Promise<void> => {

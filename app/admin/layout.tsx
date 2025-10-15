@@ -29,27 +29,42 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     try {
       const {
         data: { user },
+        error: userError,
       } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error('Auth error:', userError);
+        router.push('/auth/login');
+        return;
+      }
+
       if (!user) {
         router.push('/login');
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single();
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        toast.error('Error fetching user profile');
+        router.push('/dashboard');
+        return;
+      }
 
       if (profile?.role !== 'admin') {
         router.push('/dashboard');
         toast.error('Access denied. Admin privileges required.');
         return;
       }
-
       setCurrentUser({ ...user, ...profile });
     } catch (error) {
       console.error('Error checking admin access:', error);
+      toast.error('An error occurred while checking admin access');
       router.push('/dashboard');
     } finally {
       setLoading(false);

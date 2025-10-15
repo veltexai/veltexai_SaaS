@@ -60,6 +60,11 @@ export function AIContentGenerator({
           facility_size: form.global_inputs.facility_size,
           service_specific_data: form.service_specific_data,
           pricing_data: form.pricing_data,
+          // Enhanced facility data
+          facility_details: form.facility_details,
+          traffic_analysis: form.traffic_analysis,
+          service_scope: form.service_scope,
+          special_requirements: form.special_requirements,
         }),
       });
 

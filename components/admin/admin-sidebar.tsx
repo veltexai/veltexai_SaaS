@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, truncateText } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
@@ -259,7 +259,7 @@ export default function AdminSidebar({
                       {currentUser.full_name || 'Admin User'}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {currentUser.email}
+                      {truncateText(currentUser.email || '', 19)}
                     </div>
                   </div>
                   <ChevronDown className="h-4 w-4 pr-1" />

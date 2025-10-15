@@ -34,6 +34,7 @@ import { useProfileUpdate } from '@/hooks/use-profile-update';
 import { profileSchema, type ProfileFormData } from '@/lib/validations/profile';
 import { type User as UserType, type Profile } from '@/types/database';
 import { useNavigationGuard } from '@/hooks/use-navigation-guard';
+import { toast } from 'sonner';
 
 // Constants
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -114,19 +115,36 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
   const handleFileSelect = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
-      if (!file) return;
+      
+      // If no file selected (user cancelled), keep existing logo
+      if (!file) {
+        // Reset the input value to allow selecting the same file again
+        event.target.value = '';
+        return;
+      }
 
       const validationError = validateFile(file);
       if (validationError) {
-        // Handle validation error through error boundary or toast
+        // Show validation error to user
+        console.error('File validation failed:', validationError);
+        toast.error(validationError);
+        
+        // Reset the input value
+        event.target.value = '';
         return;
       }
 
       try {
+        // Upload the new image (this will replace the existing one in the bucket)
         const imageUrl = await handleImageUpload(file);
         form.setValue('logo_url', imageUrl, { shouldDirty: true });
+        
+        // Reset the input value to allow selecting the same file again
+        event.target.value = '';
       } catch (error) {
         console.error('Upload failed:', error);
+        // Reset the input value on error
+        event.target.value = '';
       }
     },
     [validateFile, handleImageUpload, form]

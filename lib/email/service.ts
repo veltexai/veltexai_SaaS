@@ -16,6 +16,25 @@ interface EmailData extends SubscriptionEmailData {
   userEmail: string;
 }
 
+interface PaymentFailureEmailData {
+  userEmail: string;
+  userName: string;
+  amount: number;
+  invoiceUrl?: string | null;
+}
+
+interface CancellationEmailData {
+  userEmail: string;
+  userName: string;
+  endDate: Date;
+}
+
+interface TrialEndingEmailData {
+  userEmail: string;
+  userName: string;
+  daysRemaining: number;
+}
+
 export class EmailService {
   private static async getEmailConfig(): Promise<EmailConfig | null> {
     console.log('📧 EmailService: Initializing Supabase client...');
@@ -48,21 +67,10 @@ export class EmailService {
   }
 
   private static async createTransporter() {
-    console.log('📧 EmailService: Getting config for transporter...');
     const config = await this.getEmailConfig();
     if (!config) {
-      throw new Error('Email configuration not found');
+      throw new Error('Email configuration not available');
     }
-
-    console.log(
-      '📧 EmailService: Creating nodemailer transporter with config:',
-      {
-        host: config.smtp_host,
-        port: config.smtp_port,
-        secure: config.smtp_port === 465,
-        auth: { user: config.smtp_username },
-      }
-    );
 
     return nodemailer.createTransport({
       host: config.smtp_host,
@@ -177,6 +185,129 @@ export class EmailService {
       return true;
     } catch (error) {
       console.error('Failed to send test email:', error);
+      return false;
+    }
+  }
+
+  static async sendPaymentFailureEmail(
+    data: PaymentFailureEmailData
+  ): Promise<boolean> {
+    try {
+      console.log('📧 EmailService: Sending payment failure email...');
+      const config = await this.getEmailConfig();
+      if (!config) {
+        console.error('❌ EmailService: Email configuration not available');
+        return false;
+      }
+
+      if (!config.enable_email_notifications) {
+        console.log('⚠️ EmailService: Email notifications are disabled');
+        return true;
+      }
+
+      const transporter = await this.createTransporter();
+      const template = EmailTemplates.getPaymentFailureEmail(data);
+
+      const mailOptions = {
+        from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
+        to: data.userEmail,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(
+        `✅ EmailService: Payment failure email sent successfully to ${data.userEmail}`
+      );
+      return true;
+    } catch (error) {
+      console.error(
+        '❌ EmailService: Failed to send payment failure email:',
+        error
+      );
+      return false;
+    }
+  }
+
+  static async sendCancellationEmail(
+    data: CancellationEmailData
+  ): Promise<boolean> {
+    try {
+      console.log('📧 EmailService: Sending cancellation email...');
+      const config = await this.getEmailConfig();
+      if (!config) {
+        console.error('❌ EmailService: Email configuration not available');
+        return false;
+      }
+
+      if (!config.enable_email_notifications) {
+        console.log('⚠️ EmailService: Email notifications are disabled');
+        return true;
+      }
+
+      const transporter = await this.createTransporter();
+      const template = EmailTemplates.getCancellationEmail(data);
+
+      const mailOptions = {
+        from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
+        to: data.userEmail,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(
+        `✅ EmailService: Cancellation email sent successfully to ${data.userEmail}`
+      );
+      return true;
+    } catch (error) {
+      console.error(
+        '❌ EmailService: Failed to send cancellation email:',
+        error
+      );
+      return false;
+    }
+  }
+
+  static async sendTrialEndingEmail(
+    data: TrialEndingEmailData
+  ): Promise<boolean> {
+    try {
+      console.log('📧 EmailService: Sending trial ending email...');
+      const config = await this.getEmailConfig();
+      if (!config) {
+        console.error('❌ EmailService: Email configuration not available');
+        return false;
+      }
+
+      if (!config.enable_email_notifications) {
+        console.log('⚠️ EmailService: Email notifications are disabled');
+        return true;
+      }
+
+      const transporter = await this.createTransporter();
+      const template = EmailTemplates.getTrialEndingEmail(data);
+
+      const mailOptions = {
+        from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
+        to: data.userEmail,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(
+        `✅ EmailService: Trial ending email sent successfully to ${data.userEmail}`
+      );
+      return true;
+    } catch (error) {
+      console.error(
+        '❌ EmailService: Failed to send trial ending email:',
+        error
+      );
       return false;
     }
   }

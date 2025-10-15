@@ -78,29 +78,29 @@ export class PDFExporter {
     this.addEnhancedTitle(proposal.title, template);
 
     // Add proposal overview section
-    this.addProposalOverview(proposal, template);
+    // this.addProposalOverview(proposal, template);
 
     // Add client information section
-    this.addClientInformation(proposal, template);
+    // this.addClientInformation(proposal, template);
 
     // Add service details if available
-    if (includeServiceDetails && proposal.service_specific_data) {
-      this.addServiceDetails(
-        proposal.service_type as ServiceType,
-        proposal.service_specific_data as any,
-        template
-      );
-    }
+    // if (includeServiceDetails && proposal.service_specific_data) {
+    //   this.addServiceDetails(
+    //     proposal.service_type as ServiceType,
+    //     proposal.service_specific_data as any,
+    //     template
+    //   );
+    // }
 
     // Add enhanced facility details if available
-    if (proposal.facility_details) {
-      this.addFacilityDetails(proposal.facility_details as any, template);
-    }
+    // if (proposal.facility_details) {
+    //   this.addFacilityDetails(proposal.facility_details as any, template);
+    // }
 
     // Add pricing breakdown with enhanced styling
-    if (includePricingBreakdown && proposal.pricing_data) {
-      this.addEnhancedPricingBreakdown(proposal.pricing_data as any, template);
-    }
+    // if (includePricingBreakdown && proposal.pricing_data) {
+    //   this.addEnhancedPricingBreakdown(proposal.pricing_data as any, template);
+    // }
 
     // Add generated content with better formatting
     if (proposal.generated_content) {
@@ -108,7 +108,10 @@ export class PDFExporter {
     }
 
     // Add service references if available and requested
-    if (includeServiceReferences && companyProfile?.service_references?.length) {
+    if (
+      includeServiceReferences &&
+      companyProfile?.service_references?.length
+    ) {
       this.addServiceReferences(companyProfile.service_references, template);
     }
 
@@ -403,7 +406,11 @@ export class PDFExporter {
   //   this.currentY += 30;
   // }
 
-  private addServiceDetails(serviceType: ServiceType, serviceData: any, template: string = 'modern') {
+  private addServiceDetails(
+    serviceType: ServiceType,
+    serviceData: any,
+    template: string = 'modern'
+  ) {
     this.pdf.setFontSize(14);
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.setTextColor(0, 0, 0);
@@ -892,8 +899,9 @@ export class PDFExporter {
     template: string = 'modern'
   ) {
     const logoUrl = companyProfile?.logo_url || companyInfo?.logo;
-    const companyName = companyProfile?.company_name || companyInfo?.name || 'Veltex Services';
-    
+    const companyName =
+      companyProfile?.company_name || companyInfo?.name || 'Veltex Services';
+
     // Add background color for professional template
     if (template === 'professional') {
       this.pdf.setFillColor(41, 128, 185); // Professional blue
@@ -907,9 +915,59 @@ export class PDFExporter {
         if (response.ok) {
           const arrayBuffer = await response.arrayBuffer();
           const base64 = Buffer.from(arrayBuffer).toString('base64');
+
+          // Always force PNG format for transparency support and add white background
           const dataUrl = `data:image/png;base64,${base64}`;
 
-          this.pdf.addImage(dataUrl, 'PNG', this.margin, this.currentY, 30, 20);
+          // Set flexible dimensions that work for all logo types
+          const maxWidth = 50;
+          const maxHeight = 35;
+
+          // Use a balanced approach - logos will fit within these bounds
+          // This prevents squishing while maintaining reasonable size
+          let logoWidth = maxWidth;
+          let logoHeight = maxHeight;
+
+          // For most logos, use a 3:2 aspect ratio which works well for both landscape and portrait
+          // This is a safe middle ground that prevents extreme squishing
+          const aspectRatio = 1.4; // 3:2 ratio (width:height)
+
+          if (logoWidth / logoHeight > aspectRatio) {
+            // Logo is too wide, constrain by height
+            logoHeight = maxHeight;
+            logoWidth = logoHeight * aspectRatio;
+          } else {
+            // Logo is too tall, constrain by width
+            logoWidth = maxWidth;
+            logoHeight = logoWidth / aspectRatio;
+          }
+
+          // Ensure we don't exceed maximum bounds
+          if (logoWidth > maxWidth) {
+            logoWidth = maxWidth;
+            logoHeight = logoWidth / aspectRatio;
+          }
+          if (logoHeight > maxHeight) {
+            logoHeight = maxHeight;
+            logoWidth = logoHeight * aspectRatio;
+          }
+
+          // Calculate center position for logo
+          const centerX = (this.pageWidth - logoWidth) / 2;
+
+          // Add the image with PNG format for transparency support
+          this.pdf.addImage(
+            dataUrl,
+            'PNG', // Always use PNG for transparency
+            centerX,
+            this.currentY,
+            logoWidth,
+            logoHeight,
+            undefined, // alias
+            'NONE' // No compression to preserve quality
+          );
+
+          this.currentY += logoHeight + 10;
         }
       } catch (error) {
         console.error('Failed to load logo:', error);
@@ -919,51 +977,78 @@ export class PDFExporter {
     // Add company name and contact info
     const textColor = template === 'professional' ? [255, 255, 255] : [0, 0, 0];
     this.pdf.setTextColor(textColor[0], textColor[1], textColor[2]);
-    
+
     this.pdf.setFontSize(18);
     this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text(companyName, logoUrl ? this.margin + 35 : this.margin, this.currentY + 12);
+    this.pdf.text(
+      companyName ? '' : '',
+      logoUrl ? this.margin + 35 : this.margin,
+      this.currentY + 12
+    );
 
     // Add contact information
     if (companyProfile?.contact_info || companyInfo) {
       this.pdf.setFontSize(10);
       this.pdf.setFont('helvetica', 'normal');
-      
+
       const contactInfo = companyProfile?.contact_info;
       const email = contactInfo?.email || companyInfo?.email;
       const phone = contactInfo?.phone || companyInfo?.phone;
       const website = companyInfo?.website;
 
       let contactY = this.currentY + 18;
-      
-      if (email) {
-        this.pdf.text(`Email: ${email}`, logoUrl ? this.margin + 35 : this.margin, contactY);
-        contactY += 4;
-      }
-      
-      if (phone) {
-        this.pdf.text(`Phone: ${phone}`, logoUrl ? this.margin + 35 : this.margin, contactY);
-        contactY += 4;
-      }
-      
-      if (website) {
-        this.pdf.text(`Website: ${website}`, logoUrl ? this.margin + 35 : this.margin, contactY);
-      }
+
+      // if (email) {
+      //   this.pdf.text(
+      //     `Email: ${email}`,
+      //     logoUrl ? this.margin + 35 : this.margin,
+      //     contactY
+      //   );
+      //   contactY += 4;
+      // }
+
+      // if (phone) {
+      //   this.pdf.text(
+      //     `Phone: ${phone}`,
+      //     logoUrl ? this.margin + 35 : this.margin,
+      //     contactY
+      //   );
+      //   contactY += 4;
+      // }
+
+      // if (website) {
+      //   this.pdf.text(
+      //     `Website: ${website}`,
+      //     logoUrl ? this.margin + 35 : this.margin,
+      //     contactY
+      //   );
+      // }
     }
 
-    this.currentY += 45;
-    
+    this.currentY += 15;
+
     // Add separator line
     this.pdf.setDrawColor(200, 200, 200);
-    this.pdf.line(this.margin, this.currentY, this.pageWidth - this.margin, this.currentY);
-    this.currentY += 10;
+    this.pdf.line(
+      this.margin,
+      this.currentY,
+      this.pageWidth - this.margin,
+      this.currentY
+    );
+    this.currentY += 5;
   }
 
   private addEnhancedTitle(title: string, template: string = 'modern') {
     // Add background for title based on template
     if (template === 'professional') {
       this.pdf.setFillColor(52, 152, 219);
-      this.pdf.rect(this.margin, this.currentY - 5, this.pageWidth - 2 * this.margin, 20, 'F');
+      this.pdf.rect(
+        this.margin,
+        this.currentY - 5,
+        this.pageWidth - 2 * this.margin,
+        20,
+        'F'
+      );
       this.pdf.setTextColor(255, 255, 255);
     } else {
       this.pdf.setTextColor(0, 0, 0);
@@ -971,69 +1056,72 @@ export class PDFExporter {
 
     this.pdf.setFontSize(20);
     this.pdf.setFont('helvetica', 'bold');
-    
+
     const titleWidth = this.pdf.getTextWidth(title);
     const centerX = (this.pageWidth - titleWidth) / 2;
-    
+
     this.pdf.text(title, centerX, this.currentY + 8);
     this.currentY += 25;
   }
 
-  private addProposalOverview(proposal: Proposal, template: string = 'modern') {
-    this.pdf.setTextColor(0, 0, 0);
-    this.pdf.setFontSize(14);
-    this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Proposal Overview', this.margin, this.currentY);
-    this.currentY += 10;
+  // private addProposalOverview(proposal: Proposal, template: string = 'modern') {
+  //   this.pdf.setTextColor(0, 0, 0);
+  //   this.pdf.setFontSize(14);
+  //   this.pdf.setFont('helvetica', 'bold');
+  //   this.pdf.text('Proposal Overview', this.margin, this.currentY);
+  //   this.currentY += 10;
 
-    // Create overview box
-    const boxColor = template === 'professional' ? [248, 249, 250] : [252, 252, 252];
-    this.pdf.setFillColor(boxColor[0], boxColor[1], boxColor[2]);
-    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 35, 'F');
+  //   // Create overview box
+  //   const boxColor = template === 'professional' ? [248, 249, 250] : [252, 252, 252];
+  //   this.pdf.setFillColor(boxColor[0], boxColor[1], boxColor[2]);
+  //   this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 35, 'F');
 
-    this.pdf.setFontSize(10);
-    let overviewY = this.currentY + 8;
+  //   this.pdf.setFontSize(10);
+  //   let overviewY = this.currentY + 8;
 
-    // Left column
-    this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Proposal ID:', this.margin + 5, overviewY);
-    this.pdf.setFont('helvetica', 'normal');
-    this.pdf.text(proposal.id.substring(0, 8), this.margin + 30, overviewY);
+  //   // Left column
+  //   this.pdf.setFont('helvetica', 'bold');
+  //   this.pdf.text('Proposal ID:', this.margin + 5, overviewY);
+  //   this.pdf.setFont('helvetica', 'normal');
+  //   this.pdf.text(proposal.id.substring(0, 8), this.margin + 30, overviewY);
 
-    overviewY += 6;
-    this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Service Type:', this.margin + 5, overviewY);
-    this.pdf.setFont('helvetica', 'normal');
-    this.pdf.text(this.getServiceTypeLabel(proposal.service_type as ServiceType), this.margin + 35, overviewY);
+  //   overviewY += 6;
+  //   this.pdf.setFont('helvetica', 'bold');
+  //   this.pdf.text('Service Type:', this.margin + 5, overviewY);
+  //   this.pdf.setFont('helvetica', 'normal');
+  //   this.pdf.text(this.getServiceTypeLabel(proposal.service_type as ServiceType), this.margin + 35, overviewY);
 
-    overviewY += 6;
-    this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Status:', this.margin + 5, overviewY);
-    this.pdf.setFont('helvetica', 'normal');
-    this.pdf.text(proposal.status?.toUpperCase() || 'DRAFT', this.margin + 25, overviewY);
+  //   overviewY += 6;
+  //   this.pdf.setFont('helvetica', 'bold');
+  //   this.pdf.text('Status:', this.margin + 5, overviewY);
+  //   this.pdf.setFont('helvetica', 'normal');
+  //   this.pdf.text(proposal.status?.toUpperCase() || 'DRAFT', this.margin + 25, overviewY);
 
-    // Right column
-    overviewY = this.currentY + 8;
-    const rightColumnX = this.pageWidth / 2 + 10;
+  //   // Right column
+  //   overviewY = this.currentY + 8;
+  //   const rightColumnX = this.pageWidth / 2 + 10;
 
-    this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Created:', rightColumnX, overviewY);
-    this.pdf.setFont('helvetica', 'normal');
-    this.pdf.text(formatDate(proposal.created_at), rightColumnX + 25, overviewY);
+  //   this.pdf.setFont('helvetica', 'bold');
+  //   this.pdf.text('Created:', rightColumnX, overviewY);
+  //   this.pdf.setFont('helvetica', 'normal');
+  //   this.pdf.text(formatDate(proposal.created_at), rightColumnX + 25, overviewY);
 
-    overviewY += 6;
-    if (proposal.pricing_data) {
-      const pricingData = proposal.pricing_data as any;
-      this.pdf.setFont('helvetica', 'bold');
-      this.pdf.text('Total Value:', rightColumnX, overviewY);
-      this.pdf.setFont('helvetica', 'normal');
-      this.pdf.text(formatCurrencyUtil(pricingData.total || 0), rightColumnX + 30, overviewY);
-    }
+  //   overviewY += 6;
+  //   if (proposal.pricing_data) {
+  //     const pricingData = proposal.pricing_data as any;
+  //     this.pdf.setFont('helvetica', 'bold');
+  //     this.pdf.text('Total Value:', rightColumnX, overviewY);
+  //     this.pdf.setFont('helvetica', 'normal');
+  //     this.pdf.text(formatCurrencyUtil(pricingData.total || 0), rightColumnX + 30, overviewY);
+  //   }
 
-    this.currentY += 40;
-  }
+  //   this.currentY += 40;
+  // }
 
-  private addClientInformation(proposal: Proposal, template: string = 'modern') {
+  private addClientInformation(
+    proposal: Proposal,
+    template: string = 'modern'
+  ) {
     this.pdf.setFontSize(14);
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.setTextColor(0, 0, 0);
@@ -1041,16 +1129,23 @@ export class PDFExporter {
     this.currentY += 10;
 
     // Create client info box
-    const boxColor = template === 'professional' ? [248, 249, 250] : [252, 252, 252];
+    const boxColor =
+      template === 'professional' ? [248, 249, 250] : [252, 252, 252];
     this.pdf.setFillColor(boxColor[0], boxColor[1], boxColor[2]);
-    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 25, 'F');
+    this.pdf.rect(
+      this.margin,
+      this.currentY,
+      this.pageWidth - 2 * this.margin,
+      25,
+      'F'
+    );
 
     this.pdf.setFontSize(10);
     let infoY = this.currentY + 8;
 
     // Extract client info from global_inputs
     const globalInputs = proposal.global_inputs as any;
-    
+
     if (globalInputs?.client_name) {
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Client Name:', this.margin + 5, infoY);
@@ -1082,14 +1177,20 @@ export class PDFExporter {
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Address:', rightColumnX, infoY);
       this.pdf.setFont('helvetica', 'normal');
-      const addressText = this.pdf.splitTextToSize(globalInputs.property_address, 60);
+      const addressText = this.pdf.splitTextToSize(
+        globalInputs.property_address,
+        60
+      );
       this.pdf.text(addressText, rightColumnX + 25, infoY);
     }
 
     this.currentY += 30;
   }
 
-  private addFacilityDetails(facilityDetails: any, template: string = 'modern') {
+  private addFacilityDetails(
+    facilityDetails: any,
+    template: string = 'modern'
+  ) {
     this.pdf.setFontSize(14);
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.setTextColor(0, 0, 0);
@@ -1101,7 +1202,11 @@ export class PDFExporter {
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Building Type:', this.margin, this.currentY);
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.text(facilityDetails.building_type, this.margin + 35, this.currentY);
+      this.pdf.text(
+        facilityDetails.building_type,
+        this.margin + 35,
+        this.currentY
+      );
       this.currentY += 6;
     }
 
@@ -1109,7 +1214,11 @@ export class PDFExporter {
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Total Area:', this.margin, this.currentY);
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.text(`${facilityDetails.total_area} sq ft`, this.margin + 30, this.currentY);
+      this.pdf.text(
+        `${facilityDetails.total_area} sq ft`,
+        this.margin + 30,
+        this.currentY
+      );
       this.currentY += 6;
     }
 
@@ -1117,7 +1226,11 @@ export class PDFExporter {
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Number of Floors:', this.margin, this.currentY);
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.text(facilityDetails.floors.toString(), this.margin + 45, this.currentY);
+      this.pdf.text(
+        facilityDetails.floors.toString(),
+        this.margin + 45,
+        this.currentY
+      );
       this.currentY += 6;
     }
 
@@ -1125,7 +1238,7 @@ export class PDFExporter {
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Special Features:', this.margin, this.currentY);
       this.currentY += 6;
-      
+
       facilityDetails.special_features.forEach((feature: string) => {
         this.pdf.setFont('helvetica', 'normal');
         this.pdf.text(`• ${feature}`, this.margin + 5, this.currentY);
@@ -1136,7 +1249,10 @@ export class PDFExporter {
     this.currentY += 10;
   }
 
-  private addEnhancedPricingBreakdown(pricingData: any, template: string = 'modern') {
+  private addEnhancedPricingBreakdown(
+    pricingData: any,
+    template: string = 'modern'
+  ) {
     this.pdf.setFontSize(14);
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.setTextColor(0, 0, 0);
@@ -1149,17 +1265,24 @@ export class PDFExporter {
     const colWidth = (this.pageWidth - 2 * this.margin) / 2;
 
     // Table header
-    const headerColor = template === 'professional' ? [52, 152, 219] : [240, 240, 240];
+    const headerColor =
+      template === 'professional' ? [52, 152, 219] : [240, 240, 240];
     this.pdf.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
-    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, rowHeight, 'F');
-    
+    this.pdf.rect(
+      this.margin,
+      this.currentY,
+      this.pageWidth - 2 * this.margin,
+      rowHeight,
+      'F'
+    );
+
     const textColor = template === 'professional' ? [255, 255, 255] : [0, 0, 0];
     this.pdf.setTextColor(textColor[0], textColor[1], textColor[2]);
     this.pdf.setFontSize(10);
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.text('Description', this.margin + 5, this.currentY + 5);
     this.pdf.text('Amount', this.margin + colWidth + 5, this.currentY + 5);
-    
+
     this.currentY += rowHeight;
     this.pdf.setTextColor(0, 0, 0);
 
@@ -1177,22 +1300,42 @@ export class PDFExporter {
       if (item.value > 0) {
         const bgColor = index % 2 === 0 ? [255, 255, 255] : [248, 248, 248];
         this.pdf.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
-        this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, rowHeight, 'F');
-        
+        this.pdf.rect(
+          this.margin,
+          this.currentY,
+          this.pageWidth - 2 * this.margin,
+          rowHeight,
+          'F'
+        );
+
         this.pdf.setFont('helvetica', 'normal');
         this.pdf.text(item.label, this.margin + 5, this.currentY + 5);
-        this.pdf.text(formatCurrencyUtil(item.value), this.margin + colWidth + 5, this.currentY + 5);
+        this.pdf.text(
+          formatCurrencyUtil(item.value),
+          this.margin + colWidth + 5,
+          this.currentY + 5
+        );
         this.currentY += rowHeight;
       }
     });
 
     // Total row
     this.pdf.setFillColor(220, 220, 220);
-    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, rowHeight, 'F');
+    this.pdf.rect(
+      this.margin,
+      this.currentY,
+      this.pageWidth - 2 * this.margin,
+      rowHeight,
+      'F'
+    );
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.text('TOTAL', this.margin + 5, this.currentY + 5);
-    this.pdf.text(formatCurrencyUtil(pricingData.total || 0), this.margin + colWidth + 5, this.currentY + 5);
-    
+    this.pdf.text(
+      formatCurrencyUtil(pricingData.total || 0),
+      this.margin + colWidth + 5,
+      this.currentY + 5
+    );
+
     this.currentY += rowHeight + 10;
   }
 
@@ -1205,13 +1348,17 @@ export class PDFExporter {
 
     // Parse and render content sections
     const sections = this.parseContent(content);
-    
+
     sections.forEach((section) => {
       this.addEnhancedSection(section.title, section.content, template);
     });
   }
 
-  private addEnhancedSection(title: string, content: string, template: string = 'modern') {
+  private addEnhancedSection(
+    title: string,
+    content: string,
+    template: string = 'modern'
+  ) {
     // Check if we need a new page
     if (this.currentY > this.pageHeight - 50) {
       this.pdf.addPage();
@@ -1221,7 +1368,13 @@ export class PDFExporter {
     // Add section title with background
     if (template === 'professional') {
       this.pdf.setFillColor(236, 240, 241);
-      this.pdf.rect(this.margin, this.currentY - 2, this.pageWidth - 2 * this.margin, 12, 'F');
+      this.pdf.rect(
+        this.margin,
+        this.currentY - 2,
+        this.pageWidth - 2 * this.margin,
+        12,
+        'F'
+      );
     }
 
     this.pdf.setFontSize(12);
@@ -1299,9 +1452,16 @@ export class PDFExporter {
       }
 
       // Reference box
-      const boxColor = template === 'professional' ? [248, 249, 250] : [252, 252, 252];
+      const boxColor =
+        template === 'professional' ? [248, 249, 250] : [252, 252, 252];
       this.pdf.setFillColor(boxColor[0], boxColor[1], boxColor[2]);
-      this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 40, 'F');
+      this.pdf.rect(
+        this.margin,
+        this.currentY,
+        this.pageWidth - 2 * this.margin,
+        40,
+        'F'
+      );
 
       let refY = this.currentY + 8;
 
@@ -1326,7 +1486,10 @@ export class PDFExporter {
 
       if (ref.testimonial) {
         this.pdf.setFont('helvetica', 'italic');
-        const testimonialText = this.pdf.splitTextToSize(`"${ref.testimonial}"`, this.pageWidth - 2 * this.margin - 20);
+        const testimonialText = this.pdf.splitTextToSize(
+          `"${ref.testimonial}"`,
+          this.pageWidth - 2 * this.margin - 20
+        );
         this.pdf.text(testimonialText, this.margin + 5, refY);
       }
 
@@ -1334,7 +1497,10 @@ export class PDFExporter {
     });
   }
 
-  private addCompanyBackground(background: string, template: string = 'modern') {
+  private addCompanyBackground(
+    background: string,
+    template: string = 'modern'
+  ) {
     this.pdf.setFontSize(14);
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.setTextColor(0, 0, 0);
@@ -1371,7 +1537,12 @@ export class PDFExporter {
       // Add footer line
       if (template !== 'professional') {
         this.pdf.setDrawColor(200, 200, 200);
-        this.pdf.line(this.margin, this.pageHeight - 15, this.pageWidth - this.margin, this.pageHeight - 15);
+        this.pdf.line(
+          this.margin,
+          this.pageHeight - 15,
+          this.pageWidth - this.margin,
+          this.pageHeight - 15
+        );
       }
 
       // Add page number
@@ -1379,11 +1550,20 @@ export class PDFExporter {
       this.pdf.setFont('helvetica', 'normal');
       const pageText = `Page ${i} of ${pageCount}`;
       const textWidth = this.pdf.getTextWidth(pageText);
-      this.pdf.text(pageText, this.pageWidth - this.margin - textWidth, this.pageHeight - 10);
+      this.pdf.text(
+        pageText,
+        this.pageWidth - this.margin - textWidth,
+        this.pageHeight - 10
+      );
 
       // Add company name in footer
-      const companyName = companyProfile?.company_name || companyInfo?.name || 'Veltex Services';
-      this.pdf.text(`Generated by ${companyName}`, this.margin, this.pageHeight - 10);
+      const companyName =
+        companyProfile?.company_name || companyInfo?.name || 'Veltex Services';
+      this.pdf.text(
+        `Generated by ${companyName}`,
+        this.margin,
+        this.pageHeight - 10
+      );
     }
   }
 
