@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { newPriceId, newPlan } = await request.json();
+    console.log('🚀 ~ POST ~ newPlan:', newPlan);
     const supabase = await createClient();
 
     // Get current subscription
