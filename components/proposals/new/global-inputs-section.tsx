@@ -168,6 +168,11 @@ export function GlobalInputsSection() {
                       placeholder="Enter square footage"
                       value={field.value || ''}
                       onChange={(e) => {
+                        // Allow any input during typing
+                        field.onChange(e.target.value);
+                      }}
+                      onBlur={(e) => {
+                        // Validate and sanitize only on blur
                         const raw = e.target.value;
                         const digits = raw.replace(/[^\d]/g, '');
                         const sanitized = digits.replace(/^0+(?!$)/, '');

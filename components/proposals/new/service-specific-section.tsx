@@ -120,6 +120,11 @@ export function ServiceSpecificSection({
                   max="10"
                   value={field.value || ''}
                   onChange={(e) => {
+                    // Allow any input during typing
+                    field.onChange(e.target.value);
+                  }}
+                  onBlur={(e) => {
+                    // Validate and sanitize only on blur
                     const value = e.target.value;
                     field.onChange(
                       value === '' ? undefined : parseInt(value, 10) || 1
@@ -144,6 +149,11 @@ export function ServiceSpecificSection({
                   max="10"
                   value={field.value || ''}
                   onChange={(e) => {
+                    // Allow any input during typing
+                    field.onChange(e.target.value);
+                  }}
+                  onBlur={(e) => {
+                    // Validate and sanitize only on blur
                     const value = e.target.value;
                     field.onChange(
                       value === '' ? undefined : parseInt(value, 10) || 1
@@ -265,6 +275,11 @@ export function ServiceSpecificSection({
                   min="1"
                   value={field.value || ''}
                   onChange={(e) => {
+                    // Allow any input during typing
+                    field.onChange(e.target.value);
+                  }}
+                  onBlur={(e) => {
+                    // Validate and sanitize only on blur
                     const value = e.target.value;
                     field.onChange(
                       value === '' ? undefined : parseInt(value, 10) || 1
@@ -449,6 +464,11 @@ export function ServiceSpecificSection({
                 min="1"
                 value={field.value || ''}
                 onChange={(e) => {
+                  // Allow any input during typing
+                  field.onChange(e.target.value);
+                }}
+                onBlur={(e) => {
+                  // Validate and sanitize only on blur
                   const value = e.target.value;
                   field.onChange(
                     value === '' ? undefined : parseInt(value, 10) || 1

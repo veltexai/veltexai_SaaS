@@ -157,6 +157,11 @@ export function EnhancedFacilitySection() {
                       placeholder="Enter building age"
                       value={field.value || ''}
                       onChange={(e) => {
+                        // Allow any input during typing
+                        field.onChange(e.target.value);
+                      }}
+                      onBlur={(e) => {
+                        // Validate and sanitize only on blur
                         const value = e.target.value;
                         field.onChange(
                           value === '' ? undefined : parseInt(value, 10)
@@ -404,6 +409,11 @@ export function EnhancedFacilitySection() {
                       placeholder="Number of staff"
                       value={field.value || ''}
                       onChange={(e) => {
+                        // Allow any input during typing
+                        field.onChange(e.target.value);
+                      }}
+                      onBlur={(e) => {
+                        // Validate and sanitize only on blur
                         const value = e.target.value;
                         field.onChange(
                           value === '' ? undefined : parseInt(value, 10)
