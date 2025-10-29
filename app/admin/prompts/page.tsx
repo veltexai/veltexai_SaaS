@@ -5,13 +5,25 @@ import { MessageSquare, Eye, Filter, Settings } from 'lucide-react';
 import PromptsFilters from '@/components/admin/prompts-filters';
 import PromptsTable from '@/components/admin/prompts-table';
 
+interface VariableDefinition {
+  type: 'text' | 'textarea' | 'number' | 'email' | 'phone' | 'url' | 'date' | 'time' | 'currency' | 'select';
+  description: string;
+  required: boolean;
+  options?: string[];
+}
+
 interface PromptTemplate {
   id: string;
   name: string;
   description: string | null;
-  category: 'proposal' | 'email' | 'follow_up' | 'custom';
+  category: 'proposal' | 'email' | 'follow_up' | 'custom' | 'proposal_commercial' | 'proposal_residential' | 'proposal_specialized' | 'email_welcome' | 'email_follow_up' | 'email_reminder' | 'email_thank_you' | 'email_rejection' | 'follow_up_initial' | 'follow_up_second' | 'follow_up_final';
+  subcategory?: string | null;
   template_content: string;
   variables: string[];
+  variable_definitions?: Record<string, VariableDefinition>;
+  tags?: string[];
+  usage_count?: number;
+  last_used_at?: string | null;
   is_active: boolean;
   is_default: boolean;
   created_by: string | null;

@@ -44,12 +44,22 @@ import {
   PenTool,
   Save,
   X,
+  Ruler,
+  BookOpenText,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { ProposalEditDialog } from '@/components/proposals/proposal-edit-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import LoadingPage from '@/components/ui/loading-page';
+import { ServiceSpecificSection } from '@/components/proposals/new/service-specific-section';
+import { Form } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  proposalFormSchema,
+  ProposalFormData,
+} from '@/lib/validations/proposal';
 
 type Proposal = Database['public']['Tables']['proposals']['Row'];
 
@@ -72,6 +82,59 @@ export default function ProposalDetailPage({
   const [savingAIContent, setSavingAIContent] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+
+  // Form for ServiceSpecificSection
+  const form = useForm({
+    resolver: zodResolver(proposalFormSchema),
+    defaultValues: {
+      title: '',
+      service_type: 'residential' as const,
+      status: 'draft' as const,
+      global_inputs: {
+        client_name: '',
+        client_email: '',
+        client_company: '',
+        contact_phone: '',
+        service_location: '',
+        facility_size: 0,
+        service_frequency: 'one-time' as const,
+        regional_location: '',
+      },
+      service_specific_data: {},
+      pricing_enabled: false,
+      pricing_data: undefined,
+      generated_content: '',
+      facility_details: {
+        building_age: undefined,
+        building_type: undefined,
+        accessibility_requirements: [],
+        special_areas: [],
+        equipment_present: [],
+        environmental_concerns: [],
+      },
+      traffic_analysis: {
+        staff_count: undefined,
+        visitor_frequency: undefined,
+        peak_hours: [],
+        special_events: false,
+        traffic_level: undefined,
+      },
+      service_scope: {
+        areas_included: [],
+        areas_excluded: [],
+        special_services: [],
+        frequency_details: {},
+      },
+      special_requirements: {
+        security_clearance: false,
+        after_hours_access: false,
+        special_equipment: [],
+        certifications_required: [],
+        insurance_requirements: [],
+      },
+      ai_tone: 'professional' as const,
+    },
+  });
 
   useEffect(() => {
     fetchProposal();
@@ -107,6 +170,15 @@ export default function ProposalDetailPage({
       setLoading(false);
     }
   };
+
+  // Populate form with proposal data when loaded
+  useEffect(() => {
+    if (proposal) {
+      form.reset({
+        service_specific_data: (proposal.service_specific_data as Record<string, any>) || {},
+      });
+    }
+  }, [proposal, form]);
 
   const handleAIContentEdit = () => {
     setAiContentDraft(proposal?.generated_content || '');
@@ -235,6 +307,7 @@ export default function ProposalDetailPage({
     if (!proposal?.service_specific_data) return null;
 
     const data = proposal.service_specific_data as any;
+    console.log('🚀 ~ renderServiceSpecificData ~ data:', data);
     const serviceType = proposal.service_type;
 
     return (
@@ -246,168 +319,9 @@ export default function ProposalDetailPage({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {serviceType === 'residential' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.rooms && (
-                <div>
-                  <h4 className="font-medium mb-2">Rooms to Clean</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {data.rooms.map((room: any, index: number) => (
-                      <Badge key={index} variant="outline">
-                        {room.type} ({room.count})
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {data.special_requirements && (
-                <div>
-                  <h4 className="font-medium mb-2">Special Requirements</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {data.special_requirements.map(
-                      (req: string, index: number) => (
-                        <Badge key={index} variant="secondary">
-                          {req}
-                        </Badge>
-                      )
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {serviceType === 'commercial' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.areas && (
-                <div>
-                  <h4 className="font-medium mb-2">Areas to Clean</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {data.areas.map((area: any, index: number) => (
-                      <Badge key={index} variant="outline">
-                        {area.type} ({area.size} sq ft)
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {data.special_requirements && (
-                <div>
-                  <h4 className="font-medium mb-2">Special Requirements</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {data.special_requirements.map(
-                      (req: string, index: number) => (
-                        <Badge key={index} variant="secondary">
-                          {req}
-                        </Badge>
-                      )
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {serviceType === 'carpet' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.carpets && (
-                <div>
-                  <h4 className="font-medium mb-2">Carpet Areas</h4>
-                  <div className="space-y-2">
-                    {data.carpets.map((carpet: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center p-2 bg-muted rounded"
-                      >
-                        <span>{carpet.room}</span>
-                        <Badge variant="outline">{carpet.size} sq ft</Badge>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {data.treatments && (
-                <div>
-                  <h4 className="font-medium mb-2">Treatments</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {data.treatments.map((treatment: string, index: number) => (
-                      <Badge key={index} variant="secondary">
-                        {treatment}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {serviceType === 'window' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.windows && (
-                <div>
-                  <h4 className="font-medium mb-2">Window Details</h4>
-                  <div className="space-y-2">
-                    {data.windows.map((window: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center p-2 bg-muted rounded"
-                      >
-                        <span>{window.type}</span>
-                        <Badge variant="outline">{window.count} windows</Badge>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {data.services && (
-                <div>
-                  <h4 className="font-medium mb-2">Additional Services</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {data.services.map((service: string, index: number) => (
-                      <Badge key={index} variant="secondary">
-                        {service}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {serviceType === 'floor' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.floors && (
-                <div>
-                  <h4 className="font-medium mb-2">Floor Areas</h4>
-                  <div className="space-y-2">
-                    {data.floors.map((floor: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center p-2 bg-muted rounded"
-                      >
-                        <span>
-                          {floor.room} - {floor.type}
-                        </span>
-                        <Badge variant="outline">{floor.size} sq ft</Badge>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {data.services && (
-                <div>
-                  <h4 className="font-medium mb-2">Services</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {data.services.map((service: string, index: number) => (
-                      <Badge key={index} variant="secondary">
-                        {service}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          <Form {...form}>
+            <ServiceSpecificSection serviceType={serviceType} />
+          </Form>
         </CardContent>
       </Card>
     );
@@ -428,64 +342,83 @@ export default function ProposalDetailPage({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span>Base Price</span>
-              <span className="font-medium">
-                {formatCurrency(pricing.base_price || 0)}
-              </span>
-            </div>
-
-            {pricing.adjustments &&
-              Object.entries(pricing.adjustments).map(
-                ([key, value]: [string, any]) => (
-                  <div
-                    key={key}
-                    className="flex justify-between items-center text-sm"
-                  >
-                    <span className="text-muted-foreground capitalize">
-                      {key.replace(/_/g, ' ')}
-                    </span>
-                    <span>{formatCurrency(value)}</span>
-                  </div>
-                )
-              )}
-
-            <Separator />
-
-            <div className="flex justify-between items-center">
-              <span>Subtotal</span>
-              <span className="font-medium">
-                {formatCurrency(pricing.subtotal || 0)}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">
-                Labor ({pricing.labor_hours || 0} hrs)
-              </span>
-              <span>{formatCurrency(pricing.labor_cost || 0)}</span>
-            </div>
-
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">
-                Overhead ({pricing.overhead_percentage || 0}%)
-              </span>
-              <span>{formatCurrency(pricing.overhead_cost || 0)}</span>
-            </div>
-
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">
-                Margin ({pricing.margin_percentage || 0}%)
-              </span>
-              <span>{formatCurrency(pricing.margin_cost || 0)}</span>
+            {/* Price Range */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-muted-foreground">
+                Price Range
+              </h4>
+              <div className="flex justify-between items-center">
+                <span>Low Estimate</span>
+                <span className="font-medium">
+                  {formatCurrency(pricing.price_range?.low || 0)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>High Estimate</span>
+                <span className="font-medium">
+                  {formatCurrency(pricing.price_range?.high || 0)}
+                </span>
+              </div>
             </div>
 
             <Separator />
 
+            {/* Hours Estimate */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-muted-foreground">
+                Time Estimate
+              </h4>
+              <div className="flex justify-between items-center text-sm">
+                <span>Minimum Hours</span>
+                <span>{pricing.hours_estimate?.min || 0} hrs</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span>Maximum Hours</span>
+                <span>{pricing.hours_estimate?.max || 0} hrs</span>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Assumptions */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-muted-foreground">
+                Pricing Assumptions
+              </h4>
+              <div className="flex justify-between items-center text-sm">
+                <span>Labor Rate</span>
+                <span>
+                  {formatCurrency(pricing.assumptions?.labor_rate || 0)}/hr
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span>Production Rate</span>
+                <span>
+                  {pricing.assumptions?.production_rate?.min || 0} -{' '}
+                  {pricing.assumptions?.production_rate?.max || 0} sq ft/hr
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span>Overhead</span>
+                <span>{pricing.assumptions?.overhead_percentage || 0}%</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span>Margin</span>
+                <span>{pricing.assumptions?.margin_percentage || 0}%</span>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Average Total */}
             <div className="flex justify-between items-center text-lg font-bold">
-              <span>Total</span>
+              <span>Average Estimate</span>
               <span className="text-primary">
-                {formatCurrency(pricing.total || 0)}
+                {formatCurrency(
+                  pricing.price_range?.low && pricing.price_range?.high
+                    ? (pricing.price_range.low + pricing.price_range.high) / 2
+                    : 0
+                )}
               </span>
             </div>
           </div>
@@ -636,7 +569,7 @@ export default function ProposalDetailPage({
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="font-medium">
-                        {globalInputs?.email || 'N/A'}
+                        {globalInputs?.client_email || 'N/A'}
                       </p>
                       <p className="text-sm text-muted-foreground">Email</p>
                     </div>
@@ -646,7 +579,7 @@ export default function ProposalDetailPage({
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="font-medium">
-                        {globalInputs?.phone || 'N/A'}
+                        {globalInputs?.contact_phone || 'N/A'}
                       </p>
                       <p className="text-sm text-muted-foreground">Phone</p>
                     </div>
@@ -662,20 +595,23 @@ export default function ProposalDetailPage({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <div>
-                    <p className="font-medium">
-                      {getServiceTypeLabel(proposal.service_type)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Service Type
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <BookOpenText className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">
+                        {getServiceTypeLabel(proposal.service_type)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Service Type
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="font-medium">
-                        {globalInputs?.address || 'N/A'}
+                        {globalInputs?.service_location || 'N/A'}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Service Address
@@ -683,13 +619,16 @@ export default function ProposalDetailPage({
                     </div>
                   </div>
 
-                  <div>
-                    <p className="font-medium">
-                      {globalInputs?.facility_size || 'N/A'} sq ft
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Facility Size
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <Ruler className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">
+                        {globalInputs?.facility_size || 'N/A'} sq ft
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Facility Size
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3">

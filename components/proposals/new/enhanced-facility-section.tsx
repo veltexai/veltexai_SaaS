@@ -26,8 +26,11 @@ const buildingTypeOptions = [
   { value: 'office', label: 'Office Building' },
   { value: 'warehouse', label: 'Warehouse' },
   { value: 'retail', label: 'Retail Store' },
+  { value: 'restaurant', label: 'Restaurant' },
   { value: 'medical', label: 'Medical Facility' },
-  { value: 'educational', label: 'Educational' },
+  { value: 'educational', label: 'Educational/School' },
+  { value: 'daycare', label: 'Daycare Center' },
+  { value: 'church', label: 'Church/Religious' },
   { value: 'hospitality', label: 'Hospitality' },
   { value: 'industrial', label: 'Industrial' },
   { value: 'other', label: 'Other' },
@@ -222,10 +225,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
+                                  const currentValue = Array.isArray(field.value) ? field.value : [];
                                   return checked
-                                    ? field.onChange([...field.value, item])
+                                    ? field.onChange([...currentValue, item])
                                     : field.onChange(
-                                        field.value?.filter(
+                                        currentValue.filter(
                                           (value) => value !== item
                                         )
                                       );
@@ -268,10 +272,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
+                                  const currentValue = Array.isArray(field.value) ? field.value : [];
                                   return checked
-                                    ? field.onChange([...field.value, item])
+                                    ? field.onChange([...currentValue, item])
                                     : field.onChange(
-                                        field.value?.filter(
+                                        currentValue.filter(
                                           (value) => value !== item
                                         )
                                       );
@@ -314,10 +319,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
+                                  const currentValue = Array.isArray(field.value) ? field.value : [];
                                   return checked
-                                    ? field.onChange([...field.value, item])
+                                    ? field.onChange([...currentValue, item])
                                     : field.onChange(
-                                        field.value?.filter(
+                                        currentValue.filter(
                                           (value) => value !== item
                                         )
                                       );
@@ -360,10 +366,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
+                                  const currentValue = Array.isArray(field.value) ? field.value : [];
                                   return checked
-                                    ? field.onChange([...field.value, item])
+                                    ? field.onChange([...currentValue, item])
                                     : field.onChange(
-                                        field.value?.filter(
+                                        currentValue.filter(
                                           (value) => value !== item
                                         )
                                       );
@@ -653,10 +660,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
+                                  const currentValue = Array.isArray(field.value) ? field.value : [];
                                   return checked
-                                    ? field.onChange([...field.value, item])
+                                    ? field.onChange([...currentValue, item])
                                     : field.onChange(
-                                        field.value?.filter(
+                                        currentValue.filter(
                                           (value) => value !== item
                                         )
                                       );
@@ -699,10 +707,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
+                                  const currentValue = Array.isArray(field.value) ? field.value : [];
                                   return checked
-                                    ? field.onChange([...field.value, item])
+                                    ? field.onChange([...currentValue, item])
                                     : field.onChange(
-                                        field.value?.filter(
+                                        currentValue.filter(
                                           (value) => value !== item
                                         )
                                       );
@@ -745,10 +754,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
+                                  const currentValue = Array.isArray(field.value) ? field.value : [];
                                   return checked
-                                    ? field.onChange([...field.value, item])
+                                    ? field.onChange([...currentValue, item])
                                     : field.onChange(
-                                        field.value?.filter(
+                                        currentValue.filter(
                                           (value) => value !== item
                                         )
                                       );

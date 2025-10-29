@@ -11,9 +11,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/client';
-import { formatDate, formatCurrency } from '@/lib/utils';
-import { Eye, Edit, Trash2, Loader2, Download } from 'lucide-react';
-import { useConfirmation } from '../providers/confirmation-provider';
+import { Eye, Edit, Download, Trash2, Loader2, Send } from 'lucide-react';
+import { SendProposalModal } from '@/components/proposals/send-proposal-modal';
 
 interface Proposal {
   id: string;
@@ -54,27 +53,29 @@ export function ProposalCard({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
-  const { confirm } = useConfirmation();
+  const [showSendModal, setShowSendModal] = useState(false);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
 
   const deleteProposal = async () => {
-    // if (!confirm('Are you sure you want to delete this proposal?')) {
-    //   return;
-    // }
-    const confirmed = await confirm({
-      title: 'Delete Proposal',
-      message:
-        'Are you sure you want to delete this proposal? This action cannot be undone.',
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      variant: 'destructive',
-      illustration: 'Inbox-cleanup-rafiki.svg',
-    });
-
-    if (!confirmed) {
+    if (!confirm('Are you sure you want to delete this proposal?')) {
       return;
     }
-    setDeletingId(proposal.id);
 
+    setDeletingId(proposal.id);
     try {
       const supabase = createClient();
       const { error } = await supabase
@@ -148,123 +149,143 @@ export function ProposalCard({
     }
   };
 
-  return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <CardTitle className="text-xl">{proposal.title}</CardTitle>
-            <CardDescription className="mt-1">
-              Client: {proposal.client_name}
-              {proposal.client_email && ` (${proposal.client_email})`}
-            </CardDescription>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                statusColors[proposal.status]
-              }`}
-            >
-              {statusLabels[proposal.status]}
-            </span>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-6 text-sm text-gray-600">
-            <div>
-              <span className="font-medium">Value:</span>{' '}
-              {formatCurrency(proposal.value)}
-            </div>
-            <div>
-              <span className="font-medium">Created:</span>{' '}
-              {formatDate(proposal.created_at)}
-            </div>
-            <div>
-              <span className="font-medium">Updated:</span>{' '}
-              {formatDate(proposal.updated_at)}
-            </div>
-          </div>
+  const handleSendSuccess = () => {
+    setShowSendModal(false);
+    onUpdate(proposal.id, { status: 'sent' });
+  };
 
-          <div className="flex items-center space-x-2">
-            {/* Status Update Buttons */}
-            {proposal.status === 'draft' && (
+  return (
+    <>
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <CardTitle className="text-xl">{proposal.title}</CardTitle>
+              <CardDescription className="mt-1">
+                Client: {proposal.client_name}
+                {proposal.client_email && ` (${proposal.client_email})`}
+              </CardDescription>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  statusColors[proposal.status]
+                }`}
+              >
+                {statusLabels[proposal.status]}
+              </span>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-6 text-sm text-gray-600">
+              <div>
+                <span className="font-medium">Value:</span>{' '}
+                {formatCurrency(proposal.value)}
+              </div>
+              <div>
+                <span className="font-medium">Created:</span>{' '}
+                {formatDate(proposal.created_at)}
+              </div>
+              <div>
+                <span className="font-medium">Updated:</span>{' '}
+                {formatDate(proposal.updated_at)}
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              {/* Status Update Buttons */}
+              {proposal.status === 'draft' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowSendModal(true)}
+                  disabled={updatingStatus}
+                >
+                  <Send className="h-4 w-4 mr-1" />
+                  Send
+                </Button>
+              )}
+              {proposal.status === 'sent' && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowSendModal(true)}
+                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                  >
+                    <Send className="h-4 w-4 mr-1" />
+                    Send Again
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => updateStatus('accepted')}
+                    disabled={updatingStatus}
+                    className="text-green-600 border-green-600 hover:bg-green-50"
+                  >
+                    Mark Accepted
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => updateStatus('rejected')}
+                    disabled={updatingStatus}
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                  >
+                    Mark Rejected
+                  </Button>
+                </>
+              )}
+
+              {/* Action Buttons */}
+              {/* <Link href={`/dashboard/proposals/${proposal.id}`}>
+                <Button size="sm" variant="outline">
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </Link> */}
+              <Link href={`/dashboard/proposals/${proposal.id}`}>
+                <Button size="sm" variant="outline">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </Link>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => updateStatus('sent')}
-                disabled={updatingStatus}
+                onClick={exportToPDF}
+                disabled={exportingId === proposal.id}
               >
-                {updatingStatus ? (
+                {exportingId === proposal.id ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  'Mark as Sent'
+                  <Download className="h-4 w-4" />
                 )}
               </Button>
-            )}
-            {proposal.status === 'sent' && (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => updateStatus('accepted')}
-                  disabled={updatingStatus}
-                  className="text-green-600 border-green-600 hover:bg-green-50"
-                >
-                  Mark Accepted
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => updateStatus('rejected')}
-                  disabled={updatingStatus}
-                  className="text-red-600 border-red-600 hover:bg-red-50"
-                >
-                  Mark Rejected
-                </Button>
-              </>
-            )}
-
-            {/* Action Buttons */}
-            <Link href={`/dashboard/proposals/${proposal.id}`}>
-              <Button size="sm" variant="outline">
-                <Eye className="h-4 w-4" />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={deleteProposal}
+                disabled={deletingId === proposal.id}
+                className="text-red-600 border-red-600 hover:bg-red-50"
+              >
+                {deletingId === proposal.id ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
               </Button>
-            </Link>
-            <Link href={`/proposals/${proposal.id}`}>
-              <Button size="sm" variant="outline">
-                <Edit className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={exportToPDF}
-              disabled={exportingId === proposal.id}
-            >
-              {exportingId === proposal.id ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4" />
-              )}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={deleteProposal}
-              disabled={deletingId === proposal.id}
-              className="text-red-600 border-red-600 hover:bg-red-50"
-            >
-              {deletingId === proposal.id ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="h-4 w-4" />
-              )}
-            </Button>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <SendProposalModal
+        proposal={proposal}
+        open={showSendModal}
+        onOpenChange={setShowSendModal}
+        onSuccess={handleSendSuccess}
+      />
+    </>
   );
 }

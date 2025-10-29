@@ -3,12 +3,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import { FileText } from 'lucide-react';
+import { Database } from '@/types/database';
 
-interface Proposal {
-  id: string;
-  title: string;
-  generated_content: string;
-}
+type Proposal = Database['public']['Tables']['proposals']['Row'];
 
 interface ProposalContentProps {
   proposal: Proposal;

@@ -21,12 +21,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  MoreHorizontal,
-  Trash2,
-  Eye,
-  FileText,
-} from 'lucide-react';
+import { MoreHorizontal, Trash2, Eye, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 import ProposalFilters from './proposal-filters';
@@ -129,11 +124,11 @@ export default function ProposalsTable({
           },
         });
 
-        setProposals(proposals.filter(p => !selectedProposals.includes(p.id)));
+        setProposals(
+          proposals.filter((p) => !selectedProposals.includes(p.id))
+        );
         toast.success(`Deleted ${selectedProposals.length} proposals`);
-      } else if (
-        ['draft', 'sent', 'accepted', 'rejected'].includes(action)
-      ) {
+      } else if (['draft', 'sent', 'accepted', 'rejected'].includes(action)) {
         const { error } = await supabase
           .from('proposals')
           .update({ status: action })
@@ -152,11 +147,13 @@ export default function ProposalsTable({
           },
         });
 
-        setProposals(proposals.map(p => 
-          selectedProposals.includes(p.id) 
-            ? { ...p, status: action as Proposal['status'] }
-            : p
-        ));
+        setProposals(
+          proposals.map((p) =>
+            selectedProposals.includes(p.id)
+              ? { ...p, status: action as Proposal['status'] }
+              : p
+          )
+        );
         toast.success(
           `Updated ${selectedProposals.length} proposals to ${action}`
         );
@@ -185,7 +182,7 @@ export default function ProposalsTable({
         target_id: proposalId,
       });
 
-      setProposals(proposals.filter(p => p.id !== proposalId));
+      setProposals(proposals.filter((p) => p.id !== proposalId));
       toast.success('Proposal deleted successfully');
     } catch (error) {
       console.error('Error deleting proposal:', error);
@@ -198,27 +195,83 @@ export default function ProposalsTable({
     newStatus: string
   ) => {
     try {
-      const { error } = await supabase
-        .from('proposals')
-        .update({ status: newStatus })
-        .eq('id', proposalId);
+      if (newStatus === 'sent') {
+        // Get proposal details for sending
+        const proposal = proposals.find(p => p.id === proposalId);
+        if (!proposal) {
+          throw new Error('Proposal not found');
+        }
 
-      if (error) throw error;
+        // Send email using the enhanced API
+        const response = await fetch(
+          `/api/proposals/${proposalId}/send`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              delivery_method: 'both',
+              recipient_email: proposal.client_email || '',
+              cc_emails: [],
+              subject: `Proposal: ${proposal.title}`,
+              message: `Dear ${proposal.client_name || 'Client'},\n\nPlease find attached our proposal for your review.\n\nBest regards,\nVeltex Services Team`,
+              include_branding: true,
+              send_copy_to_self: false,
+              track_opens: true,
+              track_downloads: true,
+            }),
+          }
+        );
 
-      // Log admin action
-      await supabase.from('admin_audit_log').insert({
-        admin_id: currentUserId,
-        action: 'proposal_status_updated',
-        target_id: proposalId,
-        details: { new_status: newStatus },
-      });
+        if (!response.ok) {
+          throw new Error('Failed to send proposal email');
+        }
 
-      setProposals(proposals.map(p => 
-        p.id === proposalId 
-          ? { ...p, status: newStatus as Proposal['status'] }
-          : p
-      ));
-      toast.success(`Proposal status updated to ${newStatus}`);
+        // Log admin action
+        await supabase.from('admin_audit_log').insert({
+          admin_id: currentUserId,
+          action: 'proposal_status_updated',
+          target_id: proposalId,
+          details: { new_status: newStatus, email_sent: true },
+        });
+
+        setProposals(
+          proposals.map((p) =>
+            p.id === proposalId
+              ? { ...p, status: newStatus as Proposal['status'] }
+              : p
+          )
+        );
+        toast.success(
+          `Proposal sent via email and status updated to ${newStatus}`
+        );
+      } else {
+        // For other status updates, use direct database update
+        const { error } = await supabase
+          .from('proposals')
+          .update({ status: newStatus })
+          .eq('id', proposalId);
+
+        if (error) throw error;
+
+        // Log admin action
+        await supabase.from('admin_audit_log').insert({
+          admin_id: currentUserId,
+          action: 'proposal_status_updated',
+          target_id: proposalId,
+          details: { new_status: newStatus },
+        });
+
+        setProposals(
+          proposals.map((p) =>
+            p.id === proposalId
+              ? { ...p, status: newStatus as Proposal['status'] }
+              : p
+          )
+        );
+        toast.success(`Proposal status updated to ${newStatus}`);
+      }
     } catch (error) {
       console.error('Error updating proposal status:', error);
       toast.error('Failed to update proposal status');

@@ -1,74 +1,42 @@
-import { redirect } from 'next/navigation';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 import SystemSettingsForm from '@/components/admin/system-settings-form';
-
-interface SystemSettings {
-  // Branding
-  company_name: string;
-  company_logo_url: string;
-  company_tagline: string;
-  primary_color: string;
-  secondary_color: string;
-  accent_color: string;
-
-  // Email Settings
-  smtp_host: string;
-  smtp_port: number;
-  smtp_username: string;
-  smtp_password: string;
-  smtp_from_email: string;
-  smtp_from_name: string;
-
-  // Security
-  session_timeout: number;
-  password_min_length: number;
-  require_2fa: boolean;
-  max_login_attempts: number;
-
-  // Features
-  enable_ai_suggestions: boolean;
-  enable_auto_backup: boolean;
-  enable_email_notifications: boolean;
-  enable_sms_notifications: boolean;
-
-  // Business
-  default_currency: string;
-  default_timezone: string;
-  business_hours_start: string;
-  business_hours_end: string;
-
-  // Maintenance
-  maintenance_mode: boolean;
-  maintenance_message: string;
-}
+import { SystemSettings } from '@/types/database';
 
 const defaultSettings: SystemSettings = {
+  id: '1',
   company_name: 'Veltex Services',
-  company_logo_url: '',
+  company_logo_url: null,
   company_tagline: 'Professional Printing Solutions',
   primary_color: '#3b82f6',
   secondary_color: '#64748b',
-  accent_color: '#10b981',
-  smtp_host: '',
+  accent_color: '#f59e0b',
+  email_from_name: 'Veltex Services',
+  email_from_address: 'noreply@veltexservices.com',
+  email_reply_to: null,
+  smtp_host: null,
   smtp_port: 587,
-  smtp_username: '',
-  smtp_password: '',
-  smtp_from_email: '',
-  smtp_from_name: '',
+  smtp_username: null,
+  smtp_password: null,
+  smtp_secure: true,
+  max_login_attempts: 5,
   session_timeout: 30,
   password_min_length: 8,
   require_2fa: false,
-  max_login_attempts: 5,
-  enable_ai_suggestions: true,
-  enable_auto_backup: true,
-  enable_email_notifications: true,
-  enable_sms_notifications: false,
-  default_currency: 'USD',
-  default_timezone: 'America/New_York',
+  ai_enabled: true,
+  pdf_generation_enabled: true,
+  email_notifications_enabled: true,
+  analytics_enabled: true,
   business_hours_start: '09:00',
   business_hours_end: '17:00',
+  business_timezone: 'America/New_York',
   maintenance_mode: false,
   maintenance_message: 'System is under maintenance. Please check back later.',
+  theme_applied_to_pdfs: true,
+  ai_attribution_enabled: true,
+  proposal_tracking_enabled: true,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
 };
 
 async function checkAdminAccess() {

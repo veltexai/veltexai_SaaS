@@ -57,7 +57,6 @@ const mockProposalData: Record<ServiceType, MockProposalData> = {
       facility_size: 2500,
       service_frequency: '2x-week',
       regional_location: 'Springfield, IL',
-      property_type: 'office',
     },
     service_specific_data: {
       home_type: 'house',
@@ -133,7 +132,6 @@ const mockProposalData: Record<ServiceType, MockProposalData> = {
       facility_size: 15000,
       service_frequency: '3x-week',
       regional_location: 'Chicago, IL',
-      property_type: 'office',
     },
     service_specific_data: {
       business_type: 'technology',
@@ -227,7 +225,6 @@ const mockProposalData: Record<ServiceType, MockProposalData> = {
       facility_size: 8000,
       service_frequency: '1x-month',
       regional_location: 'Phoenix, AZ',
-      property_type: 'retail',
     },
     service_specific_data: {
       carpet_type: 'commercial_grade',
@@ -311,7 +308,6 @@ const mockProposalData: Record<ServiceType, MockProposalData> = {
       facility_size: 25000,
       service_frequency: 'bi-weekly',
       regional_location: 'Denver, CO',
-      property_type: 'medical',
     },
     service_specific_data: {
       window_count: 150,
@@ -415,7 +411,6 @@ const mockProposalData: Record<ServiceType, MockProposalData> = {
       facility_size: 50000,
       service_frequency: 'daily',
       regional_location: 'Miami, FL',
-      property_type: 'retail',
     },
     service_specific_data: {
       floor_types: ['marble', 'hardwood', 'tile', 'carpet'],

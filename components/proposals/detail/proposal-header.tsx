@@ -4,14 +4,9 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
 import { ArrowLeft } from 'lucide-react'
+import { Database } from '@/types/database'
 
-interface Proposal {
-  id: string
-  title: string
-  status: 'draft' | 'sent' | 'accepted' | 'rejected'
-  created_at: string
-  updated_at: string
-}
+type Proposal = Database['public']['Tables']['proposals']['Row']
 
 interface ProposalHeaderProps {
   proposal: Proposal

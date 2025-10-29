@@ -42,46 +42,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface SystemSettings {
-  // Branding
-  company_name: string;
-  company_logo_url: string;
-  company_tagline: string;
-  primary_color: string;
-  secondary_color: string;
-  accent_color: string;
-
-  // Email Settings
-  smtp_host: string;
-  smtp_port: number;
-  smtp_username: string;
-  smtp_password: string;
-  smtp_from_email: string;
-  smtp_from_name: string;
-
-  // Security
-  session_timeout: number;
-  password_min_length: number;
-  require_2fa: boolean;
-  max_login_attempts: number;
-
-  // Features
-  enable_ai_suggestions: boolean;
-  enable_auto_backup: boolean;
-  enable_email_notifications: boolean;
-  enable_sms_notifications: boolean;
-
-  // Business
-  default_currency: string;
-  default_timezone: string;
-  business_hours_start: string;
-  business_hours_end: string;
-
-  // Maintenance
-  maintenance_mode: boolean;
-  maintenance_message: string;
-}
+import EnhancedBrandingSettings from './enhanced-branding-settings';
+import { SystemSettings } from '@/types/database';
 
 interface SystemSettingsFormProps {
   initialSettings: SystemSettings;
@@ -268,120 +230,14 @@ export default function SystemSettingsForm({
         </TabsList>
 
         <TabsContent value="branding" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Company Branding</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company_name">Company Name</Label>
-                  <Input
-                    id="company_name"
-                    value={settings.company_name}
-                    onChange={(e) =>
-                      updateSetting('company_name', e.target.value)
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company_tagline">Company Tagline</Label>
-                  <Input
-                    id="company_tagline"
-                    value={settings.company_tagline}
-                    onChange={(e) =>
-                      updateSetting('company_tagline', e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="company_logo_url">Company Logo URL</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="company_logo_url"
-                    value={settings.company_logo_url}
-                    onChange={(e) =>
-                      updateSetting('company_logo_url', e.target.value)
-                    }
-                    placeholder="https://example.com/logo.png"
-                  />
-                  <Button variant="outline">
-                    <Upload className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <Separator />
-              <div className="space-y-4">
-                <h4 className="font-medium">Color Scheme</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="primary_color">Primary Color</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="primary_color"
-                        type="color"
-                        value={settings.primary_color}
-                        onChange={(e) =>
-                          updateSetting('primary_color', e.target.value)
-                        }
-                        className="w-16 h-10 p-1"
-                      />
-                      <Input
-                        value={settings.primary_color}
-                        onChange={(e) =>
-                          updateSetting('primary_color', e.target.value)
-                        }
-                        placeholder="#3b82f6"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="secondary_color">Secondary Color</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="secondary_color"
-                        type="color"
-                        value={settings.secondary_color}
-                        onChange={(e) =>
-                          updateSetting('secondary_color', e.target.value)
-                        }
-                        className="w-16 h-10 p-1"
-                      />
-                      <Input
-                        value={settings.secondary_color}
-                        onChange={(e) =>
-                          updateSetting('secondary_color', e.target.value)
-                        }
-                        placeholder="#64748b"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="accent_color">Accent Color</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="accent_color"
-                        type="color"
-                        value={settings.accent_color}
-                        onChange={(e) =>
-                          updateSetting('accent_color', e.target.value)
-                        }
-                        className="w-16 h-10 p-1"
-                      />
-                      <Input
-                        value={settings.accent_color}
-                        onChange={(e) =>
-                          updateSetting('accent_color', e.target.value)
-                        }
-                        placeholder="#10b981"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <EnhancedBrandingSettings
+            initialSettings={settings}
+            currentUserId={currentUserId}
+            onSettingsChange={(newSettings) => {
+              setSettings(prev => ({ ...prev, ...newSettings }));
+              setHasChanges(true);
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="email" className="space-y-6">
@@ -395,7 +251,7 @@ export default function SystemSettingsForm({
                   <Label htmlFor="smtp_host">SMTP Host</Label>
                   <Input
                     id="smtp_host"
-                    value={settings.smtp_host}
+                    value={settings.smtp_host || ''}
                     onChange={(e) => updateSetting('smtp_host', e.target.value)}
                     placeholder="smtp.gmail.com"
                   />
@@ -405,7 +261,7 @@ export default function SystemSettingsForm({
                   <Input
                     id="smtp_port"
                     type="number"
-                    value={settings.smtp_port}
+                    value={settings.smtp_port || 587}
                     onChange={(e) =>
                       updateSetting('smtp_port', parseInt(e.target.value))
                     }
@@ -418,7 +274,7 @@ export default function SystemSettingsForm({
                   <Label htmlFor="smtp_username">SMTP Username</Label>
                   <Input
                     id="smtp_username"
-                    value={settings.smtp_username}
+                    value={settings.smtp_username || ''}
                     onChange={(e) =>
                       updateSetting('smtp_username', e.target.value)
                     }
@@ -430,7 +286,7 @@ export default function SystemSettingsForm({
                   <Input
                     id="smtp_password"
                     type="password"
-                    value={settings.smtp_password}
+                    value={settings.smtp_password || ''}
                     onChange={(e) =>
                       updateSetting('smtp_password', e.target.value)
                     }
@@ -440,23 +296,23 @@ export default function SystemSettingsForm({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="smtp_from_email">From Email</Label>
+                  <Label htmlFor="email_from_address">From Email</Label>
                   <Input
-                    id="smtp_from_email"
-                    value={settings.smtp_from_email}
+                    id="email_from_address"
+                    value={settings.email_from_address}
                     onChange={(e) =>
-                      updateSetting('smtp_from_email', e.target.value)
+                      updateSetting('email_from_address', e.target.value)
                     }
                     placeholder="noreply@veltexservices.com"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="smtp_from_name">From Name</Label>
+                  <Label htmlFor="email_from_name">From Name</Label>
                   <Input
-                    id="smtp_from_name"
-                    value={settings.smtp_from_name}
+                    id="email_from_name"
+                    value={settings.email_from_name}
                     onChange={(e) =>
-                      updateSetting('smtp_from_name', e.target.value)
+                      updateSetting('email_from_name', e.target.value)
                     }
                     placeholder="Veltex Services"
                   />
@@ -556,39 +412,39 @@ export default function SystemSettingsForm({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="enable_ai_suggestions">
-                      AI Suggestions
+                    <Label htmlFor="ai_enabled">
+                      AI Enabled
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Enable AI-powered suggestions for proposals
+                      Enable AI-powered features for proposals
                     </p>
                   </div>
                   <Switch
-                    id="enable_ai_suggestions"
-                    checked={settings.enable_ai_suggestions}
+                    id="ai_enabled"
+                    checked={settings.ai_enabled}
                     onCheckedChange={(checked) =>
-                      updateSetting('enable_ai_suggestions', checked)
+                      updateSetting('ai_enabled', checked)
                     }
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="enable_auto_backup">Auto Backup</Label>
+                    <Label htmlFor="pdf_generation_enabled">PDF Generation</Label>
                     <p className="text-sm text-muted-foreground">
-                      Automatically backup system data
+                      Enable PDF generation for proposals
                     </p>
                   </div>
                   <Switch
-                    id="enable_auto_backup"
-                    checked={settings.enable_auto_backup}
+                    id="pdf_generation_enabled"
+                    checked={settings.pdf_generation_enabled}
                     onCheckedChange={(checked) =>
-                      updateSetting('enable_auto_backup', checked)
+                      updateSetting('pdf_generation_enabled', checked)
                     }
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="enable_email_notifications">
+                    <Label htmlFor="email_notifications_enabled">
                       Email Notifications
                     </Label>
                     <p className="text-sm text-muted-foreground">
@@ -596,27 +452,27 @@ export default function SystemSettingsForm({
                     </p>
                   </div>
                   <Switch
-                    id="enable_email_notifications"
-                    checked={settings.enable_email_notifications}
+                    id="email_notifications_enabled"
+                    checked={settings.email_notifications_enabled}
                     onCheckedChange={(checked) =>
-                      updateSetting('enable_email_notifications', checked)
+                      updateSetting('email_notifications_enabled', checked)
                     }
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="enable_sms_notifications">
-                      SMS Notifications
+                    <Label htmlFor="analytics_enabled">
+                      Analytics
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Send SMS notifications to users
+                      Enable analytics and tracking
                     </p>
                   </div>
                   <Switch
-                    id="enable_sms_notifications"
-                    checked={settings.enable_sms_notifications}
+                    id="analytics_enabled"
+                    checked={settings.analytics_enabled}
                     onCheckedChange={(checked) =>
-                      updateSetting('enable_sms_notifications', checked)
+                      updateSetting('analytics_enabled', checked)
                     }
                   />
                 </div>
@@ -633,31 +489,11 @@ export default function SystemSettingsForm({
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="default_currency">Default Currency</Label>
+                  <Label htmlFor="business_timezone">Business Timezone</Label>
                   <Select
-                    value={settings.default_currency}
+                    value={settings.business_timezone}
                     onValueChange={(value) =>
-                      updateSetting('default_currency', value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currencies.map((currency) => (
-                        <SelectItem key={currency.value} value={currency.value}>
-                          {currency.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="default_timezone">Default Timezone</Label>
-                  <Select
-                    value={settings.default_timezone}
-                    onValueChange={(value) =>
-                      updateSetting('default_timezone', value)
+                      updateSetting('business_timezone', value)
                     }
                   >
                     <SelectTrigger>
@@ -733,7 +569,7 @@ export default function SystemSettingsForm({
                 <Label htmlFor="maintenance_message">Maintenance Message</Label>
                 <Textarea
                   id="maintenance_message"
-                  value={settings.maintenance_message}
+                  value={settings.maintenance_message || ''}
                   onChange={(e) =>
                     updateSetting('maintenance_message', e.target.value)
                   }

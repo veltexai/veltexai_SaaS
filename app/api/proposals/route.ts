@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       service_location: validatedData.global_inputs.service_location,
       facility_size: validatedData.global_inputs.facility_size,
       service_frequency: validatedData.global_inputs.service_frequency,
+      regional_location: validatedData.global_inputs.regional_location,
       // Keep nested data as JSON
       global_inputs: validatedData.global_inputs,
       service_specific_data: validatedData.service_specific_data,
@@ -51,6 +52,12 @@ export async function POST(request: NextRequest) {
       pricing_data: validatedData.pricing_data,
       generated_content: validatedData.generated_content,
       status: validatedData.status,
+      // Include enhanced fields
+      facility_details: validatedData.facility_details,
+      traffic_analysis: validatedData.traffic_analysis,
+      service_scope: validatedData.service_scope,
+      special_requirements: validatedData.special_requirements,
+      ai_tone: validatedData.ai_tone,
     };
 
     // Create the proposal

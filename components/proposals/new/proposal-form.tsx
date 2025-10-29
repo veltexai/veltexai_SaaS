@@ -140,6 +140,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
   const [selectedServiceType, setSelectedServiceType] =
     useState<ServiceType | null>(null);
   const [pricingEnabled, setPricingEnabled] = useState(false);
+  const [aiTone, setAiTone] = useState<'professional' | 'friendly' | 'formal' | 'casual' | 'technical'>('professional');
 
   const form = useForm({
     resolver: zodResolver(proposalFormSchema),
@@ -155,7 +156,6 @@ export function ProposalForm({ userId }: ProposalFormProps) {
         facility_size: 0,
         service_frequency: '1x-month' as const,
         regional_location: '',
-        property_type: undefined,
       },
       service_specific_data: {},
       pricing_enabled: false,
@@ -190,6 +190,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
         certifications_required: [],
         insurance_requirements: [],
       },
+      ai_tone: 'professional' as const,
     },
   });
 
@@ -211,6 +212,15 @@ export function ProposalForm({ userId }: ProposalFormProps) {
       );
     }
   }, [watchedServiceType, selectedServiceType, form]);
+
+  const handleAiToneChange = (tone: 'professional' | 'friendly' | 'formal' | 'casual' | 'technical') => {
+    setAiTone(tone);
+    form.setValue('ai_tone', tone, {
+      shouldValidate: false,
+      shouldTouch: false,
+      shouldDirty: false,
+    });
+  };
 
   const validateCurrentStep = async () => {
     const fieldsToValidate =
@@ -337,6 +347,8 @@ export function ProposalForm({ userId }: ProposalFormProps) {
             onEnabledChange={setPricingEnabled}
             currentStep={currentStep}
             onGeneratingChange={setIsGeneratingContent}
+            selectedTone={aiTone}
+            onToneChange={handleAiToneChange}
           />
         );
       default:

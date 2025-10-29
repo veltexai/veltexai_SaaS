@@ -15,10 +15,13 @@ export const serviceFrequencySchema = z.enum([
   "daily"
 ])
 
+// AI tone enum
+export const aiToneSchema = z.enum(["professional", "friendly", "formal", "casual", "technical"])
+
 // Enhanced facility details schema
 export const facilityDetailsSchema = z.object({
   building_age: z.number().min(0).optional(),
-  building_type: z.enum(["office", "warehouse", "retail", "medical", "educational", "hospitality", "industrial", "other"]).optional(),
+  building_type: z.enum(["office", "warehouse", "retail", "restaurant", "medical", "educational", "daycare", "church", "hospitality", "industrial", "other"]).optional(),
   accessibility_requirements: z.array(z.string()).default([]),
   special_areas: z.array(z.string()).default([]),
   equipment_present: z.array(z.string()).default([]),
@@ -62,7 +65,6 @@ export const globalInputsSchema = z.object({
   service_frequency: serviceFrequencySchema,
   // Enhanced fields
   regional_location: z.string().optional(),
-  property_type: z.enum(["office", "restaurant", "warehouse", "daycare", "medical", "church", "retail", "school"]).optional(),
 })
 
 // Service-specific schemas
@@ -152,6 +154,8 @@ export const proposalFormSchema = z.object({
   traffic_analysis: trafficAnalysisSchema.default({}),
   service_scope: serviceScopeSchema.default({}),
   special_requirements: specialRequirementsSchema.default({}),
+  // AI enhancement fields
+  ai_tone: aiToneSchema.default("professional"),
 })
 
 // Dynamic validation based on service type

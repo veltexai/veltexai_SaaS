@@ -35,13 +35,25 @@ import {
 } from 'lucide-react';
 import PromptDialog from './prompt-dialog';
 
+interface VariableDefinition {
+  type: 'text' | 'textarea' | 'number' | 'email' | 'phone' | 'url' | 'date' | 'time' | 'currency' | 'select';
+  description: string;
+  required: boolean;
+  options?: string[];
+}
+
 interface PromptTemplate {
   id: string;
   name: string;
   description: string | null;
-  category: 'proposal' | 'email' | 'follow_up' | 'custom';
+  category: 'proposal' | 'email' | 'follow_up' | 'custom' | 'proposal_commercial' | 'proposal_residential' | 'proposal_specialized' | 'email_welcome' | 'email_follow_up' | 'email_reminder' | 'email_thank_you' | 'email_rejection' | 'follow_up_initial' | 'follow_up_second' | 'follow_up_final';
+  subcategory?: string | null;
   template_content: string;
   variables: string[];
+  variable_definitions?: Record<string, VariableDefinition>;
+  tags?: string[];
+  usage_count?: number;
+  last_used_at?: string | null;
   is_active: boolean;
   is_default: boolean;
   created_by: string | null;
@@ -193,8 +205,11 @@ export default function PromptsTable({ templates: initialTemplates, currentUserI
           name: `${template.name} (Copy)`,
           description: template.description,
           category: template.category,
+          subcategory: template.subcategory,
           template_content: template.template_content,
           variables: template.variables,
+          variable_definitions: template.variable_definitions,
+          tags: template.tags,
           is_active: false,
           is_default: false,
           created_by: currentUserId,
@@ -278,17 +293,16 @@ export default function PromptsTable({ templates: initialTemplates, currentUserI
   };
 
   const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'proposal':
-        return 'bg-blue-100 text-blue-800';
-      case 'email':
-        return 'bg-green-100 text-green-800';
-      case 'follow_up':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'custom':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+    if (category.startsWith('proposal')) {
+      return 'bg-blue-100 text-blue-800';
+    } else if (category.startsWith('email')) {
+      return 'bg-green-100 text-green-800';
+    } else if (category.startsWith('follow_up')) {
+      return 'bg-yellow-100 text-yellow-800';
+    } else if (category === 'custom') {
+      return 'bg-purple-100 text-purple-800';
+    } else {
+      return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -330,6 +344,7 @@ export default function PromptsTable({ templates: initialTemplates, currentUserI
                 </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead>Tags</TableHead>
                 <TableHead>Variables</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Default</TableHead>
@@ -362,6 +377,20 @@ export default function PromptsTable({ templates: initialTemplates, currentUserI
                     <Badge className={getCategoryColor(template.category)}>
                       {template.category.replace('_', ' ')}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {template.tags?.slice(0, 2).map((tag, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {template.tags && template.tags.length > 2 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{template.tags.length - 2}
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">

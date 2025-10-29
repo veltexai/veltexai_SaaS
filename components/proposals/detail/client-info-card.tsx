@@ -1,10 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Database } from '@/types/database';
 
-interface Proposal {
-  client_name: string;
-  client_email: string;
-  client_company: string;
-}
+type Proposal = Database['public']['Tables']['proposals']['Row'];
 
 interface ClientInfoCardProps {
   proposal: Proposal;

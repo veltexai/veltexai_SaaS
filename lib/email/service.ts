@@ -1,6 +1,13 @@
 import nodemailer from 'nodemailer';
 import { createClient } from '@supabase/supabase-js';
-import { EmailTemplates, type SubscriptionEmailData } from './templates';
+import { 
+  EmailTemplates, 
+  type SubscriptionEmailData, 
+  type ProposalEmailData,
+  type EnhancedCancellationEmailData,
+  type ReactivationEmailData,
+  type GracePeriodEmailData
+} from './templates';
 
 interface EmailConfig {
   smtp_host: string;
@@ -35,6 +42,25 @@ interface TrialEndingEmailData {
   daysRemaining: number;
 }
 
+interface EnhancedProposalEmailData {
+  clientName: string;
+  clientEmail: string;
+  ccEmails?: string[];
+  subject: string;
+  message: string;
+  proposalTitle: string;
+  companyName: string;
+  senderName: string;
+  senderEmail: string;
+  proposalViewUrl?: string;
+  hasAttachment?: boolean;
+  sendCopyToSelf?: boolean;
+  trackingId: string;
+  brandingEnabled?: boolean;
+  primaryColor?: string;
+  logoUrl?: string;
+}
+
 export class EmailService {
   private static async getEmailConfig(): Promise<EmailConfig | null> {
     console.log('📧 EmailService: Initializing Supabase client...');
@@ -49,6 +75,8 @@ export class EmailService {
       .select(
         'smtp_host, smtp_port, smtp_username, smtp_password, smtp_from_email, smtp_from_name, enable_email_notifications'
       )
+      .order('updated_at', { ascending: false })
+      .limit(1)
       .single();
 
     if (error) {
@@ -271,6 +299,129 @@ export class EmailService {
     }
   }
 
+  static async sendEnhancedCancellationEmail(
+    data: EnhancedCancellationEmailData
+  ): Promise<boolean> {
+    try {
+      console.log('📧 EmailService: Sending enhanced cancellation email...');
+      const config = await this.getEmailConfig();
+      if (!config) {
+        console.error('❌ EmailService: Email configuration not available');
+        return false;
+      }
+
+      if (!config.enable_email_notifications) {
+        console.log('⚠️ EmailService: Email notifications are disabled');
+        return true;
+      }
+
+      const transporter = await this.createTransporter();
+      const template = EmailTemplates.getEnhancedCancellationEmail(data);
+
+      const mailOptions = {
+        from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
+        to: data.userEmail,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(
+        `✅ EmailService: Enhanced cancellation email sent successfully to ${data.userEmail}`
+      );
+      return true;
+    } catch (error) {
+      console.error(
+        '❌ EmailService: Failed to send enhanced cancellation email:',
+        error
+      );
+      return false;
+    }
+  }
+
+  static async sendReactivationEmail(
+    data: ReactivationEmailData
+  ): Promise<boolean> {
+    try {
+      console.log('📧 EmailService: Sending reactivation email...');
+      const config = await this.getEmailConfig();
+      if (!config) {
+        console.error('❌ EmailService: Email configuration not available');
+        return false;
+      }
+
+      if (!config.enable_email_notifications) {
+        console.log('⚠️ EmailService: Email notifications are disabled');
+        return true;
+      }
+
+      const transporter = await this.createTransporter();
+      const template = EmailTemplates.getReactivationEmail(data);
+
+      const mailOptions = {
+        from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
+        to: data.userEmail,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(
+        `✅ EmailService: Reactivation email sent successfully to ${data.userEmail}`
+      );
+      return true;
+    } catch (error) {
+      console.error(
+        '❌ EmailService: Failed to send reactivation email:',
+        error
+      );
+      return false;
+    }
+  }
+
+  static async sendGracePeriodEmail(
+    data: GracePeriodEmailData
+  ): Promise<boolean> {
+    try {
+      console.log('📧 EmailService: Sending grace period email...');
+      const config = await this.getEmailConfig();
+      if (!config) {
+        console.error('❌ EmailService: Email configuration not available');
+        return false;
+      }
+
+      if (!config.enable_email_notifications) {
+        console.log('⚠️ EmailService: Email notifications are disabled');
+        return true;
+      }
+
+      const transporter = await this.createTransporter();
+      const template = EmailTemplates.getGracePeriodEmail(data);
+
+      const mailOptions = {
+        from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
+        to: data.userEmail,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(
+        `✅ EmailService: Grace period email sent successfully to ${data.userEmail}`
+      );
+      return true;
+    } catch (error) {
+      console.error(
+        '❌ EmailService: Failed to send grace period email:',
+        error
+      );
+      return false;
+    }
+  }
+
   static async sendTrialEndingEmail(
     data: TrialEndingEmailData
   ): Promise<boolean> {
@@ -306,6 +457,117 @@ export class EmailService {
     } catch (error) {
       console.error(
         '❌ EmailService: Failed to send trial ending email:',
+        error
+      );
+      return false;
+    }
+  }
+
+  static async sendProposalEmail(
+    data: ProposalEmailData,
+    pdfBuffer?: Buffer
+  ): Promise<boolean> {
+    try {
+      console.log('📧 EmailService: Sending proposal email...');
+      const config = await this.getEmailConfig();
+      if (!config) {
+        console.error('❌ EmailService: Email configuration not available');
+        return false;
+      }
+
+      if (!config.enable_email_notifications) {
+        console.log('⚠️ EmailService: Email notifications are disabled');
+        return true;
+      }
+
+      const transporter = await this.createTransporter();
+      const template = EmailTemplates.getProposalEmail(data);
+
+      const mailOptions: any = {
+        from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
+        to: data.clientEmail,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      };
+
+      // Add PDF attachment if provided
+      if (pdfBuffer) {
+        mailOptions.attachments = [
+          {
+            filename: `${data.proposalTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_proposal.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          },
+        ];
+      }
+
+      await transporter.sendMail(mailOptions);
+      console.log(
+        `✅ EmailService: Proposal email sent successfully to ${data.clientEmail}`
+      );
+      return true;
+    } catch (error) {
+      console.error(
+        '❌ EmailService: Failed to send proposal email:',
+        error
+      );
+      return false;
+    }
+  }
+
+  static async sendEnhancedProposalEmail(
+    data: EnhancedProposalEmailData,
+    pdfBuffer?: Buffer
+  ): Promise<boolean> {
+    try {
+      console.log('📧 EmailService: Sending enhanced proposal email...');
+      const config = await this.getEmailConfig();
+      if (!config) {
+        console.error('❌ EmailService: Email configuration not available');
+        return false;
+      }
+
+      if (!config.enable_email_notifications) {
+        console.log('⚠️ EmailService: Email notifications are disabled');
+        return true;
+      }
+
+      const transporter = await this.createTransporter();
+      const template = EmailTemplates.getEnhancedProposalEmail(data);
+
+      const mailOptions: any = {
+        from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
+        to: data.clientEmail,
+        cc: data.ccEmails && data.ccEmails.length > 0 ? data.ccEmails : undefined,
+        bcc: data.sendCopyToSelf && data.senderEmail ? [data.senderEmail] : undefined,
+        subject: data.subject,
+        html: template.html,
+        text: template.text,
+        headers: {
+          'X-Proposal-Tracking-ID': data.trackingId,
+        },
+      };
+
+      // Add PDF attachment if provided
+      if (pdfBuffer) {
+        mailOptions.attachments = [
+          {
+            filename: `${data.proposalTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_proposal.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          },
+        ];
+      }
+
+      await transporter.sendMail(mailOptions);
+      console.log(
+        `✅ EmailService: Enhanced proposal email sent successfully to ${data.clientEmail}`
+      );
+      return true;
+    } catch (error) {
+      console.error(
+        '❌ EmailService: Failed to send enhanced proposal email:',
         error
       );
       return false;

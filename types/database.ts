@@ -20,7 +20,7 @@ export interface Database {
           logo_url: string | null;
           company_background: string | null;
           role: 'user' | 'admin' | 'moderator';
-          subscription_status: 'trial' | 'active' | 'cancelled' | 'past_due';
+          subscription_status: 'trial' | 'active' | 'cancelled' | 'past_due' | 'expired';
           subscription_plan: 'starter' | 'professional' | 'enterprise' | null;
           trial_ends_at: string | null;
           created_at: string;
@@ -36,7 +36,7 @@ export interface Database {
           logo_url?: string | null;
           company_background?: string | null;
           role?: 'user' | 'admin' | 'moderator';
-          subscription_status?: 'trial' | 'active' | 'cancelled' | 'past_due';
+          subscription_status?: 'trial' | 'active' | 'cancelled' | 'past_due' | 'expired';
           subscription_plan?: 'starter' | 'professional' | 'enterprise' | null;
           trial_ends_at?: string | null;
           created_at?: string;
@@ -52,7 +52,7 @@ export interface Database {
           logo_url?: string | null;
           company_background?: string | null;
           role?: 'user' | 'admin' | 'moderator';
-          subscription_status?: 'trial' | 'active' | 'cancelled' | 'past_due';
+          subscription_status?: 'trial' | 'active' | 'cancelled' | 'past_due' | 'expired';
           subscription_plan?: 'starter' | 'professional' | 'enterprise' | null;
           trial_ends_at?: string | null;
           created_at?: string;
@@ -99,6 +99,12 @@ export interface Database {
           regional_location: string | null;
           property_type: string | null;
           pricing_breakdown: Json;
+          // AI and tracking fields
+          ai_tone: 'professional' | 'friendly' | 'formal' | 'casual' | 'technical' | null;
+          view_count: number;
+          last_viewed_at: string | null;
+          tracking_enabled: boolean;
+          send_options: Json | null;
           created_at: string;
           updated_at: string;
         };
@@ -141,6 +147,12 @@ export interface Database {
           regional_location?: string | null;
           property_type?: string | null;
           pricing_breakdown?: Json;
+          // AI and tracking fields
+          ai_tone?: 'professional' | 'friendly' | 'formal' | 'casual' | 'technical' | null;
+          view_count?: number;
+          last_viewed_at?: string | null;
+          tracking_enabled?: boolean;
+          send_options?: Json | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -183,6 +195,12 @@ export interface Database {
           regional_location?: string | null;
           property_type?: string | null;
           pricing_breakdown?: Json;
+          // AI and tracking fields
+          ai_tone?: 'professional' | 'friendly' | 'formal' | 'casual' | 'technical' | null;
+          view_count?: number;
+          last_viewed_at?: string | null;
+          tracking_enabled?: boolean;
+          send_options?: Json | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -193,11 +211,14 @@ export interface Database {
           user_id: string;
           stripe_subscription_id: string | null;
           stripe_customer_id: string | null;
-          status: 'active' | 'cancelled' | 'past_due' | 'unpaid';
+          status: 'active' | 'cancelled' | 'past_due' | 'unpaid' | 'expired';
           plan: 'starter' | 'professional' | 'enterprise';
           current_period_start: string;
           current_period_end: string;
           canceled_at: string | null;
+          auto_renewal: boolean;
+          cancellation_reason: string | null;
+          grace_period_end: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -206,11 +227,14 @@ export interface Database {
           user_id: string;
           stripe_subscription_id?: string | null;
           stripe_customer_id?: string | null;
-          status: 'active' | 'cancelled' | 'past_due' | 'unpaid';
+          status: 'active' | 'cancelled' | 'past_due' | 'unpaid' | 'expired';
           plan: 'starter' | 'professional' | 'enterprise';
           current_period_start: string;
           current_period_end: string;
           canceled_at?: string | null;
+          auto_renewal?: boolean;
+          cancellation_reason?: string | null;
+          grace_period_end?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -219,11 +243,14 @@ export interface Database {
           user_id?: string;
           stripe_subscription_id?: string | null;
           stripe_customer_id?: string | null;
-          status?: 'active' | 'cancelled' | 'past_due' | 'unpaid';
+          status?: 'active' | 'cancelled' | 'past_due' | 'unpaid' | 'expired';
           plan?: 'starter' | 'professional' | 'enterprise';
           current_period_start?: string;
           current_period_end?: string;
           canceled_at?: string | null;
+          auto_renewal?: boolean;
+          cancellation_reason?: string | null;
+          grace_period_end?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -461,6 +488,339 @@ export interface Database {
           updated_at?: string;
         };
       };
+      system_settings: {
+        Row: {
+          id: string;
+          company_name: string;
+          company_logo_url: string | null;
+          company_tagline: string | null;
+          primary_color: string;
+          secondary_color: string;
+          accent_color: string;
+          email_from_name: string;
+          email_from_address: string;
+          email_reply_to: string | null;
+          smtp_host: string | null;
+          smtp_port: number | null;
+          smtp_username: string | null;
+          smtp_password: string | null;
+          smtp_secure: boolean;
+          max_login_attempts: number;
+          session_timeout: number;
+          password_min_length: number;
+          require_2fa: boolean;
+          ai_enabled: boolean;
+          pdf_generation_enabled: boolean;
+          email_notifications_enabled: boolean;
+          analytics_enabled: boolean;
+          business_hours_start: string;
+          business_hours_end: string;
+          business_timezone: string;
+          maintenance_mode: boolean;
+          maintenance_message: string | null;
+          theme_applied_to_pdfs: boolean;
+          ai_attribution_enabled: boolean;
+          proposal_tracking_enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_name?: string;
+          company_logo_url?: string | null;
+          company_tagline?: string | null;
+          primary_color?: string;
+          secondary_color?: string;
+          accent_color?: string;
+          email_from_name?: string;
+          email_from_address?: string;
+          email_reply_to?: string | null;
+          smtp_host?: string | null;
+          smtp_port?: number | null;
+          smtp_username?: string | null;
+          smtp_password?: string | null;
+          smtp_secure?: boolean;
+          max_login_attempts?: number;
+          session_timeout?: number;
+          password_min_length?: number;
+          require_2fa?: boolean;
+          ai_enabled?: boolean;
+          pdf_generation_enabled?: boolean;
+          email_notifications_enabled?: boolean;
+          analytics_enabled?: boolean;
+          business_hours_start?: string;
+          business_hours_end?: string;
+          business_timezone?: string;
+          maintenance_mode?: boolean;
+          maintenance_message?: string | null;
+          theme_applied_to_pdfs?: boolean;
+          ai_attribution_enabled?: boolean;
+          proposal_tracking_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_name?: string;
+          company_logo_url?: string | null;
+          company_tagline?: string | null;
+          primary_color?: string;
+          secondary_color?: string;
+          accent_color?: string;
+          email_from_name?: string;
+          email_from_address?: string;
+          email_reply_to?: string | null;
+          smtp_host?: string | null;
+          smtp_port?: number | null;
+          smtp_username?: string | null;
+          smtp_password?: string | null;
+          smtp_secure?: boolean;
+          max_login_attempts?: number;
+          session_timeout?: number;
+          password_min_length?: number;
+          require_2fa?: boolean;
+          ai_enabled?: boolean;
+          pdf_generation_enabled?: boolean;
+          email_notifications_enabled?: boolean;
+          analytics_enabled?: boolean;
+          business_hours_start?: string;
+          business_hours_end?: string;
+          business_timezone?: string;
+          maintenance_mode?: boolean;
+          maintenance_message?: string | null;
+          theme_applied_to_pdfs?: boolean;
+          ai_attribution_enabled?: boolean;
+          proposal_tracking_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      proposal_views: {
+        Row: {
+          id: string;
+          proposal_id: string;
+          viewer_ip: string | null;
+          tracking_token: string | null;
+          user_agent: string | null;
+          viewed_at: string;
+          view_duration: number | null;
+        };
+        Insert: {
+          id?: string;
+          proposal_id: string;
+          viewer_ip?: string | null;
+          tracking_token?: string | null;
+          user_agent?: string | null;
+          viewed_at?: string;
+          view_duration?: number | null;
+        };
+        Update: {
+          id?: string;
+          proposal_id?: string;
+          viewer_ip?: string | null;
+          tracking_token?: string | null;
+          user_agent?: string | null;
+          viewed_at?: string;
+          view_duration?: number | null;
+        };
+      };
+      proposal_status_history: {
+        Row: {
+          id: string;
+          proposal_id: string;
+          old_status: string | null;
+          new_status: string;
+          changed_by: string | null;
+          change_reason: string | null;
+          email_sent: boolean;
+          changed_at: string;
+        };
+        Insert: {
+          id?: string;
+          proposal_id: string;
+          old_status?: string | null;
+          new_status: string;
+          changed_by?: string | null;
+          change_reason?: string | null;
+          email_sent?: boolean;
+          changed_at?: string;
+        };
+        Update: {
+          id?: string;
+          proposal_id?: string;
+          old_status?: string | null;
+          new_status?: string;
+          changed_by?: string | null;
+          change_reason?: string | null;
+          email_sent?: boolean;
+          changed_at?: string;
+        };
+      };
+      error_logs: {
+        Row: {
+          id: string;
+          error_type: string;
+          error_message: string;
+          stack_trace: string | null;
+          user_id: string | null;
+          request_url: string | null;
+          user_agent: string | null;
+          severity: 'low' | 'medium' | 'high' | 'critical';
+          resolved: boolean;
+          created_at: string;
+          resolved_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          error_type: string;
+          error_message: string;
+          stack_trace?: string | null;
+          user_id?: string | null;
+          request_url?: string | null;
+          user_agent?: string | null;
+          severity?: 'low' | 'medium' | 'high' | 'critical';
+          resolved?: boolean;
+          created_at?: string;
+          resolved_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          error_type?: string;
+          error_message?: string;
+          stack_trace?: string | null;
+          user_id?: string | null;
+          request_url?: string | null;
+          user_agent?: string | null;
+          severity?: 'low' | 'medium' | 'high' | 'critical';
+          resolved?: boolean;
+          created_at?: string;
+          resolved_at?: string | null;
+        };
+      };
+      proposal_tracking: {
+        Row: {
+          id: string;
+          proposal_id: string;
+          tracking_id: string;
+          delivery_method: 'pdf' | 'online' | 'both';
+          recipient_email: string;
+          cc_emails: string[];
+          subject: string;
+          message: string;
+          include_branding: boolean;
+          track_opens: boolean;
+          track_downloads: boolean;
+          email_sent_at: string;
+          email_opened: boolean;
+          email_opened_at: string | null;
+          proposal_viewed: boolean;
+          proposal_viewed_at: string | null;
+          proposal_downloaded: boolean;
+          proposal_downloaded_at: string | null;
+          view_count: number;
+          download_count: number;
+          user_agent: string | null;
+          ip_address: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          proposal_id: string;
+          tracking_id: string;
+          delivery_method: 'pdf' | 'online' | 'both';
+          recipient_email: string;
+          cc_emails?: string[];
+          subject: string;
+          message: string;
+          include_branding?: boolean;
+          track_opens?: boolean;
+          track_downloads?: boolean;
+          email_sent_at?: string;
+          email_opened?: boolean;
+          email_opened_at?: string | null;
+          proposal_viewed?: boolean;
+          proposal_viewed_at?: string | null;
+          proposal_downloaded?: boolean;
+          proposal_downloaded_at?: string | null;
+          view_count?: number;
+          download_count?: number;
+          user_agent?: string | null;
+          ip_address?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          proposal_id?: string;
+          tracking_id?: string;
+          delivery_method?: 'pdf' | 'online' | 'both';
+          recipient_email?: string;
+          cc_emails?: string[];
+          subject?: string;
+          message?: string;
+          include_branding?: boolean;
+          track_opens?: boolean;
+          track_downloads?: boolean;
+          email_sent_at?: string;
+          email_opened?: boolean;
+          email_opened_at?: string | null;
+          proposal_viewed?: boolean;
+          proposal_viewed_at?: string | null;
+          proposal_downloaded?: boolean;
+          proposal_downloaded_at?: string | null;
+          view_count?: number;
+          download_count?: number;
+          user_agent?: string | null;
+          ip_address?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      cancellation_requests: {
+        Row: {
+          id: string;
+          user_id: string;
+          subscription_id: string;
+          reason: string | null;
+          requested_at: string;
+          processed_at: string | null;
+          status: 'pending' | 'completed' | 'failed';
+          stripe_cancellation_id: string | null;
+          refund_amount: number | null;
+          refund_reason: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          subscription_id: string;
+          reason?: string | null;
+          requested_at?: string;
+          processed_at?: string | null;
+          status?: 'pending' | 'completed' | 'failed';
+          stripe_cancellation_id?: string | null;
+          refund_amount?: number | null;
+          refund_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          subscription_id?: string;
+          reason?: string | null;
+          requested_at?: string;
+          processed_at?: string | null;
+          status?: 'pending' | 'completed' | 'failed';
+          stripe_cancellation_id?: string | null;
+          refund_amount?: number | null;
+          refund_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
@@ -491,6 +851,12 @@ export type SubscriptionPlan =
 export type CompanyProfile = Database['public']['Tables']['company_profiles']['Row'];
 export type RegionalMultiplier = Database['public']['Tables']['regional_multipliers']['Row'];
 export type PropertyBaseline = Database['public']['Tables']['property_baselines']['Row'];
+export type SystemSettings = Database['public']['Tables']['system_settings']['Row'];
+export type ProposalView = Database['public']['Tables']['proposal_views']['Row'];
+export type ProposalStatusHistory = Database['public']['Tables']['proposal_status_history']['Row'];
+export type ErrorLog = Database['public']['Tables']['error_logs']['Row'];
+export type ProposalTracking = Database['public']['Tables']['proposal_tracking']['Row'];
+export type CancellationRequest = Database['public']['Tables']['cancellation_requests']['Row'];
 export type User = {
   id: string;
   email: string;
@@ -555,4 +921,43 @@ export interface ServiceReferences {
   duration?: string;
   contact_info?: string;
   testimonial?: string;
+}
+
+// AI and Proposal Enhancement Types
+export type AITone = 'professional' | 'friendly' | 'formal' | 'casual' | 'technical';
+
+export interface SendOptions {
+  send_pdf?: boolean;
+  send_online_link?: boolean;
+  email_message?: string;
+  tracking_enabled?: boolean;
+  custom_subject?: string;
+  schedule_send?: string | null;
+}
+
+export interface BrandingTheme {
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  company_name: string;
+  logo_url?: string | null;
+  tagline?: string | null;
+}
+
+export interface ProposalTrackingStats {
+  total_views: number;
+  unique_viewers: number;
+  last_viewed_at?: string | null;
+  average_view_duration?: number;
+  view_history: ProposalView[];
+}
+
+export interface ErrorLogEntry {
+  error_type: string;
+  error_message: string;
+  stack_trace?: string | null;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  user_id?: string | null;
+  request_url?: string | null;
+  user_agent?: string | null;
 }

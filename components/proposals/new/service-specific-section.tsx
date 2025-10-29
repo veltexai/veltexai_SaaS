@@ -215,7 +215,11 @@ export function ServiceSpecificSection({
               <FormControl>
                 <Textarea
                   placeholder="Describe pets (type, number, special considerations)"
-                  {...field}
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
                 />
               </FormControl>
               <FormMessage />
@@ -233,7 +237,11 @@ export function ServiceSpecificSection({
             <FormControl>
               <Textarea
                 placeholder="Any special instructions or requirements"
-                {...field}
+                value={field.value || ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                name={field.name}
+                ref={field.ref}
               />
             </FormControl>
             <FormMessage />
@@ -255,7 +263,11 @@ export function ServiceSpecificSection({
               <FormControl>
                 <Input
                   placeholder="e.g., Office, Retail, Restaurant"
-                  {...field}
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
                 />
               </FormControl>
               <FormMessage />
@@ -300,7 +312,14 @@ export function ServiceSpecificSection({
           <FormItem>
             <FormLabel>Operating Hours</FormLabel>
             <FormControl>
-              <Input placeholder="e.g., Monday-Friday 9AM-5PM" {...field} />
+              <Input 
+                placeholder="e.g., Monday-Friday 9AM-5PM" 
+                value={field.value || ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                name={field.name}
+                ref={field.ref}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -345,7 +364,11 @@ export function ServiceSpecificSection({
             <FormControl>
               <Textarea
                 placeholder="Access codes, key procedures, security protocols"
-                {...field}
+                value={field.value || ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                name={field.name}
+                ref={field.ref}
               />
             </FormControl>
             <FormMessage />

@@ -27,13 +27,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { X, Plus, Eye, Save, Copy } from 'lucide-react';
 
+interface VariableDefinition {
+  type: 'text' | 'textarea' | 'number' | 'email' | 'phone' | 'url' | 'date' | 'time' | 'currency' | 'select';
+  description: string;
+  required: boolean;
+  options?: string[];
+}
+
 interface PromptTemplate {
   id: string;
   name: string;
   description: string | null;
-  category: 'proposal' | 'email' | 'follow_up' | 'custom';
+  category: 'proposal' | 'email' | 'follow_up' | 'custom' | 'proposal_commercial' | 'proposal_residential' | 'proposal_specialized' | 'email_welcome' | 'email_follow_up' | 'email_reminder' | 'email_thank_you' | 'email_rejection' | 'follow_up_initial' | 'follow_up_second' | 'follow_up_final';
+  subcategory?: string | null;
   template_content: string;
   variables: string[];
+  variable_definitions?: Record<string, VariableDefinition>;
+  tags?: string[];
+  usage_count?: number;
+  last_used_at?: string | null;
   is_active: boolean;
   is_default: boolean;
   created_by: string | null;
@@ -61,13 +73,17 @@ export default function PromptDialog({
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category: 'custom' as 'proposal' | 'email' | 'follow_up' | 'custom',
+    category: 'custom' as PromptTemplate['category'],
+    subcategory: '',
     template_content: '',
     variables: [] as string[],
+    variable_definitions: {} as Record<string, VariableDefinition>,
+    tags: [] as string[],
     is_active: true,
     is_default: false,
   });
   const [newVariable, setNewVariable] = useState('');
+  const [newTag, setNewTag] = useState('');
   const [previewData, setPreviewData] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -79,8 +95,11 @@ export default function PromptDialog({
         name: template.name,
         description: template.description || '',
         category: template.category,
+        subcategory: template.subcategory || '',
         template_content: template.template_content,
         variables: template.variables,
+        variable_definitions: template.variable_definitions || {},
+        tags: template.tags || [],
         is_active: template.is_active,
         is_default: template.is_default,
       });
@@ -96,8 +115,11 @@ export default function PromptDialog({
         name: '',
         description: '',
         category: 'custom',
+        subcategory: '',
         template_content: '',
         variables: [],
+        variable_definitions: {},
+        tags: [],
         is_active: true,
         is_default: false,
       });
@@ -134,16 +156,33 @@ export default function PromptDialog({
     }
   };
 
-  const handleRemoveVariable = (variable: string) => {
+  const handleRemoveVariable = (variableToRemove: string) => {
     setFormData((prev) => ({
       ...prev,
-      variables: prev.variables.filter((v) => v !== variable),
+      variables: prev.variables.filter((v) => v !== variableToRemove),
     }));
     setPreviewData((prev) => {
       const newData = { ...prev };
-      delete newData[variable];
+      delete newData[variableToRemove];
       return newData;
     });
+  };
+
+  const handleAddTag = () => {
+    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...prev.tags, newTag.trim()],
+      }));
+      setNewTag('');
+    }
+  };
+
+  const handleRemoveTag = (indexToRemove: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((_, index) => index !== indexToRemove),
+    }));
   };
 
   const renderPreview = () => {
@@ -173,8 +212,11 @@ export default function PromptDialog({
             name: formData.name,
             description: formData.description || null,
             category: formData.category,
+            subcategory: formData.subcategory || null,
             template_content: formData.template_content,
             variables: formData.variables,
+            variable_definitions: formData.variable_definitions,
+            tags: formData.tags,
             is_active: formData.is_active,
             is_default: formData.is_default,
             created_by: currentUserId,
@@ -205,8 +247,11 @@ export default function PromptDialog({
             name: formData.name,
             description: formData.description || null,
             category: formData.category,
+            subcategory: formData.subcategory || null,
             template_content: formData.template_content,
             variables: formData.variables,
+            variable_definitions: formData.variable_definitions,
+            tags: formData.tags,
             is_active: formData.is_active,
             is_default: formData.is_default,
           })
@@ -293,11 +338,38 @@ export default function PromptDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="proposal">Proposal</SelectItem>
+                    <SelectItem value="proposal_commercial">Proposal - Commercial</SelectItem>
+                    <SelectItem value="proposal_residential">Proposal - Residential</SelectItem>
+                    <SelectItem value="proposal_specialized">Proposal - Specialized</SelectItem>
                     <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="email_welcome">Email - Welcome</SelectItem>
+                    <SelectItem value="email_follow_up">Email - Follow Up</SelectItem>
+                    <SelectItem value="email_reminder">Email - Reminder</SelectItem>
+                    <SelectItem value="email_thank_you">Email - Thank You</SelectItem>
+                    <SelectItem value="email_rejection">Email - Rejection</SelectItem>
                     <SelectItem value="follow_up">Follow Up</SelectItem>
+                    <SelectItem value="follow_up_initial">Follow Up - Initial</SelectItem>
+                    <SelectItem value="follow_up_second">Follow Up - Second</SelectItem>
+                    <SelectItem value="follow_up_final">Follow Up - Final</SelectItem>
                     <SelectItem value="custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subcategory">Subcategory</Label>
+                <Input
+                  id="subcategory"
+                  value={formData.subcategory}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      subcategory: e.target.value,
+                    }))
+                  }
+                  disabled={mode === 'preview'}
+                  placeholder="Enter subcategory (optional)"
+                />
               </div>
             </div>
 
@@ -316,6 +388,44 @@ export default function PromptDialog({
                 placeholder="Enter template description"
                 rows={3}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tags">Tags</Label>
+              <div className="space-y-2">
+                <Input
+                  id="tags"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  disabled={mode === 'preview'}
+                  placeholder="Add tags (press Enter to add)"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddTag();
+                    }
+                  }}
+                />
+                {formData.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {formData.tags.map((tag, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="flex items-center space-x-1"
+                      >
+                        <span>{tag}</span>
+                        {mode !== 'preview' && (
+                          <X
+                            className="h-3 w-3 cursor-pointer"
+                            onClick={() => handleRemoveTag(index)}
+                          />
+                        )}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center space-x-6">

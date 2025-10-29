@@ -1,22 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
+import { Database } from '@/types/database';
 
-interface Proposal {
-  pricing_data: {
-    total?: number;
-    subtotal?: number;
-    tax?: number;
-  } | null;
-  service_frequency: string;
-  facility_size: number;
-}
+type Proposal = Database['public']['Tables']['proposals']['Row'];
 
 interface ProjectDetailsCardProps {
   proposal: Proposal;
 }
 
 export function ProjectDetailsCard({ proposal }: ProjectDetailsCardProps) {
-  const totalValue = proposal.pricing_data?.total || 0;
+  const pricingData = proposal.pricing_data as { total?: number; subtotal?: number; tax?: number } | null;
+  const totalValue = pricingData?.total || 0;
   
   return (
     <Card>

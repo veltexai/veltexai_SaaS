@@ -5,6 +5,7 @@ import { CompanyProfileSettings } from '@/components/settings/company-profile-se
 import { SubscriptionBilling } from '@/components/settings/subscription-billing';
 import { SecuritySettings } from '@/components/settings/security-settings';
 import { NotificationsSettings } from '@/components/settings/notifications-settings';
+import BrandingSettings from '@/components/settings/branding-settings';
 import { type User as UserType, type Profile } from '@/types/database';
 
 export default async function SettingsPage() {
@@ -33,6 +34,9 @@ export default async function SettingsPage() {
         </div>
 
         {/* <CompanyProfileSettings /> */}
+
+        {/* Branding Settings - Full width */}
+        <BrandingSettings />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SecuritySettings />

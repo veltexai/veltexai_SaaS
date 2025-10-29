@@ -40,7 +40,7 @@ export interface PricingCalculationInput {
   pricingSettings?: PricingSettings;
   // Enhanced pricing inputs
   regionalLocation?: string;
-  propertyType?: string;
+  buildingType?: string;
   trafficAnalysis?: TrafficAnalysis;
   regionalMultipliers?: RegionalMultiplier[];
   propertyBaselines?: PropertyBaseline[];
@@ -169,7 +169,7 @@ export class PricingEngine {
       globalInputs,
       pricingSettings,
       regionalLocation,
-      propertyType,
+      buildingType,
       trafficAnalysis,
       regionalMultipliers,
       propertyBaselines,
@@ -185,8 +185,9 @@ export class PricingEngine {
     // Apply property baseline if available
     let propertyBaseline = 0;
     let propertyComplexityFactor = 1.0;
-    if (propertyType && propertyBaselines) {
-      const baseline = propertyBaselines.find(pb => pb.property_type === propertyType);
+    if (buildingType && propertyBaselines) {
+      // Map buildingType to property_type for database compatibility
+      const baseline = propertyBaselines.find(pb => pb.property_type === buildingType);
       if (baseline) {
         propertyBaseline = baseline.baseline_rate;
         baseRate = baseline.baseline_rate; // Use property baseline as base rate

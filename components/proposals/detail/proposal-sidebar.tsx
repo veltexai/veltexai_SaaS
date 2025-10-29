@@ -1,19 +1,9 @@
 import { ClientInfoCard } from './client-info-card';
 import { ProjectDetailsCard } from './project-details-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Database } from '@/types/database';
 
-interface Proposal {
-  id: string;
-  client_name: string;
-  client_email: string;
-  client_company: string;
-  service_location: string;
-  service_type: string;
-  service_frequency: string;
-  facility_size: number;
-  pricing_data: any;
-  generated_content: string;
-}
+type Proposal = Database['public']['Tables']['proposals']['Row'];
 
 interface ProposalSidebarProps {
   proposal: Proposal;

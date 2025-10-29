@@ -7,6 +7,7 @@ import {
   serviceTypeSchema,
   serviceFrequencySchema,
 } from '@/lib/validations/proposal';
+import { AITone } from '@/types/database';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -49,6 +50,9 @@ export async function POST(request: NextRequest) {
       traffic_analysis,
       service_scope,
       special_requirements,
+      // AI enhancement fields
+      ai_tone = 'professional',
+      is_regenerate = false,
     } = body;
 
     // Validate required fields
@@ -80,6 +84,18 @@ export async function POST(request: NextRequest) {
         floor: 'Floor Care',
       };
       return labels[type as keyof typeof labels] || type;
+    };
+
+    // Get tone instructions
+    const getToneInstructions = (tone: AITone) => {
+      const toneInstructions = {
+        professional: 'Use a professional, business-focused tone. Be formal but approachable, emphasizing expertise and reliability.',
+        friendly: 'Use a warm, friendly tone that builds rapport. Be personable while maintaining professionalism.',
+        formal: 'Use a very formal, structured tone. Be precise, detailed, and follow traditional business communication standards.',
+        casual: 'Use a relaxed, conversational tone. Be approachable and easy to understand while remaining professional.',
+        technical: 'Use a detail-oriented, technical tone. Include specific methodologies, processes, and technical expertise.',
+      };
+      return toneInstructions[tone] || toneInstructions.professional;
     };
 
     // Helper function to format enhanced facility data
@@ -196,6 +212,9 @@ export async function POST(request: NextRequest) {
 You are a proposal writing assistant. Create a polished, persuasive business proposal in markdown format based on the details below. 
 The proposal should feel personalized, professional, and structured for business clients.
 
+--- TONE INSTRUCTIONS ---
+${getToneInstructions(ai_tone)}
+
 --- SERVICE TYPE ---
 Service Type: ${getServiceTypeLabel(service_type)}
 
@@ -242,10 +261,12 @@ Company Background: ${
 7. Why Choose Us (your company's strengths, trust factors, experience)
 8. Next Steps (call-to-action)
 
-Tone: Professional, confident, persuasive, but not overly salesy. Use clear markdown formatting (headings, subheadings, bullet points) to ensure readability.
+${getToneInstructions(ai_tone)} Use clear markdown formatting (headings, subheadings, bullet points) to ensure readability.
 Focus on the specific ${getServiceTypeLabel(
       service_type
     )} service and tailor the content accordingly.
+
+${is_regenerate ? '--- REGENERATION REQUEST ---\nThis is a regeneration request. Please create a fresh, alternative version with different phrasing and structure while maintaining the same core information and tone.\n' : ''}
 
 --- PRICING INFO ---
 ${
@@ -257,6 +278,9 @@ Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estima
     : 'Pricing to be determined'
 }
 
+--- VELTEX AI ATTRIBUTION ---
+Please include a subtle footer note: "This proposal was generated with assistance from Veltex AI to ensure professional quality and consistency."
+
 `;
     console.log('🚀 ~ POST ~ prompt:', prompt);
 
@@ -265,8 +289,7 @@ Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estima
       messages: [
         {
           role: 'system',
-          content:
-            'You are a professional business proposal writer. Create compelling, well-structured proposals that help win clients. Focus on value proposition and clear deliverables.',
+          content: `You are a professional business proposal writer for Veltex Services. Create compelling, well-structured proposals that help win clients. ${getToneInstructions(ai_tone)} Focus on value proposition and clear deliverables. Always include the Veltex AI attribution as requested.`,
         },
         {
           role: 'user',
@@ -274,7 +297,7 @@ Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estima
         },
       ],
       max_tokens: 2000,
-      temperature: 0.7,
+      temperature: is_regenerate ? 0.8 : 0.7, // Higher temperature for regeneration to get more variation
     });
 
     const generatedContent = completion.choices[0]?.message?.content;
@@ -288,6 +311,8 @@ Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estima
 
     return NextResponse.json({
       content: generatedContent,
+      tone: ai_tone,
+      is_regenerate,
     });
   } catch (error) {
     console.error('Error generating proposal:', error);

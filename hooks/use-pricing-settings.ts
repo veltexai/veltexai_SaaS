@@ -43,10 +43,11 @@ export function usePricingSettings() {
 
       if (data) {
         setSettings(data);
-      } else {
-        // No settings found, create default settings
-        await createDefaultSettings(user.id);
       }
+      // else {
+      //   // No settings found, create default settings
+      //   await createDefaultSettings(user.id);
+      // }
     } catch (err) {
       console.error('Error fetching pricing settings:', err);
       setError(
@@ -91,6 +92,8 @@ export function usePricingSettings() {
         .insert(defaultSettings)
         .select()
         .single();
+      console.log('🚀 ~ createDefaultSettings ~ error:', error);
+      console.log('🚀 ~ createDefaultSettings ~ data:', data);
 
       if (error) throw error;
 
