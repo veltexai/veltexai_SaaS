@@ -324,7 +324,10 @@ export function BillingClient({
                         {formatDate(invoice.invoice_date)}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Invoice #{invoice.stripe_invoice_id.slice(-8)}
+                        {invoice.stripe_invoice_id 
+                          ? `Invoice #${invoice.stripe_invoice_id.slice(-8)}`
+                          : 'Plan Change'
+                        }
                       </p>
                     </div>
                     <div className="text-right">

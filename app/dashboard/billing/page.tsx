@@ -33,7 +33,7 @@ interface BillingHistory {
   currency: string;
   status: string;
   invoice_date: string;
-  stripe_invoice_id: string;
+  stripe_invoice_id: string | null;
 }
 
 // Define the RPC function return type based on the SQL function
