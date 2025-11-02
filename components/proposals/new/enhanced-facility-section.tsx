@@ -520,20 +520,80 @@ export function EnhancedFacilitySection() {
           <FormField
             control={form.control}
             name="service_scope.areas_included"
-            render={({ field }) => (
+            render={() => (
               <FormItem>
                 <FormLabel>Areas Included</FormLabel>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {[
+                    'Offices',
+                    'Common Areas',
+                    'Restrooms',
+                    'Break Rooms',
+                    'Storage Areas',
+                    'Printing Rooms',
+                    'Conference Rooms',
+                    'Reception Area',
+                    'Hallways',
+                    'Lobby',
+                    'Kitchen/Cafeteria',
+                    'Stairwells',
+                    'Elevators',
+                    'Server Room',
+                    'Executive Offices',
+                    'Training Rooms',
+                    'Copy Centers',
+                    'Supply Closets',
+                  ].map((area) => (
+                    <FormField
+                      key={area}
+                      control={form.control}
+                      name="service_scope.areas_included"
+                      render={({ field }) => {
+                        return (
+                          <FormItem
+                            key={area}
+                            className="flex flex-row items-start space-x-3 space-y-0"
+                          >
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.includes(area)}
+                                onCheckedChange={(checked) => {
+                                  const currentValue = Array.isArray(field.value) ? field.value : [];
+                                  return checked
+                                    ? field.onChange([...currentValue, area])
+                                    : field.onChange(
+                                        currentValue.filter(
+                                          (value) => value !== area
+                                        )
+                                      );
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="text-sm font-normal">
+                              {area}
+                            </FormLabel>
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="service_scope.special_notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Special Notes</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="List specific areas to be cleaned (e.g., offices, restrooms, lobby, conference rooms)"
+                    placeholder="Add any special instructions, additional areas, or specific requirements for the cleaning service..."
                     className="min-h-[100px]"
-                    value={field.value?.join('\n') || ''}
-                    onChange={(e) => {
-                      const lines = e.target.value
-                        .split('\n')
-                        .filter((line) => line.trim());
-                      field.onChange(lines);
-                    }}
+                    {...field}
                   />
                 </FormControl>
                 <FormMessage />

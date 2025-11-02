@@ -253,57 +253,6 @@ export function ServiceSpecificSection({
 
   const renderCommercialForm = () => (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="service_specific_data.business_type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Business Type</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="e.g., Office, Retail, Restaurant"
-                  value={field.value || ''}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  name={field.name}
-                  ref={field.ref}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="service_specific_data.employee_count"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Number of Employees</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min="1"
-                  value={field.value || ''}
-                  onChange={(e) => {
-                    // Allow any input during typing
-                    field.onChange(e.target.value);
-                  }}
-                  onBlur={(e) => {
-                    // Validate and sanitize only on blur
-                    const value = e.target.value;
-                    field.onChange(
-                      value === '' ? undefined : parseInt(value, 10) || 1
-                    );
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
 
       <FormField
         control={form.control}

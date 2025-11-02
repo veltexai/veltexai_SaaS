@@ -887,6 +887,7 @@ export interface ServiceScope {
   areas_excluded?: string[];
   special_services?: string[];
   frequency_details?: Record<string, any>;
+  special_notes?: string;
 }
 
 export interface SpecialRequirements {
