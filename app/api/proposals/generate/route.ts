@@ -53,6 +53,8 @@ export async function POST(request: NextRequest) {
       // AI enhancement fields
       ai_tone = 'professional',
       is_regenerate = false,
+      // Template data
+      template_id,
     } = body;
 
     // Validate required fields
@@ -61,6 +63,21 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields: service_type, client_name' },
         { status: 400 }
       );
+    }
+
+    // Fetch template data if template_id is provided
+    let templateData = null;
+    if (template_id) {
+      const { data: template, error: templateError } = await supabase
+        .from('proposal_templates')
+        .select('*')
+        .eq('id', template_id)
+        .eq('is_active', true)
+        .single();
+
+      if (!templateError && template) {
+        templateData = template;
+      }
     }
 
     // Create globalInputs object for the prompt
@@ -214,6 +231,15 @@ The proposal should feel personalized, professional, and structured for business
 
 --- TONE INSTRUCTIONS ---
 ${getToneInstructions(ai_tone)}
+
+${templateData ? `--- TEMPLATE GUIDANCE ---
+Template: ${templateData.display_name}
+Description: ${templateData.description}
+${templateData.template_data?.category ? `Category: ${templateData.template_data.category}` : ''}
+${templateData.template_data?.content ? `Template Content Guidelines: ${templateData.template_data.content}` : ''}
+
+Please use this template as a structural and content guide while customizing it with the specific client and project details provided below.
+` : ''}
 
 --- SERVICE TYPE ---
 Service Type: ${getServiceTypeLabel(service_type)}

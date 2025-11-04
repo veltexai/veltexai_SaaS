@@ -61,3 +61,5 @@ export interface BillingHistory {
   invoice_date: string;
   stripe_invoice_id: string | null;
 }
+
+export type SubscriptionTier = 'starter' | 'professional' | 'enterprise';

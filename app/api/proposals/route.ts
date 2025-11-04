@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       title: validatedData.title,
       service_type: validatedData.service_type,
+      template_id: validatedData.template_id,
       // Extract fields from global_inputs to match database columns
       client_name: validatedData.global_inputs.client_name,
       client_email: validatedData.global_inputs.client_email,

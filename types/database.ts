@@ -105,6 +105,7 @@ export interface Database {
           last_viewed_at: string | null;
           tracking_enabled: boolean;
           send_options: Json | null;
+          template_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -153,6 +154,7 @@ export interface Database {
           last_viewed_at?: string | null;
           tracking_enabled?: boolean;
           send_options?: Json | null;
+          template_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -201,6 +203,7 @@ export interface Database {
           last_viewed_at?: string | null;
           tracking_enabled?: boolean;
           send_options?: Json | null;
+          template_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -821,6 +824,137 @@ export interface Database {
           updated_at?: string;
         };
       };
+      proposal_templates: {
+        Row: {
+          id: string;
+          name: string;
+          display_name: string;
+          description: string | null;
+          preview_image_url: string | null;
+          preview_pdf_url: string | null;
+          template_data: Json;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          display_name: string;
+          description?: string | null;
+          preview_image_url?: string | null;
+          preview_pdf_url?: string | null;
+          template_data?: Json;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          display_name?: string;
+          description?: string | null;
+          preview_image_url?: string | null;
+          preview_pdf_url?: string | null;
+          template_data?: Json;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      template_tier_access: {
+        Row: {
+          id: string;
+          template_id: string;
+          subscription_tier: 'starter' | 'professional' | 'enterprise';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          template_id: string;
+          subscription_tier: 'starter' | 'professional' | 'enterprise';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          template_id?: string;
+          subscription_tier?: 'starter' | 'professional' | 'enterprise';
+          created_at?: string;
+        };
+      };
+      user_template_preferences: {
+        Row: {
+          id: string;
+          user_id: string;
+          preferred_template_id: string | null;
+          template_settings: Json | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          preferred_template_id?: string | null;
+          template_settings?: Json | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          preferred_template_id?: string | null;
+          template_settings?: Json | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      user_branding_settings: {
+        Row: {
+          id: string;
+          user_id: string;
+          company_name: string;
+          company_logo_url: string | null;
+          company_tagline: string | null;
+          primary_color: string;
+          secondary_color: string;
+          accent_color: string;
+          theme_applied_to_pdfs: boolean;
+          template_version: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          company_name: string;
+          company_logo_url?: string | null;
+          company_tagline?: string | null;
+          primary_color?: string;
+          secondary_color?: string;
+          accent_color?: string;
+          theme_applied_to_pdfs?: boolean;
+          template_version?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          company_name?: string;
+          company_logo_url?: string | null;
+          company_tagline?: string | null;
+          primary_color?: string;
+          secondary_color?: string;
+          accent_color?: string;
+          theme_applied_to_pdfs?: boolean;
+          template_version?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
@@ -857,6 +991,10 @@ export type ProposalStatusHistory = Database['public']['Tables']['proposal_statu
 export type ErrorLog = Database['public']['Tables']['error_logs']['Row'];
 export type ProposalTracking = Database['public']['Tables']['proposal_tracking']['Row'];
 export type CancellationRequest = Database['public']['Tables']['cancellation_requests']['Row'];
+export type ProposalTemplate = Database['public']['Tables']['proposal_templates']['Row'];
+export type TemplateTierAccess = Database['public']['Tables']['template_tier_access']['Row'];
+export type UserTemplatePreferences = Database['public']['Tables']['user_template_preferences']['Row'];
+export type UserBrandingSettings = Database['public']['Tables']['user_branding_settings']['Row'];
 export type User = {
   id: string;
   email: string;

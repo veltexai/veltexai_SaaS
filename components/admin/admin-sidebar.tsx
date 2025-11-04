@@ -14,6 +14,7 @@ import {
   LogOut,
   User,
   ChevronDown,
+  Layout,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,6 +59,12 @@ const navigation: NavItem[] = [
     href: '/admin/proposals',
     icon: FileText,
     description: 'Manage proposals',
+  },
+  {
+    name: 'Templates',
+    href: '/admin/templates',
+    icon: Layout,
+    description: 'Manage proposal templates',
   },
   {
     name: 'Pricing',

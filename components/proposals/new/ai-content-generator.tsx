@@ -110,6 +110,8 @@ export function AIContentGenerator({
           // AI tone selection
           ai_tone: selectedTone,
           is_regenerate: isRegenerate,
+          // Template data
+          template_id: form.template_id,
         }),
       });
 

@@ -18,6 +18,7 @@ import {
   getServiceSpecificSchema,
 } from '@/lib/validations/proposal';
 import { ServiceTypeSelector } from './service-type-selector';
+import { TemplateSelectionSection } from './template-selection-section';
 import { GlobalInputsSection } from './global-inputs-section';
 import { ServiceSpecificSection } from './service-specific-section';
 import { EnhancedFacilitySection } from './enhanced-facility-section';
@@ -44,21 +45,26 @@ const STEPS = [
   },
   {
     id: 2,
+    title: 'Template',
+    description: 'Choose proposal template',
+  },
+  {
+    id: 3,
     title: 'Client Information',
     description: 'Client details and contact information',
   },
   {
-    id: 3,
+    id: 4,
     title: 'Service Details',
     description: 'Services and specifications',
   },
   {
-    id: 4,
+    id: 5,
     title: 'Facility Details',
     description: 'Enhanced facility information',
   },
   {
-    id: 5,
+    id: 6,
     title: 'Pricing',
     description: 'Pricing configuration',
   },
@@ -141,12 +147,14 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     useState<ServiceType | null>(null);
   const [pricingEnabled, setPricingEnabled] = useState(false);
   const [aiTone, setAiTone] = useState<'professional' | 'friendly' | 'formal' | 'casual' | 'technical'>('professional');
+  const [userTier, setUserTier] = useState<'starter' | 'professional' | 'enterprise'>('starter');
 
   const form = useForm({
     resolver: zodResolver(proposalFormSchema),
     defaultValues: {
       title: '',
       service_type: 'residential' as const,
+      template_id: undefined,
       global_inputs: {
         client_name: '',
         client_email: '',
@@ -194,6 +202,33 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     },
   });
 
+  // Fetch user subscription tier
+  useEffect(() => {
+    const fetchUserTier = async () => {
+      try {
+        const supabase = createClient();
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('subscription_plan')
+          .eq('id', userId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching user tier:', error);
+          return;
+        }
+
+        if (profile?.subscription_plan) {
+          setUserTier(profile.subscription_plan as 'starter' | 'professional' | 'enterprise');
+        }
+      } catch (error) {
+        console.error('Error fetching user tier:', error);
+      }
+    };
+
+    fetchUserTier();
+  }, [userId]);
+
   // Watch for service type changes
   const watchedServiceType = form.watch('service_type');
 
@@ -226,18 +261,20 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     const fieldsToValidate =
       {
         1: ['service_type', 'title'],
-        2: [
+        2: [], // Template selection is optional
+        3: [
           'global_inputs.client_name',
           'global_inputs.client_email',
           'global_inputs.contact_phone',
           'global_inputs.service_location',
           'global_inputs.facility_size',
         ],
-        3: [], // Service-specific validation handled separately
-        4: ['generated_content'], // Pricing validation handled separately
+        4: [], // Service-specific validation handled separately
+        5: [], // Facility details are optional
+        6: ['generated_content'], // Pricing validation handled separately
       }[currentStep] || [];
 
-    if (currentStep === 3) {
+    if (currentStep === 4) {
       const serviceType = form.getValues('service_type');
       const serviceSpecificData = form.getValues('service_specific_data');
 
@@ -261,17 +298,6 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     }
 
     const isValid = await form.trigger(fieldsToValidate as any);
-    // const isValid = await form.trigger(fieldsToValidate as any, {
-    //   shouldFocus: false,
-    // });
-
-    // if (currentStep === 4) {
-    //   const generatedContent = form.getValues('generated_content');
-    //   if (!generatedContent || generatedContent.trim() === '') {
-    //     setError('Please generate proposal content before submitting.');
-    //     return false;
-    //   }
-    // }
 
     return isValid;
   };
@@ -330,16 +356,18 @@ export function ProposalForm({ userId }: ProposalFormProps) {
       case 1:
         return <ServiceTypeSelector />;
       case 2:
-        return <GlobalInputsSection />;
+        return <TemplateSelectionSection userTier={userTier} />;
       case 3:
+        return <GlobalInputsSection />;
+      case 4:
         return (
           <ServiceSpecificSection
             serviceType={selectedServiceType || 'residential'}
           />
         );
-      case 4:
-        return <EnhancedFacilitySection />;
       case 5:
+        return <EnhancedFacilitySection />;
+      case 6:
         return (
           <PricingSection
             serviceType={selectedServiceType || 'residential'}

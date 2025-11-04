@@ -1,3 +1,4 @@
+import { SubscriptionTier } from '@/types/subscription';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -78,4 +79,17 @@ export function truncateText(text: string, maxLength: number): string {
     return text;
   }
   return text.slice(0, maxLength) + '...';
+}
+
+export function getTierBadgeColor(tier: SubscriptionTier) {
+  switch (tier) {
+    case 'starter':
+      return 'bg-sky-100 text-sky-800';
+    case 'professional':
+      return 'bg-blue-100 text-blue-800';
+    case 'enterprise':
+      return 'bg-amber-100 text-amber-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
 }
