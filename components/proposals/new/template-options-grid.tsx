@@ -4,13 +4,13 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Layout, Check, Lock, Eye } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn, getTierBadgeColor } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SubscriptionTier } from '@/types/subscription';
 import { Database } from '@/types/database';
 import TemplatePreviewDialog from '@/components/templates/template-preview-dialog';
-import { createClient } from '@/lib/supabase/client';
 
 export interface TemplateItem {
   id: string;
@@ -47,30 +47,6 @@ export function TemplateOptionsGrid({
   const [previewTemplate, setPreviewTemplate] = useState<TemplateItem | null>(
     null
   );
-  const supabase = createClient();
-
-  const normalizePublicUrl = (
-    rawUrl: string | null | undefined
-  ): string | null => {
-    if (!rawUrl) return null;
-    try {
-      const marker = '/storage/v1/object/public/';
-      const idx = rawUrl.indexOf(marker);
-      if (idx !== -1) {
-        const bucketAndPath = rawUrl.slice(idx + marker.length);
-        const slashIndex = bucketAndPath.indexOf('/');
-        if (slashIndex !== -1) {
-          const bucket = bucketAndPath.slice(0, slashIndex);
-          const path = decodeURIComponent(bucketAndPath.slice(slashIndex + 1));
-          const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-          return data.publicUrl || rawUrl;
-        }
-      }
-      return rawUrl;
-    } catch {
-      return rawUrl;
-    }
-  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -109,7 +85,7 @@ export function TemplateOptionsGrid({
               <div className="aspect-[1/1.4] bg-gray-100 relative">
                 {template.preview_image_url ? (
                   <Image
-                    src={normalizePublicUrl(template.preview_image_url) || ''}
+                    src={template.preview_image_url}
                     alt={template.display_name || 'Template Preview'}
                     className={cn(
                       'w-full h-full object-cover',
