@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { montserrat, dmSerifText } from '@/lib/fonts';
 import './globals.css';
 import { Toaster } from 'sonner';
 import { ConfirmationProvider } from '@/components/providers/confirmation-provider';
@@ -29,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${dmSerifText.variable} antialiased`}
       >
         <FacebookPixel />
         <FacebookPixelTracker />

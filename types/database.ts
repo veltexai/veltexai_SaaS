@@ -20,7 +20,12 @@ export interface Database {
           logo_url: string | null;
           company_background: string | null;
           role: 'user' | 'admin' | 'moderator';
-          subscription_status: 'trial' | 'active' | 'cancelled' | 'past_due' | 'expired';
+          subscription_status:
+            | 'trial'
+            | 'active'
+            | 'cancelled'
+            | 'past_due'
+            | 'expired';
           subscription_plan: 'starter' | 'professional' | 'enterprise' | null;
           trial_ends_at: string | null;
           created_at: string;
@@ -36,7 +41,12 @@ export interface Database {
           logo_url?: string | null;
           company_background?: string | null;
           role?: 'user' | 'admin' | 'moderator';
-          subscription_status?: 'trial' | 'active' | 'cancelled' | 'past_due' | 'expired';
+          subscription_status?:
+            | 'trial'
+            | 'active'
+            | 'cancelled'
+            | 'past_due'
+            | 'expired';
           subscription_plan?: 'starter' | 'professional' | 'enterprise' | null;
           trial_ends_at?: string | null;
           created_at?: string;
@@ -52,7 +62,12 @@ export interface Database {
           logo_url?: string | null;
           company_background?: string | null;
           role?: 'user' | 'admin' | 'moderator';
-          subscription_status?: 'trial' | 'active' | 'cancelled' | 'past_due' | 'expired';
+          subscription_status?:
+            | 'trial'
+            | 'active'
+            | 'cancelled'
+            | 'past_due'
+            | 'expired';
           subscription_plan?: 'starter' | 'professional' | 'enterprise' | null;
           trial_ends_at?: string | null;
           created_at?: string;
@@ -100,7 +115,13 @@ export interface Database {
           property_type: string | null;
           pricing_breakdown: Json;
           // AI and tracking fields
-          ai_tone: 'professional' | 'friendly' | 'formal' | 'casual' | 'technical' | null;
+          ai_tone:
+            | 'professional'
+            | 'friendly'
+            | 'formal'
+            | 'casual'
+            | 'technical'
+            | null;
           view_count: number;
           last_viewed_at: string | null;
           tracking_enabled: boolean;
@@ -149,7 +170,13 @@ export interface Database {
           property_type?: string | null;
           pricing_breakdown?: Json;
           // AI and tracking fields
-          ai_tone?: 'professional' | 'friendly' | 'formal' | 'casual' | 'technical' | null;
+          ai_tone?:
+            | 'professional'
+            | 'friendly'
+            | 'formal'
+            | 'casual'
+            | 'technical'
+            | null;
           view_count?: number;
           last_viewed_at?: string | null;
           tracking_enabled?: boolean;
@@ -198,7 +225,13 @@ export interface Database {
           property_type?: string | null;
           pricing_breakdown?: Json;
           // AI and tracking fields
-          ai_tone?: 'professional' | 'friendly' | 'formal' | 'casual' | 'technical' | null;
+          ai_tone?:
+            | 'professional'
+            | 'friendly'
+            | 'formal'
+            | 'casual'
+            | 'technical'
+            | null;
           view_count?: number;
           last_viewed_at?: string | null;
           tracking_enabled?: boolean;
@@ -837,6 +870,7 @@ export interface Database {
           sort_order: number;
           created_at: string;
           updated_at: string;
+          template_type: 'basic' | 'premium';
         };
         Insert: {
           id?: string;
@@ -850,6 +884,7 @@ export interface Database {
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
+          template_type?: 'basic' | 'premium';
         };
         Update: {
           id?: string;
@@ -863,6 +898,7 @@ export interface Database {
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
+          template_type?: 'basic' | 'premium';
         };
       };
       template_tier_access: {
@@ -982,19 +1018,31 @@ export type PricingSettings =
   Database['public']['Tables']['pricing_settings']['Row'];
 export type SubscriptionPlan =
   Database['public']['Tables']['subscription_plans']['Row'];
-export type CompanyProfile = Database['public']['Tables']['company_profiles']['Row'];
-export type RegionalMultiplier = Database['public']['Tables']['regional_multipliers']['Row'];
-export type PropertyBaseline = Database['public']['Tables']['property_baselines']['Row'];
-export type SystemSettings = Database['public']['Tables']['system_settings']['Row'];
-export type ProposalView = Database['public']['Tables']['proposal_views']['Row'];
-export type ProposalStatusHistory = Database['public']['Tables']['proposal_status_history']['Row'];
+export type CompanyProfile =
+  Database['public']['Tables']['company_profiles']['Row'];
+export type RegionalMultiplier =
+  Database['public']['Tables']['regional_multipliers']['Row'];
+export type PropertyBaseline =
+  Database['public']['Tables']['property_baselines']['Row'];
+export type SystemSettings =
+  Database['public']['Tables']['system_settings']['Row'];
+export type ProposalView =
+  Database['public']['Tables']['proposal_views']['Row'];
+export type ProposalStatusHistory =
+  Database['public']['Tables']['proposal_status_history']['Row'];
 export type ErrorLog = Database['public']['Tables']['error_logs']['Row'];
-export type ProposalTracking = Database['public']['Tables']['proposal_tracking']['Row'];
-export type CancellationRequest = Database['public']['Tables']['cancellation_requests']['Row'];
-export type ProposalTemplate = Database['public']['Tables']['proposal_templates']['Row'];
-export type TemplateTierAccess = Database['public']['Tables']['template_tier_access']['Row'];
-export type UserTemplatePreferences = Database['public']['Tables']['user_template_preferences']['Row'];
-export type UserBrandingSettings = Database['public']['Tables']['user_branding_settings']['Row'];
+export type ProposalTracking =
+  Database['public']['Tables']['proposal_tracking']['Row'];
+export type CancellationRequest =
+  Database['public']['Tables']['cancellation_requests']['Row'];
+export type ProposalTemplate =
+  Database['public']['Tables']['proposal_templates']['Row'];
+export type TemplateTierAccess =
+  Database['public']['Tables']['template_tier_access']['Row'];
+export type UserTemplatePreferences =
+  Database['public']['Tables']['user_template_preferences']['Row'];
+export type UserBrandingSettings =
+  Database['public']['Tables']['user_branding_settings']['Row'];
 export type User = {
   id: string;
   email: string;
@@ -1063,7 +1111,12 @@ export interface ServiceReferences {
 }
 
 // AI and Proposal Enhancement Types
-export type AITone = 'professional' | 'friendly' | 'formal' | 'casual' | 'technical';
+export type AITone =
+  | 'professional'
+  | 'friendly'
+  | 'formal'
+  | 'casual'
+  | 'technical';
 
 export interface SendOptions {
   send_pdf?: boolean;

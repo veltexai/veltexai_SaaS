@@ -93,3 +93,16 @@ export function getTierBadgeColor(tier: SubscriptionTier) {
       return 'bg-gray-100 text-gray-800';
   }
 }
+
+export function formatDateToMMDDYY(input: string): string {
+  try {
+    const d = new Date(input);
+    if (isNaN(d.getTime())) return input;
+    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(d.getUTCDate()).padStart(2, '0');
+    const yy = String(d.getUTCFullYear()).slice(-2);
+    return `${mm}/${dd}/${yy}`;
+  } catch {
+    return input;
+  }
+}
