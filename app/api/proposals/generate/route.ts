@@ -9,6 +9,7 @@ import {
   serviceFrequencySchema,
 } from '@/lib/validations/proposal';
 import { AITone } from '@/types/database';
+import { formatCurrencySafe } from '@/lib/utils';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -429,7 +430,9 @@ D. Either party may terminate this agreement with 30 days notice.
 ${legalResponsibilityGuidance}
 
 ## Pricing
-A. Summarize pricing clearly. If pricing data is partial, provide ranges and assumptions.
+A. Customer agrees to pay contractor ${formatCurrencySafe(
+      tableMonthlyCost
+    )} monthly cost.
 
 ## Additional services to be invoiced (Optional)
 ${additionalServicesFenced}
@@ -441,11 +444,6 @@ C. A new price may be negotiated if customer requests a change in frequency or c
 D. If customer schedules service and cancels a $75.00 fee will be charged.
 
 E. If unforeseen events occur beyond the contractor’s control (strikes, construction obstacles, calamities, major tax increases or national economic crisis) a new price may be negotiated.
-
-Constraints:
-- Use clean markdown headings and bullets; avoid numbering prefixes in headings.
-- TERMINATION: End the document immediately after printing the E. line in “Additional services to be invoiced (Optional)”.
-- Do NOT append any text after the E. line (no questions, no closing, no CTA, no signature).
 `;
 
     // Create the prompt for OpenAI

@@ -162,12 +162,12 @@ function assembleBasicPages(sections: Section[]): string[] {
     if (firstLine) {
       const m = firstLine.match(/^([A-Z]\s*[\.|\)])\s+(.*)$/);
       if (m) {
-        const sentenceMatch = m[2].match(/[^.!?]+[.!?]/);
-        const sentence = sentenceMatch ? sentenceMatch[0].trim() : m[2].trim();
         const bullet = m[1].replace(/\s+/g, ''); // Ensure "A." not "A ."
-        rendered = `**${bullet}** ${sentence}`;
+        // Use the full remainder of the line to avoid cutting on decimal dots (e.g., $35.521,20)
+        rendered = `**${bullet}** ${m[2].trim()}`;
       } else {
-        rendered = getFirstSentence(pricing.content.trim());
+        // Fallback: render the entire first line without sentence truncation
+        rendered = firstLine;
       }
     }
     if (rendered) {

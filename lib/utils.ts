@@ -106,3 +106,26 @@ export function formatDateToMMDDYY(input: string): string {
     return input;
   }
 }
+
+// Robust currency formatter for string or number inputs
+export function formatCurrencySafe(
+  input: string | number | null | undefined,
+  currency: string = 'usd'
+): string {
+  const toNumber = (v: string | number | null | undefined): number => {
+    if (v == null) return 0;
+    if (typeof v === 'number') return v;
+    // Strip currency symbols, commas, and text like "monthly cost"
+    const cleaned = v.replace(/[^0-9.-]/g, '');
+    const n = parseFloat(cleaned);
+    return isFinite(n) && !isNaN(n) ? n : 0;
+  };
+
+  try {
+    return formatCurrency(toNumber(input), currency);
+  } catch {
+    const n = toNumber(input);
+    // Fallback: keep two decimals without locale currency symbol handling
+    return `$${n.toFixed(2)}`;
+  }
+}

@@ -5,6 +5,7 @@ import React from 'react';
 import { getIconForLabel } from '@/lib/icon-map';
 import ProposalAcceptance from '@/components/proposals/templates/shared/proposal-acceptance';
 import { dmSerifText } from '@/lib/fonts';
+import { formatCurrencySafe } from '@/lib/utils';
 
 interface MarkdownRendererProps {
   content: string;
@@ -290,7 +291,7 @@ export function MarkdownRenderer({
           elements.push(
             <p
               key={`sinc-rest-${index}`}
-              className="font-semibold italic text-sm text-[#383838] mb-7 leading-relaxed"
+              className="font-black italic text-sm text-[#383838] mb-7 leading-relaxed"
             >
               {parseInlineMarkdown(rest)}
             </p>
@@ -381,7 +382,10 @@ export function MarkdownRenderer({
         segments.forEach((seg, j) => {
           if (seg === OPTIONAL) {
             finalParts.push(
-              <em key={`optional-${idx}-${j}`} className={`italic capitalize ${dmSerifText.className}`}>
+              <em
+                key={`optional-${idx}-${j}`}
+                className={`italic capitalize ${dmSerifText.className}`}
+              >
                 {OPTIONAL}
               </em>
             );
@@ -429,8 +433,10 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
           <div className="text-center grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs justify-center items-center">
             <div className="whitespace-normal">{row.area}</div>
             <div>{row.frequency}</div>
-            <div>{row.costPerVisit ?? 'N/A'}</div>
-            <div className="font-bold">{row.monthlyCost ?? 'N/A'}</div>
+            <div>{formatCurrencySafe(row.costPerVisit) ?? 'N/A'}</div>
+            <div className="font-bold">
+              {formatCurrencySafe(row.monthlyCost) ?? 'N/A'}
+            </div>
           </div>
         </div>
       </div>
