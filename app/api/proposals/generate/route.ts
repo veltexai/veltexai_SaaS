@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { PricingEngine } from '@/lib/pricing-engine';
 import { getUser } from '@/lib/auth/auth-helpers';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
@@ -103,14 +104,74 @@ export async function POST(request: NextRequest) {
       return labels[type as keyof typeof labels] || type;
     };
 
+    // Visits per month approximation
+    const getVisitsPerMonth = (freq: string): number => {
+      const map: Record<string, number> = {
+        'one-time': 1,
+        '1x-month': 1,
+        'bi-weekly': 2.17,
+        weekly: 4.33,
+        '2x-week': 8.66,
+        '3x-week': 13.0,
+        '5x-week': 21.67,
+        daily: 30,
+      };
+      return map[freq] ?? 1;
+    };
+
+    // Frequency discount (maps extra weekly variants to weekly base)
+    const getFrequencyDiscount = (freq: string, settings: any): number => {
+      const baseKeyMap: Record<string, string> = {
+        'one-time': 'one-time',
+        '1x-month': 'monthly',
+        'bi-weekly': 'bi-weekly',
+        weekly: 'weekly',
+        '2x-week': 'weekly',
+        '3x-week': 'weekly',
+        '5x-week': 'weekly',
+        daily: 'weekly',
+      };
+      const base = baseKeyMap[freq] || 'one-time';
+      const multipliers: Record<string, number> =
+        (settings?.frequency_multipliers as Record<string, number>) || {
+          'one-time': 1.0,
+          weekly: 0.9,
+          'bi-weekly': 0.95,
+          monthly: 1.0,
+        };
+      return multipliers[base] ?? 1.0;
+    };
+
+    const formatMoney = (n: number) => `$${(n ?? 0).toFixed(2)}`;
+
+    // Get service frequency label
+    const getServiceFrequencyLabel = (freq: string) => {
+      const labels: Record<string, string> = {
+        'one-time': 'One-time',
+        '1x-month': 'Monthly',
+        'bi-weekly': 'Bi-weekly',
+        weekly: 'Weekly',
+        '2x-week': '2x weekly',
+        '3x-week': '3x weekly',
+        '5x-week': '5x weekly',
+        daily: 'Daily',
+      };
+      return labels[freq] || freq;
+    };
+
     // Get tone instructions
     const getToneInstructions = (tone: AITone) => {
       const toneInstructions = {
-        professional: 'Use a professional, business-focused tone. Be formal but approachable, emphasizing expertise and reliability.',
-        friendly: 'Use a warm, friendly tone that builds rapport. Be personable while maintaining professionalism.',
-        formal: 'Use a very formal, structured tone. Be precise, detailed, and follow traditional business communication standards.',
-        casual: 'Use a relaxed, conversational tone. Be approachable and easy to understand while remaining professional.',
-        technical: 'Use a detail-oriented, technical tone. Include specific methodologies, processes, and technical expertise.',
+        professional:
+          'Use a professional, business-focused tone. Be formal but approachable, emphasizing expertise and reliability.',
+        friendly:
+          'Use a warm, friendly tone that builds rapport. Be personable while maintaining professionalism.',
+        formal:
+          'Use a very formal, structured tone. Be precise, detailed, and follow traditional business communication standards.',
+        casual:
+          'Use a relaxed, conversational tone. Be approachable and easy to understand while remaining professional.',
+        technical:
+          'Use a detail-oriented, technical tone. Include specific methodologies, processes, and technical expertise.',
       };
       return toneInstructions[tone] || toneInstructions.professional;
     };
@@ -224,6 +285,169 @@ export async function POST(request: NextRequest) {
       return enhancedInfo;
     };
 
+    // Extract template config (handle both template_config and template_data)
+    const templateConfig: any = templateData
+      ? templateData.template_config || templateData.template_data || {}
+      : {};
+
+    // Detect Basic Professional template style
+    const isBasicProfessional = (() => {
+      const name = (
+        templateData?.name ||
+        templateData?.display_name ||
+        ''
+      ).toLowerCase();
+      const style = (templateConfig?.style || '').toLowerCase();
+      return (
+        name.includes('basic') ||
+        style === 'basic_professional' ||
+        (templateConfig?.layout === 'five_page' &&
+          Array.isArray(templateConfig?.sections))
+      );
+    })();
+
+    // Semi-static Legal responsibility guidance
+    const legalResponsibilityGuidance = `
+Use the following legal responsibility points verbatim or with light copy edits (do not change meaning):
+A. Contractor agrees to maintain required liability and accidental insurance and bonding.
+B. Contractor agrees to hold harmless customer from claims for injury, death or property damage due to negligence or accident on part of the contractor, its employees or agents.
+C. Contractor agrees to employ safe and professionally accepted cleaning procedures.
+D. Customer agrees not to hire any worker or person employed by the contractor during the term of this agreement and for ninety days after the expiration of this agreement.
+E. Contractor is an Independent Contractor with control over its procedures, employees and agents.
+`;
+
+    // Quick pricing estimate for scope table (safe fallback when no proposal exists)
+    let tableCostPerVisit = '—';
+    let tableMonthlyCost = '—';
+    try {
+      const { data: settingsRows } = await supabase
+        .from('pricing_settings')
+        .select('*')
+        .eq('is_active', true)
+        .order('is_default', { ascending: false })
+        .limit(1);
+      const settings: any = Array.isArray(settingsRows)
+        ? settingsRows[0]
+        : settingsRows;
+
+      const engine = new PricingEngine(settings || null);
+      const perVisitResult = engine.calculatePricing({
+        serviceType: service_type,
+        facilitySize: Number(facility_size) || 0,
+        serviceFrequency: 'one-time',
+        serviceSpecificData: service_specific_data || {},
+        globalInputs,
+        pricingSettings: settings || undefined,
+      });
+      const perVisitTotal = perVisitResult.total || 0;
+      const visits = getVisitsPerMonth(service_frequency);
+      const discount = getFrequencyDiscount(
+        service_frequency,
+        engine.getSettings()
+      );
+
+      if (perVisitTotal > 0 && visits > 0) {
+        tableCostPerVisit = formatMoney(perVisitTotal);
+        tableMonthlyCost = formatMoney(perVisitTotal * visits * discount);
+      }
+    } catch {
+      // keep placeholders '—' on error
+    }
+
+    // Deterministic fenced JSON blocks to embed in-place within structure
+    const scopeTableData = {
+      rows: [
+        {
+          area: service_scope?.areas_included?.join(', ') || '—',
+          frequency: getServiceFrequencyLabel(service_frequency),
+          costPerVisit: tableCostPerVisit || null,
+          monthlyCost: tableMonthlyCost || null,
+        },
+      ],
+    };
+    const scopeTableFenced = `\n\`\`\`veliz_scope_table\n${JSON.stringify(
+      scopeTableData
+    )}\n\`\`\`\n`;
+
+    const additionalServicesRows = Array.isArray(
+      service_scope?.special_services
+    )
+      ? (service_scope.special_services as string[]).map((s: string) => ({
+          service: s,
+          pricePerTime: null,
+          pricePerMonth: null,
+        }))
+      : [];
+    const additionalServicesFenced =
+      additionalServicesRows.length > 0
+        ? `\n\`\`\`veliz_additional_services\n${JSON.stringify({
+            rows: additionalServicesRows,
+          })}\n\`\`\`\n`
+        : '';
+
+    // Build structure instructions for Basic Professional
+    const basicProfessionalStructure = `
+Return markdown with ONLY these top-level sections using exact headings:
+Include the fenced JSON blocks exactly as shown; do not alter their content or formatting.
+## Cover letter
+HARD RULES FOR THIS SECTION:
+- Do NOT include salutations like "Dear", "Hello" or "Hi" anywhere.
+- Start directly with the message.
+- Do NOT begin with client or company names, roles, or headings. The first line MUST be a sentence (no name line) starting with "We", "Our", or "As a service provider" — no commas or colons after a name.
+- Use markdown bold (**) to emphasize important words and short phrases.
+
+STRUCTURE:
+- Paragraph 1: 3–4 short sentences, warm and tailored to the client and service type. Include 2–3 bold phrases using markdown (** … **), e.g., **quality control**, **attention to detail**, **reliable scheduling**.
+- Paragraph 2: 2–3 short sentences that reinforce a clear value proposition and our **pledge of excellence**. Include at least one bold phrase.
+- Paragraph 3: exactly one sentence: "Our pledge to you as a valued customer includes:" (verbatim).
+
+ - Then include EXACTLY six bullet points. Each bullet MUST begin with the bold label below (for icon mapping) followed by Text of min three lines (max 5) in our layout, customized to the client:
+  - **100% satisfaction** – commitment to service quality and responsive support.
+  - **Guaranteed professionalism and reliability** – trained staff, insured, punctual, consistent results.
+  - **Attention to detail** – thorough processes and quality checks.
+  - **Total Service** – comprehensive scope aligned to your facility needs.
+  - **Prompt follow up** – quick response to requests or issues.
+  - **Should a problem ever exist, you can be assured it will be promptly handled** – clear escalation and corrective procedures.
+
+- End the Cover letter section with the following closing lines on their own:
+  
+  Thank you again for the opportunity to submit this proposal.  We hope we can work together as a team in the future.
+  Sincerely, ${profile.company_name || 'Your Company'}
+
+## Scope of service
+A. Contractor will furnish all labor, supervision and equipment (except customer used supplies such as paper towels, tissue, hand soap and trash liners) to clean the listed areas.
+
+${scopeTableFenced}
+
+B. Pricing shall remain in effect one year from the starting date with contract renewable annually.
+
+C. Customer agrees to notify contractor of any complaints and allow time for prompt correction.
+
+D. Either party may terminate this agreement with 30 days notice.
+
+## Legal responsibility
+${legalResponsibilityGuidance}
+
+## Pricing
+A. Summarize pricing clearly. If pricing data is partial, provide ranges and assumptions.
+
+## Additional services to be invoiced (Optional)
+${additionalServicesFenced}
+
+B. Accounts are considered delinquent after net 30 days. Can add late charge of $30.00 per day collection fees (payable by customer)
+
+C. A new price may be negotiated if customer requests a change in frequency or coverage.
+
+D. If customer schedules service and cancels a $75.00 fee will be charged.
+
+E. If unforeseen events occur beyond the contractor’s control (strikes, construction obstacles, calamities, major tax increases or national economic crisis) a new price may be negotiated.
+
+Constraints:
+- Use clean markdown headings and bullets; avoid numbering prefixes in headings.
+- TERMINATION: End the document immediately after printing the E. line in “Additional services to be invoiced (Optional)”.
+- Do NOT append any text after the E. line (no questions, no closing, no CTA, no signature).
+`;
+
     // Create the prompt for OpenAI
     const prompt = `
 You are a proposal writing assistant. Create a polished, persuasive business proposal in markdown format based on the details below. 
@@ -232,14 +456,26 @@ The proposal should feel personalized, professional, and structured for business
 --- TONE INSTRUCTIONS ---
 ${getToneInstructions(ai_tone)}
 
-${templateData ? `--- TEMPLATE GUIDANCE ---
+${
+  templateData
+    ? `--- TEMPLATE GUIDANCE ---
 Template: ${templateData.display_name}
 Description: ${templateData.description}
-${templateData.template_data?.category ? `Category: ${templateData.template_data.category}` : ''}
-${templateData.template_data?.content ? `Template Content Guidelines: ${templateData.template_data.content}` : ''}
+${
+  templateData.template_data?.category
+    ? `Category: ${templateData.template_data.category}`
+    : ''
+}
+${
+  templateData.template_data?.content
+    ? `Template Content Guidelines: ${templateData.template_data.content}`
+    : ''
+}
 
 Please use this template as a structural and content guide while customizing it with the specific client and project details provided below.
-` : ''}
+`
+    : ''
+}
 
 --- SERVICE TYPE ---
 Service Type: ${getServiceTypeLabel(service_type)}
@@ -276,23 +512,36 @@ Company Background: ${
     }
 
 --- REQUIRED STRUCTURE ---
-1. Executive Summary (high-level overview of client needs + our solution)
-2. Project Understanding (show empathy and clarity of client's situation)
-3. Proposed Solution (detailed services tailored to client requirements and service type)
-4. Service Details (specific to the ${getServiceTypeLabel(
-      service_type
-    )} service)
-5. Timeline & Schedule
-6. Investment & Terms
-7. Why Choose Us (your company's strengths, trust factors, experience)
-8. Next Steps (call-to-action)
+${
+  isBasicProfessional
+    ? basicProfessionalStructure
+    : `
+Provide a concise, client-focused proposal with clear sections:
+- Executive Summary (overview of client needs + our solution)
+- Project Understanding (context and goals)
+- Proposed Solution (services tailored to ${getServiceTypeLabel(service_type)})
+- Service Details (deliverables, schedule, assumptions)
+- Investment & Terms (pricing and conditions)
+- Why Choose Us (trust factors)
+- Next Steps (call-to-action)
 
-${getToneInstructions(ai_tone)} Use clear markdown formatting (headings, subheadings, bullet points) to ensure readability.
+Constraints:
+- Do NOT include a signature section; it is handled by design.
+`
+}
+
+${getToneInstructions(
+  ai_tone
+)} Use clear markdown formatting (headings, subheadings, bullet points) to ensure readability.
 Focus on the specific ${getServiceTypeLabel(
       service_type
     )} service and tailor the content accordingly.
 
-${is_regenerate ? '--- REGENERATION REQUEST ---\nThis is a regeneration request. Please create a fresh, alternative version with different phrasing and structure while maintaining the same core information and tone.\n' : ''}
+${
+  is_regenerate
+    ? '--- REGENERATION REQUEST ---\nThis is a regeneration request. Please create a fresh, alternative version with different phrasing and structure while maintaining the same core information and tone.\n'
+    : ''
+}
 
 --- PRICING INFO ---
 ${
@@ -304,9 +553,6 @@ Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estima
     : 'Pricing to be determined'
 }
 
---- VELTEX AI ATTRIBUTION ---
-Please include a subtle footer note: "This proposal was generated with assistance from Veltex AI to ensure professional quality and consistency."
-
 `;
     console.log('🚀 ~ POST ~ prompt:', prompt);
 
@@ -315,7 +561,9 @@ Please include a subtle footer note: "This proposal was generated with assistanc
       messages: [
         {
           role: 'system',
-          content: `You are a professional business proposal writer for Veltex Services. Create compelling, well-structured proposals that help win clients. ${getToneInstructions(ai_tone)} Focus on value proposition and clear deliverables. Always include the Veltex AI attribution as requested.`,
+          content: `You are a professional business proposal writer for Veltex Services. Create compelling, well-structured proposals that help win clients. ${getToneInstructions(
+            ai_tone
+          )} Focus on value proposition and clear deliverables. Always include the Veltex AI attribution as requested.`,
         },
         {
           role: 'user',

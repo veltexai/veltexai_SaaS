@@ -50,7 +50,8 @@ const HeaderTemplate = ({
               />
             </div>
             <p className="flex-1 flex items-center justify-center p-2">
-              Date: <span className="font-bold pl-1">{formatDateToMMDDYY(date)}</span>
+              Date:
+              <span className="font-bold pl-1">{formatDateToMMDDYY(date)}</span>
             </p>
             <span
               aria-hidden

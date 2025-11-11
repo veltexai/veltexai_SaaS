@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
-import type { TemplateProps } from '@/types/templates';
+import type { TemplateProps, TemplateType } from '@/types/templates';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import PoweredBy from './shared/powered-by';
@@ -12,12 +12,28 @@ import HorizontalBar from './shared/horizontal-bar';
 import HeaderTemplate from './shared/header-template';
 import NavitationNumber from './shared/navigation';
 import HeaderLogo from './shared/header-logo';
+import { montserrat } from '@/lib/fonts';
+import ProposalAcceptance from './shared/proposal-acceptance';
 
 export function BasicTemplate({ proposal, branding }: TemplateProps) {
   const logoUrl = branding?.logo_url ?? null;
   const companyName = branding?.name ?? 'Company';
   const preparedFor =
     proposal.client_company || proposal.client_name || 'Client';
+
+  // Map global template types to acceptance UI variants
+  const acceptanceVariantMap: Record<
+    TemplateType,
+    'modern' | 'classic' | 'minimal' | 'professional'
+  > = {
+    basic: 'minimal',
+    modern_corporate: 'modern',
+    executive_premium: 'professional',
+    luxury_elite: 'classic',
+  };
+  const acceptanceVariant =
+    acceptanceVariantMap[(proposal as any).templateType as TemplateType] ??
+    'minimal';
 
   type SplitResponse = {
     sections: { id: string; title?: string | null; content: string }[];
@@ -61,7 +77,7 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
 
   return (
     <section className="space-y-6">
-      <div id="page-one" className="relative aspect-[1/1.4] bg-[#001768]">
+      <div id="page-one" className="relative aspect-[1/1.4] bg-white">
         <VerticalBar className="left-20" />
         <HorizontalBar className="bottom-20" />
         <Image
@@ -109,9 +125,16 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
               id={`page-${idx + 2}`}
               className="relative aspect-[1/1.4] bg-white p-8"
             >
-              <div className="prose max-w-none">
+              <div className="max-w-none pl-[95px]">
                 {pageContent?.trim().length ? (
-                  <MarkdownRenderer content={pageContent} />
+                  <MarkdownRenderer
+                    content={pageContent}
+                    className={`${montserrat.className}`}
+                    showAcceptance={idx === (split.pages?.length ?? 0) - 1}
+                    acceptanceTemplate={acceptanceVariant}
+                    acceptanceClientName={preparedFor}
+                    acceptanceCompanyName={companyName}
+                  />
                 ) : (
                   <div className="text-sm text-muted-foreground">
                     No content
@@ -139,7 +162,7 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
           </CardHeader>
           <CardContent>
             {proposal.generated_content ? (
-              <div className="prose max-w-none bg-black">
+              <div className="prose max-w-none">
                 <MarkdownRenderer content={proposal.generated_content} />
               </div>
             ) : (

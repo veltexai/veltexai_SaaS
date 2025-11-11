@@ -45,7 +45,7 @@ export function ProposalDetailTabs({ proposal }: ProposalDetailTabsProps) {
       </TabsContent> */}
 
       <TabsContent value="preview" className="mt-6">
-        <div className="bg-white border rounded-lg p-6">
+        <div className="p-6">
           <TemplateRenderer proposal={proposal} />
         </div>
       </TabsContent>

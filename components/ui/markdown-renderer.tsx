@@ -1,13 +1,46 @@
 'use client';
 
+import { useUserBranding } from '@/hooks/use-user-branding';
 import React from 'react';
+import { getIconForLabel } from '@/lib/icon-map';
+import ProposalAcceptance from '@/components/proposals/templates/shared/proposal-acceptance';
+import { dmSerifText } from '@/lib/fonts';
 
 interface MarkdownRendererProps {
   content: string;
   className?: string;
+  showAcceptance?: boolean;
+  acceptanceTemplate?: 'modern' | 'classic' | 'minimal' | 'professional';
+  acceptanceClientName?: string;
+  acceptanceCompanyName?: string;
 }
 
-export function MarkdownRenderer({ content, className = '' }: MarkdownRendererProps) {
+type ScopeTableData = {
+  rows: Array<{
+    area: string;
+    frequency: string;
+    costPerVisit: string | null;
+    monthlyCost: string | null;
+  }>;
+};
+
+type AdditionalServicesData = {
+  rows: Array<{
+    service: string;
+    pricePerTime: string | null;
+    pricePerMonth: string | null;
+  }>;
+};
+
+export function MarkdownRenderer({
+  content,
+  className = '',
+  showAcceptance = false,
+  acceptanceTemplate = 'minimal',
+  acceptanceClientName,
+  acceptanceCompanyName,
+}: MarkdownRendererProps) {
+  const { settings } = useUserBranding();
   const parseMarkdown = (text: string) => {
     const lines = text.split('\n');
     const elements: React.ReactNode[] = [];
@@ -15,18 +48,91 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
     let listType: 'ul' | 'ol' | null = null;
     let listCounter = 1;
     let elementCounter = 0; // Add unique counter
+    let currentSection: string | null = null;
+
+    const renderListItem = (rawText: string, key: string) => {
+      const labelMatch = rawText.match(/^(\*\*|__)[\s]*([^*]+?)[\s]*\1/);
+      const label = labelMatch?.[2]?.trim();
+      const Icon = label ? getIconForLabel(label) : null;
+
+      return (
+        <li
+          key={key}
+          className={`text-sm text-[#383838] mb-5 ${Icon ? 'list-none' : ''}`}
+        >
+          <div className={`flex items-start ${Icon ? 'gap-3' : ''}`}>
+            {Icon ? (
+              <Icon className="mt-[2px] text-[var(--color-primary)]" />
+            ) : null}
+            <div
+              className="leading-relaxed"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 5,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
+            >
+              {parseInlineMarkdown(rawText)}
+            </div>
+          </div>
+        </li>
+      );
+    };
+
+    const renderSplitHeading = (
+      level: 1 | 2 | 3,
+      rawText: string,
+      key: string
+    ) => {
+      // Strip leading numeric prefixes like "1) " or "01. "
+      const text = rawText.replace(/^\d+\s*[-.)]?\s*/, '').trim();
+      const words = text.split(/\s+/);
+
+      const Tag = level === 1 ? 'h1' : level === 2 ? 'h2' : 'h3';
+      const baseClass =
+        level === 1
+          ? 'text-5xl mb-4 mt-4'
+          : level === 2
+          ? 'text-lg font-bold mb-3 mt-4'
+          : 'text-base font-semibold mb-2 mt-4';
+
+      // Only split for multi-word headings; accent the last word
+      if (words.length >= 2 && level !== 3) {
+        const last = words.pop() as string;
+        const first = words.join(' ');
+        return (
+          <Tag key={key} className={`text-[var(--color-primary)] ${baseClass}`}>
+            <span className="">{parseInlineMarkdown(first)}</span>{' '}
+            <span className="font-bold lowercase">
+              {parseInlineMarkdown(last)}
+            </span>
+          </Tag>
+        );
+      }
+
+      // Fallback: no split or level 3
+      return (
+        <Tag key={key} className={`${baseClass} text-[var(--color-primary)]`}>
+          {parseInlineMarkdown(text)}
+        </Tag>
+      );
+    };
 
     const flushList = () => {
       if (currentList.length > 0) {
         if (listType === 'ul') {
           elements.push(
-            <ul key={`ul-${elementCounter++}`} className="list-disc list-inside mb-3 ml-4 space-y-1">
+            <ul key={`ul-${elementCounter++}`} className="mb-3 space-y-2">
               {currentList}
             </ul>
           );
         } else if (listType === 'ol') {
           elements.push(
-            <ol key={`ol-${elementCounter++}`} className="list-decimal list-inside mb-3 ml-4 space-y-1">
+            <ol
+              key={`ol-${elementCounter++}`}
+              className="list-decimal list-inside mb-3 ml-4 space-y-2"
+            >
               {currentList}
             </ol>
           );
@@ -37,40 +143,85 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
       }
     };
 
-    lines.forEach((line, index) => {
+    for (let index = 0; index < lines.length; index++) {
+      const line = lines[index];
       const trimmedLine = line.trim();
-      
+
       // Skip empty lines but add spacing
       if (!trimmedLine) {
         flushList();
-        return;
+        continue;
+      }
+
+      // Custom fenced JSON blocks for structured tables
+      if (trimmedLine.startsWith('```veliz_scope_table')) {
+        flushList();
+        let jsonLines: string[] = [];
+        index++;
+        while (index < lines.length && !lines[index].trim().startsWith('```')) {
+          jsonLines.push(lines[index]);
+          index++;
+        }
+        const jsonText = jsonLines.join('\n');
+        try {
+          const data: ScopeTableData = JSON.parse(jsonText);
+          elements.push(
+            <ScopeTable key={`scope-${elementCounter++}`} data={data} />
+          );
+        } catch {
+          // If parsing fails, fall back to showing raw content
+          elements.push(
+            <pre
+              key={`scope-fallback-${elementCounter++}`}
+              className="bg-muted p-3 rounded"
+            >
+              {jsonText}
+            </pre>
+          );
+        }
+        continue;
+      }
+
+      if (trimmedLine.startsWith('```veliz_additional_services')) {
+        flushList();
+        let jsonLines: string[] = [];
+        index++;
+        while (index < lines.length && !lines[index].trim().startsWith('```')) {
+          jsonLines.push(lines[index]);
+          index++;
+        }
+        const jsonText = jsonLines.join('\n');
+        try {
+          const data: AdditionalServicesData = JSON.parse(jsonText);
+          if (data?.rows?.length) {
+            elements.push(
+              <AdditionalServicesTable
+                key={`extras-${elementCounter++}`}
+                data={data}
+              />
+            );
+          }
+        } catch {
+          // ignore; no extras table rendered
+        }
+        continue;
       }
 
       // Headers
       if (trimmedLine.startsWith('###')) {
         flushList();
         const text = trimmedLine.replace(/^###\s*/, '');
-        elements.push(
-          <h3 key={`h3-${index}`} className="text-base font-semibold mb-2 mt-4 text-gray-800">
-            {parseInlineMarkdown(text)}
-          </h3>
-        );
+        elements.push(renderSplitHeading(3, text, `h3-${index}`));
       } else if (trimmedLine.startsWith('##')) {
         flushList();
         const text = trimmedLine.replace(/^##\s*/, '');
-        elements.push(
-          <h2 key={`h2-${index}`} className="text-lg font-bold mb-3 mt-4 text-gray-900">
-            {parseInlineMarkdown(text)}
-          </h2>
-        );
+        currentSection = text.toLowerCase();
+        elements.push(renderSplitHeading(2, text, `h2-${index}`));
       } else if (trimmedLine.startsWith('#')) {
         flushList();
         const text = trimmedLine.replace(/^#\s*/, '');
-        elements.push(
-          <h1 key={`h1-${index}`} className="text-xl font-bold mb-4 mt-4 text-gray-900">
-            {parseInlineMarkdown(text)}
-          </h1>
-        );
+        currentSection = text.toLowerCase();
+        elements.push(renderSplitHeading(1, text, `h1-${index}`));
       }
       // Bullet points
       else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
@@ -80,9 +231,7 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
         }
         const text = trimmedLine.replace(/^[-*]\s*/, '');
         currentList.push(
-          <li key={`li-${index}-${currentList.length}`} className="text-sm text-gray-700">
-            {parseInlineMarkdown(text)}
-          </li>
+          renderListItem(text, `li-${index}-${currentList.length}`)
         );
       }
       // Numbered lists
@@ -94,22 +243,97 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
         }
         const text = trimmedLine.replace(/^\d+\.\s*/, '');
         currentList.push(
-          <li key={`li-${index}-${currentList.length}`} className="text-sm text-gray-700">
-            {parseInlineMarkdown(text)}
-          </li>
+          renderListItem(text, `li-${index}-${currentList.length}`)
         );
         listCounter++;
+      }
+      // Strip accidental salutations (Dear/Hello/Hi) at start of cover letter
+      else if (/^(Dear|Hello|Hi)\b[\s,]/i.test(trimmedLine)) {
+        flushList();
+        // Skip rendering this line entirely
+        continue;
+      }
+      // Letter-prefixed paragraphs (A. B. C. ...) — bold the marker
+      else if (/^[A-Z]\.\s+/.test(trimmedLine)) {
+        flushList();
+        const match = trimmedLine.match(/^([A-Z])\.\s+(.*)$/);
+        const marker = match?.[1] ?? '';
+        const rest = match?.[2] ?? trimmedLine;
+        const inNoMarginSection =
+          !!currentSection &&
+          (currentSection.includes('legal responsibility') ||
+            currentSection.includes('additional services'));
+        const pClass = inNoMarginSection
+          ? 'text-sm text-[#383838] leading-normal mb-0'
+          : 'text-sm text-[#383838] leading-normal mb-4';
+        elements.push(
+          <p key={`letter-${index}`} className={pClass}>
+            <strong className="font-semibold mr-1">{marker}.</strong>
+            <span>{parseInlineMarkdown(rest)}</span>
+          </p>
+        );
+      }
+      // Cover letter closing — force a line break after "Sincerely,"
+      else if (/^Sincerely,/.test(trimmedLine)) {
+        flushList();
+        const m = trimmedLine.match(/^Sincerely,\s*(.*)$/);
+        const rest = m?.[1] ?? '';
+        elements.push(
+          <p
+            key={`sinc-${index}`}
+            className="text-sm text-[#383838] mb-1 leading-relaxed"
+          >
+            Sincerely,
+          </p>
+        );
+        if (rest) {
+          elements.push(
+            <p
+              key={`sinc-rest-${index}`}
+              className="font-semibold italic text-sm text-[#383838] mb-7 leading-relaxed"
+            >
+              {parseInlineMarkdown(rest)}
+            </p>
+          );
+        } else {
+          // If the company name is on the next line, render it here and consume that line.
+          const next = lines[index + 1]?.trim() ?? '';
+          const isRenderableNext =
+            next.length > 0 &&
+            !/^###/.test(next) &&
+            !/^##/.test(next) &&
+            !/^#/.test(next) &&
+            !/^[-*]\s+/.test(next) &&
+            !/^\d+\.\s+/.test(next) &&
+            !/^[A-Z]\.\s+/.test(next) &&
+            !/^(Dear|Hello|Hi)\b[\s,]/i.test(next);
+          if (isRenderableNext) {
+            elements.push(
+              <p
+                key={`sinc-next-${index}`}
+                className="font-black italic text-sm text-[#383838] mb-7 leading-relaxed"
+              >
+                {parseInlineMarkdown(next)}
+              </p>
+            );
+            // Skip the consumed next line
+            index += 1;
+          }
+        }
       }
       // Regular paragraphs
       else {
         flushList();
         elements.push(
-          <p key={`p-${index}`} className="text-sm text-gray-700 mb-2 leading-relaxed">
+          <p
+            key={`p-${index}`}
+            className="text-sm text-[#383838] mb-4 leading-relaxed"
+          >
             {parseInlineMarkdown(trimmedLine)}
           </p>
         );
       }
-    });
+    }
 
     // Flush any remaining list
     flushList();
@@ -120,38 +344,133 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
   const parseInlineMarkdown = (text: string): React.ReactNode => {
     const parts: React.ReactNode[] = [];
     let currentIndex = 0;
-    
+
     // Handle bold text (**text** or __text__)
     const boldRegex = /(\*\*|__)(.*?)\1/g;
     let match;
-    
+
     while ((match = boldRegex.exec(text)) !== null) {
       // Add text before the match
       if (match.index > currentIndex) {
         parts.push(text.slice(currentIndex, match.index));
       }
-      
+
       // Add the bold text
       parts.push(
-        <strong key={`bold-${match.index}`} className="font-semibold text-gray-900">
+        <strong
+          key={`bold-${match.index}`}
+          className="font-semibold text-gray-900"
+        >
           {match[2]}
         </strong>
       );
-      
+
       currentIndex = match.index + match[0].length;
     }
-    
+
     // Add remaining text
     if (currentIndex < text.length) {
       parts.push(text.slice(currentIndex));
     }
-    
-    return parts.length > 0 ? parts : text;
+    // Special case: italicize literal "(Optional)" wherever it appears
+    const finalParts: React.ReactNode[] = [];
+    const OPTIONAL = '(Optional)';
+    parts.forEach((part, idx) => {
+      if (typeof part === 'string') {
+        const segments = part.split(/(\(Optional\))/);
+        segments.forEach((seg, j) => {
+          if (seg === OPTIONAL) {
+            finalParts.push(
+              <em key={`optional-${idx}-${j}`} className={`italic capitalize ${dmSerifText.className}`}>
+                {OPTIONAL}
+              </em>
+            );
+          } else if (seg) {
+            finalParts.push(seg);
+          }
+        });
+      } else {
+        finalParts.push(part);
+      }
+    });
+
+    return finalParts.length > 0 ? finalParts : text;
   };
 
   return (
     <div className={`prose prose-sm max-w-none ${className}`}>
       {parseMarkdown(content)}
+      {showAcceptance ? (
+        <div className="">
+          <ProposalAcceptance
+            template={acceptanceTemplate}
+            clientName={acceptanceClientName}
+            companyName={acceptanceCompanyName}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ScopeTable({ data }: { data: ScopeTableData }) {
+  const row = data?.rows?.[0];
+  if (!row) return null;
+  return (
+    <div className="mb-6">
+      <div className="text-white">
+        <div className="text-center grid grid-cols-2 text-[var(--color-primary)] sm:grid-cols-4 gap-4 px-5 mb-2">
+          <div className="font-semibold">Area serviced</div>
+          <div className="font-semibold">Frequency</div>
+          <div className="font-semibold">Cost per visit</div>
+          <div className="font-semibold">Monthly cost</div>
+        </div>
+        <div className="rounded-3xl px-5 py-3 bg-[var(--color-primary)]">
+          <div className="text-center grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs justify-center items-center">
+            <div className="whitespace-normal">{row.area}</div>
+            <div>{row.frequency}</div>
+            <div>{row.costPerVisit ?? 'N/A'}</div>
+            <div className="font-bold">{row.monthlyCost ?? 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdditionalServicesTable({ data }: { data: AdditionalServicesData }) {
+  const rows = data?.rows ?? [];
+  if (!rows.length) return null;
+  // Duplicate each row once (render two copies) with memoized shallow copies
+  const rowsToRender = React.useMemo(() => {
+    return rows.flatMap((row) => [
+      { ...row },
+      { ...row },
+      { ...row },
+      { ...row },
+    ]);
+  }, [rows]);
+  return (
+    <div className="my-6 space-y-3">
+      <div className="grid grid-cols-4 gap-4 px-5 text-center">
+        <div className="text-[var(--color-primary)] font-bold col-span-2">
+          Service
+        </div>
+        <div className="text-[var(--color-primary)] font-bold">Price/time</div>
+        <div className="text-[var(--color-primary)] font-bold">Price/month</div>
+      </div>
+      {rowsToRender.map((r, i) => (
+        <div
+          key={`extras-row-${i}`}
+          className="rounded-3xl bg-[var(--color-primary)] text-white px-5 py-3 mb-1"
+        >
+          <div className="grid grid-cols-4 gap-4 text-xs items-center justify-center text-center">
+            <div className="whitespace-pre-line col-span-2">{r.service}</div>
+            <div>{r.pricePerTime ?? 'N/A'}</div>
+            <div className="font-bold">{r.pricePerMonth ?? 'N/A'}</div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

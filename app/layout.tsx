@@ -29,6 +29,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Adobe Typekit: Bely font */}
+        <link rel="stylesheet" href="https://use.typekit.net/njd2wnv.css" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${dmSerifText.variable} antialiased`}
       >

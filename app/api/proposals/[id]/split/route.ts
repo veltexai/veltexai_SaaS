@@ -54,7 +54,10 @@ function splitMarkdownIntoSections(md: string): Section[] {
   return sections;
 }
 
-function chunkSectionsIntoPages(sections: Section[], pageCount: number): string[] {
+function chunkSectionsIntoPages(
+  sections: Section[],
+  pageCount: number
+): string[] {
   // Simple heuristic: distribute sections into N pages by total content length
   const totalLength = sections.reduce((sum, s) => sum + s.content.length, 0);
   const targetPerPage = Math.max(1, Math.floor(totalLength / pageCount));
@@ -71,7 +74,10 @@ function chunkSectionsIntoPages(sections: Section[], pageCount: number): string[
 
   for (const s of sections) {
     const block = `${s.title ? `# ${s.title}\n\n` : ''}${s.content.trim()}\n\n`;
-    if (currentLen + block.length > targetPerPage && pages.length < pageCount - 1) {
+    if (
+      currentLen + block.length > targetPerPage &&
+      pages.length < pageCount - 1
+    ) {
       pushCurrent();
     }
     current += block;
@@ -89,10 +95,109 @@ function chunkSectionsIntoPages(sections: Section[], pageCount: number): string[
   return pages;
 }
 
-function detectTemplateType(name?: string | null, templateType?: string | null): 'basic' | 'executive_premium' | 'modern_corporate' | 'luxury_elite' {
+function normalizeTitle(t?: string | null): string {
+  return (t || '').trim().toLowerCase();
+}
+
+function getFirstSentence(text: string): string {
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (lines.length === 0) return '';
+  let first = lines[0];
+  // If bullet, return the bullet line as-is but without trailing extras
+  if (/^[-*]\s+/.test(first)) return first.replace(/^[-*]\s+/, '');
+  // Handle letter-coded bullets like "A.", "B.", etc. Strip the prefix.
+  first = first.replace(/^[A-Z]\s*[\.|\)]\s+/, '');
+  // Split on sentence end. Fallback to the first line entirely if no period.
+  const match = first.match(/[^.!?]+[.!?]/);
+  return match ? match[0].trim() : first;
+}
+
+function assembleBasicPages(sections: Section[]): string[] {
+  const byTitle = new Map<string, Section>();
+  sections.forEach((s) => byTitle.set(normalizeTitle(s.title ?? ''), s));
+
+  const get = (key: string) => byTitle.get(normalizeTitle(key));
+  const getAny = (keys: string[]) => {
+    for (const k of keys) {
+      const v = get(k);
+      if (v) return v;
+    }
+    return undefined;
+  };
+
+  const cover = get('Cover letter');
+  const scope = get('Scope of service');
+  const legal = get('Legal responsibility');
+  const pricing = get('Pricing');
+  const additional = getAny([
+    'Additional services to be invoiced (Optional)',
+    'Additional services to be invoiced',
+  ]);
+
+  const pages: string[] = [];
+
+  // Page 1: Cover letter only
+  if (cover) {
+    pages.push(`# ${cover.title}\n\n${cover.content.trim()}\n`);
+  } else {
+    pages.push('');
+  }
+
+  // Page 2: Scope of service, Legal responsibility, Pricing (first sentence)
+  let page2 = '';
+  if (scope) page2 += `# ${scope.title}\n\n${scope.content.trim()}\n\n`;
+  if (legal) page2 += `# ${legal.title}\n\n${legal.content.trim()}\n\n`;
+  if (pricing) {
+    // Preserve a leading letter-coded bullet (e.g., "A.") and make it bold.
+    const lines = pricing.content
+      .trim()
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const firstLine = lines[0] ?? '';
+    let rendered = '';
+    if (firstLine) {
+      const m = firstLine.match(/^([A-Z]\s*[\.|\)])\s+(.*)$/);
+      if (m) {
+        const sentenceMatch = m[2].match(/[^.!?]+[.!?]/);
+        const sentence = sentenceMatch ? sentenceMatch[0].trim() : m[2].trim();
+        const bullet = m[1].replace(/\s+/g, ''); // Ensure "A." not "A ."
+        rendered = `**${bullet}** ${sentence}`;
+      } else {
+        rendered = getFirstSentence(pricing.content.trim());
+      }
+    }
+    if (rendered) {
+      page2 += `# ${pricing.title}\n\n${rendered}\n\n`;
+    }
+  }
+  pages.push(page2);
+
+  // Page 3: Additional services
+  if (additional) {
+    pages.push(`# ${additional.title}\n\n${additional.content.trim()}\n`);
+  } else {
+    pages.push('');
+  }
+
+  // Ensure exactly 3 pages for basic
+  if (pages.length > 3) pages.length = 3;
+  while (pages.length < 3) pages.push('');
+  return pages;
+}
+
+function detectTemplateType(
+  name?: string | null,
+  templateType?: string | null
+): 'basic' | 'executive_premium' | 'modern_corporate' | 'luxury_elite' {
   const n = (name ?? '').toLowerCase();
-  if (n.includes('executive') || n.includes('premium')) return 'executive_premium';
-  if (n.includes('modern') || n.includes('corporate')) return 'modern_corporate';
+  if (n.includes('executive') || n.includes('premium'))
+    return 'executive_premium';
+  if (n.includes('modern') || n.includes('corporate'))
+    return 'modern_corporate';
   if (n.includes('luxury') || n.includes('elite')) return 'luxury_elite';
   if ((templateType ?? '') === 'basic') return 'basic';
   return 'executive_premium';
@@ -103,7 +208,10 @@ export async function GET(request: NextRequest, context: RouteParams) {
     const { id } = await context.params;
     const supabase = await createClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -115,16 +223,29 @@ export async function GET(request: NextRequest, context: RouteParams) {
       .single();
 
     if (pErr || !proposal) {
-      return NextResponse.json({ error: 'Proposal not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Proposal not found' },
+        { status: 404 }
+      );
     }
     if (proposal.user_id !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    if (!proposal.generated_content || proposal.generated_content.trim().length === 0) {
-      return NextResponse.json({ sections: [], pages: [], templateType: 'basic' });
+    if (
+      !proposal.generated_content ||
+      proposal.generated_content.trim().length === 0
+    ) {
+      return NextResponse.json({
+        sections: [],
+        pages: [],
+        templateType: 'basic',
+      });
     }
 
-    let templateRow: { name?: string | null; template_type?: string | null } | null = null;
+    let templateRow: {
+      name?: string | null;
+      template_type?: string | null;
+    } | null = null;
     if (proposal.template_id) {
       const { data: t, error: tErr } = await supabase
         .from('proposal_templates')
@@ -134,15 +255,27 @@ export async function GET(request: NextRequest, context: RouteParams) {
       if (!tErr) templateRow = t as any;
     }
 
-    const templateType = detectTemplateType(templateRow?.name ?? null, templateRow?.template_type ?? null);
+    const templateType = detectTemplateType(
+      templateRow?.name ?? null,
+      templateRow?.template_type ?? null
+    );
 
-    // Split and chunk into three internal pages for templates that use 5 total pages
+    // Split into pages based on selected template
     const sections = splitMarkdownIntoSections(proposal.generated_content);
-    const pages = chunkSectionsIntoPages(sections, 3);
+    let pages: string[];
+    if (templateType === 'basic') {
+      pages = assembleBasicPages(sections);
+    } else {
+      // Fallback heuristic for non-basic templates
+      pages = chunkSectionsIntoPages(sections, 3);
+    }
 
     return NextResponse.json({ sections, pages, templateType });
   } catch (error: any) {
     console.error('Error in split API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
