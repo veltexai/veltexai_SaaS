@@ -6,6 +6,7 @@ import { getIconForLabel } from '@/lib/icon-map';
 import ProposalAcceptance from '@/components/proposals/templates/shared/proposal-acceptance';
 import { dmSerifText } from '@/lib/fonts';
 import { formatCurrencySafe } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 
 interface MarkdownRendererProps {
   content: string;
@@ -14,6 +15,7 @@ interface MarkdownRendererProps {
   acceptanceTemplate?: 'modern' | 'classic' | 'minimal' | 'professional';
   acceptanceClientName?: string;
   acceptanceCompanyName?: string;
+  proposalId?: string;
 }
 
 type ScopeTableData = {
@@ -40,8 +42,10 @@ export function MarkdownRenderer({
   acceptanceTemplate = 'minimal',
   acceptanceClientName,
   acceptanceCompanyName,
+  proposalId,
 }: MarkdownRendererProps) {
   const { settings } = useUserBranding();
+  let extrasIncluded = false;
   const parseMarkdown = (text: string) => {
     const lines = text.split('\n');
     const elements: React.ReactNode[] = [];
@@ -50,6 +54,8 @@ export function MarkdownRenderer({
     let listCounter = 1;
     let elementCounter = 0; // Add unique counter
     let currentSection: string | null = null;
+    let extrasDataFromJson: AdditionalServicesData | null = null;
+    let extrasRendered = false;
 
     const renderListItem = (rawText: string, key: string) => {
       const labelMatch = rawText.match(/^(\*\*|__)[\s]*([^*]+?)[\s]*\1/);
@@ -194,16 +200,9 @@ export function MarkdownRenderer({
         const jsonText = jsonLines.join('\n');
         try {
           const data: AdditionalServicesData = JSON.parse(jsonText);
-          if (data?.rows?.length) {
-            elements.push(
-              <AdditionalServicesTable
-                key={`extras-${elementCounter++}`}
-                data={data}
-              />
-            );
-          }
+          extrasDataFromJson = data;
         } catch {
-          // ignore; no extras table rendered
+          extrasDataFromJson = { rows: [] };
         }
         continue;
       }
@@ -213,16 +212,61 @@ export function MarkdownRenderer({
         flushList();
         const text = trimmedLine.replace(/^###\s*/, '');
         elements.push(renderSplitHeading(3, text, `h3-${index}`));
+        const norm = text.toLowerCase();
+        if (
+          !extrasRendered &&
+          (norm.includes('additional services to be invoiced') ||
+            norm.includes('additional services'))
+        ) {
+          elements.push(
+            <AdditionalServicesTable
+              key={`extras-${elementCounter++}`}
+              proposalId={proposalId}
+              data={extrasDataFromJson ?? { rows: [] }}
+            />
+          );
+          extrasRendered = true;
+        }
       } else if (trimmedLine.startsWith('##')) {
         flushList();
         const text = trimmedLine.replace(/^##\s*/, '');
         currentSection = text.toLowerCase();
         elements.push(renderSplitHeading(2, text, `h2-${index}`));
+        const norm = text.toLowerCase();
+        if (
+          !extrasRendered &&
+          (norm.includes('additional services to be invoiced') ||
+            norm.includes('additional services'))
+        ) {
+          elements.push(
+            <AdditionalServicesTable
+              key={`extras-${elementCounter++}`}
+              proposalId={proposalId}
+              data={extrasDataFromJson ?? { rows: [] }}
+            />
+          );
+          extrasRendered = true;
+        }
       } else if (trimmedLine.startsWith('#')) {
         flushList();
         const text = trimmedLine.replace(/^#\s*/, '');
         currentSection = text.toLowerCase();
         elements.push(renderSplitHeading(1, text, `h1-${index}`));
+        const norm = text.toLowerCase();
+        if (
+          !extrasRendered &&
+          (norm.includes('additional services to be invoiced') ||
+            norm.includes('additional services'))
+        ) {
+          elements.push(
+            <AdditionalServicesTable
+              key={`extras-${elementCounter++}`}
+              proposalId={proposalId}
+              data={extrasDataFromJson ?? { rows: [] }}
+            />
+          );
+          extrasRendered = true;
+        }
       }
       // Bullet points
       else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
@@ -401,9 +445,11 @@ export function MarkdownRenderer({
     return finalParts.length > 0 ? finalParts : text;
   };
 
+  const rendered = parseMarkdown(content);
+
   return (
     <div className={`prose prose-sm max-w-none ${className}`}>
-      {parseMarkdown(content)}
+      {rendered}
       {showAcceptance ? (
         <div className="">
           <ProposalAcceptance
@@ -444,18 +490,66 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
   );
 }
 
-function AdditionalServicesTable({ data }: { data: AdditionalServicesData }) {
-  const rows = data?.rows ?? [];
-  if (!rows.length) return null;
-  // Duplicate each row once (render two copies) with memoized shallow copies
-  const rowsToRender = React.useMemo(() => {
-    return rows.flatMap((row) => [
-      { ...row },
-      { ...row },
-      { ...row },
-      { ...row },
-    ]);
-  }, [rows]);
+function AdditionalServicesTable({
+  data,
+  proposalId,
+}: {
+  data?: AdditionalServicesData;
+  proposalId?: string;
+}) {
+  const [rows, setRows] = React.useState<
+    Array<{
+      service: string;
+      pricePerTime: string | null;
+      pricePerMonth: string | null;
+    }>
+  >(data?.rows ?? []);
+
+  const computeMonthly = (subtotal: any, frequency: string | null) => {
+    const raw =
+      typeof subtotal === 'number'
+        ? subtotal
+        : parseFloat(String(subtotal).replace(/[^0-9.-]/g, '')) || 0;
+    if (!frequency) return null;
+    const f = frequency.toLowerCase();
+    if (f === 'monthly') return formatCurrencySafe(raw);
+    if (f === 'quarterly') return formatCurrencySafe(raw / 3.0);
+    if (f === 'annual') return formatCurrencySafe(raw / 12.0);
+    return null;
+  };
+
+  React.useEffect(() => {
+    let mounted = true;
+    async function loadFromDb() {
+      if ((rows?.length ?? 0) > 0) return;
+      if (!proposalId) return;
+      const supabase = createClient();
+      const { data: pas } = await supabase
+        .from('proposal_additional_services')
+        .select('label, frequency, subtotal, monthly_amount')
+        .eq('proposal_id', proposalId)
+        .order('created_at', { ascending: true });
+      if (!mounted) return;
+      if (pas && pas.length) {
+        const mapped = pas.map((r: any) => ({
+          service: r.label,
+          pricePerTime: formatCurrencySafe(r.subtotal),
+          pricePerMonth:
+            r.monthly_amount != null
+              ? formatCurrencySafe(r.monthly_amount)
+              : computeMonthly(r.subtotal, r.frequency),
+        }));
+        setRows(mapped);
+      }
+    }
+    loadFromDb();
+    return () => {
+      mounted = false;
+    };
+  }, [proposalId]);
+
+  if (!(rows?.length ?? 0)) return null;
+
   return (
     <div className="my-6 space-y-3">
       <div className="grid grid-cols-4 gap-4 px-5 text-center">
@@ -465,7 +559,7 @@ function AdditionalServicesTable({ data }: { data: AdditionalServicesData }) {
         <div className="text-[var(--color-primary)] font-bold">Price/time</div>
         <div className="text-[var(--color-primary)] font-bold">Price/month</div>
       </div>
-      {rowsToRender.map((r, i) => (
+      {rows.map((r, i) => (
         <div
           key={`extras-row-${i}`}
           className="rounded-3xl bg-[var(--color-primary)] text-white px-5 py-3 mb-1"

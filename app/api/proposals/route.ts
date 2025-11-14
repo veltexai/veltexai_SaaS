@@ -76,6 +76,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Insert selected add-ons if provided
+    const selectedAddons = Array.isArray(body.selected_addons)
+      ? body.selected_addons
+      : [];
+    if (selectedAddons.length > 0) {
+      const rows = selectedAddons.map((a: any) => ({
+        proposal_id: proposal.id,
+        sku: a.sku,
+        label: a.label,
+        unit_type: a.unit_type,
+        rate: a.rate,
+        qty: a.qty,
+        min_qty: a.min_qty,
+        frequency: a.frequency,
+        monthly_amount: a.monthly_amount,
+        notes: a.notes || null,
+      }));
+      const { error: addonsError } = await supabase
+        .from('proposal_additional_services')
+        .insert(rows);
+      if (addonsError) {
+        console.error('Error inserting add-ons:', addonsError);
+      }
+    }
+
     // Increment user's proposal usage
     const { error: usageError } = await supabase.rpc('increment_user_usage', {
       user_uuid: user.id,

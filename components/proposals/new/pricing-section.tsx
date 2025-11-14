@@ -15,20 +15,15 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { type ProposalFormData } from '@/lib/validations/proposal';
-import {
-  Calculator,
-  DollarSign,
-  Clock,
-  Users,
-  Loader2,
-  RefreshCw,
-} from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Calculator, DollarSign, Clock, Users, Loader2, RefreshCw } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { usePricingSettings } from '@/hooks/use-pricing-settings';
 import { AIContentGenerator } from './ai-content-generator';
+import { createClient } from '@/lib/supabase/client';
 
 interface PricingSectionProps {
+  proposalId?: string;
   serviceType: string;
   enabled: boolean;
   onEnabledChange: (enabled: boolean) => void;
@@ -48,6 +43,7 @@ interface PricingSectionProps {
 }
 
 export function PricingSection({
+  proposalId,
   serviceType,
   enabled,
   onEnabledChange,
@@ -63,6 +59,10 @@ export function PricingSection({
   const [calculatedPricing, setCalculatedPricing] = useState<any>(null);
   const [lastCalculationTrigger, setLastCalculationTrigger] =
     useState<string>('');
+  const supabase = createClient();
+  const [addons, setAddons] = useState<any[]>([]);
+  const [loadingAddons, setLoadingAddons] = useState(false);
+  
 
   // Initialize calculatedPricing with existing data if available
   useEffect(() => {
@@ -70,6 +70,25 @@ export function PricingSection({
       setCalculatedPricing(existingPricingData);
     }
   }, [existingPricingData, calculatedPricing]);
+
+  useEffect(() => {
+    const fetchAddons = async () => {
+      try {
+        setLoadingAddons(true);
+        const { data, error } = await supabase
+          .from('proposal_additional_services')
+          .select('*')
+          .eq('proposal_id', proposalId)
+          .order('created_at', { ascending: true });
+        if (error) return;
+        setAddons(data || []);
+      } finally {
+        setLoadingAddons(false);
+      }
+    };
+    if (proposalId) fetchAddons();
+  }, [proposalId, supabase]);
+  
 
   const watchedValues = form.watch([
     'global_inputs.facility_size',
@@ -265,6 +284,28 @@ export function PricingSection({
       currency: 'USD',
     }).format(amount);
   };
+
+  const basePrice = useMemo(() => {
+    const p = calculatedPricing || existingPricingData || null;
+    if (!p) return 0;
+    if (typeof p.total === 'number') return p.total;
+    if (typeof p.enhanced_total === 'number') return p.enhanced_total;
+    const low = p.price_range?.low;
+    const high = p.price_range?.high;
+    if (typeof low === 'number' && typeof high === 'number') return (low + high) / 2;
+    if (typeof low === 'number') return low;
+    if (typeof high === 'number') return high;
+    return 0;
+  }, [calculatedPricing, existingPricingData]);
+
+  const selectedAddons = form.getValues('selected_addons' as any) || [];
+  const sourceAddons = proposalId ? addons : selectedAddons;
+  const monthlyAddonsTotal = useMemo(() => {
+    return (sourceAddons as any[]).reduce((sum, a) => sum + (a.monthly_amount || 0), 0);
+  }, [sourceAddons]);
+  const oneTimeAddons = useMemo(() => (sourceAddons as any[]).filter(a => a.monthly_amount === null), [sourceAddons]);
+
+  
 
   const handlePricingToggle = (checked: boolean) => {
     onEnabledChange(checked);
@@ -480,6 +521,33 @@ export function PricingSection({
                   >
                     Calculate Pricing
                   </Button>
+                </div>
+              )}
+          </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <DollarSign className="h-5 w-5" />
+                <span>Final Pricing</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center p-4 bg-primary/5 rounded-lg">
+                <span className="text-lg font-semibold">Monthly Total (Base + Add-ons)</span>
+                <span className="text-2xl font-bold text-primary">{formatCurrency(basePrice + monthlyAddonsTotal)}</span>
+              </div>
+              {oneTimeAddons.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">One-Time Charges</h4>
+                  <div className="space-y-2">
+                    {oneTimeAddons.map((a: any) => (
+                      <div key={a.id} className="flex justify-between text-sm">
+                        <span>{a.label}</span>
+                        <span className="font-medium">{formatCurrency(a.subtotal)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>

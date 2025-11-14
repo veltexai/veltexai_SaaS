@@ -146,8 +146,12 @@ export function ProposalForm({ userId }: ProposalFormProps) {
   const [selectedServiceType, setSelectedServiceType] =
     useState<ServiceType | null>(null);
   const [pricingEnabled, setPricingEnabled] = useState(false);
-  const [aiTone, setAiTone] = useState<'professional' | 'friendly' | 'formal' | 'casual' | 'technical'>('professional');
-  const [userTier, setUserTier] = useState<'starter' | 'professional' | 'enterprise'>('starter');
+  const [aiTone, setAiTone] = useState<
+    'professional' | 'friendly' | 'formal' | 'casual' | 'technical'
+  >('professional');
+  const [userTier, setUserTier] = useState<
+    'starter' | 'professional' | 'enterprise'
+  >('starter');
 
   const form = useForm({
     resolver: zodResolver(proposalFormSchema),
@@ -219,7 +223,12 @@ export function ProposalForm({ userId }: ProposalFormProps) {
         }
 
         if (profile?.subscription_plan) {
-          setUserTier(profile.subscription_plan as 'starter' | 'professional' | 'enterprise');
+          setUserTier(
+            profile.subscription_plan as
+              | 'starter'
+              | 'professional'
+              | 'enterprise'
+          );
         }
       } catch (error) {
         console.error('Error fetching user tier:', error);
@@ -248,7 +257,9 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     }
   }, [watchedServiceType, selectedServiceType, form]);
 
-  const handleAiToneChange = (tone: 'professional' | 'friendly' | 'formal' | 'casual' | 'technical') => {
+  const handleAiToneChange = (
+    tone: 'professional' | 'friendly' | 'formal' | 'casual' | 'technical'
+  ) => {
     setAiTone(tone);
     form.setValue('ai_tone', tone, {
       shouldValidate: false,
@@ -330,7 +341,12 @@ export function ProposalForm({ userId }: ProposalFormProps) {
       const response = await fetch('/api/proposals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(validatedData),
+        body: JSON.stringify({
+          ...validatedData,
+          selected_addons: Array.isArray(data?.selected_addons)
+            ? data.selected_addons
+            : [],
+        }),
       });
 
       if (!response.ok) {

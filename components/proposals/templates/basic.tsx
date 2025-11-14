@@ -134,6 +134,7 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
                     acceptanceTemplate={acceptanceVariant}
                     acceptanceClientName={preparedFor}
                     acceptanceCompanyName={companyName}
+                    proposalId={proposal.id}
                   />
                 ) : (
                   <div className="text-sm text-muted-foreground">
@@ -163,7 +164,7 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
           <CardContent>
             {proposal.generated_content ? (
               <div className="prose max-w-none">
-                <MarkdownRenderer content={proposal.generated_content} />
+                <MarkdownRenderer content={proposal.generated_content} proposalId={proposal.id} />
               </div>
             ) : (
               <div className="text-sm text-muted-foreground">

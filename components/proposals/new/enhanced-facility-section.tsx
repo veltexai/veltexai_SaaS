@@ -1,6 +1,8 @@
 'use client';
 
 import { useFormContext } from 'react-hook-form';
+import { useEffect, useMemo, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   FormControl,
@@ -20,7 +22,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { type ProposalFormData } from '@/lib/validations/proposal';
-import { Building2, Users, Clock, AlertTriangle } from 'lucide-react';
+import {
+  Building2,
+  Users,
+  AlertTriangle,
+  Clock,
+  Trash2,
+  Plus,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AddonServicePickerModal } from './addon-service-picker-modal';
+import { Separator } from '@/components/ui/separator';
 
 const buildingTypeOptions = [
   { value: 'office', label: 'Office Building' },
@@ -122,8 +134,116 @@ const insuranceOptions = [
   'Auto Liability',
 ];
 
-export function EnhancedFacilitySection() {
+type PASRow = {
+  id: string;
+  proposal_id: string;
+  sku: string;
+  label: string;
+  unit_type: string;
+  rate: number;
+  qty: number;
+  min_qty: number;
+  frequency: 'one_time' | 'monthly' | 'quarterly' | 'annual';
+  subtotal: number;
+  monthly_amount: number | null;
+  notes: string | null;
+};
+
+export function EnhancedFacilitySection({
+  proposalId,
+}: {
+  proposalId?: string;
+}) {
   const form = useFormContext<ProposalFormData>();
+  const supabase = createClient();
+  const [addons, setAddons] = useState<PASRow[]>([]);
+  const [loadingAddons, setLoadingAddons] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchAddons = async () => {
+      try {
+        setLoadingAddons(true);
+        const { data, error } = await supabase
+          .from('proposal_additional_services')
+          .select('*')
+          .eq('proposal_id', proposalId)
+          .order('created_at', { ascending: true });
+        if (error) return;
+        const normalized = (data || []).map((row: any) => {
+          const subtotal = Number.isFinite(row?.subtotal)
+            ? Number(row.subtotal)
+            : Number(row?.rate) * Number(row?.qty);
+          const freq = String(row?.frequency || '').toLowerCase();
+          const monthly_amount_raw = row?.monthly_amount;
+          const monthly_amount_num =
+            monthly_amount_raw != null ? Number(monthly_amount_raw) : NaN;
+          const monthly_amount = Number.isFinite(monthly_amount_num)
+            ? monthly_amount_num
+            : freq.includes('month')
+            ? subtotal
+            : null;
+          return {
+            ...row,
+            subtotal,
+            monthly_amount,
+          } as PASRow;
+        });
+        setAddons(normalized);
+      } finally {
+        setLoadingAddons(false);
+      }
+    };
+    if (proposalId) fetchAddons();
+  }, [proposalId, supabase]);
+
+  useEffect(() => {
+    if (!proposalId) {
+      const preSelected =
+        (form.getValues('selected_addons' as any) as any[]) || [];
+      setAddons(preSelected as PASRow[]);
+    }
+  }, [proposalId]);
+
+  const monthlyAddonsTotal = useMemo(() => {
+    return addons.reduce((sum, a) => {
+      const m = a.monthly_amount;
+      if (m !== null && m !== undefined) return sum + Number(m);
+      const freq = String(a.frequency || '').toLowerCase();
+      const base = Number.isFinite(a.subtotal)
+        ? Number(a.subtotal)
+        : Number(a.rate) * Number(a.qty);
+      const months = freq === 'monthly' ? 1 : freq === 'quarterly' ? 3 : freq === 'annual' ? 12 : 0;
+      if (months > 0) return sum + (Number.isFinite(base) ? base / months : 0);
+      return sum;
+    }, 0);
+  }, [addons]);
+  console.log(
+    '🚀 ~ EnhancedFacilitySection ~ monthlyAddonsTotal:',
+    monthlyAddonsTotal
+  );
+
+  const handleDeleteAddon = async (id: string) => {
+    const prev = addons;
+    setAddons(addons.filter((a) => a.id !== id));
+    if (!proposalId) {
+      form.setValue(
+        'selected_addons' as any,
+        addons.filter((a) => a.id !== id),
+        {
+          shouldValidate: false,
+          shouldTouch: false,
+          shouldDirty: false,
+        }
+      );
+      return;
+    }
+    const { error } = await supabase
+      .from('proposal_additional_services')
+      .delete()
+      .eq('id', id);
+    if (error) setAddons(prev);
+  };
 
   return (
     <div className="space-y-6">
@@ -225,7 +345,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
-                                  const currentValue = Array.isArray(field.value) ? field.value : [];
+                                  const currentValue = Array.isArray(
+                                    field.value
+                                  )
+                                    ? field.value
+                                    : [];
                                   return checked
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(
@@ -272,7 +396,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
-                                  const currentValue = Array.isArray(field.value) ? field.value : [];
+                                  const currentValue = Array.isArray(
+                                    field.value
+                                  )
+                                    ? field.value
+                                    : [];
                                   return checked
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(
@@ -319,7 +447,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
-                                  const currentValue = Array.isArray(field.value) ? field.value : [];
+                                  const currentValue = Array.isArray(
+                                    field.value
+                                  )
+                                    ? field.value
+                                    : [];
                                   return checked
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(
@@ -366,7 +498,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
-                                  const currentValue = Array.isArray(field.value) ? field.value : [];
+                                  const currentValue = Array.isArray(
+                                    field.value
+                                  )
+                                    ? field.value
+                                    : [];
                                   return checked
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(
@@ -558,7 +694,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(area)}
                                 onCheckedChange={(checked) => {
-                                  const currentValue = Array.isArray(field.value) ? field.value : [];
+                                  const currentValue = Array.isArray(
+                                    field.value
+                                  )
+                                    ? field.value
+                                    : [];
                                   return checked
                                     ? field.onChange([...currentValue, area])
                                     : field.onChange(
@@ -628,25 +768,97 @@ export function EnhancedFacilitySection() {
           <FormField
             control={form.control}
             name="service_scope.special_services"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Special Services</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="List any special cleaning services required (e.g., carpet cleaning, window washing, deep sanitization)"
-                    className="min-h-[80px]"
-                    value={field.value?.join('\n') || ''}
-                    onChange={(e) => {
-                      const lines = e.target.value
-                        .split('\n')
-                        .filter((line) => line.trim());
-                      field.onChange(lines);
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={() => <></>}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Clock className="h-5 w-5" />
+            <span>Add-on Services</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              {loadingAddons
+                ? 'Loading services...'
+                : addons.length === 0
+                ? 'No add-ons selected'
+                : `${addons.length} add-on${
+                    addons.length > 1 ? 's' : ''
+                  } selected`}
+            </div>
+            <Button onClick={() => setPickerOpen(true)} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Service
+            </Button>
+          </div>
+
+          {addons.length > 0 && (
+            <div className="space-y-3">
+              {addons.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center justify-between rounded-lg border p-3"
+                >
+                  <div className="space-y-1">
+                    <div className="font-medium">{a.label}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Qty {a.qty} {a.unit_type} • Rate ${a.rate.toFixed(2)} •{' '}
+                      {a.frequency}
+                    </div>
+                    <div className="text-sm">
+                      {a.monthly_amount !== null ? (
+                        <span className="font-semibold">
+                          Monthly: ${a.monthly_amount.toFixed(2)}
+                        </span>
+                      ) : (
+                        <span className="font-semibold">
+                          One-time: ${a.subtotal.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleDeleteAddon(a.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Monthly Add-ons Total</span>
+                <span className="text-lg font-semibold">
+                  ${monthlyAddonsTotal.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <AddonServicePickerModal
+            open={pickerOpen}
+            onOpenChange={setPickerOpen}
+            proposalId={proposalId}
+            onAdded={(row: PASRow) => {
+              setAddons((prev) => {
+                const next = [...prev, row];
+                if (!proposalId) {
+                  form.setValue('selected_addons' as any, next, {
+                    shouldValidate: false,
+                    shouldTouch: false,
+                    shouldDirty: false,
+                  });
+                }
+                return next;
+              });
+            }}
           />
         </CardContent>
       </Card>
@@ -720,7 +932,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
-                                  const currentValue = Array.isArray(field.value) ? field.value : [];
+                                  const currentValue = Array.isArray(
+                                    field.value
+                                  )
+                                    ? field.value
+                                    : [];
                                   return checked
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(
@@ -767,7 +983,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
-                                  const currentValue = Array.isArray(field.value) ? field.value : [];
+                                  const currentValue = Array.isArray(
+                                    field.value
+                                  )
+                                    ? field.value
+                                    : [];
                                   return checked
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(
@@ -814,7 +1034,11 @@ export function EnhancedFacilitySection() {
                               <Checkbox
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
-                                  const currentValue = Array.isArray(field.value) ? field.value : [];
+                                  const currentValue = Array.isArray(
+                                    field.value
+                                  )
+                                    ? field.value
+                                    : [];
                                   return checked
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(

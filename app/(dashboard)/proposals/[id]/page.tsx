@@ -717,6 +717,7 @@ export default function ProposalDetailPage({
                       <div className="whitespace-pre-wrap text-sm leading-relaxed">
                         <MarkdownRenderer
                           content={proposal.generated_content}
+                          proposalId={proposal.id}
                         />
                       </div>
                     </div>

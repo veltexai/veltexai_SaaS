@@ -468,11 +468,12 @@ export function ProposalEditDialog({
               </TabsContent>
 
               <TabsContent value="facility">
-                <EnhancedFacilitySection />
+                <EnhancedFacilitySection proposalId={proposal.id} />
               </TabsContent>
 
               <TabsContent value="pricing">
                 <PricingSection
+                  proposalId={proposal.id}
                   serviceType={selectedServiceType}
                   enabled={pricingEnabled}
                   onEnabledChange={handlePricingEnabledChange}

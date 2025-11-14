@@ -58,7 +58,7 @@ export function ProposalContent({
           <>
             {proposal.generated_content ? (
               <div className="prose max-w-none">
-                <MarkdownRenderer content={proposal.generated_content} />
+                <MarkdownRenderer content={proposal.generated_content} proposalId={proposal.id} />
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">

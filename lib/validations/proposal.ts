@@ -198,6 +198,7 @@ export const proposalFormSchema = z.object({
   facility_details: facilityDetailsSchema.default({}),
   traffic_analysis: trafficAnalysisSchema.default({}),
   service_scope: serviceScopeSchema.default({}),
+  selected_addons: z.array(z.any()).optional(),
   special_requirements: specialRequirementsSchema.default({}),
   // AI enhancement fields
   ai_tone: aiToneSchema.default('professional'),

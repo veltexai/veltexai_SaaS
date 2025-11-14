@@ -27,7 +27,7 @@ export function ExecutivePremiumTemplate({ proposal }: TemplateProps) {
           <h2 className="text-xl font-semibold mb-4">Executive Summary</h2>
           {proposal.generated_content ? (
             <div className="prose max-w-none">
-              <MarkdownRenderer content={proposal.generated_content} />
+              <MarkdownRenderer content={proposal.generated_content} proposalId={proposal.id} />
             </div>
           ) : (
             <div className="text-sm text-muted-foreground">No AI content yet.</div>
