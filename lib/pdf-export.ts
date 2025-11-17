@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 import { type Database } from '@/types/database';
 import { formatDate, formatCurrency as formatCurrencyUtil } from '@/lib/utils';
 import { ServiceType } from '@/lib/validations/proposal';

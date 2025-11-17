@@ -34,10 +34,10 @@ export function ProposalActions({
 }: ProposalActionsProps) {
   const router = useRouter();
   const [updating, setUpdating] = useState(false);
-  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState('');
   const [showSendModal, setShowSendModal] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const updateStatus = async (status: Proposal['status']) => {
     setUpdating(true);
@@ -62,46 +62,6 @@ export function ProposalActions({
       );
     } finally {
       setUpdating(false);
-    }
-  };
-
-  const exportToPDF = async () => {
-    setExporting(true);
-    setError('');
-
-    try {
-      const response = await fetch(`/api/proposals/${proposal.id}/export`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          template: 'modern',
-          includeCompanyInfo: true,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to export PDF');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `${proposal.title
-        .replace(/[^a-z0-9]/gi, '_')
-        .toLowerCase()}_proposal.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error('Error exporting PDF:', error);
-      setError('Failed to export PDF');
-    } finally {
-      setExporting(false);
     }
   };
 
@@ -147,15 +107,36 @@ export function ProposalActions({
             </Button>
             <Button
               variant="outline"
-              onClick={exportToPDF}
-              disabled={exporting}
+              disabled={downloading}
+              onClick={async () => {
+                try {
+                  setError('');
+                  setDownloading(true);
+                  const res = await fetch(`/api/proposals/${proposal.id}/print`);
+                  if (!res.ok) throw new Error('Failed to generate PDF');
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `proposal-${proposal.id}.pdf`;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  URL.revokeObjectURL(url);
+                } catch (e: any) {
+                  setError(e?.message ?? 'Failed to generate PDF');
+                  console.error(e);
+                } finally {
+                  setDownloading(false);
+                }
+              }}
             >
-              {exporting ? (
+              {downloading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Download className="mr-2 h-4 w-4" />
               )}
-              {exporting ? 'Exporting...' : 'Export PDF'}
+              {downloading ? 'Exporting…' : 'Export PDF'}
             </Button>
             {proposal.status === 'draft' && (
               <Button onClick={() => setShowSendModal(true)}>

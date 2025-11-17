@@ -16,6 +16,7 @@ interface MarkdownRendererProps {
   acceptanceClientName?: string;
   acceptanceCompanyName?: string;
   proposalId?: string;
+  additionalServicesRows?: Array<{ service: string; pricePerTime: string | null; pricePerMonth: string | null }>;
 }
 
 type ScopeTableData = {
@@ -43,6 +44,7 @@ export function MarkdownRenderer({
   acceptanceClientName,
   acceptanceCompanyName,
   proposalId,
+  additionalServicesRows,
 }: MarkdownRendererProps) {
   const { settings } = useUserBranding();
   let extrasIncluded = false;
@@ -222,7 +224,7 @@ export function MarkdownRenderer({
             <AdditionalServicesTable
               key={`extras-${elementCounter++}`}
               proposalId={proposalId}
-              data={extrasDataFromJson ?? { rows: [] }}
+              data={{ rows: additionalServicesRows ?? (extrasDataFromJson?.rows ?? []) }}
             />
           );
           extrasRendered = true;
@@ -242,7 +244,7 @@ export function MarkdownRenderer({
             <AdditionalServicesTable
               key={`extras-${elementCounter++}`}
               proposalId={proposalId}
-              data={extrasDataFromJson ?? { rows: [] }}
+              data={{ rows: additionalServicesRows ?? (extrasDataFromJson?.rows ?? []) }}
             />
           );
           extrasRendered = true;
@@ -262,7 +264,7 @@ export function MarkdownRenderer({
             <AdditionalServicesTable
               key={`extras-${elementCounter++}`}
               proposalId={proposalId}
-              data={extrasDataFromJson ?? { rows: [] }}
+              data={{ rows: additionalServicesRows ?? (extrasDataFromJson?.rows ?? []) }}
             />
           );
           extrasRendered = true;
@@ -428,7 +430,7 @@ export function MarkdownRenderer({
             finalParts.push(
               <em
                 key={`optional-${idx}-${j}`}
-                className={`italic capitalize ${dmSerifText.className}`}
+                className={`italic text-4xl capitalize ${dmSerifText.className}`}
               >
                 {OPTIONAL}
               </em>
@@ -551,7 +553,7 @@ function AdditionalServicesTable({
   if (!(rows?.length ?? 0)) return null;
 
   return (
-    <div className="my-6 space-y-3">
+    <div className="my-6 space-y-3" data-extras-ready="true">
       <div className="grid grid-cols-4 gap-4 px-5 text-center">
         <div className="text-[var(--color-primary)] font-bold col-span-2">
           Service

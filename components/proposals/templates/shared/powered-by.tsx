@@ -16,9 +16,10 @@ const PoweredBy = ({
     : isCenter
     ? 'left-[50%] translate-x-[-50%]'
     : 'left-7';
+  const colorText = colorLogo === 'white' ? 'text-white' : 'text-[#7F7F7F]';
   return (
     <div
-      className={`absolute bottom-5 ${position} flex items-center gap-2.5 text-white`}
+      className={`absolute bottom-5 ${position} flex items-center gap-2.5 ${colorText}`}
     >
       <p>Powered By</p>
       <Image

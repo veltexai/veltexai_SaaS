@@ -128,4 +128,7 @@
   .font-bely {
     font-family: var(--font-bely);
   }
+  @media print {
+    .no-print { display: none !important; }
+  }
 }

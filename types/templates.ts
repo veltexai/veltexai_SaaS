@@ -16,4 +16,7 @@ export interface TemplateProps {
   proposal: Proposal;
   template?: ProposalTemplateRow | null;
   branding?: { name?: string; logo_url?: string | null };
+  pages?: string[];
+  print?: boolean;
+  extrasRows?: Array<{ service: string; pricePerTime: string | null; pricePerMonth: string | null }>;
 }

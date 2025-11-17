@@ -15,7 +15,13 @@ import HeaderLogo from './shared/header-logo';
 import { montserrat } from '@/lib/fonts';
 import ProposalAcceptance from './shared/proposal-acceptance';
 
-export function BasicTemplate({ proposal, branding }: TemplateProps) {
+export function BasicTemplate({
+  proposal,
+  branding,
+  pages,
+  print,
+  extrasRows,
+}: TemplateProps) {
   const logoUrl = branding?.logo_url ?? null;
   const companyName = branding?.name ?? 'Company';
   const preparedFor =
@@ -54,11 +60,16 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
     let mounted = true;
     async function loadSplit() {
       if (!proposal?.id) return;
+      if (pages && pages.length) {
+        setSplit({ sections: [], pages, templateType: 'basic' });
+        return;
+      }
+      if (print) return;
       setLoadingSplit(true);
       setSplitErr(null);
       try {
         const res = await fetch(`/api/proposals/${proposal.id}/split`, {
-          cache: 'no-store',
+          cache: 'force-cache',
         });
         const data: SplitResponse = await res.json();
         if (!res.ok) throw new Error(data?.error || 'Failed to split');
@@ -73,7 +84,7 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
     return () => {
       mounted = false;
     };
-  }, [proposal.id]);
+  }, [proposal.id, pages, print]);
 
   return (
     <section className="space-y-6">
@@ -81,9 +92,9 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
         <VerticalBar className="left-20" />
         <HorizontalBar className="bottom-20" />
         <Image
-          src="/images/templates/firstBlueBackground.svg"
+          src="/images/templates/secondBlueBackground.svg"
           alt="Background"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
           height={1600}
           width={1100}
         />
@@ -102,7 +113,7 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
       </div>
 
       {/* Pages 2-4: server-split AI content */}
-      {loadingSplit && (
+      {loadingSplit && !print && (
         <Card className="rounded-none">
           <CardContent>
             <div className="text-sm text-muted-foreground">
@@ -111,15 +122,15 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
           </CardContent>
         </Card>
       )}
-      {splitErr && (
+      {splitErr && !print && (
         <Card className="rounded-none">
           <CardContent>
             <div className="text-sm text-red-600">{splitErr}</div>
           </CardContent>
         </Card>
       )}
-      {split?.pages?.length
-        ? split.pages.map((pageContent, idx) => (
+      {(pages ?? split?.pages)?.length
+        ? (pages ?? split?.pages)!.map((pageContent, idx) => (
             <div
               key={`page-${idx + 2}`}
               id={`page-${idx + 2}`}
@@ -130,11 +141,14 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
                   <MarkdownRenderer
                     content={pageContent}
                     className={`${montserrat.className}`}
-                    showAcceptance={idx === (split.pages?.length ?? 0) - 1}
+                    showAcceptance={
+                      idx === ((pages ?? split?.pages)?.length ?? 0) - 1
+                    }
                     acceptanceTemplate={acceptanceVariant}
                     acceptanceClientName={preparedFor}
                     acceptanceCompanyName={companyName}
                     proposalId={proposal.id}
+                    additionalServicesRows={extrasRows}
                   />
                 ) : (
                   <div className="text-sm text-muted-foreground">
@@ -156,7 +170,7 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
         : null}
 
       {/* Fallback block: original content display if pages not available */}
-      {!split?.pages?.length && (
+      {!print && !split?.pages?.length && (
         <Card>
           <CardHeader>
             <CardTitle>Proposal Content</CardTitle>
@@ -164,7 +178,10 @@ export function BasicTemplate({ proposal, branding }: TemplateProps) {
           <CardContent>
             {proposal.generated_content ? (
               <div className="prose max-w-none">
-                <MarkdownRenderer content={proposal.generated_content} proposalId={proposal.id} />
+                <MarkdownRenderer
+                  content={proposal.generated_content}
+                  proposalId={proposal.id}
+                />
               </div>
             ) : (
               <div className="text-sm text-muted-foreground">
