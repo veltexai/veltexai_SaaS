@@ -8,34 +8,40 @@ const HeaderTemplate = ({
   date,
   className,
   address,
+  textColor = 'text-white',
+  colorBorder = 'from-white/10 to-[#E3F2FF]',
+  gap = 'gap-4',
 }: {
   title: string;
   preparedFor: string;
   date: string;
   address: string;
   className?: string;
+  textColor?: string;
+  colorBorder?: string;
+  gap?: string;
 }) => {
   return (
     <>
-      <div className="flex flex-col gap-4">
+      <div className={`flex flex-col ${gap} ${textColor}`}>
         <p
-          className={`${dmSerifText.className} text-[24px] leading-[100%] text-white ${className}`}
+          className={`${dmSerifText.className} text-[24px] leading-[100%] ${className}`}
         >
           Proposal for
         </p>
         <h1
-          className={`${montserrat.className} capitalize font-bold text-[81px] leading-[100%] text-white ${className}`}
+          className={`${montserrat.className} capitalize font-bold text-[81px] leading-[100%] ${className}`}
         >
           {title}
         </h1>
-        <div className="relative mb-3 text-white text-sm">
+        <div className="relative mb-3 text-sm">
           <span
             aria-hidden
-            className="pointer-events-none absolute left-0 right-0 top-0 h-[1.5px] bg-gradient-to-l from-white/10 to-[#E3F2FF]"
+            className={`pointer-events-none absolute left-0 right-0 top-0 h-[1.5px] bg-gradient-to-l ${colorBorder}`}
           />
           <span
             aria-hidden
-            className="pointer-events-none absolute left-0 right-0 bottom-0 h-[1.5px] bg-gradient-to-l from-white/10 to-[#E3F2FF]"
+            className={`pointer-events-none absolute left-0 right-0 bottom-0 h-[1.5px] bg-gradient-to-l ${colorBorder}`}
           />
           <div className="relative flex items-center">
             <div className="relative flex-2 p-2">
@@ -46,7 +52,7 @@ const HeaderTemplate = ({
               </p>
               <span
                 aria-hidden
-                className="pointer-events-none absolute top-1 right-0 w-[1.5px] h-[80%] bg-gradient-to-t from-white/10 to-[#E3F2FF]"
+                className={`pointer-events-none absolute top-1 right-0 w-[1.5px] h-[80%] bg-gradient-to-t ${colorBorder}`}
               />
             </div>
             <p className="flex-1 flex items-center justify-center p-2">
@@ -55,7 +61,7 @@ const HeaderTemplate = ({
             </p>
             <span
               aria-hidden
-              className="pointer-events-none absolute left-0 right-0 bottom-0 h-[1.5px] bg-gradient-to-l from-white/10 to-[#E3F2FF]"
+              className={`pointer-events-none absolute left-0 right-0 bottom-0 h-[1.5px] bg-gradient-to-l ${colorBorder}`}
             />
           </div>
           <p className="pb-2 pt-[6.5px] pl-6">

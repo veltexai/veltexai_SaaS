@@ -5,10 +5,12 @@ const PoweredBy = ({
   colorLogo,
   isRight,
   isCenter,
+  sizeImage = 'medium',
 }: {
   colorLogo: string;
   isRight?: boolean;
   isCenter?: boolean;
+  sizeImage?: 'small' | 'medium' | 'large';
 }) => {
   const srlUrl = `/images/templates/veltexAiLogo_${colorLogo}.svg`;
   const position = isRight
@@ -25,9 +27,9 @@ const PoweredBy = ({
       <Image
         src={srlUrl}
         alt="Veltex AI Logo"
-        className="w-32 h-auto"
-        height={64}
-        width={128}
+        className={`w-32 h-auto ${sizeImage === 'small' ? 'w-auto h-4' : ''}`}
+        height={sizeImage === 'small' ? 38 : 64}
+        width={sizeImage === 'small' ? 86 : 128}
       />
     </div>
   );

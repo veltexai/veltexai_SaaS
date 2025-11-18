@@ -40,7 +40,14 @@ export function TemplateRenderer({ proposal }: { proposal: Proposal }) {
   );
   console.log('🚀 ~ TemplateRenderer ~ templateRow:', templateRow);
   const [branding, setBranding] = useState<
-    { name?: string; logo_url?: string | null } | undefined
+    | {
+        name?: string;
+        logo_url?: string | null;
+        phone?: string | null;
+        website?: string | null;
+        email?: string | null;
+      }
+    | undefined
   >(undefined);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -73,7 +80,7 @@ export function TemplateRenderer({ proposal }: { proposal: Proposal }) {
 
         const profilePromise = supabase
           .from('profiles')
-          .select('company_name, full_name, logo_url')
+          .select('company_name, full_name, logo_url, phone, website, email')
           .eq('id', proposal.user_id)
           .single();
 
@@ -96,7 +103,13 @@ export function TemplateRenderer({ proposal }: { proposal: Proposal }) {
           const name =
             (profileData?.company_name as string | undefined) ??
             (profileData?.full_name as string | undefined);
-          setBranding({ name, logo_url: profileData?.logo_url ?? null });
+          setBranding({
+            name,
+            logo_url: profileData?.logo_url ?? null,
+            phone: profileData?.phone ?? null,
+            website: profileData?.website ?? null,
+            email: profileData?.email ?? null,
+          });
         }
       } catch (e: any) {
         if (mounted) setErr(e?.message ?? 'Failed to load template');

@@ -99,7 +99,12 @@ export function BasicTemplate({
           width={1100}
         />
         {logoUrl ? (
-          <HeaderLogo logoUrl={logoUrl} companyName={companyName} isTop />
+          <HeaderLogo
+            logoUrl={logoUrl}
+            companyName={companyName}
+            isTop
+            position="center"
+          />
         ) : null}
         <div className="absolute bottom-50 right-10 max-w-[70%]">
           <HeaderTemplate
@@ -107,6 +112,7 @@ export function BasicTemplate({
             date={proposal.created_at}
             preparedFor={preparedFor}
             address={proposal.service_location}
+            textColor="text-white"
           />
         </div>
         <PoweredBy colorLogo="white" isRight />
