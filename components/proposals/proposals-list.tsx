@@ -19,19 +19,21 @@ interface ProposalsListProps {
   proposals: Proposal[];
 }
 
-export function ProposalsList({ proposals: initialProposals }: ProposalsListProps) {
+export function ProposalsList({
+  proposals: initialProposals,
+}: ProposalsListProps) {
   const [proposals, setProposals] = useState(initialProposals);
   const [error, setError] = useState('');
 
   const handleUpdate = (id: string, updates: Partial<Proposal>) => {
-    setProposals(prev => 
-      prev.map(p => p.id === id ? { ...p, ...updates } : p)
+    setProposals((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
     );
     setError('');
   };
 
   const handleDelete = (id: string) => {
-    setProposals(prev => prev.filter(p => p.id !== id));
+    setProposals((prev) => prev.filter((p) => p.id !== id));
     setError('');
   };
 
@@ -42,8 +44,8 @@ export function ProposalsList({ proposals: initialProposals }: ProposalsListProp
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      
-      <div className="grid gap-6">
+
+      <div className="grid gap-6 grid-cols-2">
         {proposals.map((proposal) => (
           <ProposalCard
             key={proposal.id}

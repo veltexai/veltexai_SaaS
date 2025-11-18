@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const url = `${base}/print/proposals/${id}`;
 
   let browser: any;
@@ -20,14 +20,20 @@ export async function GET(
     await page.emulateMedia({ media: 'print' });
 
     try {
-      await page.waitForSelector('[data-extras-ready="true"]', { timeout: 8000 });
+      await page.waitForSelector('[data-extras-ready="true"]', {
+        timeout: 8000,
+      });
     } catch {
       try {
-        await page.waitForFunction('window.__EXTRAS_READY__ === true', { timeout: 8000 });
+        await page.waitForFunction('window.__EXTRAS_READY__ === true', {
+          timeout: 8000,
+        });
       } catch {}
     }
     try {
-      await page.evaluate(() => (document as any).fonts && (document as any).fonts.ready);
+      await page.evaluate(
+        () => (document as any).fonts && (document as any).fonts.ready
+      );
     } catch {}
 
     const pdfBuffer = await page.pdf({
@@ -46,7 +52,10 @@ export async function GET(
     });
   } catch (err) {
     console.error('Headless print error:', err);
-    return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to generate PDF' },
+      { status: 500 }
+    );
   } finally {
     if (browser) await browser.close();
   }

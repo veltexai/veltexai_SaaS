@@ -170,6 +170,7 @@ export function BasicTemplate({
                 size="lg"
                 fontFamily="montserrat"
                 font="bold"
+                position="bottom-left-corner"
               />
             </div>
           ))

@@ -1,3 +1,4 @@
+import { TemplateType } from '@/types/templates';
 import Image from 'next/image';
 import React from 'react';
 
@@ -7,12 +8,14 @@ const HeaderLogo = ({
   isTop,
   withoutGradient,
   position,
+  template,
 }: {
   logoUrl: string;
   companyName: string;
   isTop?: boolean;
   withoutGradient?: boolean;
   position?: 'start' | 'center' | 'end';
+  template?: TemplateType;
 }) => {
   return (
     <div
@@ -20,7 +23,7 @@ const HeaderLogo = ({
         position || 'center'
       } absolute px-3 py-2 ${
         withoutGradient
-          ? 'bg-[#ffffff64]'
+          ? 'bg-white'
           : 'bg-gradient-to-r from-[#ffffff64] to-[#e3f2ff52] rounded-full'
       } ${
         isTop
@@ -28,6 +31,10 @@ const HeaderLogo = ({
           : 'top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]'
       }`}
     >
+      {template === 'luxury_elite' && (
+        <div className="absolute bg-white w-full h-[129.16px] -z-10"></div>
+      )}
+
       <Image
         src={logoUrl}
         alt={companyName}

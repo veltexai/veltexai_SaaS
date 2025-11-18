@@ -44,8 +44,6 @@
 }
 
 :root {
-  /* Adobe Typekit: Bely font family */
-  --font-bely: 'bely', serif;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.147 0.004 49.25);
@@ -124,11 +122,9 @@
   html {
     scroll-behavior: smooth;
   }
-  /* Utility to apply Bely anywhere */
-  .font-bely {
-    font-family: var(--font-bely);
-  }
   @media print {
-    .no-print { display: none !important; }
+    .no-print {
+      display: none !important;
+    }
   }
 }

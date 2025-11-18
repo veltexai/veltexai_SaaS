@@ -2,14 +2,20 @@
 
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import type { TemplateProps } from '@/types/templates';
-import VerticalBar from './shared/vertical-bar';
-import HorizontalBar from './shared/horizontal-bar';
 import Image from 'next/image';
 import HeaderLogo from './shared/header-logo';
 import HeaderTemplate from './shared/header-template';
 import PoweredBy from './shared/powered-by';
 import { dmSerifText, montserrat } from '@/lib/fonts';
 import { EmailIcon, PhoneIcon, WebTrafficIcon } from '@/components/icons';
+import ProposalTableOfContents from './shared/proposal-table-of-contents';
+import CTAPage from './shared/CTA-page';
+import ProposalTitle from './shared/proposal-title';
+import VerticalBar from './shared/vertical-bar';
+import HorizontalBar from './shared/horizontal-bar';
+import SignatureSection from './shared/signature-section';
+import SignatureContent from './shared/signature-content';
+import NavitationNumber from './shared/navigation';
 
 export function ExecutivePremiumTemplate({
   proposal,
@@ -59,115 +65,40 @@ export function ExecutivePremiumTemplate({
         </div>
       </div>
 
-      <div className="rounded-xl p-8 bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 text-white">
-        <div className="text-sm uppercase tracking-wide opacity-90">
-          Executive Proposal
-        </div>
-        <h1 className="text-3xl font-extrabold mt-2">{proposal.title}</h1>
-        <div className="mt-4 flex flex-wrap gap-3 text-sm">
-          <span className="inline-flex items-center rounded-md bg-white/10 px-3 py-1">
-            Client:{' '}
-            <span className="ml-1 font-semibold">{proposal.client_name}</span>
-          </span>
-          <span className="inline-flex items-center rounded-md bg-white/10 px-3 py-1">
-            Type:{' '}
-            <span className="ml-1 font-semibold capitalize">
-              {proposal.service_type}
-            </span>
-          </span>
-          <span className="inline-flex items-center rounded-md bg-white/10 px-3 py-1">
-            Frequency:{' '}
-            <span className="ml-1 font-semibold capitalize">
-              {proposal.service_frequency}
-            </span>
-          </span>
-        </div>
-      </div>
+      <ProposalTableOfContents templateType="executive_premium" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 rounded-xl border p-6">
-          <h2 className="text-xl font-semibold mb-4">Executive Summary</h2>
-          {proposal.generated_content ? (
-            <div className="prose max-w-none">
-              <MarkdownRenderer content={proposal.generated_content} />
-            </div>
-          ) : (
-            <div className="text-sm text-muted-foreground">
-              No AI content yet.
-            </div>
-          )}
-        </div>
+      <div
+        id="page-nine"
+        className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
+      >
+        <VerticalBar className="left-20" variant="gradientGray" />
+        <HorizontalBar className="bottom-20" variant="gradientGray" />
+        <ProposalTitle
+          templateType="executive_premium"
+          title="Proposal Acceptance"
+        />
+        <SignatureContent templateType="executive_premium" />
 
-        <div className="space-y-6">
-          <div className="rounded-xl border p-6">
-            <h3 className="text-sm font-semibold text-muted-foreground">
-              Key Details
-            </h3>
-            <div className="mt-4 space-y-2 text-sm">
-              <div>Company: {proposal.client_company || '—'}</div>
-              <div>Location: {proposal.service_location}</div>
-              <div>Facility: {proposal.facility_size} sq ft</div>
-            </div>
-          </div>
-          <div className="rounded-xl border p-6 bg-muted/40">
-            <h3 className="text-sm font-semibold text-muted-foreground">
-              Acceptance
-            </h3>
-            <div className="mt-4 text-sm">
-              This proposal remains valid for 30 days from issue. Contact us to
-              finalize scope and scheduling.
-            </div>
-          </div>
-        </div>
+        <SignatureSection templateType="executive_premium" />
+        <PoweredBy colorLogo="gray" isRight sizeImage="small" />
+        <NavitationNumber
+          value={9}
+          size="lg"
+          fontFamily="dmSerifText"
+          font="bold"
+          position="bottom-left-corner"
+        />
       </div>
 
       <div id="page-ten" className="relative aspect-[1/1.4] bg-white">
-        <div className="relative w-[85%] h-[55%] top-12 left-1/2 -translate-x-1/2">
-          <Image
-            src="/images/templates/images/image17.png"
-            alt="Background"
-            className="size-full object-cover"
-            height={1600}
-            width={1100}
-          />
-        </div>
-        <div className="absolute w-[90%] bottom-12 left-1/2 -translate-x-1/2 flex items-start justify-center">
-          {logoUrl ? (
-            <Image
-              src={logoUrl}
-              alt={companyName}
-              className="h-12 w-auto flex-[80%] object-contain"
-              height={48}
-              width={144}
-            />
-          ) : null}
-          <div
-            className={`flex-auto ${montserrat.className} flex flex-col gap-4`}
-          >
-            <h1
-              className={`text-3xl font-bold text-[var(--color-primary)] ${dmSerifText.className}`}
-            >
-              Thank you
-            </h1>
-            <p className="leading-[41px]">
-              We appreciate the opportunity to support your facility. Our team
-              is committed to reliable service, clear communication, and
-              measurable results.
-            </p>
-            <div className="flex items-center gap-2 font-bold">
-              <EmailIcon className="size-6 text-[var(--color-primary)]" />
-              <span>Email [{email}]</span>
-            </div>
-            <div className="flex items-center gap-2 font-bold">
-              <PhoneIcon className="size-6 text-[var(--color-primary)]" />
-              <span>Phone: [{phone}]</span>
-            </div>
-            <div className="flex items-center gap-2 font-bold">
-              <WebTrafficIcon className="size-6 text-[var(--color-primary)]" />
-              <span>Website [{website}]</span>
-            </div>
-          </div>
-        </div>
+        <CTAPage
+          email={email}
+          phone={phone}
+          website={website}
+          logoUrl={logoUrl}
+          companyName={companyName}
+          templateType="executive_premium"
+        />
       </div>
     </section>
   );

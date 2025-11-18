@@ -1,31 +1,33 @@
-"use client";
 import { dmSerifText, montserrat } from '@/lib/fonts';
 import React from 'react';
-import { useUserBranding } from '@/hooks/use-user-branding';
 
 const NavitationNumber = ({
   value,
   size,
   fontFamily,
   font,
+  position,
 }: {
   value: number;
   size: 'sm' | 'lg';
-  fontFamily: 'montserrat' | 'dmSerifText';
+  fontFamily: 'montserrat' | 'dmSerifText' | 'bely';
   font: 'bold' | 'normal';
+  position: 'bottom-left-corner' | 'top-right-corner';
 }) => {
-  // Load branding to ensure CSS variables are applied
-  // This sets --color-primary for use in className below
-  const { settings } = useUserBranding();
-  const fontSize = size === 'sm' ? 'text-[35px]' : 'text-[50px]';
+  const fontSize = size === 'sm' ? 'text-[24px]' : 'text-[50px]';
   const fontFamilyClass =
     fontFamily === 'montserrat'
       ? `${montserrat.className}`
-      : `${dmSerifText.className}`;
+      : fontFamily === 'dmSerifText'
+      ? `${dmSerifText.className}`
+      : 'tk-bely-display font-black';
+
   const fontClass = font === 'bold' ? 'font-bold' : 'font-normal';
+  const positionClass =
+    position === 'bottom-left-corner' ? 'left-2 bottom-1' : 'top-2 right-4';
   return (
     <div
-      className={`text-[var(--color-primary)] absolute left-2 bottom-1 ${fontClass} ${fontSize} ${fontFamilyClass}`}
+      className={`text-[var(--color-primary)] absolute ${positionClass} ${fontClass} ${fontSize} ${fontFamilyClass}`}
     >
       0{value}
     </div>

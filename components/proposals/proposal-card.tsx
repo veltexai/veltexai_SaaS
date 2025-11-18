@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,6 +14,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { Eye, Edit, Download, Trash2, Loader2, Send } from 'lucide-react';
 import { SendProposalModal } from '@/components/proposals/send-proposal-modal';
+import { Alert, AlertDescription } from '../ui/alert';
 
 interface Proposal {
   id: string;
@@ -23,6 +25,7 @@ interface Proposal {
   value: number;
   created_at: string;
   updated_at: string;
+  template_id?: string | null;
 }
 
 interface ProposalCardProps {
@@ -54,6 +57,10 @@ export function ProposalCard({
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
+  const [error, setError] = useState('');
+  const [templatePreviewUrl, setTemplatePreviewUrl] = useState<string | null>(
+    null
+  );
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -112,51 +119,60 @@ export function ProposalCard({
     }
   };
 
-  const exportToPDF = async () => {
-    setExportingId(proposal.id);
-    try {
-      const response = await fetch(`/api/proposals/${proposal.id}/export`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          template: 'modern',
-          includeCompanyInfo: true,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to export PDF');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `${proposal.title
-        .replace(/[^a-z0-9]/gi, '_')
-        .toLowerCase()}_proposal.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error('Error exporting PDF:', error);
-    } finally {
-      setExportingId(null);
-    }
-  };
-
   const handleSendSuccess = () => {
     setShowSendModal(false);
     onUpdate(proposal.id, { status: 'sent' });
   };
 
+  useEffect(() => {
+    let mounted = true;
+    async function fetchTemplatePreview() {
+      if (!proposal.template_id) {
+        setTemplatePreviewUrl(null);
+        return;
+      }
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('proposal_templates')
+          .select('preview_image_url')
+          .eq('id', proposal.template_id)
+          .single();
+        if (error) return;
+        if (!mounted) return;
+        setTemplatePreviewUrl(data?.preview_image_url ?? null);
+      } catch {}
+    }
+    fetchTemplatePreview();
+    return () => {
+      mounted = false;
+    };
+  }, [proposal.template_id]);
+
   return (
     <>
+      {error && (
+        <Alert variant="destructive" className="mb-2">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       <Card className="hover:shadow-md transition-shadow">
+        {templatePreviewUrl ? (
+          <div className="relative w-full aspect-video overflow-hidden rounded-t-md bg-gray-100">
+            <Image
+              src={templatePreviewUrl}
+              alt={proposal.title}
+              fill
+              className="object-contain"
+              unoptimized
+              sizes="(max-width: 768px) 100vw, 33vw"
+            />
+          </div>
+        ) : (
+          <div className="w-full aspect-video rounded-t-md bg-gray-100 flex items-center justify-center text-gray-500 text-sm">
+            No preview available
+          </div>
+        )}
         <CardHeader>
           <div className="flex justify-between items-start">
             <div className="flex-1">
@@ -178,22 +194,7 @@ export function ProposalCard({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-6 text-sm text-gray-600">
-              <div>
-                <span className="font-medium">Value:</span>{' '}
-                {formatCurrency(proposal.value)}
-              </div>
-              <div>
-                <span className="font-medium">Created:</span>{' '}
-                {formatDate(proposal.created_at)}
-              </div>
-              <div>
-                <span className="font-medium">Updated:</span>{' '}
-                {formatDate(proposal.updated_at)}
-              </div>
-            </div>
-
+          <div className="flex justify-between items-start flex-col gap-2.5">
             <div className="flex items-center space-x-2">
               {/* Status Update Buttons */}
               {proposal.status === 'draft' && (
@@ -253,7 +254,30 @@ export function ProposalCard({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={exportToPDF}
+                onClick={async () => {
+                  try {
+                    setError('');
+                    setExportingId(proposal.id);
+                    const res = await fetch(
+                      `/api/proposals/${proposal.id}/print`
+                    );
+                    if (!res.ok) throw new Error('Failed to generate PDF');
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `proposal-${proposal.id}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                  } catch (e: any) {
+                    setError(e?.message ?? 'Failed to generate PDF');
+                    console.error(e);
+                  } finally {
+                    setExportingId(null);
+                  }
+                }}
                 disabled={exportingId === proposal.id}
               >
                 {exportingId === proposal.id ? (
@@ -275,6 +299,20 @@ export function ProposalCard({
                   <Trash2 className="h-4 w-4" />
                 )}
               </Button>
+            </div>
+            <div className="flex items-center space-x-3 text-sm text-gray-600">
+              {/* <div>
+                <span className="font-medium">Value:</span>{' '}
+                {formatCurrency(proposal.value)}
+              </div> */}
+              <div>
+                <span className="font-medium">Created:</span>{' '}
+                {formatDate(proposal.created_at)}
+              </div>
+              <div>
+                <span className="font-medium">Updated:</span>{' '}
+                {formatDate(proposal.updated_at)}
+              </div>
             </div>
           </div>
         </CardContent>

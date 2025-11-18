@@ -16,6 +16,7 @@ export function formatCurrency(
   }).format(amount);
 }
 
+// Nov 14, 2025
 export function formatDate(date: string | Date): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   return dateObj.toLocaleDateString('en-US', {
@@ -25,6 +26,7 @@ export function formatDate(date: string | Date): string {
   });
 }
 
+// November 14, 2025
 export function formatDateLong(date: string | Date): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   return dateObj.toLocaleDateString('en-US', {
@@ -94,6 +96,7 @@ export function getTierBadgeColor(tier: SubscriptionTier) {
   }
 }
 
+// 11/14/25
 export function formatDateToMMDDYY(input: string): string {
   try {
     const d = new Date(input);
