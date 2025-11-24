@@ -58,6 +58,8 @@ export async function POST(request: NextRequest) {
       // Template data
       template_id,
     } = body;
+    console.log('🚀 ~ POST ~ body:', body);
+    console.log('🚀 ~ POST ~ bodyS:', body.selected_addons);
 
     // Validate required fields
     if (!service_type || !client_name) {
@@ -386,6 +388,90 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
           })}\n\`\`\`\n`
         : '';
 
+    const extractYears = (text?: string | null): number | null => {
+      const t = (text || '').toLowerCase();
+      const m = t.match(
+        /(?:over\s+)?(\d{1,3})\s+years?\s+(?:of\s+)?(?:experience|in\s+business)/i
+      );
+      if (m) {
+        const n = Number(m[1]);
+        if (!Number.isNaN(n) && n > 0) return n;
+      }
+      return null;
+    };
+
+    const premiumScopeRows = Array.isArray(service_scope?.areas_included)
+      ? (service_scope!.areas_included as string[]).map((area: string) => ({
+          area,
+          frequency: getServiceFrequencyLabel(service_frequency),
+          note:
+            typeof service_scope?.special_notes === 'string'
+              ? service_scope!.special_notes
+              : null,
+        }))
+      : scopeTableData.rows.map((r) => ({
+          area: r.area,
+          frequency: r.frequency,
+          note:
+            typeof service_scope?.special_notes === 'string'
+              ? service_scope!.special_notes
+              : null,
+        }));
+    const scopeTablePremiumFenced = `\n\`\`\`veliz_scope_table\n${JSON.stringify(
+      { rows: premiumScopeRows }
+    )}\n\`\`\`\n`;
+
+    const selectedAddons: any[] = Array.isArray(body.selected_addons)
+      ? body.selected_addons
+      : [];
+    const addonTitlesMarkdown =
+      selectedAddons.length > 0
+        ? selectedAddons.map((a) => `- ${a.label}`).join('\n') + '\n'
+        : '';
+
+    const toMoney = (n: number) => `$${(n || 0).toFixed(2)}`;
+    const baseMonthlyNum = (() => {
+      const s = String(tableMonthlyCost);
+      const n = Number(s.replace(/[^0-9.]/g, ''));
+      return Number.isFinite(n) ? n : 0;
+    })();
+    const pricingRows = [
+      {
+        service: 'Standard Janitorial Service',
+        frequency: getServiceFrequencyLabel(service_frequency),
+        pricePerMonth: toMoney(baseMonthlyNum),
+      },
+      ...selectedAddons.map((a) => ({
+        service: a.label,
+        frequency: a.frequency || a.frequency_label || 'As selected',
+        pricePerMonth: toMoney(
+          typeof a.monthly_amount === 'number'
+            ? a.monthly_amount
+            : typeof a.rate === 'number' &&
+              String(a.frequency || '')
+                .toLowerCase()
+                .includes('annual')
+            ? a.rate / 12
+            : Number(a.monthly_amount) || 0
+        ),
+      })),
+    ];
+    const subtotalNum = pricingRows.reduce((sum, r) => {
+      const v = Number(String(r.pricePerMonth).replace(/[^0-9.]/g, ''));
+      return sum + (Number.isFinite(v) ? v : 0);
+    }, 0);
+    const taxRate = 0;
+    const taxNum = subtotalNum * taxRate;
+    const totalNum = subtotalNum + taxNum;
+    const pricingTableFenced = `\n\`\`\`veliz_pricing_table\n${JSON.stringify({
+      rows: pricingRows,
+      summary: {
+        subtotal: toMoney(subtotalNum),
+        tax: toMoney(taxNum),
+        total: toMoney(totalNum),
+      },
+    })}\n\`\`\`\n`;
+
     // Build structure instructions for Basic Professional
     const basicProfessionalStructure = `
 Return markdown with ONLY these top-level sections using exact headings:
@@ -445,6 +531,126 @@ D. If customer schedules service and cancels a $75.00 fee will be charged.
 
 E. If unforeseen events occur beyond the contractor’s control (strikes, construction obstacles, calamities, major tax increases or national economic crisis) a new price may be negotiated.
 `;
+
+    const aboutIntro =
+      profile.company_background && profile.company_background.trim().length > 0
+        ? `Summarize in 2–3 sentences based on: "${
+            profile.company_background
+          }". Highlight **reliable scheduling** and **quality assurance** aligned with ${
+            globalInputs.serviceLocation || 'your area'
+          }.`
+        : `${
+            profile.company_name || 'Our company'
+          } delivers professional commercial cleaning solutions tailored to facilities of all sizes in ${
+            globalInputs.serviceLocation || 'your area'
+          }. Our approach blends trained teams, **reliable scheduling**, and **quality assurance** aligned with your operating hours and compliance standards.`;
+    const yearsLabel = (() => {
+      const y = extractYears(profile.company_background);
+      return y ? `${y} years in business` : '10 years in business';
+    })();
+
+    const executivePremiumStructure = `
+Return markdown with ONLY these top-level sections using exact headings:
+Include the fenced JSON blocks exactly as shown; do not alter their content or formatting.
+**IMPORTANT: Your generation must end after the "Notes:" section. Do not add any further sections or text after the final note.**
+
+## About Our Company
+${
+  profile.company_name || 'Our company'
+} delivers professional commercial cleaning solutions tailored to facilities of all sizes in ${
+      globalInputs.serviceLocation || 'your area'
+    }. Our approach blends trained teams, **reliable scheduling**, and **quality assurance** aligned with your operating hours and compliance standards.
+
+- 10 years in business
+- ${globalInputs.serviceLocation || 'Regional'} service area
+- Education, offices, retail & healthcare
+- 100% Satisfaction
+
+## Our Commitment
+Paraphrase this concept (same length, same meaning): commitment to **consistent quality**, **responsive communication**, and a **safe, healthy environment**. Include supervision, documented inspections, and continuous improvement.
+
+Service Values (vary wording each generation; preserve meaning and line length)
+- Consistent quality backed by scheduled inspections.
+- Trained teams following clear SOPs and safety protocols.
+- Prompt response to special requests and incidents.
+- Secure access management and confidentiality.
+
+## Why Choose Us
+- Professional Teams: same meaning, similar length; use fresh wording.
+- Transparent Pricing: same meaning, similar length; use fresh wording.
+- Quality Assurance: same meaning, similar length; use fresh wording.
+- Eco‑Conscious: same meaning, similar length; use fresh wording.
+- Reliability: same meaning, similar length; use fresh wording.
+
+## Scope of service
+Below is a representative scope structured for automation. Adjust tasks and frequencies per site. This table should expand/collapse cleanly based on selected areas and add-ons.
+${scopeTablePremiumFenced}
+
+Add-ons
+${addonTitlesMarkdown}
+
+## Service Quote & Pricing
+${pricingTableFenced}
+
+Notes:
+- Quote valid for 30 days. Pricing reflects scope and frequency above.
+- Adjustments require written approval.
+`;
+
+    const modernCorporateStructure = executivePremiumStructure;
+    const luxuryEliteStructure = executivePremiumStructure;
+
+    const detectTemplateType = ():
+      | 'basic'
+      | 'executive_premium'
+      | 'modern_corporate'
+      | 'luxury_elite'
+      | 'other' => {
+      const n = (
+        templateData?.name ||
+        templateData?.display_name ||
+        ''
+      ).toLowerCase();
+      const t = (templateData?.template_type || '').toLowerCase();
+      const s = (templateConfig?.style || '').toLowerCase();
+      if (
+        n.includes('luxury') ||
+        n.includes('elite') ||
+        s.includes('luxury') ||
+        t === 'luxury_elite'
+      )
+        return 'luxury_elite';
+      if (
+        n.includes('executive') ||
+        n.includes('premium') ||
+        s.includes('executive') ||
+        s.includes('premium') ||
+        t === 'executive_premium'
+      )
+        return 'executive_premium';
+      if (
+        n.includes('modern') ||
+        n.includes('corporate') ||
+        s.includes('modern') ||
+        s.includes('corporate') ||
+        t === 'modern_corporate'
+      )
+        return 'modern_corporate';
+      if (isBasicProfessional) return 'basic';
+      return 'other';
+    };
+
+    const templateType = detectTemplateType();
+    const selectedStructure =
+      templateType === 'luxury_elite'
+        ? luxuryEliteStructure
+        : templateType === 'executive_premium'
+        ? executivePremiumStructure
+        : templateType === 'modern_corporate'
+        ? modernCorporateStructure
+        : isBasicProfessional
+        ? basicProfessionalStructure
+        : null;
 
     // Create the prompt for OpenAI
     const prompt = `
@@ -511,8 +717,8 @@ Company Background: ${
 
 --- REQUIRED STRUCTURE ---
 ${
-  isBasicProfessional
-    ? basicProfessionalStructure
+  selectedStructure
+    ? selectedStructure
     : `
 Provide a concise, client-focused proposal with clear sections:
 - Executive Summary (overview of client needs + our solution)

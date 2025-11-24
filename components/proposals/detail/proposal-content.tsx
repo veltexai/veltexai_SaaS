@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
+import StructuredMarkdownRenderer from '@/components/proposals/detail/structured-markdown-renderer';
 import { FileText } from 'lucide-react';
 import { Database } from '@/types/database';
 
@@ -58,7 +59,10 @@ export function ProposalContent({
           <>
             {proposal.generated_content ? (
               <div className="prose max-w-none">
-                <MarkdownRenderer content={proposal.generated_content} proposalId={proposal.id} />
+                <StructuredMarkdownRenderer
+                  content={proposal.generated_content}
+                  proposalId={proposal.id}
+                />
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">

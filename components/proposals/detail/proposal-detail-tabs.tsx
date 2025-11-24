@@ -1,12 +1,10 @@
-'use client';
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProposalEditWrapper } from './proposal-edit-wrapper';
 import { ProposalAnalytics } from '../proposal-analytics';
 import { ProposalStatusHistory } from './proposal-status-history';
 import { Edit, BarChart3, History, Eye } from 'lucide-react';
 import { Database } from '@/types/database';
-import { TemplateRenderer } from '../templates';
+import { TemplateRenderer } from '@/features/templates';
 
 type Proposal = Database['public']['Tables']['proposals']['Row'];
 

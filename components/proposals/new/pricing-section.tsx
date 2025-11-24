@@ -557,6 +557,7 @@ export function PricingSection({
       <Card>
         <AIContentGenerator
           form={form.getValues()}
+          selectedAddons={sourceAddons as any[]}
           generatedContent={form.getValues('generated_content') || ''}
           onContentGenerated={(content) => {
             // Fix: Prevent validation triggers when setting generated content

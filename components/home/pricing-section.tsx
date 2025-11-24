@@ -85,7 +85,7 @@ const PricingSection = () => {
           {[
             {
               name: 'Starter',
-              price: billingCycle === 'monthly' ? 29 : 24,
+              price: billingCycle === 'monthly' ? 19.9 : 24,
               period:
                 billingCycle === 'monthly'
                   ? '/month'
@@ -102,7 +102,7 @@ const PricingSection = () => {
             },
             {
               name: 'Professional',
-              price: billingCycle === 'monthly' ? 79 : 64,
+              price: billingCycle === 'monthly' ? 39.9 : 64,
               period:
                 billingCycle === 'monthly'
                   ? '/month'
@@ -120,7 +120,7 @@ const PricingSection = () => {
             },
             {
               name: 'Enterprise',
-              price: billingCycle === 'monthly' ? 199 : 159,
+              price: billingCycle === 'monthly' ? 79.9 : 159,
               period:
                 billingCycle === 'monthly'
                   ? '/month'

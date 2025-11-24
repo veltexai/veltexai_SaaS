@@ -3,8 +3,14 @@
 import { useUserBranding } from '@/hooks/use-user-branding';
 import React from 'react';
 import { getIconForLabel } from '@/lib/icon-map';
-import ProposalAcceptance from '@/components/proposals/templates/shared/proposal-acceptance';
+import ProposalAcceptance from '@/features/templates/components/shared/proposal-acceptance';
 import { dmSerifText } from '@/lib/fonts';
+import {
+  ShieldIcon,
+  LocationIcon,
+  StartIcon,
+  EductationIcon,
+} from '@/components/icons';
 import { formatCurrencySafe } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 
@@ -16,15 +22,20 @@ interface MarkdownRendererProps {
   acceptanceClientName?: string;
   acceptanceCompanyName?: string;
   proposalId?: string;
-  additionalServicesRows?: Array<{ service: string; pricePerTime: string | null; pricePerMonth: string | null }>;
+  additionalServicesRows?: Array<{
+    service: string;
+    pricePerTime: string | null;
+    pricePerMonth: string | null;
+  }>;
 }
 
 type ScopeTableData = {
   rows: Array<{
     area: string;
     frequency: string;
-    costPerVisit: string | null;
-    monthlyCost: string | null;
+    costPerVisit?: string | null;
+    monthlyCost?: string | null;
+    note?: string | null;
   }>;
 };
 
@@ -34,6 +45,19 @@ type AdditionalServicesData = {
     pricePerTime: string | null;
     pricePerMonth: string | null;
   }>;
+};
+
+type PricingTableData = {
+  rows: Array<{
+    service: string;
+    frequency: string;
+    pricePerMonth: string;
+  }>;
+  summary?: {
+    subtotal: string;
+    tax: string;
+    total: string;
+  };
 };
 
 export function MarkdownRenderer({
@@ -58,11 +82,40 @@ export function MarkdownRenderer({
     let currentSection: string | null = null;
     let extrasDataFromJson: AdditionalServicesData | null = null;
     let extrasRendered = false;
+    let aboutIntroMarginNeeded = false;
+    let aboutIntroRendered = false;
 
     const renderListItem = (rawText: string, key: string) => {
       const labelMatch = rawText.match(/^(\*\*|__)[\s]*([^*]+?)[\s]*\1/);
       const label = labelMatch?.[2]?.trim();
-      const Icon = label ? getIconForLabel(label) : null;
+      const IconResolved = getIconForLabel(label ?? rawText);
+      const inAbout =
+        !!currentSection && currentSection.includes('about our company');
+      let Icon = IconResolved;
+      if (inAbout) {
+        const norm = (label ?? rawText).toLowerCase();
+        if (/\bservice\s+area\b/.test(norm)) Icon = LocationIcon;
+        else if (/years?/.test(norm) && /business/.test(norm))
+          Icon = ShieldIcon;
+        else if (/(education|office|offices|retail|healthcare)/.test(norm))
+          Icon = EductationIcon;
+        else if (/(satisfaction|100%)/.test(norm)) Icon = StartIcon;
+      }
+
+      if (inAbout) {
+        return (
+          <div key={key} className="flex items-start gap-4 p-10 pr-8 pb-12">
+            {Icon ? (
+              <Icon className="h-8 w-8 text-[var(--color-primary)] flex-shrink-0" />
+            ) : null}
+            <div
+              className={`italic text-[#383838] ${dmSerifText.className} text-xl leading-relaxed font-semibold`}
+            >
+              {parseInlineMarkdown(rawText)}
+            </div>
+          </div>
+        );
+      }
 
       return (
         <li
@@ -99,9 +152,12 @@ export function MarkdownRenderer({
       const words = text.split(/\s+/);
 
       const Tag = level === 1 ? 'h1' : level === 2 ? 'h2' : 'h3';
+      const isAboutHeading = /about\s+our\s+company/i.test(rawText);
       const baseClass =
         level === 1
-          ? 'text-5xl mb-4 mt-4'
+          ? isAboutHeading
+            ? 'text-5xl leading-[100%] mb-4 mt-4'
+            : 'text-5xl mb-4 mt-4'
           : level === 2
           ? 'text-lg font-bold mb-3 mt-4'
           : 'text-base font-semibold mb-2 mt-4';
@@ -113,7 +169,7 @@ export function MarkdownRenderer({
         return (
           <Tag key={key} className={`text-[var(--color-primary)] ${baseClass}`}>
             <span className="">{parseInlineMarkdown(first)}</span>{' '}
-            <span className="font-bold lowercase">
+            <span className={`font-bold ${isAboutHeading ? '' : 'lowercase'}`}>
               {parseInlineMarkdown(last)}
             </span>
           </Tag>
@@ -131,11 +187,27 @@ export function MarkdownRenderer({
     const flushList = () => {
       if (currentList.length > 0) {
         if (listType === 'ul') {
-          elements.push(
-            <ul key={`ul-${elementCounter++}`} className="mb-3 space-y-2">
-              {currentList}
-            </ul>
-          );
+          const inAbout =
+            !!currentSection && currentSection.includes('about our company');
+          if (inAbout) {
+            const firstRow = currentList.slice(0, 2);
+            const secondRow = currentList.slice(2);
+            elements.push(
+              <div key={`about-grid-${elementCounter++}`} className="mt-10">
+                <div className="grid grid-cols-2 divide-x divide-gray-200">
+                  {firstRow}
+                </div>
+                <div className="border-t border-gray-200" />
+                <div className="grid grid-cols-2 divide-x">{secondRow}</div>
+              </div>
+            );
+          } else {
+            elements.push(
+              <ul key={`ul-${elementCounter++}`} className="mb-3 space-y-2">
+                {currentList}
+              </ul>
+            );
+          }
         } else if (listType === 'ol') {
           elements.push(
             <ol
@@ -209,6 +281,33 @@ export function MarkdownRenderer({
         continue;
       }
 
+      if (trimmedLine.startsWith('```veliz_pricing_table')) {
+        flushList();
+        let jsonLines: string[] = [];
+        index++;
+        while (index < lines.length && !lines[index].trim().startsWith('```')) {
+          jsonLines.push(lines[index]);
+          index++;
+        }
+        const jsonText = jsonLines.join('\n');
+        try {
+          const data: PricingTableData = JSON.parse(jsonText);
+          elements.push(
+            <PricingTable key={`pricing-${elementCounter++}`} data={data} />
+          );
+        } catch {
+          elements.push(
+            <pre
+              key={`pricing-fallback-${elementCounter++}`}
+              className="bg-muted p-3 rounded"
+            >
+              {jsonText}
+            </pre>
+          );
+        }
+        continue;
+      }
+
       // Headers
       if (trimmedLine.startsWith('###')) {
         flushList();
@@ -224,7 +323,9 @@ export function MarkdownRenderer({
             <AdditionalServicesTable
               key={`extras-${elementCounter++}`}
               proposalId={proposalId}
-              data={{ rows: additionalServicesRows ?? (extrasDataFromJson?.rows ?? []) }}
+              data={{
+                rows: additionalServicesRows ?? extrasDataFromJson?.rows ?? [],
+              }}
             />
           );
           extrasRendered = true;
@@ -233,6 +334,10 @@ export function MarkdownRenderer({
         flushList();
         const text = trimmedLine.replace(/^##\s*/, '');
         currentSection = text.toLowerCase();
+        if (/about\s+our\s+company/i.test(text)) {
+          aboutIntroMarginNeeded = true;
+          aboutIntroRendered = false;
+        }
         elements.push(renderSplitHeading(2, text, `h2-${index}`));
         const norm = text.toLowerCase();
         if (
@@ -244,7 +349,9 @@ export function MarkdownRenderer({
             <AdditionalServicesTable
               key={`extras-${elementCounter++}`}
               proposalId={proposalId}
-              data={{ rows: additionalServicesRows ?? (extrasDataFromJson?.rows ?? []) }}
+              data={{
+                rows: additionalServicesRows ?? extrasDataFromJson?.rows ?? [],
+              }}
             />
           );
           extrasRendered = true;
@@ -253,6 +360,10 @@ export function MarkdownRenderer({
         flushList();
         const text = trimmedLine.replace(/^#\s*/, '');
         currentSection = text.toLowerCase();
+        if (/about\s+our\s+company/i.test(text)) {
+          aboutIntroMarginNeeded = true;
+          aboutIntroRendered = false;
+        }
         elements.push(renderSplitHeading(1, text, `h1-${index}`));
         const norm = text.toLowerCase();
         if (
@@ -264,7 +375,9 @@ export function MarkdownRenderer({
             <AdditionalServicesTable
               key={`extras-${elementCounter++}`}
               proposalId={proposalId}
-              data={{ rows: additionalServicesRows ?? (extrasDataFromJson?.rows ?? []) }}
+              data={{
+                rows: additionalServicesRows ?? extrasDataFromJson?.rows ?? [],
+              }}
             />
           );
           extrasRendered = true;
@@ -371,14 +484,23 @@ export function MarkdownRenderer({
       // Regular paragraphs
       else {
         flushList();
+        const needsAboutMargin =
+          !!currentSection &&
+          currentSection.includes('about our company') &&
+          aboutIntroMarginNeeded &&
+          !aboutIntroRendered;
+        const pClass = needsAboutMargin
+          ? 'text-sm text-[#383838] mb-4 leading-relaxed mt-8'
+          : 'text-sm text-[#383838] mb-4 leading-relaxed';
         elements.push(
-          <p
-            key={`p-${index}`}
-            className="text-sm text-[#383838] mb-4 leading-relaxed"
-          >
+          <p key={`p-${index}`} className={pClass}>
             {parseInlineMarkdown(trimmedLine)}
           </p>
         );
+        if (needsAboutMargin) {
+          aboutIntroRendered = true;
+          aboutIntroMarginNeeded = false;
+        }
       }
     }
 
@@ -466,27 +588,61 @@ export function MarkdownRenderer({
 }
 
 function ScopeTable({ data }: { data: ScopeTableData }) {
-  const row = data?.rows?.[0];
-  if (!row) return null;
+  const rows = data?.rows ?? [];
+  if (!rows.length) return null;
+  const premium = rows.some((r) => typeof r.note === 'string');
   return (
     <div className="mb-6">
       <div className="text-white">
-        <div className="text-center grid grid-cols-2 text-[var(--color-primary)] sm:grid-cols-4 gap-4 px-5 mb-2">
-          <div className="font-semibold">Area serviced</div>
-          <div className="font-semibold">Frequency</div>
-          <div className="font-semibold">Cost per visit</div>
-          <div className="font-semibold">Monthly cost</div>
-        </div>
-        <div className="rounded-3xl px-5 py-3 bg-[var(--color-primary)]">
-          <div className="text-center grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs justify-center items-center">
-            <div className="whitespace-normal">{row.area}</div>
-            <div>{row.frequency}</div>
-            <div>{formatCurrencySafe(row.costPerVisit) ?? 'N/A'}</div>
-            <div className="font-bold">
-              {formatCurrencySafe(row.monthlyCost) ?? 'N/A'}
+        {premium ? (
+          <>
+            <div className="text-center grid grid-cols-3 text-[var(--color-primary)] gap-4 px-5 mb-2">
+              <div className="font-semibold">Area serviced</div>
+              <div className="font-semibold">Frequency</div>
+              <div className="font-semibold">Notes</div>
             </div>
-          </div>
-        </div>
+            {rows.map((row, i) => (
+              <div
+                key={`scope-row-${i}`}
+                className="rounded-3xl px-5 py-3 bg-[var(--color-primary)] mb-2"
+              >
+                <div className="grid grid-cols-3 gap-4 text-xs justify-center items-center text-center">
+                  <div className="whitespace-pre-line text-white/90">
+                    {row.area}
+                  </div>
+                  <div className="text-white/90">{row.frequency}</div>
+                  <div className="text-white font-medium whitespace-pre-line">
+                    {row.note || ''}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <div className="text-center grid grid-cols-2 text-[var(--color-primary)] sm:grid-cols-4 gap-4 px-5 mb-2">
+              <div className="font-semibold">Area serviced</div>
+              <div className="font-semibold">Frequency</div>
+              <div className="font-semibold">Cost per visit</div>
+              <div className="font-semibold">Monthly cost</div>
+            </div>
+            {rows.map((row, i) => (
+              <div
+                key={`scope-row-${i}`}
+                className="rounded-3xl px-5 py-3 bg-[var(--color-primary)] mb-2"
+              >
+                <div className="text-center grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs justify-center items-center">
+                  <div className="whitespace-pre-line">{row.area}</div>
+                  <div>{row.frequency}</div>
+                  <div>{formatCurrencySafe(row.costPerVisit) ?? 'N/A'}</div>
+                  <div className="font-bold">
+                    {formatCurrencySafe(row.monthlyCost) ?? 'N/A'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
       </div>
     </div>
   );
@@ -573,6 +729,49 @@ function AdditionalServicesTable({
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function PricingTable({ data }: { data: PricingTableData }) {
+  const rows = data?.rows ?? [];
+  const summary = data?.summary;
+  if (!rows.length) return null;
+  return (
+    <div className="my-6 space-y-3">
+      <div className="grid grid-cols-3 gap-4 px-5 text-center">
+        <div className="text-[var(--color-primary)] font-bold">Service</div>
+        <div className="text-[var(--color-primary)] font-bold">Frequency</div>
+        <div className="text-[var(--color-primary)] font-bold">Price/month</div>
+      </div>
+      {rows.map((r, i) => (
+        <div
+          key={`pricing-row-${i}`}
+          className="rounded-3xl bg-[var(--color-primary)] text-white px-5 py-3 mb-1"
+        >
+          <div className="grid grid-cols-3 gap-4 text-xs items-center justify-center text-center">
+            <div className="whitespace-pre-line">{r.service}</div>
+            <div>{r.frequency}</div>
+            <div className="font-bold">{r.pricePerMonth}</div>
+          </div>
+        </div>
+      ))}
+      {summary ? (
+        <div className="mt-4 space-y-2">
+          <div className="flex justify-between px-5">
+            <span className="text-sm">Sub-total</span>
+            <span className="font-semibold">{summary.subtotal}</span>
+          </div>
+          <div className="flex justify-between px-5">
+            <span className="text-sm">Tax</span>
+            <span className="font-semibold">{summary.tax}</span>
+          </div>
+          <div className="flex justify-between px-5">
+            <span className="text-sm">Total</span>
+            <span className="font-semibold">{summary.total}</span>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

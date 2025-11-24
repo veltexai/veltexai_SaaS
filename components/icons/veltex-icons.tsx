@@ -361,3 +361,529 @@ export const LuxuryEliteBackgroundTitle: React.FC<IconProps> = ({
     </defs>
   </svg>
 );
+
+export const DocumentIcon: React.FC<IconProps> = ({
+  size = 42,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_70_3)">
+      <path
+        d="M38 6H29.64C28.8 3.68 26.6 2 24 2C21.4 2 19.2 3.68 18.36 6H10C7.8 6 6 7.8 6 10V38C6 40.2 7.8 42 10 42H38C40.2 42 42 40.2 42 38V10C42 7.8 40.2 6 38 6ZM24 6C25.1 6 26 6.9 26 8C26 9.1 25.1 10 24 10C22.9 10 22 9.1 22 8C22 6.9 22.9 6 24 6ZM28 34H14V30H28V34ZM34 26H14V22H34V26ZM34 18H14V14H34V18Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_70_3">
+        <rect width="48" height="48" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const paymentcardIcon: React.FC<IconProps> = ({
+  size = 42,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 33 27"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <path
+      d="M3.28281 26.2625C2.38004 26.2625 1.60748 25.9413 0.965147 25.299C0.321716 24.6556 0 23.8825 0 22.9797V3.28281C0 2.38004 0.321716 1.60748 0.965147 0.965147C1.60748 0.321715 2.38004 0 3.28281 0H29.5453C30.4481 0 31.2212 0.321715 31.8646 0.965147C32.507 1.60748 32.8281 2.38004 32.8281 3.28281V22.9797C32.8281 23.8825 32.507 24.6556 31.8646 25.299C31.2212 25.9413 30.4481 26.2625 29.5453 26.2625H3.28281ZM3.28281 6.56563V13.1313H29.5453V6.56563H3.28281Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+export const suplliseIcon: React.FC<IconProps> = ({
+  size = 42,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <path
+      d="M16 43.9999C14.9 43.9999 13.9583 43.6083 13.175 42.8249C12.3917 42.0416 12 41.0999 12 39.9999V31.3999C12 28.9333 12.35 26.5583 13.05 24.2749C13.75 21.9916 14.85 19.7166 16.35 17.4499C15.0833 17.1499 14.0417 16.4666 13.225 15.3999C12.4083 14.3333 12 13.1333 12 11.7999V9.69993C12 8.09993 12.6917 6.75827 14.075 5.67493C15.4583 4.5916 16.9 4.13327 18.4 4.29993L36.2 6.04993C36.7667 6.1166 37.2083 6.3416 37.525 6.72494C37.8417 7.10827 38 7.54993 38 8.04993V13.9999C38 14.4999 37.825 14.9416 37.475 15.3249C37.125 15.7083 36.7 15.9333 36.2 15.9999L34.4 16.1999C34.7667 17.4333 35.2 18.5666 35.7 19.5999C36.2 20.6333 36.8 21.5166 37.5 22.2499C37.8667 22.6499 38.1083 23.1166 38.225 23.6499C38.3417 24.1833 38.2667 24.6833 38 25.1499C37.7333 25.6166 37.3417 25.9333 36.825 26.0999C36.3083 26.2666 35.85 26.1666 35.45 25.7999C34.1833 24.6999 33.175 23.3583 32.425 21.7749C31.675 20.1916 31.0667 18.4499 30.6 16.5499L28.4 16.7499C28.6667 18.4166 29.175 20.0999 29.925 21.7999C30.675 23.4999 31.4333 25.0333 32.2 26.3999C32.8 27.4666 33.25 28.5833 33.55 29.7499C33.85 30.9166 34 32.0999 34 33.2999V39.9999C34 41.0999 33.6083 42.0416 32.825 42.8249C32.0417 43.6083 31.1 43.9999 30 43.9999H16ZM16 10.1999V11.7999C16 12.3999 16.2167 12.8833 16.65 13.2499C17.0833 13.6166 17.6 13.7666 18.2 13.6999L34 12.1999V9.79993L18.2 8.29993C17.6 8.23327 17.0833 8.38327 16.65 8.74993C16.2167 9.1166 16 9.59994 16 10.1999Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+export const secureIcon: React.FC<IconProps> = ({
+  size = 42,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_70_30)">
+      <path
+        d="M36 16H34V12C34 6.48 29.52 2 24 2C18.48 2 14 6.48 14 12V16H12C9.8 16 8 17.8 8 20V40C8 42.2 9.8 44 12 44H36C38.2 44 40 42.2 40 40V20C40 17.8 38.2 16 36 16ZM24 34C21.8 34 20 32.2 20 30C20 27.8 21.8 26 24 26C26.2 26 28 27.8 28 30C28 32.2 26.2 34 24 34ZM30.2 16H17.8V12C17.8 8.58 20.58 5.8 24 5.8C27.42 5.8 30.2 8.58 30.2 12V16Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_70_30">
+        <rect width="48" height="48" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const InsuranceIcon: React.FC<IconProps> = ({
+  size = 42,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 38 39"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_70_36)">
+      <path
+        d="M19 1.625L4.75 8.125V17.875C4.75 26.8938 10.83 35.3275 19 37.375C27.17 35.3275 33.25 26.8938 33.25 17.875V8.125L19 1.625Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_70_36">
+        <rect width="38" height="39" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const staffIcon: React.FC<IconProps> = ({
+  size = 42,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 43 43"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_70_42)">
+      <path
+        d="M28.667 19.708C31.6412 19.708 34.0241 17.3072 34.0241 14.333C34.0241 11.3588 31.6412 8.95801 28.667 8.95801C25.6928 8.95801 23.292 11.3588 23.292 14.333C23.292 17.3072 25.6928 19.708 28.667 19.708ZM14.3337 19.708C17.3078 19.708 19.6907 17.3072 19.6907 14.333C19.6907 11.3588 17.3078 8.95801 14.3337 8.95801C11.3595 8.95801 8.95866 11.3588 8.95866 14.333C8.95866 17.3072 11.3595 19.708 14.3337 19.708ZM14.3337 23.2913C10.1591 23.2913 1.79199 25.3876 1.79199 29.5622V34.0413H26.8753V29.5622C26.8753 25.3876 18.5082 23.2913 14.3337 23.2913ZM28.667 23.2913C28.1474 23.2913 27.5562 23.3272 26.9291 23.3809C29.0074 24.8859 30.4587 26.9105 30.4587 29.5622V34.0413H41.2087V29.5622C41.2087 25.3876 32.8416 23.2913 28.667 23.2913Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_70_42">
+        <rect width="43" height="43" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const DisputIcon: React.FC<IconProps> = ({
+  size = 24,
+  className,
+  ...props
+}) => (
+  <svg
+    width="43"
+    height="44"
+    viewBox="0 0 43 44"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_71_48)">
+      <path
+        d="M29.5271 19.0848C28.8283 19.7998 27.6637 19.7998 26.965 19.0848L18.9562 10.9081L6.325 23.8148L5.1425 22.6598C3.04625 20.5148 3.04625 17.0315 5.1425 14.8865L12.7392 7.11314C14.8354 4.96814 18.2396 4.96814 20.3358 7.11314L29.5271 16.4998C30.2258 17.2148 30.2258 18.3698 29.5271 19.0848ZM30.7812 15.1981C32.1787 16.6281 32.1787 18.9565 30.7812 20.3865C28.5058 22.7148 26.105 20.7898 25.7108 20.3865L18.9742 13.4931L8.99458 23.7048C8.29583 24.4198 8.29583 25.5748 8.99458 26.2898C9.69333 27.0048 10.8221 27.0048 11.5388 26.2898L19.8162 17.8198L21.0883 19.1215L12.8108 27.5915C12.1121 28.3065 12.1121 29.4615 12.8108 30.1765C13.5096 30.8915 14.6383 30.8915 15.355 30.1765L23.6325 21.7065L24.9046 23.0081L16.6271 31.4781C15.9283 32.1931 15.9283 33.3481 16.6271 34.0631C17.3258 34.7781 18.4546 34.7781 19.1533 34.0631L27.4308 25.5931L28.7029 26.8948L20.4254 35.3648C19.7267 36.0798 19.7267 37.2348 20.4254 37.9498C21.1242 38.6648 22.2529 38.6648 22.9517 37.9498L37.8583 22.6598C39.9546 20.5148 39.9546 17.0315 37.8583 14.8865L30.2617 7.11314C28.2012 5.00481 24.8687 4.96814 22.7725 7.00314L30.7812 15.1981Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_71_48">
+        <rect width="43" height="44" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const ShieldIcon: React.FC<IconProps> = ({
+  size = 42,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 60 60"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_44_19)">
+      <path
+        d="M30 2.5L7.5 12.5V27.5C7.5 41.375 17.1 54.35 30 57.5C42.9 54.35 52.5 41.375 52.5 27.5V12.5L30 2.5ZM25 42.5L15 32.5L18.525 28.975L25 35.425L41.475 18.95L45 22.5L25 42.5Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_44_19">
+        <rect width="60" height="60" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const LocationIcon: React.FC<IconProps> = ({
+  size = 42,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 70 70"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_44_36)">
+      <path
+        d="M34.9999 5.8335C23.7124 5.8335 14.5833 14.9627 14.5833 26.2502C14.5833 41.5627 34.9999 64.1668 34.9999 64.1668C34.9999 64.1668 55.4166 41.5627 55.4166 26.2502C55.4166 14.9627 46.2874 5.8335 34.9999 5.8335ZM34.9999 33.5418C30.9749 33.5418 27.7083 30.2752 27.7083 26.2502C27.7083 22.2252 30.9749 18.9585 34.9999 18.9585C39.0249 18.9585 42.2916 22.2252 42.2916 26.2502C42.2916 30.2752 39.0249 33.5418 34.9999 33.5418Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_44_36">
+        <rect width="70" height="70" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const StartIcon: React.FC<IconProps> = ({
+  size = 42,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 64 64"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <path
+      d="M40.9333 53.3333L35.7333 58.4667C34.7111 59.4889 33.4667 60 32 60C30.5333 60 29.2889 59.4889 28.2667 58.4667L23.0667 53.3333H16C14.5333 53.3333 13.2778 52.8111 12.2333 51.7667C11.1889 50.7222 10.6667 49.4667 10.6667 48V40.9333L5.53333 35.7333C4.51111 34.7111 4 33.4667 4 32C4 30.5333 4.51111 29.2889 5.53333 28.2667L10.6667 23.0667V16C10.6667 14.5333 11.1889 13.2778 12.2333 12.2333C13.2778 11.1889 14.5333 10.6667 16 10.6667H23.0667L28.2667 5.53333C29.2889 4.51111 30.5333 4 32 4C33.4667 4 34.7111 4.51111 35.7333 5.53333L40.9333 10.6667H48C49.4667 10.6667 50.7222 11.1889 51.7667 12.2333C52.8111 13.2778 53.3333 14.5333 53.3333 16V23.0667L58.4667 28.2667C59.4889 29.2889 60 30.5333 60 32C60 33.4667 59.4889 34.7111 58.4667 35.7333L53.3333 40.9333V48C53.3333 49.4667 52.8111 50.7222 51.7667 51.7667C50.7222 52.8111 49.4667 53.3333 48 53.3333H40.9333ZM32 38.6L37.1333 41.6667C37.6222 41.9778 38.1 41.9667 38.5667 41.6333C39.0333 41.3 39.2 40.8444 39.0667 40.2667L37.7333 34.4667L42.2667 30.5333C42.7111 30.1333 42.8444 29.6556 42.6667 29.1C42.4889 28.5444 42.0889 28.2444 41.4667 28.2L35.5333 27.7333L33.2 22.2C32.9778 21.6667 32.5778 21.4 32 21.4C31.4222 21.4 31.0222 21.6667 30.8 22.2L28.4667 27.7333L22.5333 28.2C21.9111 28.2444 21.5111 28.5444 21.3333 29.1C21.1556 29.6556 21.2889 30.1333 21.7333 30.5333L26.2667 34.4667L24.9333 40.2667C24.8 40.8444 24.9667 41.3 25.4333 41.6333C25.9 41.9667 26.3778 41.9778 26.8667 41.6667L32 38.6Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+export const EductationIcon: React.FC<IconProps> = ({
+  size = 42,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 60 60"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_44_58)">
+      <path
+        d="M55 25V55H5V25L22.5 17.5V22.5L35 17.5V25H55ZM43 21.25L45 5H52.5L54.5 21.25H43ZM27.5 45H32.5V35H27.5V45ZM17.5 45H22.5V35H17.5V45ZM42.5 35H37.5V45H42.5V35Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_44_58">
+        <rect width="60" height="60" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const BookIcon: React.FC<IconProps> = ({
+  size = 96,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 22 19"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <path
+      d="M11 18.3667C10.8167 18.3667 10.6377 18.3417 10.463 18.2917C10.2877 18.2417 10.125 18.175 9.975 18.0917C9.29167 17.675 8.575 17.3583 7.825 17.1417C7.075 16.925 6.3 16.8167 5.5 16.8167C4.8 16.8167 4.11267 16.9083 3.438 17.0917C2.76267 17.275 2.11667 17.5333 1.5 17.8667C1.15 18.05 0.812667 18.0417 0.488 17.8417C0.162667 17.6417 0 17.35 0 16.9667V4.91667C0 4.73333 0.046 4.55833 0.138 4.39167C0.229333 4.225 0.366667 4.1 0.55 4.01667C1.31667 3.61667 2.11667 3.31667 2.95 3.11667C3.78333 2.91667 4.63333 2.81667 5.5 2.81667C6.46667 2.81667 7.41267 2.94167 8.338 3.19167C9.26267 3.44167 10.15 3.81667 11 4.31667V16.4167C11.85 15.8833 12.7417 15.4833 13.675 15.2167C14.6083 14.95 15.55 14.8167 16.5 14.8167C17.1 14.8167 17.6877 14.8667 18.263 14.9667C18.8377 15.0667 19.4167 15.2167 20 15.4167V3.41667C20.25 3.5 20.496 3.58733 20.738 3.67867C20.9793 3.77067 21.2167 3.88333 21.45 4.01667C21.6333 4.1 21.771 4.225 21.863 4.39167C21.9543 4.55833 22 4.73333 22 4.91667V16.9667C22 17.35 21.8377 17.6417 21.513 17.8417C21.1877 18.0417 20.85 18.05 20.5 17.8667C19.8833 17.5333 19.2373 17.275 18.562 17.0917C17.8873 16.9083 17.2 16.8167 16.5 16.8167C15.7 16.8167 14.925 16.925 14.175 17.1417C13.425 17.3583 12.7083 17.675 12.025 18.0917C11.875 18.175 11.7127 18.2417 11.538 18.2917C11.3627 18.3417 11.1833 18.3667 11 18.3667ZM13.825 13.0667C13.6583 13.2167 13.4793 13.2457 13.288 13.1537C13.096 13.0623 13 12.9083 13 12.6917V4.51667C13 4.48333 13.05 4.36667 13.15 4.16667L17.15 0.166667C17.3167 0 17.5 -0.0416667 17.7 0.0416667C17.9 0.125 18 0.283333 18 0.516667V9.09167C18 9.15833 17.9417 9.28333 17.825 9.46667L13.825 13.0667Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+export const PriceChangeIcon: React.FC<IconProps> = ({
+  size = 48,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_pricechange)">
+      <path
+        d="M40 8H8C5.78 8 4.02 9.78 4.02 12L4 36C4 38.22 5.78 40 8 40H40C42.22 40 44 38.22 44 36V12C44 9.78 42.22 8 40 8ZM24 20H16V22H22C23.1 22 24 22.9 24 24V30C24 31.1 23.1 32 22 32H20V34H16V32H12V28H20V26H14C12.9 26 12 25.1 12 24V18C12 16.9 12.9 16 14 16H16V14H20V16H24V20ZM32 32.5L28 28.5H36L32 32.5ZM28 20L32 16L36 20H28Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_pricechange">
+        <rect width="48" height="48" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const PlaylistCheckIcon: React.FC<IconProps> = ({
+  size = 48,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_playlistcheck)">
+      <path
+        d="M24 4C12.96 4 4 12.96 4 24C4 35.04 12.96 44 24 44C35.04 44 44 35.04 44 24C44 12.96 35.04 4 24 4ZM14 14H28V18H14V14ZM14 20H28V24H14V20ZM20 30H14V26H20V30ZM28.1 36.72L22.44 31.06L25.26 28.24L28.08 31.06L35.18 24L38 26.82L28.1 36.72Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_playlistcheck">
+        <rect width="48" height="48" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const LeafSparkIcon: React.FC<IconProps> = ({
+  size = 48,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <path
+      d="M28 44C26.1333 44 24.375 43.7 22.725 43.1C21.075 42.5 19.5667 41.6667 18.2 40.6L15.4 43.4C15 43.8 14.5333 44 14 44C13.4667 44 13 43.8 12.6 43.4C12.2 43 12 42.5333 12 42C12 41.4667 12.2 41 12.6 40.6L15.4 37.8C14.3333 36.4333 13.5 34.925 12.9 33.275C12.3 31.625 12 29.8667 12 28C12 23.4 13.5917 19.5833 16.775 16.55C19.9583 13.5167 23.7 12 28 12H40C41.1 12 42.0417 12.3917 42.825 13.175C43.6083 13.9583 44 14.9 44 16V28C44 30.0667 43.6083 32.0667 42.825 34C42.0417 35.9333 40.8667 37.7 39.3 39.3C37.7 40.8667 35.9333 42.0417 34 42.825C32.0667 43.6083 30.0667 44 28 44ZM11 20C11 17.5 11.875 15.375 13.625 13.625C15.375 11.875 17.5 11 20 11C17.5 11 15.375 10.125 13.625 8.375C11.875 6.625 11 4.5 11 2C11 4.5 10.125 6.625 8.375 8.375C6.625 10.125 4.5 11 2 11C4.5 11 6.625 11.875 8.375 13.625C10.125 15.375 11 17.5 11 20ZM28.6 24.6L19.65 33.55C19.25 33.95 19.0583 34.4167 19.075 34.95C19.0917 35.4833 19.2833 35.95 19.65 36.35C20.05 36.75 20.5167 36.9583 21.05 36.975C21.5833 36.9917 22.05 36.8 22.45 36.4L31.4 27.4C31.8 27 32 26.5333 32 26C32 25.4667 31.8 25 31.4 24.6C31 24.2 30.5333 24 30 24C29.4667 24 29 24.2 28.6 24.6Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+export const ThumbUpIcon: React.FC<IconProps> = ({
+  size = 48,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_thumbup)">
+      <path
+        d="M2 42H10V18H2V42ZM46 20C46 17.8 44.2 16 42 16H29.38L31.28 6.86L31.34 6.22C31.34 5.4 31 4.64 30.46 4.1L28.34 2L15.18 15.18C14.44 15.9 14 16.9 14 18V38C14 40.2 15.8 42 18 42H36C37.66 42 39.08 41 39.68 39.56L45.72 25.46C45.9 25 46 24.52 46 24V20Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_thumbup">
+        <rect width="48" height="48" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const AddTaskIcon: React.FC<IconProps> = ({
+  size = 48,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_addtask)">
+      <path
+        d="M44 10.36L21.18 33.2L12.7 24.72L15.52 21.9L21.18 27.56L41.18 7.56L44 10.36ZM24 40C15.18 40 8 32.82 8 24C8 15.18 15.18 8 24 8C27.14 8 30.08 8.92 32.56 10.5L35.46 7.6C32.2 5.34 28.26 4 24 4C12.96 4 4 12.96 4 24C4 35.04 12.96 44 24 44C27.46 44 30.72 43.12 33.56 41.56L30.56 38.56C28.56 39.48 26.34 40 24 40ZM38 30H32V34H38V40H42V34H48V30H42V24H38V30Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_addtask">
+        <rect width="48" height="48" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const AccountBalanceIcon: React.FC<IconProps> = ({
+  size = 48,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_accountbalance)">
+      <path d="M14 20H8V34H14V20Z" fill="currentColor" />
+      <path d="M27 20H21V34H27V20Z" fill="currentColor" />
+      <path d="M44 38H4V44H44V38Z" fill="currentColor" />
+      <path d="M40 20H34V34H40V20Z" fill="currentColor" />
+      <path d="M24 2L4 12V16H44V12L24 2Z" fill="currentColor" />
+    </g>
+    <defs>
+      <clipPath id="clip0_accountbalance">
+        <rect width="48" height="48" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const CircleNotificationIcon: React.FC<IconProps> = ({
+  size = 48,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_circlenotification)">
+      <path
+        d="M24 4C12.96 4 4 12.96 4 24C4 35.04 12.96 44 24 44C35.04 44 44 35.04 44 24C44 12.96 35.04 4 24 4ZM24 37C22.34 37 21 35.66 21 34H27C27 35.66 25.66 37 24 37ZM34 32H14V30L16 28V22.78C16 18.54 18.06 14.94 22 14V13C22 11.86 22.86 11 24 11C25.14 11 26 11.86 26 13V14C29.94 14.94 32 18.56 32 22.78V28L34 30V32Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_circlenotification">
+        <rect width="48" height="48" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const LockIcon: React.FC<IconProps> = ({
+  size = 48,
+  className,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <g clipPath="url(#clip0_lock)">
+      <path
+        d="M36 16H34V12C34 6.48 29.52 2 24 2C18.48 2 14 6.48 14 12V16H12C9.8 16 8 17.8 8 20V40C8 42.2 9.8 44 12 44H36C38.2 44 40 42.2 40 40V20C40 17.8 38.2 16 36 16ZM24 34C21.8 34 20 32.2 20 30C20 27.8 21.8 26 24 26C26.2 26 28 27.8 28 30C28 32.2 26.2 34 24 34ZM30.2 16H17.8V12C17.8 8.58 20.58 5.8 24 5.8C27.42 5.8 30.2 8.58 30.2 12V16Z"
+        fill="currentColor"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_lock">
+        <rect width="48" height="48" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);

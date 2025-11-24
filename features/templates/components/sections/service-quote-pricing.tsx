@@ -1,0 +1,174 @@
+import React from 'react';
+import { TemplateType } from '@/features/templates/types/templates';
+import { dmSerifText } from '@/lib/fonts';
+import ProposalTitle from '../shared/proposal-title';
+import { cn } from '@/lib/utils';
+
+interface ServiceQuotePricingProps {
+  title: string;
+  content: string;
+  description?: string | null;
+  templateType: TemplateType;
+  className?: string;
+}
+
+type PricingRow = {
+  service: string;
+  frequency: string;
+  pricePerMonth: string;
+};
+
+type PricingData = {
+  rows: PricingRow[];
+  summary?: {
+    subtotal?: string;
+    tax?: string;
+    total?: string;
+  };
+};
+
+export default function ServiceQuotePricing({
+  title,
+  content,
+  description,
+  templateType,
+  className = '',
+}: ServiceQuotePricingProps) {
+  const lines = (content ?? '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  let data: PricingData | null = null;
+  for (let i = 0; i < lines.length; i++) {
+    const ln = lines[i];
+    if (
+      ln.startsWith('```') &&
+      ln.toLowerCase().includes('veliz_pricing_table')
+    ) {
+      const jsonLines: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].startsWith('```')) {
+        jsonLines.push(lines[i]);
+        i++;
+      }
+      const jsonText = jsonLines.join('\n');
+      try {
+        data = JSON.parse(jsonText);
+      } catch {}
+      break;
+    }
+  }
+
+  const parseInline = (text: string) => {
+    const parts: React.ReactNode[] = [];
+    let idx = 0;
+    const re = /(\*\*|__)(.*?)\1/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      if (m.index > idx) parts.push(text.slice(idx, m.index));
+      parts.push(
+        <strong key={`b-${m.index}`} className="font-semibold text-gray-900">
+          {m[2]}
+        </strong>
+      );
+      idx = m.index + m[0].length;
+    }
+    if (idx < text.length) parts.push(text.slice(idx));
+    return parts.length ? parts : text;
+  };
+
+  return (
+    <div>
+      <ProposalTitle templateType={templateType} title={title} />
+      <div className={cn('mt-20', className)}>
+        {description ? (
+          <p className="text-sm text-[#383838] mb-6 leading-relaxed mt-4">
+            {parseInline(description)}
+          </p>
+        ) : null}
+        {data ? (
+          <div className="mb-10">
+            <div className="text-center grid grid-cols-4 text-[var(--color-primary)] gap-4 px-5 mb-2">
+              <div className="font-semibold col-span-2">Service</div>
+              <div className="font-semibold">Frequency</div>
+              <div className="font-semibold">Price/month</div>
+            </div>
+            {data.rows.map((row, i) => (
+              <div
+                key={`pr-${i}`}
+                className={`${templateType !== 'luxury_elite' ? 'rounded-xl' : ''} px-5 py-4 mb-2
+                 ${
+                   templateType === 'modern_corporate'
+                     ? i % 2 === 0
+                       ? 'bg-[var(--color-primary)]/8 text-[#383838] shadow-sm'
+                       : 'bg-[var(--color-primary)]/3 text-[#383838] shadow-sm'
+                     : templateType === 'luxury_elite'
+                     ? 'bg-[var(--color-primary)]/70 text-white'
+                     : 'bg-[var(--color-primary)] text-white'
+                 }`}
+              >
+                <div className="grid grid-cols-4 gap-4 text-xs items-center text-center">
+                  <div
+                    className={`font-bold whitespace-pre-line col-span-2 ${
+                      templateType === 'modern_corporate'
+                        ? 'text-[var(--color-primary)]'
+                        : 'text-white'
+                    }`}
+                  >
+                    {row.service}
+                  </div>
+                  <div className="">{row.frequency}</div>
+                  <div className="font-bold">{row.pricePerMonth}</div>
+                </div>
+              </div>
+            ))}
+            {data.summary ? (
+              <div className="mt-1 text-sm">
+                <div className="grid grid-cols-3 items-center">
+                  <div></div>
+                  <div className="text-right font-semibold text-[var(--color-primary)] pr-4">
+                    Sub-total
+                  </div>
+                  <div
+                    className={`${templateType !== 'luxury_elite' ? 'rounded-xl' : ''}  px-5 py-3 text-center font-semibold ${
+                      templateType === 'modern_corporate'
+                        ? 'bg-[var(--color-primary)]/6  text-[#383838]'
+                        : 'bg-[var(--color-primary)] text-white'
+                    }`}
+                  >
+                    {data.summary.subtotal ?? '$0.00'}
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 mt-1 items-center">
+                  <div></div>
+                  <div className="text-right font-semibold text-[var(--color-primary)] pr-4">
+                    Tax
+                  </div>
+                  <div
+                    className={`${templateType !== 'luxury_elite' ? 'rounded-xl' : ''}  px-5 py-3 text-center font-semibold ${
+                      templateType === 'modern_corporate'
+                        ? 'bg-[var(--color-primary)]/6 text-[#383838]'
+                        : 'bg-[var(--color-primary)] text-white'
+                    }`}
+                  >
+                    {data.summary.tax ?? '$0.00'}
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 mt-1 items-center">
+                  <div></div>
+                  <div className="text-right font-semibold text-[var(--color-primary)] pr-4">
+                    Total
+                  </div>
+                  <div className={`${templateType !== 'luxury_elite' ? 'rounded-xl' : ''} border-2 border-[var(--color-primary)] text-[var(--color-primary)] px-5 py-3 text-center font-bold`}>
+                    {data.summary.total ?? '$0.00'}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}

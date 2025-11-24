@@ -25,6 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 interface AIContentGeneratorProps {
   form: ProposalFormData;
+  selectedAddons?: any[];
   generatedContent: string;
   onContentGenerated: (content: string) => void;
   onError: (error: string) => void;
@@ -35,6 +36,7 @@ interface AIContentGeneratorProps {
 
 export function AIContentGenerator({
   form,
+  selectedAddons,
   generatedContent,
   onContentGenerated,
   onError,
@@ -107,6 +109,10 @@ export function AIContentGenerator({
           traffic_analysis: form.traffic_analysis,
           service_scope: form.service_scope,
           special_requirements: form.special_requirements,
+          selected_addons:
+            Array.isArray(selectedAddons) && selectedAddons.length > 0
+              ? selectedAddons
+              : (form as any).selected_addons,
           // AI tone selection
           ai_tone: selectedTone,
           is_regenerate: isRegenerate,
