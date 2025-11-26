@@ -76,7 +76,7 @@ export function ExecutivePremiumTemplate({
         <div className="absolute w-[85%] h-[40%] bottom-12 left-1/2 -translate-x-1/2">
           <div className="absolute h-2.5 w-[200px] bg-[var(--color-primary)] -top-[5px]"></div>
           <Image
-            src="/images/templates/images/pexels-exnl-931887-1.png"
+            src="/images/templates/Images/pexels-exnl-931887-1.png"
             alt="Background"
             className="size-full object-cover"
             height={1600}

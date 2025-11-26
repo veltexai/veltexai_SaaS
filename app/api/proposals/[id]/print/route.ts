@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { chromium } from 'playwright';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -14,7 +13,22 @@ export async function GET(
 
   let browser: any;
   try {
-    browser = await chromium.launch();
+    if (process.env.NODE_ENV === 'production') {
+      const chromium = await import('@sparticuz/chromium').then(
+        (mod) => mod.default
+      );
+      const { chromium: playwrightChromium } = await import('playwright-core');
+
+      browser = await playwrightChromium.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: true,
+      });
+    } else {
+      const { chromium } = await import('playwright');
+      browser = await chromium.launch();
+    }
+
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.emulateMedia({ media: 'print' });

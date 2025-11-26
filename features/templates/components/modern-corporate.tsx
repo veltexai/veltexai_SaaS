@@ -98,7 +98,7 @@ export function ModernCorporateTemplate({
         </div>
         <div className="absolute w-[90%] h-[40%] bottom-8 left-1/2 -translate-x-1/2">
           <Image
-            src="/images/templates/images/pexels-exnl-9318871-1.png"
+            src="/images/templates/Images/pexels-exnl-9318871-1.png"
             alt="Background"
             className="size-full object-cover"
             height={1600}

@@ -32,7 +32,7 @@ const TableOfContents = ({ templateType }: { templateType: TemplateType }) => {
         <>
           <div className="z-10 absolute bottom-0 right-0 h-[400px]">
             <Image
-              src="/images/templates/images/Mask group-1.png"
+              src="/images/templates/Images/Mask group-1.png"
               alt="Table of Contents"
               className=" object-contain"
               height={1600}

@@ -101,7 +101,7 @@ const ContentQualificationsSection = ({
       {templateType === 'luxury_elite' ? (
         <div className="z-10 absolute bottom-0 right-0">
           <Image
-            src="/images/templates/images/Maskgroup-3.png"
+            src="/images/templates/Images/Maskgroup-3.png"
             alt="Table of Contents"
             className="object-contain"
             height={1600}

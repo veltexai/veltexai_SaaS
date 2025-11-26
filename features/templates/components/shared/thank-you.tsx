@@ -20,10 +20,10 @@ const ThankYouPage = ({
 }) => {
   const SrcImage =
     templateType === 'modern_corporate'
-      ? '/images/templates/images/image17-1.png'
+      ? '/images/templates/Images/image17-1.png'
       : templateType === 'luxury_elite'
-      ? '/images/templates/images/Mask group-4.png'
-      : '/images/templates/images/image17.png';
+      ? '/images/templates/Images/Mask group-4.png'
+      : '/images/templates/Images/image17.png';
 
   return (
     <>
