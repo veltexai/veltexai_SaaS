@@ -30,7 +30,7 @@ export async function GET(
     }
 
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    await page.goto(url, { waitUntil: 'networkidle' });
     await page.emulateMedia({ media: 'print' });
 
     // Skip waiting for optional extras marker to avoid unnecessary delays
