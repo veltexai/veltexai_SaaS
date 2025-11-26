@@ -97,16 +97,20 @@ export default function ServiceQuotePricing({
             {data.rows.map((row, i) => (
               <div
                 key={`pr-${i}`}
-                className={`${templateType !== 'luxury_elite' ? 'rounded-xl' : ''} px-5 py-4 mb-2
-                 ${
-                   templateType === 'modern_corporate'
-                     ? i % 2 === 0
-                       ? 'bg-[var(--color-primary)]/8 text-[#383838] shadow-sm'
-                       : 'bg-[var(--color-primary)]/3 text-[#383838] shadow-sm'
-                     : templateType === 'luxury_elite'
-                     ? 'bg-[var(--color-primary)]/70 text-white'
-                     : 'bg-[var(--color-primary)] text-white'
-                 }`}
+                className={cn(
+                  templateType !== 'luxury_elite'
+                    ? 'rounded-xl px-5 py-4 mb-2'
+                    : 'px-5 py-4 mb-2',
+                  templateType === 'modern_corporate'
+                    ? i % 2 === 0
+                      ? 'bg-[var(--color-primary)]/8 text-[#383838] drop-shadow-sm'
+                      : 'bg-[var(--color-primary)]/3 text-[#383838] drop-shadow-sm'
+                    : templateType === 'luxury_elite'
+                    ? i % 2 === 0
+                      ? 'bg-[var(--color-primary)] text-white'
+                      : 'bg-[var(--color-primary)]/70 text-white'
+                    : 'bg-[var(--color-primary)] text-white'
+                )}
               >
                 <div className="grid grid-cols-4 gap-4 text-xs items-center text-center">
                   <div
@@ -131,7 +135,9 @@ export default function ServiceQuotePricing({
                     Sub-total
                   </div>
                   <div
-                    className={`${templateType !== 'luxury_elite' ? 'rounded-xl' : ''}  px-5 py-3 text-center font-semibold ${
+                    className={`${
+                      templateType !== 'luxury_elite' ? 'rounded-xl' : ''
+                    }  px-5 py-3 text-center font-semibold ${
                       templateType === 'modern_corporate'
                         ? 'bg-[var(--color-primary)]/6  text-[#383838]'
                         : 'bg-[var(--color-primary)] text-white'
@@ -146,7 +152,9 @@ export default function ServiceQuotePricing({
                     Tax
                   </div>
                   <div
-                    className={`${templateType !== 'luxury_elite' ? 'rounded-xl' : ''}  px-5 py-3 text-center font-semibold ${
+                    className={`${
+                      templateType !== 'luxury_elite' ? 'rounded-xl' : ''
+                    }  px-5 py-3 text-center font-semibold ${
                       templateType === 'modern_corporate'
                         ? 'bg-[var(--color-primary)]/6 text-[#383838]'
                         : 'bg-[var(--color-primary)] text-white'
@@ -160,7 +168,11 @@ export default function ServiceQuotePricing({
                   <div className="text-right font-semibold text-[var(--color-primary)] pr-4">
                     Total
                   </div>
-                  <div className={`${templateType !== 'luxury_elite' ? 'rounded-xl' : ''} border-2 border-[var(--color-primary)] text-[var(--color-primary)] px-5 py-3 text-center font-bold`}>
+                  <div
+                    className={`${
+                      templateType !== 'luxury_elite' ? 'rounded-xl' : ''
+                    } border-2 border-[var(--color-primary)] text-[var(--color-primary)] px-5 py-3 text-center font-bold`}
+                  >
                     {data.summary.total ?? '$0.00'}
                   </div>
                 </div>

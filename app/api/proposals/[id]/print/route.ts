@@ -16,25 +16,11 @@ export async function GET(
   try {
     browser = await chromium.launch();
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'networkidle' });
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.emulateMedia({ media: 'print' });
 
-    try {
-      await page.waitForSelector('[data-extras-ready="true"]', {
-        timeout: 8000,
-      });
-    } catch {
-      try {
-        await page.waitForFunction('window.__EXTRAS_READY__ === true', {
-          timeout: 8000,
-        });
-      } catch {}
-    }
-    try {
-      await page.evaluate(
-        () => (document as any).fonts && (document as any).fonts.ready
-      );
-    } catch {}
+    // Skip waiting for optional extras marker to avoid unnecessary delays
+    // Avoid blocking on webfont downloads; rely on fallbacks
 
     const pdfBuffer = await page.pdf({
       format: 'A4',

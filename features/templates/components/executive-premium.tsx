@@ -33,6 +33,8 @@ import {
 export function ExecutivePremiumTemplate({
   proposal,
   branding,
+  pages,
+  print,
 }: TemplateProps) {
   const logoUrl = branding?.logo_url ?? null;
   const phone = branding?.phone ?? null;
@@ -50,9 +52,22 @@ export function ExecutivePremiumTemplate({
     addons,
     pricing,
     notes,
-    loading: loadingSplit,
-    error: splitErr,
-  } = useSplitContent(proposal.id);
+    loading,
+    error,
+  } =
+    print && pages
+      ? {
+          about: { content: pages[0] },
+          commitment: { content: pages[1] },
+          whyUs: { content: pages[2] },
+          scope: { content: pages[3] },
+          addons: { content: pages[4] },
+          pricing: { content: pages[5] },
+          notes: { content: pages[6] },
+          loading: false,
+          error: null,
+        }
+      : useSplitContent(proposal.id);
 
   return (
     <section className="space-y-8">
@@ -93,14 +108,14 @@ export function ExecutivePremiumTemplate({
       {/* Page Two */}
       <ProposalTableOfContents templateType="executive_premium" />
       {/* Content Pages: AI-split */}
-      {loadingSplit && (
+      {loading && (
         <div className="relative aspect-[1/1.4] bg-white p-8">
           <div className="text-sm text-muted-foreground">Loading content…</div>
         </div>
       )}
-      {splitErr && (
+      {error && (
         <div className="relative aspect-[1/1.4] bg-white p-8">
-          <div className="text-sm text-red-600">{splitErr}</div>
+          <div className="text-sm text-red-600">{error}</div>
         </div>
       )}
       {about || commitment || whyUs || scope || addons || pricing || notes

@@ -11,7 +11,7 @@ export type TemplateType =
   | 'luxury_elite';
 
 export interface TemplateProps {
-  proposal: Proposal;
+  proposal: Proposal & { template?: ProposalTemplateRow | null };
   template?: ProposalTemplateRow | null;
   branding?: {
     name?: string;

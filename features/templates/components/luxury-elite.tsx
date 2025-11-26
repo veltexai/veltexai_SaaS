@@ -29,7 +29,12 @@ import {
 import { LuxuryEliteBackgroundTitle } from '@/components/icons';
 import { useSplitContent } from '../hooks/use-split-content';
 
-export function LuxuryEliteTemplate({ proposal, branding }: TemplateProps) {
+export function LuxuryEliteTemplate({
+  proposal,
+  branding,
+  pages,
+  print,
+}: TemplateProps) {
   const logoUrl = branding?.logo_url ?? null;
   const phone = branding?.phone ?? null;
   const website = branding?.website ?? null;
@@ -46,9 +51,22 @@ export function LuxuryEliteTemplate({ proposal, branding }: TemplateProps) {
     addons,
     pricing,
     notes,
-    loading: loadingSplit,
-    error: splitErr,
-  } = useSplitContent(proposal.id);
+    loading,
+    error,
+  } =
+    print && pages
+      ? {
+          about: { content: pages[0] },
+          commitment: { content: pages[1] },
+          whyUs: { content: pages[2] },
+          scope: { content: pages[3] },
+          addons: { content: pages[4] },
+          pricing: { content: pages[5] },
+          notes: { content: pages[6] },
+          loading: false,
+          error: null,
+        }
+      : useSplitContent(proposal.id);
 
   return (
     <section className="space-y-6">

@@ -30,6 +30,8 @@ const PoweredBy = ({
         className="!w-[120px] h-12 mx-auto"
         height={46}
         width={200}
+        priority
+        unoptimized
       />
     </div>
   );

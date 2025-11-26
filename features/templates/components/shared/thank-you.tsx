@@ -42,6 +42,8 @@ const ThankYouPage = ({
           }`}
           height={1600}
           width={1000}
+          priority
+          unoptimized
         />
       </div>
       <div
@@ -62,6 +64,8 @@ const ThankYouPage = ({
             }`}
             height={48}
             width={144}
+            priority
+            unoptimized
           />
         ) : null}
         <ThankYouSection

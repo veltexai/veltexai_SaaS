@@ -112,13 +112,19 @@ export function ProposalActions({
                 try {
                   setError('');
                   setDownloading(true);
-                  const res = await fetch(`/api/proposals/${proposal.id}/print`);
+                  const res = await fetch(
+                    `/api/proposals/${proposal.id}/print`
+                  );
                   if (!res.ok) throw new Error('Failed to generate PDF');
                   const blob = await res.blob();
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
-                  a.download = `proposal-${proposal.id}.pdf`;
+                  a.download = `proposal-${
+                    proposal.client_company ||
+                    proposal.client_name ||
+                    proposal.id
+                  }.pdf`;
                   document.body.appendChild(a);
                   a.click();
                   a.remove();

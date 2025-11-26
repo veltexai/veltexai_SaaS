@@ -27,7 +27,12 @@ import {
   WhyChooseUs,
 } from './sections';
 
-export function ModernCorporateTemplate({ proposal, branding }: TemplateProps) {
+export function ModernCorporateTemplate({
+  proposal,
+  branding,
+  pages,
+  print,
+}: TemplateProps) {
   const logoUrl = branding?.logo_url ?? null;
   const phone = branding?.phone ?? null;
   const website = branding?.website ?? null;
@@ -36,17 +41,18 @@ export function ModernCorporateTemplate({ proposal, branding }: TemplateProps) {
   const preparedFor =
     proposal.client_company || proposal.client_name || 'Client';
 
-  const {
-    about,
-    commitment,
-    whyUs,
-    scope,
-    addons,
-    pricing,
-    notes,
-    loading: loadingSplit,
-    error: splitErr,
-  } = useSplitContent(proposal.id);
+  const { about, commitment, whyUs, scope, addons, pricing, notes } =
+    print && pages
+      ? {
+          about: { content: pages[0] },
+          commitment: { content: pages[1] },
+          whyUs: { content: pages[2] },
+          scope: { content: pages[3] },
+          addons: { content: pages[4] },
+          pricing: { content: pages[5] },
+          notes: { content: pages[6] },
+        }
+      : useSplitContent(proposal.id);
 
   return (
     <section className="space-y-6">
@@ -71,6 +77,8 @@ export function ModernCorporateTemplate({ proposal, branding }: TemplateProps) {
             className="size-full object-cover"
             height={1600}
             width={1100}
+            priority
+            unoptimized
           />
           <PoweredBy
             colorLogo="white"
@@ -95,6 +103,8 @@ export function ModernCorporateTemplate({ proposal, branding }: TemplateProps) {
             className="size-full object-cover"
             height={1600}
             width={1100}
+            priority
+            unoptimized
           />
         </div>
         {logoUrl ? (
@@ -150,6 +160,8 @@ export function ModernCorporateTemplate({ proposal, branding }: TemplateProps) {
                     width={800}
                     height={500}
                     className="z-30 absolute bottom-20 left-20 max-w-[85%]"
+                    priority
+                    unoptimized
                   />
                   <VerticalBar className="left-20" variant="gradientGray" />
                   <HorizontalBar className="bottom-20" variant="gradientGray" />
