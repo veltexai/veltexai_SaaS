@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/auth/auth-helpers';
 import { createClient } from '@/lib/supabase/server';
 import { EmailService } from '@/lib/email/service';
-import { exportProposalToPDF } from '@/lib/pdf-export';
+import { generateProposalPDFWithPlaywright } from '@/lib/pdf/playwright-generator';
 import { Database } from '@/types/database';
 import { z } from 'zod';
+
+export const maxDuration = 60; // Allow up to 60 seconds for PDF generation
+export const runtime = 'nodejs';
 
 const sendProposalSchema = z.object({
   delivery_method: z.enum(['pdf_only', 'online_only', 'both']),
@@ -23,7 +26,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  
+
   try {
     // Get the authenticated user
     const user = await getUser();
@@ -67,22 +70,20 @@ export async function POST(
       .single();
 
     // Generate tracking ID
-    const trackingId = `track_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const trackingId = `track_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
 
     let pdfBuffer: Buffer | undefined;
     let proposalViewUrl: string | undefined;
 
     // Generate PDF if needed
-    if (validatedData.delivery_method === 'pdf_only' || validatedData.delivery_method === 'both') {
+    if (
+      validatedData.delivery_method === 'pdf_only' ||
+      validatedData.delivery_method === 'both'
+    ) {
       try {
-        const pdfUint8Array = await exportProposalToPDF(proposal, {
-          companyProfile: companyProfile,
-          template: 'modern',
-          includeServiceDetails: true,
-          includePricingBreakdown: true,
-          includeServiceReferences: true,
-        });
-        pdfBuffer = Buffer.from(pdfUint8Array);
+        pdfBuffer = await generateProposalPDFWithPlaywright(proposal.id);
       } catch (pdfError) {
         console.error('Error generating PDF:', pdfError);
         return NextResponse.json(
@@ -93,7 +94,10 @@ export async function POST(
     }
 
     // Generate view URL if needed
-    if (validatedData.delivery_method === 'online_only' || validatedData.delivery_method === 'both') {
+    if (
+      validatedData.delivery_method === 'online_only' ||
+      validatedData.delivery_method === 'both'
+    ) {
       proposalViewUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/proposals/view/${proposal.id}?track=${trackingId}`;
     }
 
@@ -123,7 +127,7 @@ export async function POST(
     // Prepare email data
     const companyName = companyProfile?.company_name || 'Veltex Services';
     const senderName = profile?.full_name || user.email || 'Team';
-    
+
     const emailData = {
       clientName: proposal.client_name || 'Valued Client',
       clientEmail: validatedData.recipient_email,
@@ -141,7 +145,10 @@ export async function POST(
     };
 
     // Send the email
-    const emailSent = await EmailService.sendEnhancedProposalEmail(emailData, pdfBuffer);
+    const emailSent = await EmailService.sendEnhancedProposalEmail(
+      emailData,
+      pdfBuffer
+    );
 
     if (!emailSent) {
       return NextResponse.json(
@@ -153,9 +160,9 @@ export async function POST(
     // Update proposal status to 'sent'
     const { error: updateError } = await supabase
       .from('proposals')
-      .update({ 
+      .update({
         status: 'sent',
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', proposal.id);
 
@@ -165,20 +172,18 @@ export async function POST(
     }
 
     // Log the send event
-    await supabase
-      .from('proposal_events')
-      .insert({
-        proposal_id: proposal.id,
-        event_type: 'sent',
-        event_data: {
-          delivery_method: validatedData.delivery_method,
-          recipient_email: validatedData.recipient_email,
-          tracking_id: trackingId,
-          has_attachment: !!pdfBuffer,
-          has_view_link: !!proposalViewUrl,
-        },
-        created_by: user.id,
-      });
+    await supabase.from('proposal_events').insert({
+      proposal_id: proposal.id,
+      event_type: 'sent',
+      event_data: {
+        delivery_method: validatedData.delivery_method,
+        recipient_email: validatedData.recipient_email,
+        tracking_id: trackingId,
+        has_attachment: !!pdfBuffer,
+        has_view_link: !!proposalViewUrl,
+      },
+      created_by: user.id,
+    });
 
     return NextResponse.json({
       success: true,
@@ -189,10 +194,9 @@ export async function POST(
       statusUpdated: !updateError,
       viewUrl: proposalViewUrl,
     });
-
   } catch (error) {
     console.error('Error sending proposal:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },

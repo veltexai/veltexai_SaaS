@@ -70,6 +70,7 @@ export function MarkdownRenderer({
   proposalId,
   additionalServicesRows,
 }: MarkdownRendererProps) {
+  console.log('🚀 ~ MarkdownRenderer ~ content:', content);
   const { settings } = useUserBranding();
   let extrasIncluded = false;
   const parseMarkdown = (text: string) => {
@@ -245,7 +246,30 @@ export function MarkdownRenderer({
         }
         const jsonText = jsonLines.join('\n');
         try {
-          const data: ScopeTableData = JSON.parse(jsonText);
+          const rawData: ScopeTableData = JSON.parse(jsonText);
+
+          // Post-process: if any "area" contains commas, split into multiple rows
+          const processedRows: typeof rawData.rows = [];
+          if (Array.isArray(rawData.rows)) {
+            for (const row of rawData.rows) {
+              if (typeof row.area === 'string' && row.area.includes(',')) {
+                const splitAreas = row.area
+                  .split(',')
+                  .map((s) => s.trim())
+                  .filter((s) => s);
+                for (const areaName of splitAreas) {
+                  processedRows.push({
+                    ...row,
+                    area: areaName,
+                  });
+                }
+              } else {
+                processedRows.push(row);
+              }
+            }
+          }
+          const data = { ...rawData, rows: processedRows };
+
           elements.push(
             <ScopeTable key={`scope-${elementCounter++}`} data={data} />
           );
@@ -483,6 +507,26 @@ export function MarkdownRenderer({
       }
       // Regular paragraphs
       else {
+        // Special handling for "Scope of Service" section: split comma-separated values into rows
+        if (
+          currentSection &&
+          /scope\s+of\s+service/i.test(currentSection) &&
+          trimmedLine.includes(',')
+        ) {
+          if (listType !== 'ul') {
+            flushList();
+            listType = 'ul';
+          }
+          const items = trimmedLine
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s);
+          items.forEach((item, i) => {
+            currentList.push(renderListItem(item, `li-scope-${index}-${i}`));
+          });
+          continue;
+        }
+
         flushList();
         const needsAboutMargin =
           !!currentSection &&
@@ -629,7 +673,7 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
             {rows.map((row, i) => (
               <div
                 key={`scope-row-${i}`}
-                className="rounded-3xl px-5 py-3 bg-[var(--color-primary)] mb-2"
+                className="rounded-3xl px-5 py-3 bg-[var(--color-primary)] mb-1"
               >
                 <div className="text-center grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs justify-center items-center">
                   <div className="whitespace-pre-line">{row.area}</div>

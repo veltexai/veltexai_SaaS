@@ -1,12 +1,12 @@
 import nodemailer from 'nodemailer';
 import { createClient } from '@supabase/supabase-js';
-import { 
-  EmailTemplates, 
-  type SubscriptionEmailData, 
+import {
+  EmailTemplates,
+  type SubscriptionEmailData,
   type ProposalEmailData,
   type EnhancedCancellationEmailData,
   type ReactivationEmailData,
-  type GracePeriodEmailData
+  type GracePeriodEmailData,
 } from './templates';
 
 interface EmailConfig {
@@ -495,7 +495,9 @@ export class EmailService {
       if (pdfBuffer) {
         mailOptions.attachments = [
           {
-            filename: `${data.proposalTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_proposal.pdf`,
+            filename: `${data.proposalTitle
+              .replace(/[^a-z0-9]/gi, '_')
+              .toLowerCase()}_proposal.pdf`,
             content: pdfBuffer,
             contentType: 'application/pdf',
           },
@@ -508,10 +510,7 @@ export class EmailService {
       );
       return true;
     } catch (error) {
-      console.error(
-        '❌ EmailService: Failed to send proposal email:',
-        error
-      );
+      console.error('❌ EmailService: Failed to send proposal email:', error);
       return false;
     }
   }
@@ -539,9 +538,12 @@ export class EmailService {
       const mailOptions: any = {
         from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
         to: data.clientEmail,
-        cc: data.ccEmails && data.ccEmails.length > 0 ? data.ccEmails : undefined,
-        bcc: data.sendCopyToSelf && data.senderEmail ? [data.senderEmail] : undefined,
-        subject: data.subject,
+        cc: data.ccEmails,
+        bcc:
+          data.sendCopyToSelf && data.senderEmail
+            ? [data.senderEmail]
+            : undefined,
+        subject: template.subject,
         html: template.html,
         text: template.text,
         headers: {
@@ -553,7 +555,9 @@ export class EmailService {
       if (pdfBuffer) {
         mailOptions.attachments = [
           {
-            filename: `${data.proposalTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_proposal.pdf`,
+            filename: `${data.proposalTitle
+              .replace(/[^a-z0-9]/gi, '_')
+              .toLowerCase()}_proposal.pdf`,
             content: pdfBuffer,
             contentType: 'application/pdf',
           },

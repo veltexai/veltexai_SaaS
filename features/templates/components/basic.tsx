@@ -25,7 +25,6 @@ export function BasicTemplate({
   print,
   extrasRows,
 }: TemplateProps) {
-  console.log('🚀 ~ BasicTemplate ~ branding:', branding);
   const logoUrl = branding?.logo_url ?? null;
   const companyName = branding?.name ?? 'Company';
   const preparedFor =

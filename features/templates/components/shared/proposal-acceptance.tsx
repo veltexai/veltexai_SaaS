@@ -90,10 +90,6 @@ export default function ProposalAcceptance({
               <div className="h-px bg-border max-w-[80%]" />
             </div>
           </div>
-          <p className="text-xs text-[#383838]">
-            <span className="font-bold">Note:</span> Verbal authorization by
-            customer to commence work, including issue of service date
-          </p>
           {/* Optional: acceptance button minimal style */}
           {onAccept && (
             <div className="pt-2">
@@ -103,6 +99,10 @@ export default function ProposalAcceptance({
             </div>
           )}
         </div>
+        <p className="text-sm text-[#383838] mt-24">
+          <span className="font-bold">Note:</span> Verbal authorization by
+          customer to commence work, including issue of service date
+        </p>
       </section>
     );
   }
