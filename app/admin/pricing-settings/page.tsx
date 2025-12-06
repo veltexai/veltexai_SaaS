@@ -3,6 +3,10 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
 import PricingSettingsForm from '@/components/admin/pricing-settings-form';
 import PricingCalculator from '@/components/admin/pricing-calculator';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface PricingSettings {
   id: string;
   user_id: string;

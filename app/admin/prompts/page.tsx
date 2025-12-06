@@ -5,6 +5,10 @@ import { MessageSquare, Eye, Filter, Settings } from 'lucide-react';
 import PromptsFilters from '@/components/admin/prompts-filters';
 import PromptsTable from '@/components/admin/prompts-table';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface VariableDefinition {
   type: 'text' | 'textarea' | 'number' | 'email' | 'phone' | 'url' | 'date' | 'time' | 'currency' | 'select';
   description: string;

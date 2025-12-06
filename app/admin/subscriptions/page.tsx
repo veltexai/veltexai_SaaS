@@ -1,5 +1,9 @@
 import { SubscriptionAnalyticsClient } from '@/components/admin/subscription-analytics-client';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function AdminSubscriptionsPage() {
   return (
     <div className="space-y-6 p-6">

@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation';
 import LogsFilters from '@/components/admin/logs-filters';
 import LogsTable from '@/components/admin/logs-table';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface AuditLog {
   id: string;
   admin_id: string;

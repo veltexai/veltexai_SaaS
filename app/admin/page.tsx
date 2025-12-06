@@ -4,6 +4,10 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { AdminAnalytics } from '@/components/admin/admin-analytics';
 import { AdminClientWrapper } from '@/components/admin/admin-client-wrapper';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface Analytics {
   totalUsers: number;
   totalProposals: number;

@@ -6,6 +6,10 @@ import { redirect } from 'next/navigation';
 import { getSubscriptionPlans } from '@/lib/stripe';
 import type { SubscriptionPlan } from '@/types/database';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface UsageData {
   currentUsage: number;
   proposalLimit: number;

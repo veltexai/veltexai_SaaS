@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation';
 import SystemSettingsForm from '@/components/admin/system-settings-form';
 import { SystemSettings } from '@/types/database';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const defaultSettings: SystemSettings = {
   id: '1',
   company_name: 'Veltex Services',

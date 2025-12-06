@@ -3,6 +3,10 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { Users } from 'lucide-react';
 import UsersTable from '@/components/admin/users-table';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface User {
   id: string;
   email: string;

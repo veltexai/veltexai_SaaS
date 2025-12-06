@@ -3,6 +3,10 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { formatCurrency } from '@/lib/utils';
 import ProposalsTable from '@/components/admin/proposals-table';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface Proposal {
   id: string;
   title: string;
