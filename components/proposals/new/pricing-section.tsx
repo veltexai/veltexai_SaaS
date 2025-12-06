@@ -15,12 +15,18 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { type ProposalFormData } from '@/lib/validations/proposal';
-import { Calculator, DollarSign, Clock, Users, Loader2, RefreshCw } from 'lucide-react';
+import { Calculator, DollarSign, Clock, Users, Loader2, RefreshCw, Info } from 'lucide-react';``
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { usePricingSettings } from '@/hooks/use-pricing-settings';
 import { AIContentGenerator } from './ai-content-generator';
 import { createClient } from '@/lib/supabase/client';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface PricingSectionProps {
   proposalId?: string;
@@ -534,9 +540,41 @@ export function PricingSection({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center p-4 bg-primary/5 rounded-lg">
-                <span className="text-lg font-semibold">Monthly Total (Base + Add-ons)</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-semibold">Monthly Total (Base + Add-ons)</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>
+                          This is the estimated monthly price including base service and monthly add-ons. 
+                          {calculatedPricing?.price_range?.low && calculatedPricing?.price_range?.high && 
+                            ` The base price is calculated as the midpoint of the estimated range (${formatCurrency(calculatedPricing.price_range.low)} - ${formatCurrency(calculatedPricing.price_range.high)}).`
+                          }
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <span className="text-2xl font-bold text-primary">{formatCurrency(basePrice + monthlyAddonsTotal)}</span>
               </div>
+              
+              {monthlyAddonsTotal > 0 && (
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>Base Service (Monthly)</span>
+                    <span className="font-medium">{formatCurrency(basePrice)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Monthly Add-ons</span>
+                    <span className="font-medium">{formatCurrency(monthlyAddonsTotal)}</span>
+                  </div>
+                  <Separator />
+                </div>
+              )}
+
               {oneTimeAddons.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm">One-Time Charges</h4>

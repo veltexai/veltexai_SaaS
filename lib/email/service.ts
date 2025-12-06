@@ -539,10 +539,7 @@ export class EmailService {
         from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
         to: data.clientEmail,
         cc: data.ccEmails,
-        bcc:
-          data.sendCopyToSelf && data.senderEmail
-            ? [data.senderEmail]
-            : undefined,
+        bcc: data.sendCopyToSelf && data.senderEmail ? [data.senderEmail] : undefined,
         subject: template.subject,
         html: template.html,
         text: template.text,
@@ -555,9 +552,7 @@ export class EmailService {
       if (pdfBuffer) {
         mailOptions.attachments = [
           {
-            filename: `${data.proposalTitle
-              .replace(/[^a-z0-9]/gi, '_')
-              .toLowerCase()}_proposal.pdf`,
+            filename: `${data.proposalTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_proposal.pdf`,
             content: pdfBuffer,
             contentType: 'application/pdf',
           },

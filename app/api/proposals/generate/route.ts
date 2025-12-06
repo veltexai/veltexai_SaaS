@@ -322,40 +322,87 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
     // Quick pricing estimate for scope table (safe fallback when no proposal exists)
     let tableCostPerVisit = '—';
     let tableMonthlyCost = '—';
+    
     try {
-      const { data: settingsRows } = await supabase
-        .from('pricing_settings')
-        .select('*')
-        .eq('is_active', true)
-        .order('is_default', { ascending: false })
-        .limit(1);
-      const settings: any = Array.isArray(settingsRows)
-        ? settingsRows[0]
-        : settingsRows;
+      // Priority 1: Use saved pricing_data if available (from Pricing Calculation UI)
+      if (pricing_data && pricing_data.price_range) {
+        // Calculate total from the midpoint of the price range (same as UI logic)
+        const low = pricing_data.price_range.low;
+        const high = pricing_data.price_range.high;
+        
+        let calculatedTotal = 0;
+        if (typeof low === 'number' && typeof high === 'number') {
+          calculatedTotal = (low + high) / 2; // Midpoint
+        } else if (typeof low === 'number') {
+          calculatedTotal = low;
+        } else if (typeof high === 'number') {
+          calculatedTotal = high;
+        }
+        
+        if (calculatedTotal > 0) {
+          tableMonthlyCost = formatMoney(calculatedTotal);
+          console.log('✅ Using saved pricing_data:', {
+            low,
+            high,
+            calculatedTotal,
+            tableMonthlyCost,
+          });
+          // Calculate per-visit by dividing by visits per month
+          const visits = getVisitsPerMonth(service_frequency);
+          if (visits > 0) {
+            tableCostPerVisit = formatMoney(calculatedTotal / visits);
+          }
+        }
+      } else if (pricing_data && typeof pricing_data.total === 'number' && pricing_data.total > 0) {
+        // Fallback: if pricing_data has a direct total field
+        tableMonthlyCost = formatMoney(pricing_data.total);
+        const visits = getVisitsPerMonth(service_frequency);
+        if (visits > 0) {
+          tableCostPerVisit = formatMoney(pricing_data.total / visits);
+        }
+      } else {
+        // Priority 2: Calculate fresh using PricingEngine (fallback)
+        const { data: settingsRows } = await supabase
+          .from('pricing_settings')
+          .select('*')
+          .eq('is_active', true)
+          .order('is_default', { ascending: false })
+          .limit(1);
+        const settings: any = Array.isArray(settingsRows)
+          ? settingsRows[0]
+          : settingsRows;
 
-      const engine = new PricingEngine(settings || null);
-      const perVisitResult = engine.calculatePricing({
-        serviceType: service_type,
-        facilitySize: Number(facility_size) || 0,
-        serviceFrequency: 'one-time',
-        serviceSpecificData: service_specific_data || {},
-        globalInputs,
-        pricingSettings: settings || undefined,
-      });
-      const perVisitTotal = perVisitResult.total || 0;
-      const visits = getVisitsPerMonth(service_frequency);
-      const discount = getFrequencyDiscount(
-        service_frequency,
-        engine.getSettings()
-      );
+        const engine = new PricingEngine(settings || null);
+        const perVisitResult = engine.calculatePricing({
+          serviceType: service_type,
+          facilitySize: Number(facility_size) || 0,
+          serviceFrequency: 'one-time',
+          serviceSpecificData: service_specific_data || {},
+          globalInputs,
+          pricingSettings: settings || undefined,
+        });
+        const perVisitTotal = perVisitResult.total || 0;
+        const visits = getVisitsPerMonth(service_frequency);
+        const discount = getFrequencyDiscount(
+          service_frequency,
+          engine.getSettings()
+        );
 
-      if (perVisitTotal > 0 && visits > 0) {
-        tableCostPerVisit = formatMoney(perVisitTotal);
-        tableMonthlyCost = formatMoney(perVisitTotal * visits * discount);
+        if (perVisitTotal > 0 && visits > 0) {
+          tableCostPerVisit = formatMoney(perVisitTotal);
+          tableMonthlyCost = formatMoney(perVisitTotal * visits * discount);
+        }
       }
-    } catch {
+    } catch (error) {
+      console.error('❌ Error calculating pricing for scope table:', error);
       // keep placeholders '—' on error
     }
+    
+    console.log('📊 Final pricing values:', {
+      tableMonthlyCost,
+      tableCostPerVisit,
+      pricing_data: pricing_data ? 'exists' : 'missing',
+    });
 
     // Deterministic fenced JSON blocks to embed in-place within structure
     const scopeTableData = {
@@ -463,14 +510,17 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
     const taxRate = 0;
     const taxNum = subtotalNum * taxRate;
     const totalNum = subtotalNum + taxNum;
-    const pricingTableFenced = `\n\`\`\`veliz_pricing_table\n${JSON.stringify({
+    const pricingTableData = {
       rows: pricingRows,
       summary: {
         subtotal: toMoney(subtotalNum),
         tax: toMoney(taxNum),
         total: toMoney(totalNum),
       },
-    })}\n\`\`\`\n`;
+    };
+    const pricingTableFenced = `\n\`\`\`veliz_pricing_table\n${JSON.stringify(pricingTableData)}\n\`\`\`\n`;
+    
+    console.log('💰 Pricing table being sent to AI:', JSON.stringify(pricingTableData, null, 2));
 
     // Build structure instructions for Basic Professional
     const basicProfessionalStructure = `
@@ -552,7 +602,10 @@ E. If unforeseen events occur beyond the contractor’s control (strikes, constr
     const executivePremiumStructure = `
 Return markdown with ONLY these top-level sections using exact headings:
 Include the fenced JSON blocks exactly as shown; do not alter their content or formatting.
-**IMPORTANT: Your generation must end after the "Notes:" section. Do not add any further sections or text after the final note.**
+**IMPORTANT: Your generation must end after the "Notes:" section. Do not add any further sections or text after this section :
+Notes:
+- Quote valid for 30 days. Pricing reflects scope and frequency above.
+- Adjustments require written approval.**
 
 ## About Our Company
 ${
