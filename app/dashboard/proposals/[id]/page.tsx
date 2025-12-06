@@ -7,6 +7,10 @@ import { ProposalSidebar } from '@/components/proposals/detail/proposal-sidebar'
 import { ProposalDetailTabs } from '@/components/proposals/detail/proposal-detail-tabs';
 import { Database } from '@/types/database';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 type Proposal = Database['public']['Tables']['proposals']['Row'];
 
 async function getProposal(

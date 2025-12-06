@@ -8,6 +8,10 @@ import { RecentProposals } from '@/components/dashboard/recent-proposals';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import FacebookPixelTracker from '@/components/FacebookPixelTracker';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface DashboardStats {
   totalProposals: number;
   activeProposals: number;

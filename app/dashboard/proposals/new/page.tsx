@@ -5,6 +5,10 @@ import { ProposalForm } from '@/components/proposals/new/proposal-form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface UsageInfo {
   can_create_proposal: boolean;
   is_trial: boolean;

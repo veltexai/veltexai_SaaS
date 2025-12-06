@@ -8,6 +8,10 @@ import { NotificationsSettings } from '@/components/settings/notifications-setti
 import BrandingSettings from '@/components/settings/branding-settings';
 import { type User as UserType, type Profile } from '@/types/database';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function SettingsPage() {
   const { user, profile } = await getUser();
 

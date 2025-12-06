@@ -5,6 +5,10 @@ import { ProposalsHeader } from '@/components/proposals/proposals-header';
 import { ProposalsList } from '@/components/proposals/proposals-list';
 import { EmptyProposals } from '@/components/proposals/empty-proposals';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface Proposal {
   id: string;
   title: string;
