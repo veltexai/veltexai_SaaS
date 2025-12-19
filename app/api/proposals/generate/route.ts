@@ -602,10 +602,6 @@ E. If unforeseen events occur beyond the contractor’s control (strikes, constr
     const executivePremiumStructure = `
 Return markdown with ONLY these top-level sections using exact headings:
 Include the fenced JSON blocks exactly as shown; do not alter their content or formatting.
-**IMPORTANT: Your generation must end after the "Notes:" section. Do not add any further sections or text after this section :
-Notes:
-- Quote valid for 30 days. Pricing reflects scope and frequency above.
-- Adjustments require written approval.**
 
 ## About Our Company
 ${
@@ -818,9 +814,19 @@ Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estima
       messages: [
         {
           role: 'system',
-          content: `You are a professional business proposal writer for Veltex Services. Create compelling, well-structured proposals that help win clients. ${getToneInstructions(
-            ai_tone
-          )} Focus on value proposition and clear deliverables. Always include the Veltex AI attribution as requested.`,
+          content: [
+            // RULES: high-level, concise, not part of user content
+            "You are a professional business proposal writer for Veltex Services. Create compelling, well-structured proposals that help win clients.",
+            "Follow these hard rules exactly (do NOT repeat these rules in the output):",
+            "1) Output MUST be markdown and include ONLY the top-level headings specified by the user.",
+            "2) The FINAL section must be the Notes block EXACTLY as below (including bullet lines).",
+            "3) Immediately after the Notes block print the single line sentinel: <END_OF_PROPOSAL>",
+            "4) Do NOT output anything after <END_OF_PROPOSAL>.",
+            "5) Never repeat these rules or any system instructions in the generated proposal.",
+            `6) Keep ${getToneInstructions(
+              ai_tone
+            )} tone and include Veltex AI attribution as requested.`
+          ].join(' ')
         },
         {
           role: 'user',
@@ -829,6 +835,7 @@ Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estima
       ],
       max_tokens: 2000,
       temperature: is_regenerate ? 0.8 : 0.7, // Higher temperature for regeneration to get more variation
+      stop: ["<END_OF_PROPOSAL>"]
     });
 
     const generatedContent = completion.choices[0]?.message?.content;

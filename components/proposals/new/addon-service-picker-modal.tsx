@@ -83,6 +83,7 @@ export function AddonServicePickerModal({
           .from('additional_service_catalog')
           .select('*')
           .eq('active', true)
+          .eq('show_in_proposals', true)
           .order('label', { ascending: true });
         if (error) throw error;
         setCatalog((data || []) as CatalogRow[]);

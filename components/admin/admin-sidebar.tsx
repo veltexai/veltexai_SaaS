@@ -15,6 +15,7 @@ import {
   User,
   ChevronDown,
   Layout,
+  Package,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -71,6 +72,12 @@ const navigation: NavItem[] = [
     href: '/admin/pricing-settings',
     icon: DollarSign,
     description: 'Configure pricing settings',
+  },
+  {
+    name: 'Add-Ons',
+    href: '/admin/addons',
+    icon: Package,
+    description: 'Manage add-on services',
   },
   {
     name: 'Subscriptions',

@@ -90,6 +90,7 @@ export function SendProposalModal({
   onSuccess,
 }: SendProposalModalProps) {
   const [sending, setSending] = useState(false);
+  const [sendingProgress, setSendingProgress] = useState('');
   const [sendResult, setSendResult] = useState<{
     success: boolean;
     message: string;
@@ -131,8 +132,16 @@ Veltex Services Team`,
   const onSubmit = async (data: SendProposalFormData) => {
     setSending(true);
     setSendResult(null);
+    setSendingProgress('');
 
     try {
+      // Show progress: Step 1
+      setSendingProgress('Preparing proposal... ⚙️');
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Brief pause for UX
+
+      // Show progress: Step 2
+      setSendingProgress('Generating PDF (Fonts, Images, etc.) 📄 (this may take 30 seconds)');
+
       const response = await fetch(`/api/proposals/${proposal.id}/send`, {
         method: 'POST',
         headers: {
@@ -151,7 +160,12 @@ Veltex Services Team`,
         throw new Error(errorData.error || 'Failed to send proposal');
       }
 
+      // Show progress: Step 3
+      setSendingProgress('PDF generated! Sending email... 📧');
+
       const result = await response.json();
+
+      setSendingProgress('Email sent successfully! ✅');
 
       setSendResult({
         success: true,
@@ -171,6 +185,7 @@ Veltex Services Team`,
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to send proposal';
 
+      setSendingProgress('');
       setSendResult({
         success: false,
         message: errorMessage,
@@ -535,6 +550,16 @@ Veltex Services Team`,
                   /> */}
                 </div>
               </div>
+
+              {/* Progress Message */}
+              {sending && sendingProgress && (
+                <Alert className="border-blue-200 bg-blue-50">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                  <AlertDescription className="text-blue-800 ml-2">
+                    {sendingProgress}
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Actions */}
               <div className="flex justify-end gap-2 pt-4">
