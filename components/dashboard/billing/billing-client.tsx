@@ -121,7 +121,7 @@ export function BillingClient({
 
   return (
     <div className="container mx-auto py-8 space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="sm:flex-row items-start flex-col flex justify-between sm:items-center">
         <div>
           <h1 className="text-3xl font-bold">Billing &amp; Usage</h1>
           <p className="text-muted-foreground">

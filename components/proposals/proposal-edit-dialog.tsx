@@ -468,7 +468,7 @@ export function ProposalEditDialog({
               </TabsContent>
 
               <TabsContent value="facility">
-                <EnhancedFacilitySection proposalId={proposal.id} />
+                <EnhancedFacilitySection proposalId={proposal.id} serviceType={selectedServiceType} />
               </TabsContent>
 
               <TabsContent value="pricing">

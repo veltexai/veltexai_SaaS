@@ -78,7 +78,7 @@ function StepIndicator({
   steps: typeof STEPS;
 }) {
   return (
-    <div className="mb-8">
+    <div className="mb-8 sm:block hidden">
       <div className="relative flex items-center justify-between">
         {/* Background line */}
         <div
@@ -382,7 +382,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
           />
         );
       case 5:
-        return <EnhancedFacilitySection />;
+        return <EnhancedFacilitySection serviceType={selectedServiceType || 'residential'} />;
       case 6:
         return (
           <PricingSection

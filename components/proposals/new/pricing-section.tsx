@@ -392,7 +392,7 @@ export function PricingSection({
               <CardTitle className="flex items-center space-x-2">
                 <Calculator className="h-5 w-5" />
                 <span>Pricing Breakdown</span>
-                <Button
+                {/* <Button
                   type="button"
                   variant="outline"
                   size="sm"
@@ -411,7 +411,7 @@ export function PricingSection({
                       Recalculate
                     </>
                   )}
-                </Button>
+                </Button> */}
               </CardTitle>
             </CardHeader>
             <CardContent>

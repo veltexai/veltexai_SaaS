@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { type ProposalFormData } from '@/lib/validations/proposal';
+import { type ProposalFormData, type ServiceType } from '@/lib/validations/proposal';
 import {
   Building2,
   Users,
@@ -34,32 +34,350 @@ import { Button } from '@/components/ui/button';
 import { AddonServicePickerModal } from './addon-service-picker-modal';
 import { Separator } from '@/components/ui/separator';
 
-const buildingTypeOptions = [
-  { value: 'office', label: 'Office Building' },
-  { value: 'warehouse', label: 'Warehouse' },
-  { value: 'retail', label: 'Retail Store' },
-  { value: 'restaurant', label: 'Restaurant' },
-  { value: 'medical', label: 'Medical Facility' },
-  { value: 'educational', label: 'Educational/School' },
-  { value: 'daycare', label: 'Daycare Center' },
-  { value: 'church', label: 'Church/Religious' },
-  { value: 'hospitality', label: 'Hospitality' },
-  { value: 'industrial', label: 'Industrial' },
-  { value: 'other', label: 'Other' },
+// ============================================================
+// SERVICE-SPECIFIC OPTIONS CONFIGURATION
+// Following Service Logic Contract - strict service isolation
+// ============================================================
+
+// Building type options by service type
+const buildingTypeOptionsByService: Record<ServiceType, { value: string; label: string }[]> = {
+  residential: [
+    { value: 'apartment', label: 'Apartment' },
+    { value: 'house', label: 'House' },
+    { value: 'condo', label: 'Condo' },
+    { value: 'townhouse', label: 'Townhouse' },
+    { value: 'other', label: 'Other' },
+  ],
+  commercial: [
+    { value: 'office', label: 'Office Building' },
+    { value: 'warehouse', label: 'Warehouse' },
+    { value: 'retail', label: 'Retail Store' },
+    { value: 'restaurant', label: 'Restaurant' },
+    { value: 'medical', label: 'Medical Facility' },
+    { value: 'educational', label: 'Educational/School' },
+    { value: 'daycare', label: 'Daycare Center' },
+    { value: 'church', label: 'Church/Religious' },
+    { value: 'hospitality', label: 'Hospitality' },
+    { value: 'industrial', label: 'Industrial' },
+    { value: 'other', label: 'Other' },
+  ],
+  carpet: [
+    { value: 'residential', label: 'Residential Property' },
+    { value: 'office', label: 'Office Building' },
+    { value: 'retail', label: 'Retail Store' },
+    { value: 'hospitality', label: 'Hotel/Hospitality' },
+    { value: 'other', label: 'Other' },
+  ],
+  window: [
+    { value: 'residential', label: 'Residential Property' },
+    { value: 'office', label: 'Office Building' },
+    { value: 'retail', label: 'Retail Storefront' },
+    { value: 'other', label: 'Other' },
+  ],
+  floor: [
+    { value: 'residential', label: 'Residential Property' },
+    { value: 'office', label: 'Office Building' },
+    { value: 'retail', label: 'Retail Store' },
+    { value: 'warehouse', label: 'Warehouse' },
+    { value: 'industrial', label: 'Industrial' },
+    { value: 'other', label: 'Other' },
+  ],
+};
+
+// Special considerations/attention areas by service type
+// These are areas that need SPECIAL ATTENTION, not just room names
+const specialAreasOptionsByService: Record<ServiceType, string[]> = {
+  residential: [
+    'Pet Areas',
+    'Child Play Areas',
+    'Allergy-Sensitive Areas',
+    'Antique/Delicate Items',
+    'Home Gym/Exercise Area',
+    'Wine Cellar/Bar',
+    'Mudroom/Entry',
+    'Sunroom/Conservatory',
+  ],
+  commercial: [
+    'Clean Room Standards',
+    'Data Center/IT Equipment',
+    'Food Safety Zones',
+    'Medical/Sterile Areas',
+    'Hazmat/Chemical Areas',
+    'Restricted Access Zones',
+    'Art/Antique Collections',
+    'Sensitive Electronics',
+  ],
+  carpet: [
+    'Heavy Stain Areas',
+    'Pet Damage Areas',
+    'High Traffic Zones',
+    'Under Furniture',
+    'Stair Risers',
+    'Area Rug Edges',
+  ],
+  window: [
+    'Hard-to-Reach Access',
+    'High Elevation Areas',
+    'Oversized Panes',
+    'Leaded/Decorative Glass',
+    'Multi-Pane Storm Windows',
+    'Security/Tinted Film',
+  ],
+  floor: [
+    'Heavy Wear Areas',
+    'Wax Build-up Zones',
+    'Grout Lines',
+    'Transition Strips',
+    'Under Equipment',
+    'Drain Areas',
+  ],
+};
+
+// Equipment present options by service type
+const equipmentOptionsByService: Record<ServiceType, string[]> = {
+  residential: [
+    'Home Electronics',
+    'Kitchen Appliances',
+    'HVAC Systems',
+    'Security Systems',
+    'Home Office Equipment',
+    'Audio/Visual Equipment',
+  ],
+  commercial: [
+    'Computers/Electronics',
+    'Medical Equipment',
+    'Kitchen Equipment',
+    'Manufacturing Equipment',
+    'Laboratory Equipment',
+    'Audio/Visual Equipment',
+    'Security Systems',
+    'HVAC Systems',
+    'Server Racks',
+  ],
+  carpet: [
+    'Area Rugs',
+    'Wall-to-Wall Carpeting',
+    'Furniture to Move',
+    'Delicate Textiles',
+  ],
+  window: [
+    'Window Screens',
+    'Storm Windows',
+    'Window Films',
+    'Blinds/Shutters',
+  ],
+  floor: [
+    'Heavy Machinery',
+    'Furniture to Move',
+    'Floor Drains',
+    'Sensitive Equipment',
+  ],
+};
+
+// Environmental concerns by service type
+const environmentalConcernsByService: Record<ServiceType, string[]> = {
+  residential: [
+    'Pet Odors/Dander',
+    'Allergies in Household',
+    'Chemical Sensitivity',
+    'Child-Safe Products Required',
+    'Eco-Friendly Products Preferred',
+    'Dust Control Required',
+  ],
+  commercial: [
+    'Chemical Sensitivity',
+    'Dust Control Required',
+    'Noise Restrictions',
+    'Temperature Sensitive',
+    'Humidity Control',
+    'Air Quality Standards',
+    'Contamination Control',
+    'Allergen Management',
+  ],
+  carpet: [
+    'Pet Stains/Odors',
+    'Allergies',
+    'Chemical Sensitivity',
+    'Eco-Friendly Products',
+    'Fast Drying Required',
+  ],
+  window: [
+    'Water Restrictions',
+    'Eco-Friendly Products',
+    'Noise Restrictions',
+  ],
+  floor: [
+    'Chemical Sensitivity',
+    'Dust Control Required',
+    'Fume Ventilation',
+    'Eco-Friendly Products',
+    'Fast Drying Required',
+  ],
+};
+
+// Special equipment options by service type
+const specialEquipmentOptionsByService: Record<ServiceType, string[]> = {
+  residential: [
+    'HEPA Filtration',
+    'Steam Cleaning',
+    'Carpet Extraction',
+    'Eco-Friendly Products',
+  ],
+  commercial: [
+    'HEPA Filtration',
+    'Electrostatic Sprayers',
+    'UV Sanitization',
+    'Steam Cleaning',
+    'Pressure Washing',
+    'Carpet Extraction',
+    'Floor Buffing/Polishing',
+    'Window Cleaning Equipment',
+  ],
+  carpet: [
+    'Steam Cleaning',
+    'Carpet Extraction',
+    'Stain Treatment',
+    'Deodorizing Treatment',
+    'Scotchgard Protection',
+  ],
+  window: [
+    'Water-Fed Pole System',
+    'Ladder/Lift Access',
+    'Pressure Washing',
+    'Squeegee System',
+  ],
+  floor: [
+    'Floor Buffing/Polishing',
+    'Auto Scrubbers',
+    'Strip & Wax Equipment',
+    'Diamond Polishing',
+    'Concrete Grinding',
+  ],
+};
+
+// Certification options by service type
+const certificationOptionsByService: Record<ServiceType, string[]> = {
+  residential: [
+    'Green Cleaning Certification',
+    'Background Checked',
+    'Bonded & Insured',
+  ],
+  commercial: [
+    'OSHA Compliance',
+    'HIPAA Training',
+    'Food Safety Certification',
+    'Hazmat Handling',
+    'Security Clearance',
+    'Green Cleaning Certification',
+    'Infection Control Training',
+    'Chemical Safety Training',
+  ],
+  carpet: [
+    'IICRC Certification',
+    'Green Cleaning Certification',
+    'Bonded & Insured',
+  ],
+  window: [
+    'Height Safety Certification',
+    'Bonded & Insured',
+  ],
+  floor: [
+    'Floor Care Specialist',
+    'Chemical Safety Training',
+    'Bonded & Insured',
+  ],
+};
+
+// Insurance options (same for all, but can be customized)
+const insuranceOptions = [
+  'General Liability',
+  'Professional Liability',
+  'Workers Compensation',
+  'Bonding/Fidelity',
+  'Equipment Coverage',
 ];
 
+// Areas included options by service type
+const areasIncludedByService: Record<ServiceType, string[]> = {
+  residential: [
+    'Kitchen',
+    'Living Room',
+    'Dining Room',
+    'Bedrooms',
+    'Bathrooms',
+    'Home Office',
+    'Laundry Room',
+    'Garage',
+    'Basement',
+    'Attic',
+    'Hallways',
+    'Stairs',
+    'Outdoor Areas',
+  ],
+  commercial: [
+    'Offices',
+    'Common Areas',
+    'Restrooms',
+    'Break Rooms',
+    'Storage Areas',
+    'Printing Rooms',
+    'Conference Rooms',
+    'Reception Area',
+    'Hallways',
+    'Lobby',
+    'Kitchen/Cafeteria',
+    'Stairwells',
+    'Elevators',
+    'Server Room',
+    'Executive Offices',
+    'Training Rooms',
+    'Copy Centers',
+    'Supply Closets',
+  ],
+  carpet: [
+    'Living Room',
+    'Bedrooms',
+    'Hallways',
+    'Stairs',
+    'Office Spaces',
+    'Reception Area',
+    'Conference Rooms',
+  ],
+  window: [
+    'All Interior Windows',
+    'All Exterior Windows',
+    'Ground Floor Only',
+    'Upper Floors',
+    'Skylights',
+    'Glass Doors',
+  ],
+  floor: [
+    'Main Floor Area',
+    'Hallways',
+    'Stairs',
+    'Kitchen',
+    'Bathrooms',
+    'Entryways',
+    'Warehouse Floor',
+    'Showroom',
+  ],
+};
+
+// Visitor frequency options (only for commercial)
 const visitorFrequencyOptions = [
   { value: 'low', label: 'Low (< 50 visitors/day)' },
   { value: 'medium', label: 'Medium (50-200 visitors/day)' },
   { value: 'high', label: 'High (> 200 visitors/day)' },
 ];
 
+// Traffic level options
 const trafficLevelOptions = [
   { value: 'light', label: 'Light Traffic' },
   { value: 'medium', label: 'Medium Traffic' },
   { value: 'heavy', label: 'Heavy Traffic' },
 ];
 
+// Accessibility options (mainly for commercial)
 const accessibilityOptions = [
   'ADA Compliance Required',
   'Wheelchair Accessible',
@@ -68,71 +386,12 @@ const accessibilityOptions = [
   'Visual Assistance Systems',
 ];
 
-const specialAreasOptions = [
-  'Clean Rooms',
-  'Server Rooms',
-  'Food Service Areas',
-  'Medical Treatment Areas',
-  'Chemical Storage',
-  'High Security Zones',
-  'Art/Antique Areas',
-  'Electronics/Sensitive Equipment',
-];
+// Services that should show traffic analysis section
+const servicesWithTrafficAnalysis: ServiceType[] = ['commercial'];
 
-const equipmentOptions = [
-  'Computers/Electronics',
-  'Medical Equipment',
-  'Kitchen Equipment',
-  'Manufacturing Equipment',
-  'Laboratory Equipment',
-  'Audio/Visual Equipment',
-  'Security Systems',
-  'HVAC Systems',
-];
+// Services that should show full facility details
+const servicesWithFullFacilityDetails: ServiceType[] = ['commercial'];
 
-const environmentalConcerns = [
-  'Chemical Sensitivity',
-  'Dust Control Required',
-  'Noise Restrictions',
-  'Temperature Sensitive',
-  'Humidity Control',
-  'Air Quality Standards',
-  'Contamination Control',
-  'Allergen Management',
-];
-
-const specialEquipmentOptions = [
-  'HEPA Filtration',
-  'Electrostatic Sprayers',
-  'UV Sanitization',
-  'Steam Cleaning',
-  'Pressure Washing',
-  'Carpet Extraction',
-  'Floor Buffing/Polishing',
-  'Window Cleaning Equipment',
-];
-
-const certificationOptions = [
-  'OSHA Compliance',
-  'HIPAA Training',
-  'Food Safety Certification',
-  'Hazmat Handling',
-  'Security Clearance',
-  'Green Cleaning Certification',
-  'Infection Control Training',
-  'Chemical Safety Training',
-];
-
-const insuranceOptions = [
-  'General Liability',
-  'Professional Liability',
-  'Workers Compensation',
-  'Bonding/Fidelity',
-  'Cyber Liability',
-  'Environmental Liability',
-  'Equipment Coverage',
-  'Auto Liability',
-];
 
 type PASRow = {
   id: string;
@@ -149,11 +408,58 @@ type PASRow = {
   notes: string | null;
 };
 
+interface EnhancedFacilitySectionProps {
+  proposalId?: string;
+  serviceType?: ServiceType;
+}
+
 export function EnhancedFacilitySection({
   proposalId,
-}: {
-  proposalId?: string;
-}) {
+  serviceType = 'commercial',
+}: EnhancedFacilitySectionProps) {
+  // Get service-specific options based on selected service type
+  const buildingTypeOptions = buildingTypeOptionsByService[serviceType];
+  const specialAreasOptions = specialAreasOptionsByService[serviceType];
+  const equipmentOptions = equipmentOptionsByService[serviceType];
+  const environmentalConcerns = environmentalConcernsByService[serviceType];
+  const specialEquipmentOptions = specialEquipmentOptionsByService[serviceType];
+  const certificationOptions = certificationOptionsByService[serviceType];
+  const areasIncludedOptions = areasIncludedByService[serviceType];
+  
+  // Determine which sections to show based on service type
+  const showTrafficAnalysis = servicesWithTrafficAnalysis.includes(serviceType);
+  const showFullFacilityDetails = servicesWithFullFacilityDetails.includes(serviceType);
+  
+  // Get section titles based on service type
+  const getSectionTitle = () => {
+    switch (serviceType) {
+      case 'residential':
+        return 'Home Details';
+      case 'carpet':
+        return 'Carpet Cleaning Details';
+      case 'window':
+        return 'Window Cleaning Details';
+      case 'floor':
+        return 'Floor Care Details';
+      default:
+        return 'Enhanced Facility Details';
+    }
+  };
+  
+  const getSectionDescription = () => {
+    switch (serviceType) {
+      case 'residential':
+        return 'Provide details about the home for accurate service planning.';
+      case 'carpet':
+        return 'Provide details about the carpet areas for accurate cleaning estimates.';
+      case 'window':
+        return 'Provide details about the windows for accurate service planning.';
+      case 'floor':
+        return 'Provide details about the floor areas for accurate service planning.';
+      default:
+        return 'Provide comprehensive facility information for accurate service planning and pricing.';
+    }
+  };
   const form = useFormContext<ProposalFormData>();
   const supabase = createClient();
   const [addons, setAddons] = useState<PASRow[]>([]);
@@ -249,11 +555,10 @@ export function EnhancedFacilitySection({
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold mb-2">
-          Enhanced Facility Details
+          {getSectionTitle()}
         </h2>
         <p className="text-muted-foreground">
-          Provide comprehensive facility information for accurate service
-          planning and pricing.
+          {getSectionDescription()}
         </p>
       </div>
 
@@ -262,7 +567,7 @@ export function EnhancedFacilitySection({
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Building2 className="h-5 w-5" />
-            <span>Facility Information</span>
+            <span>{serviceType === 'residential' ? 'Property Information' : 'Facility Information'}</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -272,12 +577,12 @@ export function EnhancedFacilitySection({
               name="facility_details.building_age"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Building Age (years)</FormLabel>
+                  <FormLabel>{serviceType === 'residential' ? 'Home Age (years)' : 'Building Age (years)'}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       min="0"
-                      placeholder="Enter building age"
+                      placeholder={serviceType === 'residential' ? 'Enter home age' : 'Enter building age'}
                       value={field.value || ''}
                       onChange={(e) => {
                         // Allow any input during typing
@@ -302,11 +607,11 @@ export function EnhancedFacilitySection({
               name="facility_details.building_type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Building Type</FormLabel>
+                  <FormLabel>{serviceType === 'residential' ? 'Property Type' : 'Building Type'}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select building type" />
+                        <SelectValue placeholder={serviceType === 'residential' ? 'Select property type' : 'Select building type'} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -323,64 +628,70 @@ export function EnhancedFacilitySection({
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="facility_details.accessibility_requirements"
-            render={() => (
-              <FormItem className="border-b-1 pb-3">
-                <FormLabel>Accessibility Requirements</FormLabel>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {accessibilityOptions.map((item) => (
-                    <FormField
-                      key={item}
-                      control={form.control}
-                      name="facility_details.accessibility_requirements"
-                      render={({ field }) => {
-                        return (
-                          <FormItem
-                            key={item}
-                            className="flex flex-row items-start space-x-3 space-y-0"
-                          >
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(item)}
-                                onCheckedChange={(checked) => {
-                                  const currentValue = Array.isArray(
-                                    field.value
-                                  )
-                                    ? field.value
-                                    : [];
-                                  return checked
-                                    ? field.onChange([...currentValue, item])
-                                    : field.onChange(
-                                        currentValue.filter(
-                                          (value) => value !== item
-                                        )
-                                      );
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="text-sm font-normal">
-                              {item}
-                            </FormLabel>
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  ))}
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Accessibility Requirements - Only show for commercial */}
+          {showFullFacilityDetails && (
+            <FormField
+              control={form.control}
+              name="facility_details.accessibility_requirements"
+              render={() => (
+                <FormItem className="border-b-1 pb-3">
+                  <FormLabel>Accessibility Requirements</FormLabel>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {accessibilityOptions.map((item) => (
+                      <FormField
+                        key={item}
+                        control={form.control}
+                        name="facility_details.accessibility_requirements"
+                        render={({ field }) => {
+                          return (
+                            <FormItem
+                              key={item}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(item)}
+                                  onCheckedChange={(checked) => {
+                                    const currentValue = Array.isArray(
+                                      field.value
+                                    )
+                                      ? field.value
+                                      : [];
+                                    return checked
+                                      ? field.onChange([...currentValue, item])
+                                      : field.onChange(
+                                          currentValue.filter(
+                                            (value) => value !== item
+                                          )
+                                        );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal">
+                                {item}
+                              </FormLabel>
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <FormField
             control={form.control}
             name="facility_details.special_areas"
             render={() => (
               <FormItem className="border-b-1 pb-3">
-                <FormLabel>Special Areas</FormLabel>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <FormLabel>Areas Requiring Special Attention</FormLabel>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Select areas that need extra care or have special requirements
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {specialAreasOptions.map((item) => (
                     <FormField
                       key={item}
@@ -431,7 +742,7 @@ export function EnhancedFacilitySection({
             render={() => (
               <FormItem className="border-b-1 pb-3">
                 <FormLabel>Equipment Present</FormLabel>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {equipmentOptions.map((item) => (
                     <FormField
                       key={item}
@@ -482,7 +793,7 @@ export function EnhancedFacilitySection({
             render={() => (
               <FormItem>
                 <FormLabel>Environmental Concerns</FormLabel>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {environmentalConcerns.map((item) => (
                     <FormField
                       key={item}
@@ -529,120 +840,122 @@ export function EnhancedFacilitySection({
         </CardContent>
       </Card>
 
-      {/* Traffic Analysis */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Users className="h-5 w-5" />
-            <span>Traffic Analysis</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Traffic Analysis - Only show for commercial */}
+      {showTrafficAnalysis && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Users className="h-5 w-5" />
+              <span>Traffic Analysis</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="traffic_analysis.staff_count"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Staff Count</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="Number of staff"
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          // Allow any input during typing
+                          field.onChange(e.target.value);
+                        }}
+                        onBlur={(e) => {
+                          // Validate and sanitize only on blur
+                          const value = e.target.value;
+                          field.onChange(
+                            value === '' ? undefined : parseInt(value, 10)
+                          );
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="traffic_analysis.visitor_frequency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Visitor Frequency</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select frequency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {visitorFrequencyOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="traffic_analysis.traffic_level"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Traffic Level</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select traffic level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {trafficLevelOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
-              name="traffic_analysis.staff_count"
+              name="traffic_analysis.special_events"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Staff Count</FormLabel>
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                   <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder="Number of staff"
-                      value={field.value || ''}
-                      onChange={(e) => {
-                        // Allow any input during typing
-                        field.onChange(e.target.value);
-                      }}
-                      onBlur={(e) => {
-                        // Validate and sanitize only on blur
-                        const value = e.target.value;
-                        field.onChange(
-                          value === '' ? undefined : parseInt(value, 10)
-                        );
-                      }}
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Special Events or High-Traffic Periods</FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                      Check if the facility hosts special events that require
+                      additional cleaning
+                    </p>
+                  </div>
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="traffic_analysis.visitor_frequency"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Visitor Frequency</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select frequency" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {visitorFrequencyOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="traffic_analysis.traffic_level"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Traffic Level</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select traffic level" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {trafficLevelOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <FormField
-            control={form.control}
-            name="traffic_analysis.special_events"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Special Events or High-Traffic Periods</FormLabel>
-                  <p className="text-sm text-muted-foreground">
-                    Check if the facility hosts special events that require
-                    additional cleaning
-                  </p>
-                </div>
-              </FormItem>
-            )}
-          />
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Service Scope */}
       <Card>
@@ -658,28 +971,12 @@ export function EnhancedFacilitySection({
             name="service_scope.areas_included"
             render={() => (
               <FormItem>
-                <FormLabel>Areas Included</FormLabel>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {[
-                    'Offices',
-                    'Common Areas',
-                    'Restrooms',
-                    'Break Rooms',
-                    'Storage Areas',
-                    'Printing Rooms',
-                    'Conference Rooms',
-                    'Reception Area',
-                    'Hallways',
-                    'Lobby',
-                    'Kitchen/Cafeteria',
-                    'Stairwells',
-                    'Elevators',
-                    'Server Room',
-                    'Executive Offices',
-                    'Training Rooms',
-                    'Copy Centers',
-                    'Supply Closets',
-                  ].map((area) => (
+                <FormLabel>Areas Included in Service</FormLabel>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Select the rooms/spaces to be cleaned
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {areasIncludedOptions.map((area) => (
                     <FormField
                       key={area}
                       control={form.control}
@@ -872,43 +1169,46 @@ export function EnhancedFacilitySection({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="special_requirements.security_clearance"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Security Clearance Required</FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
+          {/* Security options - Only show for commercial */}
+          {showFullFacilityDetails && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="special_requirements.security_clearance"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Security Clearance Required</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="special_requirements.after_hours_access"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>After Hours Access Required</FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
-          </div>
+              <FormField
+                control={form.control}
+                name="special_requirements.after_hours_access"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>After Hours Access Required</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
 
           <FormField
             control={form.control}
@@ -916,7 +1216,7 @@ export function EnhancedFacilitySection({
             render={() => (
               <FormItem className="border-b-1 pb-3">
                 <FormLabel>Special Equipment Required</FormLabel>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {specialEquipmentOptions.map((item) => (
                     <FormField
                       key={item}
@@ -961,13 +1261,14 @@ export function EnhancedFacilitySection({
             )}
           />
 
+          {/* Certifications - show service-specific options */}
           <FormField
             control={form.control}
             name="special_requirements.certifications_required"
             render={() => (
               <FormItem className="border-b-1 pb-3">
                 <FormLabel>Certifications Required</FormLabel>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {certificationOptions.map((item) => (
                     <FormField
                       key={item}
@@ -1018,7 +1319,7 @@ export function EnhancedFacilitySection({
             render={() => (
               <FormItem>
                 <FormLabel>Insurance Requirements</FormLabel>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {insuranceOptions.map((item) => (
                     <FormField
                       key={item}

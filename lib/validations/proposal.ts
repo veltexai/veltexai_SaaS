@@ -35,6 +35,7 @@ export const facilityDetailsSchema = z.object({
   building_age: z.number().min(0).optional(),
   building_type: z
     .enum([
+      // Commercial building types
       'office',
       'warehouse',
       'retail',
@@ -45,6 +46,12 @@ export const facilityDetailsSchema = z.object({
       'church',
       'hospitality',
       'industrial',
+      // Residential property types
+      'apartment',
+      'house',
+      'condo',
+      'townhouse',
+      'residential',
       'other',
     ])
     .optional(),
