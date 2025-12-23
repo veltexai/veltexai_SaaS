@@ -105,12 +105,12 @@ export function MarkdownRenderer({
 
       if (inAbout) {
         return (
-          <div key={key} className="flex items-start gap-4 p-10 pr-8 pb-12">
+          <div key={key} className="flex items-start gap-3 sm:gap-4 p-4 sm:p-6 md:p-10 pr-4 sm:pr-6 md:pr-8 pb-6 sm:pb-8 md:pb-12">
             {Icon ? (
-              <Icon className="h-8 w-8 text-[var(--color-primary)] flex-shrink-0" />
+              <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--color-primary)] flex-shrink-0" />
             ) : null}
             <div
-              className={`italic text-[#383838] ${dmSerifText.className} text-xl leading-relaxed font-semibold`}
+              className={`italic text-[#383838] ${dmSerifText.className} text-base sm:text-lg md:text-xl leading-relaxed font-semibold`}
             >
               {parseInlineMarkdown(rawText)}
             </div>
@@ -121,14 +121,14 @@ export function MarkdownRenderer({
       return (
         <li
           key={key}
-          className={`text-sm text-[#383838] mb-5 ${Icon ? 'list-none' : ''}`}
+          className={`text-xs sm:text-sm text-[#383838] mb-3 sm:mb-5 ${Icon ? 'list-none' : ''}`}
         >
-          <div className={`flex items-start ${Icon ? 'gap-3' : ''}`}>
+          <div className={`flex items-start ${Icon ? 'gap-2 sm:gap-3' : ''}`}>
             {Icon ? (
-              <Icon className="mt-[2px] text-[var(--color-primary)]" />
+              <Icon className="mt-[2px] text-[var(--color-primary)] flex-shrink-0 h-4 w-4 sm:h-5 sm:w-5" />
             ) : null}
             <div
-              className="leading-relaxed"
+              className="leading-relaxed break-words"
               style={{
                 display: '-webkit-box',
                 WebkitLineClamp: 5,
@@ -157,11 +157,11 @@ export function MarkdownRenderer({
       const baseClass =
         level === 1
           ? isAboutHeading
-            ? 'text-5xl leading-[100%] mb-4 mt-4'
-            : 'text-5xl mb-4 mt-4'
+            ? 'text-2xl sm:text-3xl md:text-5xl leading-[100%] mb-3 sm:mb-4 mt-3 sm:mt-4'
+            : 'text-2xl sm:text-3xl md:text-5xl mb-3 sm:mb-4 mt-3 sm:mt-4'
           : level === 2
-          ? 'text-lg font-bold mb-3 mt-4'
-          : 'text-base font-semibold mb-2 mt-4';
+          ? 'text-base sm:text-lg font-bold mb-2 sm:mb-3 mt-3 sm:mt-4'
+          : 'text-sm sm:text-base font-semibold mb-2 mt-3 sm:mt-4';
 
       // Only split for multi-word headings; accent the last word
       if (words.length >= 2 && level !== 3) {
@@ -194,17 +194,17 @@ export function MarkdownRenderer({
             const firstRow = currentList.slice(0, 2);
             const secondRow = currentList.slice(2);
             elements.push(
-              <div key={`about-grid-${elementCounter++}`} className="mt-10">
-                <div className="grid grid-cols-2 divide-x divide-gray-200">
+              <div key={`about-grid-${elementCounter++}`} className="mt-6 sm:mt-8 md:mt-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
                   {firstRow}
                 </div>
                 <div className="border-t border-gray-200" />
-                <div className="grid grid-cols-2 divide-x">{secondRow}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x">{secondRow}</div>
               </div>
             );
           } else {
             elements.push(
-              <ul key={`ul-${elementCounter++}`} className="mb-3 space-y-2">
+              <ul key={`ul-${elementCounter++}`} className="mb-2 sm:mb-3 space-y-1 sm:space-y-2">
                 {currentList}
               </ul>
             );
@@ -213,7 +213,7 @@ export function MarkdownRenderer({
           elements.push(
             <ol
               key={`ol-${elementCounter++}`}
-              className="list-decimal list-inside mb-3 ml-4 space-y-2"
+              className="list-decimal list-inside mb-2 sm:mb-3 ml-2 sm:ml-4 space-y-1 sm:space-y-2"
             >
               {currentList}
             </ol>
@@ -448,8 +448,8 @@ export function MarkdownRenderer({
           (currentSection.includes('legal responsibility') ||
             currentSection.includes('additional services'));
         const pClass = inNoMarginSection
-          ? 'text-sm text-[#383838] leading-normal mb-0'
-          : 'text-sm text-[#383838] leading-normal mb-4';
+          ? 'text-xs sm:text-sm text-[#383838] leading-normal mb-0'
+          : 'text-xs sm:text-sm text-[#383838] leading-normal mb-3 sm:mb-4';
         elements.push(
           <p key={`letter-${index}`} className={pClass}>
             <strong className="font-semibold mr-1">{marker}.</strong>
@@ -465,7 +465,7 @@ export function MarkdownRenderer({
         elements.push(
           <p
             key={`sinc-${index}`}
-            className="text-sm text-[#383838] mb-1 leading-relaxed"
+            className="text-xs sm:text-sm text-[#383838] mb-1 leading-relaxed"
           >
             Sincerely,
           </p>
@@ -474,7 +474,7 @@ export function MarkdownRenderer({
           elements.push(
             <p
               key={`sinc-rest-${index}`}
-              className="font-black italic text-sm text-[#383838] mb-7 leading-relaxed"
+              className="font-black italic text-xs sm:text-sm text-[#383838] mb-5 sm:mb-7 leading-relaxed"
             >
               {parseInlineMarkdown(rest)}
             </p>
@@ -495,7 +495,7 @@ export function MarkdownRenderer({
             elements.push(
               <p
                 key={`sinc-next-${index}`}
-                className="font-black italic text-sm text-[#383838] mb-7 leading-relaxed"
+                className="font-black italic text-xs sm:text-sm text-[#383838] mb-5 sm:mb-7 leading-relaxed"
               >
                 {parseInlineMarkdown(next)}
               </p>
@@ -534,8 +534,8 @@ export function MarkdownRenderer({
           aboutIntroMarginNeeded &&
           !aboutIntroRendered;
         const pClass = needsAboutMargin
-          ? 'text-sm text-[#383838] mb-4 leading-relaxed mt-8'
-          : 'text-sm text-[#383838] mb-4 leading-relaxed';
+          ? 'text-xs sm:text-sm text-[#383838] mb-3 sm:mb-4 leading-relaxed mt-6 sm:mt-8'
+          : 'text-xs sm:text-sm text-[#383838] mb-3 sm:mb-4 leading-relaxed';
         elements.push(
           <p key={`p-${index}`} className={pClass}>
             {parseInlineMarkdown(trimmedLine)}
@@ -596,7 +596,7 @@ export function MarkdownRenderer({
             finalParts.push(
               <em
                 key={`optional-${idx}-${j}`}
-                className={`italic text-4xl capitalize ${dmSerifText.className}`}
+                className={`italic text-xl sm:text-2xl md:text-4xl capitalize ${dmSerifText.className}`}
               >
                 {OPTIONAL}
               </em>
@@ -616,10 +616,12 @@ export function MarkdownRenderer({
   const rendered = parseMarkdown(content);
 
   return (
-    <div className={`prose prose-sm max-w-none ${className}`}>
-      {rendered}
+    <div className={`prose prose-sm max-w-none overflow-x-hidden ${className}`}>
+      <div className="break-words">
+        {rendered}
+      </div>
       {showAcceptance ? (
-        <div className="">
+        <div className="mt-4 sm:mt-6">
           <ProposalAcceptance
             template={acceptanceTemplate}
             clientName={acceptanceClientName}
@@ -636,21 +638,40 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
   if (!rows.length) return null;
   const premium = rows.some((r) => typeof r.note === 'string');
   return (
-    <div className="mb-6">
-      <div className="text-white">
+    <div className="mb-4 sm:mb-6 overflow-x-auto">
+      <div className="text-white min-w-[280px]">
         {premium ? (
           <>
-            <div className="text-center grid grid-cols-3 text-[var(--color-primary)] gap-4 px-5 mb-2">
-              <div className="font-semibold">Area serviced</div>
-              <div className="font-semibold">Frequency</div>
-              <div className="font-semibold">Notes</div>
+            {/* Header - hidden on mobile, shown on sm+ */}
+            <div className="hidden sm:grid text-center grid-cols-3 text-[var(--color-primary)] gap-2 sm:gap-4 px-3 sm:px-5 mb-2">
+              <div className="font-semibold text-xs sm:text-sm">Area serviced</div>
+              <div className="font-semibold text-xs sm:text-sm">Frequency</div>
+              <div className="font-semibold text-xs sm:text-sm">Notes</div>
             </div>
             {rows.map((row, i) => (
               <div
                 key={`scope-row-${i}`}
-                className="rounded-3xl px-5 py-3 bg-[var(--color-primary)] mb-2"
+                className="rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2 sm:py-3 bg-[var(--color-primary)] mb-2"
               >
-                <div className="grid grid-cols-3 gap-4 text-xs justify-center items-center text-center">
+                {/* Mobile: stacked layout */}
+                <div className="sm:hidden space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Area:</span>
+                    <span className="text-white/90 text-right">{row.area}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Frequency:</span>
+                    <span className="text-white/90">{row.frequency}</span>
+                  </div>
+                  {row.note && (
+                    <div className="flex justify-between">
+                      <span className="text-white/70">Notes:</span>
+                      <span className="text-white font-medium text-right">{row.note}</span>
+                    </div>
+                  )}
+                </div>
+                {/* Desktop: grid layout */}
+                <div className="hidden sm:grid grid-cols-3 gap-2 sm:gap-4 text-xs justify-center items-center text-center">
                   <div className="whitespace-pre-line text-white/90">
                     {row.area}
                   </div>
@@ -664,18 +685,39 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
           </>
         ) : (
           <>
-            <div className="text-center grid grid-cols-2 text-[var(--color-primary)] sm:grid-cols-4 gap-4 px-5 mb-2">
-              <div className="font-semibold">Area serviced</div>
-              <div className="font-semibold">Frequency</div>
-              <div className="font-semibold">Cost per visit</div>
-              <div className="font-semibold">Monthly cost</div>
+            {/* Header - hidden on mobile, shown on sm+ */}
+            <div className="hidden sm:grid text-center grid-cols-2 text-[var(--color-primary)] sm:grid-cols-4 gap-2 sm:gap-4 px-3 sm:px-5 mb-2">
+              <div className="font-semibold text-xs sm:text-sm">Area serviced</div>
+              <div className="font-semibold text-xs sm:text-sm">Frequency</div>
+              <div className="font-semibold text-xs sm:text-sm">Cost per visit</div>
+              <div className="font-semibold text-xs sm:text-sm">Monthly cost</div>
             </div>
             {rows.map((row, i) => (
               <div
                 key={`scope-row-${i}`}
-                className="rounded-3xl px-5 py-3 bg-[var(--color-primary)] mb-1"
+                className="rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2 sm:py-3 bg-[var(--color-primary)] mb-1"
               >
-                <div className="text-center grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs justify-center items-center">
+                {/* Mobile: stacked layout */}
+                <div className="sm:hidden space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Area:</span>
+                    <span className="text-white/90 text-right">{row.area}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Frequency:</span>
+                    <span className="text-white/90">{row.frequency}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Cost/visit:</span>
+                    <span className="text-white/90">{formatCurrencySafe(row.costPerVisit) ?? 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Monthly:</span>
+                    <span className="text-white font-bold">{formatCurrencySafe(row.monthlyCost) ?? 'N/A'}</span>
+                  </div>
+                </div>
+                {/* Desktop: grid layout */}
+                <div className="hidden sm:grid text-center grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-xs justify-center items-center">
                   <div className="whitespace-pre-line">{row.area}</div>
                   <div>{row.frequency}</div>
                   <div>{formatCurrencySafe(row.costPerVisit) ?? 'N/A'}</div>
@@ -753,26 +795,42 @@ function AdditionalServicesTable({
   if (!(rows?.length ?? 0)) return null;
 
   return (
-    <div className="my-6 space-y-3" data-extras-ready="true">
-      <div className="grid grid-cols-4 gap-4 px-5 text-center">
-        <div className="text-[var(--color-primary)] font-bold col-span-2">
-          Service
-        </div>
-        <div className="text-[var(--color-primary)] font-bold">Price/time</div>
-        <div className="text-[var(--color-primary)] font-bold">Price/month</div>
-      </div>
-      {rows.map((r, i) => (
-        <div
-          key={`extras-row-${i}`}
-          className="rounded-3xl bg-[var(--color-primary)] text-white px-5 py-3 mb-1"
-        >
-          <div className="grid grid-cols-4 gap-4 text-xs items-center justify-center text-center">
-            <div className="whitespace-pre-line col-span-2">{r.service}</div>
-            <div>{r.pricePerTime ?? 'N/A'}</div>
-            <div className="font-bold">{r.pricePerMonth ?? 'N/A'}</div>
+    <div className="my-4 sm:my-6 space-y-2 sm:space-y-3 overflow-x-auto" data-extras-ready="true">
+      <div className="min-w-[280px]">
+        {/* Header - hidden on mobile */}
+        <div className="hidden sm:grid grid-cols-4 gap-2 sm:gap-4 px-3 sm:px-5 text-center">
+          <div className="text-[var(--color-primary)] font-bold text-xs sm:text-sm col-span-2">
+            Service
           </div>
+          <div className="text-[var(--color-primary)] font-bold text-xs sm:text-sm">Price/time</div>
+          <div className="text-[var(--color-primary)] font-bold text-xs sm:text-sm">Price/month</div>
         </div>
-      ))}
+        {rows.map((r, i) => (
+          <div
+            key={`extras-row-${i}`}
+            className="rounded-2xl sm:rounded-3xl bg-[var(--color-primary)] text-white px-3 sm:px-5 py-2 sm:py-3 mb-1"
+          >
+            {/* Mobile: stacked layout */}
+            <div className="sm:hidden space-y-1 text-xs">
+              <div className="font-medium text-white mb-1">{r.service}</div>
+              <div className="flex justify-between">
+                <span className="text-white/70">Price/time:</span>
+                <span className="text-white/90">{r.pricePerTime ?? 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/70">Price/month:</span>
+                <span className="text-white font-bold">{r.pricePerMonth ?? 'N/A'}</span>
+              </div>
+            </div>
+            {/* Desktop: grid layout */}
+            <div className="hidden sm:grid grid-cols-4 gap-2 sm:gap-4 text-xs items-center justify-center text-center">
+              <div className="whitespace-pre-line col-span-2">{r.service}</div>
+              <div>{r.pricePerTime ?? 'N/A'}</div>
+              <div className="font-bold">{r.pricePerMonth ?? 'N/A'}</div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -782,40 +840,56 @@ function PricingTable({ data }: { data: PricingTableData }) {
   const summary = data?.summary;
   if (!rows.length) return null;
   return (
-    <div className="my-6 space-y-3">
-      <div className="grid grid-cols-3 gap-4 px-5 text-center">
-        <div className="text-[var(--color-primary)] font-bold">Service</div>
-        <div className="text-[var(--color-primary)] font-bold">Frequency</div>
-        <div className="text-[var(--color-primary)] font-bold">Price/month</div>
+    <div className="my-4 sm:my-6 space-y-2 sm:space-y-3 overflow-x-auto">
+      <div className="min-w-[280px]">
+        {/* Header - hidden on mobile */}
+        <div className="hidden sm:grid grid-cols-3 gap-2 sm:gap-4 px-3 sm:px-5 text-center">
+          <div className="text-[var(--color-primary)] font-bold text-xs sm:text-sm">Service</div>
+          <div className="text-[var(--color-primary)] font-bold text-xs sm:text-sm">Frequency</div>
+          <div className="text-[var(--color-primary)] font-bold text-xs sm:text-sm">Price/month</div>
+        </div>
+        {rows.map((r, i) => (
+          <div
+            key={`pricing-row-${i}`}
+            className="rounded-2xl sm:rounded-3xl bg-[var(--color-primary)] text-white px-3 sm:px-5 py-2 sm:py-3 mb-1"
+          >
+            {/* Mobile: stacked layout */}
+            <div className="sm:hidden space-y-1 text-xs">
+              <div className="font-medium text-white mb-1">{r.service}</div>
+              <div className="flex justify-between">
+                <span className="text-white/70">Frequency:</span>
+                <span className="text-white/90">{r.frequency}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/70">Price/month:</span>
+                <span className="text-white font-bold">{r.pricePerMonth}</span>
+              </div>
+            </div>
+            {/* Desktop: grid layout */}
+            <div className="hidden sm:grid grid-cols-3 gap-2 sm:gap-4 text-xs items-center justify-center text-center">
+              <div className="whitespace-pre-line">{r.service}</div>
+              <div>{r.frequency}</div>
+              <div className="font-bold">{r.pricePerMonth}</div>
+            </div>
+          </div>
+        ))}
+        {summary ? (
+          <div className="mt-3 sm:mt-4 space-y-1 sm:space-y-2">
+            <div className="flex justify-between px-3 sm:px-5">
+              <span className="text-xs sm:text-sm">Sub-total</span>
+              <span className="font-semibold text-xs sm:text-sm">{summary.subtotal}</span>
+            </div>
+            <div className="flex justify-between px-3 sm:px-5">
+              <span className="text-xs sm:text-sm">Tax</span>
+              <span className="font-semibold text-xs sm:text-sm">{summary.tax}</span>
+            </div>
+            <div className="flex justify-between px-3 sm:px-5">
+              <span className="text-xs sm:text-sm">Total</span>
+              <span className="font-semibold text-xs sm:text-sm">{summary.total}</span>
+            </div>
+          </div>
+        ) : null}
       </div>
-      {rows.map((r, i) => (
-        <div
-          key={`pricing-row-${i}`}
-          className="rounded-3xl bg-[var(--color-primary)] text-white px-5 py-3 mb-1"
-        >
-          <div className="grid grid-cols-3 gap-4 text-xs items-center justify-center text-center">
-            <div className="whitespace-pre-line">{r.service}</div>
-            <div>{r.frequency}</div>
-            <div className="font-bold">{r.pricePerMonth}</div>
-          </div>
-        </div>
-      ))}
-      {summary ? (
-        <div className="mt-4 space-y-2">
-          <div className="flex justify-between px-5">
-            <span className="text-sm">Sub-total</span>
-            <span className="font-semibold">{summary.subtotal}</span>
-          </div>
-          <div className="flex justify-between px-5">
-            <span className="text-sm">Tax</span>
-            <span className="font-semibold">{summary.tax}</span>
-          </div>
-          <div className="flex justify-between px-5">
-            <span className="text-sm">Total</span>
-            <span className="font-semibold">{summary.total}</span>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

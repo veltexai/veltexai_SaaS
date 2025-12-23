@@ -26,8 +26,8 @@ export function ProposalContent({
   onTitleChange
 }: ProposalContentProps) {
   return (
-    <Card>
-      <CardHeader>
+    <Card className="overflow-hidden">
+      <CardHeader className="p-4 sm:p-6">
         {isEditing ? (
           <div className="space-y-2">
             <label htmlFor="proposal-title" className="text-sm font-medium text-muted-foreground">
@@ -38,37 +38,39 @@ export function ProposalContent({
               value={titleDraft}
               onChange={(e) => onTitleChange?.(e.target.value)}
               placeholder="Enter proposal title..."
-              className="text-lg font-semibold"
+              className="text-base sm:text-lg font-semibold"
             />
           </div>
         ) : (
-          <CardTitle>{proposal.title || 'Proposal Content'}</CardTitle>
+          <CardTitle className="text-lg sm:text-xl break-words">
+            {proposal.title || 'Proposal Content'}
+          </CardTitle>
         )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
         {isEditing ? (
           <div className="space-y-4">
             <Textarea
               value={contentDraft}
               onChange={(e) => onContentChange?.(e.target.value)}
               placeholder="Enter proposal content..."
-              className="min-h-[400px] resize-none"
+              className="min-h-[300px] sm:min-h-[400px] resize-none text-sm sm:text-base"
             />
           </div>
         ) : (
           <>
             {proposal.generated_content ? (
-              <div className="prose max-w-none">
+              <div className="prose prose-sm sm:prose max-w-none overflow-x-auto">
                 <StructuredMarkdownRenderer
                   content={proposal.generated_content}
                   proposalId={proposal.id}
                 />
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
-                <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <p>No content generated yet</p>
-                <p className="text-sm mt-1">
+              <div className="text-center py-6 sm:py-8 text-gray-500">
+                <FileText className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
+                <p className="text-sm sm:text-base">No content generated yet</p>
+                <p className="text-xs sm:text-sm mt-1">
                   Edit this proposal to add or generate content
                 </p>
               </div>

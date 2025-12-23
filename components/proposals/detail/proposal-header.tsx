@@ -30,22 +30,39 @@ export function ProposalHeader({ proposal }: ProposalHeaderProps) {
   const router = useRouter()
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-4">
-        <Button variant="outline" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+      {/* Back button and title section */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 min-w-0">
+        <Button 
+          variant="outline" 
+          onClick={() => router.back()}
+          size="sm"
+          className="w-fit"
+        >
+          <ArrowLeft className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Back</span>
         </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">{proposal.title}</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Created {formatDate(proposal.created_at)} • Last updated {formatDate(proposal.updated_at)}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-words">
+              {proposal.title}
+            </h1>
+            {/* Status badge - inline on mobile */}
+            <span className={`sm:hidden px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${statusColors[proposal.status]}`}>
+              {statusLabels[proposal.status]}
+            </span>
+          </div>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600">
+            <span className="inline-block">Created {formatDate(proposal.created_at)}</span>
+            <span className="mx-1 sm:mx-2">•</span>
+            <span className="inline-block">Updated {formatDate(proposal.updated_at)}</span>
           </p>
         </div>
       </div>
       
-      <div className="flex items-center space-x-2">
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[proposal.status]}`}>
+      {/* Status badge - separate on desktop */}
+      <div className="hidden sm:flex items-center flex-shrink-0">
+        <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${statusColors[proposal.status]}`}>
           {statusLabels[proposal.status]}
         </span>
       </div>

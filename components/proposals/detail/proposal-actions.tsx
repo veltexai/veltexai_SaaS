@@ -94,111 +94,155 @@ export function ProposalActions({
         </Alert>
       )}
 
-      <div className="flex items-center space-x-4 mb-4">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
         {!isEditing ? (
           <>
-            <Button variant="outline" onClick={onEditStart}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Proposal
-            </Button>
-            <Button variant="outline" onClick={() => setShowEditDialog(true)}>
-              <Settings className="mr-2 h-4 w-4" />
-              Edit Details
-            </Button>
-            <Button
-              variant="outline"
-              disabled={downloading}
-              onClick={async () => {
-                try {
-                  setError('');
-                  setDownloading(true);
-                  const res = await fetch(
-                    `/api/proposals/${proposal.id}/print`
-                  );
-                  if (!res.ok) throw new Error('Failed to generate PDF');
-                  const blob = await res.blob();
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `proposal-${
-                    proposal.client_company ||
-                    proposal.client_name ||
-                    proposal.id
-                  }.pdf`;
-                  document.body.appendChild(a);
-                  a.click();
-                  a.remove();
-                  URL.revokeObjectURL(url);
-                } catch (e: any) {
-                  setError(e?.message ?? 'Failed to generate PDF');
-                  console.error(e);
-                } finally {
-                  setDownloading(false);
-                }
-              }}
-            >
-              {downloading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="mr-2 h-4 w-4" />
-              )}
-              {downloading ? 'Exporting…' : 'Export PDF'}
-            </Button>
+            {/* Primary Actions - First Row */}
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                onClick={onEditStart}
+                size="sm"
+                className="flex-1 sm:flex-none"
+              >
+                <Edit className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Edit Proposal</span>
+                <span className="sm:hidden">Edit</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowEditDialog(true)}
+                size="sm"
+                className="flex-1 sm:flex-none"
+              >
+                <Settings className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Edit Details</span>
+                <span className="sm:hidden">Details</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={downloading}
+                className="flex-1 sm:flex-none"
+                onClick={async () => {
+                  try {
+                    setError('');
+                    setDownloading(true);
+                    const res = await fetch(
+                      `/api/proposals/${proposal.id}/print`
+                    );
+                    if (!res.ok) throw new Error('Failed to generate PDF');
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `proposal-${
+                      proposal.client_company ||
+                      proposal.client_name ||
+                      proposal.id
+                    }.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                  } catch (e: any) {
+                    setError(e?.message ?? 'Failed to generate PDF');
+                    console.error(e);
+                  } finally {
+                    setDownloading(false);
+                  }
+                }}
+              >
+                {downloading ? (
+                  <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
+                ) : (
+                  <Download className="h-4 w-4 sm:mr-2" />
+                )}
+                <span className="hidden sm:inline">{downloading ? 'Exporting…' : 'Export PDF'}</span>
+                <span className="sm:hidden">{downloading ? '...' : 'PDF'}</span>
+              </Button>
+            </div>
+
+            {/* Status Actions - Second Row on Mobile */}
             {proposal.status === 'draft' && (
-              <Button onClick={() => setShowSendModal(true)}>
-                <Send className="mr-2 h-4 w-4" />
+              <Button 
+                onClick={() => setShowSendModal(true)}
+                size="sm"
+                className="w-full sm:w-auto"
+              >
+                <Send className="h-4 w-4 mr-2" />
                 Send Proposal
               </Button>
             )}
 
             {proposal.status === 'sent' && (
-              <>
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <Button
                   onClick={() => setShowSendModal(true)}
                   variant="outline"
+                  size="sm"
+                  className="flex-1 sm:flex-none"
                 >
-                  <Send className="mr-2 h-4 w-4" />
-                  Send Again
+                  <Send className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Send Again</span>
+                  <span className="sm:hidden">Resend</span>
                 </Button>
                 <Button
                   onClick={() => updateStatus('accepted')}
                   disabled={updating}
-                  className="bg-green-600 hover:bg-green-700"
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
                 >
                   {updating ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    'Mark Accepted'
+                    <>
+                      <span className="hidden sm:inline">Mark </span>Accepted
+                    </>
                   )}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => updateStatus('rejected')}
                   disabled={updating}
-                  className="text-red-600 border-red-600 hover:bg-red-50"
+                  size="sm"
+                  className="text-red-600 border-red-600 hover:bg-red-50 flex-1 sm:flex-none"
                 >
                   {updating ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    'Mark Rejected'
+                    <>
+                      <span className="hidden sm:inline">Mark </span>Rejected
+                    </>
                   )}
                 </Button>
-              </>
+              </div>
             )}
           </>
         ) : (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={onEditCancel} disabled={saving}>
-              <X className="h-4 w-4 mr-2" />
-              Cancel
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button 
+              variant="outline" 
+              onClick={onEditCancel} 
+              disabled={saving}
+              size="sm"
+              className="flex-1 sm:flex-none"
+            >
+              <X className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Cancel</span>
             </Button>
-            <Button onClick={onEditSave} disabled={saving}>
+            <Button 
+              onClick={onEditSave} 
+              disabled={saving}
+              size="sm"
+              className="flex-1 sm:flex-none"
+            >
               {saving ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
               ) : (
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="h-4 w-4 sm:mr-2" />
               )}
-              Save
+              <span className="hidden sm:inline">Save</span>
             </Button>
           </div>
         )}

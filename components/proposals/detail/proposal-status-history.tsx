@@ -139,23 +139,23 @@ export function ProposalStatusHistory({
   if (loading) {
     return (
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Status History</CardTitle>
-            <RefreshCw className="h-4 w-4 animate-spin" />
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-base sm:text-lg">Status History</CardTitle>
+            <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="flex items-center space-x-4 animate-pulse"
+                className="flex items-center space-x-3 sm:space-x-4 animate-pulse"
               >
-                <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
-                <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-6 w-6 sm:h-8 sm:w-8 bg-gray-200 rounded-full flex-shrink-0"></div>
+                <div className="flex-1 min-w-0">
+                  <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-2 sm:h-3 bg-gray-200 rounded w-1/2"></div>
                 </div>
               </div>
             ))}
@@ -168,18 +168,18 @@ export function ProposalStatusHistory({
   if (error) {
     return (
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Status History</CardTitle>
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-base sm:text-lg">Status History</CardTitle>
             <Button onClick={fetchHistory} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Retry
+              <RefreshCw className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Retry</span>
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="text-center text-red-600">
-            <p>Error loading status history: {error}</p>
+        <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+          <div className="text-center text-red-600 text-sm sm:text-base">
+            <p className="break-words">Error loading status history: {error}</p>
           </div>
         </CardContent>
       </Card>
@@ -188,52 +188,54 @@ export function ProposalStatusHistory({
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Status History</CardTitle>
+      <CardHeader className="p-4 sm:p-6">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-base sm:text-lg">Status History</CardTitle>
           <Button onClick={fetchHistory} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+            <RefreshCw className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="overflow-hidden">
+      <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 overflow-hidden">
         {history.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>No status history found</p>
-            <p className="text-sm">Status changes will appear here</p>
+          <div className="text-center text-muted-foreground py-6 sm:py-8">
+            <Clock className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-gray-300" />
+            <p className="text-sm sm:text-base">No status history found</p>
+            <p className="text-xs sm:text-sm mt-1">Status changes will appear here</p>
           </div>
         ) : (
           <Timeline>
             {history.map((item, index) => (
-              <TimelineItem key={item.id} className="items-center">
+              <TimelineItem key={item.id} className="items-start sm:items-center">
                 <TimelineConnector />
                 <TimelineHeader>
                   <TimelineIcon>{getStatusIcon(item.new_status)}</TimelineIcon>
-                  <TimelineTitle className="flex items-center gap-2">
-                    {getStatusDescription(item)}
-                    {getStatusBadge(item.new_status)}
+                  <TimelineTitle className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                    <span className="break-words">{getStatusDescription(item)}</span>
+                    <span className="flex-shrink-0">{getStatusBadge(item.new_status)}</span>
                   </TimelineTitle>
                 </TimelineHeader>
                 <TimelineContent>
                   <TimelineDescription>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {formatDistanceToNow(new Date(item.created_at), {
-                          addSuffix: true,
-                        })}
+                        <Calendar className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">
+                          {formatDistanceToNow(new Date(item.created_at), {
+                            addSuffix: true,
+                          })}
+                        </span>
                       </div>
                       {item.profiles?.full_name && (
                         <div className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          {item.profiles.full_name}
+                          <User className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{item.profiles.full_name}</span>
                         </div>
                       )}
                     </div>
                     {item.change_reason && (
-                      <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
+                      <div className="mt-2 p-2 bg-gray-50 rounded text-xs sm:text-sm break-words">
                         {item.change_reason}
                       </div>
                     )}

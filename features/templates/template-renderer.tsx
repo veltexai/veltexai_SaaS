@@ -25,11 +25,18 @@ export async function TemplateRenderer({ proposal }: { proposal: Proposal }) {
     const { templateRow, branding } = await loadTemplateData(proposal);
     const type = detectTemplateType(templateRow);
     const Component = COMPONENTS[type] ?? BasicTemplate;
-    return <Component proposal={proposal} template={templateRow} branding={branding} />;
+    return (
+      <div className="w-full overflow-x-auto">
+        <div className="min-w-[320px]">
+          <Component proposal={proposal} template={templateRow} branding={branding} />
+        </div>
+      </div>
+    );
   } catch (e: any) {
     return (
-      <div className="text-sm text-red-600">
-        Failed to load template. Using Basic. ({e?.message ?? 'Unknown error'})
+      <div className="text-xs sm:text-sm text-red-600 p-3 sm:p-4 bg-red-50 rounded-md">
+        <p className="font-medium">Failed to load template</p>
+        <p className="mt-1 text-red-500">Using Basic template. ({e?.message ?? 'Unknown error'})</p>
       </div>
     );
   }
