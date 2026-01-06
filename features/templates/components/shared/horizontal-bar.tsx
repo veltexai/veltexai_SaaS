@@ -19,7 +19,7 @@ export default function HorizontalBar({
   return (
     <div
       className={cn(
-        'z-20 absolute left-0 h-[2px] w-full',
+        'z-20 absolute left-0 h-[1px] sm:h-[2px] w-full',
         VARIANTS[variant],
         className
       )}

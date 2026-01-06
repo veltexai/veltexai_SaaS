@@ -228,10 +228,9 @@ export default function MagicLinkSignupForm({
                     alt="Image"
                     className="mx-auto"
                   />
-                  {/* <h1 className="text-2xl font-bold">Welcome</h1>
-                  <p className="text-muted-foreground text-balance">
-                    <strong>Create your account</strong>
-                  </p> */}
+                   <p className="text-muted-foreground text-balance mt-3.5">
+                    Generate Professional Cleaning Proposals <br />in Minutes
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-3">

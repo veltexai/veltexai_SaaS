@@ -80,10 +80,10 @@ export function BasicTemplate({
   }, [proposal.id, pages, print]);
 
   return (
-    <section className="space-y-6">
-      <div id="page-one" className="relative aspect-[1/1.4] bg-white">
-        <VerticalBar className="left-20" />
-        <HorizontalBar className="bottom-20" />
+    <section className="space-y-4 sm:space-y-6">
+      <div id="page-one" className="relative aspect-[1/1.4] bg-white overflow-hidden">
+        <VerticalBar className="left-6 sm:left-12 md:left-20" />
+        <HorizontalBar className="bottom-6 sm:bottom-12 md:bottom-20" />
         <Image
           src="/images/templates/secondBlueBackground.svg"
           alt="Background"
@@ -99,7 +99,7 @@ export function BasicTemplate({
             position="center"
           />
         ) : null}
-        <div className="absolute bottom-50 right-10 max-w-[70%]">
+        <div className="absolute bottom-16 sm:bottom-32 md:bottom-50 right-3 sm:right-6 md:right-10 max-w-[85%] sm:max-w-[75%] md:max-w-[70%]">
           <HeaderTemplate
             title={proposal.title}
             date={proposal.created_at}
@@ -114,8 +114,8 @@ export function BasicTemplate({
       {/* Pages 2-4: server-split AI content */}
       {loadingSplit && !print && (
         <Card className="rounded-none">
-          <CardContent>
-            <div className="text-sm text-muted-foreground">
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="text-xs sm:text-sm text-muted-foreground">
               Loading content…
             </div>
           </CardContent>
@@ -123,8 +123,8 @@ export function BasicTemplate({
       )}
       {splitErr && !print && (
         <Card className="rounded-none">
-          <CardContent>
-            <div className="text-sm text-red-600">{splitErr}</div>
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="text-xs sm:text-sm text-red-600 break-words">{splitErr}</div>
           </CardContent>
         </Card>
       )}
@@ -133,9 +133,9 @@ export function BasicTemplate({
             <div
               key={`page-${idx + 2}`}
               id={`page-${idx + 2}`}
-              className="relative aspect-[1/1.4] bg-white p-8"
+              className="relative aspect-[1/1.4] bg-white p-3 sm:p-5 md:p-8 overflow-hidden"
             >
-              <div className="max-w-none pl-[95px]">
+              <div className="max-w-none pl-8 sm:pl-14 md:pl-[95px] pr-2 sm:pr-4">
                 {pageContent?.trim().length ? (
                   <MarkdownRenderer
                     content={pageContent}
@@ -150,13 +150,13 @@ export function BasicTemplate({
                     additionalServicesRows={extrasRows}
                   />
                 ) : (
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-xs sm:text-sm text-muted-foreground">
                     No content
                   </div>
                 )}
               </div>
-              <VerticalBar className="left-20" variant="gradientGray" />
-              <HorizontalBar className="bottom-20" variant="gradientGray" />
+              <VerticalBar className="left-6 sm:left-12 md:left-20" variant="gradientGray" />
+              <HorizontalBar className="bottom-6 sm:bottom-12 md:bottom-20" variant="gradientGray" />
               <PoweredBy colorLogo="gray" isRight />
               <NavitationNumber
                 value={idx + 1}
@@ -172,19 +172,19 @@ export function BasicTemplate({
       {/* Fallback block: original content display if pages not available */}
       {!print && !split?.pages?.length && (
         <Card>
-          <CardHeader>
-            <CardTitle>Proposal Content</CardTitle>
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-base sm:text-lg md:text-xl">Proposal Content</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
             {proposal.generated_content ? (
-              <div className="prose max-w-none">
+              <div className="prose prose-sm sm:prose max-w-none">
                 <MarkdownRenderer
                   content={proposal.generated_content}
                   proposalId={proposal.id}
                 />
               </div>
             ) : (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 No AI content yet.
               </div>
             )}
@@ -192,9 +192,9 @@ export function BasicTemplate({
         </Card>
       )}
 
-      <div id="page-five" className="relative aspect-[1/1.4]">
-        <VerticalBar className="right-20" />
-        <HorizontalBar className="top-20" />
+      <div id="page-five" className="relative aspect-[1/1.4] overflow-hidden">
+        <VerticalBar className="right-6 sm:right-12 md:right-20" />
+        <HorizontalBar className="top-6 sm:top-12 md:top-20" />
         <Image
           src="/images/templates/secondBlueBackground.svg"
           alt="Background"

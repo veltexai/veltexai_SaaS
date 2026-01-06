@@ -29,8 +29,8 @@ const HeroSection = () => {
             className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight"
             variants={fadeInUp}
           >
-            AI-Powered Proposals for the{' '}
-            <span className="text-blue-600">Cleaning Industry</span>
+            Generate Professional Cleaning{' '}
+            <span className="text-blue-600">Proposals in Minutes</span>
           </motion.h1>
 
           <motion.p

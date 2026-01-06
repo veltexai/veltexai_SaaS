@@ -14,7 +14,9 @@ const NavitationNumber = ({
   font: 'bold' | 'normal';
   position: 'bottom-left-corner' | 'top-right-corner';
 }) => {
-  const fontSize = size === 'sm' ? 'text-[24px]' : 'text-[50px]';
+  const fontSize = size === 'sm' 
+    ? 'text-[16px] sm:text-[20px] md:text-[24px]' 
+    : 'text-[28px] sm:text-[38px] md:text-[50px]';
   const fontFamilyClass =
     fontFamily === 'montserrat'
       ? `${montserrat.className}`
@@ -24,7 +26,9 @@ const NavitationNumber = ({
 
   const fontClass = font === 'bold' ? 'font-bold' : 'font-normal';
   const positionClass =
-    position === 'bottom-left-corner' ? 'left-2 bottom-1' : 'top-2 right-4';
+    position === 'bottom-left-corner' 
+      ? 'left-1 sm:left-1.5 md:left-2 bottom-0.5 sm:bottom-1' 
+      : 'top-1 sm:top-1.5 md:top-2 right-2 sm:right-3 md:right-4';
   return (
     <div
       className={`text-[var(--color-primary)] absolute ${positionClass} ${fontClass} ${fontSize} ${fontFamilyClass}`}

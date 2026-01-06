@@ -21,7 +21,7 @@ export default function VerticalBar({
   return (
     <div
       className={cn(
-        'z-20 absolute top-0 h-full w-[2px]',
+        'z-20 absolute top-0 h-full w-[1px] sm:w-[2px]',
         VARIANTS[variant],
         className
       )}

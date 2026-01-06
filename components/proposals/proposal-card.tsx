@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,6 +54,7 @@ export function ProposalCard({
   onUpdate,
   onDelete,
 }: ProposalCardProps) {
+  const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -61,6 +63,10 @@ export function ProposalCard({
   const [templatePreviewUrl, setTemplatePreviewUrl] = useState<string | null>(
     null
   );
+
+  const handleCardClick = () => {
+    router.push(`/dashboard/proposals/${proposal.id}`);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -156,7 +162,10 @@ export function ProposalCard({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <Card className="hover:shadow-md transition-shadow">
+      <Card 
+        className="hover:shadow-md transition-shadow cursor-pointer"
+        onClick={handleCardClick}
+      >
         {templatePreviewUrl ? (
           <div className="relative w-full aspect-[16/10] sm:aspect-video overflow-hidden rounded-t-md bg-gray-100">
             <Image
@@ -199,12 +208,15 @@ export function ProposalCard({
           <div className="flex flex-col gap-3">
             {/* Status Update Buttons - Stack on mobile */}
             {(proposal.status === 'draft' || proposal.status === 'sent') && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
                 {proposal.status === 'draft' && (
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setShowSendModal(true)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowSendModal(true);
+                    }}
                     disabled={updatingStatus}
                     className="flex-1 sm:flex-none"
                   >
@@ -217,7 +229,10 @@ export function ProposalCard({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setShowSendModal(true)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowSendModal(true);
+                      }}
                       className="text-blue-600 border-blue-600 hover:bg-blue-50 flex-1 sm:flex-none"
                     >
                       <Send className="h-4 w-4 mr-1" />
@@ -227,7 +242,10 @@ export function ProposalCard({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => updateStatus('accepted')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateStatus('accepted');
+                      }}
                       disabled={updatingStatus}
                       className="text-green-600 border-green-600 hover:bg-green-50 flex-1 sm:flex-none"
                     >
@@ -236,7 +254,10 @@ export function ProposalCard({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => updateStatus('rejected')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateStatus('rejected');
+                      }}
                       disabled={updatingStatus}
                       className="text-red-600 border-red-600 hover:bg-red-50 flex-1 sm:flex-none"
                     >
@@ -248,8 +269,12 @@ export function ProposalCard({
             )}
 
             {/* Action Buttons - Always visible */}
-            <div className="flex items-center gap-2">
-              <Link href={`/dashboard/proposals/${proposal.id}`} className="flex-1 sm:flex-none">
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <Link 
+                href={`/dashboard/proposals/${proposal.id}`} 
+                className="flex-1 sm:flex-none"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Button size="sm" variant="outline" className="w-full sm:w-auto">
                   <Edit className="h-4 w-4 sm:mr-1" />
                   <span className="hidden sm:inline">Edit</span>
@@ -259,7 +284,8 @@ export function ProposalCard({
                 size="sm"
                 variant="outline"
                 className="flex-1 sm:flex-none"
-                onClick={async () => {
+                onClick={async (e) => {
+                  e.stopPropagation();
                   try {
                     setError('');
                     setExportingId(proposal.id);
@@ -297,7 +323,10 @@ export function ProposalCard({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={deleteProposal}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteProposal();
+                }}
                 disabled={deletingId === proposal.id}
                 className="text-red-600 border-red-600 hover:bg-red-50"
               >

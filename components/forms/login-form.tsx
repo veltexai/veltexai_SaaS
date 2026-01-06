@@ -98,10 +98,9 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
                     alt="Image"
                     className="mx-auto"
                   />
-                  {/* <h1 className="text-2xl font-bold">Welcome back</h1> */}
-                  {/* <p className="text-muted-foreground text-balance">
-                    Login to your <strong>Veltex</strong> account
-                  </p> */}
+                  <p className="text-muted-foreground text-balance mt-3.5">
+                    Generate Professional Cleaning Proposals <br />in Minutes
+                  </p>
                 </div>
                 <div className="grid gap-3">
                   <FormField

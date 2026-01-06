@@ -17,17 +17,17 @@ const PoweredBy = ({
 }) => {
   const srlUrl = `/images/templates/logofooter-${colorLogo}.svg`;
   const position = isRight
-    ? 'right-7'
+    ? 'right-3 sm:right-5 md:right-7'
     : isCenter
     ? 'left-[50%] translate-x-[-50%]'
-    : 'left-7';
+    : 'left-3 sm:left-5 md:left-7';
 
   return (
-    <div className={`absolute bottom-2.5 right-5 ${position} ${className}`}>
+    <div className={`absolute bottom-1.5 sm:bottom-2 md:bottom-2.5 ${position} ${className}`}>
       <Image
         src={srlUrl}
         alt="Veltex AI Logo"
-        className="!w-[120px] h-12 mx-auto"
+        className="!w-[80px] sm:!w-[100px] md:!w-[120px] h-8 sm:h-10 md:h-12 mx-auto"
         height={46}
         width={200}
         priority
