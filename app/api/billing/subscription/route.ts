@@ -17,12 +17,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get user's subscription
+    // Get user's subscription (include 'trialing' status for trial users)
     const { data: subscription, error } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
-      .in('status', ['active', 'canceled'])
+      .in('status', ['active', 'trialing', 'canceled'])
       .order('created_at', { ascending: false })
       .limit(1)
       .single();

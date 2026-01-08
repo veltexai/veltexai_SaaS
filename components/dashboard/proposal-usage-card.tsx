@@ -65,7 +65,7 @@ export function ProposalUsageCard() {
           )}
           <div className="mt-2">
             <Badge variant={isTrial ? 'secondary' : 'default'}>
-              {isTrial ? 'Free Trial' : subscriptionStatus}
+              {isTrial ? '7-Day Free Trial' : subscriptionStatus}
             </Badge>
           </div>
         </CardContent>
@@ -76,11 +76,15 @@ export function ProposalUsageCard() {
         <Alert className="border-yellow-200 bg-yellow-50">
           <AlertCircle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-800">
-            You've used {Math.round(usagePercentage)}% of your {isTrial ? 'trial' : 'monthly'} proposals.
+            You've used {Math.round(usagePercentage)}% of your {isTrial ? '7-day trial' : 'monthly'} proposals.
             {isTrial ? (
-              <Link href="/dashboard/billing" className="ml-1 underline font-medium">
-                Choose a plan to continue
-              </Link>
+              <>
+                <br />
+                <span className="text-sm">Trial ends when time runs out or proposals are used (whichever comes first).</span>
+                <Link href="/dashboard/billing" className="ml-1 underline font-medium">
+                  Choose a plan to continue
+                </Link>
+              </>
             ) : (
               <Link href="/dashboard/billing" className="ml-1 underline font-medium">
                 Upgrade your plan
@@ -96,7 +100,7 @@ export function ProposalUsageCard() {
           <AlertCircle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800">
             {isTrial 
-              ? "You've used all your trial proposals. Choose a plan to continue creating proposals."
+              ? "Your trial has ended. You've either used all 3 free proposals or your 7-day trial period has expired. Choose a plan to continue creating proposals."
               : "You've reached your monthly proposal limit. Upgrade your plan or wait for next billing cycle."
             }
             <div className="mt-2">

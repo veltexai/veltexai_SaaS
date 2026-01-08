@@ -6,12 +6,14 @@ export const AUTH_ROUTES = {
   DASHBOARD: '/dashboard',
   FORGOT_PASSWORD: '/auth/forgot-password',
   RESET_PASSWORD: '/auth/reset-password',
+  BILLING: '/dashboard/billing?welcome=true',
+
 } as const;
 
 export const AUTH_REDIRECTS = {
   CALLBACK: `${config.domainName}/api/auth/callback`,
   CONFIRM: `${config.domainName}/api/auth/confirm`,
-  DEFAULT_REDIRECT: AUTH_ROUTES.DASHBOARD,
+  DEFAULT_REDIRECT: AUTH_ROUTES.BILLING,
 } as const;
 
 export const AUTH_PROVIDERS = {

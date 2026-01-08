@@ -69,8 +69,8 @@ export default async function NewProposalPage() {
           <AlertDescription className="text-yellow-800">
             You have {usageInfo.remaining_proposals} proposal
             {usageInfo.remaining_proposals !== 1 ? 's' : ''} remaining in your
-            trial. Consider upgrading to a paid plan to continue creating
-            proposals.
+            7-day free trial. Your trial ends when either time runs out or you&apos;ve used all 3 proposals. 
+            Choose a plan to continue creating proposals.
           </AlertDescription>
         </Alert>
       )}

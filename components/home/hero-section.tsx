@@ -51,7 +51,7 @@ const HeroSection = () => {
                 size="lg"
                 className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
               >
-                Get Started Free
+                Start 7-Day Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
@@ -66,6 +66,14 @@ const HeroSection = () => {
               </Button>
             </Link>
           </motion.div>
+          
+          {/* Trial Info */}
+          <motion.p
+            className="text-sm text-gray-500 mt-4"
+            variants={fadeInUp}
+          >
+            7-day free trial with 3 proposals • Credit card required • Cancel anytime
+          </motion.p>
         </motion.div>
 
         {/* Hero Image/Dashboard Mockup */}

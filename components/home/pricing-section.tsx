@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '../ui/card';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Clock, CreditCard, Shield } from 'lucide-react';
 import { Button } from '../ui/button';
 
 const PricingSection = () => {
@@ -31,12 +31,30 @@ const PricingSection = () => {
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-gray-600 mb-6">
             Choose the plan that fits your business needs
           </p>
+          
+          {/* Free Trial Banner */}
+          <div className="inline-flex flex-col sm:flex-row items-center gap-4 sm:gap-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl px-6 py-4 mb-8">
+            <div className="flex items-center gap-2 text-blue-800">
+              <Clock className="h-5 w-5 text-blue-600" />
+              <span className="font-medium">7-day free trial</span>
+            </div>
+            <div className="hidden sm:block w-px h-6 bg-blue-300"></div>
+            <div className="flex items-center gap-2 text-blue-800">
+              <CreditCard className="h-5 w-5 text-blue-600" />
+              <span className="font-medium">3 free proposals</span>
+            </div>
+            <div className="hidden sm:block w-px h-6 bg-blue-300"></div>
+            <div className="flex items-center gap-2 text-blue-800">
+              <Shield className="h-5 w-5 text-blue-600" />
+              <span className="font-medium">Cancel anytime</span>
+            </div>
+          </div>
 
           {/* Billing Toggle */}
-          <div className="flex items-center justify-center space-x-4 mb-8">
+          {/* <div className="flex items-center justify-center space-x-4 mb-8">
             <span
               className={
                 billingCycle === 'monthly'
@@ -72,7 +90,7 @@ const PricingSection = () => {
                 Save 20%
               </Badge>
             </span>
-          </div>
+          </div> */}
         </motion.div>
 
         <motion.div
@@ -181,8 +199,11 @@ const PricingSection = () => {
                     }`}
                     size="lg"
                   >
-                    Start Free Trial
+                    Start 7-Day Free Trial
                   </Button>
+                  <p className="text-xs text-center text-gray-500 mt-3">
+                    Credit card required • Cancel anytime
+                  </p>
                 </CardContent>
               </Card>
             </motion.div>

@@ -148,6 +148,17 @@ async function handleSubscriptionCreated(
       return;
     }
 
+    // Check if this is a trial subscription
+    const isTrialing = subscription.status === 'trialing';
+    const trialEnd = (subscription as any).trial_end 
+      ? new Date((subscription as any).trial_end * 1000)
+      : null;
+
+    console.log('📋 Subscription status:', subscription.status, 'Is trialing:', isTrialing);
+    if (trialEnd) {
+      console.log('📋 Trial ends at:', trialEnd.toISOString());
+    }
+
     // Create subscription record
     const subscriptionData = {
       user_id: userId,
@@ -155,6 +166,7 @@ async function handleSubscriptionCreated(
       stripe_customer_id: subscription.customer as string,
       status: subscription.status as
         | 'active'
+        | 'trialing'
         | 'cancelled'
         | 'past_due'
         | 'unpaid',
@@ -174,19 +186,65 @@ async function handleSubscriptionCreated(
       .insert(subscriptionData);
 
     if (subscriptionError) {
-      console.error('❌ Error creating subscription:', subscriptionError);
-      return;
+      // If it's a duplicate key error, the subscription already exists - continue to ensure usage record exists
+      if (subscriptionError.code === '23505') {
+        console.log('ℹ️ Subscription already exists, continuing to ensure usage record exists');
+      } else {
+        console.error('❌ Error creating subscription:', subscriptionError);
+        return;
+      }
     }
 
-    // Update user profile
+    // Update user profile based on subscription status
+    const profileUpdateData: any = {
+      subscription_status: isTrialing ? 'trialing' : 'active',
+      subscription_plan: planName,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Set trial_end_at if this is a trial subscription
+    if (isTrialing && trialEnd) {
+      profileUpdateData.trial_end_at = trialEnd.toISOString();
+      console.log('📋 Setting trial_end_at to:', trialEnd.toISOString());
+      
+      // Check if usage record already exists before creating
+      const { data: existingUsage } = await supabase
+        .from('usage')
+        .select('id')
+        .eq('user_id', userId)
+        .gte('period_end', new Date().toISOString())
+        .limit(1)
+        .maybeSingle();
+      
+      if (!existingUsage) {
+        // Create usage record for trial period using subscription dates for consistency
+        // This ensures increment_user_usage can find and update this record
+        const { error: usageError } = await supabase
+          .from('usage')
+          .insert({
+            user_id: userId,
+            proposal_count: 0,
+            period_start: subscriptionData.current_period_start,
+            period_end: subscriptionData.current_period_end,
+          });
+        
+        if (usageError) {
+          console.error('❌ Error creating usage record:', usageError);
+        } else {
+          console.log('✅ Trial usage record created with period:', 
+            subscriptionData.current_period_start, 'to', subscriptionData.current_period_end);
+        }
+      } else {
+        console.log('ℹ️ Usage record already exists, skipping creation');
+      }
+    }
+
     await supabase
       .from('profiles')
-      .update({
-        subscription_status: 'active',
-        subscription_plan: planName,
-        updated_at: new Date().toISOString(),
-      })
+      .update(profileUpdateData)
       .eq('id', userId);
+    
+    console.log('✅ Profile updated with status:', profileUpdateData.subscription_status);
 
     // Create billing history record (check for duplicates first)
     const { data: existingBilling } = await supabase

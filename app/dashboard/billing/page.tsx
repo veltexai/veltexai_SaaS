@@ -71,12 +71,12 @@ async function getBillingData() {
       console.error('Error fetching usage info:', usageError);
     }
 
-    // Fetch subscription data
+    // Fetch subscription data (include 'trialing' status for trial users)
     const { data: subscriptionData, error: subscriptionError } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
-      .in('status', ['active', 'canceled'])
+      .in('status', ['active', 'trialing', 'canceled'])
       .order('created_at', { ascending: false })
       .limit(1)
       .single();

@@ -25,6 +25,7 @@ import Photo from '../../public/images/pexels-tima-miroshnichenko-6195879.jpg';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { signInWithGoogle } from '@/lib/auth/actions/oauth';
 import { signUpWithMagicLink } from '@/lib/auth/actions/magic-link';
+import FreeTrialInfoBanner from '../ui/free-trial-info-banner';
 
 const formSchema = z.object({
   fullName: z.string().min(3, 'Full name must be at least 3 characters'),
@@ -232,6 +233,8 @@ export default function MagicLinkSignupForm({
                     Generate Professional Cleaning Proposals <br />in Minutes
                   </p>
                 </div>
+
+                <FreeTrialInfoBanner component="signup" /> 
 
                 <div className="flex items-center gap-3">
                   <FormField

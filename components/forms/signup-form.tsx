@@ -32,6 +32,7 @@ import {
 import PasswordStength from '@/components/ui/password-stength';
 import { signInWithGoogle } from '@/lib/auth/actions/oauth';
 import { signUp } from '@/lib/auth/actions/password';
+import FreeTrialInfoBanner from '../ui/free-trial-info-banner';
 
 const formSchema = z.object({
   fullName: z.string().min(3),
@@ -146,6 +147,9 @@ export default function SignupForm({
                     Generate Professional Cleaning Proposals <br />in Minutes
                   </p>
                 </div>
+                
+                {/* Free Trial Info Banner */}
+                <FreeTrialInfoBanner component="signup" /> 
                 <div className="flex items-center gap-3">
                   <FormField
                     control={form.control}

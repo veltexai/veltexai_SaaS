@@ -26,6 +26,11 @@ interface TemplateSelectionSectionProps {
   userTier: SubscriptionTier;
 }
 
+// Module-level cache (persists across component renders)
+let templatesCache: TemplateWithTiers[] | null = null;
+let cacheTimestamp: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export function TemplateSelectionSection({
   userTier,
 }: TemplateSelectionSectionProps) {
@@ -42,6 +47,14 @@ export function TemplateSelectionSection({
 
   const fetchTemplates = async () => {
     try {
+      // Check cache first
+      if (templatesCache && Date.now() - cacheTimestamp < CACHE_DURATION) {
+        console.log('Using cached templates');
+        setTemplates(templatesCache);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       const supabase = createClient();
 
@@ -73,6 +86,10 @@ export function TemplateSelectionSection({
           tiers: tierData?.map((t) => t.subscription_tier) || [],
         });
       }
+
+      // Save to cache (with tier data included)
+      templatesCache = templatesWithTiers;
+      cacheTimestamp = Date.now();
 
       setTemplates(templatesWithTiers);
     } catch (err) {

@@ -21,8 +21,10 @@ export function PricingFAQ() {
             Is there a free trial?
           </h3>
           <p className="text-gray-600">
-            Yes, all plans come with a 14-day free trial. No credit card
-            required to start.
+            Yes! You get a <strong>7-day free trial</strong> with <strong>3 proposals</strong> included. 
+            Credit card is required upfront to start your trial, but you can cancel anytime before 
+            the trial ends and you won&apos;t be charged. Your trial ends when either 7 days pass 
+            or you&apos;ve used all 3 proposals - whichever comes first.
           </p>
         </div>
 
@@ -41,8 +43,9 @@ export function PricingFAQ() {
             Can I cancel anytime?
           </h3>
           <p className="text-gray-600">
-            Yes, you can cancel your subscription at any time. You'll
-            continue to have access until the end of your billing period.
+            Absolutely! You can cancel your subscription at any time - including during your 
+            free trial. If you cancel before your trial ends, you won&apos;t be charged at all.
+            After the trial, you&apos;ll continue to have access until the end of your billing period.
           </p>
         </div>
       </div>

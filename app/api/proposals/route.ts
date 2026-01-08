@@ -102,13 +102,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Increment user's proposal usage
-    const { error: usageError } = await supabase.rpc('increment_user_usage', {
+    const { data: usageIncremented, error: usageError } = await supabase.rpc('increment_user_usage', {
       user_uuid: user.id,
     });
 
     if (usageError) {
       console.error('Error incrementing usage:', usageError);
       // Don't fail the request, just log the error
+    } else if (usageIncremented === false) {
+      // The function returned FALSE, meaning no subscription was found
+      console.warn('⚠️ Usage not incremented - no active subscription found for user:', user.id);
+      console.warn('This may happen if Stripe webhook did not fire. Please ensure the subscription is synced.');
+    } else {
+      console.log('✅ Usage incremented successfully for user:', user.id);
     }
 
     return NextResponse.json(proposal);

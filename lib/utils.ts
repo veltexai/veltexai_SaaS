@@ -61,10 +61,13 @@ export function getStatusColor(status: string): string {
 }
 
 export function getDaysRemaining(endDate: string | Date): number {
+  console.log('endDate', endDate);
   const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
   const now = new Date();
   const diffTime = end.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  console.log('diffDays', Math.max(0, diffDays));
+  
   return Math.max(0, diffDays);
 }
 
