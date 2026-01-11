@@ -345,18 +345,34 @@ export function BillingClient({
       )}
 
       {/* Pricing Plans - Show for pending, trial users or when no active subscription */}
-      {(isPending || usage?.isTrial || !subscription) && (
-        <Card className={isPending ? 'border-2 border-emerald-300 shadow-lg' : ''}>
+      {/* Show pricing plans only when user is pending (needs to select a plan) */}
+      {isPending && (
+        <Card className="border-2 border-emerald-300 shadow-lg">
           <CardHeader>
             <CardTitle>
-              {isPending ? '🚀 Choose Your Plan to Start Free Trial' : 'Choose Your Plan'}
+              🚀 Choose Your Plan to Start Free Trial
             </CardTitle>
             <CardDescription>
-              {isPending
-                ? 'Select any plan below to begin your 7-day free trial with 3 proposals. Credit card required but you won\'t be charged until trial ends.'
-                : usage?.isTrial
-                ? 'Your trial will continue - upgrade anytime for more proposals'
-                : 'Get started with a subscription plan'}
+              Select any plan below to begin your 7-day free trial with 3 proposals. Credit card required but you won&apos;t be charged until trial ends.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PricingPlans
+              plans={plans}
+              isLoading={false}
+              error={plansError ? new Error(plansError) : null}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Show upgrade options after trial ends (expired trial or no subscription) */}
+      {!isPending && !usage?.isTrial && !subscription && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Choose Your Plan</CardTitle>
+            <CardDescription>
+              Get started with a subscription plan
             </CardDescription>
           </CardHeader>
           <CardContent>

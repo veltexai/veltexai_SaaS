@@ -14,7 +14,7 @@ const TitleDescriptionSection = ({
   const fontFamilyDescription =
     templateType === 'luxury_elite' ? arvo.className : montserrat.className;
   return (
-    <div className="pl-14 pt-14 pr-6 flex flex-col gap-6">
+    <div className="sm:pl-14 pl-6 sm:pt-14 pt-6 sm:pr-6 pr-0 flex flex-col sm:gap-6 gap-2">
       {dataTerms.map((term) => (
         <div key={term.id} className="flex items-start gap-4">
           {React.isValidElement(term.icons) &&
@@ -26,10 +26,10 @@ const TitleDescriptionSection = ({
               ),
             })}
           <div className="flex flex-col items-start">
-            <h2 className={`text-lg font-bold ${fontFamilyTitle}`}>
+            <h2 className={`sm:text-lg text-base font-bold ${fontFamilyTitle}`}>
               {term.title}
             </h2>
-            <p className={`mt-2 text-xs ${fontFamilyDescription}`}>
+            <p className={`mt-2 sm:text-xs text-[10px] ${fontFamilyDescription}`}>
               {term.description}
             </p>
           </div>

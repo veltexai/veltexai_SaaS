@@ -70,12 +70,12 @@ export default function AboutOurCompany({
     const Icon = resolveIcon(raw);
 
     return (
-      <div className="flex items-start gap-4 p-10 pr-8">
+      <div className="flex items-start gap-3 sm:gap-4 p-2 sm:p-10 sm:pr-4">
         {Icon ? (
           <Icon className="h-8 w-8 text-[var(--color-primary)] flex-shrink-0" />
         ) : null}
         <div
-          className={`italic text-[#383838] ${dmSerifText.className} text-xl leading-relaxed font-semibold`}
+          className={`italic text-[#383838] ${dmSerifText.className} text-xs sm:text-xl leading-relaxed font-semibold`}
         >
           {parseInline(raw)}
         </div>
@@ -88,7 +88,7 @@ export default function AboutOurCompany({
       <div className={className}>
         <ProposalTitle templateType={templateType} title={title} />
         {firstParagraph ? (
-          <p className="text-sm text-[#383838] mb-4 leading-relaxed mt-8">
+          <p className="text-xs sm:text-sm text-[#383838] sm:mb-4 mb-2 leading-relaxed mt-4 sm:mt-8">
             {parseInline(firstParagraph)}
           </p>
         ) : null}
@@ -154,7 +154,7 @@ export default function AboutOurCompany({
               );
             })()
           ) : (
-            <div className="mt-10 pb-6">
+            <div className="mt-4 sm:mt-10 pb-4 sm:pb-6">
               <div className="grid grid-cols-2 divide-x divide-gray-200">
                 {bullets.slice(0, 2).map((b, i) => (
                   <Bullet key={`b1-${i}`} raw={b} />

@@ -83,9 +83,9 @@ export default function WhyChooseUs({
   const Bullet = ({ raw }: { raw: string }) => {
     const Icon = resolveIconComponent(raw);
     return (
-      <div className="flex items-start gap-4 py-2">
-        <Icon className="h-7 w-7 flex-shrink-0 text-[var(--color-primary)]" />
-        <div className="text-[#383838] leading-relaxed text-sm">
+      <div className="flex items-start gap-4 sm:py-2 py-1">
+        <Icon className="h-4 sm:h-7 w-4 sm:w-7 flex-shrink-0 text-[var(--color-primary)]" />
+        <div className="text-[#383838] leading-relaxed text-[10px] sm:text-sm">
           {parseInline(raw)}
         </div>
       </div>
@@ -97,11 +97,11 @@ export default function WhyChooseUs({
       <div className={className}>
         <ProposalTitle templateType={templateType} title={title} />
         {firstParagraph ? (
-          <p className="text-sm text-[#383838] mb-4 leading-relaxed mt-8">
+          <p className="text-xs sm:text-sm text-[#383838] mb-4 leading-relaxed mt-8">
             {parseInline(firstParagraph)}
           </p>
         ) : null}
-        <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           {bullets.map((b, i) => (
             <Bullet key={`wcu-${i}`} raw={b} />
           ))}

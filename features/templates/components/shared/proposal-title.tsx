@@ -52,7 +52,7 @@ export default function ProposalTitle({
     return (
       <div className={cn('relative inline-block', className)}>
         <h1
-          className={`${montserrat.className} text-5xl text-[var(--color-primary)]`}
+          className={`${montserrat.className} text-2xl sm:text-5xl text-[var(--color-primary)]`}
         >
           {first ? <span className="font-normal">{first} </span> : null}
           <span className="font-bold">{second}</span>

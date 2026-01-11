@@ -31,7 +31,7 @@ const ThankYouPage = ({
         className={`${
           templateType === 'luxury_elite'
             ? 'absolute right-0 bottom-0 h-[75%] w-full'
-            : 'relative w-[85%] h-[55%] top-12 left-1/2 -translate-x-1/2'
+            : 'relative w-[85%] h-[55%] sm:top-12 top-6 left-1/2 -translate-x-1/2'
         }`}
       >
         <Image
@@ -50,7 +50,7 @@ const ThankYouPage = ({
         className={`absolute flex items-start justify-center ${
           templateType === 'luxury_elite'
             ? 'flex-col gap-6 left-0 top-0 w-[60%] pl-8 pt-8'
-            : 'w-[90%] bottom-12 left-1/2 -translate-x-1/2 '
+            : 'w-[90%] sm:bottom-12 bottom-3 left-1/2 -translate-x-1/2 '
         }`}
       >
         {logoUrl ? (

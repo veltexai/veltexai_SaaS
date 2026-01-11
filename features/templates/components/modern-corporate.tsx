@@ -163,8 +163,8 @@ export function ModernCorporateTemplate({
                     priority
                     unoptimized
                   />
-                  <VerticalBar className="left-20" variant="gradientGray" />
-                  <HorizontalBar className="bottom-20" variant="gradientGray" />
+                  <VerticalBar  variant="gradientGray" />
+                  <HorizontalBar  variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={3}
@@ -209,8 +209,8 @@ export function ModernCorporateTemplate({
                       )}
                     </div>
                   </div>
-                  <VerticalBar className="left-20" variant="gradientGray" />
-                  <HorizontalBar className="bottom-20" variant="gradientGray" />
+                  <VerticalBar  variant="gradientGray" />
+                  <HorizontalBar  variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={4}
@@ -226,8 +226,8 @@ export function ModernCorporateTemplate({
                   id="page-five"
                   className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
                 >
-                  <VerticalBar className="left-20" variant="gradientGray" />
-                  <HorizontalBar className="bottom-20" variant="gradientGray" />
+                  <VerticalBar  variant="gradientGray" />
+                  <HorizontalBar  variant="gradientGray" />
                   <ProposalTitle
                     templateType="modern_corporate"
                     title="Our Qualifications"
@@ -277,8 +277,8 @@ export function ModernCorporateTemplate({
                       </div>
                     )}
                   </div>
-                  <VerticalBar className="left-20" variant="gradientGray" />
-                  <HorizontalBar className="bottom-20" variant="gradientGray" />
+                  <VerticalBar  variant="gradientGray" />
+                  <HorizontalBar  variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={6}
@@ -316,8 +316,8 @@ export function ModernCorporateTemplate({
                       />
                     ) : null}
                   </div>
-                  <VerticalBar className="left-20" variant="gradientGray" />
-                  <HorizontalBar className="bottom-20" variant="gradientGray" />
+                  <VerticalBar  variant="gradientGray" />
+                  <HorizontalBar  variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={7}
@@ -336,8 +336,8 @@ export function ModernCorporateTemplate({
         id="page-eight"
         className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
       >
-        <VerticalBar className="left-20" variant="gradientGray" />
-        <HorizontalBar className="bottom-20" variant="gradientGray" />
+        <VerticalBar  variant="gradientGray" />
+        <HorizontalBar  variant="gradientGray" />
         <ProposalTitle templateType="modern_corporate" title="Terms & Legal" />
 
         <TitleDescriptionSection templateType="modern_corporate" />
@@ -355,8 +355,8 @@ export function ModernCorporateTemplate({
         id="page-nine"
         className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
       >
-        <VerticalBar className="left-20" variant="normal" />
-        <HorizontalBar className="bottom-20" variant="normal" />
+        <VerticalBar  variant="normal" />
+        <HorizontalBar  variant="normal" />
         <ProposalTitle
           templateType="modern_corporate"
           title="Proposal Acceptance"

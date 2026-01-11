@@ -95,7 +95,7 @@ export default function ScopeOfService({
           {premium ? (
             <>
               <div
-                className={`text-center grid grid-cols-4 text-[var(--color-primary)] gap-4 px-5 mb-2 
+                className={`text-center grid grid-cols-4 text-[var(--color-primary)] gap-4 sm:px-5 px-2 mb-2 sm:text-base text-xs
                 ${
                   templateType === 'luxury_elite'
                     ? `${arvo.className} font-normal`
@@ -109,7 +109,7 @@ export default function ScopeOfService({
               {rows.map((row, i) => (
                 <div
                   key={`scope-row-${i}`}
-                  className={`rounded-3xl px-5 py-3 mb-2 
+                  className={`rounded-3xl px-5 sm:py-3 py-1 mb-2 
                     ${
                       templateType === 'modern_corporate'
                         ? i % 2 === 0
@@ -216,7 +216,7 @@ export default function ScopeOfService({
       <div>
         <ProposalTitle templateType={templateType} title={title} />
         <p
-          className={`text-sm text-[#383838] mb-6 leading-relaxed mt-6 ${
+          className={`text-xs sm:text-sm text-[#383838] sm:my-6 my-3 leading-relaxed ${
             templateType === 'luxury_elite' ? arvo.className : ''
           }`}
         >

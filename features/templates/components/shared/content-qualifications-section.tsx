@@ -13,7 +13,7 @@ const ContentQualificationsSection = ({
     <div className="text-xs">
       <p
         className={`${montserrat.className} ${
-          templateType === 'modern_corporate' ? 'my-6' : 'my-8'
+          templateType === 'modern_corporate' ? 'my-6' : 'sm:my-8 my-2 pl-6 sm:pl-0'
         }`}
       >
         We maintain appropriate insurance coverage and follow applicable
@@ -21,78 +21,78 @@ const ContentQualificationsSection = ({
         strengthen buyer confidence.
       </p>
 
-      <div className="grid grid-cols-2 gap-2 max-w-[90%]">
-        <div className="bg-white flex col-span-2 items-center justify-center p-4 drop-shadow-lg rounded-3xl">
+      <div className="grid grid-cols-2 gap-2 max-w-[90%] mt-3 sm:mt-0 pl-6 sm:pl-0">
+        <div className="bg-white flex col-span-2 items-center justify-center p-2 sm:p-4 drop-shadow-lg rounded-3xl">
           <div className="border-r pr-6">
             <Image
               src={`/images/templates/image14.svg`}
               alt="qualifications"
               width={180}
               height={40}
-              className="w-[150px] h-[30px]"
+              className="w-[150px] h-[20px] sm:h-[30px]"
               priority
               unoptimized
             />
           </div>
 
-          <p className={`${montserrat.className} text-center w-[300px]`}>
+          <p className={`${montserrat.className} text-center text-[10px] sm:text-xs w-[300px]`}>
             General Liability Insurance
           </p>
         </div>
 
-        <div className="bg-white flex col-span-2 items-center justify-center p-4 drop-shadow-lg rounded-3xl">
+        <div className="bg-white flex col-span-2 items-center justify-center p-2 sm:p-4 drop-shadow-lg rounded-3xl">
           <div className="border-r pr-6">
             <Image
               src={`/images/templates/image13.svg`}
               alt="qualifications"
               width={180}
               height={40}
-              className="w-[150px] h-[30px]"
+              className="w-[150px] h-[20px] sm:h-[30px]"
               priority
               unoptimized
             />
           </div>
 
-          <p className={`${montserrat.className} text-center w-[300px]`}>
+          <p className={`${montserrat.className} text-center text-[10px] sm:text-xs w-[300px]`}>
             Background-Checked Personnel
           </p>
         </div>
-        <div className="bg-white flex col-span-2 items-center justify-center p-4 drop-shadow-lg rounded-3xl">
+        <div className="bg-white flex col-span-2 items-center justify-center p-2 sm:p-4 drop-shadow-lg rounded-3xl">
           <div className="border-r pr-6">
             <Image
               src={`/images/templates/image15.svg`}
               alt="qualifications"
               width={180}
               height={40}
-              className="w-[150px] h-[30px]"
+              className="w-[150px] h-[20px] sm:h-[30px]"
               priority
               unoptimized
             />
           </div>
 
-          <p className={`${montserrat.className} text-center w-[300px]`}>
+          <p className={`${montserrat.className} text-center text-[10px] sm:text-xs w-[300px]`}>
             Workers’ Compensation
           </p>
         </div>
-        <div className="bg-white flex col-span-2 items-center justify-center p-4 drop-shadow-lg rounded-3xl">
+        <div className="bg-white flex col-span-2 items-center justify-center p-2 sm:p-4 drop-shadow-lg rounded-3xl">
           <div className="border-r pr-6">
             <Image
               src={`/images/templates/image16.svg`}
               alt="qualifications"
               width={180}
               height={40}
-              className="w-[150px] h-[30px]"
+              className="w-[150px] h-[20px] sm:h-[30px]"
               priority
               unoptimized
             />
           </div>
 
-          <p className={`${montserrat.className} text-center w-[300px]`}>
+          <p className={`${montserrat.className} text-center text-[10px] sm:text-xs w-[300px]`}>
             OSHA-Aware Practices
           </p>
         </div>
-        <div className="bg-white flex col-span-2 h-[62px] items-center justify-center p-4 drop-shadow-lg rounded-3xl">
-          <p className={`${montserrat.className} text-center w-[300px]`}>
+        <div className="bg-white flex col-span-2 sm:h-[62px] h-[36px] items-center justify-center p-2 sm:p-4 drop-shadow-lg rounded-3xl">
+          <p className={`${montserrat.className} text-center text-[10px] sm:text-xs w-[300px]`}>
             Equipment & Chemical Safety
           </p>
         </div>
@@ -117,7 +117,7 @@ const ContentQualificationsSection = ({
           alt="qualifications"
           width={800}
           height={500}
-          className="z-20 absolute bottom-20 left-20 max-w-[85%]"
+          className="z-20 absolute sm:bottom-20 bottom-6 sm:left-20 left-10 max-w-[85%]"
           priority
           unoptimized
         />

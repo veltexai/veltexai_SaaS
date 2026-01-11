@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
-      .eq('status', 'active')
+      .in('status', ['active', 'trialing'])
       .single();
 
     if (subError || !subscription) {
@@ -74,10 +74,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use the subscription's current_period_end with type assertion
-    // const periodEnd = (stripeSubscription as any).current_period_end;
-    const periodEnd =
-      stripeSubscription.cancel_at || stripeSubscription.billing_cycle_anchor;
+    // Use the subscription's current_period_end (works for both active and trialing)
+    // For trialing subscriptions, this will be the trial end date
+    const subWithPeriod = stripeSubscription as unknown as { current_period_end: number };
+    const periodEnd = subWithPeriod.current_period_end || 
+      stripeSubscription.cancel_at || 
+      stripeSubscription.billing_cycle_anchor;
 
     // Validate periodEnd before using it
     if (!periodEnd || typeof periodEnd !== 'number') {

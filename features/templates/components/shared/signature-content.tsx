@@ -9,16 +9,16 @@ const SignatureContent = ({ templateType }: { templateType: TemplateType }) => {
     templateType !== 'luxury_elite' ? 'font-bold' : 'font-normal';
   return (
     <div
-      className={`flex flex-col gap-10 py-16 ${
-        templateType === 'luxury_elite' ? 'pt-46 pl-6 max-w-[90%]' : ''
+      className={`flex flex-col gap-10 sm:py-16 py-6 ${
+        templateType === 'luxury_elite' ? 'pt-46 pl-6 max-w-[90%]' : 'sm:pl-0 pl-6'
       }`}
     >
-      <p className={`${fontFamily} text-sm`}>
+      <p className={`${fontFamily} sm:text-sm text-xs`}>
         By signing below, Client authorizes services as described and agrees to
         the terms herein. A countersigned copy will be provided for your
         records.
       </p>
-      <p className={`${fontFamily} ${fontWeight} text-sm`}>
+      <p className={`${fontFamily} ${fontWeight} sm:text-sm text-xs`}>
         Client/Authorized Representative
       </p>
     </div>

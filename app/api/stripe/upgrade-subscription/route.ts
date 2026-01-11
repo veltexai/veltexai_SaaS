@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
-      .eq('status', 'active')
+      .in('status', ['active', 'trialing'])
       .single();
 
     if (!subscription) {
@@ -50,7 +50,10 @@ export async function POST(request: NextRequest) {
     const isDowngrade =
       newPlanData.price_monthly < currentPlanData.price_monthly;
 
-    // Calculate the exact difference for immediate charging
+    // Check if subscription is in trial period
+    const isTrialing = subscription.status === 'trialing';
+
+    // Calculate the exact difference for immediate charging (only if not trialing)
     const priceDifference =
       newPlanData.price_monthly - currentPlanData.price_monthly;
     const immediateChargeAmount = Math.abs(priceDifference);
@@ -58,7 +61,9 @@ export async function POST(request: NextRequest) {
     let prorationAmount = 0;
     let chargeResult = null;
 
-    if (isUpgrade) {
+    // During trial: NO charges - just update the plan
+    // User will be charged for the new plan when trial ends
+    if (isUpgrade && !isTrialing) {
       // For upgrades: charge the exact difference immediately
       try {
         // Get the customer's default payment method
@@ -126,8 +131,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update subscription in Stripe - for upgrades, no proration needed since we charged separately
-    // For downgrades, use proration to handle credits
+    // Update subscription in Stripe
+    // During trial: no proration needed (no charges until trial ends)
+    // For active upgrades: no proration since we charged separately
+    // For active downgrades: use proration to handle credits
     const stripeSubscription = await stripe.subscriptions.update(
       subscription.stripe_subscription_id,
       {
@@ -141,13 +148,16 @@ export async function POST(request: NextRequest) {
             price: newPriceId,
           },
         ],
-        proration_behavior: isUpgrade ? 'none' : 'create_prorations',
+        // During trial: no proration (user hasn't paid yet)
+        // Active upgrade: no proration (charged separately)
+        // Active downgrade: create prorations for credits
+        proration_behavior: isTrialing ? 'none' : (isUpgrade ? 'none' : 'create_prorations'),
         billing_cycle_anchor: 'unchanged', // Keep current billing cycle
       }
     );
 
-    // For downgrades, get the proration credit
-    if (isDowngrade) {
+    // For downgrades (not during trial), get the proration credit
+    if (isDowngrade && !isTrialing) {
       // Wait a moment for Stripe to process the proration
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -184,18 +194,21 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id);
 
     // Add billing history record
+    // During trial: amount is 0 since no charge was made
     const billingHistoryData = {
       user_id: user.id,
       subscription_id: subscription.id,
       action: isUpgrade ? 'upgrade' : 'downgrade',
       previous_plan: subscription.plan,
       new_plan: newPlan,
-      amount: isUpgrade
-        ? Math.round(immediateChargeAmount * 100)
-        : prorationAmount, // Use actual charge amount for upgrades
+      amount: isTrialing 
+        ? 0 // No charge during trial
+        : isUpgrade
+          ? Math.round(immediateChargeAmount * 100)
+          : prorationAmount, // Use actual charge amount for upgrades
       currency: 'usd',
-      status: isUpgrade ? (chargeResult ? 'paid' : 'failed') : 'paid',
-      stripe_invoice_id: isUpgrade ? chargeResult?.id : null,
+      status: isTrialing ? 'pending' : (isUpgrade ? (chargeResult ? 'paid' : 'failed') : 'paid'),
+      stripe_invoice_id: isUpgrade && !isTrialing ? chargeResult?.id : null,
       invoice_url: null,
       invoice_date: new Date().toISOString(),
       created_at: new Date().toISOString(),
@@ -215,23 +228,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Build response message based on trial status
+    let responseMessage: string;
+    if (isTrialing) {
+      responseMessage = `Successfully changed to ${newPlan} plan! You won't be charged until your free trial ends.`;
+    } else if (isUpgrade) {
+      responseMessage = `Successfully upgraded to ${newPlan}! Charged $${immediateChargeAmount.toFixed(2)} immediately.`;
+    } else if (isDowngrade) {
+      responseMessage = `Successfully downgraded to ${newPlan}! Credit will be applied to your next billing cycle.`;
+    } else {
+      responseMessage = `Successfully changed to ${newPlan} plan!`;
+    }
+
     return NextResponse.json({
       success: true,
       newPlan,
       isUpgrade,
       isDowngrade,
-      chargeAmount: isUpgrade ? immediateChargeAmount : 0,
-      creditAmount: isDowngrade ? Math.abs(prorationAmount / 100) : 0,
-      prorationAmount: prorationAmount / 100, // Return in dollars for display
-      invoiceId: isUpgrade ? chargeResult?.id : null,
-      paymentIntentId: isUpgrade ? chargeResult?.id : null,
-      message: isUpgrade
-        ? `Successfully upgraded to ${newPlan}! Charged ${immediateChargeAmount.toFixed(
-            2
-          )} immediately.`
-        : isDowngrade
-        ? `Successfully downgraded to ${newPlan}! Credit will be applied to your next billing cycle.`
-        : `Successfully changed to ${newPlan} plan!`,
+      isTrialing,
+      chargeAmount: isUpgrade && !isTrialing ? immediateChargeAmount : 0,
+      creditAmount: isDowngrade && !isTrialing ? Math.abs(prorationAmount / 100) : 0,
+      prorationAmount: isTrialing ? 0 : prorationAmount / 100, // Return in dollars for display
+      invoiceId: isUpgrade && !isTrialing ? chargeResult?.id : null,
+      paymentIntentId: isUpgrade && !isTrialing ? chargeResult?.id : null,
+      message: responseMessage,
       usageLimitChanges: {
         unrestrictedCount: 0,
         restrictedCount: 0,

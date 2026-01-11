@@ -15,15 +15,15 @@ const ThankYouSection = ({
   website: string | null;
 }) => {
   const fontWeight =
-    templateType === 'modern_corporate' ? 'font-bold' : 'font-normal';
+    templateType === 'executive_premium' ? 'font-bold' : 'font-normal';
   const fontFamily =
     templateType === 'luxury_elite' ? arvo.className : montserrat.className;
 
   return (
     <>
-      <div className={`flex-auto flex ${fontFamily} flex-col gap-4`}>
+      <div className={`flex-auto flex ${fontFamily} flex-col sm:gap-4 gap-2`}>
         <h1
-          className={`text-3xl font-bold text-[var(--color-primary)] ${
+          className={`sm:text-3xl text-2xl font-bold text-[var(--color-primary)] ${
             templateType === 'luxury_elite'
               ? 'tk-bely-display'
               : dmSerifText.className
@@ -31,20 +31,20 @@ const ThankYouSection = ({
         >
           Thank you
         </h1>
-        {templateType !== 'modern_corporate' ? (
+        {templateType !== 'executive_premium' ? (
           <>
-            <p>
+            <p className="sm:text-base text-sm">
               We appreciate the opportunity to support your facility. Our team
               is committed to reliable service, clear communication, and
               measurable results.
             </p>
-            <p className="font-bold italic ">
+            <p className="font-bold italic sm:text-base text-sm">
               We look forward to serving your Cleaning needs with the highest
               standards of care
             </p>
           </>
         ) : (
-          <p className="leading-[41px]">
+          <p className="sm:leading-[41px] sm:text-base text-xs">
             We appreciate the opportunity to support your facility. Our team is
             committed to reliable service, clear communication, and measurable
             results.
@@ -52,15 +52,15 @@ const ThankYouSection = ({
         )}
         <div className={`flex items-center gap-2 ${fontWeight} ${fontFamily}`}>
           <EmailIcon className="size-6 text-[var(--color-primary)]" />
-          <span>Email [{email}]</span>
+          <span className="sm:text-base text-xs">Email [{email}]</span>
         </div>
         <div className={`flex items-center gap-2 ${fontWeight} ${fontFamily}`}>
           <PhoneIcon className="size-6 text-[var(--color-primary)]" />
-          <span>Phone: [{phone}]</span>
+          <span className="sm:text-base text-xs">Phone: [{phone}]</span>
         </div>
         <div className={`flex items-center gap-2 ${fontWeight} ${fontFamily}`}>
           <WebTrafficIcon className="size-6 text-[var(--color-primary)]" />
-          <span>Website [{website}]</span>
+          <span className="sm:text-base text-xs">Website [{website}]</span>
         </div>
       </div>
     </>

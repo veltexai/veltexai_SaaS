@@ -81,7 +81,7 @@ export default function ServiceQuotePricing({
   return (
     <div>
       <ProposalTitle templateType={templateType} title={title} />
-      <div className={cn('mt-20', className)}>
+      <div className={cn('sm:mt-20 mt-10', className)}>
         {description ? (
           <p className="text-sm text-[#383838] mb-6 leading-relaxed mt-4">
             {parseInline(description)}
@@ -89,17 +89,17 @@ export default function ServiceQuotePricing({
         ) : null}
         {data ? (
           <div className="mb-10">
-            <div className="text-center grid grid-cols-4 text-[var(--color-primary)] gap-4 px-5 mb-2">
+            <div className="sm:text-base text-xs text-center grid grid-cols-4 text-[var(--color-primary)] gap-4 sm:px-5 px-2 mb-2">
               <div className="font-semibold col-span-2">Service</div>
               <div className="font-semibold">Frequency</div>
-              <div className="font-semibold">Price/month</div>
+              <div className="font-semibold">Price</div>
             </div>
             {data.rows.map((row, i) => (
               <div
                 key={`pr-${i}`}
                 className={cn(
                   templateType !== 'luxury_elite'
-                    ? 'rounded-xl px-5 py-4 mb-2'
+                    ? 'rounded-xl sm:px-5 px-2 sm:py-4 py-2 mb-2'
                     : 'px-5 py-4 mb-2',
                   templateType === 'modern_corporate'
                     ? i % 2 === 0
@@ -112,7 +112,7 @@ export default function ServiceQuotePricing({
                     : 'bg-[var(--color-primary)] text-white'
                 )}
               >
-                <div className="grid grid-cols-4 gap-4 text-xs items-center text-center">
+                <div className="grid grid-cols-4 gap-4 sm:text-base text-[10px] items-center text-center">
                   <div
                     className={`font-bold whitespace-pre-line col-span-2 ${
                       templateType === 'modern_corporate'
@@ -128,16 +128,16 @@ export default function ServiceQuotePricing({
               </div>
             ))}
             {data.summary ? (
-              <div className="mt-1 text-sm">
+              <div className="mt-1 sm:text-sm text-xs">
                 <div className="grid grid-cols-3 items-center">
                   <div></div>
-                  <div className="text-right font-semibold text-[var(--color-primary)] pr-4">
+                  <div className="text-right font-semibold text-[var(--color-primary)] sm:pr-4 pr-2">
                     Sub-total
                   </div>
                   <div
                     className={`${
                       templateType !== 'luxury_elite' ? 'rounded-xl' : ''
-                    }  px-5 py-3 text-center font-semibold ${
+                    }  sm:px-5 px-3 sm:py-3 py-2 text-center font-semibold ${
                       templateType === 'modern_corporate'
                         ? 'bg-[var(--color-primary)]/6  text-[#383838]'
                         : 'bg-[var(--color-primary)] text-white'
@@ -148,13 +148,13 @@ export default function ServiceQuotePricing({
                 </div>
                 <div className="grid grid-cols-3 mt-1 items-center">
                   <div></div>
-                  <div className="text-right font-semibold text-[var(--color-primary)] pr-4">
+                  <div className="text-right font-semibold text-[var(--color-primary)] sm:pr-4 pr-2">
                     Tax
                   </div>
                   <div
                     className={`${
                       templateType !== 'luxury_elite' ? 'rounded-xl' : ''
-                    }  px-5 py-3 text-center font-semibold ${
+                    }  sm:px-5 px-3 sm:py-3 py-2 text-center font-semibold ${
                       templateType === 'modern_corporate'
                         ? 'bg-[var(--color-primary)]/6 text-[#383838]'
                         : 'bg-[var(--color-primary)] text-white'
@@ -165,13 +165,13 @@ export default function ServiceQuotePricing({
                 </div>
                 <div className="grid grid-cols-3 mt-1 items-center">
                   <div></div>
-                  <div className="text-right font-semibold text-[var(--color-primary)] pr-4">
+                  <div className="text-right font-semibold text-[var(--color-primary)] sm:pr-4 pr-2">
                     Total
                   </div>
                   <div
                     className={`${
                       templateType !== 'luxury_elite' ? 'rounded-xl' : ''
-                    } border-2 border-[var(--color-primary)] text-[var(--color-primary)] px-5 py-3 text-center font-bold`}
+                    } border-2 border-[var(--color-primary)] text-[var(--color-primary)] sm:px-5 px-3 sm:py-3 py-2 text-center font-bold`}
                   >
                     {data.summary.total ?? '$0.00'}
                   </div>

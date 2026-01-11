@@ -23,7 +23,7 @@ const PoweredBy = ({
     : 'left-3 sm:left-5 md:left-7';
 
   return (
-    <div className={`absolute bottom-1.5 sm:bottom-2 md:bottom-2.5 ${position} ${className}`}>
+    <div className={`absolute -bottom-1 sm:bottom-2 md:bottom-2.5 ${position} ${className}`}>
       <Image
         src={srlUrl}
         alt="Veltex AI Logo"

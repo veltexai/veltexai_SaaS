@@ -48,7 +48,7 @@ export default function Addons({
   const Bullet = ({ raw }: { raw: string }) => {
     return (
       <div
-        className={`flex items-center justify-center gap-4 p-3 border border-[var(--color-primary)] ${
+        className={`flex items-center justify-center gap-4 sm:p-3 p-1 border border-[var(--color-primary)] ${
           templateType === 'luxury_elite' ? 'rounded-none' : 'rounded-3xl'
         }`}
       >
@@ -64,7 +64,7 @@ export default function Addons({
       <div className={className}>
         {firstParagraph ? (
           <p
-            className={`text-2xl text-[var(--color-primary)] mb-4 leading-relaxed mt-8 italic ${
+            className={`sm:text-2xl text-xl text-[var(--color-primary)] sm:mb-4 mb-2 leading-relaxed sm:mt-8 mt-2 italic ${
               templateType === 'luxury_elite'
                 ? 'tk-bely'
                 : dmSerifText.className

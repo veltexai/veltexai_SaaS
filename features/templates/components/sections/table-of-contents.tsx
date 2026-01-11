@@ -15,13 +15,13 @@ const TableOfContents = ({ templateType }: { templateType: TemplateType }) => {
   return (
     <div
       className={`relative aspect-[1/1.4] bg-white pt-16 ${
-        templateType === 'luxury_elite' ? 'pl-16 !pt-[38px]' : 'pl-30'
+        templateType === 'luxury_elite' ? 'pl-16 !pt-[38px]' : 'pl-16 sm:pl-30'
       } overflow-hidden`}
     >
       {templateType !== 'luxury_elite' && (
         <>
-          <VerticalBar className="left-20" variant="gradientGray" />
-          <HorizontalBar className="bottom-20" variant="gradientGray" />
+          <VerticalBar  variant="gradientGray" />
+          <HorizontalBar variant="gradientGray" />
         </>
       )}
 

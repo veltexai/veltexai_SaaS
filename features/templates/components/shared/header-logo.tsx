@@ -23,7 +23,7 @@ const HeaderLogo = ({
         position || 'center'
       } absolute px-2 sm:px-3 py-1 sm:py-2 ${
         withoutGradient
-          ? 'bg-white'
+          ? ''
           : 'bg-gradient-to-r from-[#ffffff64] to-[#e3f2ff52] rounded-full'
       } ${
         isTop

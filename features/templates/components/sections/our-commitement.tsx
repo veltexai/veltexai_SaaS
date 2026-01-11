@@ -76,9 +76,9 @@ export default function OurCommitement({
   const Bullet = ({ raw }: { raw: string }) => {
     const Icon = resolveIconComponent(raw);
     return (
-      <div className="flex items-start gap-4 py-2">
-        <Icon className="h-7 w-7 flex-shrink-0 text-[var(--color-primary)]" />
-        <div className="text-[#383838] leading-relaxed text-sm">
+      <div className="flex items-start gap-4 sm:py-2 py-1">
+        <Icon className="h-4 sm:h-7 w-4 sm:w-7 flex-shrink-0 text-[var(--color-primary)]" />
+        <div className="text-[#383838] leading-relaxed text-[10px] sm:text-sm">
           {parseInline(raw)}
         </div>
       </div>
@@ -90,11 +90,11 @@ export default function OurCommitement({
       <div className={className}>
         <ProposalTitle templateType={templateType} title={title} />
         {firstParagraph ? (
-          <p className="text-sm text-[#383838] mb-4 leading-relaxed mt-8">
+          <p className="text-xs sm:text-sm text-[#383838] sm:mb-4 mb-2 leading-relaxed sm:mt-8 mt-2">
             {parseInline(firstParagraph)}
           </p>
         ) : null}
-        <h3 className={`text-2xl italic mt-8 mb-2 ${dmSerifText.className}`}>
+        <h3 className={`sm:text-2xl text-xl italic sm:mt-8 mt-4 mb-2 ${dmSerifText.className}`}>
           Service Values
         </h3>
         <div className="mt-2">

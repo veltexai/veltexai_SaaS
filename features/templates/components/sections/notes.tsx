@@ -45,7 +45,7 @@ export default function Notes({
     <div>
       <div className={className}>
         <h3
-          className={`text-xl italic mt-8 mb-4 ${
+          className={`sm:text-xl text-lg italic sm:mt-8 mt-4 mb-4 ${
             templateType === 'luxury_elite' ? 'kt-bely' : dmSerifText.className
           }`}
         >
@@ -53,7 +53,7 @@ export default function Notes({
         </h3>
         <ul className="space-y-2 text-[#383838]">
           {items.map((it, i) => (
-            <li key={`note-${i}`} className="list-disc ml-5 text-xs">
+            <li key={`note-${i}`} className="list-disc ml-5 sm:text-xs text-[10px]">
               {parseInline(it)}
             </li>
           ))}

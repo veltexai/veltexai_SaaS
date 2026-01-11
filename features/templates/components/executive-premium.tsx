@@ -93,7 +93,7 @@ export function ExecutivePremiumTemplate({
             position="start"
           />
         ) : null}
-        <div className="absolute top-28 right-10 max-w-[70%]">
+        <div className="absolute top-10 sm:top-28 right-10 max-w-[70%]">
           <HeaderTemplate
             title={proposal.title}
             date={proposal.created_at}
@@ -124,9 +124,9 @@ export function ExecutivePremiumTemplate({
               <>
                 <div
                   id="page-three"
-                  className="relative aspect-[1/1.4] bg-white p-8"
+                  className="relative aspect-[1/1.4] bg-white p-4 sm:p-8"
                 >
-                  <div className="max-w-none pl-[95px]">
+                  <div className="max-w-none pl-10 sm:pl-[95px]">
                     {about?.content ? (
                       <AboutOurCompany
                         title={about.title ?? 'About Our Company'}
@@ -145,10 +145,10 @@ export function ExecutivePremiumTemplate({
                     alt="qualifications"
                     width={800}
                     height={500}
-                    className="z-30 absolute bottom-20 left-20 max-w-[85%]"
+                    className="z-30 absolute sm:bottom-20 bottom-6 left-10 sm:left-20 max-w-[85%]"
                   />
-                  <VerticalBar className="left-20" variant="gradientGray" />
-                  <HorizontalBar className="bottom-20" variant="gradientGray" />
+                  <VerticalBar  variant="gradientGray" />
+                  <HorizontalBar  variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={3}
@@ -161,9 +161,9 @@ export function ExecutivePremiumTemplate({
 
                 <div
                   id="page-four"
-                  className="relative aspect-[1/1.4] bg-white p-8"
+                  className="relative aspect-[1/1.4] bg-white p-6 sm:p-8"
                 >
-                  <div className="gap-6 pl-[95px]">
+                  <div className="gap-6 pl-10 sm:pl-[95px]">
                     <div>
                       {commitment?.content ? (
                         <OurCommitement
@@ -178,7 +178,7 @@ export function ExecutivePremiumTemplate({
                         </div>
                       )}
                     </div>
-                    <div className="mt-10">
+                    <div className="mt-6 sm:mt-10">
                       {whyUs?.content ? (
                         <WhyChooseUs
                           title={whyUs.title ?? 'Why Choose Us'}
@@ -193,8 +193,8 @@ export function ExecutivePremiumTemplate({
                       )}
                     </div>
                   </div>
-                  <VerticalBar className="left-20" variant="gradientGray" />
-                  <HorizontalBar className="bottom-20" variant="gradientGray" />
+                  <VerticalBar  variant="gradientGray" />
+                  <HorizontalBar  variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={4}
@@ -208,14 +208,17 @@ export function ExecutivePremiumTemplate({
                 {/* Page five */}
                 <div
                   id="page-five"
-                  className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
+                  className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-6 pl-10 sm:pl-30"
                 >
-                  <VerticalBar className="left-20" variant="gradientGray" />
-                  <HorizontalBar className="bottom-20" variant="gradientGray" />
+                  <VerticalBar  variant="gradientGray" />
+                  <HorizontalBar  variant="gradientGray" />
+                  
+                  <div className="pl-6 sm:pl-0">
                   <ProposalTitle
                     templateType="executive_premium"
                     title="Our Qualifications"
                   />
+                    </div>
                   <ContentQualificationsSection templateType="executive_premium" />
 
                   <PoweredBy colorLogo="gray" isRight />
@@ -230,9 +233,9 @@ export function ExecutivePremiumTemplate({
 
                 <div
                   id="page-six"
-                  className="relative aspect-[1/1.4] bg-white p-8"
+                  className="relative aspect-[1/1.4] bg-white sm:p-8 p-6"
                 >
-                  <div className="gap-6 pl-[95px]">
+                  <div className="gap-6 pl-10 sm:pl-[95px]">
                     <div>
                       {scope?.content ? (
                         <ScopeOfService
@@ -263,8 +266,8 @@ export function ExecutivePremiumTemplate({
                       )}
                     </div>
                   </div>
-                  <VerticalBar className="left-20" variant="gradientGray" />
-                  <HorizontalBar className="bottom-20" variant="gradientGray" />
+                  <VerticalBar  variant="gradientGray" />
+                  <HorizontalBar  variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={6}
@@ -277,9 +280,9 @@ export function ExecutivePremiumTemplate({
 
                 <div
                   id="page-seven"
-                  className="relative aspect-[1/1.4] bg-white p-8"
+                  className="relative aspect-[1/1.4] bg-white sm:p-8 p-6"
                 >
-                  <div className="max-w-none pl-[95px] space-y-8">
+                  <div className="max-w-none sm:pl-[95px] pl-10 space-y-8">
                     {pricing?.content ? (
                       <ServiceQuotePricing
                         title={pricing.title ?? 'Service Quote & Pricing'}
@@ -302,8 +305,8 @@ export function ExecutivePremiumTemplate({
                       />
                     ) : null}
                   </div>
-                  <VerticalBar className="left-20" variant="gradientGray" />
-                  <HorizontalBar className="bottom-20" variant="gradientGray" />
+                  <VerticalBar  variant="gradientGray" />
+                  <HorizontalBar  variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={7}
@@ -321,11 +324,14 @@ export function ExecutivePremiumTemplate({
       {/* Page Eight */}
       <div
         id="page-eight"
-        className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
+        className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-6 sm:pl-30 pl-10 sm:pb-0 pb-10"
       >
-        <VerticalBar className="left-20" variant="gradientGray" />
-        <HorizontalBar className="bottom-20" variant="gradientGray" />
+        <VerticalBar  variant="gradientGray" />
+        <HorizontalBar  variant="gradientGray" />
+        
+        <div className="pl-6 sm:pl-0">
         <ProposalTitle templateType="executive_premium" title="Terms & Legal" />
+        </div>
 
         <TitleDescriptionSection templateType="executive_premium" />
         <PoweredBy colorLogo="gray" isRight />
@@ -341,14 +347,18 @@ export function ExecutivePremiumTemplate({
       {/* Page Nine */}
       <div
         id="page-nine"
-        className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
+        className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-6 sm:pl-30 pl-10 sm:pb-0 pb-10"
       >
-        <VerticalBar className="left-20" variant="gradientGray" />
-        <HorizontalBar className="bottom-20" variant="gradientGray" />
+        <VerticalBar  variant="gradientGray" />
+        <HorizontalBar  variant="gradientGray" />
+
+        <div className="pl-6 sm:pl-0">
         <ProposalTitle
           templateType="executive_premium"
           title="Proposal Acceptance"
         />
+        </div>
+      
         <SignatureContent templateType="executive_premium" />
 
         <SignatureSection templateType="executive_premium" />
