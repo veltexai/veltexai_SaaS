@@ -42,7 +42,7 @@ scripts*
 .vercel
 
 # supabase
-supabase/.temp/
+supabase/.temp
 
 # typescript
 *.tsbuildinfo
