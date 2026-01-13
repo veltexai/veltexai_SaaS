@@ -81,7 +81,7 @@ const HeaderTemplate = ({
             aria-hidden
             className={`pointer-events-none absolute left-0 right-0 bottom-0 h-[1px] sm:h-[1.5px] bg-gradient-to-l ${colorBorder}`}
           />
-          <div className="relative flex flex-col sm:flex-row items-start sm:items-center">
+          <div className="relative flex flex-row items-start sm:items-center">
             <div className="relative flex-2 p-1.5 sm:p-2 w-full sm:w-auto">
               <p className="pl-2 sm:pl-4">
                 {' '}
@@ -91,7 +91,7 @@ const HeaderTemplate = ({
               {template !== 'luxury_elite' && (
                 <span
                   aria-hidden
-                  className={`pointer-events-none absolute top-1 right-0 w-[1px] sm:w-[1.5px] h-[80%] bg-gradient-to-t ${colorBorder} hidden sm:block`}
+                  className={`pointer-events-none absolute top-1 right-0 w-[1px] sm:w-[1.5px] h-[80%] bg-gradient-to-t ${colorBorder} block`}
                 />
               )}
             </div>

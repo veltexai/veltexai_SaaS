@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 type VerticalBarProps = {
   className?: string;
   variant?: 'gradientWhite' | 'gradientGray' | 'normal' | 'white';
+  modernCorporate?: boolean;
 };
 
 const VARIANTS: Record<NonNullable<VerticalBarProps['variant']>, string> = {
@@ -17,11 +18,12 @@ const VARIANTS: Record<NonNullable<VerticalBarProps['variant']>, string> = {
 export default function VerticalBar({
   className,
   variant = 'gradientWhite',
+  modernCorporate = false,
 }: VerticalBarProps) {
   return (
     <div
       className={cn(
-        'z-20 absolute top-0 h-full w-[1px] sm:w-[2px] left-10 sm:left-20',
+        `z-20 absolute top-0 h-full w-[1px] sm:w-[2px] ${modernCorporate ? '' : 'left-6 sm:left-20 '}`,
         VARIANTS[variant],
         className
       )}

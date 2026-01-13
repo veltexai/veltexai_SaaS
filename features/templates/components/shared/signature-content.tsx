@@ -10,7 +10,7 @@ const SignatureContent = ({ templateType }: { templateType: TemplateType }) => {
   return (
     <div
       className={`flex flex-col gap-10 sm:py-16 py-6 ${
-        templateType === 'luxury_elite' ? 'pt-46 pl-6 max-w-[90%]' : 'sm:pl-0 pl-6'
+        templateType === 'luxury_elite' ? 'sm:pt-46 pt-26 pl-6 max-w-[90%]' : 'sm:pl-0 pl-6'
       }`}
     >
       <p className={`${fontFamily} sm:text-sm text-xs`}>

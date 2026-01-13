@@ -14,8 +14,8 @@ import {
 const TableOfContents = ({ templateType }: { templateType: TemplateType }) => {
   return (
     <div
-      className={`relative aspect-[1/1.4] bg-white pt-16 ${
-        templateType === 'luxury_elite' ? 'pl-16 !pt-[38px]' : 'pl-16 sm:pl-30'
+      className={`relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 ${
+        templateType === 'luxury_elite' ? 'sm:pl-16 pl-10 sm:aspect-[1/1.4] aspect-[1/1.78]' : 'pl-16 sm:pl-30'
       } overflow-hidden`}
     >
       {templateType !== 'luxury_elite' && (
@@ -30,7 +30,7 @@ const TableOfContents = ({ templateType }: { templateType: TemplateType }) => {
 
       {templateType === 'luxury_elite' && (
         <>
-          <div className="z-10 absolute bottom-0 right-0 h-[400px]">
+          <div className="z-10 absolute bottom-0 right-0 sm:h-[400px] h-[220px]">
             <Image
               src="/images/templates/Images/Mask group-1.png"
               alt="Table of Contents"
@@ -40,7 +40,7 @@ const TableOfContents = ({ templateType }: { templateType: TemplateType }) => {
             />
             <PoweredBy colorLogo="white" isRight template="luxury_elite" />
           </div>
-          <LuxuryEliteBackgroundTitle className="z-10 absolute -top-[20px] -left-[20px] w-[353px] h-[350px]" />
+          <LuxuryEliteBackgroundTitle className="z-10 absolute sm:-top-[20px] -top-[10px] sm:-left-[20px] -left-[10px] sm:w-[353px] w-[253px] sm:h-[350px] h-[250px]" />
         </>
       )}
       {templateType === 'luxury_elite' && (

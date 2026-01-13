@@ -33,12 +33,12 @@ const ThankYouSection = ({
         </h1>
         {templateType !== 'executive_premium' ? (
           <>
-            <p className="sm:text-base text-sm">
+            <p className="sm:text-base text-xs">
               We appreciate the opportunity to support your facility. Our team
               is committed to reliable service, clear communication, and
               measurable results.
             </p>
-            <p className="font-bold italic sm:text-base text-sm">
+            <p className="font-bold italic sm:text-base text-xs">
               We look forward to serving your Cleaning needs with the highest
               standards of care
             </p>
@@ -51,15 +51,15 @@ const ThankYouSection = ({
           </p>
         )}
         <div className={`flex items-center gap-2 ${fontWeight} ${fontFamily}`}>
-          <EmailIcon className="size-6 text-[var(--color-primary)]" />
+          <EmailIcon className="sm:size-6 size-4 text-[var(--color-primary)]" />
           <span className="sm:text-base text-xs">Email [{email}]</span>
         </div>
         <div className={`flex items-center gap-2 ${fontWeight} ${fontFamily}`}>
-          <PhoneIcon className="size-6 text-[var(--color-primary)]" />
+          <PhoneIcon className="sm:size-6 size-4 text-[var(--color-primary)]" />
           <span className="sm:text-base text-xs">Phone: [{phone}]</span>
         </div>
         <div className={`flex items-center gap-2 ${fontWeight} ${fontFamily}`}>
-          <WebTrafficIcon className="size-6 text-[var(--color-primary)]" />
+          <WebTrafficIcon className="sm:size-6 size-4 text-[var(--color-primary)]" />
           <span className="sm:text-base text-xs">Website [{website}]</span>
         </div>
       </div>

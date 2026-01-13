@@ -34,15 +34,15 @@ export default function ProposalTitle({
       <div className={cn('flex items-center gap-3 relative', className)}>
         <span
           aria-hidden
-          className="z-20 absolute -left-[40.2px] h-20 w-10 bg-[linear-gradient(135deg,var(--color-primary)_0%,var(--color-primary)_20%,#4a67d4_50%,#3555C7_100%)]"
+          className="z-20 absolute sm:-left-[40.2px] -left-[39px] sm:h-20 h-15 sm:w-10 w-8 bg-[linear-gradient(135deg,var(--color-primary)_0%,var(--color-primary)_20%,#4a67d4_50%,#3555C7_100%)]"
         />
         <h1
-          className={`${montserrat.className} font-bold text-[var(--color-primary)] pl-5`}
+          className={`${montserrat.className} font-bold text-[var(--color-primary)] sm:pl-5 pl-2`}
         >
           {first ? (
-            <span className="font-normal block text-3xl">{first} </span>
+            <span className="font-normal block sm:text-3xl text-xl">{first} </span>
           ) : null}
-          <span className="font-bold text-5xl">{second}</span>
+          <span className="font-bold sm:text-5xl text-2xl">{second}</span>
         </h1>
       </div>
     );
@@ -73,24 +73,24 @@ export default function ProposalTitle({
           className,
           `${
             first.toLowerCase() === 'about our'
-              ? 'absolute -top-50 right-0'
+              ? 'absolute sm:-top-50 -top-[90px] right-0'
               : ''
           }`
         )}
       >
         <h1
-          className={`tk-bely relative z-20 font-bold text-[var(--color-primary)] mt-7`}
+          className={`tk-bely relative z-20 font-bold text-[var(--color-primary)] sm:mt-7 mt-0`}
         >
           {first ? (
             <span
-              className={`font-normal block text-4xl ${
+              className={`font-normal block sm:text-4xl text-2xl ${
                 first.toLowerCase() === 'about our' ? 'text-right' : ''
               } `}
             >
               {first}{' '}
             </span>
           ) : null}
-          <span className="font-bold text-7xl leading-[50%]">{second}</span>
+          <span className="font-bold sm:text-7xl text-5xl leading-[50%]">{second}</span>
         </h1>
       </div>
     );

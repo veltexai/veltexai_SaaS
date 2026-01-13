@@ -7,7 +7,7 @@ const TOCSection = ({ templateType }: { templateType: TemplateType }) => {
   return (
     <div
       className={`sm:pl-25 pl-10 ${
-        templateType === 'luxury_elite' ? 'pt-10' : ' pt-4 sm:pt-20'
+        templateType === 'luxury_elite' ? 'sm:pt-10 pt-4' : ' pt-4 sm:pt-20'
       }`}
     >
       {dataTOC.map((item) => (

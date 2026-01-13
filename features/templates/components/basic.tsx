@@ -82,8 +82,8 @@ export function BasicTemplate({
   return (
     <section className="space-y-4 sm:space-y-6">
       <div id="page-one" className="relative aspect-[1/1.4] bg-white overflow-hidden">
-        <VerticalBar className="left-6 sm:left-12 md:left-20" />
-        <HorizontalBar className="bottom-6 sm:bottom-12 md:bottom-20" />
+        <VerticalBar />
+        <HorizontalBar />
         <Image
           src="/images/templates/secondBlueBackground.svg"
           alt="Background"
@@ -133,7 +133,7 @@ export function BasicTemplate({
             <div
               key={`page-${idx + 2}`}
               id={`page-${idx + 2}`}
-              className="relative aspect-[1/1.4] bg-white p-3 sm:p-5 md:p-8 overflow-hidden"
+              className="relative sm:min-h-[1015px] min-h-full bg-white p-3 sm:p-5 md:p-8 overflow-hidden sm:!pb-18"
             >
               <div className="max-w-none pl-8 sm:pl-14 md:pl-[95px] pr-2 sm:pr-4">
                 {pageContent?.trim().length ? (
@@ -155,8 +155,8 @@ export function BasicTemplate({
                   </div>
                 )}
               </div>
-              <VerticalBar className="left-6 sm:left-12 md:left-20" variant="gradientGray" />
-              <HorizontalBar className="bottom-6 sm:bottom-12 md:bottom-20" variant="gradientGray" />
+              <VerticalBar variant="gradientGray" />
+              <HorizontalBar variant="gradientGray" />
               <PoweredBy colorLogo="gray" isRight />
               <NavitationNumber
                 value={idx + 1}

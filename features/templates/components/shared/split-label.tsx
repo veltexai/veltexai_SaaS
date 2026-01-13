@@ -10,7 +10,7 @@ export function SplitLabel({ text, className }: SplitLabelProps) {
 
   return (
     <span
-      className={`flex flex-col text-center leading-tight text-lg text-[#383838] ${className}`}
+      className={`flex flex-col text-center leading-tight sm:text-lg text-xs text-[#383838] ${className}`}
     >
       <span>{top}</span>
       {bottom && <span className="">{bottom}</span>}

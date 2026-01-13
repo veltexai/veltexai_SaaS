@@ -13,7 +13,7 @@ const ContentQualificationsSection = ({
     <div className="text-xs">
       <p
         className={`${montserrat.className} ${
-          templateType === 'modern_corporate' ? 'my-6' : 'sm:my-8 my-2 pl-6 sm:pl-0'
+          templateType === 'modern_corporate' ? 'sm:my-6 my-2' : 'sm:my-8 my-2 pl-6 sm:pl-0'
         }`}
       >
         We maintain appropriate insurance coverage and follow applicable
@@ -21,7 +21,7 @@ const ContentQualificationsSection = ({
         strengthen buyer confidence.
       </p>
 
-      <div className="grid grid-cols-2 gap-2 max-w-[90%] mt-3 sm:mt-0 pl-6 sm:pl-0">
+      <div className="grid grid-cols-2 gap-2 max-w-[90%] mt-3 sm:mt-0 pl-6 sm:pl-0 mb-10">
         <div className="bg-white flex col-span-2 items-center justify-center p-2 sm:p-4 drop-shadow-lg rounded-3xl">
           <div className="border-r pr-6">
             <Image
@@ -117,7 +117,7 @@ const ContentQualificationsSection = ({
           alt="qualifications"
           width={800}
           height={500}
-          className="z-20 absolute sm:bottom-20 bottom-6 sm:left-20 left-10 max-w-[85%]"
+          className="z-20 absolute sm:bottom-20 bottom-6 sm:left-20 left-6 max-w-[85%]"
           priority
           unoptimized
         />

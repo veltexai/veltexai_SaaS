@@ -30,7 +30,7 @@ const ThankYouPage = ({
       <div
         className={`${
           templateType === 'luxury_elite'
-            ? 'absolute right-0 bottom-0 h-[75%] w-full'
+            ? 'absolute right-0 bottom-0 sm:h-[75%] h-[65%] w-full'
             : 'relative w-[85%] h-[55%] sm:top-12 top-6 left-1/2 -translate-x-1/2'
         }`}
       >
@@ -49,7 +49,7 @@ const ThankYouPage = ({
       <div
         className={`absolute flex items-start justify-center ${
           templateType === 'luxury_elite'
-            ? 'flex-col gap-6 left-0 top-0 w-[60%] pl-8 pt-8'
+            ? 'flex-col sm:gap-6 gap-4 left-0 top-0 sm:w-[60%] w-[90%] sm:pl-8 pl-4 sm:pt-8 pt-4'
             : 'w-[90%] sm:bottom-12 bottom-3 left-1/2 -translate-x-1/2 '
         }`}
       >
@@ -59,7 +59,7 @@ const ThankYouPage = ({
             alt={companyName}
             className={`${
               templateType === 'luxury_elite'
-                ? 'max-h-[60px] w-auto mb-3'
+                ? 'sm:max-h-[60px] max-h-[40px] w-auto sm:mb-3 mb-0'
                 : 'h-12 w-auto flex-[80%] object-contain'
             }`}
             height={48}

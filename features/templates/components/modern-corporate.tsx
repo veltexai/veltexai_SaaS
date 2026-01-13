@@ -60,16 +60,18 @@ export function ModernCorporateTemplate({
         id="page-one"
         className="relative aspect-[1/1.4] bg-white overflow-hidden"
       >
-        <HorizontalBar className="bottom-[58px] !h-[1px]" />
-        <HorizontalBar className="bottom-32 !h-[1px]" />
-        <div className="relative z-10 w-40 h-[calc(100%-170px)] left-15 -bottom-[112px]">
+        <HorizontalBar className="!bottom-[58px] !h-[1px]" />
+        <HorizontalBar className="sm:!bottom-32 !bottom-21 !h-[1px]" />
+        <div className="relative z-10 sm:w-40 w-22 sm:h-[calc(100%-170px)] h-[calc(100%-120px)] sm:left-15 left-8 sm:-bottom-[112px] -bottom-[62px]">
           <VerticalBar
-            className="-right-[1px] top-[260px] !w-[1px]"
+            className="-right-[1px] sm:!top-[260px] !top-[40px] !w-[1px]"
             variant="white"
+            modernCorporate={true}
           />
           <VerticalBar
-            className="-left-[1px] top-[260px] !w-[1px]"
+            className="!-left-[1px] sm:!top-[260px] !top-[40px] !w-[1px]"
             variant="white"
+            modernCorporate={true}
           />
           <Image
             src="/images/templates/Rectangle.svg"
@@ -90,10 +92,12 @@ export function ModernCorporateTemplate({
           <VerticalBar
             className="-right-[1px] bottom-[260px] !w-[1px]"
             variant="normal"
+            modernCorporate={true}
           />
           <VerticalBar
             className="-left-[1px] bottom-[260px] !w-[1px]"
             variant="normal"
+            modernCorporate={true}
           />
         </div>
         <div className="absolute w-[90%] h-[40%] bottom-8 left-1/2 -translate-x-1/2">
@@ -116,7 +120,7 @@ export function ModernCorporateTemplate({
             position="center"
           />
         ) : null}
-        <div className="absolute top-28 right-10 max-w-[64%]">
+        <div className="absolute sm:top-28 top-6 sm:right-10 right-5 max-w-[64%]">
           <HeaderTemplate
             title={proposal.title}
             date={proposal.created_at}
@@ -138,7 +142,7 @@ export function ModernCorporateTemplate({
               <>
                 <div
                   id="page-three"
-                  className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
+                  className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
                 >
                   <div>
                     {about?.content ? (
@@ -159,7 +163,7 @@ export function ModernCorporateTemplate({
                     alt="qualifications"
                     width={800}
                     height={500}
-                    className="z-30 absolute bottom-20 left-20 max-w-[85%]"
+                    className="z-30 absolute sm:bottom-20 bottom-6 sm:left-20 left-6 max-w-[85%]"
                     priority
                     unoptimized
                   />
@@ -177,7 +181,7 @@ export function ModernCorporateTemplate({
 
                 <div
                   id="page-four"
-                  className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
+                  className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-20 pb-10"
                 >
                   <div className="max-w-[95%]">
                     <div>
@@ -224,7 +228,7 @@ export function ModernCorporateTemplate({
                 {/* Page five */}
                 <div
                   id="page-five"
-                  className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
+                  className="relative sm:aspect-[1/1.4] aspect-[1/1.53] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
                 >
                   <VerticalBar  variant="gradientGray" />
                   <HorizontalBar  variant="gradientGray" />
@@ -246,7 +250,7 @@ export function ModernCorporateTemplate({
 
                 <div
                   id="page-six"
-                  className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
+                  className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
                 >
                   <div className="max-w-[95%]">
                     {scope?.content ? (
@@ -291,9 +295,9 @@ export function ModernCorporateTemplate({
 
                 <div
                   id="page-seven"
-                  className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
+                  className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16"
                 >
-                  <div className="max-w-[95%] space-y-8">
+                  <div className="max-w-[95%] sm:space-y-8 space-y-4">
                     {pricing?.content ? (
                       <ServiceQuotePricing
                         title={pricing.title ?? 'Service Quote & Pricing'}
@@ -334,7 +338,7 @@ export function ModernCorporateTemplate({
 
       <div
         id="page-eight"
-        className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
+        className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
       >
         <VerticalBar  variant="gradientGray" />
         <HorizontalBar  variant="gradientGray" />
@@ -353,7 +357,7 @@ export function ModernCorporateTemplate({
 
       <div
         id="page-nine"
-        className="relative aspect-[1/1.4] bg-white pt-16 pl-30"
+        className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16"
       >
         <VerticalBar  variant="normal" />
         <HorizontalBar  variant="normal" />

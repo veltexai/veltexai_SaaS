@@ -72,7 +72,7 @@ export default function AboutOurCompany({
     return (
       <div className="flex items-start gap-3 sm:gap-4 p-2 sm:p-10 sm:pr-4">
         {Icon ? (
-          <Icon className="h-8 w-8 text-[var(--color-primary)] flex-shrink-0" />
+          <Icon className="sm:h-8 h-4 sm:w-8 w-4 text-[var(--color-primary)] flex-shrink-0" />
         ) : null}
         <div
           className={`italic text-[#383838] ${dmSerifText.className} text-xs sm:text-xl leading-relaxed font-semibold`}
@@ -108,28 +108,28 @@ export default function AboutOurCompany({
                 /service\s*area/i.test(b)
               );
               return (
-                <div className="mt-10 pb-6 flex flex-col items-center tk-bely">
+                <div className="sm:mt-10 mt-1 pb-6 flex flex-col items-center tk-bely">
                   {years ? (
                     <div className="flex flex-col items-center gap-2 text-[var(--color-primary)]">
-                      <ShieldIcon className="h-12 w-12" />
+                      <ShieldIcon className="sm:h-12 h-8 sm:w-12 w-8" />
                       <SplitLabel text={years} />
                     </div>
                   ) : null}
-                  <div className="flex items-center gap-[78px]">
-                    <div className="relative w-48 h-48 rotate-45 bg-[var(--color-primary)]">
-                      <div className="absolute inset-0 -rotate-45 flex flex-col items-center justify-center p-6 text-white text-center">
-                        <EductationIcon className="h-12 w-12" />
-                        <div className="text-lg leading-relaxed">
+                  <div className="flex items-center sm:gap-[78px] gap-12">
+                    <div className="relative sm:w-48 w-28 sm:h-48 h-28 rotate-45 bg-[var(--color-primary)]">
+                      <div className="absolute inset-0 -rotate-45 flex flex-col items-center justify-center sm:p-6 p-2 text-white text-center">
+                        <EductationIcon className="sm:h-12 h-8 sm:w-12 w-8" />
+                        <div className="sm:text-lg text-xs leading-relaxed">
                           {sectors
                             ? parseInline(sectors)
                             : parseInline(bullets[0])}
                         </div>
                       </div>
                     </div>
-                    <div className="relative w-48 h-48 rotate-45 bg-[var(--color-primary)]">
-                      <div className="absolute inset-0 -rotate-45 flex flex-col items-center justify-center p-6 text-white text-center">
-                        <StartIcon className="h-12 w-12" />
-                        <div className="text-xl leading-relaxed">
+                    <div className="relative sm:w-48 w-28 sm:h-48 h-28 rotate-45 bg-[var(--color-primary)]">
+                      <div className="absolute inset-0 -rotate-45 flex flex-col items-center justify-center sm:p-6 p-2 text-white text-center">
+                        <StartIcon className="sm:h-12 h-8 sm:w-12 w-8" />
+                        <div className="sm:text-xl text-xs leading-relaxed">
                           {satisfaction ? (
                             <SplitLabel
                               text={satisfaction}
@@ -144,8 +144,8 @@ export default function AboutOurCompany({
                   </div>
                   {serviceArea ? (
                     <div className="flex flex-col items-center gap-2 text-[var(--color-primary)]">
-                      <LocationIcon className="h-12 w-12" />
-                      <span className="text-xl text-[#383838]">
+                      <LocationIcon className="sm:h-12 h-8 sm:w-12 w-8" />
+                      <span className="sm:text-xl text-xs text-[#383838]">
                         <SplitLabel text={serviceArea} className="text-xl" />
                       </span>
                     </div>

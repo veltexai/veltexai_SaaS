@@ -88,7 +88,7 @@ export default function ServiceQuotePricing({
           </p>
         ) : null}
         {data ? (
-          <div className="mb-10">
+          <div className="sm:mb-10 mb-4">
             <div className="sm:text-base text-xs text-center grid grid-cols-4 text-[var(--color-primary)] gap-4 sm:px-5 px-2 mb-2">
               <div className="font-semibold col-span-2">Service</div>
               <div className="font-semibold">Frequency</div>
