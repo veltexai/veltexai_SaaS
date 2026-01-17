@@ -53,7 +53,7 @@ export default function Notes({
         </h3>
         <ul className="space-y-2 text-[#383838]">
           {items.map((it, i) => (
-            <li key={`note-${i}`} className="list-disc ml-5 sm:text-xs text-[10px]">
+            <li key={`note-${i}`} className="list-disc ml-5 sm:text-xs text-2xs">
               {parseInline(it)}
             </li>
           ))}

@@ -14,7 +14,7 @@ import {
 const TableOfContents = ({ templateType }: { templateType: TemplateType }) => {
   return (
     <div
-      className={`relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 ${
+      className={`relative sm:aspect-[1/1.4] h-full bg-white sm:pt-16 pt-10 sm:pb-0 pb-10 ${
         templateType === 'luxury_elite' ? 'sm:pl-16 pl-10 sm:aspect-[1/1.4] aspect-[1/1.78]' : 'pl-16 sm:pl-30'
       } overflow-hidden`}
     >
@@ -30,7 +30,7 @@ const TableOfContents = ({ templateType }: { templateType: TemplateType }) => {
 
       {templateType === 'luxury_elite' && (
         <>
-          <div className="z-10 absolute bottom-0 right-0 sm:h-[400px] h-[220px]">
+          <div className="z-10 absolute bottom-0 right-0 sm:h-[400px] h-[190px]">
             <Image
               src="/images/templates/Images/Mask group-1.png"
               alt="Table of Contents"

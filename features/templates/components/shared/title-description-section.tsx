@@ -29,7 +29,7 @@ const TitleDescriptionSection = ({
             <h2 className={`sm:text-lg text-base font-bold ${fontFamilyTitle}`}>
               {term.title}
             </h2>
-            <p className={`mt-2 sm:text-xs text-[10px] ${fontFamilyDescription}`}>
+            <p className={`mt-2 sm:text-xs text-2xs ${fontFamilyDescription}`}>
               {term.description}
             </p>
           </div>

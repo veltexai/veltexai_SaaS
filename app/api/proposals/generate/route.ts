@@ -488,20 +488,36 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
         frequency: getServiceFrequencyLabel(service_frequency),
         pricePerMonth: toMoney(baseMonthlyNum),
       },
-      ...selectedAddons.map((a) => ({
-        service: a.label,
-        frequency: a.frequency || a.frequency_label || 'As selected',
-        pricePerMonth: toMoney(
-          typeof a.monthly_amount === 'number'
-            ? a.monthly_amount
-            : typeof a.rate === 'number' &&
-              String(a.frequency || '')
-                .toLowerCase()
-                .includes('annual')
-            ? a.rate / 12
-            : Number(a.monthly_amount) || 0
-        ),
-      })),
+      ...selectedAddons.map((a) => {
+        // Calculate subtotal: use provided subtotal or compute from qty * rate
+        const subtotal = typeof a.subtotal === 'number' && a.subtotal > 0
+          ? a.subtotal
+          : (Number(a.qty) || 0) * (Number(a.rate) || 0);
+        
+        // Determine monthly amount based on frequency
+        const freq = String(a.frequency || '').toLowerCase();
+        let monthlyAmount = 0;
+        
+        if (typeof a.monthly_amount === 'number' && a.monthly_amount > 0) {
+          // Use provided monthly_amount if available
+          monthlyAmount = a.monthly_amount;
+        } else if (freq === 'monthly') {
+          monthlyAmount = subtotal;
+        } else if (freq === 'quarterly') {
+          monthlyAmount = subtotal / 3;
+        } else if (freq === 'annual') {
+          monthlyAmount = subtotal / 12;
+        } else if (freq === 'one_time') {
+          // One-time services don't have a monthly equivalent
+          monthlyAmount = 0;
+        }
+        
+        return {
+          service: a.label,
+          frequency: a.frequency || a.frequency_label || 'As selected',
+          pricePerMonth: toMoney(monthlyAmount),
+        };
+      }),
     ];
     const subtotalNum = pricingRows.reduce((sum, r) => {
       const v = Number(String(r.pricePerMonth).replace(/[^0-9.]/g, ''));

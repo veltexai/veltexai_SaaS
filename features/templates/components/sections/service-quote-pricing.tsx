@@ -112,7 +112,7 @@ export default function ServiceQuotePricing({
                     : 'bg-[var(--color-primary)] text-white'
                 )}
               >
-                <div className="grid grid-cols-4 gap-4 sm:text-base text-[10px] items-center text-center">
+                <div className="grid grid-cols-4 gap-4 sm:text-base text-2xs items-center text-center">
                   <div
                     className={`font-bold whitespace-pre-line col-span-2 ${
                       templateType === 'modern_corporate'

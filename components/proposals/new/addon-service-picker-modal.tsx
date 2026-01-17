@@ -108,20 +108,23 @@ export function AddonServicePickerModal({
     amortize: boolean
   ) => {
     const subtotal = q * rate;
+    
+    // One-time services don't have a monthly equivalent
+    if (freq === 'one_time') {
+      return { subtotal, monthly_amount: null };
+    }
+    
+    // Calculate monthly amount based on frequency
+    // Always calculate the monthly equivalent for recurring services (monthly, quarterly, annual)
+    // This is needed for proper pricing display and budgeting
     const freqMap: Record<string, number> = {
       monthly: 1,
       quarterly: 3,
       annual: 12,
     };
     const months = freqMap[freq] || 1;
-    const monthly_amount =
-      freq === 'one_time'
-        ? null
-        : amortize
-        ? subtotal / months
-        : freq === 'monthly'
-        ? subtotal
-        : null;
+    const monthly_amount = subtotal / months;
+    
     return { subtotal, monthly_amount };
   };
 

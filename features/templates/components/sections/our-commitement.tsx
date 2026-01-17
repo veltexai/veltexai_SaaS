@@ -78,7 +78,7 @@ export default function OurCommitement({
     return (
       <div className="flex items-start gap-4 sm:py-2 py-1">
         <Icon className="h-4 sm:h-7 w-4 sm:w-7 flex-shrink-0 text-[var(--color-primary)]" />
-        <div className="text-[#383838] leading-relaxed text-[10px] sm:text-sm">
+        <div className="text-[#383838] leading-relaxed text-3xs sm:text-sm">
           {parseInline(raw)}
         </div>
       </div>
@@ -90,11 +90,11 @@ export default function OurCommitement({
       <div className={className}>
         <ProposalTitle templateType={templateType} title={title} />
         {firstParagraph ? (
-          <p className="text-xs sm:text-sm text-[#383838] sm:mb-4 mb-2 leading-relaxed sm:mt-8 mt-2">
+          <p className="text-2xs sm:text-sm text-[#383838] sm:mb-4 mb-2 leading-relaxed sm:mt-8 mt-2">
             {parseInline(firstParagraph)}
           </p>
         ) : null}
-        <h3 className={`sm:text-2xl text-xl italic sm:mt-8 mt-4 mb-2 ${dmSerifText.className}`}>
+        <h3 className={`sm:text-2xl text-base italic sm:mt-8 mt-4 mb-2 ${dmSerifText.className}`}>
           Service Values
         </h3>
         <div className="mt-2">

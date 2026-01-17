@@ -801,8 +801,6 @@ export class EmailTemplates {
             <div class="company">${data.companyName}</div>
           </div>
           <div class="content">
-            <div class="greeting">Dear ${data.clientName},</div>
-            
             <div class="message">
               ${data.message.split('\n').map(line => `<p>${line}</p>`).join('')}
             </div>

@@ -52,7 +52,7 @@ export default function Addons({
           templateType === 'luxury_elite' ? 'rounded-none' : 'rounded-3xl'
         }`}
       >
-        <div className="text-[var(--color-primary)] font-bold text-center leading-relaxed text-sm">
+        <div className="text-[var(--color-primary)] font-bold text-center leading-relaxed sm:text-sm text-2xs">
           {parseInline(raw)}
         </div>
       </div>

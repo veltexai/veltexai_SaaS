@@ -83,14 +83,14 @@ export default function ProposalTitle({
         >
           {first ? (
             <span
-              className={`font-normal block sm:text-4xl text-2xl ${
+              className={`font-normal block sm:text-4xl text-xl ${
                 first.toLowerCase() === 'about our' ? 'text-right' : ''
               } `}
             >
               {first}{' '}
             </span>
           ) : null}
-          <span className="font-bold sm:text-7xl text-5xl leading-[50%]">{second}</span>
+          <span className="font-bold sm:text-7xl text-3xl leading-[50%]">{second}</span>
         </h1>
       </div>
     );

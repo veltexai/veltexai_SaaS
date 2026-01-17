@@ -73,7 +73,7 @@ export function ExecutivePremiumTemplate({
     <section className="space-y-8">
       {/* Page One */}
       <div id="page-one" className="relative aspect-[1/1.4] bg-white">
-        <div className="absolute w-[85%] h-[40%] bottom-12 left-1/2 -translate-x-1/2">
+        <div className="absolute w-[85%] h-[40%] sm:bottom-12 bottom-6 left-1/2 -translate-x-1/2">
           <div className="absolute h-2.5 w-[200px] bg-[var(--color-primary)] -top-[5px]"></div>
           <Image
             src="/images/templates/Images/pexels-exnl-931887-1.png"
@@ -93,7 +93,7 @@ export function ExecutivePremiumTemplate({
             position="start"
           />
         ) : null}
-        <div className="absolute top-10 sm:top-28 right-10 max-w-[70%]">
+        <div className="absolute top-12 sm:top-28 right-10 max-w-[70%]">
           <HeaderTemplate
             title={proposal.title}
             date={proposal.created_at}
@@ -145,7 +145,7 @@ export function ExecutivePremiumTemplate({
                     alt="qualifications"
                     width={800}
                     height={500}
-                    className="z-30 absolute sm:bottom-20 bottom-6 left-10 sm:left-20 max-w-[85%]"
+                    className="z-30 absolute sm:bottom-20 bottom-6 left-6 sm:left-20 max-w-[85%]"
                   />
                   <VerticalBar  variant="gradientGray" />
                   <HorizontalBar  variant="gradientGray" />
@@ -208,7 +208,7 @@ export function ExecutivePremiumTemplate({
                 {/* Page five */}
                 <div
                   id="page-five"
-                  className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-6 pl-10 sm:pl-30"
+                  className="relative sm:aspect-[1/1.4] aspect-[1/1.62] bg-white sm:pt-16 pt-6 pl-10 sm:pl-30"
                 >
                   <VerticalBar  variant="gradientGray" />
                   <HorizontalBar  variant="gradientGray" />
@@ -233,7 +233,7 @@ export function ExecutivePremiumTemplate({
 
                 <div
                   id="page-six"
-                  className="relative aspect-[1/1.4] bg-white sm:p-8 p-6"
+                  className="relative aspect-[1/1.4] bg-white sm:p-8 p-6 sm:pb-0 pb-10"
                 >
                   <div className="gap-6 pl-10 sm:pl-[95px]">
                     <div>
@@ -280,7 +280,7 @@ export function ExecutivePremiumTemplate({
 
                 <div
                   id="page-seven"
-                  className="relative aspect-[1/1.4] bg-white sm:p-8 p-6"
+                  className="relative aspect-[1/1.4] bg-white sm:p-8 p-6 sm:pb-0 pb-10"
                 >
                   <div className="max-w-none sm:pl-[95px] pl-10 space-y-8">
                     {pricing?.content ? (

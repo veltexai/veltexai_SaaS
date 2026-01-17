@@ -60,9 +60,9 @@ export function ModernCorporateTemplate({
         id="page-one"
         className="relative aspect-[1/1.4] bg-white overflow-hidden"
       >
-        <HorizontalBar className="!bottom-[58px] !h-[1px]" />
-        <HorizontalBar className="sm:!bottom-32 !bottom-21 !h-[1px]" />
-        <div className="relative z-10 sm:w-40 w-22 sm:h-[calc(100%-170px)] h-[calc(100%-120px)] sm:left-15 left-8 sm:-bottom-[112px] -bottom-[62px]">
+        <HorizontalBar className="sm:!bottom-[58px] !bottom-[12px] !h-[1px]" />
+        <HorizontalBar className="sm:!bottom-32 !bottom-9 !h-[1px]" />
+        <div className="relative z-10 sm:w-40 w-18 sm:h-[calc(100%-170px)] h-[calc(100%-120px)] sm:left-15 left-8 sm:-bottom-[112px] -bottom-[108px]">
           <VerticalBar
             className="-right-[1px] sm:!top-[260px] !top-[40px] !w-[1px]"
             variant="white"
@@ -100,7 +100,7 @@ export function ModernCorporateTemplate({
             modernCorporate={true}
           />
         </div>
-        <div className="absolute w-[90%] h-[40%] bottom-8 left-1/2 -translate-x-1/2">
+        <div className="absolute w-[90%] h-[40%] sm:bottom-8 bottom-0 left-1/2 -translate-x-1/2">
           <Image
             src="/images/templates/Images/pexels-exnl-9318871-1.png"
             alt="Background"
@@ -228,7 +228,7 @@ export function ModernCorporateTemplate({
                 {/* Page five */}
                 <div
                   id="page-five"
-                  className="relative sm:aspect-[1/1.4] aspect-[1/1.53] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
+                  className="relative sm:aspect-[1/1.4] aspect-[1/1.74] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
                 >
                   <VerticalBar  variant="gradientGray" />
                   <HorizontalBar  variant="gradientGray" />
@@ -295,7 +295,7 @@ export function ModernCorporateTemplate({
 
                 <div
                   id="page-seven"
-                  className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16"
+                  className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
                 >
                   <div className="max-w-[95%] sm:space-y-8 space-y-4">
                     {pricing?.content ? (
@@ -357,7 +357,7 @@ export function ModernCorporateTemplate({
 
       <div
         id="page-nine"
-        className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16"
+        className="relative sm:aspect-[1/1.4] aspect-[1/1.5] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
       >
         <VerticalBar  variant="normal" />
         <HorizontalBar  variant="normal" />
@@ -377,7 +377,7 @@ export function ModernCorporateTemplate({
         />
       </div>
 
-      <div id="page-ten" className="relative aspect-[1/1.4] bg-white">
+      <div id="page-ten" className="relative sm:aspect-[1/1.4] aspect-[1/1.7] bg-white">
         <ThankYouPage
           email={email}
           phone={phone}

@@ -128,3 +128,13 @@
     }
   }
 }
+
+@utility text-2xs {
+  font-size: 10px;
+  line-height: 14px;
+}
+
+@utility text-3xs {
+  font-size: 8px;
+  line-height: 12px;
+}

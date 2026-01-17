@@ -34,7 +34,7 @@ const HeaderTemplate = ({
               : ''
           } ${
             template === 'luxury_elite'
-              ? `${arvo.className} uppercase tracking-[2px] sm:tracking-[3px] md:tracking-[5px] !not-italic leading-0 !text-xs sm:!text-sm`
+              ? `${arvo.className} uppercase tracking-[2px] sm:tracking-[3px] md:tracking-[5px] !not-italic leading-0 !text-2xs sm:!text-sm`
               : ''
           } text-[14px] sm:text-[18px] md:text-[24px] leading-[100%] ${className}`}
         >
@@ -60,7 +60,7 @@ const HeaderTemplate = ({
             className={` ${
               template === 'modern_corporate'
                 ? `pl-2 sm:pl-4 md:pl-8 ${montserrat.className} text-sm sm:text-lg md:text-2xl py-2 sm:py-3 md:py-4`
-                : `${arvo.className} text-sm sm:text-lg md:text-xl pb-4 sm:pb-6 md:pb-10 pt-1 sm:pt-2`
+                : `${arvo.className} text-xs sm:text-lg md:text-xl pb-1 sm:pb-6 md:pb-10 pt-1 sm:pt-2`
             }`}
           >
             Proven Strategies to Create a Healthier Environment!
@@ -69,7 +69,7 @@ const HeaderTemplate = ({
         <div
           className={`relative mb-2 sm:mb-3 ${
             template === 'luxury_elite'
-              ? `text-sm sm:text-base md:text-lg ${arvo.className}`
+              ? `text-xs sm:text-base md:text-lg ${arvo.className}`
               : 'text-[10px] sm:text-xs md:text-sm'
           }`}
         >

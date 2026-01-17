@@ -95,7 +95,7 @@ export default function ScopeOfService({
           {premium ? (
             <>
               <div
-                className={`text-center grid grid-cols-4 text-[var(--color-primary)] gap-4 sm:px-5 px-2 mb-2 sm:text-base text-xs
+                className={`text-center grid grid-cols-4 text-[var(--color-primary)] gap-4 sm:px-5 px-2 mb-2 sm:text-base text-2xs
                 ${
                   templateType === 'luxury_elite'
                     ? `${arvo.className} font-normal`
@@ -122,7 +122,7 @@ export default function ScopeOfService({
                         : 'bg-[var(--color-primary)] text-white'
                     }`}
                 >
-                  <div className="grid grid-cols-4 gap-4 text-xs justify-center items-center text-center">
+                  <div className="grid grid-cols-4 gap-4 sm:text-xs text-2xs justify-center items-center text-center">
                     <div
                       className={`whitespace-pre-line font-bold ${
                         templateType === 'modern_corporate'
@@ -151,7 +151,7 @@ export default function ScopeOfService({
               {rows.map((row, i) => (
                 <div
                   key={`scope-row-${i}`}
-                  className="rounded-3xl px-5 py-3 bg-black mb-2"
+                  className="rounded-3xl px-5 py-3 bg-[var(--color-primary)] mb-2"
                 >
                   <div className="text-center grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs justify-center items-center">
                     <div className="whitespace-pre-line">{row.area}</div>
@@ -216,7 +216,7 @@ export default function ScopeOfService({
       <div>
         <ProposalTitle templateType={templateType} title={title} />
         <p
-          className={`text-xs sm:text-sm text-[#383838] sm:my-6 my-3 leading-relaxed ${
+          className={`text-2xs sm:text-sm text-[#383838] sm:my-6 my-3 leading-relaxed ${
             templateType === 'luxury_elite' ? arvo.className : ''
           }`}
         >

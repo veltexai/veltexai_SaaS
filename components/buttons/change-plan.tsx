@@ -145,7 +145,7 @@ const ChangePlanButton = ({
                 Change Plan
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Choose Your Plan</DialogTitle>
                 <DialogDescription>
@@ -157,7 +157,7 @@ const ChangePlanButton = ({
                     : 'Select a new plan to upgrade or downgrade your subscription. Your usage will be reset with the new plan.'}
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pb-2">
                 {plans?.map((plan) => (
                   <Card
                     key={plan.name}

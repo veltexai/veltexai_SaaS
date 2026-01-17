@@ -75,7 +75,7 @@ export function LuxuryEliteTemplate({
         className="relative aspect-[1/1.4] bg-white overflow-hidden"
       >
         <p
-          className={`absolute -right-[48px] sm:top-[88.5px] top-[58.5px] -rotate-90 z-30 text-white sm:text-sm text-xs ${montserrat.className}`}
+          className={`absolute sm:-right-[48px] -right-[38px] sm:top-[88.5px] top-[58.5px] -rotate-90 z-30 text-white sm:text-sm text-xs ${montserrat.className}`}
         >
           {formatDateLong(proposal.created_at)}
         </p>
@@ -97,7 +97,7 @@ export function LuxuryEliteTemplate({
           width={1100}
         />
 
-        <div className="absolute sm:top-50 top-25 sm:left-20 left-10 max-w-[75%]">
+        <div className="absolute sm:top-50 top-21 sm:left-20 left-10 max-w-[75%]">
           <HeaderTemplate
             title={proposal.title}
             date={proposal.created_at}
@@ -148,7 +148,7 @@ export function LuxuryEliteTemplate({
                     alt="qualifications"
                     width={800}
                     height={500}
-                    className="z-30 absolute top-0 left-0 max-w-[85%]"
+                    className="z-30 absolute top-0 left-0 sm:max-w-[85%] max-w-[75%]"
                   />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
@@ -162,7 +162,7 @@ export function LuxuryEliteTemplate({
 
                 <div
                   id="page-four"
-                  className="relative sm:aspect-[1/1.4] aspect-[1/1.64] bg-white overflow-hidden sm:pl-16 pl-12 sm:!pt-[38px] pt-10 sm:pb-0 pb-10"
+                  className="relative sm:aspect-[1/1.4] aspect-[1/1.64] bg-white overflow-hidden sm:pl-16 pl-10 sm:!pt-[38px] pt-10 sm:pb-0 pb-10"
                 >
                   <LuxuryEliteBackgroundTitle className="z-10 absolute sm:-top-[20px] -top-[10px] sm:-left-[20px] -left-[10px] sm:w-[353px] w-[253px] sm:h-[350px] h-[250px]" />
                   <div className="gap-6">
@@ -180,7 +180,7 @@ export function LuxuryEliteTemplate({
                         </div>
                       )}
                     </div>
-                    <div className="mt-10">
+                    <div className="sm:mt-10 mt-4">
                       {whyUs?.content ? (
                         <WhyChooseUs
                           title={whyUs.title ?? 'Why Choose Us'}
@@ -317,7 +317,7 @@ export function LuxuryEliteTemplate({
 
       <div
         id="page-eight"
-        className="relative sm:aspect-[1/1.4] aspect-[1/1.74] bg-white sm:pl-16 pl-12 sm:!pt-[38px] pt-10 sm:pb-0 pb-10 overflow-hidden"
+        className="relative sm:aspect-[1/1.4] h-full bg-white sm:pl-16 pl-12 sm:!pt-[38px] pt-10 sm:pb-0 pb-10 overflow-hidden"
       >
         <LuxuryEliteBackgroundTitle className="z-10 absolute sm:-top-[20px] -top-[10px] sm:-left-[20px] -left-[10px] sm:w-[353px] w-[253px] sm:h-[350px] h-[250px]" />
         <ProposalTitle templateType="luxury_elite" title="Terms & Legal" />

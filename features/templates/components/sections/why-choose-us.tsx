@@ -85,7 +85,7 @@ export default function WhyChooseUs({
     return (
       <div className="flex items-start gap-4 sm:py-2 py-1">
         <Icon className="h-4 sm:h-7 w-4 sm:w-7 flex-shrink-0 text-[var(--color-primary)]" />
-        <div className="text-[#383838] leading-relaxed text-[10px] sm:text-sm">
+        <div className="text-[#383838] leading-relaxed text-3xs sm:text-sm">
           {parseInline(raw)}
         </div>
       </div>

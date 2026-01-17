@@ -306,10 +306,44 @@ export function PricingSection({
 
   const selectedAddons = form.getValues('selected_addons' as any) || [];
   const sourceAddons = proposalId ? addons : selectedAddons;
+  
+  // Calculate monthly total for recurring addons (monthly, quarterly, annual)
+  // This properly handles amortization for quarterly and annual frequencies
   const monthlyAddonsTotal = useMemo(() => {
-    return (sourceAddons as any[]).reduce((sum, a) => sum + (a.monthly_amount || 0), 0);
+    return (sourceAddons as any[]).reduce((sum, a) => {
+      // If monthly_amount is already calculated, use it
+      const m = a.monthly_amount;
+      if (m !== null && m !== undefined && Number.isFinite(Number(m))) {
+        return sum + Number(m);
+      }
+      
+      // Calculate monthly equivalent based on frequency
+      const freq = String(a.frequency || '').toLowerCase();
+      const subtotal = Number.isFinite(Number(a.subtotal))
+        ? Number(a.subtotal)
+        : (Number(a.rate) || 0) * (Number(a.qty) || 0);
+      
+      // Only include recurring frequencies in monthly total
+      if (freq === 'monthly') {
+        return sum + subtotal;
+      } else if (freq === 'quarterly') {
+        return sum + subtotal / 3;
+      } else if (freq === 'annual') {
+        return sum + subtotal / 12;
+      }
+      
+      // One-time addons are not included in monthly total
+      return sum;
+    }, 0);
   }, [sourceAddons]);
-  const oneTimeAddons = useMemo(() => (sourceAddons as any[]).filter(a => a.monthly_amount === null), [sourceAddons]);
+  
+  // Filter one-time addons for separate display
+  const oneTimeAddons = useMemo(() => {
+    return (sourceAddons as any[]).filter(a => {
+      const freq = String(a.frequency || '').toLowerCase();
+      return freq === 'one_time' || (a.monthly_amount === null && !['monthly', 'quarterly', 'annual'].includes(freq));
+    });
+  }, [sourceAddons]);
 
   
 
