@@ -385,51 +385,87 @@ export function BillingClient({
         </Card>
       )}
 
-      {/* Billing History - Only show for subscribed users */}
-      {!usage?.isTrial && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Billing History</CardTitle>
-            <CardDescription>Your recent invoices and payments</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {billingHistory.length > 0 ? (
-              <div className="space-y-4">
-                {billingHistory.map((invoice) => (
-                  <div
-                    key={invoice.id}
-                    className="flex items-center justify-between py-2"
-                  >
-                    <div>
-                      <p className="font-medium">
-                        {formatDate(invoice.invoice_date)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {invoice.stripe_invoice_id 
-                          ? `Invoice #${invoice.stripe_invoice_id.slice(-8)}`
-                          : 'Plan Change'
-                        }
-                      </p>
+      {/* Billing History - Show for all users with payment history */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Billing History</CardTitle>
+          <CardDescription>
+            {usage?.isTrial 
+              ? 'Your billing will start after the free trial ends'
+              : 'Your recent invoices and payments'
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {billingHistory.filter(b => b.amount > 0 || b.status === 'pending').length > 0 ? (
+            <div className="space-y-4">
+              {billingHistory
+                .filter(b => b.amount > 0 || b.status === 'pending')
+                .map((invoice) => {
+                  // Determine description based on action and status
+                  const getDescription = () => {
+                    const action = invoice.action;
+                    const isPending = invoice.status === 'pending';
+                    
+                    if (action === 'subscription_start') {
+                      if (isPending) {
+                        return `Subscription to ${invoice.new_plan || 'plan'} (pending trial end)`;
+                      }
+                      return `First payment - ${invoice.new_plan || 'Subscription'} plan`;
+                    }
+                    
+                    if (action === 'upgrade' || action === 'downgrade') {
+                      if (isPending) {
+                        return `Plan change to ${invoice.new_plan || 'new plan'} (pending trial end)`;
+                      }
+                      return `Plan change to ${invoice.new_plan || 'new plan'}`;
+                    }
+                    
+                    if (invoice.stripe_invoice_id) {
+                      return `Invoice #${invoice.stripe_invoice_id.slice(-8)}`;
+                    }
+                    
+                    return isPending ? 'Pending charge' : 'Payment';
+                  };
+                  
+                  return (
+                    <div
+                      key={invoice.id}
+                      className="flex items-center justify-between py-2"
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {formatDate(invoice.invoice_date)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {getDescription()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">
+                          {invoice.status === 'pending'
+                            ? formatCurrency(invoice.amount / 100, invoice.currency) + ' (pending)'
+                            : formatCurrency(invoice.amount / 100, invoice.currency)
+                          }
+                        </p>
+                        <Badge className={getStatusColor(invoice.status)}>
+                          {invoice.status}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium">
-                        {formatCurrency(invoice.amount / 100, invoice.currency)}
-                      </p>
-                      <Badge className={getStatusColor(invoice.status)}>
-                        {invoice.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-center py-8">
-                No billing history available
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
+                  );
+                })}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-8">
+              {usage?.isTrial 
+                ? 'No charges yet - you\'re on a free trial'
+                : 'No billing history available'
+              }
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

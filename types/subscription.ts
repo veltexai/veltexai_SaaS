@@ -60,6 +60,9 @@ export interface BillingHistory {
   status: string;
   invoice_date: string;
   stripe_invoice_id: string | null;
+  action?: string; // 'subscription_start' | 'payment' | 'upgrade' | 'downgrade'
+  new_plan?: string | null;
+  previous_plan?: string | null;
 }
 
 export type SubscriptionTier = 'starter' | 'professional' | 'enterprise';

@@ -61,8 +61,11 @@ export async function POST(request: NextRequest) {
     let prorationAmount = 0;
     let chargeResult = null;
 
-    // During trial: NO charges - just update the plan
-    // User will be charged for the new plan when trial ends
+    // IMPORTANT: During trial, NO charges and NO proration
+    // When trial ends (either 3 proposals used OR 7 days pass):
+    // - Stripe will charge the FULL price of whatever plan is active
+    // - NOT (new price - old price) because user hasn't paid anything yet
+    // This is handled by proration_behavior: 'none' below
     if (isUpgrade && !isTrialing) {
       // For upgrades: charge the exact difference immediately
       try {

@@ -116,25 +116,18 @@ export async function POST(req: NextRequest) {
     if (!planName && subscription.items.data.length > 0) {
       const priceId = subscription.items.data[0].price.id;
       
-      // Map price IDs to plan names
-      const priceIdToPlan: { [key: string]: string } = {
-        'price_1SAqrMQ4KodTerz4O94nMNom': 'starter',
-        'price_1SAqpnQ4KodTerz4CXyEd6CC': 'professional',
-      };
+      // Get plan name from database by price ID
+      const { data: planFromPrice } = await supabase
+        .from('subscription_plans')
+        .select('name')
+        .eq('stripe_price_id_monthly', priceId)
+        .single();
       
-      planName = priceIdToPlan[priceId];
-      
-      if (!planName) {
-        // Fallback: try to get plan name from database by price ID
-        const { data: planFromPrice } = await supabase
-          .from('subscription_plans')
-          .select('name')
-          .eq('stripe_price_id_monthly', priceId)
-          .single();
-        
-        if (planFromPrice) {
-          planName = planFromPrice.name;
-        }
+      if (planFromPrice) {
+        planName = planFromPrice.name;
+        console.log('📋 Mapped plan name from database:', planName);
+      } else {
+        console.log('⚠️ Unknown price ID:', priceId, '- not found in subscription_plans table');
       }
     }
 

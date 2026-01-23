@@ -132,7 +132,10 @@ async function getBillingData() {
         currency: item.currency,
         status: item.status,
         invoice_date: item.invoice_date,
-        stripe_invoice_id: item.stripe_invoice_id || '',
+        stripe_invoice_id: item.stripe_invoice_id || null,
+        action: item.action || null,
+        new_plan: item.new_plan || null,
+        previous_plan: item.previous_plan || null,
       })) || [];
 
     return {

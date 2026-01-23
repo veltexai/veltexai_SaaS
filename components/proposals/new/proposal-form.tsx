@@ -211,6 +211,25 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     const fetchUserTier = async () => {
       try {
         const supabase = createClient();
+        
+        // First try to get from subscriptions table (more reliable during trial)
+        const { data: subscription, error: subError } = await supabase
+          .from('subscriptions')
+          .select('plan')
+          .eq('user_id', userId)
+          .in('status', ['active', 'trialing'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (subscription?.plan) {
+          setUserTier(
+            subscription.plan as 'starter' | 'professional' | 'enterprise'
+          );
+          return;
+        }
+
+        // Fallback to profiles table
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('subscription_plan')

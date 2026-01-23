@@ -40,13 +40,30 @@ export function useTemplates(): UseTemplatesReturn {
         throw new Error('User not authenticated');
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('subscription_plan')
-        .eq('id', user.id)
+      // First try to get from subscriptions table (more reliable during trial)
+      let userTier = 'starter';
+      
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('plan')
+        .eq('user_id', user.id)
+        .in('status', ['active', 'trialing'])
+        .order('created_at', { ascending: false })
+        .limit(1)
         .single();
 
-      const userTier = profile?.subscription_plan || 'starter';
+      if (subscription?.plan) {
+        userTier = subscription.plan;
+      } else {
+        // Fallback to profiles table
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('subscription_plan')
+          .eq('id', user.id)
+          .single();
+        
+        userTier = profile?.subscription_plan || 'starter';
+      }
 
       // Get all active templates with their tier access
       const { data: templatesData, error: templatesError } = await supabase
