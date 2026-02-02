@@ -120,7 +120,7 @@ Please review the attached proposal and don't hesitate to reach out if you have 
 I look forward to the opportunity to serve you.
 
 Best regards,
-Veltex Services Team`,
+Veltex AI Team`,
       include_company_branding: true,
       send_copy_to_self: false,
       track_downloads: true,

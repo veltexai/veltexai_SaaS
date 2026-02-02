@@ -109,8 +109,8 @@ export class EmailTemplates {
   private static getWelcomeTemplate(
     data: SubscriptionEmailData
   ): EmailTemplate {
-    const subject = `Welcome to ${data.planName} Plan - Veltex Services`;
-    const text = `Hi ${data.userName}!\n\nWelcome to Veltex Services! Your ${data.planName} subscription is now active.\n\nThank you for choosing us!\n\nBest regards,\nThe Veltex Services Team`;
+    const subject = `Welcome to ${data.planName} Plan - Veltex AI`;
+    const text = `Hi ${data.userName}!\n\nWelcome to Veltex AI! Your ${data.planName} subscription is now active.\n\nThank you for choosing us!\n\nBest regards,\nThe Veltex AI Team`;
 
     const html = `
       <!DOCTYPE html>
@@ -124,25 +124,25 @@ export class EmailTemplates {
           .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
           .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
           .plan-badge { background: #4CAF50; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; margin: 10px 0; font-weight: bold; }
-          .cta-button { background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; }
+          .cta-button { background: #667eea; color: white !important; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; }
           .footer { text-align: center; padding: 20px; color: #666; font-size: 14px; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1>🎉 Welcome to Veltex Services!</h1>
+            <h1>🎉 Welcome to Veltex AI!</h1>
           </div>
           <div class="content">
             <h2>Hi ${data.userName}!</h2>
-            <p>Welcome to Veltex Services! Your subscription is now active and ready to use.</p>
+            <p>Welcome to Veltex AI! Your subscription is now active and ready to use.</p>
             <div class="plan-badge">${data.planName} Plan</div>
             <p>You now have access to all the features included in your plan. Start creating professional proposals today!</p>
             <a href="#" class="cta-button">Get Started</a>
             <p>If you have any questions, our support team is here to help.</p>
           </div>
           <div class="footer">
-            <p>Thank you for choosing Veltex Services!<br>The Veltex Services Team</p>
+            <p>Thank you for choosing Veltex AI!<br>The Veltex AI Team</p>
           </div>
         </div>
       </body>
@@ -155,8 +155,8 @@ export class EmailTemplates {
   private static getUpgradeTemplate(
     data: SubscriptionEmailData
   ): EmailTemplate {
-    const subject = `Plan Upgraded to ${data.planName} - Veltex Services`;
-    const text = `Hi ${data.userName}!\n\nGreat news! Your plan has been upgraded from ${data.previousPlan} to ${data.planName}.\n\nYou now have access to additional features and benefits.\n\nBest regards,\nThe Veltex Services Team`;
+    const subject = `Plan Upgraded to ${data.planName} - Veltex AI`;
+    const text = `Hi ${data.userName}!\n\nGreat news! Your plan has been upgraded from ${data.previousPlan} to ${data.planName}.\n\nYou now have access to additional features and benefits.\n\nBest regards,\nThe Veltex AI Team`;
 
     const html = `
       <!DOCTYPE html>
@@ -192,7 +192,7 @@ export class EmailTemplates {
             <p>Thank you for growing with us!</p>
           </div>
           <div class="footer">
-            <p>Best regards,<br>The Veltex Services Team</p>
+            <p>Best regards,<br>The Veltex AI Team</p>
           </div>
         </div>
       </body>
@@ -205,8 +205,8 @@ export class EmailTemplates {
   private static getDowngradeTemplate(
     data: SubscriptionEmailData
   ): EmailTemplate {
-    const subject = `Plan Changed to ${data.planName} - Veltex Services`;
-    const text = `Hi ${data.userName}!\n\nYour plan has been changed from ${data.previousPlan} to ${data.planName}.\n\nIf you have any questions, please contact our support team.\n\nBest regards,\nThe Veltex Services Team`;
+    const subject = `Plan Changed to ${data.planName} - Veltex AI`;
+    const text = `Hi ${data.userName}!\n\nYour plan has been changed from ${data.previousPlan} to ${data.planName}.\n\nIf you have any questions, please contact our support team.\n\nBest regards,\nThe Veltex AI Team`;
 
     const html = `
       <!DOCTYPE html>
@@ -242,7 +242,7 @@ export class EmailTemplates {
             <p>If you have any questions, please don't hesitate to contact our support team.</p>
           </div>
           <div class="footer">
-            <p>Best regards,<br>The Veltex Services Team</p>
+            <p>Best regards,<br>The Veltex AI Team</p>
           </div>
         </div>
       </body>
@@ -253,8 +253,8 @@ export class EmailTemplates {
   }
 
   private static getUpdateTemplate(data: SubscriptionEmailData): EmailTemplate {
-    const subject = `Subscription Updated - ${data.planName} - Veltex Services`;
-    const text = `Hi ${data.userName}!\n\nThis is a confirmation that your ${data.planName} subscription has been updated.\n\nIf you have any questions, please contact our support team.\n\nBest regards,\nThe Veltex Services Team`;
+    const subject = `Subscription Updated - ${data.planName} - Veltex AI`;
+    const text = `Hi ${data.userName}!\n\nThis is a confirmation that your ${data.planName} subscription has been updated.\n\nIf you have any questions, please contact our support team.\n\nBest regards,\nThe Veltex AI Team`;
 
     const html = `
       <!DOCTYPE html>
@@ -286,7 +286,7 @@ export class EmailTemplates {
             <p>If you have any questions about your subscription, please contact our support team.</p>
           </div>
           <div class="footer">
-            <p>Best regards,<br>The Veltex Services Team</p>
+            <p>Best regards,<br>The Veltex AI Team</p>
           </div>
         </div>
       </body>
@@ -297,14 +297,14 @@ export class EmailTemplates {
   }
 
   static getPaymentFailureEmail(data: PaymentFailureEmailData): EmailTemplate {
-    const subject = 'Payment Failed - Action Required - Veltex Services';
+    const subject = 'Payment Failed - Action Required - Veltex AI';
     const text = `Hi ${
       data.userName
     }!\n\nWe were unable to process your payment of $${data.amount.toFixed(
       2
     )}.\n\nPlease update your payment method to continue your subscription.\n\n${
       data.invoiceUrl ? `View invoice: ${data.invoiceUrl}\n\n` : ''
-    }Best regards,\nThe Veltex Services Team`;
+    }Best regards,\nThe Veltex AI Team`;
 
     const html = `
       <!DOCTYPE html>
@@ -344,7 +344,7 @@ export class EmailTemplates {
             <p>If you have any questions, please don't hesitate to contact our support team.</p>
           </div>
           <div class="footer">
-            <p>Best regards,<br>The Veltex Services Team</p>
+            <p>Best regards,<br>The Veltex AI Team</p>
           </div>
         </div>
       </body>
@@ -355,13 +355,13 @@ export class EmailTemplates {
   }
 
   static getCancellationEmail(data: CancellationEmailData): EmailTemplate {
-    const subject = 'Subscription Canceled - Veltex Services';
+    const subject = 'Subscription Canceled - Veltex AI';
     const endDateStr = data.endDate.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     });
-    const text = `Hi ${data.userName}!\n\nYour subscription has been canceled as requested.\n\nYou will continue to have access to your account until ${endDateStr}.\n\nWe're sorry to see you go! If you change your mind, you can reactivate your subscription anytime.\n\nBest regards,\nThe Veltex Services Team`;
+    const text = `Hi ${data.userName}!\n\nYour subscription has been canceled as requested.\n\nYou will continue to have access to your account until ${endDateStr}.\n\nWe're sorry to see you go! If you change your mind, you can reactivate your subscription anytime.\n\nBest regards,\nThe Veltex AI Team`;
 
     const html = `
       <!DOCTYPE html>
@@ -395,10 +395,10 @@ export class EmailTemplates {
             <p>You will continue to have full access to your account and all features until your current billing period ends.</p>
             <p>We're sorry to see you go! If you change your mind, you can reactivate your subscription anytime before it expires.</p>
             <a href="#" class="cta-button">Reactivate Subscription</a>
-            <p>Thank you for being part of the Veltex Services community.</p>
+            <p>Thank you for being part of the Veltex AI community.</p>
           </div>
           <div class="footer">
-            <p>Best regards,<br>The Veltex Services Team</p>
+            <p>Best regards,<br>The Veltex AI Team</p>
           </div>
         </div>
       </body>
@@ -409,7 +409,7 @@ export class EmailTemplates {
   }
 
   static getEnhancedCancellationEmail(data: EnhancedCancellationEmailData): EmailTemplate {
-    const subject = `${data.planName} Subscription Canceled - Veltex Services`;
+    const subject = `${data.planName} Subscription Canceled - Veltex AI`;
     const endDateStr = data.endDate.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -422,7 +422,7 @@ export class EmailTemplates {
           : data.cancellationReason.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))
       : 'Not specified';
 
-    const text = `Hi ${data.userName}!\n\nYour ${data.planName} subscription has been canceled as requested.\n\nCancellation reason: ${reasonText}\n\nYou will continue to have access to your account until ${endDateStr}.\n\nWe're sorry to see you go! If you change your mind, you can reactivate your subscription anytime.\n\nReactivate: ${data.reactivationUrl}\n\nBest regards,\nThe Veltex Services Team`;
+    const text = `Hi ${data.userName}!\n\nYour ${data.planName} subscription has been canceled as requested.\n\nCancellation reason: ${reasonText}\n\nYou will continue to have access to your account until ${endDateStr}.\n\nWe're sorry to see you go! If you change your mind, you can reactivate your subscription anytime.\n\nReactivate: ${data.reactivationUrl}\n\nBest regards,\nThe Veltex AI Team`;
 
     const html = `
       <!DOCTYPE html>
@@ -470,10 +470,10 @@ export class EmailTemplates {
               <a href="${data.reactivationUrl}" class="cta-button">Reactivate Subscription</a>
             </div>
             
-            <p>Thank you for being part of the Veltex Services community.</p>
+            <p>Thank you for being part of the Veltex AI community.</p>
           </div>
           <div class="footer">
-            <p>Best regards,<br>The Veltex Services Team</p>
+            <p>Best regards,<br>The Veltex AI Team</p>
             <p><small>If you have any questions, please contact our support team.</small></p>
           </div>
         </div>
@@ -485,14 +485,14 @@ export class EmailTemplates {
   }
 
   static getReactivationEmail(data: ReactivationEmailData): EmailTemplate {
-    const subject = `Welcome Back! ${data.planName} Subscription Reactivated - Veltex Services`;
+    const subject = `Welcome Back! ${data.planName} Subscription Reactivated - Veltex AI`;
     const nextBillingStr = data.nextBillingDate.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     });
 
-    const text = `Hi ${data.userName}!\n\nGreat news! Your ${data.planName} subscription has been successfully reactivated.\n\nYour next billing date: ${nextBillingStr}\n\nYou now have full access to all features again.\n\nWelcome back!\n\nBest regards,\nThe Veltex Services Team`;
+    const text = `Hi ${data.userName}!\n\nGreat news! Your ${data.planName} subscription has been successfully reactivated.\n\nYour next billing date: ${nextBillingStr}\n\nYou now have full access to all features again.\n\nWelcome back!\n\nBest regards,\nThe Veltex AI Team`;
 
     const html = `
       <!DOCTYPE html>
@@ -529,10 +529,10 @@ export class EmailTemplates {
             </ul>
             <p><strong>Next billing date:</strong></p>
             <div class="date-badge">${nextBillingStr}</div>
-            <p>We're thrilled to have you back as part of the Veltex Services community!</p>
+            <p>We're thrilled to have you back as part of the Veltex AI community!</p>
           </div>
           <div class="footer">
-            <p>Best regards,<br>The Veltex Services Team</p>
+            <p>Best regards,<br>The Veltex AI Team</p>
           </div>
         </div>
       </body>
@@ -550,7 +550,7 @@ export class EmailTemplates {
       day: 'numeric',
     });
 
-    const text = `Hi ${data.userName}!\n\nYour ${data.planName} subscription expires in ${data.daysRemaining} days (${expirationStr}).\n\nDon't lose access to your proposals and data!\n\nReactivate now: ${data.reactivationUrl}\n\nBest regards,\nThe Veltex Services Team`;
+    const text = `Hi ${data.userName}!\n\nYour ${data.planName} subscription expires in ${data.daysRemaining} days (${expirationStr}).\n\nDon't lose access to your proposals and data!\n\nReactivate now: ${data.reactivationUrl}\n\nBest regards,\nThe Veltex AI Team`;
 
     const html = `
       <!DOCTYPE html>
@@ -600,7 +600,7 @@ export class EmailTemplates {
             <p><small>Reactivating is quick and easy - your account will be restored immediately with all your data intact.</small></p>
           </div>
           <div class="footer">
-            <p>Best regards,<br>The Veltex Services Team</p>
+            <p>Best regards,<br>The Veltex AI Team</p>
             <p><small>Questions? Contact our support team anytime.</small></p>
           </div>
         </div>
@@ -612,8 +612,8 @@ export class EmailTemplates {
   }
 
   static getTrialEndingEmail(data: TrialEndingEmailData): EmailTemplate {
-    const subject = `Your Trial Ends in ${data.daysRemaining} Days - Veltex Services`;
-    const text = `Hi ${data.userName}!\n\nYour free trial ends in ${data.daysRemaining} days.\n\nTo continue using Veltex Services without interruption, please choose a subscription plan.\n\nDon't lose access to your proposals and data!\n\nBest regards,\nThe Veltex Services Team`;
+    const subject = `Your Trial Ends in ${data.daysRemaining} Days - Veltex AI`;
+    const text = `Hi ${data.userName}!\n\nYour free trial ends in ${data.daysRemaining} days.\n\nTo continue using Veltex AI without interruption, please choose a subscription plan.\n\nDon't lose access to your proposals and data!\n\nBest regards,\nThe Veltex AI Team`;
 
     const html = `
       <!DOCTYPE html>
@@ -645,7 +645,7 @@ export class EmailTemplates {
       data.daysRemaining === 1 ? 'Day' : 'Days'
     }</div>
             </div>
-            <p>We hope you've enjoyed exploring Veltex Services during your trial period!</p>
+            <p>We hope you've enjoyed exploring Veltex AI during your trial period!</p>
             <p>To continue creating professional proposals and accessing all features without interruption, please choose a subscription plan that fits your needs.</p>
             <a href="#" class="cta-button">Choose Your Plan</a>
             <p><strong>Don't lose access to:</strong></p>
@@ -658,7 +658,7 @@ export class EmailTemplates {
             <p>Questions? Our support team is here to help!</p>
           </div>
           <div class="footer">
-            <p>Best regards,<br>The Veltex Services Team</p>
+            <p>Best regards,<br>The Veltex AI Team</p>
           </div>
         </div>
       </body>
@@ -745,7 +745,7 @@ export class EmailTemplates {
           </div>
           <div class="footer">
             <p style="margin: 0; color: #6b7280; font-size: 14px;">
-              This proposal was generated using Veltex Services
+              This proposal was generated using Veltex AI
             </p>
           </div>
         </div>
@@ -758,7 +758,8 @@ export class EmailTemplates {
 
   static getEnhancedProposalEmail(data: EnhancedProposalEmailData): EmailTemplate {
     const subject = data.subject;
-    const primaryColor = data.brandingEnabled && data.primaryColor ? data.primaryColor : '#3b82f6';
+    const primaryColor = data.brandingEnabled && data.primaryColor ? data.primaryColor : '#f8fafc';
+    
     
     const text = `Dear ${data.clientName},\n\n${data.message}\n\n${data.proposalViewUrl ? `You can view the full proposal online at: ${data.proposalViewUrl}` : 'Please find the proposal attached to this email.'}\n\nBest regards,\n${data.senderName}\n${data.companyName}`;
 
@@ -771,7 +772,7 @@ export class EmailTemplates {
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5; }
           .container { max-width: 600px; margin: 0 auto; background-color: white; }
-          .header { background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%); color: white; padding: 40px 30px; text-align: center; }
+          .header { background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%); color: black; padding: 40px 30px; text-align: center; }
           .header h1 { margin: 0; font-size: 28px; font-weight: 300; }
           .header .company { font-size: 16px; opacity: 0.9; margin-top: 8px; }
           .logo { max-height: 60px; margin-bottom: 20px; }
@@ -797,16 +798,12 @@ export class EmailTemplates {
         <div class="container">
           <div class="header">
             ${data.brandingEnabled && data.logoUrl ? `<img src="${data.logoUrl}" alt="${data.companyName}" class="logo" />` : ''}
+            <img src="${data.logoUrl}" alt="${data.companyName}" class="logo" />
             <h1>📋 ${data.proposalTitle}</h1>
-            <div class="company">${data.companyName}</div>
           </div>
           <div class="content">
             <div class="message">
               ${data.message.split('\n').map(line => `<p>${line}</p>`).join('')}
-            </div>
-            
-            <div class="proposal-title">
-              <h2>${data.proposalTitle}</h2>
             </div>
             
             ${data.proposalViewUrl ? `
@@ -826,11 +823,6 @@ export class EmailTemplates {
                 <p style="margin: 8px 0 0 0; font-size: 14px;">Please find the detailed proposal document attached to this email.</p>
               </div>
             ` : ''}
-            
-            <div class="signature">
-              <div class="name">${data.senderName}</div>
-              <div class="company">${data.companyName}</div>
-            </div>
           </div>
           <div class="footer">
             <div class="veltex-attribution">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import type { TemplateProps } from '@/features/templates/types/templates';
 import ProposalTableOfContents from './sections/table-of-contents';
 import Image from 'next/image';
@@ -26,6 +27,11 @@ import {
   ServiceQuotePricing,
   WhyChooseUs,
 } from './sections';
+import {
+  parseScopeTableData,
+  splitScopeRows,
+  type ScopeRow,
+} from '../utils/split-scope-rows';
 
 export function ModernCorporateTemplate({
   proposal,
@@ -53,6 +59,16 @@ export function ModernCorporateTemplate({
           notes: { content: pages[6] },
         }
       : useSplitContent(proposal.id);
+
+  // Calculate scope row chunks for PDF pagination
+  const scopeRowChunks = useMemo(() => {
+    if (!scope?.content) return [];
+    const tableData = parseScopeTableData(scope.content);
+    if (!tableData) return [];
+    return splitScopeRows(tableData, 8, 14);
+  }, [scope?.content]);
+
+  const hasAdditionalScopePages = scopeRowChunks.length > 1;
 
   return (
     <section className="space-y-6">
@@ -260,6 +276,7 @@ export function ModernCorporateTemplate({
                         templateType="modern_corporate"
                         className={`${montserrat.className}`}
                         description={scope.description || ''}
+                        overrideRows={hasAdditionalScopePages ? scopeRowChunks[0] : undefined}
                       />
                     ) : (
                       <div className="text-sm text-muted-foreground">
@@ -267,20 +284,22 @@ export function ModernCorporateTemplate({
                       </div>
                     )}
                   </div>
-                  <div className="max-w-[95%]">
-                    {addons?.content ? (
-                      <Addons
-                        title={addons.title ?? 'Add-ons'}
-                        content={addons.content}
-                        templateType="modern_corporate"
-                        className={`${montserrat.className}`}
-                      />
-                    ) : (
-                      <div className="text-sm text-muted-foreground">
-                        No content
-                      </div>
-                    )}
-                  </div>
+                  {!hasAdditionalScopePages && (
+                    <div className="max-w-[95%]">
+                      {addons?.content ? (
+                        <Addons
+                          title={addons.title ?? 'Add-ons'}
+                          content={addons.content}
+                          templateType="modern_corporate"
+                          className={`${montserrat.className}`}
+                        />
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          No content
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <VerticalBar  variant="gradientGray" />
                   <HorizontalBar  variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
@@ -292,6 +311,50 @@ export function ModernCorporateTemplate({
                     position="bottom-left-corner"
                   />
                 </div>
+
+                {/* Scope overflow pages */}
+                {hasAdditionalScopePages && scopeRowChunks.slice(1).map((rowChunk: ScopeRow[], chunkIndex: number) => {
+                  const isLastScopeOverflowPage = chunkIndex === scopeRowChunks.length - 2;
+                  return (
+                    <div
+                      key={`scope-overflow-${chunkIndex}`}
+                      id={`page-six-overflow-${chunkIndex + 1}`}
+                      className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
+                    >
+                      <div className="max-w-[95%]">
+                        <ScopeOfService
+                          title={scope?.title ?? 'Scope of Service'}
+                          content={scope?.content ?? ''}
+                          templateType="modern_corporate"
+                          className={`${montserrat.className}`}
+                          description=""
+                          overrideRows={rowChunk}
+                          isContinuation
+                        />
+                      </div>
+                      {isLastScopeOverflowPage && addons?.content && (
+                        <div className="max-w-[95%] mt-6">
+                          <Addons
+                            title={addons.title ?? 'Add-ons'}
+                            content={addons.content}
+                            templateType="modern_corporate"
+                            className={`${montserrat.className}`}
+                          />
+                        </div>
+                      )}
+                      <VerticalBar variant="gradientGray" />
+                      <HorizontalBar variant="gradientGray" />
+                      <PoweredBy colorLogo="gray" isRight />
+                      <NavitationNumber
+                        value={6}
+                        size="lg"
+                        fontFamily="dmSerifText"
+                        font="bold"
+                        position="bottom-left-corner"
+                      />
+                    </div>
+                  );
+                })}
 
                 <div
                   id="page-seven"

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import type {
   TemplateProps,
   TemplateType,
@@ -29,6 +30,11 @@ import {
   ServiceQuotePricing,
   WhyChooseUs,
 } from './sections';
+import {
+  parseScopeTableData,
+  splitScopeRows,
+  type ScopeRow,
+} from '../utils/split-scope-rows';
 
 export function ExecutivePremiumTemplate({
   proposal,
@@ -68,6 +74,19 @@ export function ExecutivePremiumTemplate({
           error: null,
         }
       : useSplitContent(proposal.id);
+
+  // Calculate scope row chunks for PDF pagination
+  // First page: ~8 rows (with title, description)
+  // Continuation pages: ~14 rows
+  const scopeRowChunks = useMemo(() => {
+    if (!scope?.content) return [];
+    const tableData = parseScopeTableData(scope.content);
+    if (!tableData) return [];
+    return splitScopeRows(tableData, 8, 14);
+  }, [scope?.content]);
+
+  // Check if we need overflow pages for scope
+  const hasAdditionalScopePages = scopeRowChunks.length > 1;
 
   return (
     <section className="space-y-8">
@@ -231,9 +250,10 @@ export function ExecutivePremiumTemplate({
                   />
                 </div>
 
+                {/* Page six - Scope of Service (with PDF pagination support) */}
                 <div
                   id="page-six"
-                  className="relative aspect-[1/1.4] bg-white sm:p-8 p-6 sm:pb-0 pb-10"
+                  className="relative aspect-[1/1.4] bg-white sm:p-8 p-6 sm:pb-26 pb-10"
                 >
                   <div className="gap-6 pl-10 sm:pl-[95px]">
                     <div>
@@ -244,27 +264,29 @@ export function ExecutivePremiumTemplate({
                           templateType="executive_premium"
                           className={`${montserrat.className}`}
                           description={scope.description || ''}
+                          overrideRows={hasAdditionalScopePages ? scopeRowChunks[0] : undefined}
                         />
                       ) : (
                         <div className="text-sm text-muted-foreground">
-                          No content
                         </div>
                       )}
                     </div>
-                    <div>
-                      {addons?.content ? (
-                        <Addons
-                          title={addons.title ?? 'Add-ons'}
-                          content={addons.content}
-                          templateType="executive_premium"
-                          className={`${montserrat.className}`}
-                        />
-                      ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No content
-                        </div>
-                      )}
-                    </div>
+                    {/* Only show addons on first page if scope doesn't overflow */}
+                    {!hasAdditionalScopePages && (
+                      <div>
+                        {addons?.content ? (
+                          <Addons
+                            title={addons.title ?? 'Add-ons'}
+                            content={addons.content}
+                            templateType="executive_premium"
+                            className={`${montserrat.className}`}
+                          />
+                        ) : (
+                          <div className="text-sm text-muted-foreground">
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <VerticalBar  variant="gradientGray" />
                   <HorizontalBar  variant="gradientGray" />
@@ -277,6 +299,53 @@ export function ExecutivePremiumTemplate({
                     position="bottom-left-corner"
                   />
                 </div>
+
+                {/* Scope overflow pages - render additional pages for remaining rows */}
+                {hasAdditionalScopePages && scopeRowChunks.slice(1).map((rowChunk: ScopeRow[], chunkIndex: number) => {
+                  const isLastScopeOverflowPage = chunkIndex === scopeRowChunks.length - 2;
+                  return (
+                    <div
+                      key={`scope-overflow-${chunkIndex}`}
+                      id={`page-six-overflow-${chunkIndex + 1}`}
+                      className="relative aspect-[1/1.4] bg-white sm:p-8 p-6 sm:pb-26 pb-10"
+                    >
+                      <div className="gap-6 pl-10 sm:pl-[95px]">
+                        <div>
+                          <ScopeOfService
+                            title={scope?.title ?? 'Scope of Service'}
+                            content={scope?.content ?? ''}
+                            templateType="executive_premium"
+                            className={`${montserrat.className}`}
+                            description=""
+                            overrideRows={rowChunk}
+                            isContinuation
+                          />
+                        </div>
+                        {/* Show addons on the last scope overflow page */}
+                        {isLastScopeOverflowPage && addons?.content && (
+                          <div className="mt-6">
+                            <Addons
+                              title={addons.title ?? 'Add-ons'}
+                              content={addons.content}
+                              templateType="executive_premium"
+                              className={`${montserrat.className}`}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <VerticalBar variant="gradientGray" />
+                      <HorizontalBar variant="gradientGray" />
+                      <PoweredBy colorLogo="gray" isRight />
+                      <NavitationNumber
+                        value={6}
+                        size="lg"
+                        fontFamily="dmSerifText"
+                        font="bold"
+                        position="bottom-left-corner"
+                      />
+                    </div>
+                  );
+                })}
 
                 <div
                   id="page-seven"

@@ -4,6 +4,7 @@ import { cn, formatCurrencySafe } from '@/lib/utils';
 import React from 'react';
 import ProposalTitle from '../shared/proposal-title';
 import { arvo } from '@/lib/fonts';
+import type { ScopeRow } from '@/features/templates/utils/split-scope-rows';
 
 interface ScopeOfServiceProps {
   title: string;
@@ -11,6 +12,10 @@ interface ScopeOfServiceProps {
   templateType: TemplateType;
   className?: string;
   description?: string;
+  /** Override rows to display (for PDF pagination) */
+  overrideRows?: ScopeRow[];
+  /** Whether this is a continuation page */
+  isContinuation?: boolean;
 }
 
 export default function ScopeOfService({
@@ -19,6 +24,8 @@ export default function ScopeOfService({
   templateType,
   className = '',
   description = '',
+  overrideRows,
+  isContinuation = false,
 }: ScopeOfServiceProps) {
   const lines = content
     .split('\n')
@@ -86,7 +93,8 @@ export default function ScopeOfService({
   };
 
   const ScopeTable = ({ data }: { data: ScopeTableData }) => {
-    const rows = data?.rows ?? [];
+    // Use overrideRows if provided (for PDF pagination), otherwise use data.rows
+    const rows = overrideRows ?? data?.rows ?? [];
     if (!rows.length) return null;
     const premium = rows.some((r) => typeof r.note === 'string');
     return (
@@ -214,14 +222,20 @@ export default function ScopeOfService({
   return (
     <div>
       <div>
-        <ProposalTitle templateType={templateType} title={title} />
-        <p
-          className={`text-2xs sm:text-sm text-[#383838] sm:my-6 my-3 leading-relaxed ${
-            templateType === 'luxury_elite' ? arvo.className : ''
-          }`}
-        >
-          {description}
-        </p>
+        <ProposalTitle 
+          templateType={templateType} 
+          title={isContinuation ? `${title}` : title} 
+        />
+        {/* Only show description on first page, not on continuation pages */}
+        {!isContinuation && (
+          <p
+            className={`text-2xs sm:text-sm text-[#383838] sm:my-6 my-3 leading-relaxed ${
+              templateType === 'luxury_elite' ? arvo.className : ''
+            }`}
+          >
+            {description}
+          </p>
+        )}
         {renderRest()}
       </div>
     </div>

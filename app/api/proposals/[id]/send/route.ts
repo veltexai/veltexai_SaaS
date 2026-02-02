@@ -125,8 +125,10 @@ export async function POST(
     }
 
     // Prepare email data
-    const companyName = companyProfile?.company_name || 'Veltex Services';
+    const companyName = companyProfile?.company_name || 'Veltex AI';
     const senderName = profile?.full_name || user.email || 'Team';
+    const baseUrl = "https://veltexai.com";
+    const logoUrl = companyProfile?.logo_url || `${baseUrl}/images/IMG_3800.png`;
 
     const emailData = {
       clientName: proposal.client_name || 'Valued Client',
@@ -136,6 +138,7 @@ export async function POST(
       message: validatedData.message,
       proposalTitle: proposal.title || 'Service Proposal',
       companyName,
+      logoUrl,
       senderName,
       proposalViewUrl,
       hasAttachment: !!pdfBuffer,

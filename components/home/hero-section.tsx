@@ -21,7 +21,7 @@ const HeroSection = () => {
         >
           <motion.div variants={fadeInUp}>
             <Badge className="mb-6 bg-emerald-50 text-emerald-700 border-emerald-200">
-              Trusted by cleaning companies since 1986
+            Built on decades of real cleaning industry experience
             </Badge>
           </motion.div>
 
@@ -38,7 +38,7 @@ const HeroSection = () => {
             variants={fadeInUp}
           >
             Generate professional, branded PDF proposals in minutes — trusted by
-            janitorial companies since 1986. Save hours of manual work with AI
+            janitorial companies. Save hours of manual work with AI
             that understands your industry.
           </motion.p>
 

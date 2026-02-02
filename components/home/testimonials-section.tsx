@@ -22,10 +22,10 @@ const TestimonialsSection = () => {
             Trusted by Cleaning Professionals
           </h2>
           <div className="flex justify-center items-center space-x-1 mb-4">
-            {[...Array(5)].map((_, i) => (
+            {/* {[...Array(5)].map((_, i) => (
               <Star key={i} className="h-6 w-6 text-yellow-400 fill-current" />
-            ))}
-            <span className="ml-2 text-gray-600">4.9/5 from 200+ reviews</span>
+            ))} */}
+            <span className="ml-2 text-gray-600">Verified Cleaning Business Owner</span>
           </div>
         </motion.div>
 

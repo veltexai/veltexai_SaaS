@@ -107,9 +107,92 @@ function getPages(proposal: any) {
     } else {
       result.push('');
     }
-    let page2 = '';
-    if (scope) page2 += `# ${scope.title}\n\n${scope.content.trim()}\n\n`;
-    if (legal) page2 += `# ${legal.title}\n\n${legal.content.trim()}\n\n`;
+    
+    // Parse scope content to check if we need pagination
+    let scopePages: string[] = [];
+    const MAX_ROWS_PER_PAGE = 8;
+    
+    if (scope) {
+      const scopeContent = scope.content.trim();
+      const scopeLines = scopeContent.split('\n');
+      
+      // Find veliz_scope_table block and parse it
+      let tableStartIdx = -1;
+      let tableEndIdx = -1;
+      let tableJson = '';
+      
+      for (let i = 0; i < scopeLines.length; i++) {
+        const line = scopeLines[i].trim();
+        if (line.startsWith('```') && line.toLowerCase().includes('veliz_scope_table')) {
+          tableStartIdx = i;
+          i++;
+          const jsonLines: string[] = [];
+          while (i < scopeLines.length && !scopeLines[i].trim().startsWith('```')) {
+            jsonLines.push(scopeLines[i]);
+            i++;
+          }
+          tableEndIdx = i;
+          tableJson = jsonLines.join('\n');
+          break;
+        }
+      }
+      
+      if (tableJson) {
+        try {
+          const data = JSON.parse(tableJson);
+          let allRows = data?.rows ?? [];
+          
+          // Expand comma-separated areas into individual rows
+          const expandedRows: any[] = [];
+          for (const row of allRows) {
+            if (typeof row.area === 'string' && row.area.includes(',')) {
+              const splitAreas = row.area.split(',').map((s: string) => s.trim()).filter((s: string) => s);
+              for (const areaName of splitAreas) {
+                expandedRows.push({ ...row, area: areaName });
+              }
+            } else {
+              expandedRows.push(row);
+            }
+          }
+          
+          if (expandedRows.length > MAX_ROWS_PER_PAGE) {
+            // Need to paginate scope
+            const beforeTable = scopeLines.slice(0, tableStartIdx).join('\n').trim();
+            const afterTable = scopeLines.slice(tableEndIdx + 1).join('\n').trim();
+            
+            // Split rows into chunks
+            const chunks: any[][] = [];
+            for (let i = 0; i < expandedRows.length; i += MAX_ROWS_PER_PAGE) {
+              chunks.push(expandedRows.slice(i, i + MAX_ROWS_PER_PAGE));
+            }
+            
+            // First page: title + description + first chunk of rows
+            const firstChunkJson = JSON.stringify({ rows: chunks[0] });
+            scopePages.push(`# ${scope.title}\n\n${beforeTable}\n\n\`\`\`veliz_scope_table\n${firstChunkJson}\n\`\`\`\n`);
+            
+            // Continuation pages: just rows (no afterTable content yet)
+            for (let c = 1; c < chunks.length; c++) {
+              const chunkJson = JSON.stringify({ rows: chunks[c] });
+              const isLast = c === chunks.length - 1;
+              scopePages.push(`# ${scope.title} \n\n\`\`\`veliz_scope_table\n${chunkJson}\n\`\`\`\n${isLast ? '\n' + afterTable : ''}`);
+            }
+          } else {
+            // No pagination needed
+            scopePages.push(`# ${scope.title}\n\n${scopeContent}\n\n`);
+          }
+        } catch {
+          // JSON parse failed, use original
+          scopePages.push(`# ${scope.title}\n\n${scopeContent}\n\n`);
+        }
+      } else {
+        // No table found, use original
+        scopePages.push(`# ${scope.title}\n\n${scopeContent}\n\n`);
+      }
+    }
+    
+    // Build legal + pricing content
+    let legalPricingContent = '';
+    if (legal) legalPricingContent += `# ${legal.title}\n\n${legal.content.trim()}\n\n`;
     if (pricing) {
       const lines = pricing.content
         .trim()
@@ -127,16 +210,32 @@ function getPages(proposal: any) {
           rendered = firstLine;
         }
       }
-      if (rendered) page2 += `# ${pricing.title}\n\n${rendered}\n\n`;
+      if (rendered) legalPricingContent += `# ${pricing.title}\n\n${rendered}\n\n`;
     }
-    result.push(page2);
+    
+    // If scope needed pagination, put legal+pricing on last scope page or separate page
+    if (scopePages.length > 1) {
+      // Append legal+pricing to the last scope page
+      scopePages[scopePages.length - 1] += legalPricingContent;
+      // Add all scope pages to result
+      for (const sp of scopePages) {
+        result.push(sp);
+      }
+    } else if (scopePages.length === 1) {
+      // Single scope page - combine with legal+pricing as before
+      result.push(scopePages[0] + legalPricingContent);
+    } else {
+      // No scope - just add legal+pricing
+      result.push(legalPricingContent);
+    }
+    
     if (additional) {
       result.push(`# ${additional.title}\n\n${additional.content.trim()}\n`);
     } else {
       result.push('');
     }
+    // Don't limit to 3 pages anymore since we may have overflow pages
     while (result.length < 3) result.push('');
-    if (result.length > 3) result.length = 3;
     return result;
   }
 

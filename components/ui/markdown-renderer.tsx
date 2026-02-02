@@ -637,98 +637,134 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
   const rows = data?.rows ?? [];
   if (!rows.length) return null;
   const premium = rows.some((r) => typeof r.note === 'string');
+  
+  // Maximum rows per page section for PDF (prevents overflow)
+  const MAX_ROWS_PER_SECTION = 8;
+  const needsPagination = rows.length > MAX_ROWS_PER_SECTION;
+  
+  // Split rows into chunks for pagination
+  const rowChunks: typeof rows[] = [];
+  if (needsPagination) {
+    for (let i = 0; i < rows.length; i += MAX_ROWS_PER_SECTION) {
+      rowChunks.push(rows.slice(i, i + MAX_ROWS_PER_SECTION));
+    }
+  } else {
+    rowChunks.push(rows);
+  }
+  
+  const renderHeader = (isPremium: boolean) => {
+    if (isPremium) {
+      return (
+        <div className="hidden sm:grid text-center grid-cols-3 text-[var(--color-primary)] gap-2 sm:gap-4 px-3 sm:px-5 mb-2">
+          <div className="font-semibold text-xs sm:text-sm">Area serviced</div>
+          <div className="font-semibold text-xs sm:text-sm">Frequency</div>
+          <div className="font-semibold text-xs sm:text-sm">Notes</div>
+        </div>
+      );
+    }
+    return (
+      <div className="hidden sm:grid text-center grid-cols-2 text-[var(--color-primary)] sm:grid-cols-4 gap-2 sm:gap-4 px-3 sm:px-5 mb-2">
+        <div className="font-semibold text-xs sm:text-sm">Area serviced</div>
+        <div className="font-semibold text-xs sm:text-sm">Frequency</div>
+        <div className="font-semibold text-xs sm:text-sm">Cost per visit</div>
+        <div className="font-semibold text-xs sm:text-sm">Monthly cost</div>
+      </div>
+    );
+  };
+  
+  const renderRow = (row: typeof rows[0], i: number, isPremium: boolean) => {
+    if (isPremium) {
+      return (
+        <div
+          key={`scope-row-${i}`}
+          className="rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2 sm:py-3 bg-[var(--color-primary)] mb-2"
+        >
+          {/* Mobile: stacked layout */}
+          <div className="sm:hidden space-y-1 text-xs">
+            <div className="flex justify-between">
+              <span className="text-white/70">Area:</span>
+              <span className="text-white/90 text-right">{row.area}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-white/70">Frequency:</span>
+              <span className="text-white/90">{row.frequency}</span>
+            </div>
+            {row.note && (
+              <div className="flex justify-between">
+                <span className="text-white/70">Notes:</span>
+                <span className="text-white font-medium text-right">{row.note}</span>
+              </div>
+            )}
+          </div>
+          {/* Desktop: grid layout */}
+          <div className="hidden sm:grid grid-cols-3 gap-2 sm:gap-4 text-xs justify-center items-center text-center">
+            <div className="whitespace-pre-line text-white/90">
+              {row.area}
+            </div>
+            <div className="text-white/90">{row.frequency}</div>
+            <div className="text-white font-medium whitespace-pre-line">
+              {row.note || ''}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div
+        key={`scope-row-${i}`}
+        className="rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2 sm:py-3 bg-[var(--color-primary)] mb-1"
+      >
+        {/* Mobile: stacked layout */}
+        <div className="sm:hidden space-y-1 text-xs">
+          <div className="flex justify-between">
+            <span className="text-white/70">Area:</span>
+            <span className="text-white/90 text-right">{row.area}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-white/70">Frequency:</span>
+            <span className="text-white/90">{row.frequency}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-white/70">Cost/visit:</span>
+            <span className="text-white/90">{formatCurrencySafe(row.costPerVisit) ?? 'N/A'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-white/70">Monthly:</span>
+            <span className="text-white font-bold">{formatCurrencySafe(row.monthlyCost) ?? 'N/A'}</span>
+          </div>
+        </div>
+        {/* Desktop: grid layout */}
+        <div className="hidden sm:grid text-center grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-xs justify-center items-center">
+          <div className="whitespace-pre-line">{row.area}</div>
+          <div>{row.frequency}</div>
+          <div>{formatCurrencySafe(row.costPerVisit) ?? 'N/A'}</div>
+          <div className="font-bold">
+            {formatCurrencySafe(row.monthlyCost) ?? 'N/A'}
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div className="mb-4 sm:mb-6 overflow-x-auto">
       <div className="text-white min-w-[280px]">
-        {premium ? (
-          <>
-            {/* Header - hidden on mobile, shown on sm+ */}
-            <div className="hidden sm:grid text-center grid-cols-3 text-[var(--color-primary)] gap-2 sm:gap-4 px-3 sm:px-5 mb-2">
-              <div className="font-semibold text-xs sm:text-sm">Area serviced</div>
-              <div className="font-semibold text-xs sm:text-sm">Frequency</div>
-              <div className="font-semibold text-xs sm:text-sm">Notes</div>
-            </div>
-            {rows.map((row, i) => (
-              <div
-                key={`scope-row-${i}`}
-                className="rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2 sm:py-3 bg-[var(--color-primary)] mb-2"
-              >
-                {/* Mobile: stacked layout */}
-                <div className="sm:hidden space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Area:</span>
-                    <span className="text-white/90 text-right">{row.area}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Frequency:</span>
-                    <span className="text-white/90">{row.frequency}</span>
-                  </div>
-                  {row.note && (
-                    <div className="flex justify-between">
-                      <span className="text-white/70">Notes:</span>
-                      <span className="text-white font-medium text-right">{row.note}</span>
-                    </div>
-                  )}
-                </div>
-                {/* Desktop: grid layout */}
-                <div className="hidden sm:grid grid-cols-3 gap-2 sm:gap-4 text-xs justify-center items-center text-center">
-                  <div className="whitespace-pre-line text-white/90">
-                    {row.area}
-                  </div>
-                  <div className="text-white/90">{row.frequency}</div>
-                  <div className="text-white font-medium whitespace-pre-line">
-                    {row.note || ''}
-                  </div>
-                </div>
+        {rowChunks.map((chunk, chunkIndex) => (
+          <div 
+            key={`scope-chunk-${chunkIndex}`}
+            // Add page-break-before for continuation chunks (for PDF rendering)
+            style={chunkIndex > 0 ? { pageBreakBefore: 'always', paddingTop: '20px' } : undefined}
+          >
+            {/* Show header for first chunk and continuation chunks */}
+            {renderHeader(premium)}
+            {chunkIndex > 0 && (
+              <div className="text-[var(--color-primary)] font-semibold text-sm mb-2 print:block hidden">
+                Scope of Service (continued)
               </div>
-            ))}
-          </>
-        ) : (
-          <>
-            {/* Header - hidden on mobile, shown on sm+ */}
-            <div className="hidden sm:grid text-center grid-cols-2 text-[var(--color-primary)] sm:grid-cols-4 gap-2 sm:gap-4 px-3 sm:px-5 mb-2">
-              <div className="font-semibold text-xs sm:text-sm">Area serviced</div>
-              <div className="font-semibold text-xs sm:text-sm">Frequency</div>
-              <div className="font-semibold text-xs sm:text-sm">Cost per visit</div>
-              <div className="font-semibold text-xs sm:text-sm">Monthly cost</div>
-            </div>
-            {rows.map((row, i) => (
-              <div
-                key={`scope-row-${i}`}
-                className="rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-2 sm:py-3 bg-[var(--color-primary)] mb-1"
-              >
-                {/* Mobile: stacked layout */}
-                <div className="sm:hidden space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Area:</span>
-                    <span className="text-white/90 text-right">{row.area}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Frequency:</span>
-                    <span className="text-white/90">{row.frequency}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Cost/visit:</span>
-                    <span className="text-white/90">{formatCurrencySafe(row.costPerVisit) ?? 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Monthly:</span>
-                    <span className="text-white font-bold">{formatCurrencySafe(row.monthlyCost) ?? 'N/A'}</span>
-                  </div>
-                </div>
-                {/* Desktop: grid layout */}
-                <div className="hidden sm:grid text-center grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-xs justify-center items-center">
-                  <div className="whitespace-pre-line">{row.area}</div>
-                  <div>{row.frequency}</div>
-                  <div>{formatCurrencySafe(row.costPerVisit) ?? 'N/A'}</div>
-                  <div className="font-bold">
-                    {formatCurrencySafe(row.monthlyCost) ?? 'N/A'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </>
-        )}
+            )}
+            {chunk.map((row, i) => renderRow(row, chunkIndex * MAX_ROWS_PER_SECTION + i, premium))}
+          </div>
+        ))}
       </div>
     </div>
   );
