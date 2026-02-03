@@ -88,7 +88,7 @@ const TestimonialsSection = () => {
         </motion.div>
 
         {/* Client Logos */}
-        <motion.div
+        {/* <motion.div
           className="mt-16 text-center"
           initial="initial"
           whileInView="animate"
@@ -107,7 +107,7 @@ const TestimonialsSection = () => {
               )
             )}
           </div>
-        </motion.div>
+        </motion.div> */}
       </div>
     </section>
   );

@@ -29,17 +29,15 @@ const HeroSection = () => {
             className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight"
             variants={fadeInUp}
           >
-            Generate Professional Cleaning{' '}
-            <span className="text-blue-600">Proposals in Minutes</span>
+            Win More Cleaning Contracts{' '}
+            <span className="text-blue-600">AI-Generated Proposals</span>
           </motion.h1>
 
           <motion.p
             className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed"
             variants={fadeInUp}
           >
-            Generate professional, branded PDF proposals in minutes — trusted by
-            janitorial companies. Save hours of manual work with AI
-            that understands your industry.
+            Built specifically for janitorial companies to create accurate, client-ready proposals that close faster.
           </motion.p>
 
           <motion.div

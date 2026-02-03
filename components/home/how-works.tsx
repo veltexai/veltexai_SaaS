@@ -35,21 +35,21 @@ const HowItWorksSection = () => {
           {[
             {
               step: '01',
-              title: 'Enter Project Details',
+              title: 'Takes 2–3 minutes',
               description:
                 'Fill out a simple form with your client information, project scope, and cleaning requirements.',
               icon: FileText,
             },
             {
               step: '02',
-              title: 'AI Generates Proposal',
+              title: 'Built-in janitorial pricing logic',
               description:
                 'Our AI creates a tailored, professional proposal based on industry best practices and your specifications.',
               icon: Zap,
             },
             {
               step: '03',
-              title: 'Export Branded PDF',
+              title: 'Ready-to-send PDFs',
               description:
                 'Download your fully branded PDF proposal ready to send to clients. Professional results every time.',
               icon: CheckCircle,

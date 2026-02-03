@@ -331,7 +331,6 @@ const areasIncludedByService: Record<ServiceType, string[]> = {
     'Server Room',
     'Executive Offices',
     'Training Rooms',
-    'Copy Centers',
     'Supply Closets',
   ],
   carpet: [
