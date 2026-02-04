@@ -13,3 +13,9 @@ export {
 } from './components';
 
 export { TemplateRenderer } from './template-renderer';
+
+export {
+  parseScopeTableData,
+  splitScopeRows,
+  type ScopeRow,
+} from './utils/split-scope-rows';

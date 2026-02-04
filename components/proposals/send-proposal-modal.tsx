@@ -95,6 +95,8 @@ export function SendProposalModal({
     success: boolean;
     message: string;
     trackingId?: string;
+    errorCode?: string;
+    errorDetails?: string;
   } | null>(null);
   const [showAIGenerator, setShowAIGenerator] = useState(false);
 
@@ -157,7 +159,12 @@ Veltex AI Team`,
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to send proposal');
+        const error = new Error(errorData.message || errorData.error || 'Failed to send proposal');
+        (error as Error & { cause: object }).cause = {
+          code: errorData.code,
+          details: errorData.details,
+        };
+        throw error;
       }
 
       // Show progress: Step 3
@@ -182,13 +189,34 @@ Veltex AI Team`,
       }, 2000);
     } catch (error) {
       console.error('Error sending proposal:', error);
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to send proposal';
+      
+      let errorMessage = 'An unexpected error occurred while sending the proposal.';
+      let errorCode = 'UNKNOWN_ERROR';
+      let errorDetails: string | undefined;
+
+      if (error instanceof Error) {
+        // Check for network errors
+        if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+          errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+          errorCode = 'NETWORK_ERROR';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      // Handle structured error responses from the API
+      if (error instanceof Error && error.cause) {
+        const cause = error.cause as { code?: string; details?: string };
+        errorCode = cause.code || errorCode;
+        errorDetails = cause.details;
+      }
 
       setSendingProgress('');
       setSendResult({
         success: false,
         message: errorMessage,
+        errorCode,
+        errorDetails,
       });
 
       toast.error(errorMessage);
@@ -237,19 +265,33 @@ Veltex AI Team`,
                   : 'border-red-200 bg-red-50'
               }
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-2">
                 {sendResult.success ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                 ) : (
-                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
                 )}
-                <AlertDescription
-                  className={
-                    sendResult.success ? 'text-green-800' : 'text-red-800'
-                  }
-                >
-                  {sendResult.message}
-                </AlertDescription>
+                <div className="flex-1 space-y-1">
+                  <AlertDescription
+                    className={
+                      sendResult.success ? 'text-green-800' : 'text-red-800 font-medium'
+                    }
+                  >
+                    {sendResult.message}
+                  </AlertDescription>
+                  {!sendResult.success && sendResult.errorCode && (
+                    <p className="text-xs text-red-600">
+                      Error Code: {sendResult.errorCode}
+                    </p>
+                  )}
+                  {!sendResult.success && sendResult.errorDetails && (
+                    <p className="text-xs text-red-500 mt-1">
+                      Details: {typeof sendResult.errorDetails === 'string' 
+                        ? sendResult.errorDetails 
+                        : JSON.stringify(sendResult.errorDetails)}
+                    </p>
+                  )}
+                </div>
               </div>
             </Alert>
 
@@ -281,10 +323,23 @@ Veltex AI Team`,
             )}
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={resetForm}>
-                Send Another
-              </Button>
-              <Button onClick={() => onOpenChange(false)}>Close</Button>
+              {sendResult.success ? (
+                <>
+                  <Button variant="outline" onClick={resetForm}>
+                    Send Another
+                  </Button>
+                  <Button onClick={() => onOpenChange(false)}>Close</Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={resetForm}>
+                    Try Again
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         ) : (

@@ -1,0 +1,1 @@
+export { getDeliveryMethodDescription } from './utils/get-delivery-method-description';

@@ -332,16 +332,27 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     return isValid;
   };
 
+  // Scroll to top on mobile when changing steps
+  const scrollToTopOnMobile = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const nextStep = async () => {
+    console.log('nextStepe');
     const isValid = await validateCurrentStep();
     if (isValid && currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
+      scrollToTopOnMobile();
+      console.log('after Scroll');
     }
   };
 
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      scrollToTopOnMobile();
     }
   };
 

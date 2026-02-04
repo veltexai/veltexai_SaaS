@@ -31,7 +31,14 @@ export async function POST(
     // Get the authenticated user
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        {
+          error: 'Authentication required',
+          code: 'UNAUTHORIZED',
+          message: 'Please sign in to send proposals. Your session may have expired.',
+        },
+        { status: 401 }
+      );
     }
 
     const supabase = await createClient();
@@ -46,7 +53,11 @@ export async function POST(
 
     if (proposalError || !proposal) {
       return NextResponse.json(
-        { error: 'Proposal not found' },
+        {
+          error: 'Proposal not found',
+          code: 'PROPOSAL_NOT_FOUND',
+          message: 'The proposal could not be found. It may have been deleted or you may not have permission to access it.',
+        },
         { status: 404 }
       );
     }
@@ -86,8 +97,14 @@ export async function POST(
         pdfBuffer = await generateProposalPDFWithPlaywright(proposal.id);
       } catch (pdfError) {
         console.error('Error generating PDF:', pdfError);
+        const pdfErrorMessage = pdfError instanceof Error ? pdfError.message : 'Unknown error';
         return NextResponse.json(
-          { error: 'Failed to generate PDF attachment' },
+          {
+            error: 'PDF generation failed',
+            code: 'PDF_GENERATION_ERROR',
+            message: 'We encountered an issue while generating the PDF. This could be due to missing fonts, images, or content formatting issues.',
+            details: pdfErrorMessage,
+          },
           { status: 500 }
         );
       }
@@ -155,7 +172,11 @@ export async function POST(
 
     if (!emailSent) {
       return NextResponse.json(
-        { error: 'Failed to send proposal email' },
+        {
+          error: 'Email delivery failed',
+          code: 'EMAIL_SEND_ERROR',
+          message: 'The PDF was generated successfully, but we could not send the email. Please check the recipient email address and try again.',
+        },
         { status: 500 }
       );
     }
@@ -201,14 +222,26 @@ export async function POST(
     console.error('Error sending proposal:', error);
 
     if (error instanceof z.ZodError) {
+      const fieldErrors = error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        {
+          error: 'Validation error',
+          code: 'VALIDATION_ERROR',
+          message: `Please check your input: ${fieldErrors}`,
+          details: error.errors,
+        },
         { status: 400 }
       );
     }
 
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR',
+        message: 'An unexpected error occurred while processing your request. Please try again later.',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+      },
       { status: 500 }
     );
   }
