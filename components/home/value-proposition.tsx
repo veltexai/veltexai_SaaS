@@ -31,7 +31,7 @@ const ValueProposition = () => {
               },
               {
                 title: 'Scale Fast',
-                subtitle: 'Reliable, enterprise-ready platform',
+                subtitle: 'Reliable Operational Intelligence Engine',
               },
             ].map((item, index) => (
               <motion.div

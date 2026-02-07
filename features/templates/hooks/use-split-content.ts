@@ -218,7 +218,7 @@ export function useSplitContent(proposalId?: string) {
       scope?.content?.toLowerCase().includes('veliz_scope_table')
     ) {
       const DEFAULT_SCOPE_DESCRIPTION =
-        'Below is a representative scope structured for automation. Adjust tasks and frequencies per site. This table should expand/collapse cleanly based on selected areas and add-ons.';
+        'Below is a representative scope from scope & frequency logic. Adjust tasks and frequencies per site. This table should expand/collapse cleanly based on selected areas and add-ons.';
       scope = {
         ...(scope as any),
         description: DEFAULT_SCOPE_DESCRIPTION,

@@ -224,7 +224,8 @@ const MagicLinkLoginForm = ({
                     className="mx-auto"
                   />
                    <p className="text-muted-foreground text-balance mt-3.5">
-                    Generate Professional Cleaning Proposals <br />in Minutes
+                    AI Operating System for Janitorial Companies — <br />
+                    Scope → Labor → Pricing → Proposal
                   </p>
                 </div>
 

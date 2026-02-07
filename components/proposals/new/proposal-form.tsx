@@ -40,33 +40,33 @@ interface ProposalFormProps {
 const STEPS = [
   {
     id: 1,
-    title: 'Service Type',
-    description: 'Select service type',
+    title: 'Facility Intelligence Input',
+    description: 'Service type & facility context',
   },
   {
     id: 2,
-    title: 'Template',
+    title: 'Client-Ready Output Format',
     description: 'Choose proposal template',
   },
   {
     id: 3,
-    title: 'Client Information',
+    title: 'Client & Site Context',
     description: 'Client details and contact information',
   },
   {
     id: 4,
-    title: 'Service Details',
-    description: 'Services and specifications',
+    title: 'Scope & Frequency Logic',
+    description: 'Services, specs, and frequencies',
   },
   {
     id: 5,
-    title: 'Facility Details',
+    title: 'Facility Intelligence Detail',
     description: 'Enhanced facility information',
   },
   {
     id: 6,
-    title: 'Pricing',
-    description: 'Pricing configuration',
+    title: 'Labor + Margin Modeling',
+    description: 'Pricing from labor and margin rules',
   },
 ];
 

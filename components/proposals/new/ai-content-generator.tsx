@@ -32,6 +32,7 @@ interface AIContentGeneratorProps {
   onGeneratingChange?: (generating: boolean) => void;
   selectedTone?: AITone;
   onToneChange?: (tone: AITone) => void;
+  pricingEnabled?: boolean;
 }
 
 export function AIContentGenerator({
@@ -43,6 +44,7 @@ export function AIContentGenerator({
   onGeneratingChange,
   selectedTone = 'professional',
   onToneChange,
+  pricingEnabled = false,
 }: AIContentGeneratorProps) {
   const [generating, setGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -103,7 +105,9 @@ export function AIContentGenerator({
           service_frequency: form.global_inputs.service_frequency,
           facility_size: form.global_inputs.facility_size,
           service_specific_data: form.service_specific_data,
-          pricing_data: form.pricing_data,
+          // Only include pricing_data when pricing is enabled - ensures fresh generation
+          pricing_data: pricingEnabled ? form.pricing_data : undefined,
+          pricing_enabled: pricingEnabled,
           // Enhanced facility data
           facility_details: form.facility_details,
           traffic_analysis: form.traffic_analysis,
@@ -161,11 +165,10 @@ export function AIContentGenerator({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Wand2 className="h-5 w-5" />
-          AI-Generated Content
+          Operational Intelligence Output
         </CardTitle>
         <CardDescription>
-          Generate professional proposal content using AI based on your project
-          details. Choose a tone that matches your client relationship.
+          Client-ready content from your scope, labor, and margin inputs. Constrained by real janitorial rules. Choose a tone that matches your client relationship.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

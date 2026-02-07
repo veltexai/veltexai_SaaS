@@ -405,8 +405,8 @@ export function PricingSection({
           <h2 className="text-2xl font-semibold mb-2">Pricing Calculation</h2>
           <p className="text-muted-foreground">
             {hasPricingData
-              ? 'Review the calculated pricing for this proposal.'
-              : 'Complete the service details to calculate pricing for this proposal.'}
+              ? 'Review labor + margin modeling for this client-ready output.'
+              : 'Complete scope & frequency to run labor + margin modeling.'}
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -645,6 +645,7 @@ export function PricingSection({
           onGeneratingChange={onGeneratingChange}
           selectedTone={selectedTone}
           onToneChange={onToneChange}
+          pricingEnabled={enabled}
         />
       </Card>
     </div>

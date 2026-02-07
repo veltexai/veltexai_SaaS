@@ -20,7 +20,10 @@ export function WelcomeSection({ profile }: WelcomeSectionProps) {
           Welcome back, {profile?.full_name || 'User'}!
         </h2>
         <p className="mt-1 text-sm text-gray-500">
-          Here's what's happening with your proposals today.
+          Operational Intelligence — here&apos;s what&apos;s happening with your workflow today.
+        </p>
+        <p className="mt-1 text-xs text-gray-400 italic">
+          All outputs are constrained by labor, frequency, and margin rules based on real janitorial operations.
         </p>
       </div>
       <div className="mt-4 flex md:ml-4 md:mt-0">

@@ -295,7 +295,7 @@ export default function AdminTemplatesPage() {
         </div>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button disabled title="Coming soon (Phase 2)">
+            <Button disabled title="AI Scope-of-Work from Facility Photos/Videos (Phase 2)">
               <Plus className="h-4 w-4 mr-2" />
               Create Template — Phase 2
             </Button>

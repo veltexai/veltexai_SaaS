@@ -29,15 +29,15 @@ const HeroSection = () => {
             className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight"
             variants={fadeInUp}
           >
-            Win More Cleaning Contracts{' '}
-            <span className="text-blue-600">AI-Generated Proposals</span>
+            Win More Cleaning Contracts with{' '}
+            <span className="text-blue-600">Operational Intelligence</span>
           </motion.h1>
 
           <motion.p
             className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed"
             variants={fadeInUp}
           >
-            Built specifically for janitorial companies to create accurate, client-ready proposals that close faster.
+            The AI Operating System for janitorial companies. Scope → Labor → Pricing → Proposal — client-ready output that closes faster.
           </motion.p>
 
           <motion.div

@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
       facility_size,
       service_specific_data,
       pricing_data,
+      pricing_enabled = false,
       // Enhanced facility data
       facility_details,
       traffic_analysis,
@@ -537,10 +538,32 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
     const pricingTableFenced = `\n\`\`\`veliz_pricing_table\n${JSON.stringify(pricingTableData)}\n\`\`\`\n`;
     
     console.log('💰 Pricing table being sent to AI:', JSON.stringify(pricingTableData, null, 2));
+    console.log('💰 Pricing enabled:', pricing_enabled);
 
-    // Build structure instructions for Basic Professional
+    // Conditionally build pricing sections based on pricing_enabled flag
+    const basicProfessionalPricingSection = pricing_enabled
+      ? `
+## Pricing
+A. Customer agrees to pay contractor ${formatCurrencySafe(
+          tableMonthlyCost
+        )} monthly cost.
+
+## Additional services to be invoiced (Optional)
+${additionalServicesFenced}
+
+B. Accounts are considered delinquent after net 30 days. Can add late charge of $30.00 per day collection fees (payable by customer)
+
+C. A new price may be negotiated if customer requests a change in frequency or coverage.
+
+D. If customer schedules service and cancels a $75.00 fee will be charged.
+
+E. If unforeseen events occur beyond the contractor's control (strikes, construction obstacles, calamities, major tax increases or national economic crisis) a new price may be negotiated.
+`
+      : '';
+
+    // Build structure instructions for Basic Professional (uses conditional pricing section)
     const basicProfessionalStructure = `
-Return markdown with ONLY these top-level sections using exact headings:
+Return markdown with ONLY these top-level sections using exact headings:${!pricing_enabled ? '\nIMPORTANT: Do NOT include any Pricing or Additional services sections - the client has disabled pricing for this proposal.' : ''}
 Include the fenced JSON blocks exactly as shown; do not alter their content or formatting.
 ## Cover letter
 HARD RULES FOR THIS SECTION:
@@ -580,23 +603,7 @@ D. Either party may terminate this agreement with 30 days notice.
 
 ## Legal responsibility
 ${legalResponsibilityGuidance}
-
-## Pricing
-A. Customer agrees to pay contractor ${formatCurrencySafe(
-      tableMonthlyCost
-    )} monthly cost.
-
-## Additional services to be invoiced (Optional)
-${additionalServicesFenced}
-
-B. Accounts are considered delinquent after net 30 days. Can add late charge of $30.00 per day collection fees (payable by customer)
-
-C. A new price may be negotiated if customer requests a change in frequency or coverage.
-
-D. If customer schedules service and cancels a $75.00 fee will be charged.
-
-E. If unforeseen events occur beyond the contractor’s control (strikes, construction obstacles, calamities, major tax increases or national economic crisis) a new price may be negotiated.
-`;
+${basicProfessionalPricingSection}`;
 
     const aboutIntro =
       profile.company_background && profile.company_background.trim().length > 0
@@ -615,8 +622,20 @@ E. If unforeseen events occur beyond the contractor’s control (strikes, constr
       return y ? `${y} years in business` : '10 years in business';
     })();
 
+    // Conditionally build pricing section for Executive Premium template
+    const executivePremiumPricingSection = pricing_enabled
+      ? `
+## Service Quote & Pricing
+${pricingTableFenced}
+
+Notes:
+- Quote valid for 30 days. Pricing reflects scope and frequency above.
+- Adjustments require written approval.
+`
+      : '';
+
     const executivePremiumStructure = `
-Return markdown with ONLY these top-level sections using exact headings:
+Return markdown with ONLY these top-level sections using exact headings:${!pricing_enabled ? '\nIMPORTANT: Do NOT include any "Service Quote & Pricing" section - the client has disabled pricing for this proposal.' : ''}
 Include the fenced JSON blocks exactly as shown; do not alter their content or formatting.
 
 ## About Our Company
@@ -648,19 +667,12 @@ Service Values (vary wording each generation; preserve meaning and line length)
 - Reliability: same meaning, similar length; use fresh wording.
 
 ## Scope of service
-Below is a representative scope structured for automation. Adjust tasks and frequencies per site. This table should expand/collapse cleanly based on selected areas and add-ons.
+Below is a representative scope from scope & frequency logic. Adjust tasks and frequencies per site. This table should expand/collapse cleanly based on selected areas and add-ons.
 ${scopeTablePremiumFenced}
 
 Add-ons
 ${addonTitlesMarkdown}
-
-## Service Quote & Pricing
-${pricingTableFenced}
-
-Notes:
-- Quote valid for 30 days. Pricing reflects scope and frequency above.
-- Adjustments require written approval.
-`;
+${executivePremiumPricingSection}`;
 
     const modernCorporateStructure = executivePremiumStructure;
     const luxuryEliteStructure = executivePremiumStructure;

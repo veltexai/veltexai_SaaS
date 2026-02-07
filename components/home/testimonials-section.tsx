@@ -53,7 +53,7 @@ const TestimonialsSection = () => {
             },
             {
               quote:
-                'Finally, a tool built for cleaning companies by people who understand our business. The time savings alone pays for itself.',
+                'Finally, an operating system built for janitorial companies by people who understand our business. The time savings alone pays for itself.',
               author: 'Lisa Chen',
               title: 'Director, Elite Janitorial',
               rating: 5,

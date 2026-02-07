@@ -57,8 +57,10 @@ export default async function NewProposalPage() {
           Create New Proposal
         </h1>
         <p className="mt-2 text-sm text-gray-600">
-          Fill in the details below and let AI help you create a professional
-          proposal.
+          Facility intelligence → Scope & frequency → Labor + margin → Client-ready output.
+        </p>
+        <p className="mt-1 text-xs text-gray-500 italic">
+          All outputs are constrained by labor, frequency, and margin rules based on real janitorial operations.
         </p>
       </div>
 

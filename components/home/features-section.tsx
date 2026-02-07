@@ -28,8 +28,7 @@ const FeatureSection = () => {
             Everything You Need
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Built specifically for cleaning businesses, not generic proposal
-            tools
+            Vertical AI operating system for janitorial companies, not generic SaaS
           </p>
         </motion.div>
 
@@ -42,9 +41,9 @@ const FeatureSection = () => {
         >
           {[
             {
-              title: 'AI-Generated Content',
+              title: 'Operational Intelligence Engine',
               description:
-                'Industry-specific proposals tailored for janitorial and cleaning services.',
+                'Scope → Labor → Pricing → Proposal. Outputs constrained by real janitorial labor, frequency, and margin rules.',
               icon: Zap,
             },
             {

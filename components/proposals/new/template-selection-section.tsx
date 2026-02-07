@@ -167,8 +167,7 @@ export function TemplateSelectionSection({
           Choose a Template
         </CardTitle>
         <p className="text-sm text-muted-foreground mt-2">
-          Select a professional template to structure your proposal. You can
-          customize the content later.
+          Choose client-ready output format. You can customize the content later.
         </p>
       </CardHeader>
       <CardContent>

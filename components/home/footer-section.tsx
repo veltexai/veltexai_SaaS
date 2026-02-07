@@ -17,8 +17,7 @@ const FooterSection = () => {
               />
             </div>
             <p className="text-gray-400 mb-6 max-w-md">
-              AI-powered proposal generation for the cleaning industry. Trusted
-              since 1986.
+              AI Operating System for Janitorial Companies. Scope → Labor → Pricing → Proposal. Trusted since 1986.
             </p>
             <div className="flex space-x-4">
               <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 cursor-pointer">

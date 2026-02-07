@@ -21,7 +21,7 @@ const HowItWorksSection = () => {
             How It Works
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Three simple steps to professional proposals
+            Operational decision layers: Facility Intelligence → Scope & Frequency → Labor + Margin → Client-Ready Output
           </p>
         </motion.div>
 
@@ -35,23 +35,23 @@ const HowItWorksSection = () => {
           {[
             {
               step: '01',
-              title: 'Takes 2–3 minutes',
+              title: 'Facility Intelligence Input',
               description:
-                'Fill out a simple form with your client information, project scope, and cleaning requirements.',
+                'Enter client and site context, service type, and facility details. Operational inputs, not form filling.',
               icon: FileText,
             },
             {
               step: '02',
-              title: 'Built-in janitorial pricing logic',
+              title: 'Scope & Frequency Logic',
               description:
-                'Our AI creates a tailored, professional proposal based on industry best practices and your specifications.',
+                'Operational Intelligence Engine applies labor, frequency, and margin rules from real janitorial operations.',
               icon: Zap,
             },
             {
               step: '03',
-              title: 'Ready-to-send PDFs',
+              title: 'Client-Ready Output',
               description:
-                'Download your fully branded PDF proposal ready to send to clients. Professional results every time.',
+                'Labor + margin modeling produces branded, client-ready proposals. All outputs constrained by your rules.',
               icon: CheckCircle,
             },
           ].map((item, index) => (

@@ -371,7 +371,6 @@ export function ModernCorporateTemplate({
                       />
                     ) : (
                       <div className="text-sm text-muted-foreground">
-                        No content
                       </div>
                     )}
                     {notes?.content ? (

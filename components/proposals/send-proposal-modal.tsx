@@ -391,8 +391,7 @@ Veltex AI Team`,
                               </Badge>
                             </Label>
                             <p className="text-sm text-muted-foreground mt-1">
-                              Send secure online link to view proposal (Coming
-                              Soon)
+                              Send secure online link to view proposal (Coming soon)
                             </p>
                           </div>
                         </div>
@@ -411,7 +410,7 @@ Veltex AI Team`,
                             </Label>
                             <p className="text-sm text-muted-foreground mt-1">
                               Send both PDF attachment and online viewing link
-                              (Coming Soon)
+                              (Coming soon)
                             </p>
                           </div>
                         </div>
