@@ -844,7 +844,7 @@ Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estima
           role: 'system',
           content: [
             // RULES: high-level, concise, not part of user content
-            "You are a professional business proposal writer for Veltex Services. Create compelling, well-structured proposals that help win clients.",
+            "You are a professional business proposal writer for VeltexAI. Create compelling, well-structured proposals that help win clients.",
             "Follow these hard rules exactly (do NOT repeat these rules in the output):",
             "1) Output MUST be markdown and include ONLY the top-level headings specified by the user.",
             "2) The FINAL section must be the Notes block EXACTLY as below (including bullet lines).",

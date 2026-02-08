@@ -1,6 +1,5 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { NavButton } from '@/components/ui/nav-button';
 
 export function ProposalsHeader() {
   return (
@@ -11,12 +10,9 @@ export function ProposalsHeader() {
           Manage your business proposals and track their status.
         </p>
       </div>
-      <Link href="/dashboard/proposals/new">
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          New Proposal
-        </Button>
-      </Link>
+      <NavButton href="/dashboard/proposals/new" icon={<Plus className="h-4 w-4" />}>
+        New Proposal
+      </NavButton>
     </div>
   );
 }

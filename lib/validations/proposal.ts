@@ -169,25 +169,31 @@ export const floorServiceSchema = z.object({
   high_traffic_areas: z.array(z.string()).default([]),
 });
 
-// Pricing data schema
+// Pricing data schema (nested fields optional so edit form and partial data validate)
 export const pricingDataSchema = z.object({
-  price_range: z.object({
-    low: z.number(),
-    high: z.number(),
-  }),
-  hours_estimate: z.object({
-    min: z.number(),
-    max: z.number(),
-  }),
-  assumptions: z.object({
-    labor_rate: z.number(),
-    overhead_percentage: z.number(),
-    margin_percentage: z.number(),
-    production_rate: z.object({
+  price_range: z
+    .object({
+      low: z.number(),
+      high: z.number(),
+    })
+    .optional(),
+  hours_estimate: z
+    .object({
       min: z.number(),
       max: z.number(),
-    }),
-  }),
+    })
+    .optional(),
+  assumptions: z
+    .object({
+      labor_rate: z.number(),
+      overhead_percentage: z.number(),
+      margin_percentage: z.number(),
+      production_rate: z.object({
+        min: z.number(),
+        max: z.number(),
+      }),
+    })
+    .optional(),
 });
 
 // Main proposal form schema

@@ -47,10 +47,10 @@ const ThankYouPage = ({
         />
       </div>
       <div
-        className={`absolute flex items-start justify-center ${
+        className={`absolute flex items-start justify-center gap-2 ${
           templateType === 'luxury_elite'
             ? 'flex-col sm:gap-6 gap-4 left-0 top-0 sm:w-[60%] w-[90%] sm:pl-8 pl-4 sm:pt-8 pt-4'
-            : 'w-[90%] sm:bottom-12 bottom-3 left-1/2 -translate-x-1/2 '
+            : 'w-[90%] sm:bottom-12 bottom-1 left-1/2 -translate-x-1/2 '
         }`}
       >
         {logoUrl ? (
@@ -60,7 +60,7 @@ const ThankYouPage = ({
             className={`${
               templateType === 'luxury_elite'
                 ? 'sm:max-h-[60px] max-h-[40px] w-auto sm:mb-3 mb-0'
-                : 'h-12 w-auto flex-[80%] object-contain'
+                : 'sm:h-6 h-4 w-auto flex-[80%] object-contain'
             }`}
             height={48}
             width={144}

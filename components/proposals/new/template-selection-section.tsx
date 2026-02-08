@@ -6,12 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Layout, Check, AlertCircle, Sparkles } from 'lucide-react';
+import { Layout, AlertCircle, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { Database } from '@/types/database';
 import { ProposalFormData } from '@/lib/validations/proposal';
-import { cn } from '@/lib/utils';
 import { TemplateOptionsGrid } from './template-options-grid';
 import { SubscriptionTier } from '@/types/subscription';
 
@@ -111,10 +110,15 @@ export function TemplateSelectionSection({
     toast.success('Template selected successfully');
   };
 
-  const clearSelection = () => {
-    setValue('template_id', undefined, { shouldValidate: true });
-    toast.success('Template selection cleared');
-  };
+  // Default to first accessible template (basic) when none selected
+  useEffect(() => {
+    if (templates.length === 0 || selectedTemplateId) return;
+    const firstAccessible = templates.find((t) => hasAccess(t.tiers));
+    const defaultId = firstAccessible?.id ?? templates[0]?.id;
+    if (defaultId) {
+      setValue('template_id', defaultId, { shouldValidate: true });
+    }
+  }, [templates, selectedTemplateId, setValue]);
 
   if (loading) {
     return (
@@ -172,31 +176,6 @@ export function TemplateSelectionSection({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* No Template Option */}
-          <div
-            className={cn(
-              'relative border-2 rounded-lg p-4 cursor-pointer transition-all hover:shadow-md',
-              !selectedTemplateId
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'
-            )}
-            onClick={() => clearSelection()}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium">No Template</h3>
-                  {!selectedTemplateId && (
-                    <Check className="h-4 w-4 text-blue-600" />
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Start with a blank proposal and create your own structure
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Template Options */}
           <TemplateOptionsGrid
             templates={templates}

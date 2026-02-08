@@ -256,22 +256,27 @@ export function AIContentGenerator({
             <Label>Generated Content Preview</Label>
 
             {isEditing ? (
-              <div className="space-y-4">
+              <div className="rounded-md bg-gray-50 max-h-60 overflow-y-auto sm:w-auto w-[300px]">
                 <Textarea
                   value={editedContent}
                   onChange={(e) => setEditedContent(e.target.value)}
-                  className="min-h-[300px] font-mono text-sm"
+                  className="min-h-[300px] font-mono sm:text-sm text-xs "
                   placeholder="Edit your proposal content..."
                 />
-                <div className="flex gap-2 justify-end">
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end my-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handleCancelEdit}
+                    className="w-full sm:w-auto"
                   >
                     Cancel
                   </Button>
-                  <Button type="button" onClick={handleSaveEdit}>
+                  <Button
+                    type="button"
+                    onClick={handleSaveEdit}
+                    className="w-full sm:w-auto"
+                  >
                     Save Changes
                   </Button>
                 </div>

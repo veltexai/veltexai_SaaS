@@ -70,7 +70,6 @@ export function MarkdownRenderer({
   proposalId,
   additionalServicesRows,
 }: MarkdownRendererProps) {
-  console.log('🚀 ~ MarkdownRenderer ~ content:', content);
   const { settings } = useUserBranding();
   let extrasIncluded = false;
   const parseMarkdown = (text: string) => {

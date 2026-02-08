@@ -23,19 +23,19 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, Save } from 'lucide-react';
 import {
-  ProposalFormData,
+  Loader2,
+  Save,
+  FileText,
+  User,
+  Settings,
+  Building2,
+  DollarSign,
+} from 'lucide-react';
+import {
   proposalFormSchema,
   ServiceType,
 } from '@/lib/validations/proposal';
@@ -45,6 +45,7 @@ import { ServiceSpecificSection } from '@/components/proposals/new/service-speci
 import { PricingSection } from '@/components/proposals/new/pricing-section';
 import { EnhancedFacilitySection } from '@/components/proposals/new/enhanced-facility-section';
 import { validateProposalWithServiceData } from '@/lib/validations/proposal';
+import { getValidationMessage } from '@/features/proposals';
 
 type Proposal = Database['public']['Tables']['proposals']['Row'];
 
@@ -107,6 +108,7 @@ export function ProposalEditDialog({
         areas_excluded: [],
         special_services: [],
         frequency_details: {},
+        special_notes: '',
       },
       special_requirements: {
         security_clearance: false,
@@ -137,6 +139,7 @@ export function ProposalEditDialog({
       form.reset({
         title: proposal.title,
         service_type: proposal.service_type as ServiceType,
+        template_id: proposal.template_id ?? undefined,
         global_inputs: {
           client_name: proposal.client_name || '',
           client_email: proposal.client_email || '',
@@ -204,6 +207,8 @@ export function ProposalEditDialog({
                 typeof scope.frequency_details === 'object'
                   ? scope.frequency_details
                   : {},
+              special_notes:
+                typeof scope.special_notes === 'string' ? scope.special_notes : '',
             };
           }
           // Default fallback
@@ -212,6 +217,7 @@ export function ProposalEditDialog({
             areas_excluded: [],
             special_services: [],
             frequency_details: {},
+            special_notes: '',
           };
         })(),
         special_requirements: proposal.special_requirements
@@ -229,6 +235,7 @@ export function ProposalEditDialog({
   }, [proposal, open, form]);
 
   const onSubmit = async (data: any) => {
+    console.log('Data submitted:', data);
     try {
       setSaving(true);
 
@@ -250,10 +257,11 @@ export function ProposalEditDialog({
         };
       }
 
-      // Prepare base update payload with only guaranteed fields
+      // Prepare base update payload with only guaranteed fields (keep proposal's template)
       const updatePayload: any = {
         title: validatedData.title,
         service_type: validatedData.service_type,
+        template_id: proposal.template_id ?? undefined,
         client_name: validatedData.global_inputs?.client_name,
         client_email: validatedData.global_inputs?.client_email,
         client_company: validatedData.global_inputs?.client_company,
@@ -418,7 +426,7 @@ export function ProposalEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl sm:max-h-[90vh] h-full overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Proposal</DialogTitle>
           <DialogDescription>
@@ -427,18 +435,68 @@ export function ProposalEditDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(onSubmit, (errors) => {
+              const firstError = Object.keys(errors)[0];
+              const message = firstError
+                ? getValidationMessage(errors, firstError)
+                : 'Please fix the errors in the form.';
+              toast.error(message);
+              // Switch to the tab that likely contains the first error
+              if (firstError?.startsWith('global_inputs')) setActiveTab('client');
+              else if (firstError === 'title' || firstError === 'service_type') setActiveTab('basic');
+              else if (firstError === 'service_specific_data') setActiveTab('service');
+              else if (firstError?.startsWith('facility_') || firstError?.startsWith('traffic_') || firstError?.startsWith('service_scope') || firstError?.startsWith('special_requirements')) setActiveTab('facility');
+              else if (firstError?.startsWith('pricing')) setActiveTab('pricing');
+            })}
+            className="space-y-6"
+          >
             <Tabs
               value={activeTab}
               onValueChange={setActiveTab}
               className="space-y-4"
             >
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                <TabsTrigger value="client">Client Details</TabsTrigger>
-                <TabsTrigger value="service">Service Details</TabsTrigger>
-                <TabsTrigger value="facility">Facility Details</TabsTrigger>
-                <TabsTrigger value="pricing">Pricing</TabsTrigger>
+              <TabsList className="flex w-full flex-nowrap overflow-x-auto gap-1 p-1 md:grid md:grid-cols-5 md:overflow-visible">
+                <TabsTrigger
+                  value="basic"
+                  className="flex shrink-0 items-center gap-1.5 md:flex-1"
+                  title="Basic Info"
+                >
+                  <FileText className="h-4 w-4 shrink-0" />
+                  <span className="hidden md:inline">Basic Info</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="client"
+                  className="flex shrink-0 items-center gap-1.5 md:flex-1"
+                  title="Client Details"
+                >
+                  <User className="h-4 w-4 shrink-0" />
+                  <span className="hidden md:inline">Client Details</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="service"
+                  className="flex shrink-0 items-center gap-1.5 md:flex-1"
+                  title="Service Details"
+                >
+                  <Settings className="h-4 w-4 shrink-0" />
+                  <span className="hidden md:inline">Service Details</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="facility"
+                  className="flex shrink-0 items-center gap-1.5 md:flex-1"
+                  title="Facility Details"
+                >
+                  <Building2 className="h-4 w-4 shrink-0" />
+                  <span className="hidden md:inline">Facility Details</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="pricing"
+                  className="flex shrink-0 items-center gap-1.5 md:flex-1"
+                  title="Pricing"
+                >
+                  <DollarSign className="h-4 w-4 shrink-0" />
+                  <span className="hidden md:inline">Pricing</span>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="basic" className="space-y-4">
@@ -471,7 +529,7 @@ export function ProposalEditDialog({
                 <EnhancedFacilitySection proposalId={proposal.id} serviceType={selectedServiceType} />
               </TabsContent>
 
-              <TabsContent value="pricing">
+              <TabsContent value="pricing" className='min-h-[calc(100vh-300px)]'>
                 <PricingSection
                   proposalId={proposal.id}
                   serviceType={selectedServiceType}
@@ -484,11 +542,12 @@ export function ProposalEditDialog({
               </TabsContent>
             </Tabs>
 
-            <DialogFooter className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <DialogFooter className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex w-full gap-2 sm:w-auto">
                 <Button
                   type="button"
                   variant="outline"
+                  className="flex-1 sm:flex-initial"
                   onClick={() => {
                     if (activeTab === 'basic') return;
                     const tabs = [
@@ -508,6 +567,7 @@ export function ProposalEditDialog({
                 <Button
                   type="button"
                   variant="outline"
+                  className="flex-1 sm:flex-initial"
                   onClick={() => {
                     if (activeTab === 'pricing') return;
                     const tabs = [
@@ -526,16 +586,21 @@ export function ProposalEditDialog({
                 </Button>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex w-full gap-2 sm:w-auto">
                 <Button
                   type="button"
                   variant="outline"
+                  className="flex-1 sm:flex-initial"
                   onClick={() => onOpenChange(false)}
                   disabled={saving}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={saving}>
+                <Button
+                  type="submit"
+                  className="flex-1 sm:flex-initial"
+                  disabled={saving}
+                >
                   {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   <Save className="h-4 w-4 mr-2" />
                   Save Changes

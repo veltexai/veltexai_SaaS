@@ -60,13 +60,15 @@ export default function AboutOurCompany({
     const norm = (label ?? raw).toLowerCase();
     if (/\bservice\s+area\b/.test(norm)) Icon = LocationIcon;
     else if (/years?/.test(norm) && /business/.test(norm)) Icon = ShieldIcon;
-    else if (/(education|office|offices|retail|healthcare)/.test(norm))
+    else if (/(education|office|offices|retail|healthcare|residential)/.test(norm))
       Icon = EductationIcon;
     else if (/(satisfaction|100%)/.test(norm)) Icon = StartIcon;
     return Icon;
   };
 
   const Bullet = ({ raw }: { raw: string }) => {
+    console.log('raw', raw);
+    
     const Icon = resolveIcon(raw);
 
     return (

@@ -400,7 +400,7 @@ export function PricingSection({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex sm:flex-row flex-col items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold mb-2">Pricing Calculation</h2>
           <p className="text-muted-foreground">
@@ -409,7 +409,7 @@ export function PricingSection({
               : 'Complete scope & frequency to run labor + margin modeling.'}
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center sm:w-auto w-full justify-end space-x-2">
           <span className="text-sm font-medium">Enable Pricing</span>
           <Switch
             checked={enabled}

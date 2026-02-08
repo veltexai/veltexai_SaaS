@@ -22,6 +22,7 @@ import { signOut } from '@/lib/auth/actions/password';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/types/database';
 import Image from 'next/image';
+import { NavButton } from '../ui/nav-button';
 
 interface DashboardClientLayoutProps {
   children: React.ReactNode;
@@ -214,19 +215,13 @@ export function DashboardClientLayout({
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               {pathname === '/dashboard/proposals/new' ? (
-                <Link href="/dashboard/proposals">
-                  <Button size="sm" variant="outline">
-                    <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                    Back to Proposals
-                  </Button>
-                </Link>
+                <NavButton size="sm" variant="outline" href="/dashboard/proposals" icon={<ArrowLeftIcon className="mr-2 h-4 w-4" />}>
+                  Back to Proposals
+                </NavButton>
               ) : (
-                <Link href="/dashboard/proposals/new">
-                  <Button size="sm">
-                    <Plus className="mr-2 h-4 w-4" />
-                    New Proposal
-                  </Button>
-                </Link>
+                <NavButton href="/dashboard/proposals/new" icon={<Plus className="h-4 w-4" />}>
+                  New Proposal
+                </NavButton>
               )}
             </div>
           </div>
