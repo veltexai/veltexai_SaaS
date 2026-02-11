@@ -142,7 +142,7 @@ Veltex AI Team`,
       await new Promise((resolve) => setTimeout(resolve, 500)); // Brief pause for UX
 
       // Show progress: Step 2
-      setSendingProgress('Generating PDF (Fonts, Images, etc.) 📄 (this may take 30 seconds)');
+      setSendingProgress('Generating PDF (Fonts, Images, etc.) 📄 - this may take >30 seconds - please don\'t close the window');
 
       const response = await fetch(`/api/proposals/${proposal.id}/send`, {
         method: 'POST',

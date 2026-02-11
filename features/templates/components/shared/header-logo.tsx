@@ -1,5 +1,5 @@
 import { TemplateType } from '@/features/templates/types/templates';
-import Image from 'next/image';
+import LogoImage from './logo-image';
 import React from 'react';
 
 const HeaderLogo = ({
@@ -32,18 +32,10 @@ const HeaderLogo = ({
       }`}
     >
       {template === 'luxury_elite' && (
-        <div className="absolute bg-white w-full h-[80px] sm:h-[100px] md:h-[129.16px] -z-10"></div>
+        <div className="absolute bg-white w-full h-[80px] sm:h-[170px] -z-10"></div>
       )}
 
-      <Image
-        src={logoUrl}
-        alt={companyName}
-        className="h-3 sm:h-6 w-auto object-contain max-w-full"
-        height={48}
-        width={144}
-        priority
-        unoptimized
-      />
+      <LogoImage logoUrl={logoUrl} companyName={companyName} />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
 import {
   EmailTemplates,
   type SubscriptionEmailData,
@@ -520,7 +521,21 @@ export class EmailService {
     pdfBuffer?: Buffer
   ): Promise<boolean> {
     try {
-      console.log('📧 EmailService: Sending enhanced proposal email...');
+      console.log('📧 EmailService: Sending enhanced proposal email (Resend)...');
+
+      const apiKey = process.env.RESEND_API_KEY;
+      const fromName = process.env.EMAIL_SENDER_NAME;
+      const fromAddress = process.env.EMAIL_SENDER_ADDRESS;
+
+      if (!apiKey?.trim()) {
+        console.error('❌ EmailService: RESEND_API_KEY is not set');
+        return false;
+      }
+      if (!fromAddress?.trim()) {
+        console.error('❌ EmailService: EMAIL_SENDER_ADDRESS is not set');
+        return false;
+      }
+
       const config = await this.getEmailConfig();
       if (!config) {
         console.error('❌ EmailService: Email configuration not available');
@@ -532,36 +547,50 @@ export class EmailService {
         return true;
       }
 
-      const transporter = await this.createTransporter();
+      const resend = new Resend(apiKey);
       const template = EmailTemplates.getEnhancedProposalEmail(data);
 
-      const mailOptions: any = {
-        from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
+      const from =
+        fromName?.trim() ?
+          `"${fromName.trim()}" <${fromAddress.trim()}>`
+        : fromAddress.trim();
+
+      const payload: Parameters<Resend['emails']['send']>[0] = {
+        from,
         to: data.clientEmail,
-        cc: data.ccEmails,
-        bcc: data.sendCopyToSelf && data.senderEmail ? [data.senderEmail] : undefined,
         subject: template.subject,
         html: template.html,
-        text: template.text,
+        text: template.text ?? undefined,
         headers: {
           'X-Proposal-Tracking-ID': data.trackingId,
         },
       };
 
-      // Add PDF attachment if provided
+      if (data.ccEmails?.length) {
+        payload.cc = data.ccEmails;
+      }
+      if (data.sendCopyToSelf && data.senderEmail) {
+        payload.bcc = [data.senderEmail];
+      }
+
       if (pdfBuffer) {
-        mailOptions.attachments = [
+        payload.attachments = [
           {
             filename: `${data.proposalTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_proposal.pdf`,
             content: pdfBuffer,
-            contentType: 'application/pdf',
           },
         ];
       }
 
-      await transporter.sendMail(mailOptions);
+      const { data: sendData, error } = await resend.emails.send(payload);
+
+      if (error) {
+        console.error('❌ EmailService: Resend API error:', error);
+        return false;
+      }
+
       console.log(
-        `✅ EmailService: Enhanced proposal email sent successfully to ${data.clientEmail}`
+        `✅ EmailService: Enhanced proposal email sent successfully to ${data.clientEmail}${sendData?.id ? ` (id: ${sendData.id})` : ''}`
       );
       return true;
     } catch (error) {

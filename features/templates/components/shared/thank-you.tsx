@@ -2,6 +2,7 @@ import { TemplateType } from '@/features/templates/types/templates';
 import Image from 'next/image';
 import React from 'react';
 import ThankYouSection from '../sections/thank-you-section';
+import LogoImage from './logo-image';
 
 const ThankYouPage = ({
   email,
@@ -49,24 +50,12 @@ const ThankYouPage = ({
       <div
         className={`absolute flex items-start justify-center gap-2 ${
           templateType === 'luxury_elite'
-            ? 'flex-col sm:gap-6 gap-4 left-0 top-0 sm:w-[60%] w-[90%] sm:pl-8 pl-4 sm:pt-8 pt-4'
+            ? 'flex-col left-0 top-0 sm:w-[60%] w-[90%] sm:pl-8 pl-4 sm:pt-8 pt-4'
             : 'w-[90%] sm:bottom-12 bottom-1 left-1/2 -translate-x-1/2 '
         }`}
       >
         {logoUrl ? (
-          <Image
-            src={logoUrl}
-            alt={companyName}
-            className={`${
-              templateType === 'luxury_elite'
-                ? 'sm:max-h-[60px] max-h-[40px] w-auto sm:mb-3 mb-0'
-                : 'sm:h-6 h-4 w-auto flex-[80%] object-contain'
-            }`}
-            height={48}
-            width={144}
-            priority
-            unoptimized
-          />
+          <LogoImage logoUrl={logoUrl} companyName={companyName} templateType={templateType} />
         ) : null}
         <ThankYouSection
           templateType={templateType}
