@@ -13,6 +13,8 @@ import {
 } from '@/components/icons';
 import { formatCurrencySafe } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { isOneTimeFrequency, isStandardJanitorialService } from '@/lib/recurring-monthly-functions';
+import { FrequencyLabel } from '@/features/templates/components';
 
 interface MarkdownRendererProps {
   content: string;
@@ -870,6 +872,8 @@ function AdditionalServicesTable({
   );
 }
 
+
+
 function PricingTable({ data }: { data: PricingTableData }) {
   const rows = data?.rows ?? [];
   const summary = data?.summary;
@@ -893,7 +897,7 @@ function PricingTable({ data }: { data: PricingTableData }) {
               <div className="font-medium text-white mb-1">{r.service}</div>
               <div className="flex justify-between">
                 <span className="text-white/70">Frequency:</span>
-                <span className="text-white/90">{r.frequency}</span>
+                <span className="text-white/90">{isStandardJanitorialService(r.service) ?<FrequencyLabel frequency={r.frequency} /> : r.frequency}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-white/70">Price/month:</span>
@@ -903,7 +907,7 @@ function PricingTable({ data }: { data: PricingTableData }) {
             {/* Desktop: grid layout */}
             <div className="hidden sm:grid grid-cols-3 gap-2 sm:gap-4 text-xs items-center justify-center text-center">
               <div className="whitespace-pre-line">{r.service}</div>
-              <div>{r.frequency}</div>
+              <div>{isStandardJanitorialService(r.service) ? <FrequencyLabel frequency={r.frequency} />: r.frequency}</div>
               <div className="font-bold">{r.pricePerMonth}</div>
             </div>
           </div>

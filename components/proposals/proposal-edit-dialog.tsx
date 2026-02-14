@@ -39,7 +39,7 @@ import {
   proposalFormSchema,
   ServiceType,
 } from '@/lib/validations/proposal';
-import { ServiceTypeSelector } from '@/components/proposals/new/service-type-selector';
+import { ServiceTypeSelector } from '@/features/proposals/components/new/service-type-selector';
 import { GlobalInputsSection } from '@/components/proposals/new/global-inputs-section';
 import { ServiceSpecificSection } from '@/components/proposals/new/service-specific-section';
 import { PricingSection } from '@/components/proposals/new/pricing-section';

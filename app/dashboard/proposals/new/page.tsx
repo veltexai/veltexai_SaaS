@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { getUser } from '@/queries/user';
 import { createClient } from '@/lib/supabase/server';
-import { ProposalForm } from '@/components/proposals/new/proposal-form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { ProposalForm } from '@/features/proposals';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';

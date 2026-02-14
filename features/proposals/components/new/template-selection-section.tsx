@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { Database } from '@/types/database';
 import { ProposalFormData } from '@/lib/validations/proposal';
-import { TemplateOptionsGrid } from './template-options-grid';
+import { TemplateOptionsGrid } from '../../../../components/proposals/new/template-options-grid';
 import { SubscriptionTier } from '@/types/subscription';
 
 type ProposalTemplate =
@@ -133,7 +133,6 @@ export function TemplateSelectionSection({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="space-y-2">
-                <Skeleton className="h-80 w-3xs" />
                 <Skeleton className="h-80 w-3xs" />
                 <Skeleton className="h-80 w-3xs" />
               </div>

@@ -4,12 +4,9 @@ import { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form } from '@/components/ui/form';
+import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { createClient } from '@/lib/supabase/client';
 import {
   proposalFormSchema,
   type ProposalFormData,
@@ -18,24 +15,28 @@ import {
   getServiceSpecificSchema,
 } from '@/lib/validations/proposal';
 import { ServiceTypeSelector } from './service-type-selector';
-import { TemplateSelectionSection } from './template-selection-section';
-import { GlobalInputsSection } from './global-inputs-section';
-import { ServiceSpecificSection } from './service-specific-section';
-import { EnhancedFacilitySection } from './enhanced-facility-section';
-import { PricingSection } from './pricing-section';
-import {
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  Calculator,
-  Loader2,
-} from 'lucide-react';
+import { GlobalInputsSection } from '../../../../components/proposals/new/global-inputs-section';
+import { ServiceSpecificSection } from '../../../../components/proposals/new/service-specific-section';
+import { EnhancedFacilitySection } from '../../../../components/proposals/new/enhanced-facility-section';
+import { PricingSection } from '../../../../components/proposals/new/pricing-section';
 import { cn } from '@/lib/utils';
 import z from 'zod';
+import { useUserTier } from '@/features/proposals/hooks/use-user-tier';
+import { AiTone } from '@/types/proposal';
+import { FieldPath } from 'react-hook-form';
+import { scrollToTopOnMobile } from '@/lib/scroll';
+import { FormNavigation, TemplateSelectionSection } from '@/features/proposals';
 
 interface ProposalFormProps {
   userId: string;
 }
+
+interface Step {
+  id: number;
+  title: string;
+  description: string;
+}
+
 
 const STEPS = [
   {
@@ -70,12 +71,27 @@ const STEPS = [
   },
 ];
 
+const STEP_VALIDATION_FIELDS: Record<number, string[]> = {
+  1: ['service_type', 'title'],
+  2: [],
+  3: [
+    'global_inputs.client_name',
+    'global_inputs.client_email',
+    'global_inputs.contact_phone',
+    'global_inputs.service_location',
+    'global_inputs.facility_size',
+  ],
+  4: [],
+  5: [],
+  6: ['generated_content'],
+};
+
 function StepIndicator({
   currentStep,
   steps,
 }: {
   currentStep: number;
-  steps: typeof STEPS;
+  steps: Step[];
 }) {
   return (
     <div className="mb-8 sm:block hidden">
@@ -142,16 +158,10 @@ export function ProposalForm({ userId }: ProposalFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isGeneratingContent, setIsGeneratingContent] = useState(false);
   const [selectedServiceType, setSelectedServiceType] =
     useState<ServiceType | null>(null);
   const [pricingEnabled, setPricingEnabled] = useState(false);
-  const [aiTone, setAiTone] = useState<
-    'professional' | 'friendly' | 'formal' | 'casual' | 'technical'
-  >('professional');
-  const [userTier, setUserTier] = useState<
-    'starter' | 'professional' | 'enterprise'
-  >('starter');
+  const userTier = useUserTier(userId);
 
   const form = useForm({
     resolver: zodResolver(proposalFormSchema),
@@ -206,57 +216,6 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     },
   });
 
-  // Fetch user subscription tier
-  useEffect(() => {
-    const fetchUserTier = async () => {
-      try {
-        const supabase = createClient();
-        
-        // First try to get from subscriptions table (more reliable during trial)
-        const { data: subscription, error: subError } = await supabase
-          .from('subscriptions')
-          .select('plan')
-          .eq('user_id', userId)
-          .in('status', ['active', 'trialing'])
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (subscription?.plan) {
-          setUserTier(
-            subscription.plan as 'starter' | 'professional' | 'enterprise'
-          );
-          return;
-        }
-
-        // Fallback to profiles table
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('subscription_plan')
-          .eq('id', userId)
-          .single();
-
-        if (error) {
-          console.error('Error fetching user tier:', error);
-          return;
-        }
-
-        if (profile?.subscription_plan) {
-          setUserTier(
-            profile.subscription_plan as
-              | 'starter'
-              | 'professional'
-              | 'enterprise'
-          );
-        }
-      } catch (error) {
-        console.error('Error fetching user tier:', error);
-      }
-    };
-
-    fetchUserTier();
-  }, [userId]);
-
   // Watch for service type changes
   const watchedServiceType = form.watch('service_type');
 
@@ -276,10 +235,8 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     }
   }, [watchedServiceType, selectedServiceType, form]);
 
-  const handleAiToneChange = (
-    tone: 'professional' | 'friendly' | 'formal' | 'casual' | 'technical'
-  ) => {
-    setAiTone(tone);
+  const aiTone = form.watch('ai_tone') as AiTone;
+  const handleAiToneChange = (tone: AiTone) => {
     form.setValue('ai_tone', tone, {
       shouldValidate: false,
       shouldTouch: false,
@@ -288,21 +245,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
   };
 
   const validateCurrentStep = async () => {
-    const fieldsToValidate =
-      {
-        1: ['service_type', 'title'],
-        2: [], // Template selection is optional
-        3: [
-          'global_inputs.client_name',
-          'global_inputs.client_email',
-          'global_inputs.contact_phone',
-          'global_inputs.service_location',
-          'global_inputs.facility_size',
-        ],
-        4: [], // Service-specific validation handled separately
-        5: [], // Facility details are optional
-        6: ['generated_content'], // Pricing validation handled separately
-      }[currentStep] || [];
+    const fieldsToValidate = STEP_VALIDATION_FIELDS[currentStep] ?? [];
 
     if (currentStep === 4) {
       const serviceType = form.getValues('service_type');
@@ -316,7 +259,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
           // Set form errors for service-specific fields
           error.errors.forEach((err) => {
             const fieldPath = `service_specific_data.${err.path.join('.')}`;
-            form.setError(fieldPath as any, {
+            form.setError(fieldPath as FieldPath<ProposalFormData>, {
               type: 'manual',
               message: err.message,
             });
@@ -327,25 +270,24 @@ export function ProposalForm({ userId }: ProposalFormProps) {
       return true;
     }
 
+    // If no fields to validate for this step, skip trigger entirely.
+    // Calling form.trigger([]) validates ALL fields, which can cause
+    // the form to enter a fully-valid state and auto-submit on re-render.
+    if (fieldsToValidate.length === 0) {
+      return true;
+    }
+
     const isValid = await form.trigger(fieldsToValidate as any);
 
     return isValid;
   };
 
-  // Scroll to top on mobile when changing steps
-  const scrollToTopOnMobile = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const nextStep = async () => {
-    console.log('nextStepe');
+  const nextStep = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     const isValid = await validateCurrentStep();
     if (isValid && currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
       scrollToTopOnMobile();
-      console.log('after Scroll');
     }
   };
 
@@ -356,7 +298,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     }
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: ProposalFormData): Promise<void> => {
     if (currentStep !== STEPS.length) {
       console.warn('Form submission attempted before reaching final step');
       return;
@@ -397,37 +339,25 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     }
   };
 
-  const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 1:
-        return <ServiceTypeSelector />;
-      case 2:
-        return <TemplateSelectionSection userTier={userTier} />;
-      case 3:
-        return <GlobalInputsSection />;
-      case 4:
-        return (
-          <ServiceSpecificSection
-            serviceType={selectedServiceType || 'residential'}
-          />
-        );
-      case 5:
-        return <EnhancedFacilitySection serviceType={selectedServiceType || 'residential'} />;
-      case 6:
-        return (
-          <PricingSection
-            serviceType={selectedServiceType || 'residential'}
-            enabled={pricingEnabled}
-            onEnabledChange={setPricingEnabled}
-            currentStep={currentStep}
-            onGeneratingChange={setIsGeneratingContent}
-            selectedTone={aiTone}
-            onToneChange={handleAiToneChange}
-          />
-        );
-      default:
-        return null;
-    }
+
+  const resolvedServiceType: ServiceType = selectedServiceType ?? 'residential';
+
+  const STEP_COMPONENTS: Record<number, React.ReactNode> = {
+    1: <ServiceTypeSelector />,
+    2: <TemplateSelectionSection userTier={userTier} />,
+    3: <GlobalInputsSection />,
+    4: <ServiceSpecificSection serviceType={resolvedServiceType} />,
+    5: <EnhancedFacilitySection serviceType={resolvedServiceType} />,
+    6: (
+      <PricingSection
+        serviceType={resolvedServiceType}
+        enabled={pricingEnabled}
+        onEnabledChange={setPricingEnabled}
+        currentStep={currentStep}
+        selectedTone={aiTone}
+        onToneChange={handleAiToneChange}
+      />
+    ),
   };
 
   return (
@@ -446,50 +376,17 @@ export function ProposalForm({ userId }: ProposalFormProps) {
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-6 bg-white rounded-2xl p-4"
           >
-            {renderCurrentStep()}
+            {STEP_COMPONENTS[currentStep] ?? null}
 
-            <div className="flex justify-between px-6 gap-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={currentStep === 1 ? () => router.back() : prevStep}
-                className="flex items-center text-sm flex-1"
-                size="lg"
-              >
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                {currentStep === 1 ? 'Cancel' : 'Back'}
-              </Button>
-
-              {currentStep < STEPS.length ? (
-                <Button
-                  type="button"
-                  onClick={nextStep}
-                  className="flex items-center text-sm flex-1"
-                  size="lg"
-                >
-                  Next
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  disabled={loading || !form.watch('generated_content')?.trim()}
-                  className="flex items-center flex-1"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="mr-2 h-4 w-4" />
-                      Create Proposal
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
+            <FormNavigation
+              currentStep={currentStep}
+              totalSteps={STEPS.length}
+              isLoading={loading}
+              isSubmitDisabled={!form.formState.isValid}
+              onNext={nextStep}
+              onBack={prevStep}
+              onCancel={() => router.push('/dashboard/proposals')}
+            />
           </form>
         </Card>
       </div>

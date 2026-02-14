@@ -2,16 +2,7 @@
 
 import { useFormContext } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { type ProposalFormData } from '@/lib/validations/proposal';
@@ -27,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { AiTone } from '@/types/proposal';
 
 interface PricingSectionProps {
   proposalId?: string;
@@ -36,14 +28,9 @@ interface PricingSectionProps {
   onPricingCalculated?: (pricing: any) => void;
   currentStep?: number;
   onGeneratingChange?: (generating: boolean) => void;
-  selectedTone?:
-    | 'professional'
-    | 'friendly'
-    | 'formal'
-    | 'casual'
-    | 'technical';
+  selectedTone?: AiTone;
   onToneChange?: (
-    tone: 'professional' | 'friendly' | 'formal' | 'casual' | 'technical'
+    tone: AiTone
   ) => void;
   existingPricingData?: any; // Add prop for existing pricing data
 }
@@ -62,15 +49,20 @@ export function PricingSection({
   const form = useFormContext<ProposalFormData>();
   const { settings, loading, error } = usePricingSettings();
   const [isCalculating, setIsCalculating] = useState(false);
-  const [calculatedPricing, setCalculatedPricing] = useState<any>(null);
+  // Initialize from existingPricingData prop OR from the form's persisted pricing_data.
+  // This ensures pricing survives unmount/remount during step navigation (Back/Next).
+  const [calculatedPricing, setCalculatedPricing] = useState<any>(() => {
+    if (existingPricingData) return existingPricingData;
+    const formPricingData = form.getValues('pricing_data');
+    return formPricingData ?? null;
+  });
   const [lastCalculationTrigger, setLastCalculationTrigger] =
     useState<string>('');
   const supabase = createClient();
   const [addons, setAddons] = useState<any[]>([]);
   const [loadingAddons, setLoadingAddons] = useState(false);
-  
 
-  // Initialize calculatedPricing with existing data if available
+  // Sync calculatedPricing if existingPricingData prop changes after mount
   useEffect(() => {
     if (existingPricingData && !calculatedPricing) {
       setCalculatedPricing(existingPricingData);
@@ -630,7 +622,7 @@ export function PricingSection({
         <AIContentGenerator
           form={form.getValues()}
           selectedAddons={sourceAddons as any[]}
-          generatedContent={form.getValues('generated_content') || ''}
+          generatedContent={form.watch('generated_content') || ''}
           onContentGenerated={(content) => {
             // Fix: Prevent validation triggers when setting generated content
             form.setValue('generated_content', content, {

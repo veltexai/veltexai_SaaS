@@ -59,8 +59,7 @@ export async function POST(request: NextRequest) {
       // Template data
       template_id,
     } = body;
-    console.log('🚀 ~ POST ~ body:', body);
-    console.log('🚀 ~ POST ~ bodyS:', body.selected_addons);
+    console.log('🚀 ~ POST ~ service_frequency:', service_frequency);
 
     // Validate required fields
     if (!service_type || !client_name) {

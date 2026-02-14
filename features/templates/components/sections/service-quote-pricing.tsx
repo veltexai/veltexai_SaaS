@@ -3,6 +3,8 @@ import { TemplateType } from '@/features/templates/types/templates';
 import { dmSerifText } from '@/lib/fonts';
 import ProposalTitle from '../shared/proposal-title';
 import { cn } from '@/lib/utils';
+import { isOneTimeFrequency, isStandardJanitorialService } from '@/lib/recurring-monthly-functions';
+import { FrequencyLabel } from './frequency-label';
 
 interface ServiceQuotePricingProps {
   title: string;
@@ -92,7 +94,7 @@ export default function ServiceQuotePricing({
             <div className="sm:text-base text-xs text-center grid grid-cols-4 text-[var(--color-primary)] gap-4 sm:px-5 px-2 mb-2">
               <div className="font-semibold col-span-2">Service</div>
               <div className="font-semibold">Frequency</div>
-              <div className="font-semibold">Price</div>
+              <div className="font-semibold">Price/month</div>
             </div>
             {data.rows.map((row, i) => (
               <div
@@ -122,7 +124,9 @@ export default function ServiceQuotePricing({
                   >
                     {row.service}
                   </div>
-                  <div className="">{row.frequency}</div>
+                  <div className="">
+                  {isStandardJanitorialService(row.service) ? <FrequencyLabel frequency={row.frequency} /> : row.frequency }
+                  </div>
                   <div className="font-bold">{row.pricePerMonth}</div>
                 </div>
               </div>
@@ -164,9 +168,9 @@ export default function ServiceQuotePricing({
                   </div>
                 </div>
                 <div className="grid grid-cols-3 mt-1 items-center">
-                  <div></div>
-                  <div className="text-right font-semibold text-[var(--color-primary)] sm:pr-4 pr-2">
-                    Total
+                  {/* <div></div> */}
+                  <div className="col-span-2 text-right font-semibold text-[var(--color-primary)] sm:pr-4 pr-2">
+                   Total Monthly Investment: 
                   </div>
                   <div
                     className={`${
