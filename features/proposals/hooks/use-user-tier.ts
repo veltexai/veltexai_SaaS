@@ -1,4 +1,4 @@
-// hooks/use-user-tier.ts
+'use client';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { SubscriptionTier as UserTier } from '@/types/subscription';
