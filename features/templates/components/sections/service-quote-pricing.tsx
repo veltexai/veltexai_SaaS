@@ -114,7 +114,7 @@ export default function ServiceQuotePricing({
                     : 'bg-[var(--color-primary)] text-white'
                 )}
               >
-                <div className="grid grid-cols-4 gap-4 sm:text-base text-2xs items-center text-center">
+                <div className="grid grid-cols-4 gap-4 sm:text-sm text-2xs items-center text-center">
                   <div
                     className={`font-bold whitespace-pre-line col-span-2 ${
                       templateType === 'modern_corporate'
@@ -125,9 +125,9 @@ export default function ServiceQuotePricing({
                     {row.service}
                   </div>
                   <div className="">
-                  {isStandardJanitorialService(row.service) ? <FrequencyLabel frequency={row.frequency} /> : row.frequency }
+                  {isStandardJanitorialService(row.service) ? <FrequencyLabel frequency={row.frequency} /> : row.frequency === 'annual' ? 'Annual Service' : row.frequency }
                   </div>
-                  <div className="font-bold">{row.pricePerMonth}</div>
+                  <div className="font-semibold">{row.pricePerMonth}</div>
                 </div>
               </div>
             ))}
@@ -175,11 +175,12 @@ export default function ServiceQuotePricing({
                   <div
                     className={`${
                       templateType !== 'luxury_elite' ? 'rounded-xl' : ''
-                    } border-2 border-[var(--color-primary)] text-[var(--color-primary)] sm:px-5 px-3 sm:py-3 py-2 text-center font-bold`}
+                    } sm:text-base font-bold border-2 border-[var(--color-primary)] text-[var(--color-primary)] sm:px-5 px-3 sm:py-3 py-2 text-center`}
                   >
                     {data.summary.total ?? '$0.00'}
                   </div>
                 </div>
+                <p className='text-xs mt-10'>Investment reflects full scope of services outlined above, including supervision, quality inspections, and compliance oversight.</p>
               </div>
             ) : null}
           </div>

@@ -180,7 +180,7 @@ export function ExecutivePremiumTemplate({
 
                 <div
                   id="page-four"
-                  className="relative aspect-[1/1.4] bg-white p-6 sm:p-8"
+                  className="relative h-full bg-white p-6 sm:p-8 sm:pb-20 pb-10"
                 >
                   <div className="gap-6 pl-10 sm:pl-[95px]">
                     <div>
@@ -429,7 +429,7 @@ export function ExecutivePremiumTemplate({
       
         <SignatureContent templateType="executive_premium" />
 
-        <SignatureSection templateType="executive_premium" />
+        <SignatureSection templateType="executive_premium" companyName={proposal.client_company || companyName} clientName={proposal.client_name} />
         <PoweredBy colorLogo="gray" isRight />
         <NavitationNumber
           value={9}

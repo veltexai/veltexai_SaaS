@@ -94,9 +94,9 @@ export default function OurCommitement({
             {parseInline(firstParagraph)}
           </p>
         ) : null}
-        <h3 className={`sm:text-2xl text-base italic sm:mt-8 mt-4 mb-2 ${dmSerifText.className}`}>
+        {/* <h3 className={`sm:text-2xl text-base italic sm:mt-8 mt-4 mb-2 ${dmSerifText.className}`}>
           Service Values
-        </h3>
+        </h3> */}
         <div className="mt-2">
           {bullets.map((b, i) => (
             <Bullet key={`sv-${i}`} raw={b} />

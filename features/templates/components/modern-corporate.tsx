@@ -197,7 +197,7 @@ export function ModernCorporateTemplate({
 
                 <div
                   id="page-four"
-                  className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-20 pb-10"
+                  className="relative h-full bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-20 pb-10"
                 >
                   <div className="max-w-[95%]">
                     <div>
@@ -400,7 +400,7 @@ export function ModernCorporateTemplate({
 
       <div
         id="page-eight"
-        className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
+        className="relative h-full bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-22 pb-10"
       >
         <VerticalBar  variant="gradientGray" />
         <HorizontalBar  variant="gradientGray" />
@@ -428,7 +428,7 @@ export function ModernCorporateTemplate({
           title="Proposal Acceptance"
         />
         <SignatureContent templateType="modern_corporate" />
-        <SignatureSection templateType="modern_corporate" />
+        <SignatureSection templateType="modern_corporate" companyName={proposal.client_company || companyName} clientName={proposal.client_name}/>
         <PoweredBy colorLogo="gray" isRight />
         <NavitationNumber
           value={9}

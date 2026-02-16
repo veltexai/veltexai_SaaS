@@ -650,13 +650,12 @@ ${
 - 100% Satisfaction
 
 ## Our Commitment
-Paraphrase this concept (same length, same meaning): commitment to **consistent quality**, **responsive communication**, and a **safe, healthy environment**. Include supervision, documented inspections, and continuous improvement.
+We are committed to **consistent quality** **responsive communication**, and a **safe, healthy environment**. Every service plan includes supervision, documented inspections, and continuous improvement measures to ensure your facility looks its best.
 
-Service Values (vary wording each generation; preserve meaning and line length)
-- Consistent quality backed by scheduled inspections.
-- Trained teams following clear SOPs and safety protocols.
-- Prompt response to special requests and incidents.
-- Secure access management and confidentiality.
+- At **${client_company || 'Veltex Services'}**, we are committed to delivering consistent, measurable service quality through structured supervision, documented inspections, and continuous performance improvement.
+- Our teams follow clearly defined Standard Operating Procedures (SOPs) and safety protocols to ensure reliability across every visit.
+- We maintain responsive communication with designated client contacts, providing prompt resolution of service requests, quality concerns, or operational changes.
+- Through proactive oversight, secure access management, and compliance-driven practices, we create and maintain safe, healthy, and professional environments that support your organization’s daily operations.
 
 ## Why Choose Us
 - Professional Teams: same meaning, similar length; use fresh wording.

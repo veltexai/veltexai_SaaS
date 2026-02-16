@@ -5,7 +5,7 @@ export function FrequencyLabel({ frequency }: { frequency: string }) {
       <>
         {frequency}
         {!isOneTimeFrequency(frequency) && (
-          <span style={{ fontSize: '10px' }} className="block opacity-80">
+          <span className="block opacity-80 sm:text-2xs text-3xs">
             (Recurring Monthly)
           </span>
         )}

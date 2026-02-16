@@ -178,7 +178,7 @@ export function LuxuryEliteTemplate({
 
                 <div
                   id="page-four"
-                  className="relative sm:aspect-[1/1.4] aspect-[1/1.64] bg-white overflow-hidden sm:pl-16 pl-10 sm:!pt-[38px] pt-10 sm:pb-0 pb-10"
+                  className="relative h-full bg-white overflow-hidden sm:pl-16 pl-10 sm:!pt-[38px] pt-10 sm:pb-10 pb-10"
                 >
                   <LuxuryEliteBackgroundTitle className="z-10 absolute sm:-top-[20px] -top-[10px] sm:-left-[20px] -left-[10px] sm:w-[353px] w-[253px] sm:h-[350px] h-[250px]" />
                   <div className="gap-6">
@@ -246,7 +246,7 @@ export function LuxuryEliteTemplate({
                 {/* Page six - Scope of Service (with PDF pagination support) */}
                 <div
                   id="page-six"
-                  className="relative aspect-[1/1.4] bg-white overflow-hidden sm:pl-16 pl-12 sm:!pt-[38px] pt-10 sm:pb-0 pb-10"
+                  className="relative sm:aspect-[1/1.4] h-full bg-white overflow-hidden sm:pl-16 pl-12 sm:!pt-[38px] pt-10 sm:pb-0 pb-10"
                 >
                   <LuxuryEliteBackgroundTitle className="z-10 absolute sm:-top-[20px] -top-[10px] sm:-left-[20px] -left-[10px] sm:w-[353px] w-[253px] sm:h-[350px] h-[250px]" />
                   <div className="gap-6 max-w-[95%]">
@@ -381,7 +381,7 @@ export function LuxuryEliteTemplate({
 
       <div
         id="page-eight"
-        className="relative sm:aspect-[1/1.4] h-full bg-white sm:pl-16 pl-12 sm:!pt-[38px] pt-10 sm:pb-0 pb-10 overflow-hidden"
+        className="relative h-full bg-white sm:pl-16 pl-12 sm:!pt-[38px] pt-10 sm:pb-20 pb-10 overflow-hidden"
       >
         <LuxuryEliteBackgroundTitle className="z-10 absolute sm:-top-[20px] -top-[10px] sm:-left-[20px] -left-[10px] sm:w-[353px] w-[253px] sm:h-[350px] h-[250px]" />
         <ProposalTitle templateType="luxury_elite" title="Terms & Legal" />
@@ -399,7 +399,7 @@ export function LuxuryEliteTemplate({
 
       <div
         id="page-nine"
-        className="relative sm:aspect-[1/1.4] aspect-[1/1.54] bg-white sm:pl-16 pl-12 sm:!pt-[38px] pt-10 sm:pb-0 pb-10 overflow-hidden"
+        className="relative sm:aspect-[1/1.4] h-full bg-white sm:pl-16 pl-12 sm:!pt-[38px] pt-10 sm:pb-0 pb-10 overflow-hidden"
       >
         <LuxuryEliteBackgroundTitle className="z-10 absolute sm:-top-[20px] -top-[10px] sm:-left-[20px] -left-[10px] sm:w-[353px] w-[253px] sm:h-[350px] h-[250px]" />
         <ProposalTitle
@@ -407,7 +407,7 @@ export function LuxuryEliteTemplate({
           title="Proposal Acceptance"
         />
         <SignatureContent templateType="luxury_elite" />
-        <SignatureSection templateType="luxury_elite" />
+        <SignatureSection templateType="luxury_elite" companyName={proposal.client_company || companyName} clientName={proposal.client_name} />
         <PoweredBy colorLogo="gray" isRight />
         <NavitationNumber
           value={9}

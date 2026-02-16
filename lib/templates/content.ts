@@ -1,13 +1,15 @@
-import { type ReactNode, createElement } from 'react';
+import { type ReactNode, createElement } from "react";
 import {
   DisputIcon,
   DocumentIcon,
   InsuranceIcon,
   paymentcardIcon,
   secureIcon,
+  SettingsIcon,
   staffIcon,
+  StartIcon,
   suplliseIcon,
-} from '../../components/icons/veltex-icons';
+} from "../../components/icons/veltex-icons";
 
 export type TocItem = { id: string; number: string; title: string };
 export type TermItem = {
@@ -17,21 +19,21 @@ export type TermItem = {
   description: string;
 };
 
-const BASE_TOC: ReadonlyArray<Omit<TocItem, 'number'>> = [
-  { id: 'about-our-company', title: 'About Our Company' },
-  { id: 'our-commitment', title: 'Our Commitment' },
-  { id: 'why-choose-us', title: 'Why Choose Us' },
-  { id: 'our-qualifications', title: 'Our Qualifications' },
-  { id: 'scope-of-work', title: 'Scope of Work' },
-  { id: 'service-quote-pricing', title: 'Service Quote & Pricing' },
-  { id: 'terms-legal', title: 'Terms & Legal' },
-  { id: 'proposal-acceptance', title: 'Proposal Acceptance' },
-  { id: 'thank-you-contact', title: 'Thank You / Contact' },
+const BASE_TOC: ReadonlyArray<Omit<TocItem, "number">> = [
+  { id: "about-our-company", title: "About Our Company" },
+  { id: "our-commitment", title: "Our Commitment" },
+  { id: "why-choose-us", title: "Why Choose Us" },
+  { id: "our-qualifications", title: "Our Qualifications" },
+  { id: "scope-of-work", title: "Scope of Work" },
+  { id: "service-quote-pricing", title: "Service Quote & Pricing" },
+  { id: "terms-legal", title: "Terms & Legal" },
+  { id: "proposal-acceptance", title: "Proposal Acceptance" },
+  { id: "thank-you-contact", title: "Thank You / Contact" },
 ];
 
 const MANUAL_TOC_NUMBERS: Record<string, string> = {
-  'our-commitment': '04',
-  'why-choose-us': '04',
+  "our-commitment": "04",
+  "why-choose-us": "04",
 };
 
 export const dataTOC: ReadonlyArray<TocItem> = (() => {
@@ -43,7 +45,7 @@ export const dataTOC: ReadonlyArray<TocItem> = (() => {
       return { ...item, number: manual };
     }
     current += 1;
-    return { ...item, number: String(current).padStart(2, '0') };
+    return { ...item, number: String(current).padStart(2, "0") };
   });
 })();
 
@@ -51,50 +53,57 @@ export const dataTerms: ReadonlyArray<TermItem> = [
   {
     id: 1,
     icons: createElement(DocumentIcon),
-    title: 'Terms & Renewal',
+    title: "Terms & Renewal",
     description:
-      'Initial term [12 months] with automatic month-to-month renewal unless terminated with [30 days] written notice.',
+      "This agreement shall commence on the service start date and remain in effect for an initial term of twelve (12) months. Thereafter, services will continue on a month-to-month basis unless terminated by either party with thirty (30) days written notice.",
   },
   {
     id: 2,
     icons: createElement(paymentcardIcon),
-    title: 'Payment',
+    title: "Billing & Payment Terms",
     description:
-      'Invoices are due per selected terms: [Due at service | Net 15 | Net 30]. Late balances may incur [1.5%/mo] finance charges.',
+      "invoices are issued monthly in advance unless otherwise agreed in writing. Payment is due within the selected terms (Due Upon Receipt, Net 15, or Net 30). Late balances may incur a finance charge of 1.5% per month or the maximum allowed by law.",
   },
   {
     id: 3,
-    icons: createElement(suplliseIcon),
-    title: 'Supplies & Consumables',
+    icons: createElement(StartIcon),
+    title: "Scope Modifications",
     description:
-      'Consumables (paper goods, soap, liners) provided by [Client | Contractor]. If Contractor-provided, costs are billed monthly.',
+      "Any changes to service scope, frequency, or facility conditions that materially affect labor or operational requirements may require written adjustment to pricing.",
   },
   {
     id: 4,
-    icons: createElement(secureIcon),
-    title: 'Access & Security',
+    icons: createElement(suplliseIcon),
+    title: "Supplies & Consumables",
     description:
-      'Client will provide safe access (keys, codes, badges). Contractor safeguards credentials and follows site protocols',
+      "Unless otherwise specified, consumable supplies (paper products, liners, soap) shall be provided by the Client. If supplied by Contractor, such costs will be invoiced monthly at agreed rates.",
   },
   {
     id: 5,
-    icons: createElement(InsuranceIcon),
-    title: 'Insurance & Liability',
+    icons: createElement(secureIcon),
+    title: "Access & Security",
     description:
-      'Contractor maintains liability and workers’ compensation insurance. Contractor is not liable for pre-existing damage or unsecured valuables.',
+      "Client agrees to provide safe and reasonable access to the facility. Contractor will safeguard all keys, codes, and credentials and adhere to site-specific security protocols.",
   },
   {
     id: 6,
-    icons: createElement(staffIcon),
-    title: 'Staffing',
+    icons: createElement(InsuranceIcon),
+    title: "Insurance & Liability",
     description:
-      'All personnel are background-checked and trained. Non-solicitation of staff during the agreement term and [12 months] thereafter.',
+      "Contractor maintains general liability and workers’ compensation insurance in accordance with applicable regulations. Certificates of insurance are available upon request. Contractor shall not be liable for pre-existing damage, unsecured valuables, or conditions beyond its control.",
   },
   {
     id: 7,
-    icons: createElement(DisputIcon),
-    title: 'Dispute Resolution',
+    icons: createElement(staffIcon),
+    title: "Staffing & Non-Solicitation",
     description:
-      'Disputes resolved via [mediation | arbitration | court] under the laws of [Jurisdiction].',
+      "All personnel are background-checked and trained. Client agrees not to directly solicit or hire Contractor employees during the agreement term and for twelve (12) months thereafter without written consent.",
+  },
+  {
+    id: 8,
+    icons: createElement(DisputIcon),
+    title: "Dispute Resolution",
+    description:
+      "Disputes shall first be addressed through good-faith negotiation. If unresolved, parties agree to mediation prior to litigation, under the governing laws of the state in which services are performed.",
   },
 ];

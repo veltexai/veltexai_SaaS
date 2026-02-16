@@ -92,18 +92,18 @@ export default function ScopeOfService({
     }>;
   };
 
-  const ScopeTable = ({ data }: { data: ScopeTableData }) => {
+  const ScopeTable = ({ data, templateType }: { data: ScopeTableData, templateType: TemplateType }) => {
     // Use overrideRows if provided (for PDF pagination), otherwise use data.rows
     const rows = overrideRows ?? data?.rows ?? [];
     if (!rows.length) return null;
-    const premium = rows.some((r) => typeof r.note === 'string');
+    const premium = templateType !== 'basic';
     return (
       <div className="mb-6">
         <div className="text-white">
           {premium ? (
             <>
               <div
-                className={`text-center grid grid-cols-4 text-[var(--color-primary)] gap-4 sm:px-5 px-2 mb-2 sm:text-base text-2xs
+                className={`text-center grid grid-cols-2 text-[var(--color-primary)] gap-4 sm:px-5 px-2 mb-2 sm:text-base text-2xs
                 ${
                   templateType === 'luxury_elite'
                     ? `${arvo.className} font-normal`
@@ -112,7 +112,7 @@ export default function ScopeOfService({
               >
                 <div className="">Area serviced</div>
                 <div className="">Frequency</div>
-                <div className=" col-span-2">Notes</div>
+                {/* <div className=" col-span-2">Notes</div> */}
               </div>
               {rows.map((row, i) => (
                 <div
@@ -130,7 +130,7 @@ export default function ScopeOfService({
                         : 'bg-[var(--color-primary)] text-white'
                     }`}
                 >
-                  <div className="grid grid-cols-4 gap-4 sm:text-xs text-2xs justify-center items-center text-center">
+                  <div className="grid grid-cols-2 gap-4 sm:text-xs text-2xs justify-center items-center text-center">
                     <div
                       className={`whitespace-pre-line font-bold ${
                         templateType === 'modern_corporate'
@@ -141,9 +141,9 @@ export default function ScopeOfService({
                       {row.area}
                     </div>
                     <div className="">{row.frequency}</div>
-                    <div className="whitespace-pre-line col-span-2">
+                    {/* <div className="whitespace-pre-line col-span-2">
                       {row.note || ''}
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               ))}
@@ -199,7 +199,7 @@ export default function ScopeOfService({
         const jsonText = jsonLines.join('\n');
         try {
           const data: ScopeTableData = JSON.parse(jsonText);
-          elements.push(<ScopeTable key={`scope-table`} data={data} />);
+          elements.push(<ScopeTable key={`scope-table`} data={data} templateType={templateType} />);
         } catch {}
         continue;
       }
