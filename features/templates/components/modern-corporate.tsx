@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import type { TemplateProps } from '@/features/templates/types/templates';
-import ProposalTableOfContents from './sections/table-of-contents';
-import Image from 'next/image';
-import PoweredBy from './shared/powered-by';
-import HeaderLogo from './shared/header-logo';
-import HeaderTemplate from './shared/header-template';
-import VerticalBar from './shared/vertical-bar';
-import HorizontalBar from './shared/horizontal-bar';
-import ThankYouPage from './shared/thank-you';
-import ProposalTitle from './shared/proposal-title';
-import SignatureContent from './shared/signature-content';
-import SignatureSection from './shared/signature-section';
-import NavitationNumber from './shared/navigation';
-import TitleDescriptionSection from './shared/title-description-section';
-import ContentQualificationsSection from './shared/content-qualifications-section';
-import { useSplitContent } from '../hooks/use-split-content';
-import { montserrat } from '@/lib/fonts';
+import { useMemo } from "react";
+import type { TemplateProps } from "@/features/templates/types/templates";
+import ProposalTableOfContents from "./sections/table-of-contents";
+import Image from "next/image";
+import PoweredBy from "./shared/powered-by";
+import HeaderLogo from "./shared/header-logo";
+import HeaderTemplate from "./shared/header-template";
+import VerticalBar from "./shared/vertical-bar";
+import HorizontalBar from "./shared/horizontal-bar";
+import ThankYouPage from "./shared/thank-you";
+import ProposalTitle from "./shared/proposal-title";
+import SignatureContent from "./shared/signature-content";
+import SignatureSection from "./shared/signature-section";
+import NavitationNumber from "./shared/navigation";
+import TitleDescriptionSection from "./shared/title-description-section";
+import ContentQualificationsSection from "./shared/content-qualifications-section";
+import { useSplitContent } from "../hooks/use-split-content";
+import { montserrat } from "@/lib/fonts";
 import {
   AboutOurCompany,
   Addons,
@@ -26,12 +26,12 @@ import {
   ScopeOfService,
   ServiceQuotePricing,
   WhyChooseUs,
-} from './sections';
+} from "./sections";
 import {
   parseScopeTableData,
   splitScopeRows,
   type ScopeRow,
-} from '../utils/split-scope-rows';
+} from "../utils/split-scope-rows";
 
 export function ModernCorporateTemplate({
   proposal,
@@ -42,10 +42,10 @@ export function ModernCorporateTemplate({
   const logoUrl = branding?.logo_url ?? null;
   const phone = branding?.phone ?? null;
   const website = branding?.website ?? null;
-  const companyName = branding?.name ?? 'Company';
+  const companyName = branding?.name ?? "Company";
   const email = branding?.email ?? null;
   const preparedFor =
-    proposal.client_company || proposal.client_name || 'Client';
+    proposal.client_company || proposal.client_name || "Client";
 
   const { about, commitment, whyUs, scope, addons, pricing, notes } =
     print && pages
@@ -163,7 +163,7 @@ export function ModernCorporateTemplate({
                   <div>
                     {about?.content ? (
                       <AboutOurCompany
-                        title={about.title ?? 'About Our Company'}
+                        title={about.title ?? "About Our Company"}
                         content={about.content}
                         templateType="modern_corporate"
                         className={`${montserrat.className}`}
@@ -183,8 +183,8 @@ export function ModernCorporateTemplate({
                     priority
                     unoptimized
                   />
-                  <VerticalBar  variant="gradientGray" />
-                  <HorizontalBar  variant="gradientGray" />
+                  <VerticalBar variant="gradientGray" />
+                  <HorizontalBar variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={3}
@@ -203,7 +203,7 @@ export function ModernCorporateTemplate({
                     <div>
                       {commitment?.content ? (
                         <OurCommitement
-                          title={commitment.title ?? 'Our Commitment'}
+                          title={commitment.title ?? "Our Commitment"}
                           content={commitment.content}
                           templateType="modern_corporate"
                           className={`${montserrat.className}`}
@@ -217,7 +217,7 @@ export function ModernCorporateTemplate({
                     <div className="mt-10">
                       {whyUs?.content ? (
                         <WhyChooseUs
-                          title={whyUs.title ?? 'Why Choose Us'}
+                          title={whyUs.title ?? "Why Choose Us"}
                           content={whyUs.content}
                           templateType="modern_corporate"
                           className={`${montserrat.className}`}
@@ -229,8 +229,8 @@ export function ModernCorporateTemplate({
                       )}
                     </div>
                   </div>
-                  <VerticalBar  variant="gradientGray" />
-                  <HorizontalBar  variant="gradientGray" />
+                  <VerticalBar variant="gradientGray" />
+                  <HorizontalBar variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={4}
@@ -246,8 +246,8 @@ export function ModernCorporateTemplate({
                   id="page-five"
                   className="relative sm:aspect-[1/1.4] aspect-[1/1.74] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
                 >
-                  <VerticalBar  variant="gradientGray" />
-                  <HorizontalBar  variant="gradientGray" />
+                  <VerticalBar variant="gradientGray" />
+                  <HorizontalBar variant="gradientGray" />
                   <ProposalTitle
                     templateType="modern_corporate"
                     title="Our Qualifications"
@@ -256,7 +256,7 @@ export function ModernCorporateTemplate({
 
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
-                    value={8}
+                    value={5}
                     size="lg"
                     fontFamily="dmSerifText"
                     font="bold"
@@ -271,12 +271,16 @@ export function ModernCorporateTemplate({
                   <div className="max-w-[95%]">
                     {scope?.content ? (
                       <ScopeOfService
-                        title={scope.title ?? 'Scope of Service'}
+                        title={scope.title ?? "Scope of Service"}
                         content={scope.content}
                         templateType="modern_corporate"
                         className={`${montserrat.className}`}
-                        description={scope.description || ''}
-                        overrideRows={hasAdditionalScopePages ? scopeRowChunks[0] : undefined}
+                        description={scope.description || ""}
+                        overrideRows={
+                          hasAdditionalScopePages
+                            ? scopeRowChunks[0]
+                            : undefined
+                        }
                       />
                     ) : (
                       <div className="text-sm text-muted-foreground">
@@ -288,7 +292,7 @@ export function ModernCorporateTemplate({
                     <div className="max-w-[95%]">
                       {addons?.content ? (
                         <Addons
-                          title={addons.title ?? 'Add-ons'}
+                          title={addons.title ?? "Add-ons"}
                           content={addons.content}
                           templateType="modern_corporate"
                           className={`${montserrat.className}`}
@@ -300,8 +304,8 @@ export function ModernCorporateTemplate({
                       )}
                     </div>
                   )}
-                  <VerticalBar  variant="gradientGray" />
-                  <HorizontalBar  variant="gradientGray" />
+                  <VerticalBar variant="gradientGray" />
+                  <HorizontalBar variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={6}
@@ -313,77 +317,80 @@ export function ModernCorporateTemplate({
                 </div>
 
                 {/* Scope overflow pages */}
-                {hasAdditionalScopePages && scopeRowChunks.slice(1).map((rowChunk: ScopeRow[], chunkIndex: number) => {
-                  const isLastScopeOverflowPage = chunkIndex === scopeRowChunks.length - 2;
-                  return (
-                    <div
-                      key={`scope-overflow-${chunkIndex}`}
-                      id={`page-six-overflow-${chunkIndex + 1}`}
-                      className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
-                    >
-                      <div className="max-w-[95%]">
-                        <ScopeOfService
-                          title={scope?.title ?? 'Scope of Service'}
-                          content={scope?.content ?? ''}
-                          templateType="modern_corporate"
-                          className={`${montserrat.className}`}
-                          description=""
-                          overrideRows={rowChunk}
-                          isContinuation
-                        />
-                      </div>
-                      {isLastScopeOverflowPage && addons?.content && (
-                        <div className="max-w-[95%] mt-6">
-                          <Addons
-                            title={addons.title ?? 'Add-ons'}
-                            content={addons.content}
-                            templateType="modern_corporate"
-                            className={`${montserrat.className}`}
+                {hasAdditionalScopePages &&
+                  scopeRowChunks
+                    .slice(1)
+                    .map((rowChunk: ScopeRow[], chunkIndex: number) => {
+                      const isLastScopeOverflowPage =
+                        chunkIndex === scopeRowChunks.length - 2;
+                      return (
+                        <div
+                          key={`scope-overflow-${chunkIndex}`}
+                          id={`page-six-overflow-${chunkIndex + 1}`}
+                          className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
+                        >
+                          <div className="max-w-[95%]">
+                            <ScopeOfService
+                              title={scope?.title ?? "Scope of Service"}
+                              content={scope?.content ?? ""}
+                              templateType="modern_corporate"
+                              className={`${montserrat.className}`}
+                              description=""
+                              overrideRows={rowChunk}
+                              isContinuation
+                            />
+                          </div>
+                          {isLastScopeOverflowPage && addons?.content && (
+                            <div className="max-w-[95%] mt-6">
+                              <Addons
+                                title={addons.title ?? "Add-ons"}
+                                content={addons.content}
+                                templateType="modern_corporate"
+                                className={`${montserrat.className}`}
+                              />
+                            </div>
+                          )}
+                          <VerticalBar variant="gradientGray" />
+                          <HorizontalBar variant="gradientGray" />
+                          <PoweredBy colorLogo="gray" isRight />
+                          <NavitationNumber
+                            value={6}
+                            size="lg"
+                            fontFamily="dmSerifText"
+                            font="bold"
+                            position="bottom-left-corner"
                           />
                         </div>
-                      )}
-                      <VerticalBar variant="gradientGray" />
-                      <HorizontalBar variant="gradientGray" />
-                      <PoweredBy colorLogo="gray" isRight />
-                      <NavitationNumber
-                        value={6}
-                        size="lg"
-                        fontFamily="dmSerifText"
-                        font="bold"
-                        position="bottom-left-corner"
-                      />
-                    </div>
-                  );
-                })}
+                      );
+                    })}
 
                 <div
                   id="page-seven"
-                  className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
+                  className="relative h-full bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-26 pb-10"
                 >
                   <div className="max-w-[95%] sm:space-y-8 space-y-4">
                     {pricing?.content ? (
                       <ServiceQuotePricing
-                        title={pricing.title ?? 'Service Quote & Pricing'}
+                        title={pricing.title ?? "Service Quote & Pricing"}
                         content={pricing.content}
                         description={pricing.description}
                         templateType="modern_corporate"
                         className={`${montserrat.className}`}
                       />
                     ) : (
-                      <div className="text-sm text-muted-foreground">
-                      </div>
+                      <div className="text-sm text-muted-foreground"></div>
                     )}
                     {notes?.content ? (
                       <Notes
-                        title={notes.title ?? 'Notes'}
+                        title={notes.title ?? "Notes"}
                         content={notes.content}
                         templateType="modern_corporate"
                         className={`${montserrat.className}`}
                       />
                     ) : null}
                   </div>
-                  <VerticalBar  variant="gradientGray" />
-                  <HorizontalBar  variant="gradientGray" />
+                  <VerticalBar variant="gradientGray" />
+                  <HorizontalBar variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={7}
@@ -402,8 +409,8 @@ export function ModernCorporateTemplate({
         id="page-eight"
         className="relative h-full bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-22 pb-10"
       >
-        <VerticalBar  variant="gradientGray" />
-        <HorizontalBar  variant="gradientGray" />
+        <VerticalBar variant="gradientGray" />
+        <HorizontalBar variant="gradientGray" />
         <ProposalTitle templateType="modern_corporate" title="Terms & Legal" />
 
         <TitleDescriptionSection templateType="modern_corporate" />
@@ -421,14 +428,18 @@ export function ModernCorporateTemplate({
         id="page-nine"
         className="relative sm:aspect-[1/1.4] aspect-[1/1.5] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
       >
-        <VerticalBar  variant="normal" />
-        <HorizontalBar  variant="normal" />
+        <VerticalBar variant="normal" />
+        <HorizontalBar variant="normal" />
         <ProposalTitle
           templateType="modern_corporate"
           title="Proposal Acceptance"
         />
         <SignatureContent templateType="modern_corporate" />
-        <SignatureSection templateType="modern_corporate" companyName={proposal.client_company || companyName} clientName={proposal.client_name}/>
+        <SignatureSection
+          templateType="modern_corporate"
+          companyName={proposal.client_company || companyName}
+          clientName={proposal.client_name}
+        />
         <PoweredBy colorLogo="gray" isRight />
         <NavitationNumber
           value={9}
@@ -439,7 +450,10 @@ export function ModernCorporateTemplate({
         />
       </div>
 
-      <div id="page-ten" className="relative sm:aspect-[1/1.4] aspect-[1/1.7] bg-white">
+      <div
+        id="page-ten"
+        className="relative sm:aspect-[1/1.4] aspect-[1/1.7] bg-white"
+      >
         <ThankYouPage
           email={email}
           phone={phone}

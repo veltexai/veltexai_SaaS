@@ -62,7 +62,7 @@ export const dataTerms: ReadonlyArray<TermItem> = [
     icons: createElement(paymentcardIcon),
     title: "Billing & Payment Terms",
     description:
-      "invoices are issued monthly in advance unless otherwise agreed in writing. Payment is due within the selected terms (Due Upon Receipt, Net 15, or Net 30). Late balances may incur a finance charge of 1.5% per month or the maximum allowed by law.",
+      "invoices are issued monthly in advance unless otherwise agreed in writing. Payment is due within the selected terms (Due Upon Receipt, Net 15, or Net 30). Late balances may incur a finance charge of 1.5% per month or the maximum allowed by law. Invoices are issued monthly in advance. The initial invoice is due upon contract execution or prior to service commencement. Thereafter, payment terms are Net 30 from invoice date.",
   },
   {
     id: 3,
@@ -90,7 +90,7 @@ export const dataTerms: ReadonlyArray<TermItem> = [
     icons: createElement(InsuranceIcon),
     title: "Insurance & Liability",
     description:
-      "Contractor maintains general liability and workers’ compensation insurance in accordance with applicable regulations. Certificates of insurance are available upon request. Contractor shall not be liable for pre-existing damage, unsecured valuables, or conditions beyond its control.",
+      "Contractor maintains general liability and workers’ compensation insurance in accordance with applicable regulations. Certificates of insurance are available upon request. Contractor shall not be liable for pre-existing damage, unsecured valuables, or conditions beyond its control. Coverage limits meet or exceed industry standards for commercial facilities.",
   },
   {
     id: 7,

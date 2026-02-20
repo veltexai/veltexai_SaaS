@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
+import { useMemo } from "react";
 import type {
   TemplateProps,
   TemplateType,
-} from '@/features/templates/types/templates';
-import Image from 'next/image';
-import HeaderLogo from './shared/header-logo';
-import HeaderTemplate from './shared/header-template';
-import PoweredBy from './shared/powered-by';
-import { dmSerifText, montserrat } from '@/lib/fonts';
-import ProposalTableOfContents from './sections/table-of-contents';
-import ThankYouPage from './shared/thank-you';
-import ProposalTitle from './shared/proposal-title';
-import VerticalBar from './shared/vertical-bar';
-import HorizontalBar from './shared/horizontal-bar';
-import SignatureSection from './shared/signature-section';
-import SignatureContent from './shared/signature-content';
-import NavitationNumber from './shared/navigation';
-import TitleDescriptionSection from './shared/title-description-section';
-import ContentQualificationsSection from './shared/content-qualifications-section';
-import { useSplitContent } from '../hooks/use-split-content';
+} from "@/features/templates/types/templates";
+import Image from "next/image";
+import HeaderLogo from "./shared/header-logo";
+import HeaderTemplate from "./shared/header-template";
+import PoweredBy from "./shared/powered-by";
+import { dmSerifText, montserrat } from "@/lib/fonts";
+import ProposalTableOfContents from "./sections/table-of-contents";
+import ThankYouPage from "./shared/thank-you";
+import ProposalTitle from "./shared/proposal-title";
+import VerticalBar from "./shared/vertical-bar";
+import HorizontalBar from "./shared/horizontal-bar";
+import SignatureSection from "./shared/signature-section";
+import SignatureContent from "./shared/signature-content";
+import NavitationNumber from "./shared/navigation";
+import TitleDescriptionSection from "./shared/title-description-section";
+import ContentQualificationsSection from "./shared/content-qualifications-section";
+import { useSplitContent } from "../hooks/use-split-content";
 import {
   AboutOurCompany,
   Addons,
@@ -29,12 +29,12 @@ import {
   ScopeOfService,
   ServiceQuotePricing,
   WhyChooseUs,
-} from './sections';
+} from "./sections";
 import {
   parseScopeTableData,
   splitScopeRows,
   type ScopeRow,
-} from '../utils/split-scope-rows';
+} from "../utils/split-scope-rows";
 
 export function ExecutivePremiumTemplate({
   proposal,
@@ -45,10 +45,10 @@ export function ExecutivePremiumTemplate({
   const logoUrl = branding?.logo_url ?? null;
   const phone = branding?.phone ?? null;
   const website = branding?.website ?? null;
-  const companyName = branding?.name ?? 'Company';
+  const companyName = branding?.name ?? "Company";
   const email = branding?.email ?? null;
   const preparedFor =
-    proposal.client_company || proposal.client_name || 'Client';
+    proposal.client_company || proposal.client_name || "Client";
 
   const {
     about,
@@ -148,7 +148,7 @@ export function ExecutivePremiumTemplate({
                   <div className="max-w-none pl-10 sm:pl-[95px]">
                     {about?.content ? (
                       <AboutOurCompany
-                        title={about.title ?? 'About Our Company'}
+                        title={about.title ?? "About Our Company"}
                         content={about.content}
                         templateType="executive_premium"
                         className={`${montserrat.className}`}
@@ -166,8 +166,8 @@ export function ExecutivePremiumTemplate({
                     height={500}
                     className="z-30 absolute sm:bottom-20 bottom-6 left-6 sm:left-20 max-w-[85%]"
                   />
-                  <VerticalBar  variant="gradientGray" />
-                  <HorizontalBar  variant="gradientGray" />
+                  <VerticalBar variant="gradientGray" />
+                  <HorizontalBar variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={3}
@@ -186,7 +186,7 @@ export function ExecutivePremiumTemplate({
                     <div>
                       {commitment?.content ? (
                         <OurCommitement
-                          title={commitment.title ?? 'Our Commitment'}
+                          title={commitment.title ?? "Our Commitment"}
                           content={commitment.content}
                           templateType="executive_premium"
                           className={`${montserrat.className}`}
@@ -200,7 +200,7 @@ export function ExecutivePremiumTemplate({
                     <div className="mt-6 sm:mt-10">
                       {whyUs?.content ? (
                         <WhyChooseUs
-                          title={whyUs.title ?? 'Why Choose Us'}
+                          title={whyUs.title ?? "Why Choose Us"}
                           content={whyUs.content}
                           templateType="executive_premium"
                           className={`${montserrat.className}`}
@@ -212,8 +212,8 @@ export function ExecutivePremiumTemplate({
                       )}
                     </div>
                   </div>
-                  <VerticalBar  variant="gradientGray" />
-                  <HorizontalBar  variant="gradientGray" />
+                  <VerticalBar variant="gradientGray" />
+                  <HorizontalBar variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={4}
@@ -229,15 +229,15 @@ export function ExecutivePremiumTemplate({
                   id="page-five"
                   className="relative sm:aspect-[1/1.4] aspect-[1/1.62] bg-white sm:pt-16 pt-6 pl-10 sm:pl-30"
                 >
-                  <VerticalBar  variant="gradientGray" />
-                  <HorizontalBar  variant="gradientGray" />
-                  
+                  <VerticalBar variant="gradientGray" />
+                  <HorizontalBar variant="gradientGray" />
+
                   <div className="pl-6 sm:pl-0">
-                  <ProposalTitle
-                    templateType="executive_premium"
-                    title="Our Qualifications"
-                  />
-                    </div>
+                    <ProposalTitle
+                      templateType="executive_premium"
+                      title="Our Qualifications"
+                    />
+                  </div>
                   <ContentQualificationsSection templateType="executive_premium" />
 
                   <PoweredBy colorLogo="gray" isRight />
@@ -259,16 +259,19 @@ export function ExecutivePremiumTemplate({
                     <div>
                       {scope?.content ? (
                         <ScopeOfService
-                          title={scope.title ?? 'Scope of Service'}
+                          title={scope.title ?? "Scope of Service"}
                           content={scope.content}
                           templateType="executive_premium"
                           className={`${montserrat.className}`}
-                          description={scope.description || ''}
-                          overrideRows={hasAdditionalScopePages ? scopeRowChunks[0] : undefined}
+                          description={scope.description || ""}
+                          overrideRows={
+                            hasAdditionalScopePages
+                              ? scopeRowChunks[0]
+                              : undefined
+                          }
                         />
                       ) : (
-                        <div className="text-sm text-muted-foreground">
-                        </div>
+                        <div className="text-sm text-muted-foreground"></div>
                       )}
                     </div>
                     {/* Only show addons on first page if scope doesn't overflow */}
@@ -276,20 +279,19 @@ export function ExecutivePremiumTemplate({
                       <div>
                         {addons?.content ? (
                           <Addons
-                            title={addons.title ?? 'Add-ons'}
+                            title={addons.title ?? "Add-ons"}
                             content={addons.content}
                             templateType="executive_premium"
                             className={`${montserrat.className}`}
                           />
                         ) : (
-                          <div className="text-sm text-muted-foreground">
-                          </div>
+                          <div className="text-sm text-muted-foreground"></div>
                         )}
                       </div>
                     )}
                   </div>
-                  <VerticalBar  variant="gradientGray" />
-                  <HorizontalBar  variant="gradientGray" />
+                  <VerticalBar variant="gradientGray" />
+                  <HorizontalBar variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={6}
@@ -301,80 +303,83 @@ export function ExecutivePremiumTemplate({
                 </div>
 
                 {/* Scope overflow pages - render additional pages for remaining rows */}
-                {hasAdditionalScopePages && scopeRowChunks.slice(1).map((rowChunk: ScopeRow[], chunkIndex: number) => {
-                  const isLastScopeOverflowPage = chunkIndex === scopeRowChunks.length - 2;
-                  return (
-                    <div
-                      key={`scope-overflow-${chunkIndex}`}
-                      id={`page-six-overflow-${chunkIndex + 1}`}
-                      className="relative aspect-[1/1.4] bg-white sm:p-8 p-6 sm:pb-26 pb-10"
-                    >
-                      <div className="gap-6 pl-10 sm:pl-[95px]">
-                        <div>
-                          <ScopeOfService
-                            title={scope?.title ?? 'Scope of Service'}
-                            content={scope?.content ?? ''}
-                            templateType="executive_premium"
-                            className={`${montserrat.className}`}
-                            description=""
-                            overrideRows={rowChunk}
-                            isContinuation
+                {hasAdditionalScopePages &&
+                  scopeRowChunks
+                    .slice(1)
+                    .map((rowChunk: ScopeRow[], chunkIndex: number) => {
+                      const isLastScopeOverflowPage =
+                        chunkIndex === scopeRowChunks.length - 2;
+                      return (
+                        <div
+                          key={`scope-overflow-${chunkIndex}`}
+                          id={`page-six-overflow-${chunkIndex + 1}`}
+                          className="relative aspect-[1/1.4] bg-white sm:p-8 p-6 sm:pb-26 pb-10"
+                        >
+                          <div className="gap-6 pl-10 sm:pl-[95px]">
+                            <div>
+                              <ScopeOfService
+                                title={scope?.title ?? "Scope of Service"}
+                                content={scope?.content ?? ""}
+                                templateType="executive_premium"
+                                className={`${montserrat.className}`}
+                                description=""
+                                overrideRows={rowChunk}
+                                isContinuation
+                              />
+                            </div>
+                            {/* Show addons on the last scope overflow page */}
+                            {isLastScopeOverflowPage && addons?.content && (
+                              <div className="mt-6">
+                                <Addons
+                                  title={addons.title ?? "Add-ons"}
+                                  content={addons.content}
+                                  templateType="executive_premium"
+                                  className={`${montserrat.className}`}
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <VerticalBar variant="gradientGray" />
+                          <HorizontalBar variant="gradientGray" />
+                          <PoweredBy colorLogo="gray" isRight />
+                          <NavitationNumber
+                            value={6}
+                            size="lg"
+                            fontFamily="dmSerifText"
+                            font="bold"
+                            position="bottom-left-corner"
                           />
                         </div>
-                        {/* Show addons on the last scope overflow page */}
-                        {isLastScopeOverflowPage && addons?.content && (
-                          <div className="mt-6">
-                            <Addons
-                              title={addons.title ?? 'Add-ons'}
-                              content={addons.content}
-                              templateType="executive_premium"
-                              className={`${montserrat.className}`}
-                            />
-                          </div>
-                        )}
-                      </div>
-                      <VerticalBar variant="gradientGray" />
-                      <HorizontalBar variant="gradientGray" />
-                      <PoweredBy colorLogo="gray" isRight />
-                      <NavitationNumber
-                        value={6}
-                        size="lg"
-                        fontFamily="dmSerifText"
-                        font="bold"
-                        position="bottom-left-corner"
-                      />
-                    </div>
-                  );
-                })}
+                      );
+                    })}
 
                 <div
                   id="page-seven"
-                  className="relative aspect-[1/1.4] bg-white sm:p-8 p-6 sm:pb-0 pb-10"
+                  className="relative h-full bg-white sm:p-8 p-6 sm:pb-26 pb-10"
                 >
                   <div className="max-w-none sm:pl-[95px] pl-10 space-y-8">
                     {pricing?.content ? (
                       <ServiceQuotePricing
-                        title={pricing.title ?? 'Service Quote & Pricing'}
+                        title={pricing.title ?? "Service Quote & Pricing"}
                         content={pricing.content}
                         description={pricing.description}
                         templateType="executive_premium"
                         className={`${montserrat.className}`}
                       />
                     ) : (
-                      <div className="text-sm text-muted-foreground">
-                      </div>
+                      <div className="text-sm text-muted-foreground"></div>
                     )}
                     {notes?.content ? (
                       <Notes
-                        title={notes.title ?? 'Notes'}
+                        title={notes.title ?? "Notes"}
                         content={notes.content}
                         templateType="executive_premium"
                         className={`${montserrat.className}`}
                       />
                     ) : null}
                   </div>
-                  <VerticalBar  variant="gradientGray" />
-                  <HorizontalBar  variant="gradientGray" />
+                  <VerticalBar variant="gradientGray" />
+                  <HorizontalBar variant="gradientGray" />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
                     value={7}
@@ -392,13 +397,16 @@ export function ExecutivePremiumTemplate({
       {/* Page Eight */}
       <div
         id="page-eight"
-        className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-6 sm:pl-30 pl-10 sm:pb-0 pb-10"
+        className="relative h-full bg-white sm:pt-16 pt-6 sm:pl-30 pl-10 sm:pb-22 pb-10"
       >
-        <VerticalBar  variant="gradientGray" />
-        <HorizontalBar  variant="gradientGray" />
-        
+        <VerticalBar variant="gradientGray" />
+        <HorizontalBar variant="gradientGray" />
+
         <div className="pl-6 sm:pl-0">
-        <ProposalTitle templateType="executive_premium" title="Terms & Legal" />
+          <ProposalTitle
+            templateType="executive_premium"
+            title="Terms & Legal"
+          />
         </div>
 
         <TitleDescriptionSection templateType="executive_premium" />
@@ -417,19 +425,23 @@ export function ExecutivePremiumTemplate({
         id="page-nine"
         className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-6 sm:pl-30 pl-10 sm:pb-0 pb-10"
       >
-        <VerticalBar  variant="gradientGray" />
-        <HorizontalBar  variant="gradientGray" />
+        <VerticalBar variant="gradientGray" />
+        <HorizontalBar variant="gradientGray" />
 
         <div className="pl-6 sm:pl-0">
-        <ProposalTitle
-          templateType="executive_premium"
-          title="Proposal Acceptance"
-        />
+          <ProposalTitle
+            templateType="executive_premium"
+            title="Proposal Acceptance"
+          />
         </div>
-      
+
         <SignatureContent templateType="executive_premium" />
 
-        <SignatureSection templateType="executive_premium" companyName={proposal.client_company || companyName} clientName={proposal.client_name} />
+        <SignatureSection
+          templateType="executive_premium"
+          companyName={proposal.client_company || companyName}
+          clientName={proposal.client_name}
+        />
         <PoweredBy colorLogo="gray" isRight />
         <NavitationNumber
           value={9}

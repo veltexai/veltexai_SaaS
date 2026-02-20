@@ -1,34 +1,34 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 type CatalogRow = {
   id: string;
   sku: string;
   label: string;
-  unit_type: 'sqft' | 'pane' | 'visit' | 'hour' | 'flat';
+  unit_type: "sqft" | "pane" | "visit" | "hour" | "flat";
   rate: number;
   min_qty: number;
-  default_frequency: 'one_time' | 'monthly' | 'quarterly' | 'annual';
+  default_frequency: "one_time" | "monthly" | "quarterly" | "annual";
   frequency_options: string[];
   amortize_to_monthly: boolean;
   default_qty_source: string;
@@ -43,7 +43,7 @@ type PASRow = {
   rate: number;
   qty: number;
   min_qty: number;
-  frequency: 'one_time' | 'monthly' | 'quarterly' | 'annual';
+  frequency: "one_time" | "monthly" | "quarterly" | "annual";
   subtotal: number;
   monthly_amount: number | null;
   notes: string | null;
@@ -65,13 +65,14 @@ export function AddonServicePickerModal({
   const supabase = createClient();
   const [catalog, setCatalog] = useState<CatalogRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedSku, setSelectedSku] = useState<string>('');
+  const [selectedSku, setSelectedSku] = useState<string>("");
   const selected = useMemo(
     () => catalog.find((c) => c.sku === selectedSku) || null,
-    [catalog, selectedSku]
+    [catalog, selectedSku],
   );
-  const [qty, setQty] = useState<string>('');
-  const [frequency, setFrequency] = useState<string>('');
+
+  const [qty, setQty] = useState<string>("");
+  const [frequency, setFrequency] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -80,20 +81,21 @@ export function AddonServicePickerModal({
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('additional_service_catalog')
-          .select('*')
-          .eq('active', true)
-          .eq('show_in_proposals', true)
-          .order('label', { ascending: true });
+          .from("additional_service_catalog")
+          .select("*")
+          .eq("active", true)
+          .eq("show_in_proposals", true)
+          .order("label", { ascending: true });
         if (error) throw error;
         setCatalog((data || []) as CatalogRow[]);
       } catch (err) {
-        toast.error('Failed to load add-on catalog');
+        toast.error("Failed to load add-on catalog");
       } finally {
         setLoading(false);
       }
     };
     fetchCatalog();
+    console.log("🚀 ~ useEffect ~ selected:", selected);
   }, [open, supabase]);
 
   useEffect(() => {
@@ -105,15 +107,15 @@ export function AddonServicePickerModal({
     q: number,
     rate: number,
     freq: string,
-    amortize: boolean
+    amortize: boolean,
   ) => {
     const subtotal = q * rate;
-    
+
     // One-time services don't have a monthly equivalent
-    if (freq === 'one_time') {
+    if (freq === "one_time") {
       return { subtotal, monthly_amount: null };
     }
-    
+
     // Calculate monthly amount based on frequency
     // Always calculate the monthly equivalent for recurring services (monthly, quarterly, annual)
     // This is needed for proper pricing display and budgeting
@@ -124,23 +126,23 @@ export function AddonServicePickerModal({
     };
     const months = freqMap[freq] || 1;
     const monthly_amount = subtotal / months;
-    
+
     return { subtotal, monthly_amount };
   };
 
   const handleSubmit = async () => {
     try {
       if (!selected) {
-        toast.error('Select a service');
+        toast.error("Select a service");
         return;
       }
       const parsedQty = parseFloat(qty);
       if (!Number.isFinite(parsedQty) || parsedQty <= 0) {
-        toast.error('Enter a valid quantity');
+        toast.error("Enter a valid quantity");
         return;
       }
       if (!frequency) {
-        toast.error('Select a frequency');
+        toast.error("Select a frequency");
         return;
       }
       setSubmitting(true);
@@ -149,7 +151,7 @@ export function AddonServicePickerModal({
           parsedQty,
           selected.rate,
           frequency,
-          !!selected.amortize_to_monthly
+          !!selected.amortize_to_monthly,
         );
         const insertPayload = {
           proposal_id: proposalId,
@@ -164,43 +166,43 @@ export function AddonServicePickerModal({
           monthly_amount,
         };
         const { data, error } = await supabase
-          .from('proposal_additional_services')
+          .from("proposal_additional_services")
           .insert(insertPayload)
-          .select('*')
+          .select("*")
           .single();
         if (error) throw error;
         onAdded(data as PASRow);
-        toast.success('Add-on service added');
+        toast.success("Add-on service added");
       } else {
         const { subtotal, monthly_amount } = computeAmounts(
           parsedQty,
           selected.rate,
           frequency,
-          !!selected.amortize_to_monthly
+          !!selected.amortize_to_monthly,
         );
         const row: PASRow = {
           id: `temp_${Date.now()}`,
-          proposal_id: '',
+          proposal_id: "",
           sku: selected.sku,
           label: selected.label,
           unit_type: selected.unit_type,
           rate: selected.rate,
           qty: parsedQty,
           min_qty: selected.min_qty,
-          frequency: frequency as PASRow['frequency'],
+          frequency: frequency as PASRow["frequency"],
           subtotal,
           monthly_amount,
           notes: null,
         };
         onAdded(row);
-        toast.success('Add-on service added');
+        toast.success("Add-on service added");
       }
-      setSelectedSku('');
-      setQty('');
-      setFrequency('');
+      setSelectedSku("");
+      setQty("");
+      setFrequency("");
       onOpenChange(false);
     } catch (err) {
-      toast.error('Failed to add service');
+      toast.error("Failed to add service");
     } finally {
       setSubmitting(false);
     }
@@ -222,7 +224,7 @@ export function AddonServicePickerModal({
               <Select value={selectedSku} onValueChange={setSelectedSku}>
                 <SelectTrigger className="w-full">
                   <SelectValue
-                    placeholder={loading ? 'Loading...' : 'Choose a service'}
+                    placeholder={loading ? "Loading..." : "Choose a service"}
                   />
                 </SelectTrigger>
                 <SelectContent>
@@ -254,7 +256,9 @@ export function AddonServicePickerModal({
                     <div className="flex justify-between">
                       <span>Default Frequency</span>
                       <span className="font-medium">
-                        {selected.default_frequency}
+                        {selected.default_frequency === "one_time"
+                          ? "one time"
+                          : selected.default_frequency}
                       </span>
                     </div>
                   </div>
@@ -268,9 +272,9 @@ export function AddonServicePickerModal({
                         value={qty}
                         onChange={(e) => setQty(e.target.value)}
                         placeholder={
-                          selected.unit_type === 'sqft'
-                            ? 'e.g., 5000'
-                            : 'Enter quantity'
+                          selected.unit_type === "sqft"
+                            ? "e.g., 5000"
+                            : "Enter quantity"
                         }
                       />
                     </div>
@@ -283,7 +287,7 @@ export function AddonServicePickerModal({
                         <SelectContent>
                           {(selected.frequency_options || []).map((opt) => (
                             <SelectItem key={opt} value={opt}>
-                              {opt}
+                              {opt === "one_time" ? "one time" : opt}
                             </SelectItem>
                           ))}
                         </SelectContent>

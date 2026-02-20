@@ -1,27 +1,30 @@
-'use client';
+"use client";
 
-import { useFormContext } from 'react-hook-form';
-import { useEffect, useMemo, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useFormContext } from "react-hook-form";
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { type ProposalFormData, type ServiceType } from '@/lib/validations/proposal';
+} from "@/components/ui/select";
+import {
+  type ProposalFormData,
+  type ServiceType,
+} from "@/lib/validations/proposal";
 import {
   Building2,
   Users,
@@ -29,10 +32,10 @@ import {
   Clock,
   Trash2,
   Plus,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { AddonServicePickerModal } from './addon-service-picker-modal';
-import { Separator } from '@/components/ui/separator';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AddonServicePickerModal } from "./addon-service-picker-modal";
+import { Separator } from "@/components/ui/separator";
 
 // ============================================================
 // SERVICE-SPECIFIC OPTIONS CONFIGURATION
@@ -40,47 +43,50 @@ import { Separator } from '@/components/ui/separator';
 // ============================================================
 
 // Building type options by service type
-const buildingTypeOptionsByService: Record<ServiceType, { value: string; label: string }[]> = {
+const buildingTypeOptionsByService: Record<
+  ServiceType,
+  { value: string; label: string }[]
+> = {
   residential: [
-    { value: 'apartment', label: 'Apartment' },
-    { value: 'house', label: 'House' },
-    { value: 'condo', label: 'Condo' },
-    { value: 'townhouse', label: 'Townhouse' },
-    { value: 'other', label: 'Other' },
+    { value: "apartment", label: "Apartment" },
+    { value: "house", label: "House" },
+    { value: "condo", label: "Condo" },
+    { value: "townhouse", label: "Townhouse" },
+    { value: "other", label: "Other" },
   ],
   commercial: [
-    { value: 'office', label: 'Office Building' },
-    { value: 'warehouse', label: 'Warehouse' },
-    { value: 'retail', label: 'Retail Store' },
-    { value: 'restaurant', label: 'Restaurant' },
-    { value: 'medical', label: 'Medical Facility' },
-    { value: 'educational', label: 'Educational/School' },
-    { value: 'daycare', label: 'Daycare Center' },
-    { value: 'church', label: 'Church/Religious' },
-    { value: 'hospitality', label: 'Hospitality' },
-    { value: 'industrial', label: 'Industrial' },
-    { value: 'other', label: 'Other' },
+    { value: "office", label: "Office Building" },
+    { value: "warehouse", label: "Warehouse" },
+    { value: "retail", label: "Retail Store" },
+    { value: "restaurant", label: "Restaurant" },
+    { value: "medical", label: "Medical Facility" },
+    { value: "educational", label: "Educational/School" },
+    { value: "daycare", label: "Daycare Center" },
+    { value: "church", label: "Church/Religious" },
+    { value: "hospitality", label: "Hospitality" },
+    { value: "industrial", label: "Industrial" },
+    { value: "other", label: "Other" },
   ],
   carpet: [
-    { value: 'residential', label: 'Residential Property' },
-    { value: 'office', label: 'Office Building' },
-    { value: 'retail', label: 'Retail Store' },
-    { value: 'hospitality', label: 'Hotel/Hospitality' },
-    { value: 'other', label: 'Other' },
+    { value: "residential", label: "Residential Property" },
+    { value: "office", label: "Office Building" },
+    { value: "retail", label: "Retail Store" },
+    { value: "hospitality", label: "Hotel/Hospitality" },
+    { value: "other", label: "Other" },
   ],
   window: [
-    { value: 'residential', label: 'Residential Property' },
-    { value: 'office', label: 'Office Building' },
-    { value: 'retail', label: 'Retail Storefront' },
-    { value: 'other', label: 'Other' },
+    { value: "residential", label: "Residential Property" },
+    { value: "office", label: "Office Building" },
+    { value: "retail", label: "Retail Storefront" },
+    { value: "other", label: "Other" },
   ],
   floor: [
-    { value: 'residential', label: 'Residential Property' },
-    { value: 'office', label: 'Office Building' },
-    { value: 'retail', label: 'Retail Store' },
-    { value: 'warehouse', label: 'Warehouse' },
-    { value: 'industrial', label: 'Industrial' },
-    { value: 'other', label: 'Other' },
+    { value: "residential", label: "Residential Property" },
+    { value: "office", label: "Office Building" },
+    { value: "retail", label: "Retail Store" },
+    { value: "warehouse", label: "Warehouse" },
+    { value: "industrial", label: "Industrial" },
+    { value: "other", label: "Other" },
   ],
 };
 
@@ -88,309 +94,301 @@ const buildingTypeOptionsByService: Record<ServiceType, { value: string; label: 
 // These are areas that need SPECIAL ATTENTION, not just room names
 const specialAreasOptionsByService: Record<ServiceType, string[]> = {
   residential: [
-    'Pet Areas',
-    'Child Play Areas',
-    'Allergy-Sensitive Areas',
-    'Antique/Delicate Items',
-    'Home Gym/Exercise Area',
-    'Wine Cellar/Bar',
-    'Mudroom/Entry',
-    'Sunroom/Conservatory',
+    "Pet Areas",
+    "Child Play Areas",
+    "Allergy-Sensitive Areas",
+    "Antique/Delicate Items",
+    "Home Gym/Exercise Area",
+    "Wine Cellar/Bar",
+    "Mudroom/Entry",
+    "Sunroom/Conservatory",
   ],
   commercial: [
-    'Clean Room Standards',
-    'Data Center/IT Equipment',
-    'Food Safety Zones',
-    'Medical/Sterile Areas',
-    'Hazmat/Chemical Areas',
-    'Restricted Access Zones',
-    'Art/Antique Collections',
-    'Sensitive Electronics',
+    "Clean Room Standards",
+    "Data Center/IT Equipment",
+    "Food Safety Zones",
+    "Medical/Sterile Areas",
+    "Hazmat/Chemical Areas",
+    "Restricted Access Zones",
+    "Art/Antique Collections",
+    "Sensitive Electronics",
   ],
   carpet: [
-    'Heavy Stain Areas',
-    'Pet Damage Areas',
-    'High Traffic Zones',
-    'Under Furniture',
-    'Stair Risers',
-    'Area Rug Edges',
+    "Heavy Stain Areas",
+    "Pet Damage Areas",
+    "High Traffic Zones",
+    "Under Furniture",
+    "Stair Risers",
+    "Area Rug Edges",
   ],
   window: [
-    'Hard-to-Reach Access',
-    'High Elevation Areas',
-    'Oversized Panes',
-    'Leaded/Decorative Glass',
-    'Multi-Pane Storm Windows',
-    'Security/Tinted Film',
+    "Hard-to-Reach Access",
+    "High Elevation Areas",
+    "Oversized Panes",
+    "Leaded/Decorative Glass",
+    "Multi-Pane Storm Windows",
+    "Security/Tinted Film",
   ],
   floor: [
-    'Heavy Wear Areas',
-    'Wax Build-up Zones',
-    'Grout Lines',
-    'Transition Strips',
-    'Under Equipment',
-    'Drain Areas',
+    "Heavy Wear Areas",
+    "Wax Build-up Zones",
+    "Grout Lines",
+    "Transition Strips",
+    "Under Equipment",
+    "Drain Areas",
   ],
 };
 
 // Equipment present options by service type
 const equipmentOptionsByService: Record<ServiceType, string[]> = {
   residential: [
-    'Home Electronics',
-    'Kitchen Appliances',
-    'HVAC Systems',
-    'Security Systems',
-    'Home Office Equipment',
-    'Audio/Visual Equipment',
+    "Home Electronics",
+    "Kitchen Appliances",
+    "HVAC Systems",
+    "Security Systems",
+    "Home Office Equipment",
+    "Audio/Visual Equipment",
   ],
   commercial: [
-    'Computers/Electronics',
-    'Medical Equipment',
-    'Kitchen Equipment',
-    'Manufacturing Equipment',
-    'Laboratory Equipment',
-    'Audio/Visual Equipment',
-    'Security Systems',
-    'HVAC Systems',
-    'Server Racks',
+    "Computers/Electronics",
+    "Medical Equipment",
+    "Kitchen Equipment",
+    "Manufacturing Equipment",
+    "Laboratory Equipment",
+    "Audio/Visual Equipment",
+    "Security Systems",
+    "HVAC Systems",
+    "Server Racks",
   ],
   carpet: [
-    'Area Rugs',
-    'Wall-to-Wall Carpeting',
-    'Furniture to Move',
-    'Delicate Textiles',
+    "Area Rugs",
+    "Wall-to-Wall Carpeting",
+    "Furniture to Move",
+    "Delicate Textiles",
   ],
   window: [
-    'Window Screens',
-    'Storm Windows',
-    'Window Films',
-    'Blinds/Shutters',
+    "Window Screens",
+    "Storm Windows",
+    "Window Films",
+    "Blinds/Shutters",
   ],
   floor: [
-    'Heavy Machinery',
-    'Furniture to Move',
-    'Floor Drains',
-    'Sensitive Equipment',
+    "Heavy Machinery",
+    "Furniture to Move",
+    "Floor Drains",
+    "Sensitive Equipment",
   ],
 };
 
 // Environmental concerns by service type
 const environmentalConcernsByService: Record<ServiceType, string[]> = {
   residential: [
-    'Pet Odors/Dander',
-    'Allergies in Household',
-    'Chemical Sensitivity',
-    'Child-Safe Products Required',
-    'Eco-Friendly Products Preferred',
-    'Dust Control Required',
+    "Pet Odors/Dander",
+    "Allergies in Household",
+    "Chemical Sensitivity",
+    "Child-Safe Products Required",
+    "Eco-Friendly Products Preferred",
+    "Dust Control Required",
   ],
   commercial: [
-    'Chemical Sensitivity',
-    'Dust Control Required',
-    'Noise Restrictions',
-    'Temperature Sensitive',
-    'Humidity Control',
-    'Air Quality Standards',
-    'Contamination Control',
-    'Allergen Management',
+    "Chemical Sensitivity",
+    "Dust Control Required",
+    "Noise Restrictions",
+    "Temperature Sensitive",
+    "Humidity Control",
+    "Air Quality Standards",
+    "Contamination Control",
+    "Allergen Management",
   ],
   carpet: [
-    'Pet Stains/Odors',
-    'Allergies',
-    'Chemical Sensitivity',
-    'Eco-Friendly Products',
-    'Fast Drying Required',
+    "Pet Stains/Odors",
+    "Allergies",
+    "Chemical Sensitivity",
+    "Eco-Friendly Products",
+    "Fast Drying Required",
   ],
-  window: [
-    'Water Restrictions',
-    'Eco-Friendly Products',
-    'Noise Restrictions',
-  ],
+  window: ["Water Restrictions", "Eco-Friendly Products", "Noise Restrictions"],
   floor: [
-    'Chemical Sensitivity',
-    'Dust Control Required',
-    'Fume Ventilation',
-    'Eco-Friendly Products',
-    'Fast Drying Required',
+    "Chemical Sensitivity",
+    "Dust Control Required",
+    "Fume Ventilation",
+    "Eco-Friendly Products",
+    "Fast Drying Required",
   ],
 };
 
 // Special equipment options by service type
 const specialEquipmentOptionsByService: Record<ServiceType, string[]> = {
   residential: [
-    'HEPA Filtration',
-    'Steam Cleaning',
-    'Carpet Extraction',
-    'Eco-Friendly Products',
+    "HEPA Filtration",
+    "Steam Cleaning",
+    "Carpet Extraction",
+    "Eco-Friendly Products",
   ],
   commercial: [
-    'HEPA Filtration',
-    'Electrostatic Sprayers',
-    'UV Sanitization',
-    'Steam Cleaning',
-    'Pressure Washing',
-    'Carpet Extraction',
-    'Floor Buffing/Polishing',
-    'Window Cleaning Equipment',
+    "HEPA Filtration",
+    "Electrostatic Sprayers",
+    "UV Sanitization",
+    "Steam Cleaning",
+    "Pressure Washing",
+    "Carpet Extraction",
+    "Floor Buffing/Polishing",
+    "Window Cleaning Equipment",
   ],
   carpet: [
-    'Steam Cleaning',
-    'Carpet Extraction',
-    'Stain Treatment',
-    'Deodorizing Treatment',
-    'Scotchgard Protection',
+    "Steam Cleaning",
+    "Carpet Extraction",
+    "Stain Treatment",
+    "Deodorizing Treatment",
+    "Scotchgard Protection",
   ],
   window: [
-    'Water-Fed Pole System',
-    'Ladder/Lift Access',
-    'Pressure Washing',
-    'Squeegee System',
+    "Water-Fed Pole System",
+    "Ladder/Lift Access",
+    "Pressure Washing",
+    "Squeegee System",
   ],
   floor: [
-    'Floor Buffing/Polishing',
-    'Auto Scrubbers',
-    'Strip & Wax Equipment',
-    'Diamond Polishing',
-    'Concrete Grinding',
+    "Floor Buffing/Polishing",
+    "Auto Scrubbers",
+    "Strip & Wax Equipment",
+    "Diamond Polishing",
+    "Concrete Grinding",
   ],
 };
 
 // Certification options by service type
 const certificationOptionsByService: Record<ServiceType, string[]> = {
   residential: [
-    'Green Cleaning Certification',
-    'Background Checked',
-    'Bonded & Insured',
+    "Green Cleaning Certification",
+    "Background Checked",
+    "Bonded & Insured",
   ],
   commercial: [
-    'OSHA Compliance',
-    'HIPAA Training',
-    'Food Safety Certification',
-    'Hazmat Handling',
-    'Security Clearance',
-    'Green Cleaning Certification',
-    'Infection Control Training',
-    'Chemical Safety Training',
+    "OSHA Compliance",
+    "HIPAA Training",
+    "Food Safety Certification",
+    "Hazmat Handling",
+    "Security Clearance",
+    "Green Cleaning Certification",
+    "Infection Control Training",
+    "Chemical Safety Training",
   ],
   carpet: [
-    'IICRC Certification',
-    'Green Cleaning Certification',
-    'Bonded & Insured',
+    "IICRC Certification",
+    "Green Cleaning Certification",
+    "Bonded & Insured",
   ],
-  window: [
-    'Height Safety Certification',
-    'Bonded & Insured',
-  ],
+  window: ["Height Safety Certification", "Bonded & Insured"],
   floor: [
-    'Floor Care Specialist',
-    'Chemical Safety Training',
-    'Bonded & Insured',
+    "Floor Care Specialist",
+    "Chemical Safety Training",
+    "Bonded & Insured",
   ],
 };
 
 // Insurance options (same for all, but can be customized)
 const insuranceOptions = [
-  'General Liability',
-  'Professional Liability',
-  'Workers Compensation',
-  'Bonding/Fidelity',
-  'Equipment Coverage',
+  "General Liability",
+  "Professional Liability",
+  "Workers Compensation",
+  "Bonding/Fidelity",
+  "Equipment Coverage",
 ];
 
 // Areas included options by service type
 const areasIncludedByService: Record<ServiceType, string[]> = {
   residential: [
-    'Kitchen',
-    'Living Room',
-    'Dining Room',
-    'Bedrooms',
-    'Bathrooms',
-    'Home Office',
-    'Laundry Room',
-    'Garage',
-    'Basement',
-    'Attic',
-    'Hallways',
-    'Stairs',
-    'Outdoor Areas',
+    "Kitchen",
+    "Living Room",
+    "Dining Room",
+    "Bedrooms",
+    "Bathrooms",
+    "Home Office",
+    "Laundry Room",
+    "Garage",
+    "Basement",
+    "Attic",
+    "Hallways",
+    "Stairs",
+    "Outdoor Areas",
   ],
   commercial: [
-    'Offices',
-    'Common Areas',
-    'Restrooms',
-    'Break Rooms',
-    'Storage Areas',
-    'Printing Rooms',
-    'Conference Rooms',
-    'Reception Area',
-    'Hallways',
-    'Lobby',
-    'Kitchen/Cafeteria',
-    'Stairwells',
-    'Elevators',
-    'Server Room',
-    'Executive Offices',
-    'Training Rooms',
-    'Supply Closets',
+    "Offices",
+    "Common Areas",
+    "Restrooms",
+    "Break Rooms",
+    "Storage Areas",
+    "Printing Rooms",
+    "Conference Rooms",
+    "Reception Area",
+    "Hallways",
+    "Lobby",
+    "Kitchen/Cafeteria",
+    "Stairwells",
+    "Elevators",
+    "Server Room",
+    "Executive Offices",
+    "Training Rooms",
+    "Supply Closets",
   ],
   carpet: [
-    'Living Room',
-    'Bedrooms',
-    'Hallways',
-    'Stairs',
-    'Office Spaces',
-    'Reception Area',
-    'Conference Rooms',
+    "Living Room",
+    "Bedrooms",
+    "Hallways",
+    "Stairs",
+    "Office Spaces",
+    "Reception Area",
+    "Conference Rooms",
   ],
   window: [
-    'All Interior Windows',
-    'All Exterior Windows',
-    'Ground Floor Only',
-    'Upper Floors',
-    'Skylights',
-    'Glass Doors',
+    "All Interior Windows",
+    "All Exterior Windows",
+    "Ground Floor Only",
+    "Upper Floors",
+    "Skylights",
+    "Glass Doors",
   ],
   floor: [
-    'Main Floor Area',
-    'Hallways',
-    'Stairs',
-    'Kitchen',
-    'Bathrooms',
-    'Entryways',
-    'Warehouse Floor',
-    'Showroom',
+    "Main Floor Area",
+    "Hallways",
+    "Stairs",
+    "Kitchen",
+    "Bathrooms",
+    "Entryways",
+    "Warehouse Floor",
+    "Showroom",
   ],
 };
 
 // Visitor frequency options (only for commercial)
 const visitorFrequencyOptions = [
-  { value: 'low', label: 'Low (< 50 visitors/day)' },
-  { value: 'medium', label: 'Medium (50-200 visitors/day)' },
-  { value: 'high', label: 'High (> 200 visitors/day)' },
+  { value: "low", label: "Low (< 50 visitors/day)" },
+  { value: "medium", label: "Medium (50-200 visitors/day)" },
+  { value: "high", label: "High (> 200 visitors/day)" },
 ];
 
 // Traffic level options
 const trafficLevelOptions = [
-  { value: 'light', label: 'Light Traffic' },
-  { value: 'medium', label: 'Medium Traffic' },
-  { value: 'heavy', label: 'Heavy Traffic' },
+  { value: "light", label: "Light Traffic" },
+  { value: "medium", label: "Medium Traffic" },
+  { value: "heavy", label: "Heavy Traffic" },
 ];
 
 // Accessibility options (mainly for commercial)
 const accessibilityOptions = [
-  'ADA Compliance Required',
-  'Wheelchair Accessible',
-  'Special Mobility Equipment',
-  'Hearing Assistance Systems',
-  'Visual Assistance Systems',
+  "ADA Compliance Required",
+  "Wheelchair Accessible",
+  "Special Mobility Equipment",
+  "Hearing Assistance Systems",
+  "Visual Assistance Systems",
 ];
 
 // Services that should show traffic analysis section
-const servicesWithTrafficAnalysis: ServiceType[] = ['commercial'];
+const servicesWithTrafficAnalysis: ServiceType[] = ["commercial"];
 
 // Services that should show full facility details
-const servicesWithFullFacilityDetails: ServiceType[] = ['commercial'];
-
+const servicesWithFullFacilityDetails: ServiceType[] = ["commercial"];
 
 type PASRow = {
   id: string;
@@ -401,7 +399,7 @@ type PASRow = {
   rate: number;
   qty: number;
   min_qty: number;
-  frequency: 'one_time' | 'monthly' | 'quarterly' | 'annual';
+  frequency: "one_time" | "monthly" | "quarterly" | "annual";
   subtotal: number;
   monthly_amount: number | null;
   notes: string | null;
@@ -414,7 +412,7 @@ interface EnhancedFacilitySectionProps {
 
 export function EnhancedFacilitySection({
   proposalId,
-  serviceType = 'commercial',
+  serviceType = "commercial",
 }: EnhancedFacilitySectionProps) {
   // Get service-specific options based on selected service type
   const buildingTypeOptions = buildingTypeOptionsByService[serviceType];
@@ -424,39 +422,40 @@ export function EnhancedFacilitySection({
   const specialEquipmentOptions = specialEquipmentOptionsByService[serviceType];
   const certificationOptions = certificationOptionsByService[serviceType];
   const areasIncludedOptions = areasIncludedByService[serviceType];
-  
+
   // Determine which sections to show based on service type
   const showTrafficAnalysis = servicesWithTrafficAnalysis.includes(serviceType);
-  const showFullFacilityDetails = servicesWithFullFacilityDetails.includes(serviceType);
-  
+  const showFullFacilityDetails =
+    servicesWithFullFacilityDetails.includes(serviceType);
+
   // Get section titles based on service type
   const getSectionTitle = () => {
     switch (serviceType) {
-      case 'residential':
-        return 'Home Details';
-      case 'carpet':
-        return 'Carpet Cleaning Details';
-      case 'window':
-        return 'Window Cleaning Details';
-      case 'floor':
-        return 'Floor Care Details';
+      case "residential":
+        return "Home Details";
+      case "carpet":
+        return "Carpet Cleaning Details";
+      case "window":
+        return "Window Cleaning Details";
+      case "floor":
+        return "Floor Care Details";
       default:
-        return 'Enhanced Facility Details';
+        return "Enhanced Facility Details";
     }
   };
-  
+
   const getSectionDescription = () => {
     switch (serviceType) {
-      case 'residential':
-        return 'Provide details about the home for accurate service planning.';
-      case 'carpet':
-        return 'Provide details about the carpet areas for accurate cleaning estimates.';
-      case 'window':
-        return 'Provide details about the windows for accurate service planning.';
-      case 'floor':
-        return 'Provide details about the floor areas for accurate service planning.';
+      case "residential":
+        return "Provide details about the home for accurate service planning.";
+      case "carpet":
+        return "Provide details about the carpet areas for accurate cleaning estimates.";
+      case "window":
+        return "Provide details about the windows for accurate service planning.";
+      case "floor":
+        return "Provide details about the floor areas for accurate service planning.";
       default:
-        return 'Provide comprehensive facility information for accurate service planning and pricing.';
+        return "Provide comprehensive facility information for accurate service planning and pricing.";
     }
   };
   const form = useFormContext<ProposalFormData>();
@@ -470,24 +469,24 @@ export function EnhancedFacilitySection({
       try {
         setLoadingAddons(true);
         const { data, error } = await supabase
-          .from('proposal_additional_services')
-          .select('*')
-          .eq('proposal_id', proposalId)
-          .order('created_at', { ascending: true });
+          .from("proposal_additional_services")
+          .select("*")
+          .eq("proposal_id", proposalId)
+          .order("created_at", { ascending: true });
         if (error) return;
         const normalized = (data || []).map((row: any) => {
           const subtotal = Number.isFinite(row?.subtotal)
             ? Number(row.subtotal)
             : Number(row?.rate) * Number(row?.qty);
-          const freq = String(row?.frequency || '').toLowerCase();
+          const freq = String(row?.frequency || "").toLowerCase();
           const monthly_amount_raw = row?.monthly_amount;
           const monthly_amount_num =
             monthly_amount_raw != null ? Number(monthly_amount_raw) : NaN;
           const monthly_amount = Number.isFinite(monthly_amount_num)
             ? monthly_amount_num
-            : freq.includes('month')
-            ? subtotal
-            : null;
+            : freq.includes("month")
+              ? subtotal
+              : null;
           return {
             ...row,
             subtotal,
@@ -505,7 +504,7 @@ export function EnhancedFacilitySection({
   useEffect(() => {
     if (!proposalId) {
       const preSelected =
-        (form.getValues('selected_addons' as any) as any[]) || [];
+        (form.getValues("selected_addons" as any) as any[]) || [];
       setAddons(preSelected as PASRow[]);
     }
   }, [proposalId]);
@@ -514,51 +513,50 @@ export function EnhancedFacilitySection({
     return addons.reduce((sum, a) => {
       const m = a.monthly_amount;
       if (m !== null && m !== undefined) return sum + Number(m);
-      const freq = String(a.frequency || '').toLowerCase();
+      const freq = String(a.frequency || "").toLowerCase();
       const base = Number.isFinite(a.subtotal)
         ? Number(a.subtotal)
         : Number(a.rate) * Number(a.qty);
-      const months = freq === 'monthly' ? 1 : freq === 'quarterly' ? 3 : freq === 'annual' ? 12 : 0;
+      const months =
+        freq === "monthly"
+          ? 1
+          : freq === "quarterly"
+            ? 3
+            : freq === "annual" || freq === "one_time"
+              ? 12
+              : 0;
       if (months > 0) return sum + (Number.isFinite(base) ? base / months : 0);
       return sum;
     }, 0);
   }, [addons]);
-  console.log(
-    '🚀 ~ EnhancedFacilitySection ~ monthlyAddonsTotal:',
-    monthlyAddonsTotal
-  );
 
   const handleDeleteAddon = async (id: string) => {
     const prev = addons;
     setAddons(addons.filter((a) => a.id !== id));
     if (!proposalId) {
       form.setValue(
-        'selected_addons' as any,
+        "selected_addons" as any,
         addons.filter((a) => a.id !== id),
         {
           shouldValidate: false,
           shouldTouch: false,
           shouldDirty: false,
-        }
+        },
       );
       return;
     }
     const { error } = await supabase
-      .from('proposal_additional_services')
+      .from("proposal_additional_services")
       .delete()
-      .eq('id', id);
+      .eq("id", id);
     if (error) setAddons(prev);
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold mb-2">
-          {getSectionTitle()}
-        </h2>
-        <p className="text-muted-foreground">
-          {getSectionDescription()}
-        </p>
+        <h2 className="text-2xl font-semibold mb-2">{getSectionTitle()}</h2>
+        <p className="text-muted-foreground">{getSectionDescription()}</p>
       </div>
 
       {/* Facility Details */}
@@ -566,7 +564,11 @@ export function EnhancedFacilitySection({
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Building2 className="h-5 w-5" />
-            <span>{serviceType === 'residential' ? 'Property Information' : 'Facility Information'}</span>
+            <span>
+              {serviceType === "residential"
+                ? "Property Information"
+                : "Facility Information"}
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -576,13 +578,21 @@ export function EnhancedFacilitySection({
               name="facility_details.building_age"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{serviceType === 'residential' ? 'Home Age (years)' : 'Building Age (years)'}</FormLabel>
+                  <FormLabel>
+                    {serviceType === "residential"
+                      ? "Home Age (years)"
+                      : "Building Age (years)"}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       min="0"
-                      placeholder={serviceType === 'residential' ? 'Enter home age' : 'Enter building age'}
-                      value={field.value || ''}
+                      placeholder={
+                        serviceType === "residential"
+                          ? "Enter home age"
+                          : "Enter building age"
+                      }
+                      value={field.value || ""}
                       onChange={(e) => {
                         // Allow any input during typing
                         field.onChange(e.target.value);
@@ -591,7 +601,7 @@ export function EnhancedFacilitySection({
                         // Validate and sanitize only on blur
                         const value = e.target.value;
                         field.onChange(
-                          value === '' ? undefined : parseInt(value, 10)
+                          value === "" ? undefined : parseInt(value, 10),
                         );
                       }}
                     />
@@ -606,11 +616,21 @@ export function EnhancedFacilitySection({
               name="facility_details.building_type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{serviceType === 'residential' ? 'Property Type' : 'Building Type'}</FormLabel>
+                  <FormLabel>
+                    {serviceType === "residential"
+                      ? "Property Type"
+                      : "Building Type"}
+                  </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder={serviceType === 'residential' ? 'Select property type' : 'Select building type'} />
+                        <SelectValue
+                          placeholder={
+                            serviceType === "residential"
+                              ? "Select property type"
+                              : "Select building type"
+                          }
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -652,7 +672,7 @@ export function EnhancedFacilitySection({
                                   checked={field.value?.includes(item)}
                                   onCheckedChange={(checked) => {
                                     const currentValue = Array.isArray(
-                                      field.value
+                                      field.value,
                                     )
                                       ? field.value
                                       : [];
@@ -660,8 +680,8 @@ export function EnhancedFacilitySection({
                                       ? field.onChange([...currentValue, item])
                                       : field.onChange(
                                           currentValue.filter(
-                                            (value) => value !== item
-                                          )
+                                            (value) => value !== item,
+                                          ),
                                         );
                                   }}
                                 />
@@ -707,7 +727,7 @@ export function EnhancedFacilitySection({
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
                                   const currentValue = Array.isArray(
-                                    field.value
+                                    field.value,
                                   )
                                     ? field.value
                                     : [];
@@ -715,8 +735,8 @@ export function EnhancedFacilitySection({
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(
                                         currentValue.filter(
-                                          (value) => value !== item
-                                        )
+                                          (value) => value !== item,
+                                        ),
                                       );
                                 }}
                               />
@@ -758,7 +778,7 @@ export function EnhancedFacilitySection({
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
                                   const currentValue = Array.isArray(
-                                    field.value
+                                    field.value,
                                   )
                                     ? field.value
                                     : [];
@@ -766,8 +786,8 @@ export function EnhancedFacilitySection({
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(
                                         currentValue.filter(
-                                          (value) => value !== item
-                                        )
+                                          (value) => value !== item,
+                                        ),
                                       );
                                 }}
                               />
@@ -809,7 +829,7 @@ export function EnhancedFacilitySection({
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
                                   const currentValue = Array.isArray(
-                                    field.value
+                                    field.value,
                                   )
                                     ? field.value
                                     : [];
@@ -817,8 +837,8 @@ export function EnhancedFacilitySection({
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(
                                         currentValue.filter(
-                                          (value) => value !== item
-                                        )
+                                          (value) => value !== item,
+                                        ),
                                       );
                                 }}
                               />
@@ -861,7 +881,7 @@ export function EnhancedFacilitySection({
                         type="number"
                         min="0"
                         placeholder="Number of staff"
-                        value={field.value || ''}
+                        value={field.value || ""}
                         onChange={(e) => {
                           // Allow any input during typing
                           field.onChange(e.target.value);
@@ -870,7 +890,7 @@ export function EnhancedFacilitySection({
                           // Validate and sanitize only on blur
                           const value = e.target.value;
                           field.onChange(
-                            value === '' ? undefined : parseInt(value, 10)
+                            value === "" ? undefined : parseInt(value, 10),
                           );
                         }}
                       />
@@ -943,7 +963,9 @@ export function EnhancedFacilitySection({
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>Special Events or High-Traffic Periods</FormLabel>
+                    <FormLabel>
+                      Special Events or High-Traffic Periods
+                    </FormLabel>
                     <p className="text-sm text-muted-foreground">
                       Check if the facility hosts special events that require
                       additional cleaning
@@ -991,7 +1013,7 @@ export function EnhancedFacilitySection({
                                 checked={field.value?.includes(area)}
                                 onCheckedChange={(checked) => {
                                   const currentValue = Array.isArray(
-                                    field.value
+                                    field.value,
                                   )
                                     ? field.value
                                     : [];
@@ -999,8 +1021,8 @@ export function EnhancedFacilitySection({
                                     ? field.onChange([...currentValue, area])
                                     : field.onChange(
                                         currentValue.filter(
-                                          (value) => value !== area
-                                        )
+                                          (value) => value !== area,
+                                        ),
                                       );
                                 }}
                               />
@@ -1047,10 +1069,10 @@ export function EnhancedFacilitySection({
                   <Textarea
                     placeholder="List areas that should be excluded from cleaning"
                     className="min-h-[80px]"
-                    value={field.value?.join('\n') || ''}
+                    value={field.value?.join("\n") || ""}
                     onChange={(e) => {
                       const lines = e.target.value
-                        .split('\n')
+                        .split("\n")
                         .filter((line) => line.trim());
                       field.onChange(lines);
                     }}
@@ -1080,12 +1102,12 @@ export function EnhancedFacilitySection({
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
               {loadingAddons
-                ? 'Loading services...'
+                ? "Loading services..."
                 : addons.length === 0
-                ? 'No add-ons selected'
-                : `${addons.length} add-on${
-                    addons.length > 1 ? 's' : ''
-                  } selected`}
+                  ? "No add-ons selected"
+                  : `${addons.length} add-on${
+                      addons.length > 1 ? "s" : ""
+                    } selected`}
             </div>
             <Button onClick={() => setPickerOpen(true)} size="sm">
               <Plus className="h-4 w-4 mr-2" />
@@ -1103,8 +1125,8 @@ export function EnhancedFacilitySection({
                   <div className="space-y-1">
                     <div className="font-medium">{a.label}</div>
                     <div className="text-xs text-muted-foreground">
-                      Qty {a.qty} {a.unit_type} • Rate ${a.rate.toFixed(2)} •{' '}
-                      {a.frequency}
+                      Qty {a.qty} {a.unit_type} • Rate ${a.rate.toFixed(2)} •{" "}
+                      {a.frequency === "one_time" ? "one time" : a.frequency}
                     </div>
                     <div className="text-sm">
                       {a.monthly_amount !== null ? (
@@ -1129,12 +1151,14 @@ export function EnhancedFacilitySection({
               ))}
 
               <Separator />
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Monthly Add-ons Total</span>
-                <span className="text-lg font-semibold">
-                  ${monthlyAddonsTotal.toFixed(2)}
-                </span>
-              </div>
+              {monthlyAddonsTotal > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Monthly Add-ons Total</span>
+                  <span className="text-lg font-semibold">
+                    ${monthlyAddonsTotal.toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
@@ -1146,7 +1170,7 @@ export function EnhancedFacilitySection({
               setAddons((prev) => {
                 const next = [...prev, row];
                 if (!proposalId) {
-                  form.setValue('selected_addons' as any, next, {
+                  form.setValue("selected_addons" as any, next, {
                     shouldValidate: false,
                     shouldTouch: false,
                     shouldDirty: false,
@@ -1232,7 +1256,7 @@ export function EnhancedFacilitySection({
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
                                   const currentValue = Array.isArray(
-                                    field.value
+                                    field.value,
                                   )
                                     ? field.value
                                     : [];
@@ -1240,8 +1264,8 @@ export function EnhancedFacilitySection({
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(
                                         currentValue.filter(
-                                          (value) => value !== item
-                                        )
+                                          (value) => value !== item,
+                                        ),
                                       );
                                 }}
                               />
@@ -1284,7 +1308,7 @@ export function EnhancedFacilitySection({
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
                                   const currentValue = Array.isArray(
-                                    field.value
+                                    field.value,
                                   )
                                     ? field.value
                                     : [];
@@ -1292,8 +1316,8 @@ export function EnhancedFacilitySection({
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(
                                         currentValue.filter(
-                                          (value) => value !== item
-                                        )
+                                          (value) => value !== item,
+                                        ),
                                       );
                                 }}
                               />
@@ -1335,7 +1359,7 @@ export function EnhancedFacilitySection({
                                 checked={field.value?.includes(item)}
                                 onCheckedChange={(checked) => {
                                   const currentValue = Array.isArray(
-                                    field.value
+                                    field.value,
                                   )
                                     ? field.value
                                     : [];
@@ -1343,8 +1367,8 @@ export function EnhancedFacilitySection({
                                     ? field.onChange([...currentValue, item])
                                     : field.onChange(
                                         currentValue.filter(
-                                          (value) => value !== item
-                                        )
+                                          (value) => value !== item,
+                                        ),
                                       );
                                 }}
                               />

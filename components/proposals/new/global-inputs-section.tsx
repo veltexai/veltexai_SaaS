@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { type ProposalFormData } from '@/lib/validations/proposal';
+import { formatPhoneNumber } from '@/lib/utils';
 import { User, Mail, Building, Phone, MapPin, Ruler } from 'lucide-react';
 
 const serviceFrequencyOptions = [
@@ -110,7 +111,12 @@ export function GlobalInputsSection() {
                 <FormItem>
                   <FormLabel>Phone Number *</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="(555) 123-4567" {...field} />
+                    <Input
+                      type="tel"
+                      placeholder="(555) 123-4567"
+                      {...field}
+                      onChange={(e) => field.onChange(formatPhoneNumber(e.target.value))}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

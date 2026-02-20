@@ -110,6 +110,7 @@ export default function ProposalAcceptance({
   const isClassic = template === 'classic';
   const isModern = template === 'modern';
   const isProfessional = template === 'professional';
+  console.log("🚀 ~ ProposalAcceptance ~ isProfessional:", isProfessional)
 
   function SignatureFields({ label }: { label: string }) {
     return (

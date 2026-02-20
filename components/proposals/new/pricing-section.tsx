@@ -1,24 +1,33 @@
-'use client';
+"use client";
 
-import { useFormContext } from 'react-hook-form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { type ProposalFormData } from '@/lib/validations/proposal';
-import { Calculator, DollarSign, Clock, Users, Loader2, RefreshCw, Info } from 'lucide-react';``
-import { useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
-import { usePricingSettings } from '@/hooks/use-pricing-settings';
-import { AIContentGenerator } from './ai-content-generator';
-import { createClient } from '@/lib/supabase/client';
+import { useFormContext } from "react-hook-form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { type ProposalFormData } from "@/lib/validations/proposal";
+import {
+  Calculator,
+  DollarSign,
+  Clock,
+  Users,
+  Loader2,
+  RefreshCw,
+  Info,
+} from "lucide-react";
+``;
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { usePricingSettings } from "@/hooks/use-pricing-settings";
+import { AIContentGenerator } from "./ai-content-generator";
+import { createClient } from "@/lib/supabase/client";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { AiTone } from '@/types/proposal';
+} from "@/components/ui/tooltip";
+import { AiTone } from "@/types/proposal";
 
 interface PricingSectionProps {
   proposalId?: string;
@@ -29,9 +38,7 @@ interface PricingSectionProps {
   currentStep?: number;
   onGeneratingChange?: (generating: boolean) => void;
   selectedTone?: AiTone;
-  onToneChange?: (
-    tone: AiTone
-  ) => void;
+  onToneChange?: (tone: AiTone) => void;
   existingPricingData?: any; // Add prop for existing pricing data
 }
 
@@ -42,7 +49,7 @@ export function PricingSection({
   onEnabledChange,
   currentStep,
   onGeneratingChange,
-  selectedTone = 'professional',
+  selectedTone = "professional",
   onToneChange,
   existingPricingData, // Add the new prop
 }: PricingSectionProps) {
@@ -53,11 +60,11 @@ export function PricingSection({
   // This ensures pricing survives unmount/remount during step navigation (Back/Next).
   const [calculatedPricing, setCalculatedPricing] = useState<any>(() => {
     if (existingPricingData) return existingPricingData;
-    const formPricingData = form.getValues('pricing_data');
+    const formPricingData = form.getValues("pricing_data");
     return formPricingData ?? null;
   });
   const [lastCalculationTrigger, setLastCalculationTrigger] =
-    useState<string>('');
+    useState<string>("");
   const supabase = createClient();
   const [addons, setAddons] = useState<any[]>([]);
   const [loadingAddons, setLoadingAddons] = useState(false);
@@ -74,10 +81,10 @@ export function PricingSection({
       try {
         setLoadingAddons(true);
         const { data, error } = await supabase
-          .from('proposal_additional_services')
-          .select('*')
-          .eq('proposal_id', proposalId)
-          .order('created_at', { ascending: true });
+          .from("proposal_additional_services")
+          .select("*")
+          .eq("proposal_id", proposalId)
+          .order("created_at", { ascending: true });
         if (error) return;
         setAddons(data || []);
       } finally {
@@ -86,12 +93,11 @@ export function PricingSection({
     };
     if (proposalId) fetchAddons();
   }, [proposalId, supabase]);
-  
 
   const watchedValues = form.watch([
-    'global_inputs.facility_size',
-    'global_inputs.service_frequency',
-    'service_specific_data',
+    "global_inputs.facility_size",
+    "global_inputs.service_frequency",
+    "service_specific_data",
   ]);
 
   // Default pricing settings to use when user settings are not available
@@ -127,14 +133,14 @@ export function PricingSection({
       // Enhanced validation with better error messages
       if (!facilitySize || facilitySize <= 0) {
         toast.error(
-          'Please enter a valid facility size before calculating pricing'
+          "Please enter a valid facility size before calculating pricing",
         );
         return;
       }
 
       if (!frequency) {
         toast.error(
-          'Please select a service frequency before calculating pricing'
+          "Please select a service frequency before calculating pricing",
         );
         return;
       }
@@ -144,7 +150,7 @@ export function PricingSection({
         Object.keys(serviceSpecificData).length === 0
       ) {
         toast.error(
-          'Please fill in service-specific details before calculating pricing'
+          "Please fill in service-specific details before calculating pricing",
         );
         return;
       }
@@ -178,7 +184,7 @@ export function PricingSection({
       let laborHours = 0;
       const windowCount = formData.service_specific_data?.window_count || 1;
 
-      if (serviceType === 'window') {
+      if (serviceType === "window") {
         basePrice = windowCount * baseRates[serviceType];
         laborHours = Math.ceil(windowCount / 10); // 10 windows per hour
       } else {
@@ -222,16 +228,16 @@ export function PricingSection({
 
       setCalculatedPricing(pricing);
       // Fix: Use setValue with proper options to prevent triggering form validation and submission
-      form.setValue('pricing_data', pricing, {
+      form.setValue("pricing_data", pricing, {
         shouldValidate: false,
         shouldTouch: false,
         shouldDirty: false,
       });
 
-      toast.success('Pricing calculated successfully');
+      toast.success("Pricing calculated successfully");
     } catch (error) {
-      console.error('Error calculating pricing:', error);
-      toast.error('Failed to calculate pricing');
+      console.error("Error calculating pricing:", error);
+      toast.error("Failed to calculate pricing");
     } finally {
       setIsCalculating(false);
     }
@@ -243,12 +249,12 @@ export function PricingSection({
 
     // Safely handle potential null/undefined values
     const safeFacilitySize = facilitySize || 0;
-    const safeFrequency = frequency || 'one-time';
+    const safeFrequency = frequency || "one-time";
     const safeServiceSpecificData = serviceSpecificData || {};
 
     // Create a trigger string to detect if values actually changed
     const currentTrigger = `${safeFacilitySize}-${safeFrequency}-${JSON.stringify(
-      safeServiceSpecificData
+      safeServiceSpecificData,
     )}`;
 
     if (
@@ -277,28 +283,29 @@ export function PricingSection({
   ]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
   const basePrice = useMemo(() => {
     const p = calculatedPricing || existingPricingData || null;
     if (!p) return 0;
-    if (typeof p.total === 'number') return p.total;
-    if (typeof p.enhanced_total === 'number') return p.enhanced_total;
+    if (typeof p.total === "number") return p.total;
+    if (typeof p.enhanced_total === "number") return p.enhanced_total;
     const low = p.price_range?.low;
     const high = p.price_range?.high;
-    if (typeof low === 'number' && typeof high === 'number') return (low + high) / 2;
-    if (typeof low === 'number') return low;
-    if (typeof high === 'number') return high;
+    if (typeof low === "number" && typeof high === "number")
+      return (low + high) / 2;
+    if (typeof low === "number") return low;
+    if (typeof high === "number") return high;
     return 0;
   }, [calculatedPricing, existingPricingData]);
 
-  const selectedAddons = form.getValues('selected_addons' as any) || [];
+  const selectedAddons = form.getValues("selected_addons" as any) || [];
   const sourceAddons = proposalId ? addons : selectedAddons;
-  
+
   // Calculate monthly total for recurring addons (monthly, quarterly, annual)
   // This properly handles amortization for quarterly and annual frequencies
   const monthlyAddonsTotal = useMemo(() => {
@@ -308,48 +315,52 @@ export function PricingSection({
       if (m !== null && m !== undefined && Number.isFinite(Number(m))) {
         return sum + Number(m);
       }
-      
+
       // Calculate monthly equivalent based on frequency
-      const freq = String(a.frequency || '').toLowerCase();
+      const freq = String(a.frequency || "").toLowerCase();
       const subtotal = Number.isFinite(Number(a.subtotal))
         ? Number(a.subtotal)
         : (Number(a.rate) || 0) * (Number(a.qty) || 0);
-      
+
       // Only include recurring frequencies in monthly total
-      if (freq === 'monthly') {
+      if (freq === "monthly") {
         return sum + subtotal;
-      } else if (freq === 'quarterly') {
+      } else if (freq === "quarterly") {
         return sum + subtotal / 3;
-      } else if (freq === 'annual') {
+      } else if (freq === "annual") {
+        return sum + subtotal / 12;
+      } else if (freq === "one_time") {
         return sum + subtotal / 12;
       }
-      
+
       // One-time addons are not included in monthly total
       return sum;
     }, 0);
   }, [sourceAddons]);
-  
+
   // Filter one-time addons for separate display
   const oneTimeAddons = useMemo(() => {
-    return (sourceAddons as any[]).filter(a => {
-      const freq = String(a.frequency || '').toLowerCase();
-      return freq === 'one_time' || (a.monthly_amount === null && !['monthly', 'quarterly', 'annual'].includes(freq));
+    return (sourceAddons as any[]).filter((a) => {
+      const freq = String(a.frequency || "").toLowerCase();
+      return (
+        freq === "one_time" ||
+        (a.monthly_amount === null &&
+          !["monthly", "quarterly", "annual"].includes(freq))
+      );
     });
   }, [sourceAddons]);
-
-  
 
   const handlePricingToggle = (checked: boolean) => {
     onEnabledChange(checked);
     // Fix: Prevent validation triggers when toggling pricing
-    form.setValue('pricing_enabled', checked, {
+    form.setValue("pricing_enabled", checked, {
       shouldValidate: false,
       shouldTouch: false,
       shouldDirty: false,
     });
     if (!checked) {
       setCalculatedPricing(null);
-      form.setValue('pricing_data', undefined, {
+      form.setValue("pricing_data", undefined, {
         shouldValidate: false,
         shouldTouch: false,
         shouldDirty: false,
@@ -371,7 +382,7 @@ export function PricingSection({
 
   // Helper function to check if calculatedPricing is a valid object with data
   const isValidPricingData = (pricing: any): boolean => {
-    if (!pricing || typeof pricing !== 'object') return false;
+    if (!pricing || typeof pricing !== "object") return false;
 
     // Check if it's an empty object
     if (Object.keys(pricing).length === 0) return false;
@@ -397,8 +408,8 @@ export function PricingSection({
           <h2 className="text-2xl font-semibold mb-2">Pricing Calculation</h2>
           <p className="text-muted-foreground">
             {hasPricingData
-              ? 'Review labor + margin modeling for this client-ready output.'
-              : 'Complete scope & frequency to run labor + margin modeling.'}
+              ? "Review labor + margin modeling for this client-ready output."
+              : "Complete scope & frequency to run labor + margin modeling."}
           </p>
         </div>
         <div className="flex items-center sm:w-auto w-full justify-end space-x-2">
@@ -495,7 +506,7 @@ export function PricingSection({
                         </span>
                         <span className="font-medium">
                           {formatCurrency(
-                            calculatedPricing.assumptions.labor_rate
+                            calculatedPricing.assumptions.labor_rate,
                           )}
                           /h
                         </span>
@@ -536,7 +547,7 @@ export function PricingSection({
                       Estimated Price Range:
                     </span>
                     <span className="text-2xl font-bold text-primary">
-                      {formatCurrency(calculatedPricing.price_range.low)} -{' '}
+                      {formatCurrency(calculatedPricing.price_range.low)} -{" "}
                       {formatCurrency(calculatedPricing.price_range.high)}
                     </span>
                   </div>
@@ -555,7 +566,7 @@ export function PricingSection({
                   </Button>
                 </div>
               )}
-          </CardContent>
+            </CardContent>
           </Card>
           <Card>
             <CardHeader>
@@ -567,7 +578,9 @@ export function PricingSection({
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center p-4 bg-primary/5 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold">Monthly Total (Base + Add-ons)</span>
+                  <span className="text-lg font-semibold">
+                    Monthly Total (Base + Add-ons)
+                  </span>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -575,27 +588,34 @@ export function PricingSection({
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
                         <p>
-                          This is the estimated monthly price including base service and monthly add-ons. 
-                          {calculatedPricing?.price_range?.low && calculatedPricing?.price_range?.high && 
-                            ` The base price is calculated as the midpoint of the estimated range (${formatCurrency(calculatedPricing.price_range.low)} - ${formatCurrency(calculatedPricing.price_range.high)}).`
-                          }
+                          This is the estimated monthly price including base
+                          service and monthly add-ons.
+                          {calculatedPricing?.price_range?.low &&
+                            calculatedPricing?.price_range?.high &&
+                            ` The base price is calculated as the midpoint of the estimated range (${formatCurrency(calculatedPricing.price_range.low)} - ${formatCurrency(calculatedPricing.price_range.high)}).`}
                         </p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <span className="text-2xl font-bold text-primary">{formatCurrency(basePrice + monthlyAddonsTotal)}</span>
+                <span className="text-2xl font-bold text-primary">
+                  {formatCurrency(basePrice + monthlyAddonsTotal)}
+                </span>
               </div>
-              
+
               {monthlyAddonsTotal > 0 && (
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <div className="flex justify-between">
                     <span>Base Service (Monthly)</span>
-                    <span className="font-medium">{formatCurrency(basePrice)}</span>
+                    <span className="font-medium">
+                      {formatCurrency(basePrice)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Monthly Add-ons</span>
-                    <span className="font-medium">{formatCurrency(monthlyAddonsTotal)}</span>
+                    <span className="font-medium">
+                      {formatCurrency(monthlyAddonsTotal)}
+                    </span>
                   </div>
                   <Separator />
                 </div>
@@ -608,7 +628,9 @@ export function PricingSection({
                     {oneTimeAddons.map((a: any) => (
                       <div key={a.id} className="flex justify-between text-sm">
                         <span>{a.label}</span>
-                        <span className="font-medium">{formatCurrency(a.subtotal)}</span>
+                        <span className="font-medium">
+                          {formatCurrency(a.subtotal)}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -622,10 +644,10 @@ export function PricingSection({
         <AIContentGenerator
           form={form.getValues()}
           selectedAddons={sourceAddons as any[]}
-          generatedContent={form.watch('generated_content') || ''}
+          generatedContent={form.watch("generated_content") || ""}
           onContentGenerated={(content) => {
             // Fix: Prevent validation triggers when setting generated content
-            form.setValue('generated_content', content, {
+            form.setValue("generated_content", content, {
               shouldValidate: false,
               shouldTouch: false,
               shouldDirty: false,
