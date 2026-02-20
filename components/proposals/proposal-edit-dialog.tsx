@@ -82,6 +82,7 @@ export function ProposalEditDialog({
         facility_size: 0,
         service_frequency: 'one-time',
         regional_location: '',
+        city: '',
       },
       service_specific_data: {},
       pricing_enabled: false,
@@ -158,6 +159,7 @@ export function ProposalEditDialog({
               | '5x-week'
               | 'daily') || 'one-time',
           regional_location: proposal.regional_location || '',
+          city: proposal.city || '',
         },
         service_specific_data:
           (proposal.service_specific_data as Record<string, any>) || {},
@@ -269,6 +271,7 @@ export function ProposalEditDialog({
         service_location: validatedData.global_inputs?.service_location,
         facility_size: validatedData.global_inputs?.facility_size,
         service_frequency: validatedData.global_inputs?.service_frequency,
+        city: validatedData.global_inputs?.city,
         global_inputs: validatedData.global_inputs,
         service_specific_data: validatedData.service_specific_data,
         pricing_enabled: validatedData.pricing_enabled,

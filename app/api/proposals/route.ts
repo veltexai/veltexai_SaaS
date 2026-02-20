@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
       facility_size: validatedData.global_inputs.facility_size,
       service_frequency: validatedData.global_inputs.service_frequency,
       regional_location: validatedData.global_inputs.regional_location,
+      city: validatedData.global_inputs.city,
       // Keep nested data as JSON
       global_inputs: validatedData.global_inputs,
       service_specific_data: validatedData.service_specific_data,

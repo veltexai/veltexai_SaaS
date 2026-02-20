@@ -99,6 +99,7 @@ export const globalInputsSchema = z.object({
   service_frequency: serviceFrequencySchema,
   // Enhanced fields
   regional_location: z.string().optional(),
+  city: z.string().optional(),
 });
 
 // Service-specific schemas

@@ -112,6 +112,7 @@ export interface Database {
           service_scope: Json;
           special_requirements: Json;
           regional_location: string | null;
+          city: string | null;
           property_type: string | null;
           pricing_breakdown: Json;
           // AI and tracking fields
@@ -167,6 +168,7 @@ export interface Database {
           service_scope?: Json;
           special_requirements?: Json;
           regional_location?: string | null;
+          city?: string | null;
           property_type?: string | null;
           pricing_breakdown?: Json;
           // AI and tracking fields
@@ -222,6 +224,7 @@ export interface Database {
           service_scope?: Json;
           special_requirements?: Json;
           regional_location?: string | null;
+          city?: string | null;
           property_type?: string | null;
           pricing_breakdown?: Json;
           // AI and tracking fields

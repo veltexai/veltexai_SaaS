@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
       client_company,
       contact_phone,
       service_location,
+      city,
       title,
       service_type,
       service_frequency,
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
       // Template data
       template_id,
     } = body;
-    console.log("🚀 ~ POST ~ service_frequency:", service_frequency);
+    console.log("🚀 ~ POST ~ service_frequency:", body);
 
     // Validate required fields
     if (!service_type || !client_name) {
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
       serviceLocation: service_location,
       facilitySize: facility_size,
       serviceFrequency: service_frequency,
+      city: city,
     };
 
     // Get service type label
@@ -650,14 +652,14 @@ Include the fenced JSON blocks exactly as shown; do not alter their content or f
 We specialize in supporting education, retail, office, and healthcare facilities with structured service programs designed for operational consistency. Our approach blends trained teams, **reliable scheduling**, and **quality assurance** aligned with your operating hours and compliance standards.
 
 - 10 years in business
-- ${globalInputs.serviceLocation || "Regional"} service area
+- ${city || globalInputs.serviceLocation || "Regional"} service area
 - Education, offices, retail & healthcare
 - 100% Satisfaction
 
 ## Our Commitment
 We are committed to delivering **consistent quality**, **responsive communication**, and a **safe**, **healthy environment**. Every service plan includes supervision, documented inspections, and continuous improvement measures to ensure your facility looks its best.
 
-- At **${client_company || "Veltex Services"}**, we are committed to delivering consistent, measurable service quality through structured supervision, documented inspections, and continuous performance improvement.
+- At **${profile.company_name || "Our Company"}**, we are committed to delivering consistent, measurable service quality through structured supervision, documented inspections, and continuous performance improvement.
 - Our teams follow clearly defined Standard Operating Procedures (SOPs) and safety protocols to ensure reliability across every visit.
 - We maintain responsive communication with designated client contacts, providing prompt resolution of service requests, quality concerns, or operational changes.
 - Through proactive oversight, secure access management, and compliance-driven practices, we create and maintain safe, healthy, and professional environments that support your organization’s daily operations.
@@ -770,6 +772,7 @@ Client: ${globalInputs.clientName || "Valued Client"}${
     }
 Phone: ${globalInputs.clientPhone || ""}
 Service Location: ${globalInputs.serviceLocation || ""}
+${globalInputs.city ? `City: ${globalInputs.city}` : ""}
 ${title ? `Project Title: ${title}` : ""}
 Facility Size: ${
       globalInputs.facilitySize ? `${globalInputs.facilitySize} sq ft` : ""

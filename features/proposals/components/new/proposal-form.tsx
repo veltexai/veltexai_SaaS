@@ -178,6 +178,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
         facility_size: 0,
         service_frequency: '1x-month' as const,
         regional_location: '',
+        city: '',
       },
       service_specific_data: {},
       pricing_enabled: false,

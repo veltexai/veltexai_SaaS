@@ -210,22 +210,41 @@ export function GlobalInputsSection() {
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="global_inputs.regional_location"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Regional Location</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="e.g., Seattle, WA"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="global_inputs.city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Seattle"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="global_inputs.regional_location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Regional Location</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Seattle, WA"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -100,6 +100,7 @@ export function AIContentGenerator({
           client_company: form.global_inputs.client_company,
           contact_phone: form.global_inputs.contact_phone,
           service_location: form.global_inputs.service_location,
+          city: form.global_inputs.city,
           title: form.title,
           service_type: form.service_type,
           service_frequency: form.global_inputs.service_frequency,
