@@ -148,7 +148,7 @@ export async function POST(
     // Prepare email data
     const companyName = companyProfile?.company_name || "Veltex AI";
     const senderName = profile?.full_name || user.email || "Team";
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URLL;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
     const logoUrl = `${baseUrl}/images/IMG_3800.png`;
 
     const emailData = {
