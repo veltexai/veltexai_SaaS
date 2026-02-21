@@ -118,6 +118,8 @@ export function ExecutivePremiumTemplate({
             date={proposal.created_at}
             preparedFor={preparedFor}
             address={proposal.service_location}
+            serviceLocation={proposal.regional_location ?? ""}
+            city={proposal.city ?? ""}
             textColor="text-[var(--color-primary)]"
             colorBorder="from-[var(--color-primary)] to-[var(--color-primary)]"
             gap="gap-2"

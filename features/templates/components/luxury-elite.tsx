@@ -119,6 +119,8 @@ export function LuxuryEliteTemplate({
             date={proposal.created_at}
             preparedFor={preparedFor}
             address={proposal.service_location}
+            serviceLocation={proposal.regional_location ?? ""}
+            city={proposal.city ?? ""}
             textColor="text-white"
             colorBorder="bg-white"
             gap="gap-0"

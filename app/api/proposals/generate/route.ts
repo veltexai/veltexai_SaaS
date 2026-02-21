@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
       client_company,
       contact_phone,
       service_location,
+      regional_location,
       city,
       title,
       service_type,
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
       facilitySize: facility_size,
       serviceFrequency: service_frequency,
       city: city,
+      regionalLocation: regional_location,
     };
 
     // Get service type label
@@ -652,7 +654,7 @@ Include the fenced JSON blocks exactly as shown; do not alter their content or f
 We specialize in supporting education, retail, office, and healthcare facilities with structured service programs designed for operational consistency. Our approach blends trained teams, **reliable scheduling**, and **quality assurance** aligned with your operating hours and compliance standards.
 
 - 10 years in business
-- ${`${city}, ${globalInputs.serviceLocation}` || "Service Location To Be Confirmed"}
+- ${`${city}, ${globalInputs.regionalLocation ?? ""}, ${globalInputs.serviceLocation ?? ""}` || "Service Location To Be Confirmed"}
 - Education, offices, retail & healthcare
 - 100% Satisfaction
 

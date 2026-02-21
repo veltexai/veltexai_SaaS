@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getUser } from '@/lib/auth/auth-helpers';
-import { createClient } from '@/lib/supabase/server';
-import { EmailService } from '@/lib/email/service';
-import { generateProposalPDFWithPlaywright } from '@/lib/pdf/playwright-generator';
-import { Database } from '@/types/database';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { getUser } from "@/lib/auth/auth-helpers";
+import { createClient } from "@/lib/supabase/server";
+import { EmailService } from "@/lib/email/service";
+import { generateProposalPDFWithPlaywright } from "@/lib/pdf/playwright-generator";
+import { Database } from "@/types/database";
+import { z } from "zod";
 
 export const maxDuration = 60; // Allow up to 60 seconds for PDF generation
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
 const sendProposalSchema = z.object({
-  delivery_method: z.enum(['pdf_only', 'online_only', 'both']),
+  delivery_method: z.enum(["pdf_only", "online_only", "both"]),
   recipient_email: z.string().email(),
   cc_emails: z.array(z.string().email()).optional(),
   subject: z.string().min(1),
@@ -23,7 +23,7 @@ const sendProposalSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
 
@@ -33,11 +33,12 @@ export async function POST(
     if (!user) {
       return NextResponse.json(
         {
-          error: 'Authentication required',
-          code: 'UNAUTHORIZED',
-          message: 'Please sign in to send proposals. Your session may have expired.',
+          error: "Authentication required",
+          code: "UNAUTHORIZED",
+          message:
+            "Please sign in to send proposals. Your session may have expired.",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -45,20 +46,21 @@ export async function POST(
 
     // Get the proposal
     const { data: proposal, error: proposalError } = await supabase
-      .from('proposals')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', user.id)
+      .from("proposals")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", user.id)
       .single();
 
     if (proposalError || !proposal) {
       return NextResponse.json(
         {
-          error: 'Proposal not found',
-          code: 'PROPOSAL_NOT_FOUND',
-          message: 'The proposal could not be found. It may have been deleted or you may not have permission to access it.',
+          error: "Proposal not found",
+          code: "PROPOSAL_NOT_FOUND",
+          message:
+            "The proposal could not be found. It may have been deleted or you may not have permission to access it.",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -68,16 +70,16 @@ export async function POST(
 
     // Get user profile for sender info
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
       .single();
 
     // Get company profile for enhanced company data
     const { data: companyProfile } = await supabase
-      .from('company_profiles')
-      .select('*')
-      .eq('user_id', user.id)
+      .from("company_profiles")
+      .select("*")
+      .eq("user_id", user.id)
       .single();
 
     // Generate tracking ID
@@ -90,37 +92,39 @@ export async function POST(
 
     // Generate PDF if needed
     if (
-      validatedData.delivery_method === 'pdf_only' ||
-      validatedData.delivery_method === 'both'
+      validatedData.delivery_method === "pdf_only" ||
+      validatedData.delivery_method === "both"
     ) {
       try {
         pdfBuffer = await generateProposalPDFWithPlaywright(proposal.id);
       } catch (pdfError) {
-        console.error('Error generating PDF:', pdfError);
-        const pdfErrorMessage = pdfError instanceof Error ? pdfError.message : 'Unknown error';
+        console.error("Error generating PDF:", pdfError);
+        const pdfErrorMessage =
+          pdfError instanceof Error ? pdfError.message : "Unknown error";
         return NextResponse.json(
           {
-            error: 'PDF generation failed',
-            code: 'PDF_GENERATION_ERROR',
-            message: 'We encountered an issue while generating the PDF. This could be due to missing fonts, images, or content formatting issues.',
+            error: "PDF generation failed",
+            code: "PDF_GENERATION_ERROR",
+            message:
+              "We encountered an issue while generating the PDF. This could be due to missing fonts, images, or content formatting issues.",
             details: pdfErrorMessage,
           },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
 
     // Generate view URL if needed
     if (
-      validatedData.delivery_method === 'online_only' ||
-      validatedData.delivery_method === 'both'
+      validatedData.delivery_method === "online_only" ||
+      validatedData.delivery_method === "both"
     ) {
-      proposalViewUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/proposals/view/${proposal.id}?track=${trackingId}`;
+      proposalViewUrl = `${process.env.NEXT_PUBLIC_APP_URLL}/proposals/view/${proposal.id}?track=${trackingId}`;
     }
 
     // Create proposal tracking record
     const { data: trackingRecord, error: trackingError } = await supabase
-      .from('proposal_tracking')
+      .from("proposal_tracking")
       .insert({
         proposal_id: proposal.id,
         tracking_id: trackingId,
@@ -137,23 +141,23 @@ export async function POST(
       .single();
 
     if (trackingError) {
-      console.error('Error creating tracking record:', trackingError);
+      console.error("Error creating tracking record:", trackingError);
       // Continue without tracking if this fails
     }
 
     // Prepare email data
-    const companyName = companyProfile?.company_name || 'Veltex AI';
-    const senderName = profile?.full_name || user.email || 'Team';
-    const baseUrl = "https://veltexai.com";
-    const logoUrl = companyProfile?.logo_url || `${baseUrl}/images/IMG_3800.png`;
+    const companyName = companyProfile?.company_name || "Veltex AI";
+    const senderName = profile?.full_name || user.email || "Team";
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URLL;
+    const logoUrl = `${baseUrl}/images/IMG_3800.png`;
 
     const emailData = {
-      clientName: proposal.client_name || 'Valued Client',
+      clientName: proposal.client_name || "Valued Client",
       clientEmail: validatedData.recipient_email,
       ccEmails: validatedData.cc_emails || [],
       subject: validatedData.subject,
       message: validatedData.message,
-      proposalTitle: proposal.title || 'Service Proposal',
+      proposalTitle: proposal.title || "Service Proposal",
       companyName,
       logoUrl,
       senderName,
@@ -161,44 +165,45 @@ export async function POST(
       hasAttachment: !!pdfBuffer,
       trackingId,
       sendCopyToSelf: validatedData.send_copy_to_self,
-      senderEmail: user.email || 'noreply@veltexservices.com',
+      senderEmail: user.email || "noreply@veltexservices.com",
     };
 
     // Send the email
     const emailSent = await EmailService.sendEnhancedProposalEmail(
       emailData,
-      pdfBuffer
+      pdfBuffer,
     );
 
     if (!emailSent) {
       return NextResponse.json(
         {
-          error: 'Email delivery failed',
-          code: 'EMAIL_SEND_ERROR',
-          message: 'The PDF was generated successfully, but we could not send the email. Please check the recipient email address and try again.',
+          error: "Email delivery failed",
+          code: "EMAIL_SEND_ERROR",
+          message:
+            "The PDF was generated successfully, but we could not send the email. Please check the recipient email address and try again.",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     // Update proposal status to 'sent'
     const { error: updateError } = await supabase
-      .from('proposals')
+      .from("proposals")
       .update({
-        status: 'sent',
+        status: "sent",
         updated_at: new Date().toISOString(),
       })
-      .eq('id', proposal.id);
+      .eq("id", proposal.id);
 
     if (updateError) {
-      console.error('Error updating proposal status:', updateError);
+      console.error("Error updating proposal status:", updateError);
       // Don't fail the request since email was sent successfully
     }
 
     // Log the send event
-    await supabase.from('proposal_events').insert({
+    await supabase.from("proposal_events").insert({
       proposal_id: proposal.id,
-      event_type: 'sent',
+      event_type: "sent",
       event_data: {
         delivery_method: validatedData.delivery_method,
         recipient_email: validatedData.recipient_email,
@@ -211,7 +216,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: 'Proposal sent successfully',
+      message: "Proposal sent successfully",
       trackingId,
       deliveryMethod: validatedData.delivery_method,
       emailSent: true,
@@ -219,30 +224,35 @@ export async function POST(
       viewUrl: proposalViewUrl,
     });
   } catch (error) {
-    console.error('Error sending proposal:', error);
+    console.error("Error sending proposal:", error);
 
     if (error instanceof z.ZodError) {
-      const fieldErrors = error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+      const fieldErrors = error.errors
+        .map((e) => `${e.path.join(".")}: ${e.message}`)
+        .join(", ");
       return NextResponse.json(
         {
-          error: 'Validation error',
-          code: 'VALIDATION_ERROR',
+          error: "Validation error",
+          code: "VALIDATION_ERROR",
           message: `Please check your input: ${fieldErrors}`,
           details: error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
       {
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-        message: 'An unexpected error occurred while processing your request. Please try again later.',
-        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+        error: "Internal server error",
+        code: "INTERNAL_ERROR",
+        message:
+          "An unexpected error occurred while processing your request. Please try again later.",
+        details:
+          process.env.NODE_ENV === "development" ? errorMessage : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

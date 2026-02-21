@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import {
   acceptanceVariantMap,
   type TemplateProps,
   type TemplateType,
-} from '@/features/templates/types/templates';
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import PoweredBy from './shared/powered-by';
-import VerticalBar from './shared/vertical-bar';
-import HorizontalBar from './shared/horizontal-bar';
-import HeaderTemplate from './shared/header-template';
-import NavitationNumber from './shared/navigation';
-import HeaderLogo from './shared/header-logo';
-import { montserrat } from '@/lib/fonts';
+} from "@/features/templates/types/templates";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import PoweredBy from "./shared/powered-by";
+import VerticalBar from "./shared/vertical-bar";
+import HorizontalBar from "./shared/horizontal-bar";
+import HeaderTemplate from "./shared/header-template";
+import NavitationNumber from "./shared/navigation";
+import HeaderLogo from "./shared/header-logo";
+import { montserrat } from "@/lib/fonts";
 
 export function BasicTemplate({
   proposal,
@@ -26,22 +26,22 @@ export function BasicTemplate({
   extrasRows,
 }: TemplateProps) {
   const logoUrl = branding?.logo_url ?? null;
-  const companyName = branding?.name ?? 'Company';
+  const companyName = branding?.name ?? "Company";
   const preparedFor =
-    proposal.client_company || proposal.client_name || 'Client';
+    proposal.client_company || proposal.client_name || "Client";
 
   const acceptanceVariant =
     acceptanceVariantMap[(proposal as any).templateType as TemplateType] ??
-    'minimal';
+    "minimal";
 
   type SplitResponse = {
     sections: { id: string; title?: string | null; content: string }[];
     pages: string[];
     templateType:
-      | 'basic'
-      | 'executive_premium'
-      | 'modern_corporate'
-      | 'luxury_elite';
+      | "basic"
+      | "executive_premium"
+      | "modern_corporate"
+      | "luxury_elite";
     error?: string;
   };
 
@@ -54,7 +54,7 @@ export function BasicTemplate({
     async function loadSplit() {
       if (!proposal?.id) return;
       if (pages && pages.length) {
-        setSplit({ sections: [], pages, templateType: 'basic' });
+        setSplit({ sections: [], pages, templateType: "basic" });
         return;
       }
       if (print) return;
@@ -62,13 +62,13 @@ export function BasicTemplate({
       setSplitErr(null);
       try {
         const res = await fetch(`/api/proposals/${proposal.id}/split`, {
-          cache: 'force-cache',
+          cache: "force-cache",
         });
         const data: SplitResponse = await res.json();
-        if (!res.ok) throw new Error(data?.error || 'Failed to split');
+        if (!res.ok) throw new Error(data?.error || "Failed to split");
         if (mounted) setSplit(data);
       } catch (e: any) {
-        if (mounted) setSplitErr(e?.message ?? 'Failed to load pages');
+        if (mounted) setSplitErr(e?.message ?? "Failed to load pages");
       } finally {
         if (mounted) setLoadingSplit(false);
       }
@@ -81,7 +81,10 @@ export function BasicTemplate({
 
   return (
     <section className="space-y-4 sm:space-y-6">
-      <div id="page-one" className="relative aspect-[1/1.4] bg-white overflow-hidden">
+      <div
+        id="page-one"
+        className="relative aspect-[1/1.4] bg-white overflow-hidden"
+      >
         <VerticalBar />
         <HorizontalBar />
         <Image
@@ -105,6 +108,8 @@ export function BasicTemplate({
             date={proposal.created_at}
             preparedFor={preparedFor}
             address={proposal.service_location}
+            serviceLocation={proposal.regional_location ?? ""}
+            city={proposal.city ?? ""}
             textColor="text-white"
           />
         </div>
@@ -124,7 +129,9 @@ export function BasicTemplate({
       {splitErr && !print && (
         <Card className="rounded-none">
           <CardContent className="p-3 sm:p-4 md:p-6">
-            <div className="text-xs sm:text-sm text-red-600 break-words">{splitErr}</div>
+            <div className="text-xs sm:text-sm text-red-600 break-words">
+              {splitErr}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -173,7 +180,9 @@ export function BasicTemplate({
       {!print && !split?.pages?.length && (
         <Card>
           <CardHeader className="p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-base sm:text-lg md:text-xl">Proposal Content</CardTitle>
+            <CardTitle className="text-base sm:text-lg md:text-xl">
+              Proposal Content
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
             {proposal.generated_content ? (

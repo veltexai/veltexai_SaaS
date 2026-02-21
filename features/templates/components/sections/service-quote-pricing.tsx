@@ -83,8 +83,6 @@ export default function ServiceQuotePricing({
     return parts.length ? parts : text;
   };
 
-  console.log("🚀 ~ ServiceQuotePricing ~ data:", data);
-
   return (
     <div>
       <ProposalTitle templateType={templateType} title={title} />

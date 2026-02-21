@@ -32,6 +32,7 @@ import {
   splitScopeRows,
   type ScopeRow,
 } from "../utils/split-scope-rows";
+import { profile } from "console";
 
 export function ModernCorporateTemplate({
   proposal,
@@ -142,6 +143,8 @@ export function ModernCorporateTemplate({
             date={proposal.created_at}
             preparedFor={preparedFor}
             address={proposal.service_location}
+            serviceLocation={proposal.regional_location ?? ""}
+            city={proposal.city ?? ""}
             textColor="text-[#383838]"
             colorBorder="bg-[#383838]"
             gap="gap-2"
