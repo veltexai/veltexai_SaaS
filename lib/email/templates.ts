@@ -107,7 +107,7 @@ export class EmailTemplates {
   }
 
   private static getWelcomeTemplate(
-    data: SubscriptionEmailData
+    data: SubscriptionEmailData,
   ): EmailTemplate {
     const subject = `Welcome to ${data.planName} Plan - Veltex AI`;
     const text = `Hi ${data.userName}!\n\nWelcome to Veltex AI! Your ${data.planName} subscription is now active.\n\nThank you for choosing us!\n\nBest regards,\nThe Veltex AI Team`;
@@ -153,7 +153,7 @@ export class EmailTemplates {
   }
 
   private static getUpgradeTemplate(
-    data: SubscriptionEmailData
+    data: SubscriptionEmailData,
   ): EmailTemplate {
     const subject = `Plan Upgraded to ${data.planName} - Veltex AI`;
     const text = `Hi ${data.userName}!\n\nGreat news! Your plan has been upgraded from ${data.previousPlan} to ${data.planName}.\n\nYou now have access to additional features and benefits.\n\nBest regards,\nThe Veltex AI Team`;
@@ -203,7 +203,7 @@ export class EmailTemplates {
   }
 
   private static getDowngradeTemplate(
-    data: SubscriptionEmailData
+    data: SubscriptionEmailData,
   ): EmailTemplate {
     const subject = `Plan Changed to ${data.planName} - Veltex AI`;
     const text = `Hi ${data.userName}!\n\nYour plan has been changed from ${data.previousPlan} to ${data.planName}.\n\nIf you have any questions, please contact our support team.\n\nBest regards,\nThe Veltex AI Team`;
@@ -297,13 +297,13 @@ export class EmailTemplates {
   }
 
   static getPaymentFailureEmail(data: PaymentFailureEmailData): EmailTemplate {
-    const subject = 'Payment Failed - Action Required - Veltex AI';
+    const subject = "Payment Failed - Action Required - Veltex AI";
     const text = `Hi ${
       data.userName
     }!\n\nWe were unable to process your payment of $${data.amount.toFixed(
-      2
+      2,
     )}.\n\nPlease update your payment method to continue your subscription.\n\n${
-      data.invoiceUrl ? `View invoice: ${data.invoiceUrl}\n\n` : ''
+      data.invoiceUrl ? `View invoice: ${data.invoiceUrl}\n\n` : ""
     }Best regards,\nThe Veltex AI Team`;
 
     const html = `
@@ -355,11 +355,11 @@ export class EmailTemplates {
   }
 
   static getCancellationEmail(data: CancellationEmailData): EmailTemplate {
-    const subject = 'Subscription Canceled - Veltex AI';
-    const endDateStr = data.endDate.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    const subject = "Subscription Canceled - Veltex AI";
+    const endDateStr = data.endDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
     const text = `Hi ${data.userName}!\n\nYour subscription has been canceled as requested.\n\nYou will continue to have access to your account until ${endDateStr}.\n\nWe're sorry to see you go! If you change your mind, you can reactivate your subscription anytime.\n\nBest regards,\nThe Veltex AI Team`;
 
@@ -408,19 +408,23 @@ export class EmailTemplates {
     return { subject, html, text };
   }
 
-  static getEnhancedCancellationEmail(data: EnhancedCancellationEmailData): EmailTemplate {
+  static getEnhancedCancellationEmail(
+    data: EnhancedCancellationEmailData,
+  ): EmailTemplate {
     const subject = `${data.planName} Subscription Canceled - Veltex AI`;
-    const endDateStr = data.endDate.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    const endDateStr = data.endDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
 
-    const reasonText = data.cancellationReason 
-      ? (data.cancellationReason === 'other' && data.customReason 
-          ? data.customReason 
-          : data.cancellationReason.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))
-      : 'Not specified';
+    const reasonText = data.cancellationReason
+      ? data.cancellationReason === "other" && data.customReason
+        ? data.customReason
+        : data.cancellationReason
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase())
+      : "Not specified";
 
     const text = `Hi ${data.userName}!\n\nYour ${data.planName} subscription has been canceled as requested.\n\nCancellation reason: ${reasonText}\n\nYou will continue to have access to your account until ${endDateStr}.\n\nWe're sorry to see you go! If you change your mind, you can reactivate your subscription anytime.\n\nReactivate: ${data.reactivationUrl}\n\nBest regards,\nThe Veltex AI Team`;
 
@@ -451,11 +455,15 @@ export class EmailTemplates {
             <h2>Hi ${data.userName}!</h2>
             <p>Your <strong>${data.planName}</strong> subscription has been canceled as requested.</p>
             
-            ${data.cancellationReason ? `
+            ${
+              data.cancellationReason
+                ? `
             <div class="reason-box">
               <strong>Cancellation reason:</strong> ${reasonText}
             </div>
-            ` : ''}
+            `
+                : ""
+            }
             
             <div class="info-box">
               <strong>Your access continues until:</strong>
@@ -486,10 +494,10 @@ export class EmailTemplates {
 
   static getReactivationEmail(data: ReactivationEmailData): EmailTemplate {
     const subject = `Welcome Back! ${data.planName} Subscription Reactivated - Veltex AI`;
-    const nextBillingStr = data.nextBillingDate.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    const nextBillingStr = data.nextBillingDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
 
     const text = `Hi ${data.userName}!\n\nGreat news! Your ${data.planName} subscription has been successfully reactivated.\n\nYour next billing date: ${nextBillingStr}\n\nYou now have full access to all features again.\n\nWelcome back!\n\nBest regards,\nThe Veltex AI Team`;
@@ -544,10 +552,10 @@ export class EmailTemplates {
 
   static getGracePeriodEmail(data: GracePeriodEmailData): EmailTemplate {
     const subject = `${data.daysRemaining} Days Left - Reactivate Your ${data.planName} Subscription`;
-    const expirationStr = data.expirationDate.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    const expirationStr = data.expirationDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
 
     const text = `Hi ${data.userName}!\n\nYour ${data.planName} subscription expires in ${data.daysRemaining} days (${expirationStr}).\n\nDon't lose access to your proposals and data!\n\nReactivate now: ${data.reactivationUrl}\n\nBest regards,\nThe Veltex AI Team`;
@@ -642,8 +650,8 @@ export class EmailTemplates {
             <div class="warning-box">
               <strong>Your free trial ends in:</strong>
               <div class="days-badge">${data.daysRemaining} ${
-      data.daysRemaining === 1 ? 'Day' : 'Days'
-    }</div>
+                data.daysRemaining === 1 ? "Day" : "Days"
+              }</div>
             </div>
             <p>We hope you've enjoyed exploring Veltex AI during your trial period!</p>
             <p>To continue creating professional proposals and accessing all features without interruption, please choose a subscription plan that fits your needs.</p>
@@ -670,7 +678,7 @@ export class EmailTemplates {
 
   static getProposalEmail(data: ProposalEmailData): EmailTemplate {
     const subject = `Proposal: ${data.proposalTitle} - ${data.companyName}`;
-    const text = `Dear ${data.clientName},\n\nI hope this email finds you well.\n\nI'm pleased to share our proposal for "${data.proposalTitle}" with you. We've carefully reviewed your requirements and prepared a comprehensive solution tailored to your needs.\n\n${data.proposalViewUrl ? `You can view the full proposal online at: ${data.proposalViewUrl}` : 'Please find the proposal attached to this email.'}\n\nWe're excited about the opportunity to work with you and would be happy to discuss any questions you may have about our proposal.\n\nThank you for considering ${data.companyName} for your project. We look forward to hearing from you soon.\n\nBest regards,\n${data.senderName}\n${data.companyName}`;
+    const text = `Dear ${data.clientName},\n\nI hope this email finds you well.\n\nI'm pleased to share our proposal for "${data.proposalTitle}" with you. We've carefully reviewed your requirements and prepared a comprehensive solution tailored to your needs.\n\n${data.proposalViewUrl ? `You can view the full proposal online at: ${data.proposalViewUrl}` : "Please find the proposal attached to this email."}\n\nWe're excited about the opportunity to work with you and would be happy to discuss any questions you may have about our proposal.\n\nThank you for considering ${data.companyName} for your project. We look forward to hearing from you soon.\n\nBest regards,\n${data.senderName}\n${data.companyName}`;
 
     const html = `
       <!DOCTYPE html>
@@ -716,7 +724,9 @@ export class EmailTemplates {
               <h2>${data.proposalTitle}</h2>
             </div>
             
-            ${data.proposalViewUrl ? `
+            ${
+              data.proposalViewUrl
+                ? `
               <div class="cta-section">
                 <p><strong>View your proposal online:</strong></p>
                 <a href="${data.proposalViewUrl}" class="cta-button">View Proposal</a>
@@ -724,15 +734,21 @@ export class EmailTemplates {
                   Click the button above to access your personalized proposal portal
                 </p>
               </div>
-            ` : ''}
+            `
+                : ""
+            }
             
-            ${data.hasAttachment ? `
+            ${
+              data.hasAttachment
+                ? `
               <div class="attachment-notice">
                 <span class="icon">📎</span>
                 <strong>Proposal Document Attached</strong>
                 <p style="margin: 8px 0 0 0; font-size: 14px;">Please find the detailed proposal document attached to this email.</p>
               </div>
-            ` : ''}
+            `
+                : ""
+            }
             
             <p>We're excited about the opportunity to work with you and would be happy to discuss any questions you may have about our proposal. Our team is ready to provide any additional information or clarification you might need.</p>
             
@@ -756,12 +772,14 @@ export class EmailTemplates {
     return { subject, html, text };
   }
 
-  static getEnhancedProposalEmail(data: EnhancedProposalEmailData): EmailTemplate {
+  static getEnhancedProposalEmail(
+    data: EnhancedProposalEmailData,
+  ): EmailTemplate {
     const subject = data.subject;
-    const primaryColor = data.brandingEnabled && data.primaryColor ? data.primaryColor : '#f8fafc';
-    
-    
-    const text = `Dear ${data.clientName},\n\n${data.message}\n\n${data.proposalViewUrl ? `You can view the full proposal online at: ${data.proposalViewUrl}` : 'Please find the proposal attached to this email.'}\n\nBest regards,\n${data.senderName}\n${data.companyName}`;
+    const primaryColor =
+      data.brandingEnabled && data.primaryColor ? data.primaryColor : "#f8fafc";
+
+    const text = `Dear ${data.clientName},\n\n${data.message}\n\n${data.proposalViewUrl ? `You can view the full proposal online at: ${data.proposalViewUrl}` : "Please find the proposal attached to this email."}\n\nBest regards,\n${data.senderName}\n${data.companyName}`;
 
     const html = `
       <!DOCTYPE html>
@@ -775,7 +793,7 @@ export class EmailTemplates {
           .header { background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%); color: black; padding: 40px 30px; text-align: center; }
           .header h1 { margin: 0; font-size: 28px; font-weight: 300; }
           .header .company { font-size: 16px; opacity: 0.9; margin-top: 8px; }
-          .logo { max-height: 60px; margin-bottom: 20px; }
+          .logo { max-height: 60px; width: auto; height: auto; margin-bottom: 20px; display: inline-block; }
           .content { padding: 40px 30px; }
           .greeting { font-size: 18px; margin-bottom: 20px; color: ${primaryColor}; }
           .message { background: #f8fafc; padding: 25px; margin: 25px 0; border-radius: 8px; border-left: 4px solid ${primaryColor}; }
@@ -797,16 +815,20 @@ export class EmailTemplates {
       <body>
         <div class="container">
           <div class="header">
-            ${data.brandingEnabled && data.logoUrl ? `<img src="${data.logoUrl}" alt="${data.companyName}" class="logo" />` : ''}
-            <img src="${data.logoUrl}" alt="${data.companyName}" class="logo" />
+            <img src="${data.logoUrl}" alt="${data.companyName}" class="logo" style="max-height:60px;width:auto;height:auto;margin-bottom:20px;" />
             <h1>📋 ${data.proposalTitle}</h1>
           </div>
           <div class="content">
             <div class="message">
-              ${data.message.split('\n').map(line => `<p>${line}</p>`).join('')}
+              ${data.message
+                .split("\n")
+                .map((line) => `<p>${line}</p>`)
+                .join("")}
             </div>
             
-            ${data.proposalViewUrl ? `
+            ${
+              data.proposalViewUrl
+                ? `
               <div class="cta-section">
                 <p><strong>View your proposal online:</strong></p>
                 <a href="${data.proposalViewUrl}?tracking=${data.trackingId}" class="cta-button">View Proposal</a>
@@ -814,15 +836,21 @@ export class EmailTemplates {
                   Click the button above to access your personalized proposal portal
                 </p>
               </div>
-            ` : ''}
+            `
+                : ""
+            }
             
-            ${data.hasAttachment ? `
+            ${
+              data.hasAttachment
+                ? `
               <div class="attachment-notice">
                 <span class="icon">📎</span>
                 <strong>Proposal Document Attached</strong>
                 <p style="margin: 8px 0 0 0; font-size: 14px;">Please find the detailed proposal document attached to this email.</p>
               </div>
-            ` : ''}
+            `
+                : ""
+            }
           </div>
           <div class="footer">
             <div class="veltex-attribution">
