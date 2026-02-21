@@ -1,18 +1,18 @@
-import AboutOurCompany from './about-our-company';
+import AboutOurCompany from "./about-our-company";
 
-import OurCommitement from './our-commitement';
+import OurCommitement from "./our-commitement";
 
-import WhyChooseUs from './why-choose-us';
+import WhyChooseUs from "./why-choose-us";
 
-import ScopeOfService from './Scope-of-service';
+import ScopeOfService from "./Scope-of-service";
 
-import Addons from './addons';
+import Addons from "./addons";
 
-import ServiceQuotePricing from './service-quote-pricing';
+import ServiceQuotePricing from "./service-quote-pricing";
 
-import Notes from './notes';
+import Notes from "./notes";
 
-import TableOfContents from './table-of-contents';
+import { ProposalTableOfContents } from "../sections/table-of-contents";
 
 export {
   AboutOurCompany,
@@ -22,5 +22,5 @@ export {
   Addons,
   ServiceQuotePricing,
   Notes,
-  TableOfContents,
+  ProposalTableOfContents,
 };

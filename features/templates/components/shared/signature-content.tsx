@@ -30,4 +30,4 @@ const SignatureContent = ({ templateType }: { templateType: TemplateType }) => {
   );
 };
 
-export default SignatureContent;
+export { SignatureContent };

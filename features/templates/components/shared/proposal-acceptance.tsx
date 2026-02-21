@@ -55,7 +55,7 @@ const accentBarVariants = cva('h-1 w-16 rounded-full', {
   },
 });
 
-export default function ProposalAcceptance({
+export function ProposalAcceptance({
   template,
   clientName,
   companyName,

@@ -6,20 +6,22 @@ import type {
   TemplateType,
 } from "@/features/templates/types/templates";
 import Image from "next/image";
-import HeaderLogo from "./shared/header-logo";
-import HeaderTemplate from "./shared/header-template";
-import PoweredBy from "./shared/powered-by";
+import {
+  HeaderLogo,
+  HeaderTemplate,
+  PoweredBy,
+  VerticalBar,
+  HorizontalBar,
+  NavitationNumber,
+  SignatureSection,
+  SignatureContent,
+  TitleDescriptionSection,
+  ContentQualificationsSection,
+  ProposalTableOfContents,
+  ProposalTitle,
+  ThankYouPage,
+} from "./shared";
 import { dmSerifText, montserrat } from "@/lib/fonts";
-import ProposalTableOfContents from "./sections/table-of-contents";
-import ThankYouPage from "./shared/thank-you";
-import ProposalTitle from "./shared/proposal-title";
-import VerticalBar from "./shared/vertical-bar";
-import HorizontalBar from "./shared/horizontal-bar";
-import SignatureSection from "./shared/signature-section";
-import SignatureContent from "./shared/signature-content";
-import NavitationNumber from "./shared/navigation";
-import TitleDescriptionSection from "./shared/title-description-section";
-import ContentQualificationsSection from "./shared/content-qualifications-section";
 import { useSplitContent } from "../hooks/use-split-content";
 import {
   AboutOurCompany,
@@ -35,6 +37,7 @@ import {
   splitScopeRows,
   type ScopeRow,
 } from "../utils/split-scope-rows";
+import { getScopeRowChunks } from "../utils/paginate-scope-rows";
 
 export function ExecutivePremiumTemplate({
   proposal,
@@ -75,15 +78,11 @@ export function ExecutivePremiumTemplate({
         }
       : useSplitContent(proposal.id);
 
-  // Calculate scope row chunks for PDF pagination
-  // First page: ~8 rows (with title, description)
-  // Continuation pages: ~14 rows
-  const scopeRowChunks = useMemo(() => {
-    if (!scope?.content) return [];
-    const tableData = parseScopeTableData(scope.content);
-    if (!tableData) return [];
-    return splitScopeRows(tableData, 8, 14);
-  }, [scope?.content]);
+  // First page: ~12 rows (with title, description)
+  const scopeRowChunks = useMemo(
+    () => getScopeRowChunks(scope?.content, 12, 14),
+    [scope?.content],
+  );
 
   // Check if we need overflow pages for scope
   const hasAdditionalScopePages = scopeRowChunks.length > 1;

@@ -2,7 +2,7 @@ import { montserrat } from "@/lib/fonts";
 import { TemplateType } from "@/features/templates/types/templates";
 import Image from "next/image";
 import React from "react";
-import PoweredBy from "./powered-by";
+import { PoweredBy } from "./powered-by";
 
 const ContentQualificationsSection = ({
   templateType,
@@ -137,4 +137,4 @@ const ContentQualificationsSection = ({
   );
 };
 
-export default ContentQualificationsSection;
+export { ContentQualificationsSection };

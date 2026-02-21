@@ -3,7 +3,7 @@
 import { useUserBranding } from "@/hooks/use-user-branding";
 import React from "react";
 import { getIconForLabel } from "@/lib/icon-map";
-import ProposalAcceptance from "@/features/templates/components/shared/proposal-acceptance";
+import { ProposalAcceptance } from "@/features/templates/components/shared/proposal-acceptance";
 import { dmSerifText } from "@/lib/fonts";
 import {
   ShieldIcon,

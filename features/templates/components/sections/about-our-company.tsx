@@ -1,6 +1,6 @@
 import React from "react";
 import { TemplateType } from "@/features/templates/types/templates";
-import ProposalTitle from "../shared/proposal-title";
+import { ProposalTitle } from "../shared";
 import { parseInline } from "../../utils/parse-inline";
 import { LuxuryEliteBullets, StandardBullets } from "../index";
 

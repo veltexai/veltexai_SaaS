@@ -67,4 +67,4 @@ const ThankYouSection = ({
   );
 };
 
-export default ThankYouSection;
+export { ThankYouSection };

@@ -3,7 +3,7 @@ import { arvo, dmSerifText, montserrat } from "@/lib/fonts";
 import { formatDateToMMDDYY } from "@/lib/utils";
 import { TemplateType } from "@/features/templates/types/templates";
 
-const HeaderTemplate = ({
+export const HeaderTemplate = ({
   title,
   preparedFor,
   date,
@@ -129,5 +129,3 @@ const HeaderTemplate = ({
     </>
   );
 };
-
-export default HeaderTemplate;

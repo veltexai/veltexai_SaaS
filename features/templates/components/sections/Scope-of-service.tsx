@@ -1,10 +1,10 @@
-import { TemplateType } from '@/features/templates/types/templates';
-import Image from 'next/image';
-import { cn, formatCurrencySafe } from '@/lib/utils';
-import React from 'react';
-import ProposalTitle from '../shared/proposal-title';
-import { arvo } from '@/lib/fonts';
-import type { ScopeRow } from '@/features/templates/utils/split-scope-rows';
+import { TemplateType } from "@/features/templates/types/templates";
+import Image from "next/image";
+import { cn, formatCurrencySafe } from "@/lib/utils";
+import React from "react";
+import { ProposalTitle } from "../shared";
+import { arvo } from "@/lib/fonts";
+import type { ScopeRow } from "@/features/templates/utils/split-scope-rows";
 
 interface ScopeOfServiceProps {
   title: string;
@@ -22,19 +22,19 @@ export default function ScopeOfService({
   title,
   content,
   templateType,
-  className = '',
-  description = '',
+  className = "",
+  description = "",
   overrideRows,
   isContinuation = false,
 }: ScopeOfServiceProps) {
   const lines = content
-    .split('\n')
+    .split("\n")
     .map((l) => l.trim())
     .filter(Boolean);
   const isBullet = (l: string) => /^[-*]\s+/.test(l);
   const isHeader = (l: string) => /^#{1,3}\s+/.test(l);
   const isFenceOpen = (l: string) =>
-    l.startsWith('```') && l.toLowerCase().includes('veliz_scope_table');
+    l.startsWith("```") && l.toLowerCase().includes("veliz_scope_table");
   const fenceRanges: Array<[number, number]> = [];
   {
     let inFence = false;
@@ -46,7 +46,7 @@ export default function ScopeOfService({
         start = i;
         continue;
       }
-      if (inFence && ln.startsWith('```')) {
+      if (inFence && ln.startsWith("```")) {
         fenceRanges.push([start, i]);
         inFence = false;
         start = -1;
@@ -61,7 +61,7 @@ export default function ScopeOfService({
       !isBullet(l) &&
       !isHeader(l) &&
       !isFenceOpen(l) &&
-      !isInsideFence(idx)
+      !isInsideFence(idx),
   );
 
   const parseInline = (text: string) => {
@@ -74,7 +74,7 @@ export default function ScopeOfService({
       parts.push(
         <strong key={`b-${m.index}`} className="font-semibold text-gray-900">
           {m[2]}
-        </strong>
+        </strong>,
       );
       idx = m.index + m[0].length;
     }
@@ -92,11 +92,17 @@ export default function ScopeOfService({
     }>;
   };
 
-  const ScopeTable = ({ data, templateType }: { data: ScopeTableData, templateType: TemplateType }) => {
+  const ScopeTable = ({
+    data,
+    templateType,
+  }: {
+    data: ScopeTableData;
+    templateType: TemplateType;
+  }) => {
     // Use overrideRows if provided (for PDF pagination), otherwise use data.rows
     const rows = overrideRows ?? data?.rows ?? [];
     if (!rows.length) return null;
-    const premium = templateType !== 'basic';
+    const premium = templateType !== "basic";
     return (
       <div className="mb-6">
         <div className="text-white">
@@ -105,9 +111,9 @@ export default function ScopeOfService({
               <div
                 className={`text-center grid grid-cols-2 text-[var(--color-primary)] gap-4 sm:px-5 px-2 mb-2 sm:text-base text-2xs
                 ${
-                  templateType === 'luxury_elite'
+                  templateType === "luxury_elite"
                     ? `${arvo.className} font-normal`
-                    : 'font-semibold'
+                    : "font-semibold"
                 }`}
               >
                 <div className="">Area serviced</div>
@@ -119,23 +125,23 @@ export default function ScopeOfService({
                   key={`scope-row-${i}`}
                   className={`rounded-3xl px-5 sm:py-3 py-1 mb-2 
                     ${
-                      templateType === 'modern_corporate'
+                      templateType === "modern_corporate"
                         ? i % 2 === 0
-                          ? 'bg-[var(--color-primary)]/8 text-[#383838] shadow-2xs'
-                          : 'bg-[var(--color-primary)]/3 text-[#383838] shadow-2xs'
-                        : templateType === 'luxury_elite'
-                        ? i % 2 === 0
-                          ? `bg-[var(--color-primary)]  text-white !rounded-none ${arvo.className}`
-                          : `bg-[var(--color-primary)]/70 text-white !rounded-none ${arvo.className}`
-                        : 'bg-[var(--color-primary)] text-white'
+                          ? "bg-[var(--color-primary)]/8 text-[#383838] shadow-2xs"
+                          : "bg-[var(--color-primary)]/3 text-[#383838] shadow-2xs"
+                        : templateType === "luxury_elite"
+                          ? i % 2 === 0
+                            ? `bg-[var(--color-primary)]  text-white !rounded-none ${arvo.className}`
+                            : `bg-[var(--color-primary)]/70 text-white !rounded-none ${arvo.className}`
+                          : "bg-[var(--color-primary)] text-white"
                     }`}
                 >
                   <div className="grid grid-cols-2 gap-4 sm:text-xs text-2xs justify-center items-center text-center">
                     <div
                       className={`whitespace-pre-line font-bold ${
-                        templateType === 'modern_corporate'
-                          ? 'text-[var(--color-primary)]'
-                          : 'text-white'
+                        templateType === "modern_corporate"
+                          ? "text-[var(--color-primary)]"
+                          : "text-white"
                       }`}
                     >
                       {row.area}
@@ -164,9 +170,9 @@ export default function ScopeOfService({
                   <div className="text-center grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs justify-center items-center">
                     <div className="whitespace-pre-line">{row.area}</div>
                     <div>{row.frequency}</div>
-                    <div>{formatCurrencySafe(row.costPerVisit) ?? 'N/A'}</div>
+                    <div>{formatCurrencySafe(row.costPerVisit) ?? "N/A"}</div>
                     <div className="font-bold">
-                      {formatCurrencySafe(row.monthlyCost) ?? 'N/A'}
+                      {formatCurrencySafe(row.monthlyCost) ?? "N/A"}
                     </div>
                   </div>
                 </div>
@@ -187,24 +193,30 @@ export default function ScopeOfService({
       const trimmed = lines[i];
       if (!trimmed) continue;
       if (
-        trimmed.startsWith('```') &&
-        trimmed.toLowerCase().includes('veliz_scope_table')
+        trimmed.startsWith("```") &&
+        trimmed.toLowerCase().includes("veliz_scope_table")
       ) {
         const jsonLines: string[] = [];
         i++;
-        while (i < lines.length && !lines[i].startsWith('```')) {
+        while (i < lines.length && !lines[i].startsWith("```")) {
           jsonLines.push(lines[i]);
           i++;
         }
-        const jsonText = jsonLines.join('\n');
+        const jsonText = jsonLines.join("\n");
         try {
           const data: ScopeTableData = JSON.parse(jsonText);
-          elements.push(<ScopeTable key={`scope-table`} data={data} templateType={templateType} />);
+          elements.push(
+            <ScopeTable
+              key={`scope-table`}
+              data={data}
+              templateType={templateType}
+            />,
+          );
         } catch {}
         continue;
       }
       if (/^[-*]\s+/.test(trimmed)) {
-        bulletsAcc.push(trimmed.replace(/^[-*]\s+/, ''));
+        bulletsAcc.push(trimmed.replace(/^[-*]\s+/, ""));
         continue;
       }
       elements.push(
@@ -213,7 +225,7 @@ export default function ScopeOfService({
           className="text-sm text-[#383838] mb-4 leading-relaxed"
         >
           {parseInline(trimmed)}
-        </p>
+        </p>,
       );
     }
     return elements;
@@ -222,15 +234,15 @@ export default function ScopeOfService({
   return (
     <div>
       <div>
-        <ProposalTitle 
-          templateType={templateType} 
-          title={isContinuation ? `${title}` : title} 
+        <ProposalTitle
+          templateType={templateType}
+          title={isContinuation ? `${title}` : title}
         />
         {/* Only show description on first page, not on continuation pages */}
         {!isContinuation && (
           <p
             className={`text-2xs sm:text-sm text-[#383838] sm:my-6 my-3 leading-relaxed ${
-              templateType === 'luxury_elite' ? arvo.className : ''
+              templateType === "luxury_elite" ? arvo.className : ""
             }`}
           >
             {description}

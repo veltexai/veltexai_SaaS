@@ -1,14 +1,14 @@
-import React from 'react';
-import { TemplateType } from '@/features/templates/types/templates';
-import { dmSerifText } from '@/lib/fonts';
+import React from "react";
+import { TemplateType } from "@/features/templates/types/templates";
+import { dmSerifText } from "@/lib/fonts";
 import {
   BookIcon,
   PriceChangeIcon,
   PlaylistCheckIcon,
   LeafSparkIcon,
   ThumbUpIcon,
-} from '@/components/icons';
-import ProposalTitle from '../shared/proposal-title';
+} from "@/components/icons";
+import { ProposalTitle } from "../shared";
 
 interface WhyChooseUsProps {
   title: string;
@@ -21,18 +21,18 @@ export default function WhyChooseUs({
   title,
   content,
   templateType,
-  className = '',
+  className = "",
 }: WhyChooseUsProps) {
   const lines = content
-    .split('\n')
+    .split("\n")
     .map((l) => l.trim())
     .filter(Boolean);
   const firstParagraphIndex = lines.findIndex((l) => !/^[-*]\s+/.test(l));
   const bullets = lines
     .filter((l) => /^[-*]\s+/.test(l))
-    .map((l) => l.replace(/^[-*]\s+/, ''));
+    .map((l) => l.replace(/^[-*]\s+/, ""));
   const firstParagraph =
-    firstParagraphIndex >= 0 ? lines[firstParagraphIndex] : '';
+    firstParagraphIndex >= 0 ? lines[firstParagraphIndex] : "";
 
   const parseInline = (text: string) => {
     const parts: React.ReactNode[] = [];
@@ -44,7 +44,7 @@ export default function WhyChooseUs({
       parts.push(
         <strong key={`b-${m.index}`} className="font-semibold text-gray-900">
           {m[2]}
-        </strong>
+        </strong>,
       );
       idx = m.index + m[0].length;
     }
@@ -54,27 +54,27 @@ export default function WhyChooseUs({
 
   const resolveIconComponent = (raw: string) => {
     const l = raw.toLowerCase();
-    if (l.includes('professional') || l.includes('teams')) return BookIcon;
-    if (l.includes('transparent') || l.includes('pricing'))
+    if (l.includes("professional") || l.includes("teams")) return BookIcon;
+    if (l.includes("transparent") || l.includes("pricing"))
       return PriceChangeIcon;
     if (
-      l.includes('quality') ||
-      l.includes('assurance') ||
-      l.includes('walk') ||
-      l.includes('logs')
+      l.includes("quality") ||
+      l.includes("assurance") ||
+      l.includes("walk") ||
+      l.includes("logs")
     )
       return PlaylistCheckIcon;
     if (
-      l.includes('eco') ||
-      l.includes('conscious') ||
-      l.includes('safe') ||
-      l.includes('waste')
+      l.includes("eco") ||
+      l.includes("conscious") ||
+      l.includes("safe") ||
+      l.includes("waste")
     )
       return LeafSparkIcon;
     if (
-      l.includes('reliability') ||
-      l.includes('backup') ||
-      l.includes('coverage')
+      l.includes("reliability") ||
+      l.includes("backup") ||
+      l.includes("coverage")
     )
       return ThumbUpIcon;
     return PlaylistCheckIcon;

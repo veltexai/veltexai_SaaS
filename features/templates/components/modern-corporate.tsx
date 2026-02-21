@@ -2,37 +2,35 @@
 
 import { useMemo } from "react";
 import type { TemplateProps } from "@/features/templates/types/templates";
-import ProposalTableOfContents from "./sections/table-of-contents";
 import Image from "next/image";
-import PoweredBy from "./shared/powered-by";
-import HeaderLogo from "./shared/header-logo";
-import HeaderTemplate from "./shared/header-template";
-import VerticalBar from "./shared/vertical-bar";
-import HorizontalBar from "./shared/horizontal-bar";
-import ThankYouPage from "./shared/thank-you";
-import ProposalTitle from "./shared/proposal-title";
-import SignatureContent from "./shared/signature-content";
-import SignatureSection from "./shared/signature-section";
-import NavitationNumber from "./shared/navigation";
-import TitleDescriptionSection from "./shared/title-description-section";
-import ContentQualificationsSection from "./shared/content-qualifications-section";
 import { useSplitContent } from "../hooks/use-split-content";
 import { montserrat } from "@/lib/fonts";
+import {
+  PoweredBy,
+  HeaderLogo,
+  HeaderTemplate,
+  ThankYouPage,
+  NavitationNumber,
+  SignatureSection,
+  ProposalTitle,
+  SignatureContent,
+  TitleDescriptionSection,
+  ContentQualificationsSection,
+  HorizontalBar,
+  VerticalBar,
+} from "./shared";
 import {
   AboutOurCompany,
   Addons,
   Notes,
   OurCommitement,
+  ProposalTableOfContents,
   ScopeOfService,
   ServiceQuotePricing,
   WhyChooseUs,
 } from "./sections";
-import {
-  parseScopeTableData,
-  splitScopeRows,
-  type ScopeRow,
-} from "../utils/split-scope-rows";
-import { profile } from "console";
+import { type ScopeRow } from "../utils/split-scope-rows";
+import { getScopeRowChunks } from "../utils/paginate-scope-rows";
 
 export function ModernCorporateTemplate({
   proposal,
@@ -62,12 +60,10 @@ export function ModernCorporateTemplate({
       : useSplitContent(proposal.id);
 
   // Calculate scope row chunks for PDF pagination
-  const scopeRowChunks = useMemo(() => {
-    if (!scope?.content) return [];
-    const tableData = parseScopeTableData(scope.content);
-    if (!tableData) return [];
-    return splitScopeRows(tableData, 8, 14);
-  }, [scope?.content]);
+  const scopeRowChunks = useMemo(
+    () => getScopeRowChunks(scope?.content, 12, 14),
+    [scope?.content],
+  );
 
   const hasAdditionalScopePages = scopeRowChunks.length > 1;
 

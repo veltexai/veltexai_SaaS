@@ -1,27 +1,27 @@
-import { cn } from '@/lib/utils';
-import React from 'react';
+import { cn } from "@/lib/utils";
+import React from "react";
 
 type HorizontalBarProps = {
   className?: string;
-  variant?: 'gradientWhite' | 'gradientGray' | 'normal';
+  variant?: "gradientWhite" | "gradientGray" | "normal";
 };
 
-const VARIANTS: Record<NonNullable<HorizontalBarProps['variant']>, string> = {
-  gradientWhite: 'bg-gradient-to-b from-white/10 to-white',
-  gradientGray: 'bg-gradient-to-b from-[#F3F3F3] to-[#CECECE]',
-  normal: 'bg-[#00000036]',
+const VARIANTS: Record<NonNullable<HorizontalBarProps["variant"]>, string> = {
+  gradientWhite: "bg-gradient-to-b from-white/10 to-white",
+  gradientGray: "bg-gradient-to-b from-[#F3F3F3] to-[#CECECE]",
+  normal: "bg-[#00000036]",
 };
 
-export default function HorizontalBar({
+export function HorizontalBar({
   className,
-  variant = 'gradientWhite',
+  variant = "gradientWhite",
 }: HorizontalBarProps) {
   return (
     <div
       className={cn(
-        'z-20 absolute left-0 h-[1px] sm:h-[2px] w-full bottom-6 sm:bottom-20',
+        "z-20 absolute left-0 h-[1px] sm:h-[2px] w-full bottom-6 sm:bottom-20",
         VARIANTS[variant],
-        className
+        className,
       )}
       aria-hidden
     />

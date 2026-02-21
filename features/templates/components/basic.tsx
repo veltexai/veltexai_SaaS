@@ -1,7 +1,6 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import {
   acceptanceVariantMap,
@@ -10,13 +9,15 @@ import {
 } from "@/features/templates/types/templates";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import PoweredBy from "./shared/powered-by";
-import VerticalBar from "./shared/vertical-bar";
-import HorizontalBar from "./shared/horizontal-bar";
-import HeaderTemplate from "./shared/header-template";
-import NavitationNumber from "./shared/navigation";
-import HeaderLogo from "./shared/header-logo";
 import { montserrat } from "@/lib/fonts";
+import {
+  HeaderLogo,
+  HeaderTemplate,
+  HorizontalBar,
+  NavitationNumber,
+  PoweredBy,
+  VerticalBar,
+} from "./shared";
 
 export function BasicTemplate({
   proposal,

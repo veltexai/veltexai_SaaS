@@ -1,7 +1,6 @@
-import React from 'react';
-import { TemplateType } from '@/features/templates/types/templates';
-import { arvo, dmSerifText } from '@/lib/fonts';
-import Image from 'next/image';
+import React from "react";
+import { TemplateType } from "@/features/templates/types/templates";
+import { dmSerifText } from "@/lib/fonts";
 
 interface AddonsProps {
   title: string;
@@ -14,18 +13,18 @@ export default function Addons({
   title,
   content,
   templateType,
-  className = '',
+  className = "",
 }: AddonsProps) {
   const lines = content
-    .split('\n')
+    .split("\n")
     .map((l) => l.trim())
     .filter(Boolean);
   const firstParagraphIndex = lines.findIndex((l) => !/^[-*]\s+/.test(l));
   const bullets = lines
     .filter((l) => /^[-*]\s+/.test(l))
-    .map((l) => l.replace(/^[-*]\s+/, ''));
+    .map((l) => l.replace(/^[-*]\s+/, ""));
   const firstParagraph =
-    firstParagraphIndex >= 0 ? lines[firstParagraphIndex] : '';
+    firstParagraphIndex >= 0 ? lines[firstParagraphIndex] : "";
 
   const parseInline = (text: string) => {
     const parts: React.ReactNode[] = [];
@@ -37,7 +36,7 @@ export default function Addons({
       parts.push(
         <strong key={`b-${m.index}`} className="font-semibold text-gray-900">
           {m[2]}
-        </strong>
+        </strong>,
       );
       idx = m.index + m[0].length;
     }
@@ -49,7 +48,7 @@ export default function Addons({
     return (
       <div
         className={`flex items-center justify-center gap-4 sm:p-3 p-1 border border-[var(--color-primary)] ${
-          templateType === 'luxury_elite' ? 'rounded-none' : 'rounded-3xl'
+          templateType === "luxury_elite" ? "rounded-none" : "rounded-3xl"
         }`}
       >
         <div className="text-[var(--color-primary)] font-bold text-center leading-relaxed sm:text-sm text-2xs">
@@ -65,8 +64,8 @@ export default function Addons({
         {firstParagraph ? (
           <p
             className={`sm:text-2xl text-xl text-[var(--color-primary)] sm:mb-4 mb-2 leading-relaxed sm:mt-8 mt-2 italic ${
-              templateType === 'luxury_elite'
-                ? 'tk-bely'
+              templateType === "luxury_elite"
+                ? "tk-bely"
                 : dmSerifText.className
             }`}
           >

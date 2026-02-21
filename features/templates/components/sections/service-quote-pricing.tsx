@@ -1,7 +1,7 @@
 import React from "react";
 import { TemplateType } from "@/features/templates/types/templates";
 import { dmSerifText } from "@/lib/fonts";
-import ProposalTitle from "../shared/proposal-title";
+import { ProposalTitle } from "../shared";
 import { cn } from "@/lib/utils";
 import {
   isOneTimeFrequency,

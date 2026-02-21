@@ -1,13 +1,13 @@
-import React from 'react';
-import { TemplateType } from '@/features/templates/types/templates';
-import { dmSerifText } from '@/lib/fonts';
+import React from "react";
+import { TemplateType } from "@/features/templates/types/templates";
+import { dmSerifText } from "@/lib/fonts";
 import {
   AddTaskIcon,
   AccountBalanceIcon,
   CircleNotificationIcon,
   LockIcon,
-} from '@/components/icons';
-import ProposalTitle from '../shared/proposal-title';
+} from "@/components/icons";
+import { ProposalTitle } from "../shared";
 
 interface OurCommitementProps {
   title: string;
@@ -20,18 +20,18 @@ export default function OurCommitement({
   title,
   content,
   templateType,
-  className = '',
+  className = "",
 }: OurCommitementProps) {
   const lines = content
-    .split('\n')
+    .split("\n")
     .map((l) => l.trim())
     .filter(Boolean);
   const firstParagraphIndex = lines.findIndex((l) => !/^[-*]\s+/.test(l));
   const bullets = lines
     .filter((l) => /^[-*]\s+/.test(l))
-    .map((l) => l.replace(/^[-*]\s+/, ''));
+    .map((l) => l.replace(/^[-*]\s+/, ""));
   const firstParagraph =
-    firstParagraphIndex >= 0 ? lines[firstParagraphIndex] : '';
+    firstParagraphIndex >= 0 ? lines[firstParagraphIndex] : "";
 
   const parseInline = (text: string) => {
     const parts: React.ReactNode[] = [];
@@ -43,7 +43,7 @@ export default function OurCommitement({
       parts.push(
         <strong key={`b-${m.index}`} className="font-semibold text-gray-900">
           {m[2]}
-        </strong>
+        </strong>,
       );
       idx = m.index + m[0].length;
     }
@@ -53,21 +53,21 @@ export default function OurCommitement({
 
   const resolveIconComponent = (raw: string) => {
     const l = raw.toLowerCase();
-    if (l.includes('quality') || l.includes('inspection')) return AddTaskIcon;
+    if (l.includes("quality") || l.includes("inspection")) return AddTaskIcon;
     if (
-      l.includes('trained') ||
-      l.includes('sop') ||
-      l.includes('safety') ||
-      l.includes('protocol') ||
-      l.includes('teams')
+      l.includes("trained") ||
+      l.includes("sop") ||
+      l.includes("safety") ||
+      l.includes("protocol") ||
+      l.includes("teams")
     )
       return AccountBalanceIcon;
-    if (l.includes('prompt') || l.includes('request') || l.includes('incident'))
+    if (l.includes("prompt") || l.includes("request") || l.includes("incident"))
       return CircleNotificationIcon;
     if (
-      l.includes('secure') ||
-      l.includes('confidential') ||
-      l.includes('access')
+      l.includes("secure") ||
+      l.includes("confidential") ||
+      l.includes("access")
     )
       return LockIcon;
     return AddTaskIcon;

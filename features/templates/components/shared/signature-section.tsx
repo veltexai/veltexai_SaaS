@@ -54,4 +54,4 @@ const SignatureSection = ({ templateType, companyName, clientName}: SignatureSec
   );
 };
 
-export default SignatureSection;
+export { SignatureSection };

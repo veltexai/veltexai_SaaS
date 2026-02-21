@@ -1,12 +1,12 @@
-import Image from 'next/image';
-import React from 'react';
-import { TemplateType } from '../../template-renderer';
+import Image from "next/image";
+import React from "react";
+import { TemplateType } from "../../template-renderer";
 
-const PoweredBy = ({
+export const PoweredBy = ({
   colorLogo,
   isRight,
   isCenter,
-  className = '',
+  className = "",
   template,
 }: {
   colorLogo: string;
@@ -17,13 +17,15 @@ const PoweredBy = ({
 }) => {
   const srlUrl = `/images/templates/logofooter-${colorLogo}.svg`;
   const position = isRight
-    ? 'right-3 sm:right-5 md:right-7'
+    ? "right-3 sm:right-5 md:right-7"
     : isCenter
-    ? 'left-[50%] translate-x-[-50%]'
-    : 'left-3 sm:left-5 md:left-7';
+      ? "left-[50%] translate-x-[-50%]"
+      : "left-3 sm:left-5 md:left-7";
 
   return (
-    <div className={`absolute -bottom-1 sm:bottom-2 md:bottom-2.5 ${position} ${className}`}>
+    <div
+      className={`absolute -bottom-1 sm:bottom-2 md:bottom-2.5 ${position} ${className}`}
+    >
       <Image
         src={srlUrl}
         alt="Veltex AI Logo"
@@ -36,5 +38,3 @@ const PoweredBy = ({
     </div>
   );
 };
-
-export default PoweredBy;

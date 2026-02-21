@@ -25,7 +25,7 @@ import {
   ScopeOfService,
   ServiceQuotePricing,
   WhyChooseUs,
-  TableOfContents,
+  ProposalTableOfContents,
 } from "./sections";
 import { LuxuryEliteBackgroundTitle } from "@/components/icons";
 import { useSplitContent } from "../hooks/use-split-content";
@@ -34,6 +34,7 @@ import {
   splitScopeRows,
   type ScopeRow,
 } from "../utils/split-scope-rows";
+import { getScopeRowChunks } from "../utils/paginate-scope-rows";
 
 export function LuxuryEliteTemplate({
   proposal,
@@ -75,12 +76,10 @@ export function LuxuryEliteTemplate({
       : useSplitContent(proposal.id);
 
   // Calculate scope row chunks for PDF pagination
-  const scopeRowChunks = useMemo(() => {
-    if (!scope?.content) return [];
-    const tableData = parseScopeTableData(scope.content);
-    if (!tableData) return [];
-    return splitScopeRows(tableData, 8, 14);
-  }, [scope?.content]);
+  const scopeRowChunks = useMemo(
+    () => getScopeRowChunks(scope?.content, 12, 14),
+    [scope?.content],
+  );
 
   const hasAdditionalScopePages = scopeRowChunks.length > 1;
 
@@ -137,7 +136,7 @@ export function LuxuryEliteTemplate({
         <PoweredBy colorLogo="gray" isRight template="luxury_elite" />
       </div>
 
-      <TableOfContents templateType="luxury_elite" />
+      <ProposalTableOfContents templateType="luxury_elite" />
 
       {about || commitment || whyUs || scope || addons || pricing || notes
         ? (() => {

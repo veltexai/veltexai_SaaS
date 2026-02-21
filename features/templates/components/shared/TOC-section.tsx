@@ -34,4 +34,4 @@ const TOCSection = ({ templateType }: { templateType: TemplateType }) => {
   );
 };
 
-export default TOCSection;
+export { TOCSection };

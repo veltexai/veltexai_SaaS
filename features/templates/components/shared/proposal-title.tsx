@@ -1,8 +1,8 @@
-import React from 'react';
-import { TemplateType } from '@/features/templates/types/templates';
-import { dmSerifText, montserrat } from '@/lib/fonts';
-import { splitTitleWithAmpersand } from '@/features/templates/utils/utils';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { TemplateType } from "@/features/templates/types/templates";
+import { dmSerifText, montserrat } from "@/lib/fonts";
+import { splitTitleWithAmpersand } from "@/features/templates/utils/utils";
+import { cn } from "@/lib/utils";
 
 type ProposalTitleProps = {
   templateType: TemplateType;
@@ -10,18 +10,18 @@ type ProposalTitleProps = {
   className?: string;
 };
 
-export default function ProposalTitle({
+export const ProposalTitle = ({
   templateType,
   title,
   className,
-}: ProposalTitleProps) {
+}: ProposalTitleProps) => {
   const { first, second } = splitTitleWithAmpersand(title, templateType);
-  if (templateType === 'basic') {
+  if (templateType === "basic") {
     return (
       <h1
         className={cn(
           `${dmSerifText.className} text-4xl font-bold text-[var(--color-primary)]`,
-          className
+          className,
         )}
       >
         {title}
@@ -29,9 +29,9 @@ export default function ProposalTitle({
     );
   }
 
-  if (templateType === 'modern_corporate') {
+  if (templateType === "modern_corporate") {
     return (
-      <div className={cn('flex items-center gap-3 relative', className)}>
+      <div className={cn("flex items-center gap-3 relative", className)}>
         <span
           aria-hidden
           className="z-20 absolute sm:-left-[40.2px] -left-[39px] sm:h-20 h-15 sm:w-10 w-8 bg-[linear-gradient(135deg,var(--color-primary)_0%,var(--color-primary)_20%,#4a67d4_50%,#3555C7_100%)]"
@@ -40,7 +40,9 @@ export default function ProposalTitle({
           className={`${montserrat.className} font-bold text-[var(--color-primary)] sm:pl-5 pl-2`}
         >
           {first ? (
-            <span className="font-normal block sm:text-3xl text-xl">{first} </span>
+            <span className="font-normal block sm:text-3xl text-xl">
+              {first}{" "}
+            </span>
           ) : null}
           <span className="font-bold sm:text-5xl text-2xl">{second}</span>
         </h1>
@@ -48,9 +50,9 @@ export default function ProposalTitle({
     );
   }
 
-  if (templateType === 'executive_premium') {
+  if (templateType === "executive_premium") {
     return (
-      <div className={cn('relative inline-block', className)}>
+      <div className={cn("relative inline-block", className)}>
         <h1
           className={`${montserrat.className} text-2xl sm:text-5xl text-[var(--color-primary)]`}
         >
@@ -65,17 +67,17 @@ export default function ProposalTitle({
     );
   }
 
-  if (templateType === 'luxury_elite') {
+  if (templateType === "luxury_elite") {
     return (
       <div
         className={cn(
-          'relative z-20 inline-block',
+          "relative z-20 inline-block",
           className,
           `${
-            first.toLowerCase() === 'about our'
-              ? 'absolute sm:-top-50 -top-[90px] right-0'
-              : ''
-          }`
+            first.toLowerCase() === "about our"
+              ? "absolute sm:-top-50 -top-[90px] right-0"
+              : ""
+          }`,
         )}
       >
         <h1
@@ -84,13 +86,15 @@ export default function ProposalTitle({
           {first ? (
             <span
               className={`font-normal block sm:text-4xl text-xl ${
-                first.toLowerCase() === 'about our' ? 'text-right' : ''
+                first.toLowerCase() === "about our" ? "text-right" : ""
               } `}
             >
-              {first}{' '}
+              {first}{" "}
             </span>
           ) : null}
-          <span className="font-bold sm:text-7xl text-3xl leading-[50%]">{second}</span>
+          <span className="font-bold sm:text-7xl text-3xl leading-[50%]">
+            {second}
+          </span>
         </h1>
       </div>
     );
@@ -100,10 +104,10 @@ export default function ProposalTitle({
     <h1
       className={cn(
         `${dmSerifText.className} text-4xl font-bold text-[var(--color-primary)]`,
-        className
+        className,
       )}
     >
       {title}
     </h1>
   );
-}
+};
