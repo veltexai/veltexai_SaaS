@@ -28,6 +28,12 @@ const HeaderTemplate = ({
   gap?: string;
   template?: TemplateType;
 }) => {
+  const locationParts = [address, city, serviceLocation].filter(Boolean);
+  const locationText =
+    locationParts.length > 0
+      ? locationParts.join(", ")
+      : "Service Location To Be Confirmed";
+
   return (
     <>
       <div className={`flex flex-col gap-2 sm:gap-3 md:${gap} ${textColor}`}>
@@ -116,11 +122,7 @@ const HeaderTemplate = ({
           </div>
           <p className="pb-1.5 sm:pb-2 pt-1 sm:pt-[6.5px] pl-2 sm:pl-4 md:pl-6 break-words">
             Address:{" "}
-            <span className="font-bold pl-0.5 sm:pl-1">
-              {city ? `${city}, ` : ""}{" "}
-              {serviceLocation ? `${serviceLocation}, ` : ""}{" "}
-              {address ? address : "Service Location To Be Confirmed"}
-            </span>
+            <span className="font-bold pl-0.5 sm:pl-1">{locationText}</span>
           </p>
         </div>
       </div>

@@ -654,7 +654,7 @@ Include the fenced JSON blocks exactly as shown; do not alter their content or f
 We specialize in supporting education, retail, office, and healthcare facilities with structured service programs designed for operational consistency. Our approach blends trained teams, **reliable scheduling**, and **quality assurance** aligned with your operating hours and compliance standards.
 
 - 10 years in business
-- ${`${city}, ${globalInputs.regionalLocation ?? ""}, ${globalInputs.serviceLocation ?? ""}` || "Service Location To Be Confirmed"}
+- ${`${city}, ${globalInputs.regionalLocation ?? ""}}` || "Service Location To Be Confirmed"}
 - Education, offices, retail & healthcare
 - 100% Satisfaction
 
