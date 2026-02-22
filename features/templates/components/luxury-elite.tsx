@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import type { TemplateProps } from "@/features/templates/types/templates";
 import Image from "next/image";
 import { formatDateLong } from "@/lib/utils";
@@ -28,13 +27,8 @@ import {
   ProposalTableOfContents,
 } from "./sections";
 import { LuxuryEliteBackgroundTitle } from "@/components/icons";
-import { useSplitContent } from "../hooks/use-split-content";
-import {
-  parseScopeTableData,
-  splitScopeRows,
-  type ScopeRow,
-} from "../utils/split-scope-rows";
-import { getScopeRowChunks } from "../utils/paginate-scope-rows";
+import { type ScopeRow } from "../utils/split-scope-rows";
+import { useTemplateData } from "../hooks/use-template-data";
 
 export function LuxuryEliteTemplate({
   proposal,
@@ -42,46 +36,13 @@ export function LuxuryEliteTemplate({
   pages,
   print,
 }: TemplateProps) {
-  const logoUrl = branding?.logo_url ?? null;
-  const phone = branding?.phone ?? null;
-  const website = branding?.website ?? null;
-  const companyName = branding?.name ?? "Company";
-  const email = branding?.email ?? null;
-  const preparedFor =
-    proposal.client_company || proposal.client_name || "Client";
-
   const {
-    about,
-    commitment,
-    whyUs,
-    scope,
-    addons,
-    pricing,
-    notes,
-    loading,
-    error,
-  } =
-    print && pages
-      ? {
-          about: { content: pages[0] },
-          commitment: { content: pages[1] },
-          whyUs: { content: pages[2] },
-          scope: { content: pages[3] },
-          addons: { content: pages[4] },
-          pricing: { content: pages[5] },
-          notes: { content: pages[6] },
-          loading: false,
-          error: null,
-        }
-      : useSplitContent(proposal.id);
-
-  // Calculate scope row chunks for PDF pagination
-  const scopeRowChunks = useMemo(
-    () => getScopeRowChunks(scope?.content, 12, 14),
-    [scope?.content],
-  );
-
-  const hasAdditionalScopePages = scopeRowChunks.length > 1;
+    branding: b,
+    preparedFor,
+    content,
+    scopeRowChunks,
+    hasAdditionalScopePages,
+  } = useTemplateData(proposal, branding, pages, print);
 
   return (
     <section className="space-y-6">
@@ -94,10 +55,10 @@ export function LuxuryEliteTemplate({
         >
           {formatDateLong(proposal.created_at)}
         </p>
-        {logoUrl ? (
+        {b.logoUrl ? (
           <HeaderLogo
-            logoUrl={logoUrl}
-            companyName={companyName}
+            logoUrl={b.logoUrl}
+            companyName={b.companyName}
             isTop
             withoutGradient
             position="center"
@@ -138,7 +99,7 @@ export function LuxuryEliteTemplate({
 
       <ProposalTableOfContents templateType="luxury_elite" />
 
-      {about || commitment || whyUs || scope || addons || pricing || notes
+      {content.about || content.commitment || content.whyUs || content.scope || content.addons || content.pricing || content.notes
         ? (() => {
             return (
               <>
@@ -147,10 +108,10 @@ export function LuxuryEliteTemplate({
                   className="relative sm:aspect-[1/1.4] aspect-[1/1.54] bg-white overflow-hidden sm:pl-16 pl-10 !pt-[38px] sm:pb-0 pb-10"
                 >
                   <div className="sm:max-w-[80%] max-w-[90%] absolute sm:bottom-5 bottom-0 sm:right-15 right-5">
-                    {about?.content ? (
+                    {content.about?.content ? (
                       <AboutOurCompany
-                        title={about.title ?? "About Our Company"}
-                        content={about.content}
+                        title={content.about.title ?? "About Our Company"}
+                        content={content.about.content}
                         templateType="luxury_elite"
                         className={`${arvo.className}`}
                       />
@@ -184,10 +145,10 @@ export function LuxuryEliteTemplate({
                   <LuxuryEliteBackgroundTitle className="z-10 absolute sm:-top-[20px] -top-[10px] sm:-left-[20px] -left-[10px] sm:w-[353px] w-[253px] sm:h-[350px] h-[250px]" />
                   <div className="gap-6">
                     <div>
-                      {commitment?.content ? (
+                      {content.commitment?.content ? (
                         <OurCommitement
-                          title={commitment.title ?? "Our Commitment"}
-                          content={commitment.content}
+                          title={content.commitment.title ?? "Our Commitment"}
+                          content={content.commitment.content}
                           templateType="luxury_elite"
                           className={`${montserrat.className}`}
                         />
@@ -198,10 +159,10 @@ export function LuxuryEliteTemplate({
                       )}
                     </div>
                     <div className="sm:mt-10 mt-4">
-                      {whyUs?.content ? (
+                      {content.whyUs?.content ? (
                         <WhyChooseUs
-                          title={whyUs.title ?? "Why Choose Us"}
-                          content={whyUs.content}
+                          title={content.whyUs.title ?? "Why Choose Us"}
+                          content={content.whyUs.content}
                           templateType="luxury_elite"
                           className={`${montserrat.className} relative z-20`}
                         />
@@ -252,13 +213,13 @@ export function LuxuryEliteTemplate({
                   <LuxuryEliteBackgroundTitle className="z-10 absolute sm:-top-[20px] -top-[10px] sm:-left-[20px] -left-[10px] sm:w-[353px] w-[253px] sm:h-[350px] h-[250px]" />
                   <div className="gap-6 max-w-[95%]">
                     <div>
-                      {scope?.content ? (
+                      {content.scope?.content ? (
                         <ScopeOfService
-                          title={scope.title ?? "Scope of Service"}
-                          content={scope.content}
+                          title={content.scope.title ?? "Scope of Service"}
+                          content={content.scope.content}
                           templateType="luxury_elite"
                           className={`${montserrat.className}`}
-                          description={scope.description || ""}
+                          description={content.scope.description || ""}
                           overrideRows={
                             hasAdditionalScopePages
                               ? scopeRowChunks[0]
@@ -273,10 +234,10 @@ export function LuxuryEliteTemplate({
                     </div>
                     {!hasAdditionalScopePages && (
                       <div>
-                        {addons?.content ? (
+                        {content.addons?.content ? (
                           <Addons
-                            title={addons.title ?? "Add-ons"}
-                            content={addons.content}
+                            title={content.addons.title ?? "Add-ons"}
+                            content={content.addons.content}
                             templateType="luxury_elite"
                             className={`${montserrat.className}`}
                           />
@@ -315,8 +276,8 @@ export function LuxuryEliteTemplate({
                           <div className="gap-6 max-w-[95%]">
                             <div>
                               <ScopeOfService
-                                title={scope?.title ?? "Scope of Service"}
-                                content={scope?.content ?? ""}
+                                title={content.scope?.title ?? "Scope of Service"}
+                                content={content.scope?.content ?? ""}
                                 templateType="luxury_elite"
                                 className={`${montserrat.className}`}
                                 description=""
@@ -324,11 +285,11 @@ export function LuxuryEliteTemplate({
                                 isContinuation
                               />
                             </div>
-                            {isLastScopeOverflowPage && addons?.content && (
+                            {isLastScopeOverflowPage && content.addons?.content && (
                               <div className="mt-6">
                                 <Addons
-                                  title={addons.title ?? "Add-ons"}
-                                  content={addons.content}
+                                  title={content.addons.title ?? "Add-ons"}
+                                  content={content.addons.content}
                                   templateType="luxury_elite"
                                   className={`${montserrat.className}`}
                                 />
@@ -353,21 +314,21 @@ export function LuxuryEliteTemplate({
                 >
                   <LuxuryEliteBackgroundTitle className="z-10 absolute sm:-top-[20px] -top-[10px] sm:-left-[20px] -left-[10px] sm:w-[353px] w-[253px] sm:h-[350px] h-[250px]" />
                   <div className="space-y-8 max-w-[95%]">
-                    {pricing?.content ? (
+                    {content.pricing?.content ? (
                       <ServiceQuotePricing
-                        title={pricing.title ?? "Service Quote & Pricing"}
-                        content={pricing.content}
-                        description={pricing.description}
+                        title={content.pricing.title ?? "Service Quote & Pricing"}
+                        content={content.pricing.content}
+                        description={content.pricing.description}
                         templateType="luxury_elite"
                         className={`${montserrat.className}`}
                       />
                     ) : (
                       <div className="text-sm text-muted-foreground"></div>
                     )}
-                    {notes?.content ? (
+                    {content.notes?.content ? (
                       <Notes
-                        title={notes.title ?? "Notes"}
-                        content={notes.content}
+                        title={content.notes.title ?? "Notes"}
+                        content={content.notes.content}
                         templateType="luxury_elite"
                         className={`${arvo.className}`}
                       />
@@ -417,7 +378,7 @@ export function LuxuryEliteTemplate({
         <SignatureContent templateType="luxury_elite" />
         <SignatureSection
           templateType="luxury_elite"
-          companyName={proposal.client_company || companyName}
+          companyName={proposal.client_company || b.companyName}
           clientName={proposal.client_name}
         />
         <PoweredBy colorLogo="gray" isRight />
@@ -435,11 +396,11 @@ export function LuxuryEliteTemplate({
         className="relative sm:aspect-[1/1.4] aspect-[1/1.7] bg-white"
       >
         <ThankYouPage
-          email={email}
-          phone={phone}
-          website={website}
-          logoUrl={logoUrl}
-          companyName={companyName}
+          email={b.email}
+          phone={b.phone}
+          website={b.website}
+          logoUrl={b.logoUrl}
+          companyName={b.companyName}
           templateType="luxury_elite"
         />
       </div>

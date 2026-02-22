@@ -1,10 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
-import type {
-  TemplateProps,
-  TemplateType,
-} from "@/features/templates/types/templates";
+import type { TemplateProps } from "@/features/templates/types/templates";
 import Image from "next/image";
 import {
   HeaderLogo,
@@ -21,8 +17,7 @@ import {
   ProposalTitle,
   ThankYouPage,
 } from "./shared";
-import { dmSerifText, montserrat } from "@/lib/fonts";
-import { useSplitContent } from "../hooks/use-split-content";
+import { montserrat } from "@/lib/fonts";
 import {
   AboutOurCompany,
   Addons,
@@ -32,12 +27,8 @@ import {
   ServiceQuotePricing,
   WhyChooseUs,
 } from "./sections";
-import {
-  parseScopeTableData,
-  splitScopeRows,
-  type ScopeRow,
-} from "../utils/split-scope-rows";
-import { getScopeRowChunks } from "../utils/paginate-scope-rows";
+import { type ScopeRow } from "../utils/split-scope-rows";
+import { useTemplateData } from "../hooks/use-template-data";
 
 export function ExecutivePremiumTemplate({
   proposal,
@@ -45,47 +36,13 @@ export function ExecutivePremiumTemplate({
   pages,
   print,
 }: TemplateProps) {
-  const logoUrl = branding?.logo_url ?? null;
-  const phone = branding?.phone ?? null;
-  const website = branding?.website ?? null;
-  const companyName = branding?.name ?? "Company";
-  const email = branding?.email ?? null;
-  const preparedFor =
-    proposal.client_company || proposal.client_name || "Client";
-
   const {
-    about,
-    commitment,
-    whyUs,
-    scope,
-    addons,
-    pricing,
-    notes,
-    loading,
-    error,
-  } =
-    print && pages
-      ? {
-          about: { content: pages[0] },
-          commitment: { content: pages[1] },
-          whyUs: { content: pages[2] },
-          scope: { content: pages[3] },
-          addons: { content: pages[4] },
-          pricing: { content: pages[5] },
-          notes: { content: pages[6] },
-          loading: false,
-          error: null,
-        }
-      : useSplitContent(proposal.id);
-
-  // First page: ~12 rows (with title, description)
-  const scopeRowChunks = useMemo(
-    () => getScopeRowChunks(scope?.content, 12, 14),
-    [scope?.content],
-  );
-
-  // Check if we need overflow pages for scope
-  const hasAdditionalScopePages = scopeRowChunks.length > 1;
+    branding: b,
+    preparedFor,
+    content,
+    scopeRowChunks,
+    hasAdditionalScopePages,
+  } = useTemplateData(proposal, branding, pages, print);
 
   return (
     <section className="space-y-8">
@@ -102,10 +59,10 @@ export function ExecutivePremiumTemplate({
           />
           <PoweredBy colorLogo="white" isCenter />
         </div>
-        {logoUrl ? (
+        {b.logoUrl ? (
           <HeaderLogo
-            logoUrl={logoUrl}
-            companyName={companyName}
+            logoUrl={b.logoUrl}
+            companyName={b.companyName}
             isTop
             withoutGradient
             position="start"
@@ -128,17 +85,23 @@ export function ExecutivePremiumTemplate({
       {/* Page Two */}
       <ProposalTableOfContents templateType="executive_premium" />
       {/* Content Pages: AI-split */}
-      {loading && (
+      {content.loading && (
         <div className="relative aspect-[1/1.4] bg-white p-8">
           <div className="text-sm text-muted-foreground">Loading content…</div>
         </div>
       )}
-      {error && (
+      {content.error && (
         <div className="relative aspect-[1/1.4] bg-white p-8">
-          <div className="text-sm text-red-600">{error}</div>
+          <div className="text-sm text-red-600">{content.error}</div>
         </div>
       )}
-      {about || commitment || whyUs || scope || addons || pricing || notes
+      {content.about ||
+      content.commitment ||
+      content.whyUs ||
+      content.scope ||
+      content.addons ||
+      content.pricing ||
+      content.notes
         ? (() => {
             return (
               <>
@@ -147,10 +110,10 @@ export function ExecutivePremiumTemplate({
                   className="relative aspect-[1/1.4] bg-white p-4 sm:p-8"
                 >
                   <div className="max-w-none pl-10 sm:pl-[95px]">
-                    {about?.content ? (
+                    {content.about?.content ? (
                       <AboutOurCompany
-                        title={about.title ?? "About Our Company"}
-                        content={about.content}
+                        title={content.about.title ?? "About Our Company"}
+                        content={content.about.content}
                         templateType="executive_premium"
                         className={`${montserrat.className}`}
                       />
@@ -185,10 +148,10 @@ export function ExecutivePremiumTemplate({
                 >
                   <div className="gap-6 pl-10 sm:pl-[95px]">
                     <div>
-                      {commitment?.content ? (
+                      {content.commitment?.content ? (
                         <OurCommitement
-                          title={commitment.title ?? "Our Commitment"}
-                          content={commitment.content}
+                          title={content.commitment.title ?? "Our Commitment"}
+                          content={content.commitment.content}
                           templateType="executive_premium"
                           className={`${montserrat.className}`}
                         />
@@ -199,10 +162,10 @@ export function ExecutivePremiumTemplate({
                       )}
                     </div>
                     <div className="mt-6 sm:mt-10">
-                      {whyUs?.content ? (
+                      {content.whyUs?.content ? (
                         <WhyChooseUs
-                          title={whyUs.title ?? "Why Choose Us"}
-                          content={whyUs.content}
+                          title={content.whyUs.title ?? "Why Choose Us"}
+                          content={content.whyUs.content}
                           templateType="executive_premium"
                           className={`${montserrat.className}`}
                         />
@@ -258,13 +221,13 @@ export function ExecutivePremiumTemplate({
                 >
                   <div className="gap-6 pl-10 sm:pl-[95px]">
                     <div>
-                      {scope?.content ? (
+                      {content.scope?.content ? (
                         <ScopeOfService
-                          title={scope.title ?? "Scope of Service"}
-                          content={scope.content}
+                          title={content.scope.title ?? "Scope of Service"}
+                          content={content.scope.content}
                           templateType="executive_premium"
                           className={`${montserrat.className}`}
-                          description={scope.description || ""}
+                          description={content.scope.description || ""}
                           overrideRows={
                             hasAdditionalScopePages
                               ? scopeRowChunks[0]
@@ -278,10 +241,10 @@ export function ExecutivePremiumTemplate({
                     {/* Only show addons on first page if scope doesn't overflow */}
                     {!hasAdditionalScopePages && (
                       <div>
-                        {addons?.content ? (
+                        {content.addons?.content ? (
                           <Addons
-                            title={addons.title ?? "Add-ons"}
-                            content={addons.content}
+                            title={content.addons.title ?? "Add-ons"}
+                            content={content.addons.content}
                             templateType="executive_premium"
                             className={`${montserrat.className}`}
                           />
@@ -319,8 +282,10 @@ export function ExecutivePremiumTemplate({
                           <div className="gap-6 pl-10 sm:pl-[95px]">
                             <div>
                               <ScopeOfService
-                                title={scope?.title ?? "Scope of Service"}
-                                content={scope?.content ?? ""}
+                                title={
+                                  content.scope?.title ?? "Scope of Service"
+                                }
+                                content={content.scope?.content ?? ""}
                                 templateType="executive_premium"
                                 className={`${montserrat.className}`}
                                 description=""
@@ -329,16 +294,17 @@ export function ExecutivePremiumTemplate({
                               />
                             </div>
                             {/* Show addons on the last scope overflow page */}
-                            {isLastScopeOverflowPage && addons?.content && (
-                              <div className="mt-6">
-                                <Addons
-                                  title={addons.title ?? "Add-ons"}
-                                  content={addons.content}
-                                  templateType="executive_premium"
-                                  className={`${montserrat.className}`}
-                                />
-                              </div>
-                            )}
+                            {isLastScopeOverflowPage &&
+                              content.addons?.content && (
+                                <div className="mt-6">
+                                  <Addons
+                                    title={content.addons.title ?? "Add-ons"}
+                                    content={content.addons.content}
+                                    templateType="executive_premium"
+                                    className={`${montserrat.className}`}
+                                  />
+                                </div>
+                              )}
                           </div>
                           <VerticalBar variant="gradientGray" />
                           <HorizontalBar variant="gradientGray" />
@@ -359,21 +325,23 @@ export function ExecutivePremiumTemplate({
                   className="relative h-full bg-white sm:p-8 p-6 sm:pb-26 pb-10"
                 >
                   <div className="max-w-none sm:pl-[95px] pl-10 space-y-8">
-                    {pricing?.content ? (
+                    {content.pricing?.content ? (
                       <ServiceQuotePricing
-                        title={pricing.title ?? "Service Quote & Pricing"}
-                        content={pricing.content}
-                        description={pricing.description}
+                        title={
+                          content.pricing.title ?? "Service Quote & Pricing"
+                        }
+                        content={content.pricing.content}
+                        description={content.pricing.description}
                         templateType="executive_premium"
                         className={`${montserrat.className}`}
                       />
                     ) : (
                       <div className="text-sm text-muted-foreground"></div>
                     )}
-                    {notes?.content ? (
+                    {content.notes?.content ? (
                       <Notes
-                        title={notes.title ?? "Notes"}
-                        content={notes.content}
+                        title={content.notes.title ?? "Notes"}
+                        content={content.notes.content}
                         templateType="executive_premium"
                         className={`${montserrat.className}`}
                       />
@@ -440,7 +408,7 @@ export function ExecutivePremiumTemplate({
 
         <SignatureSection
           templateType="executive_premium"
-          companyName={proposal.client_company || companyName}
+          companyName={proposal.client_company || b.companyName}
           clientName={proposal.client_name}
         />
         <PoweredBy colorLogo="gray" isRight />
@@ -456,11 +424,11 @@ export function ExecutivePremiumTemplate({
       {/* Page Ten */}
       <div id="page-ten" className="relative aspect-[1/1.4] bg-white">
         <ThankYouPage
-          email={email}
-          phone={phone}
-          website={website}
-          logoUrl={logoUrl}
-          companyName={companyName}
+          email={b.email}
+          phone={b.phone}
+          website={b.website}
+          logoUrl={b.logoUrl}
+          companyName={b.companyName}
           templateType="executive_premium"
         />
       </div>
