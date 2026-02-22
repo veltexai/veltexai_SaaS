@@ -61,7 +61,6 @@ export async function POST(request: NextRequest) {
       // Template data
       template_id,
     } = body;
-    console.log("🚀 ~ POST ~ service_frequency:", body);
 
     // Validate required fields
     if (!service_type || !client_name) {
@@ -345,12 +344,6 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
 
         if (calculatedTotal > 0) {
           tableMonthlyCost = formatMoney(calculatedTotal);
-          console.log("✅ Using saved pricing_data:", {
-            low,
-            high,
-            calculatedTotal,
-            tableMonthlyCost,
-          });
           // Calculate per-visit by dividing by visits per month
           const visits = getVisitsPerMonth(service_frequency);
           if (visits > 0) {
@@ -405,12 +398,6 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
       console.error("❌ Error calculating pricing for scope table:", error);
       // keep placeholders '—' on error
     }
-
-    console.log("📊 Final pricing values:", {
-      tableMonthlyCost,
-      tableCostPerVisit,
-      pricing_data: pricing_data ? "exists" : "missing",
-    });
 
     // Deterministic fenced JSON blocks to embed in-place within structure
     const scopeTableData = {
@@ -545,12 +532,6 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
     };
     const pricingTableFenced = `\n\`\`\`veliz_pricing_table\n${JSON.stringify(pricingTableData)}\n\`\`\`\n`;
 
-    console.log(
-      "💰 Pricing table being sent to AI:",
-      JSON.stringify(pricingTableData, null, 2),
-    );
-    console.log("💰 Pricing enabled:", pricing_enabled);
-
     // Conditionally build pricing sections based on pricing_enabled flag
     const basicProfessionalPricingSection = pricing_enabled
       ? `
@@ -654,7 +635,7 @@ Include the fenced JSON blocks exactly as shown; do not alter their content or f
 We specialize in supporting education, retail, office, and healthcare facilities with structured service programs designed for operational consistency. Our approach blends trained teams, **reliable scheduling**, and **quality assurance** aligned with your operating hours and compliance standards.
 
 - 10 years in business
-- ${`${city}, ${globalInputs.regionalLocation ?? ""}}` || "Service Location To Be Confirmed"}
+- ${`${city}, ${globalInputs.regionalLocation}` || "Service Location To Be Confirmed"}
 - Education, offices, retail & healthcare
 - 100% Satisfaction
 
@@ -843,7 +824,6 @@ Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estima
 }
 
 `;
-    console.log("🚀 ~ POST ~ prompt:", prompt);
 
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",

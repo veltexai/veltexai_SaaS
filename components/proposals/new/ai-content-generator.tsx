@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Loader2, Wand2, RefreshCw, Edit3 } from 'lucide-react';
-import { ProposalFormData } from '@/lib/validations/proposal';
-import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
-import { AITone } from '@/types/database';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/select";
+import { Loader2, Wand2, RefreshCw, Edit3 } from "lucide-react";
+import { ProposalFormData } from "@/lib/validations/proposal";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import { AITone } from "@/types/database";
+import { Textarea } from "@/components/ui/textarea";
 
 interface AIContentGeneratorProps {
   form: ProposalFormData;
@@ -42,46 +42,46 @@ export function AIContentGenerator({
   onContentGenerated,
   onError,
   onGeneratingChange,
-  selectedTone = 'professional',
+  selectedTone = "professional",
   onToneChange,
   pricingEnabled = false,
 }: AIContentGeneratorProps) {
   const [generating, setGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedContent, setEditedContent] = useState('');
+  const [editedContent, setEditedContent] = useState("");
 
   const toneOptions: { value: AITone; label: string; description: string }[] = [
     {
-      value: 'professional',
-      label: 'Professional',
-      description: 'Formal, business-focused tone',
+      value: "professional",
+      label: "Professional",
+      description: "Formal, business-focused tone",
     },
     {
-      value: 'friendly',
-      label: 'Friendly',
-      description: 'Warm and approachable tone',
+      value: "friendly",
+      label: "Friendly",
+      description: "Warm and approachable tone",
     },
     {
-      value: 'formal',
-      label: 'Formal',
-      description: 'Very formal and structured tone',
+      value: "formal",
+      label: "Formal",
+      description: "Very formal and structured tone",
     },
     {
-      value: 'casual',
-      label: 'Casual',
-      description: 'Relaxed and conversational tone',
+      value: "casual",
+      label: "Casual",
+      description: "Relaxed and conversational tone",
     },
     {
-      value: 'technical',
-      label: 'Technical',
-      description: 'Detail-oriented and technical tone',
+      value: "technical",
+      label: "Technical",
+      description: "Detail-oriented and technical tone",
     },
   ];
 
   const generateProposalContent = async (isRegenerate = false) => {
     if (!form.global_inputs.client_name || !form.title) {
       onError(
-        'Please fill in at least the client name and proposal title to generate content.'
+        "Please fill in at least the client name and proposal title to generate content.",
       );
       return;
     }
@@ -90,10 +90,10 @@ export function AIContentGenerator({
     onGeneratingChange?.(true);
 
     try {
-      const response = await fetch('/api/proposals/generate', {
-        method: 'POST',
+      const response = await fetch("/api/proposals/generate", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           client_name: form.global_inputs.client_name,
@@ -101,6 +101,7 @@ export function AIContentGenerator({
           contact_phone: form.global_inputs.contact_phone,
           service_location: form.global_inputs.service_location,
           city: form.global_inputs.city,
+          regional_location: form.global_inputs.regional_location,
           title: form.title,
           service_type: form.service_type,
           service_frequency: form.global_inputs.service_frequency,
@@ -127,14 +128,14 @@ export function AIContentGenerator({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate proposal content');
+        throw new Error("Failed to generate proposal content");
       }
 
       const data = await response.json();
       onContentGenerated(data.content);
     } catch (error) {
-      console.error('Error generating content:', error);
-      onError('Failed to generate proposal content. Please try again.');
+      console.error("Error generating content:", error);
+      onError("Failed to generate proposal content. Please try again.");
     } finally {
       setGenerating(false);
       onGeneratingChange?.(false);
@@ -153,12 +154,12 @@ export function AIContentGenerator({
   const handleSaveEdit = () => {
     onContentGenerated(editedContent);
     setIsEditing(false);
-    setEditedContent('');
+    setEditedContent("");
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setEditedContent('');
+    setEditedContent("");
   };
 
   return (
@@ -169,7 +170,9 @@ export function AIContentGenerator({
           Operational Intelligence Output
         </CardTitle>
         <CardDescription>
-          Client-ready content from your scope, labor, and margin inputs. Constrained by real janitorial rules. Choose a tone that matches your client relationship.
+          Client-ready content from your scope, labor, and margin inputs.
+          Constrained by real janitorial rules. Choose a tone that matches your
+          client relationship.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -221,7 +224,7 @@ export function AIContentGenerator({
             ) : (
               <>
                 <Wand2 className="mr-2 h-4 w-4" />
-                {generatedContent ? 'Generate New' : 'Generate Content'}
+                {generatedContent ? "Generate New" : "Generate Content"}
               </>
             )}
           </Button>
