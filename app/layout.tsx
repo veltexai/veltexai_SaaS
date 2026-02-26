@@ -4,8 +4,8 @@ import { montserrat, dmSerifText, arvo } from '@/lib/fonts';
 import './globals.css';
 import { Toaster } from 'sonner';
 import { ConfirmationProvider } from '@/components/providers/confirmation-provider';
-import FacebookPixel from '../components/FacebookPixel';
-import FacebookPixelTracker from '@/components/FacebookPixelTracker';
+import MetaPixel from '@/components/MetaPixel';
+import MetaPixelTracker from '@/components/MetaPixelTracker';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -36,8 +36,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${dmSerifText.variable} ${arvo.variable} antialiased`}
       >
-        <FacebookPixel />
-        <FacebookPixelTracker />
+        <MetaPixel />
+        <MetaPixelTracker />
         <ConfirmationProvider>
           {children}
           <Toaster />

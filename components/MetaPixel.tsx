@@ -1,11 +1,12 @@
 'use client';
 import Script from 'next/script';
 
-const FacebookPixel = () => {
+const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID ?? '425132391465999';
+
+const MetaPixel = () => {
   return (
     <>
-      {/* Meta Pixel Script */}
-      <Script strategy="afterInteractive" id="facebook-pixel">
+      <Script strategy="afterInteractive" id="meta-pixel">
         {`
           !function(f,b,e,v,n,t,s) {
             if(f.fbq) return;
@@ -24,7 +25,7 @@ const FacebookPixel = () => {
           }(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
 
-          fbq('init', '425132391465999');
+          fbq('init', '${PIXEL_ID}');
           fbq('track', 'PageView');
         `}
       </Script>
@@ -34,11 +35,11 @@ const FacebookPixel = () => {
           height="1"
           width="1"
           style={{ display: 'none' }}
-          src="https://www.facebook.com/tr?id=425132391465999&ev=PageView&noscript=1"
+          src={`https://www.facebook.com/tr?id=${PIXEL_ID}&ev=PageView&noscript=1`}
         />
       </noscript>
     </>
   );
 };
 
-export default FacebookPixel;
+export default MetaPixel;

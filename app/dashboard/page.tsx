@@ -6,7 +6,7 @@ import { WelcomeSection } from '@/components/dashboard/welcome-section';
 import { DashboardStats } from '@/components/dashboard/dashboard-stats';
 import { RecentProposals } from '@/components/dashboard/recent-proposals';
 import { QuickActions } from '@/components/dashboard/quick-actions';
-import FacebookPixelTracker from '@/components/FacebookPixelTracker';
+import MetaPixelTracker from '@/components/MetaPixelTracker';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <FacebookPixelTracker />
+      <MetaPixelTracker />
       <WelcomeSection profile={profile} />
       <DashboardStats stats={stats} />
       <RecentProposals proposals={recentProposals} />

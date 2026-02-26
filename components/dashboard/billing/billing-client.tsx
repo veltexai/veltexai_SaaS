@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PricingPlans } from '@/components/pricing/pricing-plans';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SubscriptionPlan } from '@/types/database';
 import {
   UsageData,
@@ -39,6 +39,7 @@ import {
 import ChangePlanButton from '@/components/buttons/change-plan';
 import CancelSubscriptionButton from '@/components/buttons/cancel-subscription';
 import FreeTrialInfoBanner from '@/components/ui/free-trial-info-banner';
+import { trackStartTrial } from '@/lib/meta-pixel';
 
 interface BillingClientProps {
   initialUsage: UsageData | null;
@@ -151,18 +152,27 @@ export function BillingClient({
     }
   }, [searchParams, trialStarted, refreshBillingData]);
 
+  const trialTrackedRef = useRef(false);
+
   useEffect(() => {
-    // Check for error from middleware redirect
     const error = searchParams.get('error');
     if (error === 'subscription_required') {
       toast.error('You need an active subscription to create proposals');
     }
-    
-    // Show success toast if trial just started
+
     if (trialStarted) {
       toast.success('🎉 Your 7-day free trial has started! You have 3 proposals to try.');
+
+      if (!trialTrackedRef.current) {
+        trialTrackedRef.current = true;
+        const plan = plans?.find((p) => p.name === usage?.subscriptionPlan);
+        trackStartTrial({
+          planName: plan?.name ?? 'unknown',
+          value: plan?.price_monthly ?? 0,
+        });
+      }
     }
-  }, [searchParams, trialStarted]);
+  }, [searchParams, trialStarted, plans, usage?.subscriptionPlan]);
 
   return (
     <div className="container mx-auto py-8 space-y-8">

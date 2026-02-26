@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { ArrowRight, Mail } from 'lucide-react';
-import { motion } from 'framer-motion';
-import React from 'react';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import Image from 'next/image';
-import Link from 'next/link';
+import { ArrowRight, Mail } from "lucide-react";
+import { motion } from "framer-motion";
+import React from "react";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { fadeInUp, staggerContainer } from "@/lib/animations/variants";
+import Image from "next/image";
+import Link from "next/link";
 
 const HeroSection = () => {
   return (
@@ -21,7 +21,7 @@ const HeroSection = () => {
         >
           <motion.div variants={fadeInUp}>
             <Badge className="mb-6 bg-emerald-50 text-emerald-700 border-emerald-200">
-            Built on decades of real cleaning industry experience
+              Built on decades of real cleaning industry experience
             </Badge>
           </motion.div>
 
@@ -29,7 +29,7 @@ const HeroSection = () => {
             className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight"
             variants={fadeInUp}
           >
-            Win More Cleaning Contracts with{' '}
+            Win More Cleaning Contracts with{" "}
             <span className="text-blue-600">Operational Intelligence</span>
           </motion.h1>
 
@@ -37,14 +37,15 @@ const HeroSection = () => {
             className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed"
             variants={fadeInUp}
           >
-            The AI Operating System for janitorial companies. Scope → Labor → Pricing → Proposal — client-ready output that closes faster.
+            The AI Operating System for janitorial companies. Scope → Labor →
+            Pricing → Proposal — client-ready output that closes faster.
           </motion.p>
 
           <motion.div
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             variants={fadeInUp}
           >
-            <Link href={'/auth/signup'}>
+            <Link href={"/auth/signup"}>
               <Button
                 size="lg"
                 className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
@@ -53,7 +54,7 @@ const HeroSection = () => {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link href={'/auth/signup?method=magic'}>
+            <Link href={"/auth/signup?method=magic"}>
               <Button
                 variant="outline"
                 size="lg"
@@ -64,13 +65,11 @@ const HeroSection = () => {
               </Button>
             </Link>
           </motion.div>
-          
+
           {/* Trial Info */}
-          <motion.p
-            className="text-sm text-gray-500 mt-4"
-            variants={fadeInUp}
-          >
-            7-day free trial with 3 proposals • Credit card required • Cancel anytime
+          <motion.p className="text-sm text-gray-500 mt-4" variants={fadeInUp}>
+            7-day free trial with 3 proposals • Credit card required • Cancel
+            anytime
           </motion.p>
         </motion.div>
 

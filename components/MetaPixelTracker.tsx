@@ -3,13 +3,7 @@
 import { useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-declare global {
-  interface Window {
-    fbq: any;
-  }
-}
-
-const FacebookPixelTracker = () => {
+const MetaPixelTracker = () => {
   useEffect(() => {
     const checkNewSignup = async () => {
       const supabase = createClient();
@@ -24,7 +18,7 @@ const FacebookPixelTracker = () => {
             currency: 'USD',
           });
 
-          console.log('✅ Facebook Pixel: CompleteRegistration tracked');
+          console.log('✅ Meta Pixel: CompleteRegistration tracked');
         }
 
         await supabase.auth.updateUser({
@@ -39,4 +33,4 @@ const FacebookPixelTracker = () => {
   return null;
 };
 
-export default FacebookPixelTracker;
+export default MetaPixelTracker;

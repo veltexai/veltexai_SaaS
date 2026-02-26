@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { createServiceClient } from '@/lib/supabase/server';
 import { EmailService } from '@/lib/email/service';
+import { sendStartTrialEvent, sendPurchaseEvent } from '@/lib/meta-capi';
 import Stripe from 'stripe';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -318,6 +319,16 @@ async function handleSubscriptionCreated(
       });
 
       console.log('✅ Welcome email sent to:', profile.email);
+
+      // Fire CAPI StartTrial event for Meta conversion tracking
+      if (isTrialing) {
+        await sendStartTrialEvent({
+          email: profile.email,
+          userId,
+          planName,
+          value: planData.price_monthly,
+        });
+      }
     }
 
     console.log('✅ Subscription created successfully');
@@ -600,6 +611,23 @@ async function handleInvoicePaymentSucceeded(
     }
     
     console.log('📋 Processing payment for user:', userId, 'plan:', planName);
+
+    // Fire CAPI Purchase event for Meta conversion tracking
+    const { data: payingProfile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', userId)
+      .single();
+
+    if (payingProfile?.email) {
+      await sendPurchaseEvent({
+        email: payingProfile.email,
+        userId,
+        planName: planName ?? 'unknown',
+        value: invoice.amount_paid / 100,
+        currency: invoice.currency,
+      });
+    }
 
     // First, check if there are pending billing records to update (from trial)
     // Update ALL pending records for this user to 'paid' when first real payment comes in

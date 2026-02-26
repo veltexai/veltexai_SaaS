@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/lib/hooks/use-subscription';
+import { trackInitiateCheckout } from '@/lib/meta-pixel';
 import { SubscriptionPlan } from '@/types/database';
 
 export function PricingPlans({
@@ -39,6 +40,13 @@ export function PricingPlans({
 
   const handleGetStarted = async (planName: string) => {
     setCheckoutLoading(true);
+
+    const selectedPlan = plans.find((p) => p.name === planName);
+    trackInitiateCheckout({
+      planName,
+      value: selectedPlan?.price_monthly ?? 0,
+    });
+
     await createCheckoutSession(planName);
     setCheckoutLoading(false);
   };
