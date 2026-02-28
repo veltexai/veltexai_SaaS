@@ -29,6 +29,7 @@ interface MarkdownRendererProps {
   proposalId?: string;
   additionalServicesRows?: Array<{
     service: string;
+    frequency?: string | null;
     pricePerTime: string | null;
     pricePerMonth: string | null;
   }>;
@@ -47,6 +48,7 @@ type ScopeTableData = {
 type AdditionalServicesData = {
   rows: Array<{
     service: string;
+    frequency?: string | null;
     pricePerTime: string | null;
     pricePerMonth: string | null;
   }>;
@@ -652,7 +654,7 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
   const premium = rows.some((r) => typeof r.note === "string");
 
   // Maximum rows per page section for PDF (prevents overflow)
-  const MAX_ROWS_PER_SECTION = 8;
+  const MAX_ROWS_PER_SECTION = 14;
   const needsPagination = rows.length > MAX_ROWS_PER_SECTION;
 
   // Split rows into chunks for pagination
@@ -676,11 +678,9 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
       );
     }
     return (
-      <div className="hidden sm:grid text-center grid-cols-2 text-[var(--color-primary)] sm:grid-cols-4 gap-2 sm:gap-4 px-3 sm:px-5 mb-2">
+      <div className="hidden sm:grid text-center grid-cols-2 text-[var(--color-primary)] gap-2 sm:gap-4 px-3 sm:px-5 mb-2">
         <div className="font-semibold text-xs sm:text-sm">Area serviced</div>
         <div className="font-semibold text-xs sm:text-sm">Frequency</div>
-        <div className="font-semibold text-xs sm:text-sm">Cost per visit</div>
-        <div className="font-semibold text-xs sm:text-sm">Monthly cost</div>
       </div>
     );
   };
@@ -737,27 +737,11 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
             <span className="text-white/70">Frequency:</span>
             <span className="text-white/90">{row.frequency}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-white/70">Cost/visit:</span>
-            <span className="text-white/90">
-              {formatCurrencySafe(row.costPerVisit) ?? "N/A"}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-white/70">Monthly:</span>
-            <span className="text-white font-bold">
-              {formatCurrencySafe(row.monthlyCost) ?? "N/A"}
-            </span>
-          </div>
         </div>
         {/* Desktop: grid layout */}
-        <div className="hidden sm:grid text-center grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-xs justify-center items-center">
+        <div className="hidden sm:grid text-center grid-cols-2 gap-2 sm:gap-4 text-xs justify-center items-center">
           <div className="whitespace-pre-line">{row.area}</div>
           <div>{row.frequency}</div>
-          <div>{formatCurrencySafe(row.costPerVisit) ?? "N/A"}</div>
-          <div className="font-bold">
-            {formatCurrencySafe(row.monthlyCost) ?? "N/A"}
-          </div>
         </div>
       </div>
     );
@@ -803,10 +787,24 @@ function AdditionalServicesTable({
   const [rows, setRows] = React.useState<
     Array<{
       service: string;
-      pricePerTime: string | null;
+      frequency: string | null;
       pricePerMonth: string | null;
     }>
-  >(data?.rows ?? []);
+  >(
+    (data?.rows ?? []).map((r) => {
+      const freq = (r.frequency ?? "").toString().toLowerCase();
+      const isOneTime =
+        freq === "one_time" || freq === "one-time" || freq === "onetime";
+      const pricePerMonth =
+        r.pricePerMonth ??
+        (isOneTime && r.pricePerTime ? r.pricePerTime : null);
+      return {
+        service: r.service,
+        frequency: r.frequency ?? null,
+        pricePerMonth,
+      };
+    }),
+  );
 
   const computeMonthly = (subtotal: any, frequency: string | null) => {
     const raw =
@@ -834,14 +832,22 @@ function AdditionalServicesTable({
         .order("created_at", { ascending: true });
       if (!mounted) return;
       if (pas && pas.length) {
-        const mapped = pas.map((r: any) => ({
-          service: r.label,
-          pricePerTime: formatCurrencySafe(r.subtotal),
-          pricePerMonth:
+        const mapped = pas.map((r: any) => {
+          const freq = (r.frequency ?? "").toLowerCase();
+          const isOneTime =
+            freq === "one_time" || freq === "one-time" || freq === "onetime";
+          const monthlyValue =
             r.monthly_amount != null
               ? formatCurrencySafe(r.monthly_amount)
-              : computeMonthly(r.subtotal, r.frequency),
-        }));
+              : isOneTime
+                ? formatCurrencySafe(r.subtotal)
+                : computeMonthly(r.subtotal, r.frequency);
+          return {
+            service: r.label,
+            frequency: r.frequency ?? null,
+            pricePerMonth: monthlyValue,
+          };
+        });
         setRows(mapped);
       }
     }
@@ -865,7 +871,7 @@ function AdditionalServicesTable({
             Service
           </div>
           <div className="text-[var(--color-primary)] font-bold text-xs sm:text-sm">
-            Price/time
+            Frequency
           </div>
           <div className="text-[var(--color-primary)] font-bold text-xs sm:text-sm">
             Price/month
@@ -880,8 +886,22 @@ function AdditionalServicesTable({
             <div className="sm:hidden space-y-1 text-xs">
               <div className="font-medium text-white mb-1">{r.service}</div>
               <div className="flex justify-between">
-                <span className="text-white/70">Price/time:</span>
-                <span className="text-white/90">{r.pricePerTime ?? "N/A"}</span>
+                <span className="text-white/70">Frequency:</span>
+                <span className="text-white/90">
+                  {r.frequency ? (
+                    isStandardJanitorialService(r.service) ? (
+                      <FrequencyLabel frequency={r.frequency} />
+                    ) : r.frequency === "annual" ? (
+                      "Annual Service"
+                    ) : r.frequency === "one_time" ? (
+                      "One time"
+                    ) : (
+                      r.frequency
+                    )
+                  ) : (
+                    "N/A"
+                  )}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-white/70">Price/month:</span>
@@ -893,7 +913,21 @@ function AdditionalServicesTable({
             {/* Desktop: grid layout */}
             <div className="hidden sm:grid grid-cols-4 gap-2 sm:gap-4 text-xs items-center justify-center text-center">
               <div className="whitespace-pre-line col-span-2">{r.service}</div>
-              <div>{r.pricePerTime ?? "N/A"}</div>
+              <div>
+                {r.frequency ? (
+                  isStandardJanitorialService(r.service) ? (
+                    <FrequencyLabel frequency={r.frequency} />
+                  ) : r.frequency === "annual" ? (
+                    "Annual Service"
+                  ) : r.frequency === "one_time" ? (
+                    "One time"
+                  ) : (
+                    r.frequency
+                  )
+                ) : (
+                  "N/A"
+                )}
+              </div>
               <div className="font-bold">{r.pricePerMonth ?? "N/A"}</div>
             </div>
           </div>

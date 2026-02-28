@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import React, { useState } from 'react';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import { Badge } from '../ui/badge';
+import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { fadeInUp, staggerContainer } from "@/lib/animations/variants";
+import { Badge } from "../ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../ui/card';
-import { CheckCircle, Clock, CreditCard, Shield } from 'lucide-react';
-import { Button } from '../ui/button';
+} from "../ui/card";
+import { CheckCircle, Clock, CreditCard, Shield } from "lucide-react";
+import { Button } from "../ui/button";
 
 const PricingSection = () => {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>(
-    'monthly'
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
+    "monthly",
   );
   return (
     <section id="pricing" className="py-20">
@@ -34,7 +34,7 @@ const PricingSection = () => {
           <p className="text-xl text-gray-600 mb-6">
             Choose the plan that fits your business needs
           </p>
-          
+
           {/* Free Trial Banner */}
           <div className="inline-flex flex-col sm:flex-row items-center gap-4 sm:gap-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl px-6 py-4 mb-8">
             <div className="flex items-center gap-2 text-blue-800">
@@ -102,55 +102,55 @@ const PricingSection = () => {
         >
           {[
             {
-              name: 'Starter',
-              price: billingCycle === 'monthly' ? 19.9 : 24,
+              name: "Starter",
+              price: billingCycle === "monthly" ? 19.99 : 24,
               period:
-                billingCycle === 'monthly'
-                  ? '/month'
-                  : '/month (billed annually)',
-              description: 'Perfect for small cleaning businesses',
+                billingCycle === "monthly"
+                  ? "/month"
+                  : "/month (billed annually)",
+              description: "Perfect for small cleaning businesses",
               features: [
-                '20 proposals per month',
-                'Basic AI templates',
-                'PDF export',
-                'Email support',
-                'Basic branding',
+                "20 proposals per month",
+                "Basic AI templates",
+                "PDF export",
+                "Email support",
+                "Basic branding",
               ],
               popular: false,
             },
             {
-              name: 'Professional',
-              price: billingCycle === 'monthly' ? 39.9 : 64,
+              name: "Professional",
+              price: billingCycle === "monthly" ? 39.99 : 64,
               period:
-                billingCycle === 'monthly'
-                  ? '/month'
-                  : '/month (billed annually)',
-              description: 'For growing cleaning companies',
+                billingCycle === "monthly"
+                  ? "/month"
+                  : "/month (billed annually)",
+              description: "For growing cleaning companies",
               features: [
-                '75 proposals per month',
-                'Advanced AI templates',
-                'Custom branding',
-                'Priority support',
-                'Team collaboration',
-                'Analytics dashboard',
+                "75 proposals per month",
+                "Advanced AI templates",
+                "Custom branding",
+                "Priority support",
+                "Team collaboration",
+                "Analytics dashboard",
               ],
               popular: true,
             },
             {
-              name: 'Enterprise',
-              price: billingCycle === 'monthly' ? 79.9 : 159,
+              name: "Enterprise",
+              price: billingCycle === "monthly" ? 79.99 : 159,
               period:
-                billingCycle === 'monthly'
-                  ? '/month'
-                  : '/month (billed annually)',
-              description: 'For large cleaning operations',
+                billingCycle === "monthly"
+                  ? "/month"
+                  : "/month (billed annually)",
+              description: "For large cleaning operations",
               features: [
-                'Unlimited proposals',
-                'Custom AI training',
-                'White-label solution',
-                'Dedicated support',
-                'API access',
-                'Custom integrations',
+                "Unlimited proposals",
+                "Custom AI training",
+                "White-label solution",
+                "Dedicated support",
+                "API access",
+                "Custom integrations",
               ],
               popular: false,
             },
@@ -159,8 +159,8 @@ const PricingSection = () => {
               <Card
                 className={`relative p-8 h-full ${
                   plan.popular
-                    ? 'border-2 border-blue-600 shadow-xl'
-                    : 'border shadow-lg'
+                    ? "border-2 border-blue-600 shadow-xl"
+                    : "border shadow-lg"
                 }`}
               >
                 {plan.popular && (
@@ -194,8 +194,8 @@ const PricingSection = () => {
                   <Button
                     className={`w-full ${
                       plan.popular
-                        ? 'bg-blue-600 hover:bg-blue-700'
-                        : 'bg-gray-900 hover:bg-gray-800'
+                        ? "bg-blue-600 hover:bg-blue-700"
+                        : "bg-gray-900 hover:bg-gray-800"
                     }`}
                     size="lg"
                   >
