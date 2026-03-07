@@ -1,7 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import LogsFilters from '@/components/admin/logs-filters';
-import LogsTable from '@/components/admin/logs-table';
+import LogsFilters from '@/features/admin/components/logs-filters';
+import LogsTable from '@/features/admin/components/logs-table';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';

@@ -48,11 +48,11 @@ import {
   BookOpenText,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-import { ProposalEditDialog } from '@/components/proposals/proposal-edit-dialog';
+import { ProposalEditDialog } from '@/features/proposals/components/proposal-edit-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import LoadingPage from '@/components/ui/loading-page';
-import { ServiceSpecificSection } from '@/components/proposals/new/service-specific-section';
+import { ServiceSpecificSection } from '@/features/proposals/components/new/service-specific-section';
 import { Form } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

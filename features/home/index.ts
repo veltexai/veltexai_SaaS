@@ -1,0 +1,10 @@
+export { default as Header } from './components/header';
+export { default as HeroSection } from './components/hero-section';
+export { default as HowItWorksSection } from './components/how-works';
+export { default as FeatureSection } from './components/features-section';
+export { default as ValueProposition } from './components/value-proposition';
+export { default as PricingSection } from './components/pricing-section';
+export { default as TestimonialsSection } from './components/testimonials-section';
+export { default as CTASection } from './components/cta-section';
+export { default as FAQSection } from './components/faq-section';
+export { default as FooterSection } from './components/footer-section';

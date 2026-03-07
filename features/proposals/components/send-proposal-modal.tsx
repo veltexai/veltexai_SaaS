@@ -49,7 +49,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { AIEmailGenerator } from '@/components/emails/ai-email-generator';
+import { AIEmailGenerator } from '@/features/emails/components/ai-email-generator';
 
 const sendProposalSchema = z.object({
   delivery_method: z.enum(['pdf_only'], {

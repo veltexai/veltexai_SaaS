@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import React from 'react';
 import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
 import { CheckCircle, FileText, Zap } from 'lucide-react';
-import { Card, CardContent } from '../ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 const HowItWorksSection = () => {
   return (

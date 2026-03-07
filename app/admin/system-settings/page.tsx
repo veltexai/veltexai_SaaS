@@ -1,6 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import SystemSettingsForm from '@/components/admin/system-settings-form';
+import SystemSettingsForm from '@/features/admin/components/system-settings-form';
 import { SystemSettings } from '@/types/database';
 
 // Force dynamic rendering

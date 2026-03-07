@@ -1,7 +1,7 @@
 'use client';
 
 import { SubscriptionTier } from '@/types/subscription';
-import TemplatePreviewDialog from '@/components/templates/template-preview-dialog';
+import TemplatePreviewDialog from '@/features/templates/components/template-preview-dialog';
 import { canAccessTemplate, sortTemplatesByAccess, TemplateCard, TemplateItem, useTemplatePreview } from '@/features/proposals';
 import { useMemo } from 'react';
 

@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getUser } from '@/queries/user';
-import { ProposalsHeader } from '@/components/proposals/proposals-header';
-import { ProposalsList } from '@/components/proposals/proposals-list';
-import { EmptyProposals } from '@/components/proposals/empty-proposals';
+import { ProposalsHeader } from '@/features/proposals/components/proposals-header';
+import { ProposalsList } from '@/features/proposals/components/proposals-list';
+import { EmptyProposals } from '@/features/proposals/components/empty-proposals';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';

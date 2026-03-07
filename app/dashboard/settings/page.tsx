@@ -1,11 +1,11 @@
 import { redirect } from 'next/navigation';
 import { getUser } from '@/queries/user';
-import { ProfileSettings } from '@/components/settings/profile-settings';
-import { CompanyProfileSettings } from '@/components/settings/company-profile-settings';
-import { SubscriptionBilling } from '@/components/settings/subscription-billing';
-import { SecuritySettings } from '@/components/settings/security-settings';
-import { NotificationsSettings } from '@/components/settings/notifications-settings';
-import BrandingSettings from '@/components/settings/branding-settings';
+import { ProfileSettings } from '@/features/settings/components/profile-settings';
+import { CompanyProfileSettings } from '@/features/settings/components/company-profile-settings';
+import { SubscriptionBilling } from '@/features/settings/components/subscription-billing';
+import { SecuritySettings } from '@/features/settings/components/security-settings';
+import { NotificationsSettings } from '@/features/settings/components/notifications-settings';
+import BrandingSettings from '@/features/settings/components/branding-settings';
 import { type User as UserType, type Profile } from '@/types/database';
 
 // Force dynamic rendering

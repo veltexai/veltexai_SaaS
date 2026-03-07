@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { Users } from 'lucide-react';
-import UsersTable from '@/components/admin/users-table';
+import UsersTable from '@/features/admin/components/users-table';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';

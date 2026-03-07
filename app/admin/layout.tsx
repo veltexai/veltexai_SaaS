@@ -7,7 +7,7 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import AdminSidebar from '@/components/admin/admin-sidebar';
+import AdminSidebar from '@/features/admin/components/admin-sidebar';
 
 interface AdminLayoutProps {
   children: React.ReactNode;

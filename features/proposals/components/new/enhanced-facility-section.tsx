@@ -26,13 +26,19 @@ import {
   type ServiceType,
 } from "@/lib/validations/proposal";
 import {
+  AREA_FREQUENCY_OPTIONS,
+  getAreaFrequencyLabel,
+} from "@/lib/constants/area-frequency";
+import {
   Building2,
   Users,
   AlertTriangle,
   Clock,
   Trash2,
   Plus,
+  X,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AddonServicePickerModal } from "./addon-service-picker-modal";
 import { Separator } from "@/components/ui/separator";
@@ -463,6 +469,69 @@ export function EnhancedFacilitySection({
   const [addons, setAddons] = useState<PASRow[]>([]);
   const [loadingAddons, setLoadingAddons] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Area frequency state
+  const [customAreaInput, setCustomAreaInput] = useState("");
+  const [showCustomAreaInput, setShowCustomAreaInput] = useState(false);
+  const areasIncluded: string[] =
+    form.watch("service_scope.areas_included") ?? [];
+  const frequencyDetails: Record<string, string> =
+    (form.watch("service_scope.frequency_details") as Record<string, string>) ??
+    {};
+
+  const DEFAULT_AREA_FREQUENCY = "1x_weekly";
+
+  const updateAreasForm = (
+    areas: string[],
+    details: Record<string, string>,
+  ) => {
+    form.setValue("service_scope.areas_included", areas, { shouldDirty: true });
+    form.setValue("service_scope.frequency_details", details, {
+      shouldDirty: true,
+    });
+  };
+
+  const handleToggleArea = (area: string) => {
+    const current = [...areasIncluded];
+    const details = { ...frequencyDetails };
+
+    if (current.includes(area)) {
+      updateAreasForm(
+        current.filter((a) => a !== area),
+        Object.fromEntries(
+          Object.entries(details).filter(([key]) => key !== area),
+        ),
+      );
+    } else {
+      details[area] = DEFAULT_AREA_FREQUENCY;
+      updateAreasForm([...current, area], details);
+    }
+  };
+
+  const handleAreaFrequencyChange = (area: string, frequency: string) => {
+    updateAreasForm(areasIncluded, { ...frequencyDetails, [area]: frequency });
+  };
+
+  const handleRemoveArea = (area: string) => {
+    updateAreasForm(
+      areasIncluded.filter((a) => a !== area),
+      Object.fromEntries(
+        Object.entries(frequencyDetails).filter(([key]) => key !== area),
+      ),
+    );
+  };
+
+  const handleAddCustomArea = () => {
+    const name = customAreaInput.trim();
+    if (!name || areasIncluded.includes(name)) return;
+
+    updateAreasForm(
+      [...areasIncluded, name],
+      { ...frequencyDetails, [name]: DEFAULT_AREA_FREQUENCY },
+    );
+    setCustomAreaInput("");
+    setShowCustomAreaInput(false);
+  };
 
   useEffect(() => {
     const fetchAddons = async () => {
@@ -987,59 +1056,120 @@ export function EnhancedFacilitySection({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <FormField
-            control={form.control}
-            name="service_scope.areas_included"
-            render={() => (
-              <FormItem>
-                <FormLabel>Areas Included in Service</FormLabel>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Select the rooms/spaces to be cleaned
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {areasIncludedOptions.map((area) => (
-                    <FormField
-                      key={area}
-                      control={form.control}
-                      name="service_scope.areas_included"
-                      render={({ field }) => {
-                        return (
-                          <FormItem
-                            key={area}
-                            className="flex flex-row items-start space-x-3 space-y-0"
-                          >
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(area)}
-                                onCheckedChange={(checked) => {
-                                  const currentValue = Array.isArray(
-                                    field.value,
-                                  )
-                                    ? field.value
-                                    : [];
-                                  return checked
-                                    ? field.onChange([...currentValue, area])
-                                    : field.onChange(
-                                        currentValue.filter(
-                                          (value) => value !== area,
-                                        ),
-                                      );
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="text-sm font-normal">
-                              {area}
-                            </FormLabel>
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  ))}
-                </div>
-                <FormMessage />
-              </FormItem>
+          {/* Areas with per-area frequency selection */}
+          <div className="space-y-4">
+            <div>
+              <FormLabel>Areas Included in Service</FormLabel>
+              <p className="text-xs text-muted-foreground mt-1">
+                Select areas and assign a cleaning frequency for each
+              </p>
+            </div>
+
+            {/* Preset area chips */}
+            <div className="flex flex-wrap gap-2">
+              {areasIncludedOptions.map((area) => {
+                const isSelected = areasIncluded.includes(area);
+                return (
+                  <button
+                    key={area}
+                    type="button"
+                    onClick={() => handleToggleArea(area)}
+                    className={cn(
+                      "px-3 py-1.5 text-sm rounded-full border transition-colors cursor-pointer",
+                      isSelected
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background hover:bg-muted border-border",
+                    )}
+                  >
+                    {area}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Selected areas with frequency dropdowns */}
+            {areasIncluded.length > 0 && (
+              <div className="space-y-2">
+                {areasIncluded.map((area) => (
+                  <div
+                    key={area}
+                    className="flex items-center gap-3 rounded-lg border p-3"
+                  >
+                    <span className="flex-1 text-sm font-medium">{area}</span>
+                    <Select
+                      value={frequencyDetails[area] ?? DEFAULT_AREA_FREQUENCY}
+                      onValueChange={(value) =>
+                        handleAreaFrequencyChange(area, value)
+                      }
+                    >
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {AREA_FREQUENCY_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveArea(area)}
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
             )}
-          />
+
+            {/* Add custom area */}
+            {showCustomAreaInput ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Enter area name"
+                  value={customAreaInput}
+                  onChange={(e) => setCustomAreaInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddCustomArea();
+                    }
+                  }}
+                  className="flex-1"
+                  autoFocus
+                />
+                <Button type="button" size="sm" onClick={handleAddCustomArea}>
+                  Add
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowCustomAreaInput(false);
+                    setCustomAreaInput("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCustomAreaInput(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Area
+              </Button>
+            )}
+          </div>
 
           <FormField
             control={form.control}

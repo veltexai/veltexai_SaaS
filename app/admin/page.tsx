@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import { getUser } from '@/queries/user';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { AdminAnalytics } from '@/components/admin/admin-analytics';
-import { AdminClientWrapper } from '@/components/admin/admin-client-wrapper';
+import { AdminAnalytics } from '@/features/admin/components/admin-analytics';
+import { AdminClientWrapper } from '@/features/admin/components/admin-client-wrapper';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';

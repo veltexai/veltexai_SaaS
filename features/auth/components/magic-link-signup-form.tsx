@@ -21,11 +21,11 @@ import {
 import Link from 'next/link';
 import { Loader2, Mail } from 'lucide-react';
 import Image from 'next/image';
-import Photo from '../../public/images/pexels-tima-miroshnichenko-6195879.jpg';
+import Photo from '../../../public/images/pexels-tima-miroshnichenko-6195879.jpg';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { signInWithGoogle } from '@/lib/auth/actions/oauth';
 import { signUpWithMagicLink } from '@/lib/auth/actions/magic-link';
-import FreeTrialInfoBanner from '../ui/free-trial-info-banner';
+import FreeTrialInfoBanner from '@/components/ui/free-trial-info-banner';
 
 const formSchema = z.object({
   fullName: z.string().min(3, 'Full name must be at least 3 characters'),

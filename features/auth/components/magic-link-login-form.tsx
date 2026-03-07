@@ -20,7 +20,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
-import Photo from '../../public/images/pexels-tima-miroshnichenko-6196692.jpg';
+import Photo from '../../../public/images/pexels-tima-miroshnichenko-6196692.jpg';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { signInWithMagicLink } from '@/lib/auth/actions/magic-link';
 import { signInWithGoogle } from '@/lib/auth/actions/oauth';

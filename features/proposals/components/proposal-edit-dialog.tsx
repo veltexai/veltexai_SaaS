@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { createClient } from '@/lib/supabase/client';
-import { type Database } from '@/types/database';
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createClient } from "@/lib/supabase/client";
+import { type Database } from "@/types/database";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +12,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -21,11 +21,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 import {
   Loader2,
   Save,
@@ -34,20 +34,18 @@ import {
   Settings,
   Building2,
   DollarSign,
-} from 'lucide-react';
-import {
-  proposalFormSchema,
-  ServiceType,
-} from '@/lib/validations/proposal';
-import { ServiceTypeSelector } from '@/features/proposals/components/new/service-type-selector';
-import { GlobalInputsSection } from '@/components/proposals/new/global-inputs-section';
-import { ServiceSpecificSection } from '@/components/proposals/new/service-specific-section';
-import { PricingSection } from '@/components/proposals/new/pricing-section';
-import { EnhancedFacilitySection } from '@/components/proposals/new/enhanced-facility-section';
-import { validateProposalWithServiceData } from '@/lib/validations/proposal';
-import { getValidationMessage } from '@/features/proposals';
+} from "lucide-react";
+import { proposalFormSchema, ServiceType } from "@/lib/validations/proposal";
+import { ServiceTypeSelector } from "@/features/proposals/components/new/service-type-selector";
+import { GlobalInputsSection } from "@/features/proposals/components/new/global-inputs-section";
+import { ServiceSpecificSection } from "@/features/proposals/components/new/service-specific-section";
+import { PricingSection } from "@/features/proposals/components/new/pricing-section";
+import { EnhancedFacilitySection } from "@/features/proposals/components/new/enhanced-facility-section";
+import { validateProposalWithServiceData } from "@/lib/validations/proposal";
+import { getValidationMessage } from "@/features/proposals";
+import { CalculatedPricing } from "../types/pricing";
 
-type Proposal = Database['public']['Tables']['proposals']['Row'];
+type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 
 interface ProposalEditDialogProps {
   proposal: Proposal;
@@ -63,32 +61,34 @@ export function ProposalEditDialog({
   onProposalUpdated,
 }: ProposalEditDialogProps) {
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('basic');
+  const [activeTab, setActiveTab] = useState("basic");
   const [pricingEnabled, setPricingEnabled] = useState(false);
-  const [aiTone, setAiTone] = useState<'professional' | 'friendly' | 'formal' | 'casual' | 'technical'>('professional');
+  const [aiTone, setAiTone] = useState<
+    "professional" | "friendly" | "formal" | "casual" | "technical"
+  >("professional");
   const supabase = createClient();
 
   const form = useForm({
     resolver: zodResolver(proposalFormSchema),
     defaultValues: {
-      title: '',
-      service_type: 'residential',
+      title: "",
+      service_type: "residential",
       global_inputs: {
-        client_name: '',
-        client_email: '',
-        client_company: '',
-        contact_phone: '',
-        service_location: '',
+        client_name: "",
+        client_email: "",
+        client_company: "",
+        contact_phone: "",
+        service_location: "",
         facility_size: 0,
-        service_frequency: 'one-time',
-        regional_location: '',
-        city: '',
+        service_frequency: "one-time",
+        regional_location: "",
+        city: "",
       },
       service_specific_data: {},
       pricing_enabled: false,
       pricing_data: undefined,
-      generated_content: '',
-      status: 'draft' as const,
+      generated_content: "",
+      status: "draft" as const,
       facility_details: {
         building_age: undefined,
         building_type: undefined,
@@ -109,7 +109,7 @@ export function ProposalEditDialog({
         areas_excluded: [],
         special_services: [],
         frequency_details: {},
-        special_notes: '',
+        special_notes: "",
       },
       special_requirements: {
         security_clearance: false,
@@ -118,7 +118,7 @@ export function ProposalEditDialog({
         certifications_required: [],
         insurance_requirements: [],
       },
-      ai_tone: 'professional' as const,
+      ai_tone: "professional" as const,
     },
   });
 
@@ -126,15 +126,24 @@ export function ProposalEditDialog({
   useEffect(() => {
     if (proposal && open) {
       // Set pricing enabled state - auto-enable if proposal has pricing data
-      const hasExistingPricing = proposal.pricing_data && 
-        typeof proposal.pricing_data === 'object' && 
+      const hasExistingPricing =
+        proposal.pricing_data &&
+        typeof proposal.pricing_data === "object" &&
         proposal.pricing_data !== null &&
         Object.keys(proposal.pricing_data).length > 0;
-      
-      setPricingEnabled(hasExistingPricing || proposal.pricing_enabled || false);
-      
+
+      setPricingEnabled(
+        hasExistingPricing || proposal.pricing_enabled || false,
+      );
+
       // Set AI tone from proposal data or default
-      const proposalAiTone = (proposal.ai_tone as 'professional' | 'friendly' | 'formal' | 'casual' | 'technical') ?? 'professional';
+      const proposalAiTone =
+        (proposal.ai_tone as
+          | "professional"
+          | "friendly"
+          | "formal"
+          | "casual"
+          | "technical") ?? "professional";
       setAiTone(proposalAiTone);
 
       form.reset({
@@ -142,31 +151,31 @@ export function ProposalEditDialog({
         service_type: proposal.service_type as ServiceType,
         template_id: proposal.template_id ?? undefined,
         global_inputs: {
-          client_name: proposal.client_name || '',
-          client_email: proposal.client_email || '',
-          client_company: proposal.client_company || '',
-          contact_phone: proposal.contact_phone || '',
-          service_location: proposal.service_location || '',
+          client_name: proposal.client_name || "",
+          client_email: proposal.client_email || "",
+          client_company: proposal.client_company || "",
+          contact_phone: proposal.contact_phone || "",
+          service_location: proposal.service_location || "",
           facility_size: proposal.facility_size || 0,
           service_frequency:
             (proposal.service_frequency as
-              | 'one-time'
-              | '1x-month'
-              | 'bi-weekly'
-              | 'weekly'
-              | '2x-week'
-              | '3x-week'
-              | '5x-week'
-              | 'daily') || 'one-time',
-          regional_location: proposal.regional_location || '',
-          city: proposal.city || '',
+              | "one-time"
+              | "1x-month"
+              | "bi-weekly"
+              | "weekly"
+              | "2x-week"
+              | "3x-week"
+              | "5x-week"
+              | "daily") || "one-time",
+          regional_location: proposal.regional_location || "",
+          city: proposal.city || "",
         },
         service_specific_data:
           (proposal.service_specific_data as Record<string, any>) || {},
         pricing_enabled: proposal.pricing_enabled || false,
         pricing_data: (proposal.pricing_data as any) || undefined,
-        generated_content: proposal.generated_content || '',
-        status: proposal.status || 'draft',
+        generated_content: proposal.generated_content || "",
+        status: proposal.status || "draft",
         facility_details: proposal.facility_details
           ? (proposal.facility_details as any)
           : {
@@ -190,7 +199,7 @@ export function ProposalEditDialog({
           // Handle case where service_scope might be an array or invalid format
           if (
             proposal.service_scope &&
-            typeof proposal.service_scope === 'object' &&
+            typeof proposal.service_scope === "object" &&
             !Array.isArray(proposal.service_scope)
           ) {
             const scope = proposal.service_scope as any;
@@ -206,11 +215,13 @@ export function ProposalEditDialog({
                 : [],
               frequency_details:
                 scope.frequency_details &&
-                typeof scope.frequency_details === 'object'
+                typeof scope.frequency_details === "object"
                   ? scope.frequency_details
                   : {},
               special_notes:
-                typeof scope.special_notes === 'string' ? scope.special_notes : '',
+                typeof scope.special_notes === "string"
+                  ? scope.special_notes
+                  : "",
             };
           }
           // Default fallback
@@ -219,7 +230,7 @@ export function ProposalEditDialog({
             areas_excluded: [],
             special_services: [],
             frequency_details: {},
-            special_notes: '',
+            special_notes: "",
           };
         })(),
         special_requirements: proposal.special_requirements
@@ -237,7 +248,7 @@ export function ProposalEditDialog({
   }, [proposal, open, form]);
 
   const onSubmit = async (data: any) => {
-    console.log('Data submitted:', data);
+    console.log("Data submitted:", data);
     try {
       setSaving(true);
 
@@ -245,9 +256,9 @@ export function ProposalEditDialog({
       try {
         // Try to validate service-specific data
         validatedData = validateProposalWithServiceData(data);
-        console.log('Validated data:', validatedData);
+        console.log("Validated data:", validatedData);
       } catch (validationError) {
-        console.warn('Validation failed, using raw data:', validationError);
+        console.warn("Validation failed, using raw data:", validationError);
         // Fallback to using the raw data with basic structure
         validatedData = {
           ...data,
@@ -300,7 +311,7 @@ export function ProposalEditDialog({
       }
 
       // Ensure JSON fields are properly serialized
-      console.log('Validating JSON fields before update...');
+      console.log("Validating JSON fields before update...");
       try {
         if (updatePayload.global_inputs) {
           JSON.stringify(updatePayload.global_inputs);
@@ -323,15 +334,15 @@ export function ProposalEditDialog({
         if (updatePayload.special_requirements) {
           JSON.stringify(updatePayload.special_requirements);
         }
-        console.log('All JSON fields are valid');
+        console.log("All JSON fields are valid");
       } catch (jsonError) {
-        console.error('Invalid JSON data:', jsonError);
-        toast.error('Invalid data format. Please check your inputs.');
+        console.error("Invalid JSON data:", jsonError);
+        toast.error("Invalid data format. Please check your inputs.");
         return;
       }
 
-      console.log('Update payload:', updatePayload);
-      console.log('Proposal ID:', proposal.id);
+      console.log("Update payload:", updatePayload);
+      console.log("Proposal ID:", proposal.id);
 
       // Check current user for debugging
       const {
@@ -339,88 +350,90 @@ export function ProposalEditDialog({
         error: userError,
       } = await supabase.auth.getUser();
       if (userError) {
-        console.error('Error getting user:', userError);
-        toast.error('Authentication error');
+        console.error("Error getting user:", userError);
+        toast.error("Authentication error");
         return;
       }
-      console.log('Current user:', user?.id);
+      console.log("Current user:", user?.id);
 
       // First, verify the proposal exists and we can access it
       const { data: existingProposal, error: fetchError } = await supabase
-        .from('proposals')
-        .select('id, user_id, status')
-        .eq('id', proposal.id)
+        .from("proposals")
+        .select("id, user_id, status")
+        .eq("id", proposal.id)
         .single();
 
       if (fetchError) {
-        console.error('Error fetching existing proposal:', fetchError);
+        console.error("Error fetching existing proposal:", fetchError);
         toast.error(`Failed to fetch proposal: ${fetchError.message}`);
         return;
       }
 
       if (!existingProposal) {
-        console.error('Proposal not found with ID:', proposal.id);
-        toast.error('Proposal not found');
+        console.error("Proposal not found with ID:", proposal.id);
+        toast.error("Proposal not found");
         return;
       }
 
-      console.log('Existing proposal found:', existingProposal);
+      console.log("Existing proposal found:", existingProposal);
 
       // Update proposal in database
       const { data: updatedProposals, error } = await supabase
-        .from('proposals')
+        .from("proposals")
         .update(updatePayload)
-        .eq('id', proposal.id)
+        .eq("id", proposal.id)
         .select();
 
       if (error) {
-        console.error('Supabase error details:', error);
+        console.error("Supabase error details:", error);
         toast.error(`Failed to update proposal: ${error.message}`);
         return;
       }
 
       if (!updatedProposals || updatedProposals.length === 0) {
-        console.error('No proposal was updated');
-        toast.error('Failed to update proposal: No records updated');
+        console.error("No proposal was updated");
+        toast.error("Failed to update proposal: No records updated");
         return;
       }
 
       const updatedProposal = updatedProposals[0];
-      console.log('Updated proposal:', updatedProposal);
-      toast.success('Proposal updated successfully');
+      console.log("Updated proposal:", updatedProposal);
+      toast.success("Proposal updated successfully");
       onProposalUpdated(updatedProposal);
       onOpenChange(false);
     } catch (error) {
-      console.error('Validation or other error:', error);
+      console.error("Validation or other error:", error);
       toast.error(
         `Failed to update proposal: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
       );
     } finally {
       setSaving(false);
     }
   };
 
-  const selectedServiceType = form.watch('service_type');
+  const selectedServiceType = form.watch("service_type");
 
   // Reset service-specific data when service type changes
   useEffect(() => {
-    form.setValue('service_specific_data', {});
+    form.setValue("service_specific_data", {});
   }, [selectedServiceType, form]);
 
   const handlePricingEnabledChange = (enabled: boolean) => {
     setPricingEnabled(enabled);
-    form.setValue('pricing_enabled', enabled, {
+    form.setValue("pricing_enabled", enabled, {
       shouldValidate: false,
       shouldTouch: false,
       shouldDirty: false,
     });
   };
 
-  const handleAiToneChange = (tone: 'professional' | 'friendly' | 'formal' | 'casual' | 'technical') => {
+  const handleAiToneChange = (
+    tone: "professional" | "friendly" | "formal" | "casual" | "technical",
+  ) => {
     setAiTone(tone);
-    form.setValue('ai_tone', tone, {
+    form.setValue("ai_tone", tone, {
       shouldValidate: false,
       shouldTouch: false,
       shouldDirty: false,
@@ -443,14 +456,24 @@ export function ProposalEditDialog({
               const firstError = Object.keys(errors)[0];
               const message = firstError
                 ? getValidationMessage(errors, firstError)
-                : 'Please fix the errors in the form.';
+                : "Please fix the errors in the form.";
               toast.error(message);
               // Switch to the tab that likely contains the first error
-              if (firstError?.startsWith('global_inputs')) setActiveTab('client');
-              else if (firstError === 'title' || firstError === 'service_type') setActiveTab('basic');
-              else if (firstError === 'service_specific_data') setActiveTab('service');
-              else if (firstError?.startsWith('facility_') || firstError?.startsWith('traffic_') || firstError?.startsWith('service_scope') || firstError?.startsWith('special_requirements')) setActiveTab('facility');
-              else if (firstError?.startsWith('pricing')) setActiveTab('pricing');
+              if (firstError?.startsWith("global_inputs"))
+                setActiveTab("client");
+              else if (firstError === "title" || firstError === "service_type")
+                setActiveTab("basic");
+              else if (firstError === "service_specific_data")
+                setActiveTab("service");
+              else if (
+                firstError?.startsWith("facility_") ||
+                firstError?.startsWith("traffic_") ||
+                firstError?.startsWith("service_scope") ||
+                firstError?.startsWith("special_requirements")
+              )
+                setActiveTab("facility");
+              else if (firstError?.startsWith("pricing"))
+                setActiveTab("pricing");
             })}
             className="space-y-6"
           >
@@ -529,10 +552,16 @@ export function ProposalEditDialog({
               </TabsContent>
 
               <TabsContent value="facility">
-                <EnhancedFacilitySection proposalId={proposal.id} serviceType={selectedServiceType} />
+                <EnhancedFacilitySection
+                  proposalId={proposal.id}
+                  serviceType={selectedServiceType}
+                />
               </TabsContent>
 
-              <TabsContent value="pricing" className='min-h-[calc(100vh-300px)]'>
+              <TabsContent
+                value="pricing"
+                className="min-h-[calc(100vh-300px)]"
+              >
                 <PricingSection
                   proposalId={proposal.id}
                   serviceType={selectedServiceType}
@@ -540,7 +569,9 @@ export function ProposalEditDialog({
                   onEnabledChange={handlePricingEnabledChange}
                   selectedTone={aiTone}
                   onToneChange={handleAiToneChange}
-                  existingPricingData={proposal.pricing_data}
+                  existingPricingData={
+                    proposal.pricing_data as CalculatedPricing | null
+                  }
                 />
               </TabsContent>
             </Tabs>
@@ -552,18 +583,18 @@ export function ProposalEditDialog({
                   variant="outline"
                   className="flex-1 sm:flex-initial"
                   onClick={() => {
-                    if (activeTab === 'basic') return;
+                    if (activeTab === "basic") return;
                     const tabs = [
-                      'basic',
-                      'client',
-                      'service',
-                      'facility',
-                      'pricing',
+                      "basic",
+                      "client",
+                      "service",
+                      "facility",
+                      "pricing",
                     ];
                     const currentIndex = tabs.indexOf(activeTab);
                     setActiveTab(tabs[currentIndex - 1]);
                   }}
-                  disabled={activeTab === 'basic'}
+                  disabled={activeTab === "basic"}
                 >
                   Previous
                 </Button>
@@ -572,18 +603,18 @@ export function ProposalEditDialog({
                   variant="outline"
                   className="flex-1 sm:flex-initial"
                   onClick={() => {
-                    if (activeTab === 'pricing') return;
+                    if (activeTab === "pricing") return;
                     const tabs = [
-                      'basic',
-                      'client',
-                      'service',
-                      'facility',
-                      'pricing',
+                      "basic",
+                      "client",
+                      "service",
+                      "facility",
+                      "pricing",
                     ];
                     const currentIndex = tabs.indexOf(activeTab);
                     setActiveTab(tabs[currentIndex + 1]);
                   }}
-                  disabled={activeTab === 'pricing'}
+                  disabled={activeTab === "pricing"}
                 >
                   Next
                 </Button>

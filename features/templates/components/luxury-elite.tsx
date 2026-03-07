@@ -51,7 +51,7 @@ export function LuxuryEliteTemplate({
         className="relative aspect-[1/1.4] bg-white overflow-hidden"
       >
         <p
-          className={`absolute sm:-right-[48px] -right-[38px] sm:top-[88.5px] top-[58.5px] -rotate-90 z-30 text-white sm:text-sm text-xs ${montserrat.className}`}
+          className={`absolute -right-[28px] sm:top-[88.5px] top-[58.5px] -rotate-90 z-30 text-white sm:text-sm text-xs ${montserrat.className}`}
         >
           {formatDateLong(proposal.created_at)}
         </p>
@@ -99,7 +99,13 @@ export function LuxuryEliteTemplate({
 
       <ProposalTableOfContents templateType="luxury_elite" />
 
-      {content.about || content.commitment || content.whyUs || content.scope || content.addons || content.pricing || content.notes
+      {content.about ||
+      content.commitment ||
+      content.whyUs ||
+      content.scope ||
+      content.addons ||
+      content.pricing ||
+      content.notes
         ? (() => {
             return (
               <>
@@ -276,7 +282,9 @@ export function LuxuryEliteTemplate({
                           <div className="gap-6 max-w-[95%]">
                             <div>
                               <ScopeOfService
-                                title={content.scope?.title ?? "Scope of Service"}
+                                title={
+                                  content.scope?.title ?? "Scope of Service"
+                                }
                                 content={content.scope?.content ?? ""}
                                 templateType="luxury_elite"
                                 className={`${montserrat.className}`}
@@ -285,16 +293,17 @@ export function LuxuryEliteTemplate({
                                 isContinuation
                               />
                             </div>
-                            {isLastScopeOverflowPage && content.addons?.content && (
-                              <div className="mt-6">
-                                <Addons
-                                  title={content.addons.title ?? "Add-ons"}
-                                  content={content.addons.content}
-                                  templateType="luxury_elite"
-                                  className={`${montserrat.className}`}
-                                />
-                              </div>
-                            )}
+                            {isLastScopeOverflowPage &&
+                              content.addons?.content && (
+                                <div className="mt-6">
+                                  <Addons
+                                    title={content.addons.title ?? "Add-ons"}
+                                    content={content.addons.content}
+                                    templateType="luxury_elite"
+                                    className={`${montserrat.className}`}
+                                  />
+                                </div>
+                              )}
                           </div>
                           <PoweredBy colorLogo="gray" isRight />
                           <NavitationNumber
@@ -316,7 +325,9 @@ export function LuxuryEliteTemplate({
                   <div className="space-y-8 max-w-[95%]">
                     {content.pricing?.content ? (
                       <ServiceQuotePricing
-                        title={content.pricing.title ?? "Service Quote & Pricing"}
+                        title={
+                          content.pricing.title ?? "Service Quote & Pricing"
+                        }
                         content={content.pricing.content}
                         description={content.pricing.description}
                         templateType="luxury_elite"

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import { XCircle, RotateCcw } from 'lucide-react';
-import { useConfirmation } from '../providers/confirmation-provider';
+import { useConfirmation } from '@/components/providers/confirmation-provider';
 import { toast } from 'sonner';
 
 interface CancelSubscriptionButtonProps {

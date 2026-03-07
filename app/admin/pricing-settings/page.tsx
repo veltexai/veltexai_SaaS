@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
-import PricingSettingsForm from '@/components/admin/pricing-settings-form';
-import PricingCalculator from '@/components/admin/pricing-calculator';
+import PricingSettingsForm from '@/features/admin/components/pricing-settings-form';
+import PricingCalculator from '@/features/admin/components/pricing-calculator';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';

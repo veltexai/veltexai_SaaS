@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { PublicProposalView } from '@/components/proposals/public-proposal-view';
-import { ProposalViewTracker } from '@/components/proposals/proposal-view-tracker';
+import { PublicProposalView } from '@/features/proposals/components/public-proposal-view';
+import { ProposalViewTracker } from '@/features/proposals/components/proposal-view-tracker';
 
 interface ProposalData {
   id: string;

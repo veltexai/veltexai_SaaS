@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
-import StructuredMarkdownRenderer from '@/components/proposals/detail/structured-markdown-renderer';
+import StructuredMarkdownRenderer from '@/features/proposals/components/detail/structured-markdown-renderer';
 import { FileText } from 'lucide-react';
 import { Database } from '@/types/database';
 

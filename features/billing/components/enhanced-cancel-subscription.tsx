@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,17 +10,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '../ui/dialog';
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
-import { Textarea } from '../ui/textarea';
-import { Label } from '../ui/label';
-import { Alert, AlertDescription } from '../ui/alert';
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { XCircle, RotateCcw, AlertTriangle, Calendar, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';

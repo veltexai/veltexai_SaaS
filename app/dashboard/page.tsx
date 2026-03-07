@@ -2,10 +2,10 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getUser } from '@/queries/user';
-import { WelcomeSection } from '@/components/dashboard/welcome-section';
-import { DashboardStats } from '@/components/dashboard/dashboard-stats';
-import { RecentProposals } from '@/components/dashboard/recent-proposals';
-import { QuickActions } from '@/components/dashboard/quick-actions';
+import { WelcomeSection } from '@/features/dashboard/components/welcome-section';
+import { DashboardStats } from '@/features/dashboard/components/dashboard-stats';
+import { RecentProposals } from '@/features/dashboard/components/recent-proposals';
+import { QuickActions } from '@/features/dashboard/components/quick-actions';
 import MetaPixelTracker from '@/components/MetaPixelTracker';
 
 // Force dynamic rendering

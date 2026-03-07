@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { formatCurrency } from '@/lib/utils';
-import ProposalsTable from '@/components/admin/proposals-table';
+import ProposalsTable from '@/features/admin/components/proposals-table';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';

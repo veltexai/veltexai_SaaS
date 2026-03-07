@@ -1,3 +1,4 @@
+// Types
 export type {
   TemplateProps,
   TemplateType,
@@ -5,6 +6,7 @@ export type {
   ProposalTemplateRow,
 } from './types/templates';
 
+// Template variants
 export {
   BasicTemplate,
   ExecutivePremiumTemplate,
@@ -12,8 +14,14 @@ export {
   LuxuryEliteTemplate,
 } from './components';
 
+// Template UI
+export { default as TemplatePreviewDialog } from './components/template-preview-dialog';
+export { TemplatePreview } from './components/template-preview';
+export { TemplateSelector } from './components/template-selector';
+
 export { TemplateRenderer } from './template-renderer';
 
+// Utils
 export {
   parseScopeTableData,
   splitScopeRows,

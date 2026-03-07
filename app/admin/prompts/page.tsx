@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageSquare, Eye, Filter, Settings } from 'lucide-react';
-import PromptsFilters from '@/components/admin/prompts-filters';
-import PromptsTable from '@/components/admin/prompts-table';
+import PromptsFilters from '@/features/admin/components/prompts-filters';
+import PromptsTable from '@/features/admin/components/prompts-table';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';

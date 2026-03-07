@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { PasswordInput } from '@/components/ui/password-input';
-import Photo from '../../public/images/pexels-tima-miroshnichenko-6196692.jpg';
+import Photo from '../../../public/images/pexels-tima-miroshnichenko-6196692.jpg';
 import { signIn } from '@/lib/auth/actions/password';
 import { signInWithGoogle } from '@/lib/auth/actions/oauth';
 

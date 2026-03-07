@@ -22,7 +22,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { PricingPlans } from '@/components/pricing/pricing-plans';
+import { PricingPlans } from '@/features/pricing/components/pricing-plans';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SubscriptionPlan } from '@/types/database';
 import {
@@ -36,8 +36,8 @@ import {
   getDaysRemaining,
   getStatusColor,
 } from '@/lib/utils';
-import ChangePlanButton from '@/components/buttons/change-plan';
-import CancelSubscriptionButton from '@/components/buttons/cancel-subscription';
+import ChangePlanButton from '@/features/billing/components/change-plan';
+import CancelSubscriptionButton from '@/features/billing/components/cancel-subscription';
 import FreeTrialInfoBanner from '@/components/ui/free-trial-info-banner';
 import { trackStartTrial } from '@/lib/meta-pixel';
 

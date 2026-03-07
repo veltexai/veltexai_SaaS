@@ -11,11 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { CreditCard, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
-import ManageBillingButton from '../buttons/manage-billing';
+import ManageBillingButton from '@/features/billing/components/manage-billing';
 import { getSubscriptionPlans, getUserSubscription } from '@/lib/stripe';
-import ChangePlanButton from '../buttons/change-plan';
-import EnhancedCancelSubscription from '../buttons/enhanced-cancel-subscription';
-import ReactivateSubscription from '../buttons/reactivate-subscription';
+import ChangePlanButton from '@/features/billing/components/change-plan';
+import EnhancedCancelSubscription from '@/features/billing/components/enhanced-cancel-subscription';
+import ReactivateSubscription from '@/features/billing/components/reactivate-subscription';
 
 export async function SubscriptionBilling({ userId }: { userId: string }) {
   const plans = await getSubscriptionPlans();

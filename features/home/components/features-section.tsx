@@ -11,7 +11,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import { Card, CardContent } from '../ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 const FeatureSection = () => {
   return (

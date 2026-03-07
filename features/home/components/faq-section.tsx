@@ -7,7 +7,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '../ui/collapsible';
+} from '@/components/ui/collapsible';
 import { ChevronDownIcon } from 'lucide-react';
 
 const FAQSection = () => {

@@ -1,7 +1,7 @@
-import MagicLinkLoginForm from '@/components/forms/magic-link-login-form';
+import MagicLinkLoginForm from '@/features/auth/components/magic-link-login-form';
 import { redirect } from 'next/navigation';
 import { getUser } from '@/queries/user';
-import LoginForm from '@/components/forms/login-form';
+import LoginForm from '@/features/auth/components/login-form';
 interface LoginPageProps {
   searchParams: Promise<{ method?: string }>;
 }

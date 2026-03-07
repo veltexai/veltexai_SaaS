@@ -1,5 +1,5 @@
-import MagicLinkSignupForm from '@/components/forms/magic-link-signup-form';
-import SignupForm from '@/components/forms/signup-form';
+import MagicLinkSignupForm from '@/features/auth/components/magic-link-signup-form';
+import SignupForm from '@/features/auth/components/signup-form';
 import { getUser } from '@/queries/user';
 import { redirect } from 'next/navigation';
 

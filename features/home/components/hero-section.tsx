@@ -3,8 +3,8 @@
 import { ArrowRight, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import React from "react";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { fadeInUp, staggerContainer } from "@/lib/animations/variants";
 import Image from "next/image";
 import Link from "next/link";
@@ -45,7 +45,7 @@ const HeroSection = () => {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             variants={fadeInUp}
           >
-            <Link href={"/auth/signup"}>
+            <Link href={"#pricing"}>
               <Button
                 size="lg"
                 className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"

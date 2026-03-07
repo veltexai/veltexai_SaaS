@@ -10,6 +10,10 @@ import {
 } from "@/lib/validations/proposal";
 import { AITone } from "@/types/database";
 import { formatCurrencySafe } from "@/lib/utils";
+import {
+  getAreaFrequencyLabel,
+  isOnDemandFrequency,
+} from "@/lib/constants/area-frequency";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -243,9 +247,22 @@ export async function POST(request: NextRequest) {
       if (service_scope && Object.keys(service_scope).length > 0) {
         enhancedInfo += "\n--- SERVICE SCOPE ---\n";
         if (service_scope.areas_included?.length > 0) {
-          enhancedInfo += `Areas Included: ${service_scope.areas_included.join(
-            ", ",
-          )}\n`;
+          const hasFrequencyDetails =
+            service_scope.frequency_details &&
+            Object.keys(service_scope.frequency_details).length > 0;
+
+          if (hasFrequencyDetails) {
+            enhancedInfo += "Areas with Frequencies:\n";
+            for (const area of service_scope.areas_included) {
+              const freq = service_scope.frequency_details?.[area];
+              const label = freq
+                ? getAreaFrequencyLabel(freq)
+                : getServiceFrequencyLabel(service_frequency);
+              enhancedInfo += `  - ${area} – ${label}\n`;
+            }
+          } else {
+            enhancedInfo += `Areas Included: ${service_scope.areas_included.join(", ")}\n`;
+          }
         }
         if (service_scope.areas_excluded?.length > 0) {
           enhancedInfo += `Areas Excluded: ${service_scope.areas_excluded.join(
@@ -400,15 +417,36 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
     }
 
     // Deterministic fenced JSON blocks to embed in-place within structure
+    const hasPerAreaFrequencies =
+      service_scope?.frequency_details &&
+      Object.keys(service_scope.frequency_details).length > 0;
+
     const scopeTableData = {
-      rows: [
-        {
-          area: service_scope?.areas_included?.join(", ") || "—",
-          frequency: getServiceFrequencyLabel(service_frequency),
-          costPerVisit: tableCostPerVisit || null,
-          monthlyCost: tableMonthlyCost || null,
-        },
-      ],
+      rows: hasPerAreaFrequencies
+        ? (service_scope!.areas_included as string[]).map((area: string) => ({
+            area,
+            frequency: service_scope!.frequency_details?.[area]
+              ? getAreaFrequencyLabel(service_scope!.frequency_details[area])
+              : getServiceFrequencyLabel(service_frequency),
+            costPerVisit: isOnDemandFrequency(
+              service_scope!.frequency_details?.[area] ?? "",
+            )
+              ? null
+              : tableCostPerVisit || null,
+            monthlyCost: isOnDemandFrequency(
+              service_scope!.frequency_details?.[area] ?? "",
+            )
+              ? null
+              : tableMonthlyCost || null,
+          }))
+        : [
+            {
+              area: service_scope?.areas_included?.join(", ") || "—",
+              frequency: getServiceFrequencyLabel(service_frequency),
+              costPerVisit: tableCostPerVisit || null,
+              monthlyCost: tableMonthlyCost || null,
+            },
+          ],
     };
     const scopeTableFenced = `\n\`\`\`veliz_scope_table\n${JSON.stringify(
       scopeTableData,
@@ -445,7 +483,11 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
     const premiumScopeRows = Array.isArray(service_scope?.areas_included)
       ? (service_scope!.areas_included as string[]).map((area: string) => ({
           area,
-          frequency: getServiceFrequencyLabel(service_frequency),
+          frequency: hasPerAreaFrequencies
+            ? getAreaFrequencyLabel(
+                service_scope!.frequency_details?.[area] ?? service_frequency,
+              )
+            : getServiceFrequencyLabel(service_frequency),
           note:
             typeof service_scope?.special_notes === "string"
               ? service_scope!.special_notes

@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { getUser } from '@/queries/user';
-import { BillingClient } from '@/components/dashboard/billing/billing-client';
+import { BillingClient } from '@/features/dashboard/components/billing/billing-client';
 import { redirect } from 'next/navigation';
 import { getSubscriptionPlans } from '@/lib/stripe';
 import type { SubscriptionPlan } from '@/types/database';

@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { createClient } from '@/lib/supabase/client';
 import { Edit, Download, Send, Loader2, Save, X, Settings } from 'lucide-react';
-import { SendProposalModal } from '@/components/proposals/send-proposal-modal';
-import { ProposalEditDialog } from '@/components/proposals/proposal-edit-dialog';
+import { SendProposalModal } from '@/features/proposals/components/send-proposal-modal';
+import { ProposalEditDialog } from '@/features/proposals/components/proposal-edit-dialog';
 import { type Database } from '@/types/database';
 
 type Proposal = Database['public']['Tables']['proposals']['Row'];

@@ -1,10 +1,10 @@
 import { notFound, redirect } from 'next/navigation';
 import { getUser } from '@/queries/user';
 import { createClient } from '@/lib/supabase/server';
-import { ProposalHeader } from '@/components/proposals/detail/proposal-header';
-import { ProposalEditWrapper } from '@/components/proposals/detail/proposal-edit-wrapper';
-import { ProposalSidebar } from '@/components/proposals/detail/proposal-sidebar';
-import { ProposalDetailTabs } from '@/components/proposals/detail/proposal-detail-tabs';
+import { ProposalHeader } from '@/features/proposals/components/detail/proposal-header';
+import { ProposalEditWrapper } from '@/features/proposals/components/detail/proposal-edit-wrapper';
+import { ProposalSidebar } from '@/features/proposals/components/detail/proposal-sidebar';
+import { ProposalDetailTabs } from '@/features/proposals/components/detail/proposal-detail-tabs';
 import { Database } from '@/types/database';
 
 // Force dynamic rendering

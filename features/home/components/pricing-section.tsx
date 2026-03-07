@@ -3,16 +3,16 @@
 import { motion } from "framer-motion";
 import React, { useState } from "react";
 import { fadeInUp, staggerContainer } from "@/lib/animations/variants";
-import { Badge } from "../ui/badge";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../ui/card";
+} from "@/components/ui/card";
 import { CheckCircle, Clock, CreditCard, Shield } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 
 const PricingSection = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(

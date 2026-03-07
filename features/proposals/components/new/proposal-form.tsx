@@ -15,10 +15,10 @@ import {
   getServiceSpecificSchema,
 } from '@/lib/validations/proposal';
 import { ServiceTypeSelector } from './service-type-selector';
-import { GlobalInputsSection } from '../../../../components/proposals/new/global-inputs-section';
-import { ServiceSpecificSection } from '../../../../components/proposals/new/service-specific-section';
-import { EnhancedFacilitySection } from '../../../../components/proposals/new/enhanced-facility-section';
-import { PricingSection } from '../../../../components/proposals/new/pricing-section';
+import { GlobalInputsSection } from './global-inputs-section';
+import { ServiceSpecificSection } from './service-specific-section';
+import { EnhancedFacilitySection } from './enhanced-facility-section';
+import { PricingSection } from './pricing-section';
 import { cn } from '@/lib/utils';
 import z from 'zod';
 import { useUserTier } from '@/features/proposals/hooks/use-user-tier';

@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
-import { PricingHeader } from '@/components/pricing/pricing-header';
-import { PricingPlans } from '@/components/pricing/pricing-plans';
-import { PricingFAQ } from '@/components/pricing/pricing-faq';
+import { PricingHeader } from '@/features/pricing/components/pricing-header';
+import { PricingPlans } from '@/features/pricing/components/pricing-plans';
+import { PricingFAQ } from '@/features/pricing/components/pricing-faq';
 
 export default function PricingPage() {
   return (

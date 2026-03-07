@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import React from 'react';
 import { fadeInUp } from '@/lib/animations/variants';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
 const CTASection = () => {

@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/client';
 import { Edit, Download, Trash2, Loader2, Send } from 'lucide-react';
-import { SendProposalModal } from '@/components/proposals/send-proposal-modal';
-import { Alert, AlertDescription } from '../ui/alert';
+import { SendProposalModal } from '@/features/proposals/components/send-proposal-modal';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Proposal {
   id: string;

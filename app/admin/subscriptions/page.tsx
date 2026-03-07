@@ -1,4 +1,4 @@
-import { SubscriptionAnalyticsClient } from '@/components/admin/subscription-analytics-client';
+import { SubscriptionAnalyticsClient } from '@/features/admin/components/subscription-analytics-client';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
