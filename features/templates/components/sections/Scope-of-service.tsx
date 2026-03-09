@@ -116,7 +116,7 @@ export default function ScopeOfService({
                     : "font-semibold"
                 }`}
               >
-                <div className="">Area serviced</div>
+                <div className="">Service Area</div>
                 <div className="">Frequency</div>
                 {/* <div className=" col-span-2">Notes</div> */}
               </div>
@@ -157,7 +157,7 @@ export default function ScopeOfService({
           ) : (
             <>
               <div className="text-center grid grid-cols-2 text-[var(--color-primary)] sm:grid-cols-4 gap-4 px-5 mb-2">
-                <div className="font-semibold">Area serviced</div>
+                <div className="font-semibold">Service Area</div>
                 <div className="font-semibold">Frequency</div>
                 <div className="font-semibold">Cost per visit</div>
                 <div className="font-semibold">Monthly cost</div>

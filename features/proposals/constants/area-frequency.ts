@@ -10,7 +10,6 @@ export const AREA_FREQUENCY_OPTIONS = [
   { value: "monthly", label: "Monthly" },
   { value: "quarterly", label: "Quarterly" },
   { value: "on_demand", label: "On-Demand" },
-  { value: "custom", label: "Custom" },
 ] as const;
 
 export type AreaFrequencyValue =
@@ -19,9 +18,7 @@ export type AreaFrequencyValue =
 export const ON_DEMAND_FREQUENCY: AreaFrequencyValue = "on_demand";
 
 export function getAreaFrequencyLabel(value: string): string {
-  return (
-    AREA_FREQUENCY_OPTIONS.find((o) => o.value === value)?.label ?? value
-  );
+  return AREA_FREQUENCY_OPTIONS.find((o) => o.value === value)?.label ?? value;
 }
 
 export function isOnDemandFrequency(value: string): boolean {

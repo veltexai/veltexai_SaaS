@@ -671,7 +671,7 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
     if (isPremium) {
       return (
         <div className="hidden sm:grid text-center grid-cols-3 text-[var(--color-primary)] gap-2 sm:gap-4 px-3 sm:px-5 mb-2">
-          <div className="font-semibold text-xs sm:text-sm">Area serviced</div>
+          <div className="font-semibold text-xs sm:text-sm">Service Area</div>
           <div className="font-semibold text-xs sm:text-sm">Frequency</div>
           <div className="font-semibold text-xs sm:text-sm">Notes</div>
         </div>
@@ -679,7 +679,7 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
     }
     return (
       <div className="hidden sm:grid text-center grid-cols-2 text-[var(--color-primary)] gap-2 sm:gap-4 px-3 sm:px-5 mb-2">
-        <div className="font-semibold text-xs sm:text-sm">Area serviced</div>
+        <div className="font-semibold text-xs sm:text-sm">Service Area</div>
         <div className="font-semibold text-xs sm:text-sm">Frequency</div>
       </div>
     );

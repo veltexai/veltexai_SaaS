@@ -13,7 +13,7 @@ import { formatCurrencySafe } from "@/lib/utils";
 import {
   getAreaFrequencyLabel,
   isOnDemandFrequency,
-} from "@/lib/constants/area-frequency";
+} from "@/features/proposals/constants/area-frequency";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -697,7 +697,7 @@ We are committed to delivering **consistent quality**, **responsive communicatio
 - Reliability: same meaning, similar length; use fresh wording.
 
 ## Scope of service
-Below is a representative scope from scope & frequency logic. Adjust tasks and frequencies per site. This table should expand/collapse cleanly based on selected areas and add-ons.
+Below is a representative scope from scope & frequency logic. Adjust tasks and frequencies per site.
 ${scopeTablePremiumFenced}
 
 Add-ons

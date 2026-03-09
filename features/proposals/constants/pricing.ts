@@ -36,5 +36,4 @@ export const AREA_FREQUENCY_COST_FACTORS: Record<string, number> = {
   monthly: 1.0,
   quarterly: 1.1,
   on_demand: 1.0,
-  custom: 1.0,
 };
