@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -36,6 +35,9 @@ interface ProposalCardProps {
   proposal: Proposal;
   onUpdate: (id: string, updates: Partial<Proposal>) => void;
   onDelete: (id: string) => void;
+  canSend: boolean;
+  canDownload: boolean;
+  isFreeTrial: boolean;
 }
 
 const statusColors = {
@@ -56,6 +58,9 @@ export function ProposalCard({
   proposal,
   onUpdate,
   onDelete,
+  canSend,
+  canDownload,
+  isFreeTrial,
 }: ProposalCardProps) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -74,6 +79,9 @@ export function ProposalCard({
   } = useProposalActions({
     proposalId: proposal.id,
     clientName: proposal.client_name,
+    canSend,
+    canDownload,
+    isFreeTrial,
   });
 
   const handleCardClick = () => {

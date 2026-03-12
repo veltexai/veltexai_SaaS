@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ProposalCard } from './proposal-card';
+import { useProposalPermissions } from '@/lib/hooks/use-proposal-permissions';
 
 interface Proposal {
   id: string;
@@ -13,6 +14,7 @@ interface Proposal {
   value: number;
   created_at: string;
   updated_at: string;
+  template_id?: string | null;
 }
 
 interface ProposalsListProps {
@@ -24,6 +26,7 @@ export function ProposalsList({
 }: ProposalsListProps) {
   const [proposals, setProposals] = useState(initialProposals);
   const [error, setError] = useState('');
+  const { canSend, canDownload, isFreeTrial } = useProposalPermissions();
 
   const handleUpdate = (id: string, updates: Partial<Proposal>) => {
     setProposals((prev) =>
@@ -52,6 +55,9 @@ export function ProposalsList({
             proposal={proposal}
             onUpdate={handleUpdate}
             onDelete={handleDelete}
+            canSend={canSend}
+            canDownload={canDownload}
+            isFreeTrial={isFreeTrial}
           />
         ))}
       </div>

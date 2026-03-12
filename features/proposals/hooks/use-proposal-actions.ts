@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useProposalPermissions } from "@/lib/hooks/use-proposal-permissions";
 
 const DEFAULT_DOWNLOAD_ERROR = "Failed to generate PDF";
 
@@ -9,6 +8,9 @@ export interface UseProposalActionsOptions {
   proposalId: string;
   clientCompany?: string | null;
   clientName?: string | null;
+  canSend: boolean;
+  canDownload: boolean;
+  isFreeTrial: boolean;
 }
 
 export interface UseProposalActionsReturn {
@@ -31,8 +33,7 @@ export interface UseProposalActionsReturn {
 export function useProposalActions(
   options: UseProposalActionsOptions,
 ): UseProposalActionsReturn {
-  const { proposalId, clientCompany, clientName } = options;
-  const { canSend, canDownload, isFreeTrial } = useProposalPermissions();
+  const { proposalId, clientCompany, clientName, canSend, canDownload, isFreeTrial } = options;
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [downloading, setDownloading] = useState(false);

@@ -1,18 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { createClient } from '@/lib/supabase/client';
-import { Edit, Download, Send, Loader2, Save, X, Settings } from 'lucide-react';
-import { SendProposalModal } from '@/features/proposals/components/send-proposal-modal';
-import { ProposalEditDialog } from '@/features/proposals/components/proposal-edit-dialog';
-import { UpgradeModal } from '@/features/billing/components/upgrade-modal';
-import { useProposalActions } from '@/features/proposals/hooks/use-proposal-actions';
-import { type Database } from '@/types/database';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { createClient } from "@/lib/supabase/client";
+import { Edit, Download, Send, Loader2, Save, X, Settings } from "lucide-react";
+import { SendProposalModal } from "@/features/proposals/components/send-proposal-modal";
+import { ProposalEditDialog } from "@/features/proposals/components/proposal-edit-dialog";
+import { UpgradeModal } from "@/features/billing/components/upgrade-modal";
+import { useProposalActions } from "@/features/proposals/hooks/use-proposal-actions";
+import { type Database } from "@/types/database";
+import { useProposalPermissions } from "@/lib/hooks/use-proposal-permissions";
 
-type Proposal = Database['public']['Tables']['proposals']['Row'];
+type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 
 interface ProposalActionsProps {
   proposal: Proposal;
@@ -37,8 +38,8 @@ export function ProposalActions({
   const [showSendModal, setShowSendModal] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [statusError, setStatusError] = useState('');
-
+  const [statusError, setStatusError] = useState("");
+  const { canSend, canDownload, isFreeTrial } = useProposalPermissions();
   const {
     handleSendClick,
     handleDownloadClick,
@@ -51,28 +52,31 @@ export function ProposalActions({
     proposalId: proposal.id,
     clientCompany: proposal.client_company,
     clientName: proposal.client_name,
+    canSend,
+    canDownload,
+    isFreeTrial,
   });
 
-  const updateStatus = async (status: Proposal['status']) => {
+  const updateStatus = async (status: Proposal["status"]) => {
     setUpdating(true);
-    setStatusError('');
+    setStatusError("");
 
     try {
       const supabase = createClient();
       const { error } = await supabase
-        .from('proposals')
+        .from("proposals")
         .update({ status })
-        .eq('id', proposal.id);
+        .eq("id", proposal.id);
 
       if (error) throw error;
 
       router.refresh();
     } catch (error) {
-      console.error('Error updating proposal status:', error);
+      console.error("Error updating proposal status:", error);
       setStatusError(
         error instanceof Error
           ? error.message
-          : 'Failed to update proposal status'
+          : "Failed to update proposal status",
       );
     } finally {
       setUpdating(false);
@@ -157,15 +161,13 @@ export function ProposalActions({
                   <Download className="h-4 w-4 sm:mr-2" />
                 )}
                 <span className="hidden sm:inline">
-                  {downloading ? 'Exporting...' : 'Export PDF'}
+                  {downloading ? "Exporting..." : "Export PDF"}
                 </span>
-                <span className="sm:hidden">
-                  {downloading ? '...' : 'PDF'}
-                </span>
+                <span className="sm:hidden">{downloading ? "..." : "PDF"}</span>
               </Button>
             </div>
 
-            {proposal.status === 'draft' && (
+            {proposal.status === "draft" && (
               <Button
                 onClick={() => handleSendClick(() => setShowSendModal(true))}
                 size="sm"
@@ -176,7 +178,7 @@ export function ProposalActions({
               </Button>
             )}
 
-            {proposal.status === 'sent' && (
+            {proposal.status === "sent" && (
               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <Button
                   onClick={() => handleSendClick(() => setShowSendModal(true))}
@@ -189,7 +191,7 @@ export function ProposalActions({
                   <span className="sm:hidden">Resend</span>
                 </Button>
                 <Button
-                  onClick={() => updateStatus('accepted')}
+                  onClick={() => updateStatus("accepted")}
                   disabled={updating}
                   size="sm"
                   className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
@@ -204,7 +206,7 @@ export function ProposalActions({
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => updateStatus('rejected')}
+                  onClick={() => updateStatus("rejected")}
                   disabled={updating}
                   size="sm"
                   className="text-red-600 border-red-600 hover:bg-red-50 flex-1 sm:flex-none"
