@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -9,6 +8,8 @@ import { createClient } from '@/lib/supabase/client';
 import { Edit, Download, Send, Loader2, Save, X, Settings } from 'lucide-react';
 import { SendProposalModal } from '@/features/proposals/components/send-proposal-modal';
 import { ProposalEditDialog } from '@/features/proposals/components/proposal-edit-dialog';
+import { UpgradeModal } from '@/features/billing/components/upgrade-modal';
+import { useProposalActions } from '@/features/proposals/hooks/use-proposal-actions';
 import { type Database } from '@/types/database';
 
 type Proposal = Database['public']['Tables']['proposals']['Row'];
@@ -33,15 +34,28 @@ export function ProposalActions({
   onProposalUpdated,
 }: ProposalActionsProps) {
   const router = useRouter();
-  const [updating, setUpdating] = useState(false);
-  const [error, setError] = useState('');
   const [showSendModal, setShowSendModal] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [downloading, setDownloading] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [statusError, setStatusError] = useState('');
+
+  const {
+    handleSendClick,
+    handleDownloadClick,
+    downloading,
+    downloadError,
+    clearDownloadError,
+    showUpgradeModal,
+    setShowUpgradeModal,
+  } = useProposalActions({
+    proposalId: proposal.id,
+    clientCompany: proposal.client_company,
+    clientName: proposal.client_name,
+  });
 
   const updateStatus = async (status: Proposal['status']) => {
     setUpdating(true);
-    setError('');
+    setStatusError('');
 
     try {
       const supabase = createClient();
@@ -55,7 +69,7 @@ export function ProposalActions({
       router.refresh();
     } catch (error) {
       console.error('Error updating proposal status:', error);
-      setError(
+      setStatusError(
         error instanceof Error
           ? error.message
           : 'Failed to update proposal status'
@@ -75,7 +89,6 @@ export function ProposalActions({
     router.refresh();
   };
 
-  // Convert database Proposal type to SendProposalModal expected type
   const proposalForSendModal = {
     id: proposal.id,
     title: proposal.title,
@@ -86,21 +99,33 @@ export function ProposalActions({
     status: proposal.status,
   };
 
+  const displayError = statusError || downloadError;
+
   return (
     <>
-      {error && (
+      {displayError && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            {displayError}
+            {downloadError && !statusError && (
+              <button
+                type="button"
+                onClick={clearDownloadError}
+                className="ml-2 underline focus:outline-none"
+              >
+                Dismiss
+              </button>
+            )}
+          </AlertDescription>
         </Alert>
       )}
 
       <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
         {!isEditing ? (
           <>
-            {/* Primary Actions - First Row */}
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={onEditStart}
                 size="sm"
                 className="flex-1 sm:flex-none"
@@ -109,8 +134,8 @@ export function ProposalActions({
                 <span className="hidden sm:inline">Edit Proposal</span>
                 <span className="sm:hidden">Edit</span>
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowEditDialog(true)}
                 size="sm"
                 className="flex-1 sm:flex-none"
@@ -124,49 +149,25 @@ export function ProposalActions({
                 size="sm"
                 disabled={downloading}
                 className="flex-1 sm:flex-none"
-                onClick={async () => {
-                  try {
-                    setError('');
-                    setDownloading(true);
-                    const res = await fetch(
-                      `/api/proposals/${proposal.id}/print`
-                    );
-                    if (!res.ok) throw new Error('Failed to generate PDF');
-                    const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `proposal-${
-                      proposal.client_company ||
-                      proposal.client_name ||
-                      proposal.id
-                    }.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    URL.revokeObjectURL(url);
-                  } catch (e: any) {
-                    setError(e?.message ?? 'Failed to generate PDF');
-                    console.error(e);
-                  } finally {
-                    setDownloading(false);
-                  }
-                }}
+                onClick={handleDownloadClick}
               >
                 {downloading ? (
                   <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
                 ) : (
                   <Download className="h-4 w-4 sm:mr-2" />
                 )}
-                <span className="hidden sm:inline">{downloading ? 'Exporting…' : 'Export PDF'}</span>
-                <span className="sm:hidden">{downloading ? '...' : 'PDF'}</span>
+                <span className="hidden sm:inline">
+                  {downloading ? 'Exporting...' : 'Export PDF'}
+                </span>
+                <span className="sm:hidden">
+                  {downloading ? '...' : 'PDF'}
+                </span>
               </Button>
             </div>
 
-            {/* Status Actions - Second Row on Mobile */}
             {proposal.status === 'draft' && (
-              <Button 
-                onClick={() => setShowSendModal(true)}
+              <Button
+                onClick={() => handleSendClick(() => setShowSendModal(true))}
                 size="sm"
                 className="w-full sm:w-auto"
               >
@@ -178,7 +179,7 @@ export function ProposalActions({
             {proposal.status === 'sent' && (
               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <Button
-                  onClick={() => setShowSendModal(true)}
+                  onClick={() => handleSendClick(() => setShowSendModal(true))}
                   variant="outline"
                   size="sm"
                   className="flex-1 sm:flex-none"
@@ -221,9 +222,9 @@ export function ProposalActions({
           </>
         ) : (
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Button 
-              variant="outline" 
-              onClick={onEditCancel} 
+            <Button
+              variant="outline"
+              onClick={onEditCancel}
               disabled={saving}
               size="sm"
               className="flex-1 sm:flex-none"
@@ -231,8 +232,8 @@ export function ProposalActions({
               <X className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Cancel</span>
             </Button>
-            <Button 
-              onClick={onEditSave} 
+            <Button
+              onClick={onEditSave}
               disabled={saving}
               size="sm"
               className="flex-1 sm:flex-none"
@@ -260,6 +261,11 @@ export function ProposalActions({
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
         onProposalUpdated={handleProposalUpdated}
+      />
+
+      <UpgradeModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
       />
     </>
   );

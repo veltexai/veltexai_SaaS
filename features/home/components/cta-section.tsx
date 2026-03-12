@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import React from 'react';
-import { fadeInUp } from '@/lib/animations/variants';
-import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { motion } from "framer-motion";
+import React from "react";
+import { fadeInUp } from "@/lib/animations/variants";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 const CTASection = () => {
   return (
@@ -31,7 +31,7 @@ const CTASection = () => {
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
           <p className="text-sm text-blue-100/80 mt-4">
-            7-day free trial with 3 proposals • Credit card required • Cancel anytime
+            7-day free trial with 3 proposals • No credit card required to start
           </p>
         </motion.div>
       </div>

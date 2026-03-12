@@ -78,17 +78,8 @@ export async function POST(req: NextRequest) {
         .eq('id', user.id);
     }
 
-    // Check if user is eligible for trial (new users who haven't had a subscription before)
-    const { data: existingSubscription } = await supabase
-      .from('subscriptions')
-      .select('id')
-      .eq('user_id', user.id)
-      .limit(1)
-      .maybeSingle();
-
-    const isEligibleForTrial = !existingSubscription;
-
-    // Create checkout session with 7-day free trial for eligible users
+    // Free trial is handled without Stripe (profile-based).
+    // When the user subscribes, they pay immediately -- no Stripe trial period.
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
@@ -99,7 +90,7 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?session_id={CHECKOUT_SESSION_ID}&trial_started=true`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?session_id={CHECKOUT_SESSION_ID}&subscribed=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing`,
       metadata: {
         userId: user.id,
@@ -110,8 +101,6 @@ export async function POST(req: NextRequest) {
           userId: user.id,
           plan: plan,
         },
-        // 7-day free trial - only for new users
-        ...(isEligibleForTrial && { trial_period_days: 7 }),
       },
     });
 

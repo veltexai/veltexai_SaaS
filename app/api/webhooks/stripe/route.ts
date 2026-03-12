@@ -184,19 +184,35 @@ async function handleSubscriptionCreated(
       }
     }
 
-    // Update user profile based on subscription status
+    // Update user profile -- clear trial_end_at when subscribing (free trial is over)
     const profileUpdateData: any = {
       subscription_status: isTrialing ? 'trialing' : 'active',
       subscription_plan: planName,
+      trial_end_at: isTrialing ? (trialEnd?.toISOString() ?? null) : null,
       updated_at: new Date().toISOString(),
     };
 
-    // Set trial_end_at if this is a trial subscription
+    // Clean up free trial usage records when user subscribes for the first time
+    if (!isTrialing) {
+      await supabase.from('usage').delete().eq('user_id', userId);
+      console.log('🧹 Cleared free trial usage records');
+
+      const { error: usageError } = await supabase.from('usage').insert({
+        user_id: userId,
+        proposal_count: 0,
+        period_start: subscriptionData.current_period_start,
+        period_end: subscriptionData.current_period_end,
+      });
+      if (usageError) {
+        console.error('❌ Error creating paid usage record:', usageError);
+      } else {
+        console.log('✅ Paid usage record created');
+      }
+    }
+
     if (isTrialing && trialEnd) {
-      profileUpdateData.trial_end_at = trialEnd.toISOString();
       console.log('📋 Setting trial_end_at to:', trialEnd.toISOString());
-      
-      // Check if usage record already exists before creating
+
       const { data: existingUsage } = await supabase
         .from('usage')
         .select('id')
@@ -204,10 +220,8 @@ async function handleSubscriptionCreated(
         .gte('period_end', new Date().toISOString())
         .limit(1)
         .maybeSingle();
-      
+
       if (!existingUsage) {
-        // Create usage record for trial period using subscription dates for consistency
-        // This ensures increment_user_usage can find and update this record
         const { error: usageError } = await supabase
           .from('usage')
           .insert({
@@ -216,11 +230,11 @@ async function handleSubscriptionCreated(
             period_start: subscriptionData.current_period_start,
             period_end: subscriptionData.current_period_end,
           });
-        
+
         if (usageError) {
           console.error('❌ Error creating usage record:', usageError);
         } else {
-          console.log('✅ Trial usage record created with period:', 
+          console.log('✅ Trial usage record created with period:',
             subscriptionData.current_period_start, 'to', subscriptionData.current_period_end);
         }
       } else {

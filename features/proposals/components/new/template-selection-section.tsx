@@ -1,16 +1,20 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useFormContext } from 'react-hook-form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Layout, AlertCircle, Sparkles } from 'lucide-react';
-import { ProposalFormData } from '@/lib/validations/proposal';
-import { SubscriptionTier } from '@/types/subscription';
-import { handleSelectTemplate, useProposalTemplates, canAccessTemplate, TemplateOptionsGrid } from '@/features/proposals';
-
+import { useEffect } from "react";
+import { useFormContext } from "react-hook-form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Layout, AlertCircle, Sparkles } from "lucide-react";
+import { ProposalFormData } from "@/lib/validations/proposal";
+import { SubscriptionTier } from "@/types/subscription";
+import {
+  handleSelectTemplate,
+  useProposalTemplates,
+  canAccessTemplate,
+  TemplateOptionsGrid,
+} from "@/features/proposals";
 
 interface TemplateSelectionSectionProps {
   userTier: SubscriptionTier;
@@ -20,16 +24,18 @@ export function TemplateSelectionSection({
   userTier,
 }: TemplateSelectionSectionProps) {
   const { setValue, watch } = useFormContext<ProposalFormData>();
-  const selectedTemplateId = watch('template_id');
+  const selectedTemplateId = watch("template_id");
   const { templates, isLoading, error, refetch } = useProposalTemplates();
 
   // Default to first accessible template (basic) when none selected
   useEffect(() => {
     if (templates.length === 0 || selectedTemplateId) return;
-    const firstAccessible = templates.find((t) => canAccessTemplate(t.tiers, userTier));
+    const firstAccessible = templates.find((t) =>
+      canAccessTemplate(t.tiers, userTier),
+    );
     const defaultId = firstAccessible?.id ?? templates[0]?.id;
     if (defaultId) {
-      setValue('template_id', defaultId, { shouldValidate: true });
+      setValue("template_id", defaultId, { shouldValidate: true });
     }
   }, [templates, selectedTemplateId, setValue, userTier]);
 
@@ -83,7 +89,8 @@ export function TemplateSelectionSection({
           Choose a Template
         </CardTitle>
         <p className="text-sm text-muted-foreground mt-2">
-          Choose client-ready output format. You can customize the content later.
+          Choose client-ready output format. You can customize the content
+          later.
         </p>
       </CardHeader>
       <CardContent>
@@ -104,7 +111,7 @@ export function TemplateSelectionSection({
                 Some templates require a higher subscription tier.
                 <Button variant="link" className="p-0 h-auto ml-1">
                   Upgrade your plan
-                </Button>{' '}
+                </Button>{" "}
                 to access all templates.
               </AlertDescription>
             </Alert>

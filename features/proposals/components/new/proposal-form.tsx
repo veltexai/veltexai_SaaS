@@ -1,31 +1,31 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { useForm, FormProvider } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 import {
   proposalFormSchema,
   type ProposalFormData,
   type ServiceType,
   validateProposalWithServiceData,
   getServiceSpecificSchema,
-} from '@/lib/validations/proposal';
-import { ServiceTypeSelector } from './service-type-selector';
-import { GlobalInputsSection } from './global-inputs-section';
-import { ServiceSpecificSection } from './service-specific-section';
-import { EnhancedFacilitySection } from './enhanced-facility-section';
-import { PricingSection } from './pricing-section';
-import { cn } from '@/lib/utils';
-import z from 'zod';
-import { useUserTier } from '@/features/proposals/hooks/use-user-tier';
-import { AiTone } from '@/types/proposal';
-import { FieldPath } from 'react-hook-form';
-import { scrollToTopOnMobile } from '@/lib/scroll';
-import { FormNavigation, TemplateSelectionSection } from '@/features/proposals';
+} from "@/lib/validations/proposal";
+import { ServiceTypeSelector } from "./service-type-selector";
+import { GlobalInputsSection } from "./global-inputs-section";
+import { ServiceSpecificSection } from "./service-specific-section";
+import { EnhancedFacilitySection } from "./enhanced-facility-section";
+import { PricingSection } from "./pricing-section";
+import { cn } from "@/lib/utils";
+import z from "zod";
+import { useUserTier } from "@/features/proposals/hooks/use-user-tier";
+import { AiTone } from "@/types/proposal";
+import { FieldPath } from "react-hook-form";
+import { scrollToTopOnMobile } from "@/lib/scroll";
+import { FormNavigation, TemplateSelectionSection } from "@/features/proposals";
 
 interface ProposalFormProps {
   userId: string;
@@ -37,53 +37,52 @@ interface Step {
   description: string;
 }
 
-
 const STEPS = [
   {
     id: 1,
-    title: 'Facility Intelligence Input',
-    description: 'Service type & facility context',
+    title: "Facility Intelligence Input",
+    description: "Service type & facility context",
   },
   {
     id: 2,
-    title: 'Client-Ready Output Format',
-    description: 'Choose proposal template',
+    title: "Client-Ready Output Format",
+    description: "Choose proposal template",
   },
   {
     id: 3,
-    title: 'Client & Site Context',
-    description: 'Client details and contact information',
+    title: "Client & Site Context",
+    description: "Client details and contact information",
   },
   {
     id: 4,
-    title: 'Scope & Frequency Logic',
-    description: 'Services, specs, and frequencies',
+    title: "Scope & Frequency Logic",
+    description: "Services, specs, and frequencies",
   },
   {
     id: 5,
-    title: 'Facility Intelligence Detail',
-    description: 'Enhanced facility information',
+    title: "Facility Intelligence Detail",
+    description: "Enhanced facility information",
   },
   {
     id: 6,
-    title: 'Labor + Margin Modeling',
-    description: 'Pricing from labor and margin rules',
+    title: "Labor + Margin Modeling",
+    description: "Pricing from labor and margin rules",
   },
 ];
 
 const STEP_VALIDATION_FIELDS: Record<number, string[]> = {
-  1: ['service_type', 'title'],
+  1: ["service_type", "title"],
   2: [],
   3: [
-    'global_inputs.client_name',
-    'global_inputs.client_email',
-    'global_inputs.contact_phone',
-    'global_inputs.service_location',
-    'global_inputs.facility_size',
+    "global_inputs.client_name",
+    "global_inputs.client_email",
+    "global_inputs.contact_phone",
+    "global_inputs.service_location",
+    "global_inputs.facility_size",
   ],
   4: [],
   5: [],
-  6: ['generated_content'],
+  6: ["generated_content"],
 };
 
 function StepIndicator({
@@ -99,7 +98,7 @@ function StepIndicator({
         {/* Background line */}
         <div
           className="absolute top-5 h-0.5 bg-gray-200 left-[50%] translate-x-[-50%]"
-          style={{ width: 'calc(100% - 120px)' }}
+          style={{ width: "calc(100% - 120px)" }}
         />
 
         {/* Progress line */}
@@ -120,12 +119,12 @@ function StepIndicator({
             <div key={step.id} className="relative flex flex-col items-center">
               <div
                 className={cn(
-                  'w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium border-2 transition-colors bg-white relative z-10',
-                  isActive && 'bg-blue-600 border-blue-600 text-white',
-                  isCompleted && 'bg-green-600 border-green-600 text-white',
+                  "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium border-2 transition-colors bg-white relative z-10",
+                  isActive && "bg-blue-600 border-blue-600 text-white",
+                  isCompleted && "bg-green-600 border-green-600 text-white",
                   !isActive &&
                     !isCompleted &&
-                    'bg-white border-gray-300 text-gray-500'
+                    "bg-white border-gray-300 text-gray-500",
                 )}
               >
                 {step.id}
@@ -133,10 +132,10 @@ function StepIndicator({
               <div className="mt-3 text-center max-w-[120px] min-h-[108px]">
                 <div
                   className={cn(
-                    'text-sm font-medium',
-                    isActive && 'text-blue-600',
-                    isCompleted && 'text-green-600',
-                    !isActive && !isCompleted && 'text-gray-500'
+                    "text-sm font-medium",
+                    isActive && "text-blue-600",
+                    isCompleted && "text-green-600",
+                    !isActive && !isCompleted && "text-gray-500",
                   )}
                 >
                   {step.title}
@@ -157,7 +156,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [selectedServiceType, setSelectedServiceType] =
     useState<ServiceType | null>(null);
   const [pricingEnabled, setPricingEnabled] = useState(false);
@@ -166,25 +165,25 @@ export function ProposalForm({ userId }: ProposalFormProps) {
   const form = useForm({
     resolver: zodResolver(proposalFormSchema),
     defaultValues: {
-      title: '',
-      service_type: 'residential' as const,
+      title: "",
+      service_type: "residential" as const,
       template_id: undefined,
       global_inputs: {
-        client_name: '',
-        client_email: '',
-        client_company: '',
-        contact_phone: '',
-        service_location: '',
+        client_name: "",
+        client_email: "",
+        client_company: "",
+        contact_phone: "",
+        service_location: "",
         facility_size: 0,
-        service_frequency: '1x-month' as const,
-        regional_location: '',
-        city: '',
+        service_frequency: "1x-month" as const,
+        regional_location: "",
+        city: "",
       },
       service_specific_data: {},
       pricing_enabled: false,
       pricing_data: undefined,
-      generated_content: '',
-      status: 'draft' as const,
+      generated_content: "",
+      status: "draft" as const,
       facility_details: {
         building_age: undefined,
         building_type: undefined,
@@ -213,32 +212,33 @@ export function ProposalForm({ userId }: ProposalFormProps) {
         certifications_required: [],
         insurance_requirements: [],
       },
-      ai_tone: 'professional' as const,
+      ai_tone: "professional" as const,
     },
   });
 
   // Watch for service type changes
-  const watchedServiceType = form.watch('service_type');
+  const watchedServiceType = form.watch("service_type");
 
   useEffect(() => {
     if (watchedServiceType !== selectedServiceType) {
       setSelectedServiceType(watchedServiceType);
       // Reset service-specific data when service type changes
       form.setValue(
-        'service_specific_data',
+        "service_specific_data",
         {},
         {
           shouldValidate: false,
           shouldTouch: false,
           shouldDirty: false,
-        }
+        },
       );
     }
   }, [watchedServiceType, selectedServiceType, form]);
 
-  const aiTone = form.watch('ai_tone') as AiTone;
+  const aiTone = form.watch("ai_tone") as AiTone;
+  const generatedContent = form.watch("generated_content");
   const handleAiToneChange = (tone: AiTone) => {
-    form.setValue('ai_tone', tone, {
+    form.setValue("ai_tone", tone, {
       shouldValidate: false,
       shouldTouch: false,
       shouldDirty: false,
@@ -249,8 +249,8 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     const fieldsToValidate = STEP_VALIDATION_FIELDS[currentStep] ?? [];
 
     if (currentStep === 4) {
-      const serviceType = form.getValues('service_type');
-      const serviceSpecificData = form.getValues('service_specific_data');
+      const serviceType = form.getValues("service_type");
+      const serviceSpecificData = form.getValues("service_specific_data");
 
       try {
         const serviceSchema = getServiceSpecificSchema(serviceType);
@@ -259,9 +259,9 @@ export function ProposalForm({ userId }: ProposalFormProps) {
         if (error instanceof z.ZodError) {
           // Set form errors for service-specific fields
           error.errors.forEach((err) => {
-            const fieldPath = `service_specific_data.${err.path.join('.')}`;
+            const fieldPath = `service_specific_data.${err.path.join(".")}`;
             form.setError(fieldPath as FieldPath<ProposalFormData>, {
-              type: 'manual',
+              type: "manual",
               message: err.message,
             });
           });
@@ -301,19 +301,19 @@ export function ProposalForm({ userId }: ProposalFormProps) {
 
   const onSubmit = async (data: ProposalFormData): Promise<void> => {
     if (currentStep !== STEPS.length) {
-      console.warn('Form submission attempted before reaching final step');
+      console.warn("Form submission attempted before reaching final step");
       return;
     }
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       // Validate service-specific data
       const validatedData = validateProposalWithServiceData(data);
 
-      const response = await fetch('/api/proposals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/proposals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...validatedData,
           selected_addons: Array.isArray(data?.selected_addons)
@@ -324,24 +324,23 @@ export function ProposalForm({ userId }: ProposalFormProps) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create proposal');
+        throw new Error(error.error || "Failed to create proposal");
       }
 
       const proposalData = await response.json();
 
-      toast.success('Proposal created successfully!');
+      toast.success("Proposal created successfully!");
       router.push(`/dashboard/proposals/${proposalData.id}`);
     } catch (error) {
-      console.error('Error creating proposal:', error);
-      setError('Failed to create proposal. Please try again.');
-      toast.error('Failed to create proposal');
+      console.error("Error creating proposal:", error);
+      setError("Failed to create proposal. Please try again.");
+      toast.error("Failed to create proposal");
     } finally {
       setLoading(false);
     }
   };
 
-
-  const resolvedServiceType: ServiceType = selectedServiceType ?? 'residential';
+  const resolvedServiceType: ServiceType = selectedServiceType ?? "residential";
 
   const STEP_COMPONENTS: Record<number, React.ReactNode> = {
     1: <ServiceTypeSelector />,
@@ -383,10 +382,10 @@ export function ProposalForm({ userId }: ProposalFormProps) {
               currentStep={currentStep}
               totalSteps={STEPS.length}
               isLoading={loading}
-              isSubmitDisabled={!form.formState.isValid}
+              isSubmitDisabled={!form.formState.isValid || !generatedContent}
               onNext={nextStep}
               onBack={prevStep}
-              onCancel={() => router.push('/dashboard/proposals')}
+              onCancel={() => router.push("/dashboard/proposals")}
             />
           </form>
         </Card>

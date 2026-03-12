@@ -68,8 +68,7 @@ const HeroSection = () => {
 
           {/* Trial Info */}
           <motion.p className="text-sm text-gray-500 mt-4" variants={fadeInUp}>
-            7-day free trial with 3 proposals • Credit card required • Cancel
-            anytime
+            7-day free trial with 3 proposals • No credit card required to start
           </motion.p>
         </motion.div>
 

@@ -64,15 +64,18 @@ export default async function NewProposalPage() {
         </p>
       </div>
 
-      {/* Usage Warning for Trial Users */}
+      {/* Usage Warning for Free Trial Users */}
       {usageInfo?.is_trial && usageInfo.remaining_proposals <= 1 && (
         <Alert className="border-yellow-200 bg-yellow-50">
           <AlertCircle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-800">
             You have {usageInfo.remaining_proposals} proposal
             {usageInfo.remaining_proposals !== 1 ? 's' : ''} remaining in your
-            7-day free trial. Your trial ends when either time runs out or you&apos;ve used all 3 proposals. 
-            Choose a plan to continue creating proposals.
+            free trial.{' '}
+            <a href="/dashboard/billing" className="underline font-semibold">
+              Upgrade your plan
+            </a>{' '}
+            to continue creating proposals.
           </AlertDescription>
         </Alert>
       )}

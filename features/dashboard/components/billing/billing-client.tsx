@@ -17,9 +17,6 @@ import {
   TrendingUp,
   AlertCircle,
   Gift,
-  Clock,
-  Shield,
-  CheckCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PricingPlans } from '@/features/pricing/components/pricing-plans';
@@ -116,20 +113,20 @@ export function BillingClient({
     ? getDaysRemaining(usage.trialEndAt)
     : 0;
   
-  // Check if user is in pending state (new user who hasn't selected a plan yet)
-  const isPending = usage?.subscriptionStatus === 'pending' || 
-    (usage?.subscriptionPlan === 'none' && !subscription);
-  
-  // Check for welcome parameter (new user redirected after signup)
-  const isWelcome = searchParams.get('welcome') === 'true';
+  // free_trial: user signed up but hasn't subscribed yet
+  const isFreeTrial = usage?.subscriptionStatus === 'free_trial';
+  // Fallback for legacy pending users
+  const isPending = usage?.subscriptionStatus === 'pending' ||
+    (usage?.subscriptionPlan === 'none' && !subscription && !isFreeTrial);
+
   const trialStarted = searchParams.get('trial_started') === 'true';
+  const justSubscribed = searchParams.get('subscribed') === 'true';
 
   // Sync subscription from Stripe if returning from checkout
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
-    
-    if (sessionId && trialStarted) {
-      // Sync subscription data from Stripe (fallback for when webhooks don't fire)
+
+    if (sessionId && (trialStarted || justSubscribed)) {
       const syncSubscription = async () => {
         try {
           const response = await fetch('/api/stripe/sync-subscription', {
@@ -137,42 +134,40 @@ export function BillingClient({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ sessionId }),
           });
-          
+
           if (response.ok) {
-            console.log('✅ Subscription sync completed, refreshing billing data');
-            // Always refresh billing data after sync to ensure we have the latest
             refreshBillingData();
           }
         } catch (error) {
           console.error('Error syncing subscription:', error);
         }
       };
-      
+
       syncSubscription();
     }
-  }, [searchParams, trialStarted, refreshBillingData]);
+  }, [searchParams, trialStarted, justSubscribed, refreshBillingData]);
 
   const trialTrackedRef = useRef(false);
 
   useEffect(() => {
     const error = searchParams.get('error');
     if (error === 'subscription_required') {
-      toast.error('You need an active subscription to create proposals');
+      toast.error('Your free trial has ended. Please subscribe to continue.');
     }
 
-    if (trialStarted) {
-      toast.success('🎉 Your 7-day free trial has started! You have 3 proposals to try.');
-
-      if (!trialTrackedRef.current) {
-        trialTrackedRef.current = true;
-        const plan = plans?.find((p) => p.name === usage?.subscriptionPlan);
-        trackStartTrial({
-          planName: plan?.name ?? 'unknown',
-          value: plan?.price_monthly ?? 0,
-        });
-      }
+    if (justSubscribed) {
+      toast.success('Your subscription is now active! You can create, send, and download proposals.');
     }
-  }, [searchParams, trialStarted, plans, usage?.subscriptionPlan]);
+
+    if (trialStarted && !trialTrackedRef.current) {
+      trialTrackedRef.current = true;
+      const plan = plans?.find((p) => p.name === usage?.subscriptionPlan);
+      trackStartTrial({
+        planName: plan?.name ?? 'unknown',
+        value: plan?.price_monthly ?? 0,
+      });
+    }
+  }, [searchParams, trialStarted, justSubscribed, plans, usage?.subscriptionPlan]);
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -199,36 +194,47 @@ export function BillingClient({
         )}
       </div>
 
-      {/* Welcome Alert for New Users (Pending Status) */}
-      {isPending && (
-        <FreeTrialInfoBanner component="pricing" />
-      )}
-
-      {/* Trial Alert (for users with active trial) */}
-      {isTrialActive && !isPending && (
+      {/* Free Trial Active Alert */}
+      {isFreeTrial && isTrialActive && (
         <Alert className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
           <Gift className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
-            <strong>Welcome to your 7-day free trial!</strong> You have{' '}
+            <strong>You&apos;re on a free trial!</strong> You have{' '}
             <strong>{usage?.remainingProposals}</strong> of 3 free proposals remaining
             {trialDaysRemaining > 0 && <> and <strong>{trialDaysRemaining} day{trialDaysRemaining !== 1 ? 's' : ''}</strong> left</>}.
             <br />
             <span className="text-sm">
-              Trial ends when either time runs out or you&apos;ve used all 3 proposals (whichever comes first).
-              Cancel anytime before trial ends - no charge!
+              Subscribe to unlock unlimited proposals, email sending, and PDF downloads.
             </span>
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Trial Expired Alert */}
-      {usage?.isTrial && !isTrialActive && (
+      {/* Free Trial Expired Alert */}
+      {isFreeTrial && !isTrialActive && (
         <Alert className="border-red-200 bg-red-50">
           <AlertCircle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800">
             <strong>Your free trial has ended.</strong> You&apos;ve either used all 3 free proposals
-            or your 7-day trial period has expired. Choose a subscription plan below to continue 
-            creating professional proposals for your cleaning business.
+            or your 7-day trial period has expired. Choose a subscription plan below to continue
+            creating proposals.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Legacy pending user alert */}
+      {isPending && (
+        <FreeTrialInfoBanner component="pricing" />
+      )}
+
+      {/* Stripe trial alert (backward compat) */}
+      {!isFreeTrial && isTrialActive && usage?.isTrial && (
+        <Alert className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <Gift className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            <strong>You&apos;re on a trial!</strong> You have{' '}
+            <strong>{usage?.remainingProposals}</strong> of 3 proposals remaining
+            {trialDaysRemaining > 0 && <> and <strong>{trialDaysRemaining} day{trialDaysRemaining !== 1 ? 's' : ''}</strong> left</>}.
           </AlertDescription>
         </Alert>
       )}
@@ -324,8 +330,12 @@ export function BillingClient({
                 : 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {isPending
-                ? 'Choose a plan to start your free trial'
+              {isFreeTrial
+                ? isTrialActive
+                  ? `${trialDaysRemaining} days remaining`
+                  : 'Trial ended - subscribe to continue'
+                : isPending
+                ? 'Choose a plan to get started'
                 : usage?.isTrial
                 ? `${trialDaysRemaining} days remaining`
                 : subscription?.canceled_at
@@ -354,35 +364,19 @@ export function BillingClient({
         </Card>
       )}
 
-      {/* Pricing Plans - Show for pending, trial users or when no active subscription */}
-      {/* Show pricing plans only when user is pending (needs to select a plan) */}
-      {isPending && (
+      {/* Pricing Plans -- show for free trial users and unsubscribed users */}
+      {(isFreeTrial || isPending || (!subscription && !usage?.isTrial)) && (
         <Card className="border-2 border-emerald-300 shadow-lg">
           <CardHeader>
             <CardTitle>
-              🚀 Choose Your Plan to Start Free Trial
+              {isFreeTrial && isTrialActive
+                ? 'Upgrade Your Plan'
+                : 'Choose Your Plan'}
             </CardTitle>
             <CardDescription>
-              Select any plan below to begin your 7-day free trial with 3 proposals. Credit card required but you won&apos;t be charged until trial ends.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PricingPlans
-              plans={plans}
-              isLoading={false}
-              error={plansError ? new Error(plansError) : null}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Show upgrade options after trial ends (expired trial or no subscription) */}
-      {!isPending && !usage?.isTrial && !subscription && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Choose Your Plan</CardTitle>
-            <CardDescription>
-              Get started with a subscription plan
+              {isFreeTrial && isTrialActive
+                ? 'Subscribe now to unlock unlimited proposals, email sending, and PDF downloads.'
+                : 'Get started with a subscription plan to create, send, and download proposals.'}
             </CardDescription>
           </CardHeader>
           <CardContent>

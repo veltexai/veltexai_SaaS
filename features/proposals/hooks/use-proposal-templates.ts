@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import type { SubscriptionTier } from '@/types/subscription';
-import { TemplateWithTiers } from '@/features/proposals';
+import type { TemplateWithTiers } from '@/features/proposals/types/proposals';
 import { templatesCache } from '@/lib/templates/templates-cache';
 
 interface UseProposalTemplatesReturn {

@@ -235,6 +235,7 @@ export function useSubscription() {
     isSubscribed && ['professional', 'enterprise'].includes(subscription.plan);
   const isEnterprise = isSubscribed && subscription.plan === 'enterprise';
   const isTrial = usageInfo?.isTrial || false;
+  const isFreeTrial = usageInfo?.subscriptionStatus === 'free_trial';
   const canCreateProposal = usageInfo?.canCreateProposal || false;
 
   return {
@@ -246,6 +247,7 @@ export function useSubscription() {
     isPro,
     isEnterprise,
     isTrial,
+    isFreeTrial,
     canCreateProposal,
     createCheckoutSession,
     createPortalSession,

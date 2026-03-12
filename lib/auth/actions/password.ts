@@ -1,12 +1,12 @@
-'use server';
+"use server";
 
-import { z } from 'zod';
-import { validatedAction } from '@/lib/auth/middleware';
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { AUTH_ROUTES, AUTH_ERRORS, AUTH_REDIRECTS } from '@/lib/auth/constants';
-import type { AuthResponse } from '@/lib/auth/types';
-import config from '@/config/config';
+import { z } from "zod";
+import { validatedAction } from "@/lib/auth/middleware";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { AUTH_ROUTES, AUTH_ERRORS, AUTH_REDIRECTS } from "@/lib/auth/constants";
+import type { AuthResponse } from "@/lib/auth/types";
+import config from "@/config/config";
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
@@ -28,22 +28,22 @@ export const signIn = validatedAction(signInSchema, async (data) => {
 
   // Ensure user_data entry exists
   const { data: userData, error: userDataError } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', signInData.user?.id)
+    .from("profiles")
+    .select("*")
+    .eq("id", signInData.user?.id)
     .single();
 
-  if (userDataError && userDataError.code === 'PGRST116') {
-    const { error: insertError } = await supabase.from('profiles').insert({
+  if (userDataError && userDataError.code === "PGRST116") {
+    const { error: insertError } = await supabase.from("profiles").insert({
       id: signInData.user?.id,
-      email: signInData.user?.email || '',
+      email: signInData.user?.email || "",
     });
 
     if (insertError) {
-      console.error('Error creating profile entry:', insertError);
+      console.error("Error creating profile entry:", insertError);
     }
   }
-  redirect(`${config.domainName}${AUTH_ROUTES.DASHBOARD}`);
+  redirect(`${config.domainName}${AUTH_ROUTES.PROPOSALS}`);
 });
 
 const signUpSchema = z.object({
@@ -60,13 +60,13 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
 
   // Check if user already exists first
   const { data: existingProfile } = await supabase
-    .from('profiles')
-    .select('email')
-    .eq('email', email)
+    .from("profiles")
+    .select("email")
+    .eq("email", email)
     .single();
 
   if (existingProfile) {
-    return { error: 'User already exists!' };
+    return { error: "User already exists!" };
   }
 
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -75,12 +75,12 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
     options: {
       data: {
         full_name: fullName,
-        company_name: companyName || '',
+        company_name: companyName || "",
       },
       emailRedirectTo: `${
         config.domainName
       }/api/auth/callback?redirect=${encodeURIComponent(
-        AUTH_REDIRECTS.DEFAULT_REDIRECT
+        AUTH_REDIRECTS.DEFAULT_REDIRECT,
       )}`,
     },
   });
@@ -91,10 +91,10 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
 
   // Success case - user was created
   if (signUpData.user) {
-    return { success: 'Please check your email to verify your account.' };
+    return { success: "Please check your email to verify your account." };
   }
 
-  return { error: 'Failed to create user.' };
+  return { error: "Failed to create user." };
 });
 
 export const signOut = async (): Promise<AuthResponse> => {
@@ -122,21 +122,21 @@ export const sendResetPasswordEmail = validatedAction(
       redirectTo: `${
         config.domainName
       }/api/auth/confirm?next=${encodeURIComponent(
-        AUTH_ROUTES.RESET_PASSWORD
+        AUTH_ROUTES.RESET_PASSWORD,
       )}`,
     });
 
     if (error) {
-      console.error('Reset password error:', error);
+      console.error("Reset password error:", error);
       return { error: { message: error.message } };
     }
 
-    return { success: 'Please check your email for the reset link.' };
-  }
+    return { success: "Please check your email for the reset link." };
+  },
 );
 
 const updatePasswordSchema = z.object({
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export const updatePassword = validatedAction(
@@ -150,10 +150,10 @@ export const updatePassword = validatedAction(
     });
 
     if (error) {
-      console.error('Update password error:', error);
+      console.error("Update password error:", error);
       return { error: { message: error.message } };
     }
 
-    return { success: 'Password updated successfully.' };
-  }
+    return { success: "Password updated successfully." };
+  },
 );

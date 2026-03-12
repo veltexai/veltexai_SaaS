@@ -1,28 +1,31 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { createClient } from '@/lib/supabase/client';
-import { Edit, Download, Trash2, Loader2, Send } from 'lucide-react';
-import { SendProposalModal } from '@/features/proposals/components/send-proposal-modal';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+} from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/client";
+import { Edit, Download, Trash2, Loader2, Send } from "lucide-react";
+import { SendProposalModal } from "@/features/proposals/components/send-proposal-modal";
+import { UpgradeModal } from "@/features/billing/components/upgrade-modal";
+import { useProposalActions } from "@/features/proposals/hooks/use-proposal-actions";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatDate } from "@/lib/utils";
 
 interface Proposal {
   id: string;
   title: string;
   client_name: string;
   client_email: string;
-  status: 'draft' | 'sent' | 'accepted' | 'rejected';
+  status: "draft" | "sent" | "accepted" | "rejected";
   value: number;
   created_at: string;
   updated_at: string;
@@ -36,17 +39,17 @@ interface ProposalCardProps {
 }
 
 const statusColors = {
-  draft: 'bg-gray-100 text-gray-800',
-  sent: 'bg-blue-100 text-blue-800',
-  accepted: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
+  draft: "bg-gray-100 text-gray-800",
+  sent: "bg-blue-100 text-blue-800",
+  accepted: "bg-green-100 text-green-800",
+  rejected: "bg-red-100 text-red-800",
 };
 
 const statusLabels = {
-  draft: 'Draft',
-  sent: 'Sent',
-  accepted: 'Accepted',
-  rejected: 'Rejected',
+  draft: "Draft",
+  sent: "Sent",
+  accepted: "Accepted",
+  rejected: "Rejected",
 };
 
 export function ProposalCard({
@@ -56,35 +59,29 @@ export function ProposalCard({
 }: ProposalCardProps) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [exportingId, setExportingId] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
-  const [error, setError] = useState('');
-  const [templatePreviewUrl, setTemplatePreviewUrl] = useState<string | null>(
-    null
-  );
+  const [error, setError] = useState("");
+
+  const {
+    handleSendClick,
+    handleDownloadClick,
+    downloading,
+    downloadError,
+    clearDownloadError,
+    showUpgradeModal,
+    setShowUpgradeModal,
+  } = useProposalActions({
+    proposalId: proposal.id,
+    clientName: proposal.client_name,
+  });
 
   const handleCardClick = () => {
     router.push(`/dashboard/proposals/${proposal.id}`);
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
   const deleteProposal = async () => {
-    if (!confirm('Are you sure you want to delete this proposal?')) {
+    if (!confirm("Are you sure you want to delete this proposal?")) {
       return;
     }
 
@@ -92,34 +89,34 @@ export function ProposalCard({
     try {
       const supabase = createClient();
       const { error } = await supabase
-        .from('proposals')
+        .from("proposals")
         .delete()
-        .eq('id', proposal.id);
+        .eq("id", proposal.id);
 
       if (error) throw error;
 
       onDelete(proposal.id);
     } catch (error) {
-      console.error('Error deleting proposal:', error);
+      console.error("Error deleting proposal:", error);
     } finally {
       setDeletingId(null);
     }
   };
 
-  const updateStatus = async (status: Proposal['status']) => {
+  const updateStatus = async (status: Proposal["status"]) => {
     setUpdatingStatus(true);
     try {
       const supabase = createClient();
       const { error } = await supabase
-        .from('proposals')
+        .from("proposals")
         .update({ status })
-        .eq('id', proposal.id);
+        .eq("id", proposal.id);
 
       if (error) throw error;
 
       onUpdate(proposal.id, { status });
     } catch (error) {
-      console.error('Error updating proposal status:', error);
+      console.error("Error updating proposal status:", error);
     } finally {
       setUpdatingStatus(false);
     }
@@ -127,65 +124,40 @@ export function ProposalCard({
 
   const handleSendSuccess = () => {
     setShowSendModal(false);
-    onUpdate(proposal.id, { status: 'sent' });
+    onUpdate(proposal.id, { status: "sent" });
   };
-
-  useEffect(() => {
-    let mounted = true;
-    async function fetchTemplatePreview() {
-      if (!proposal.template_id) {
-        setTemplatePreviewUrl(null);
-        return;
-      }
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from('proposal_templates')
-          .select('preview_image_url')
-          .eq('id', proposal.template_id)
-          .single();
-        if (error) return;
-        if (!mounted) return;
-        setTemplatePreviewUrl(data?.preview_image_url ?? null);
-      } catch {}
-    }
-    fetchTemplatePreview();
-    return () => {
-      mounted = false;
-    };
-  }, [proposal.template_id]);
 
   return (
     <>
-      {error && (
+      {(error || downloadError) && (
         <Alert variant="destructive" className="mb-2">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            {error || downloadError}
+            {downloadError && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearDownloadError();
+                }}
+                className="ml-2 underline focus:outline-none"
+              >
+                Dismiss
+              </button>
+            )}
+          </AlertDescription>
         </Alert>
       )}
-      <Card 
+      <Card
         className="hover:shadow-md transition-shadow cursor-pointer"
         onClick={handleCardClick}
       >
-        {templatePreviewUrl ? (
-          <div className="relative w-full aspect-[16/10] sm:aspect-video overflow-hidden rounded-t-md bg-gray-100">
-            <Image
-              src={templatePreviewUrl}
-              alt={proposal.title}
-              fill
-              className="object-contain"
-              unoptimized
-              sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, 50vw"
-            />
-          </div>
-        ) : (
-          <div className="w-full aspect-[16/10] sm:aspect-video rounded-t-md bg-gray-100 flex items-center justify-center text-gray-500 text-xs sm:text-sm">
-            No preview available
-          </div>
-        )}
         <CardHeader className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-lg sm:text-xl truncate">{proposal.title}</CardTitle>
+              <CardTitle className="text-lg sm:text-xl truncate">
+                {proposal.title}
+              </CardTitle>
               <CardDescription className="mt-1 text-sm truncate">
                 Client: {proposal.client_name}
                 <span className="hidden sm:inline">
@@ -207,15 +179,18 @@ export function ProposalCard({
         <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
           <div className="flex flex-col gap-3">
             {/* Status Update Buttons - Stack on mobile */}
-            {(proposal.status === 'draft' || proposal.status === 'sent') && (
-              <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
-                {proposal.status === 'draft' && (
+            {(proposal.status === "draft" || proposal.status === "sent") && (
+              <div
+                className="flex flex-wrap gap-2"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {proposal.status === "draft" && (
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowSendModal(true);
+                      handleSendClick(() => setShowSendModal(true));
                     }}
                     disabled={updatingStatus}
                     className="flex-1 sm:flex-none"
@@ -224,14 +199,14 @@ export function ProposalCard({
                     Send
                   </Button>
                 )}
-                {proposal.status === 'sent' && (
+                {proposal.status === "sent" && (
                   <>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setShowSendModal(true);
+                        handleSendClick(() => setShowSendModal(true));
                       }}
                       className="text-blue-600 border-blue-600 hover:bg-blue-50 flex-1 sm:flex-none"
                     >
@@ -244,7 +219,7 @@ export function ProposalCard({
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        updateStatus('accepted');
+                        updateStatus("accepted");
                       }}
                       disabled={updatingStatus}
                       className="text-green-600 border-green-600 hover:bg-green-50 flex-1 sm:flex-none"
@@ -256,7 +231,7 @@ export function ProposalCard({
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        updateStatus('rejected');
+                        updateStatus("rejected");
                       }}
                       disabled={updatingStatus}
                       className="text-red-600 border-red-600 hover:bg-red-50 flex-1 sm:flex-none"
@@ -269,13 +244,20 @@ export function ProposalCard({
             )}
 
             {/* Action Buttons - Always visible */}
-            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-              <Link 
-                href={`/dashboard/proposals/${proposal.id}`} 
+            <div
+              className="flex items-center gap-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Link
+                href={`/dashboard/proposals/${proposal.id}`}
                 className="flex-1 sm:flex-none"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Button size="sm" variant="outline" className="w-full sm:w-auto">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                >
                   <Edit className="h-4 w-4 sm:mr-1" />
                   <span className="hidden sm:inline">Edit</span>
                 </Button>
@@ -286,32 +268,11 @@ export function ProposalCard({
                 className="flex-1 sm:flex-none"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  try {
-                    setError('');
-                    setExportingId(proposal.id);
-                    const res = await fetch(
-                      `/api/proposals/${proposal.id}/print`
-                    );
-                    if (!res.ok) throw new Error('Failed to generate PDF');
-                    const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `proposal-${proposal.id}.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    URL.revokeObjectURL(url);
-                  } catch (e: any) {
-                    setError(e?.message ?? 'Failed to generate PDF');
-                    console.error(e);
-                  } finally {
-                    setExportingId(null);
-                  }
+                  await handleDownloadClick();
                 }}
-                disabled={exportingId === proposal.id}
+                disabled={downloading}
               >
-                {exportingId === proposal.id ? (
+                {downloading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
@@ -341,11 +302,11 @@ export function ProposalCard({
             {/* Date Info - Stack on mobile */}
             <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-3 text-xs sm:text-sm text-gray-600">
               <div>
-                <span className="font-medium">Created:</span>{' '}
+                <span className="font-medium">Created:</span>{" "}
                 {formatDate(proposal.created_at)}
               </div>
               <div>
-                <span className="font-medium">Updated:</span>{' '}
+                <span className="font-medium">Updated:</span>{" "}
                 {formatDate(proposal.updated_at)}
               </div>
             </div>
@@ -358,6 +319,11 @@ export function ProposalCard({
         open={showSendModal}
         onOpenChange={setShowSendModal}
         onSuccess={handleSendSuccess}
+      />
+
+      <UpgradeModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
       />
     </>
   );

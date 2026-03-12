@@ -65,4 +65,8 @@ export interface BillingHistory {
   previous_plan?: string | null;
 }
 
-export type SubscriptionTier = 'starter' | 'professional' | 'enterprise';
+export type SubscriptionTier =
+  | "starter"
+  | "professional"
+  | "enterprise"
+  | "free_trial";

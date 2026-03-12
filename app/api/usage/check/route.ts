@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
       subscriptionStatus: usageData.subscription_status,
       remainingProposals: usageData.remaining_proposals,
       isTrial: usageData.is_trial,
+      isFreeTrial: usageData.subscription_status === 'free_trial',
       trialEndAt: usageData.trial_end_at,
     });
   } catch (error) {

@@ -86,10 +86,10 @@ export function PricingPlans({
                 onClick={() => handleGetStarted(plan.name)}
                 disabled={checkoutLoading}
               >
-                {checkoutLoading ? 'Loading...' : 'Start Free Trial'}
+                {checkoutLoading ? 'Loading...' : 'Subscribe Now'}
               </Button>
               <p className="text-xs text-center text-muted-foreground mt-2">
-                7 days free • 3 proposals • Cancel anytime
+                Cancel anytime
               </p>
             </CardContent>
           </Card>
