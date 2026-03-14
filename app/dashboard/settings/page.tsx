@@ -1,22 +1,22 @@
-import { redirect } from 'next/navigation';
-import { getUser } from '@/queries/user';
-import { ProfileSettings } from '@/features/settings/components/profile-settings';
-import { CompanyProfileSettings } from '@/features/settings/components/company-profile-settings';
-import { SubscriptionBilling } from '@/features/settings/components/subscription-billing';
-import { SecuritySettings } from '@/features/settings/components/security-settings';
-import { NotificationsSettings } from '@/features/settings/components/notifications-settings';
-import BrandingSettings from '@/features/settings/components/branding-settings';
-import { type User as UserType, type Profile } from '@/types/database';
+import { redirect } from "next/navigation";
+import { getUser } from "@/queries/user";
+import { ProfileSettings } from "@/features/settings/components/profile-settings";
+import { CompanyProfileSettings } from "@/features/settings/components/company-profile-settings";
+import { SubscriptionBilling } from "@/features/settings/components/subscription-billing";
+import { SecuritySettings } from "@/features/settings/components/security-settings";
+import { NotificationsSettings } from "@/features/settings/components/notifications-settings";
+import BrandingSettingsCard from "@/features/settings/components/branding-settings-card";
+import { type User as UserType, type Profile } from "@/types/database";
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function SettingsPage() {
   const { user, profile } = await getUser();
 
   if (!user) {
-    redirect('/auth/login');
+    redirect("/auth/login");
   }
 
   return (
@@ -40,7 +40,7 @@ export default async function SettingsPage() {
         {/* <CompanyProfileSettings /> */}
 
         {/* Branding Settings - Full width */}
-        <BrandingSettings />
+        <BrandingSettingsCard />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SecuritySettings />

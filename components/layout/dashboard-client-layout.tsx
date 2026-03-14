@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import {
   FileText,
   BarChart3,
@@ -16,13 +16,14 @@ import {
   Shield,
   ArrowLeftIcon,
   CreditCard,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { signOut } from '@/lib/auth/actions/password';
-import type { User } from '@supabase/supabase-js';
-import type { Profile } from '@/types/database';
-import Image from 'next/image';
-import { NavButton } from '../ui/nav-button';
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { signOut } from "@/lib/auth/actions/password";
+import type { User } from "@supabase/supabase-js";
+import type { Profile } from "@/types/database";
+import Image from "next/image";
+import { NavButton } from "../ui/nav-button";
+import useBranding from "@/hooks/use-branding";
 
 interface DashboardClientLayoutProps {
   children: React.ReactNode;
@@ -31,25 +32,26 @@ interface DashboardClientLayoutProps {
 }
 
 const baseNavigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-  { name: 'Proposals', href: '/dashboard/proposals', icon: FileText },
-  { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
+  { name: "Proposals", href: "/dashboard/proposals", icon: FileText },
+  { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
+  { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-const adminNavigation = [{ name: 'Admin', href: '/admin', icon: Shield }];
+const adminNavigation = [{ name: "Admin", href: "/admin", icon: Shield }];
 
 export function DashboardClientLayout({
   children,
   user,
   profile,
 }: DashboardClientLayoutProps) {
+  useBranding();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
   // Combine navigation based on user role
   const navigation =
-    profile?.role === 'admin'
+    profile?.role === "admin"
       ? [...baseNavigation, ...adminNavigation]
       : baseNavigation;
 
@@ -58,8 +60,8 @@ export function DashboardClientLayout({
       {/* Mobile sidebar */}
       <div
         className={cn(
-          'fixed inset-0 z-50 lg:hidden',
-          sidebarOpen ? 'block' : 'hidden'
+          "fixed inset-0 z-50 lg:hidden",
+          sidebarOpen ? "block" : "hidden",
         )}
       >
         <div
@@ -82,16 +84,16 @@ export function DashboardClientLayout({
               const Icon = item.icon;
               const isActive =
                 pathname === item.href ||
-                (item.href === '/admin' && pathname.startsWith('/admin'));
+                (item.href === "/admin" && pathname.startsWith("/admin"));
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    'group flex items-center px-2 py-2 text-sm font-medium rounded-md',
+                    "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
                     isActive
-                      ? 'bg-blue-100 text-blue-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? "bg-blue-100 text-blue-900"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
                   )}
                   onClick={() => setSidebarOpen(false)}
                 >
@@ -108,13 +110,13 @@ export function DashboardClientLayout({
                   <span className="text-sm font-medium text-white">
                     {profile?.full_name?.charAt(0) ||
                       user?.email?.charAt(0) ||
-                      'U'}
+                      "U"}
                   </span>
                 </div>
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-700">
-                  {profile?.full_name || 'User'}
+                  {profile?.full_name || "User"}
                 </p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
@@ -142,23 +144,25 @@ export function DashboardClientLayout({
               src="/images/IMG_3800.png"
               alt="Veltex AI - AI Operating System for Janitorial Companies"
             />
-            <span className="text-xs text-gray-500 mt-1">Scope → Labor → Pricing → Proposal</span>
+            <span className="text-xs text-gray-500 mt-1">
+              Scope → Labor → Pricing → Proposal
+            </span>
           </div>
           <nav className="flex-1 space-y-1 px-2 py-4">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive =
                 pathname === item.href ||
-                (item.href === '/admin' && pathname.startsWith('/admin'));
+                (item.href === "/admin" && pathname.startsWith("/admin"));
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    'group flex items-center px-2 py-2 text-sm font-medium rounded-md',
+                    "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
                     isActive
-                      ? 'bg-blue-100 text-blue-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? "bg-blue-100 text-blue-900"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
                   )}
                 >
                   <Icon className="mr-3 h-5 w-5" />
@@ -174,13 +178,13 @@ export function DashboardClientLayout({
                   <span className="text-sm font-medium text-white">
                     {profile?.full_name?.charAt(0) ||
                       user?.email?.charAt(0) ||
-                      'U'}
+                      "U"}
                   </span>
                 </div>
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-700">
-                  {profile?.full_name || 'User'}
+                  {profile?.full_name || "User"}
                 </p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
@@ -214,12 +218,20 @@ export function DashboardClientLayout({
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
-              {pathname === '/dashboard/proposals/new' ? (
-                <NavButton size="sm" variant="outline" href="/dashboard/proposals" icon={<ArrowLeftIcon className="mr-2 h-4 w-4" />}>
+              {pathname === "/dashboard/proposals/new" ? (
+                <NavButton
+                  size="sm"
+                  variant="outline"
+                  href="/dashboard/proposals"
+                  icon={<ArrowLeftIcon className="mr-2 h-4 w-4" />}
+                >
                   Back to Proposals
                 </NavButton>
               ) : (
-                <NavButton href="/dashboard/proposals/new" icon={<Plus className="h-4 w-4" />}>
+                <NavButton
+                  href="/dashboard/proposals/new"
+                  icon={<Plus className="h-4 w-4" />}
+                >
                   New Proposal
                 </NavButton>
               )}

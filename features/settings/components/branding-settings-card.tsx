@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
+import { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,32 +17,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Palette, Eye, Save, RotateCcw, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
-import { useUserBranding } from '@/hooks/use-user-branding';
+} from "@/components/ui/alert-dialog";
+import { Palette, Eye, Save, RotateCcw, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { useUserBranding } from "@/hooks/use-user-branding";
 import {
   type BrandingSettings,
   COLOR_PRESETS,
   DEFAULT_BRANDING,
-} from '@/types/branding';
+} from "@/types/branding";
 
-export default function BrandingSettings() {
-  const {
-    settings,
-    isLoading,
-    isSaving,
-    saveSettings,
-    resetToDefaults,
-    applyTheme,
-    uploadLogo,
-  } = useUserBranding();
-
+function BrandingSettingsCard() {
+  console.log("STEP 1 - BrandingSettingsCard called");
+  const { settings, isLoading, isSaving, saveSettings, resetToDefaults } =
+    useUserBranding();
   const [localSettings, setLocalSettings] =
     useState<BrandingSettings>(settings);
   const [previewMode, setPreviewMode] = useState(false);
 
-  // Update local settings when settings change
+  // Sync local state when server settings load
   useEffect(() => {
     setLocalSettings(settings);
   }, [settings]);
@@ -50,69 +43,35 @@ export default function BrandingSettings() {
   // Check if there are unsaved changes
   const hasChanges = JSON.stringify(localSettings) !== JSON.stringify(settings);
 
-  // Update local settings and apply theme if in preview mode
   const updateLocalSettings = (newSettings: BrandingSettings) => {
     setLocalSettings(newSettings);
-    if (previewMode) {
-      applyTheme({
-        primary: newSettings.primary_color,
-        secondary: newSettings.secondary_color,
-        accent: newSettings.accent_color,
-      });
-    }
   };
 
   const updateLocalSetting = <K extends keyof BrandingSettings>(
     key: K,
-    value: BrandingSettings[K]
+    value: BrandingSettings[K],
   ) => {
-    const newSettings = { ...localSettings, [key]: value };
-    updateLocalSettings(newSettings);
+    updateLocalSettings({ ...localSettings, [key]: value });
   };
 
-  const applyColorPreset = (preset: (typeof COLOR_PRESETS)[0]) => {
-    const newSettings = {
+  const handleApplyColorPreset = (preset: (typeof COLOR_PRESETS)[0]) => {
+    updateLocalSettings({
       ...localSettings,
       primary_color: preset.colors.primary,
       secondary_color: preset.colors.secondary,
       accent_color: preset.colors.accent,
-    };
-    updateLocalSettings(newSettings);
+    });
     toast.success(`Applied ${preset.name} color preset`);
   };
 
   const handleSave = async () => {
-    const success = await saveSettings(localSettings);
-    if (success) {
-      setPreviewMode(false);
-    }
+    await saveSettings(localSettings);
   };
 
   const handleReset = async () => {
     await resetToDefaults();
     setLocalSettings(DEFAULT_BRANDING);
-    setPreviewMode(false);
   };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="h-5 w-5" />
-            Branding
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-sm text-muted-foreground">
-              Loading branding settings...
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>
@@ -133,11 +92,11 @@ export default function BrandingSettings() {
               size="sm"
               onClick={() => setPreviewMode(!previewMode)}
               className={
-                previewMode ? 'bg-primary text-primary-foreground' : ''
+                previewMode ? "bg-primary text-primary-foreground" : ""
               }
             >
               <Eye className="h-4 w-4" />
-              {previewMode ? 'Exit Preview' : 'Live Preview'}
+              {previewMode ? "Exit Preview" : "Live Preview"}
             </Button>
           </div> */}
         </div>
@@ -166,7 +125,7 @@ export default function BrandingSettings() {
                 key={preset.name}
                 variant="outline"
                 size="sm"
-                onClick={() => applyColorPreset(preset)}
+                onClick={() => handleApplyColorPreset(preset)}
                 className="h-auto p-3 flex flex-col items-center gap-2"
               >
                 <div className="flex gap-1">
@@ -205,14 +164,14 @@ export default function BrandingSettings() {
                   type="color"
                   value={localSettings.primary_color}
                   onChange={(e) =>
-                    updateLocalSetting('primary_color', e.target.value)
+                    updateLocalSetting("primary_color", e.target.value)
                   }
                   className="w-16 h-10 p-1 cursor-pointer"
                 />
                 <Input
                   value={localSettings.primary_color}
                   onChange={(e) =>
-                    updateLocalSetting('primary_color', e.target.value)
+                    updateLocalSetting("primary_color", e.target.value)
                   }
                   placeholder="#3b82f6"
                   className="flex-1"
@@ -231,14 +190,14 @@ export default function BrandingSettings() {
                   type="color"
                   value={localSettings.secondary_color}
                   onChange={(e) =>
-                    updateLocalSetting('secondary_color', e.target.value)
+                    updateLocalSetting("secondary_color", e.target.value)
                   }
                   className="w-16 h-10 p-1 cursor-pointer"
                 />
                 <Input
                   value={localSettings.secondary_color}
                   onChange={(e) =>
-                    updateLocalSetting('secondary_color', e.target.value)
+                    updateLocalSetting("secondary_color", e.target.value)
                   }
                   placeholder="#1e40af"
                   className="flex-1"
@@ -257,14 +216,14 @@ export default function BrandingSettings() {
                   type="color"
                   value={localSettings.accent_color}
                   onChange={(e) =>
-                    updateLocalSetting('accent_color', e.target.value)
+                    updateLocalSetting("accent_color", e.target.value)
                   }
                   className="w-16 h-10 p-1 cursor-pointer"
                 />
                 <Input
                   value={localSettings.accent_color}
                   onChange={(e) =>
-                    updateLocalSetting('accent_color', e.target.value)
+                    updateLocalSetting("accent_color", e.target.value)
                   }
                   placeholder="#f59e0b"
                   className="flex-1"
@@ -296,7 +255,7 @@ export default function BrandingSettings() {
               id="theme_applied_to_pdfs"
               checked={localSettings.theme_applied_to_pdfs}
               onCheckedChange={(checked) =>
-                updateLocalSetting('theme_applied_to_pdfs', checked)
+                updateLocalSetting("theme_applied_to_pdfs", checked)
               }
             />
           </div>
@@ -342,7 +301,7 @@ export default function BrandingSettings() {
               className="min-w-[120px]"
             >
               <Save className="h-4 w-4" />
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>
@@ -350,3 +309,5 @@ export default function BrandingSettings() {
     </Card>
   );
 }
+
+export default BrandingSettingsCard;

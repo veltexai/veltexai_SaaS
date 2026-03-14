@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { createClient } from "@/lib/supabase/client";
 import { Edit, Download, Send, Loader2, Save, X, Settings } from "lucide-react";
 import { SendProposalModal } from "@/features/proposals/components/send-proposal-modal";
 import { ProposalEditDialog } from "@/features/proposals/components/proposal-edit-dialog";
@@ -12,6 +10,10 @@ import { UpgradeModal } from "@/features/billing/components/upgrade-modal";
 import { useProposalActions } from "@/features/proposals/hooks/use-proposal-actions";
 import { type Database } from "@/types/database";
 import { useProposalPermissions } from "@/lib/hooks/use-proposal-permissions";
+import { ProposalStatusActions } from "./proposal-status-actions";
+import { useProposalStatus } from "../../hooks/use-proposal-status";
+import { toSendModalProposal } from "../../utils/send-modal-proposal";
+import { useRouter } from "next/navigation";
 
 type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 
@@ -35,10 +37,12 @@ export function ProposalActions({
   onProposalUpdated,
 }: ProposalActionsProps) {
   const router = useRouter();
+  const { updateStatus, updating, statusError } = useProposalStatus(
+    proposal.id,
+    () => router.refresh(),
+  );
   const [showSendModal, setShowSendModal] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [updating, setUpdating] = useState(false);
-  const [statusError, setStatusError] = useState("");
   const { canSend, canDownload, isFreeTrial } = useProposalPermissions();
   const {
     handleSendClick,
@@ -57,32 +61,6 @@ export function ProposalActions({
     isFreeTrial,
   });
 
-  const updateStatus = async (status: Proposal["status"]) => {
-    setUpdating(true);
-    setStatusError("");
-
-    try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("proposals")
-        .update({ status })
-        .eq("id", proposal.id);
-
-      if (error) throw error;
-
-      router.refresh();
-    } catch (error) {
-      console.error("Error updating proposal status:", error);
-      setStatusError(
-        error instanceof Error
-          ? error.message
-          : "Failed to update proposal status",
-      );
-    } finally {
-      setUpdating(false);
-    }
-  };
-
   const handleSendSuccess = () => {
     setShowSendModal(false);
     router.refresh();
@@ -93,33 +71,25 @@ export function ProposalActions({
     router.refresh();
   };
 
-  const proposalForSendModal = {
-    id: proposal.id,
-    title: proposal.title,
-    client_name: proposal.client_name,
-    client_email: proposal.client_email,
-    client_company: proposal.client_company || undefined,
-    service_type: proposal.service_type,
-    status: proposal.status,
-  };
+  const handleSendModalOpen = () =>
+    handleSendClick(() => setShowSendModal(true));
 
-  const displayError = statusError || downloadError;
+  const proposalForSendModal = toSendModalProposal(proposal);
 
   return (
     <>
-      {displayError && (
+      {statusError && (
+        <Alert variant="destructive">
+          <AlertDescription>{statusError}</AlertDescription>
+        </Alert>
+      )}
+      {downloadError && (
         <Alert variant="destructive">
           <AlertDescription>
-            {displayError}
-            {downloadError && !statusError && (
-              <button
-                type="button"
-                onClick={clearDownloadError}
-                className="ml-2 underline focus:outline-none"
-              >
-                Dismiss
-              </button>
-            )}
+            {downloadError}
+            <button onClick={clearDownloadError} className="ml-2 underline">
+              Dismiss
+            </button>
           </AlertDescription>
         </Alert>
       )}
@@ -167,60 +137,13 @@ export function ProposalActions({
               </Button>
             </div>
 
-            {proposal.status === "draft" && (
-              <Button
-                onClick={() => handleSendClick(() => setShowSendModal(true))}
-                size="sm"
-                className="w-full sm:w-auto"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Send Proposal
-              </Button>
-            )}
-
-            {proposal.status === "sent" && (
-              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                <Button
-                  onClick={() => handleSendClick(() => setShowSendModal(true))}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 sm:flex-none"
-                >
-                  <Send className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Send Again</span>
-                  <span className="sm:hidden">Resend</span>
-                </Button>
-                <Button
-                  onClick={() => updateStatus("accepted")}
-                  disabled={updating}
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
-                >
-                  {updating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span className="hidden sm:inline">Mark </span>Accepted
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => updateStatus("rejected")}
-                  disabled={updating}
-                  size="sm"
-                  className="text-red-600 border-red-600 hover:bg-red-50 flex-1 sm:flex-none"
-                >
-                  {updating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span className="hidden sm:inline">Mark </span>Rejected
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+            <ProposalStatusActions
+              status={proposal.status}
+              updating={updating}
+              onSend={handleSendModalOpen}
+              onMarkAccepted={() => updateStatus("accepted")}
+              onMarkRejected={() => updateStatus("rejected")}
+            />
           </>
         ) : (
           <div className="flex items-center gap-2 w-full sm:w-auto">

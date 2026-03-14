@@ -1,6 +1,5 @@
 "use client";
 
-import { useUserBranding } from "@/hooks/use-user-branding";
 import React from "react";
 import { getIconForLabel } from "@/lib/icon-map";
 import { ProposalAcceptance } from "@/features/templates/components/shared/proposal-acceptance";
@@ -77,7 +76,6 @@ export function MarkdownRenderer({
   proposalId,
   additionalServicesRows,
 }: MarkdownRendererProps) {
-  const { settings } = useUserBranding();
   let extrasIncluded = false;
   const parseMarkdown = (text: string) => {
     const lines = text.split("\n");
