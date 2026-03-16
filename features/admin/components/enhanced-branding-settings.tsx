@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
+import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 import {
   Palette,
   Upload,
@@ -35,10 +35,14 @@ import {
   RotateCcw,
   FileImage,
   Sparkles,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { BrandingSettings, COLOR_PRESETS, DEFAULT_BRANDING } from '@/types/branding';
-import { SystemSettings } from '@/types/database';
+} from "lucide-react";
+import { toast } from "sonner";
+import {
+  BrandingSettingsInterface,
+  COLOR_PRESETS,
+  DEFAULT_BRANDING,
+} from "@/features/settings";
+import { SystemSettings } from "@/types/database";
 
 interface EnhancedBrandingSettingsProps {
   initialSettings: Partial<SystemSettings>;
@@ -51,16 +55,26 @@ export default function EnhancedBrandingSettings({
   currentUserId,
   onSettingsChange,
 }: EnhancedBrandingSettingsProps) {
-  const [settings, setSettings] = useState<BrandingSettings>({
+  const [settings, setSettings] = useState<BrandingSettingsInterface>({
     company_name: initialSettings.company_name || DEFAULT_BRANDING.company_name,
-    company_logo_url: initialSettings.company_logo_url || DEFAULT_BRANDING.company_logo_url,
-    company_tagline: initialSettings.company_tagline || DEFAULT_BRANDING.company_tagline,
-    primary_color: initialSettings.primary_color || DEFAULT_BRANDING.primary_color,
-    secondary_color: initialSettings.secondary_color || DEFAULT_BRANDING.secondary_color,
+    company_logo_url:
+      initialSettings.company_logo_url || DEFAULT_BRANDING.company_logo_url,
+    company_tagline:
+      initialSettings.company_tagline || DEFAULT_BRANDING.company_tagline,
+    primary_color:
+      initialSettings.primary_color || DEFAULT_BRANDING.primary_color,
+    secondary_color:
+      initialSettings.secondary_color || DEFAULT_BRANDING.secondary_color,
     accent_color: initialSettings.accent_color || DEFAULT_BRANDING.accent_color,
-    theme_applied_to_pdfs: initialSettings.theme_applied_to_pdfs ?? DEFAULT_BRANDING.theme_applied_to_pdfs,
-    ai_attribution_enabled: initialSettings.ai_attribution_enabled ?? DEFAULT_BRANDING.ai_attribution_enabled,
-    proposal_tracking_enabled: initialSettings.proposal_tracking_enabled ?? DEFAULT_BRANDING.proposal_tracking_enabled,
+    theme_applied_to_pdfs:
+      initialSettings.theme_applied_to_pdfs ??
+      DEFAULT_BRANDING.theme_applied_to_pdfs,
+    ai_attribution_enabled:
+      initialSettings.ai_attribution_enabled ??
+      DEFAULT_BRANDING.ai_attribution_enabled,
+    proposal_tracking_enabled:
+      initialSettings.proposal_tracking_enabled ??
+      DEFAULT_BRANDING.proposal_tracking_enabled,
   });
 
   const [saving, setSaving] = useState(false);
@@ -81,34 +95,43 @@ export default function EnhancedBrandingSettings({
 
   const applyThemeVariables = useCallback(() => {
     const root = document.documentElement;
-    root.style.setProperty('--color-primary', settings.primary_color);
-    root.style.setProperty('--color-secondary', settings.secondary_color);
-    root.style.setProperty('--color-accent', settings.accent_color);
-    
+    root.style.setProperty("--color-primary", settings.primary_color);
+    root.style.setProperty("--color-secondary", settings.secondary_color);
+    root.style.setProperty("--color-accent", settings.accent_color);
+
     // Convert hex to RGB for CSS variables that need RGB values
     const primaryRgb = hexToRgb(settings.primary_color);
     const secondaryRgb = hexToRgb(settings.secondary_color);
     const accentRgb = hexToRgb(settings.accent_color);
-    
+
     if (primaryRgb) {
-      root.style.setProperty('--color-primary-rgb', `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`);
+      root.style.setProperty(
+        "--color-primary-rgb",
+        `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`,
+      );
     }
     if (secondaryRgb) {
-      root.style.setProperty('--color-secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
+      root.style.setProperty(
+        "--color-secondary-rgb",
+        `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`,
+      );
     }
     if (accentRgb) {
-      root.style.setProperty('--color-accent-rgb', `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`);
+      root.style.setProperty(
+        "--color-accent-rgb",
+        `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`,
+      );
     }
   }, [settings]);
 
   const resetThemeVariables = useCallback(() => {
     const root = document.documentElement;
-    root.style.removeProperty('--color-primary');
-    root.style.removeProperty('--color-secondary');
-    root.style.removeProperty('--color-accent');
-    root.style.removeProperty('--color-primary-rgb');
-    root.style.removeProperty('--color-secondary-rgb');
-    root.style.removeProperty('--color-accent-rgb');
+    root.style.removeProperty("--color-primary");
+    root.style.removeProperty("--color-secondary");
+    root.style.removeProperty("--color-accent");
+    root.style.removeProperty("--color-primary-rgb");
+    root.style.removeProperty("--color-secondary-rgb");
+    root.style.removeProperty("--color-accent-rgb");
   }, []);
 
   const hexToRgb = (hex: string) => {
@@ -122,20 +145,20 @@ export default function EnhancedBrandingSettings({
       : null;
   };
 
-  const updateSetting = <K extends keyof BrandingSettings>(
+  const updateSetting = <K extends keyof BrandingSettingsInterface>(
     key: K,
-    value: BrandingSettings[K]
+    value: BrandingSettingsInterface[K],
   ) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
     setHasChanges(true);
-    
+
     // Notify parent component of changes
     if (onSettingsChange) {
       onSettingsChange({ [key]: value });
     }
   };
 
-  const applyColorPreset = (preset: typeof COLOR_PRESETS[0]) => {
+  const applyColorPreset = (preset: (typeof COLOR_PRESETS)[0]) => {
     setSettings((prev) => ({
       ...prev,
       primary_color: preset.colors.primary,
@@ -143,7 +166,7 @@ export default function EnhancedBrandingSettings({
       accent_color: preset.colors.accent,
     }));
     setHasChanges(true);
-    
+
     if (onSettingsChange) {
       onSettingsChange({
         primary_color: preset.colors.primary,
@@ -151,23 +174,25 @@ export default function EnhancedBrandingSettings({
         accent_color: preset.colors.accent,
       });
     }
-    
+
     toast.success(`Applied ${preset.name} color preset`);
   };
 
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
       return;
     }
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image size must be less than 2MB');
+      toast.error("Image size must be less than 2MB");
       return;
     }
 
@@ -175,25 +200,25 @@ export default function EnhancedBrandingSettings({
       setUploading(true);
 
       // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split(".").pop();
       const fileName = `logo-${Date.now()}.${fileExt}`;
-      
+
       const { data, error } = await supabase.storage
-        .from('company-assets')
+        .from("company-assets")
         .upload(fileName, file);
 
       if (error) throw error;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('company-assets')
-        .getPublicUrl(fileName);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("company-assets").getPublicUrl(fileName);
 
-      updateSetting('company_logo_url', publicUrl);
-      toast.success('Logo uploaded successfully');
+      updateSetting("company_logo_url", publicUrl);
+      toast.success("Logo uploaded successfully");
     } catch (error) {
-      console.error('Error uploading logo:', error);
-      toast.error('Failed to upload logo');
+      console.error("Error uploading logo:", error);
+      toast.error("Failed to upload logo");
     } finally {
       setUploading(false);
     }
@@ -203,39 +228,37 @@ export default function EnhancedBrandingSettings({
     try {
       setSaving(true);
 
-      const { error } = await supabase
-        .from('system_settings')
-        .upsert({
-          company_name: settings.company_name,
-          company_logo_url: settings.company_logo_url,
-          company_tagline: settings.company_tagline,
-          primary_color: settings.primary_color,
-          secondary_color: settings.secondary_color,
-          accent_color: settings.accent_color,
-          theme_applied_to_pdfs: settings.theme_applied_to_pdfs,
-          ai_attribution_enabled: settings.ai_attribution_enabled,
-          proposal_tracking_enabled: settings.proposal_tracking_enabled,
-          updated_at: new Date().toISOString(),
-        });
+      const { error } = await supabase.from("system_settings").upsert({
+        company_name: settings.company_name,
+        company_logo_url: settings.company_logo_url,
+        company_tagline: settings.company_tagline,
+        primary_color: settings.primary_color,
+        secondary_color: settings.secondary_color,
+        accent_color: settings.accent_color,
+        theme_applied_to_pdfs: settings.theme_applied_to_pdfs,
+        ai_attribution_enabled: settings.ai_attribution_enabled,
+        proposal_tracking_enabled: settings.proposal_tracking_enabled,
+        updated_at: new Date().toISOString(),
+      });
 
       if (error) throw error;
 
       // Log admin action
-      await supabase.from('audit_logs').insert({
+      await supabase.from("audit_logs").insert({
         user_id: currentUserId,
-        action: 'update_branding_settings',
-        resource_type: 'system_settings',
-        details: { 
+        action: "update_branding_settings",
+        resource_type: "system_settings",
+        details: {
           updated_fields: Object.keys(settings),
-          updated_at: new Date().toISOString() 
+          updated_at: new Date().toISOString(),
         },
       });
 
-      toast.success('Branding settings saved successfully');
+      toast.success("Branding settings saved successfully");
       setHasChanges(false);
     } catch (error) {
-      console.error('Error saving branding settings:', error);
-      toast.error('Failed to save branding settings');
+      console.error("Error saving branding settings:", error);
+      toast.error("Failed to save branding settings");
     } finally {
       setSaving(false);
     }
@@ -244,12 +267,12 @@ export default function EnhancedBrandingSettings({
   const resetToDefaults = () => {
     setSettings(DEFAULT_BRANDING);
     setHasChanges(true);
-    
+
     if (onSettingsChange) {
       onSettingsChange(DEFAULT_BRANDING);
     }
-    
-    toast.success('Reset to default branding settings');
+
+    toast.success("Reset to default branding settings");
   };
 
   return (
@@ -267,10 +290,10 @@ export default function EnhancedBrandingSettings({
             variant="outline"
             size="sm"
             onClick={() => setPreviewMode(!previewMode)}
-            className={previewMode ? 'bg-primary text-primary-foreground' : ''}
+            className={previewMode ? "bg-primary text-primary-foreground" : ""}
           >
             <Eye className="h-4 w-4" />
-            {previewMode ? 'Exit Preview' : 'Live Preview'}
+            {previewMode ? "Exit Preview" : "Live Preview"}
           </Button>
           <Button
             variant="outline"
@@ -279,7 +302,7 @@ export default function EnhancedBrandingSettings({
             disabled={!hasChanges || saving}
           >
             <Save className="h-4 w-4" />
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </div>
@@ -290,7 +313,8 @@ export default function EnhancedBrandingSettings({
             <div className="flex items-center gap-2 text-primary">
               <Eye className="h-4 w-4" />
               <span className="text-sm font-medium">
-                Live Preview Mode - Changes are applied to the interface in real-time
+                Live Preview Mode - Changes are applied to the interface in
+                real-time
               </span>
             </div>
           </CardContent>
@@ -312,7 +336,7 @@ export default function EnhancedBrandingSettings({
               <Input
                 id="company_name"
                 value={settings.company_name}
-                onChange={(e) => updateSetting('company_name', e.target.value)}
+                onChange={(e) => updateSetting("company_name", e.target.value)}
                 placeholder="Enter company name"
               />
             </div>
@@ -320,8 +344,10 @@ export default function EnhancedBrandingSettings({
               <Label htmlFor="company_tagline">Company Tagline</Label>
               <Input
                 id="company_tagline"
-                value={settings.company_tagline || ''}
-                onChange={(e) => updateSetting('company_tagline', e.target.value)}
+                value={settings.company_tagline || ""}
+                onChange={(e) =>
+                  updateSetting("company_tagline", e.target.value)
+                }
                 placeholder="Enter company tagline"
               />
             </div>
@@ -341,8 +367,10 @@ export default function EnhancedBrandingSettings({
               )}
               <div className="flex-1">
                 <Input
-                  value={settings.company_logo_url || ''}
-                  onChange={(e) => updateSetting('company_logo_url', e.target.value)}
+                  value={settings.company_logo_url || ""}
+                  onChange={(e) =>
+                    updateSetting("company_logo_url", e.target.value)
+                  }
                   placeholder="Enter logo URL or upload a file"
                 />
               </div>
@@ -357,11 +385,13 @@ export default function EnhancedBrandingSettings({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => document.getElementById('logo_upload')?.click()}
+                  onClick={() =>
+                    document.getElementById("logo_upload")?.click()
+                  }
                   disabled={uploading}
                 >
                   <Upload className="h-4 w-4" />
-                  {uploading ? 'Uploading...' : 'Upload'}
+                  {uploading ? "Uploading..." : "Upload"}
                 </Button>
               </div>
             </div>
@@ -421,12 +451,16 @@ export default function EnhancedBrandingSettings({
                   id="primary_color"
                   type="color"
                   value={settings.primary_color}
-                  onChange={(e) => updateSetting('primary_color', e.target.value)}
+                  onChange={(e) =>
+                    updateSetting("primary_color", e.target.value)
+                  }
                   className="w-16 h-10 p-1 cursor-pointer"
                 />
                 <Input
                   value={settings.primary_color}
-                  onChange={(e) => updateSetting('primary_color', e.target.value)}
+                  onChange={(e) =>
+                    updateSetting("primary_color", e.target.value)
+                  }
                   placeholder="#3b82f6"
                   className="flex-1"
                 />
@@ -443,12 +477,16 @@ export default function EnhancedBrandingSettings({
                   id="secondary_color"
                   type="color"
                   value={settings.secondary_color}
-                  onChange={(e) => updateSetting('secondary_color', e.target.value)}
+                  onChange={(e) =>
+                    updateSetting("secondary_color", e.target.value)
+                  }
                   className="w-16 h-10 p-1 cursor-pointer"
                 />
                 <Input
                   value={settings.secondary_color}
-                  onChange={(e) => updateSetting('secondary_color', e.target.value)}
+                  onChange={(e) =>
+                    updateSetting("secondary_color", e.target.value)
+                  }
                   placeholder="#1e40af"
                   className="flex-1"
                 />
@@ -465,12 +503,16 @@ export default function EnhancedBrandingSettings({
                   id="accent_color"
                   type="color"
                   value={settings.accent_color}
-                  onChange={(e) => updateSetting('accent_color', e.target.value)}
+                  onChange={(e) =>
+                    updateSetting("accent_color", e.target.value)
+                  }
                   className="w-16 h-10 p-1 cursor-pointer"
                 />
                 <Input
                   value={settings.accent_color}
-                  onChange={(e) => updateSetting('accent_color', e.target.value)}
+                  onChange={(e) =>
+                    updateSetting("accent_color", e.target.value)
+                  }
                   placeholder="#f59e0b"
                   className="flex-1"
                 />
@@ -502,7 +544,9 @@ export default function EnhancedBrandingSettings({
             <Switch
               id="theme_applied_to_pdfs"
               checked={settings.theme_applied_to_pdfs}
-              onCheckedChange={(checked) => updateSetting('theme_applied_to_pdfs', checked)}
+              onCheckedChange={(checked) =>
+                updateSetting("theme_applied_to_pdfs", checked)
+              }
             />
           </div>
 
@@ -518,7 +562,9 @@ export default function EnhancedBrandingSettings({
             <Switch
               id="ai_attribution_enabled"
               checked={settings.ai_attribution_enabled}
-              onCheckedChange={(checked) => updateSetting('ai_attribution_enabled', checked)}
+              onCheckedChange={(checked) =>
+                updateSetting("ai_attribution_enabled", checked)
+              }
             />
           </div>
 
@@ -526,7 +572,9 @@ export default function EnhancedBrandingSettings({
 
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label htmlFor="proposal_tracking_enabled">Proposal Tracking</Label>
+              <Label htmlFor="proposal_tracking_enabled">
+                Proposal Tracking
+              </Label>
               <p className="text-sm text-muted-foreground">
                 Enable tracking of proposal views and engagement metrics
               </p>
@@ -534,7 +582,9 @@ export default function EnhancedBrandingSettings({
             <Switch
               id="proposal_tracking_enabled"
               checked={settings.proposal_tracking_enabled}
-              onCheckedChange={(checked) => updateSetting('proposal_tracking_enabled', checked)}
+              onCheckedChange={(checked) =>
+                updateSetting("proposal_tracking_enabled", checked)
+              }
             />
           </div>
         </CardContent>
@@ -553,7 +603,8 @@ export default function EnhancedBrandingSettings({
             <AlertDialogHeader>
               <AlertDialogTitle>Reset Branding Settings</AlertDialogTitle>
               <AlertDialogDescription>
-                This will reset all branding settings to their default values. This action cannot be undone.
+                This will reset all branding settings to their default values.
+                This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -577,7 +628,7 @@ export default function EnhancedBrandingSettings({
             className="min-w-[120px]"
           >
             <Save className="h-4 w-4" />
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </div>

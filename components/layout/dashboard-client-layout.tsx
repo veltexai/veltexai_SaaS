@@ -23,7 +23,6 @@ import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/types/database";
 import Image from "next/image";
 import { NavButton } from "../ui/nav-button";
-import useBranding from "@/hooks/use-branding";
 
 interface DashboardClientLayoutProps {
   children: React.ReactNode;
@@ -45,7 +44,6 @@ export function DashboardClientLayout({
   user,
   profile,
 }: DashboardClientLayoutProps) {
-  useBranding();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 

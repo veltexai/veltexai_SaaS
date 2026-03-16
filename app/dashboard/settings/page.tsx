@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { getUser } from "@/queries/user";
 import { ProfileSettings } from "@/features/settings/components/profile-settings";
-import { CompanyProfileSettings } from "@/features/settings/components/company-profile-settings";
+// import { CompanyProfileSettings } from "@/features/settings/components/company-profile-settings";
 import { SubscriptionBilling } from "@/features/settings/components/subscription-billing";
 import { SecuritySettings } from "@/features/settings/components/security-settings";
-import { NotificationsSettings } from "@/features/settings/components/notifications-settings";
+// import { NotificationsSettings } from "@/features/settings/components/notifications-settings";
 import BrandingSettingsCard from "@/features/settings/components/branding-settings-card";
 import { type User as UserType, type Profile } from "@/types/database";
 
@@ -40,7 +40,7 @@ export default async function SettingsPage() {
         {/* <CompanyProfileSettings /> */}
 
         {/* Branding Settings - Full width */}
-        <BrandingSettingsCard />
+        <BrandingSettingsCard userId={user.id} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SecuritySettings />

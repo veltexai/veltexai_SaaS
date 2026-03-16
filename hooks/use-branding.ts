@@ -1,11 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { BrandingSettings, DEFAULT_BRANDING } from "@/types/branding";
+import {
+  BrandingSettingsInterface,
+  DEFAULT_BRANDING,
+} from "@/features/settings";
 import { applyTheme, resetTheme } from "@/lib/theme";
 import { toast } from "sonner";
 
 export function useBranding() {
-  const [settings, setSettings] = useState<BrandingSettings>(DEFAULT_BRANDING);
+  const [settings, setSettings] =
+    useState<BrandingSettingsInterface>(DEFAULT_BRANDING);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -29,7 +33,7 @@ export function useBranding() {
       }
 
       if (data) {
-        const brandingSettings: BrandingSettings = {
+        const brandingSettings: BrandingSettingsInterface = {
           company_name: data.company_name || DEFAULT_BRANDING.company_name,
           company_logo_url:
             data.company_logo_url || DEFAULT_BRANDING.company_logo_url,
@@ -70,7 +74,7 @@ export function useBranding() {
 
   // Save branding settings to database
   const saveSettings = useCallback(
-    async (newSettings: BrandingSettings) => {
+    async (newSettings: BrandingSettingsInterface) => {
       try {
         setIsSaving(true);
 
@@ -107,11 +111,14 @@ export function useBranding() {
   );
 
   // Update settings locally (for preview)
-  const updateSettings = useCallback((newSettings: BrandingSettings) => {
-    setSettings(newSettings);
-    applyTheme(newSettings);
-    setHasChanges(true);
-  }, []);
+  const updateSettings = useCallback(
+    (newSettings: BrandingSettingsInterface) => {
+      setSettings(newSettings);
+      applyTheme(newSettings);
+      setHasChanges(true);
+    },
+    [],
+  );
 
   // Reset to defaults
   const resetToDefaults = useCallback(async () => {

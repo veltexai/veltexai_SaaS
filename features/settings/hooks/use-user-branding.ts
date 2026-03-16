@@ -1,51 +1,28 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { BrandingSettings, DEFAULT_BRANDING } from "@/types/branding";
+import { type BrandingSettingsInterface } from "@/features/settings/type/branding-type";
+import { DEFAULT_BRANDING } from "@/features/settings/constants/branding-constants";
 import { applyThemeVariables } from "@/lib/theme";
 
-interface UserBrandingSettings {
-  id?: string;
+interface UserBrandingDbPayload {
   user_id: string;
-  company_name?: string | null;
+  company_name: string;
   company_logo_url?: string | null;
   company_tagline?: string | null;
   primary_color: string;
   secondary_color: string;
   accent_color: string;
   theme_applied_to_pdfs: boolean;
-  created_at?: string;
-  updated_at?: string;
 }
 
-export function useUserBranding() {
-  const [settings, setSettings] = useState<BrandingSettings | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const supabase = createClient();
-
-  // Convert database format to BrandingSettings format
-  const convertToSettings = (
-    dbSettings: UserBrandingSettings,
-  ): BrandingSettings => ({
-    company_name: dbSettings.company_name || "",
-    company_logo_url: dbSettings.company_logo_url,
-    company_tagline: dbSettings.company_tagline,
-    primary_color: dbSettings.primary_color,
-    secondary_color: dbSettings.secondary_color,
-    accent_color: dbSettings.accent_color,
-    theme_applied_to_pdfs: dbSettings.theme_applied_to_pdfs,
-    ai_attribution_enabled: true, // Default value
-    proposal_tracking_enabled: true, // Default value
-  });
-
-  // Convert BrandingSettings format to database format
-  const convertToDbFormat = (
-    settings: BrandingSettings,
-    userId: string,
-  ): Partial<UserBrandingSettings> => ({
+function toDbPayload(
+  settings: BrandingSettingsInterface,
+  userId: string,
+): UserBrandingDbPayload {
+  return {
     user_id: userId,
     company_name: settings.company_name,
     company_logo_url: settings.company_logo_url,
@@ -54,42 +31,18 @@ export function useUserBranding() {
     secondary_color: settings.secondary_color,
     accent_color: settings.accent_color,
     theme_applied_to_pdfs: settings.theme_applied_to_pdfs,
-  });
+  };
+}
 
-  // Load user branding settings
-  const loadSettings = useCallback(async () => {
-    try {
-      setIsLoading(true);
+export function useUserBrandingMutations() {
+  const supabase = createClient();
+  const [isSaving, setIsSaving] = useState(false);
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError || !user) {
-        setSettings(DEFAULT_BRANDING);
-        return; // ← if this fires, isLoading stays true forever in old code
-      }
-
-      const { data, error } = await supabase
-        .from("user_branding_settings")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-    } catch (error) {
-      setSettings(DEFAULT_BRANDING);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [supabase]);
-
-  // Save branding settings
   const saveSettings = useCallback(
-    async (newSettings: BrandingSettings) => {
+    async (newSettings: BrandingSettingsInterface): Promise<boolean> => {
       try {
         setIsSaving(true);
 
-        // Get current user
         const {
           data: { user },
           error: userError,
@@ -100,14 +53,11 @@ export function useUserBranding() {
           return false;
         }
 
-        const dbData = convertToDbFormat(newSettings, user.id);
+        const payload = toDbPayload(newSettings, user.id);
 
-        // Upsert the settings
         const { error } = await supabase
           .from("user_branding_settings")
-          .upsert(dbData, {
-            onConflict: "user_id",
-          });
+          .upsert(payload, { onConflict: "user_id" });
 
         if (error) {
           console.error("Error saving branding settings:", error);
@@ -115,12 +65,12 @@ export function useUserBranding() {
           return false;
         }
 
-        setSettings(newSettings);
         applyThemeVariables({
           primary: newSettings.primary_color,
           secondary: newSettings.secondary_color,
           accent: newSettings.accent_color,
         });
+
         toast.success("Branding settings saved successfully");
         return true;
       } catch (error) {
@@ -134,8 +84,7 @@ export function useUserBranding() {
     [supabase],
   );
 
-  // Reset to defaults
-  const resetToDefaults = useCallback(async () => {
+  const resetToDefaults = useCallback(async (): Promise<boolean> => {
     const success = await saveSettings(DEFAULT_BRANDING);
     if (success) {
       toast.success("Branding settings reset to defaults");
@@ -143,7 +92,6 @@ export function useUserBranding() {
     return success;
   }, [saveSettings]);
 
-  // Apply theme without saving
   const applyTheme = useCallback(
     (colors: { primary: string; secondary: string; accent: string }) => {
       applyThemeVariables(colors);
@@ -151,15 +99,14 @@ export function useUserBranding() {
     [],
   );
 
-  // Upload logo to Supabase Storage
   const uploadLogo = useCallback(
-    async (file: File) => {
+    async (file: File): Promise<string | null> => {
       try {
-        // Get current user
         const {
           data: { user },
           error: userError,
         } = await supabase.auth.getUser();
+
         if (userError || !user) {
           toast.error("Authentication required");
           return null;
@@ -193,19 +140,11 @@ export function useUserBranding() {
     [supabase],
   );
 
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
-
   return {
-    settings: settings || DEFAULT_BRANDING,
-    isLoading,
     isSaving,
     saveSettings,
     resetToDefaults,
     applyTheme,
     uploadLogo,
-    refreshSettings: loadSettings,
   };
 }
