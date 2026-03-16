@@ -1,4 +1,7 @@
-import { BrandingSettingsInterface, ColorPalette } from "@/features/settings";
+import type {
+  BrandingSettingsInterface,
+  ColorPalette,
+} from "@/features/settings/type/branding-type";
 
 // Default branding settings
 export const DEFAULT_BRANDING: BrandingSettingsInterface = {

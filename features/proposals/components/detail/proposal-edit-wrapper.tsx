@@ -1,67 +1,72 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { toast } from 'sonner';
-import { ProposalActions } from './proposal-actions';
-import { ProposalContent } from './proposal-content';
-import { Database } from '@/types/database';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
+import { ProposalActions } from "./proposal-actions";
+import { ProposalContent } from "./proposal-content";
+import { Database } from "@/types/database";
+import { ProposalPermissions } from "../../types/proposals";
 
-type Proposal = Database['public']['Tables']['proposals']['Row'];
+type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 
 interface ProposalEditWrapperProps {
   proposal: Proposal;
+  permissions: ProposalPermissions;
 }
 
-export function ProposalEditWrapper({ proposal: initialProposal }: ProposalEditWrapperProps) {
+export function ProposalEditWrapper({
+  proposal: initialProposal,
+  permissions,
+}: ProposalEditWrapperProps) {
   const [proposal, setProposal] = useState(initialProposal);
   const [isEditing, setIsEditing] = useState(false);
-  const [contentDraft, setContentDraft] = useState('');
-  const [titleDraft, setTitleDraft] = useState('');
+  const [contentDraft, setContentDraft] = useState("");
+  const [titleDraft, setTitleDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
   const handleEditStart = () => {
-    setContentDraft(proposal.generated_content || '');
-    setTitleDraft(proposal.title || '');
+    setContentDraft(proposal.generated_content || "");
+    setTitleDraft(proposal.title || "");
     setIsEditing(true);
   };
 
   const handleEditCancel = () => {
     setIsEditing(false);
-    setContentDraft('');
-    setTitleDraft('');
+    setContentDraft("");
+    setTitleDraft("");
   };
 
   const handleEditSave = async () => {
     try {
       setSaving(true);
       const { error } = await supabase
-        .from('proposals')
+        .from("proposals")
         .update({
           title: titleDraft,
           generated_content: contentDraft,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', proposal.id);
+        .eq("id", proposal.id);
 
       if (error) throw error;
 
-      setProposal(prev => ({
+      setProposal((prev) => ({
         ...prev,
         title: titleDraft,
         generated_content: contentDraft,
       }));
       setIsEditing(false);
-      setContentDraft('');
-      setTitleDraft('');
-      toast.success('Proposal updated successfully');
+      setContentDraft("");
+      setTitleDraft("");
+      toast.success("Proposal updated successfully");
       router.refresh();
     } catch (error) {
-      console.error('Error updating proposal:', error);
-      toast.error('Failed to update proposal');
+      console.error("Error updating proposal:", error);
+      toast.error("Failed to update proposal");
     } finally {
       setSaving(false);
     }
@@ -81,9 +86,10 @@ export function ProposalEditWrapper({ proposal: initialProposal }: ProposalEditW
         onEditCancel={handleEditCancel}
         onEditSave={handleEditSave}
         saving={saving}
+        permissions={permissions}
         onProposalUpdated={handleProposalUpdated}
       />
-      <ProposalContent 
+      <ProposalContent
         proposal={proposal}
         isEditing={isEditing}
         contentDraft={contentDraft}

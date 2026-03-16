@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { XCircle, RotateCcw } from 'lucide-react';
-import { useConfirmation } from '@/components/providers/confirmation-provider';
-import { toast } from 'sonner';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { XCircle, RotateCcw } from "lucide-react";
+import { useConfirmation } from "@/providers/confirmation-provider";
+import { toast } from "sonner";
 
 interface CancelSubscriptionButtonProps {
   className?: string;
@@ -13,7 +13,7 @@ interface CancelSubscriptionButtonProps {
 }
 
 const CancelSubscriptionButton = ({
-  className = '',
+  className = "",
   onCancellationChanged,
   isAlreadyCancelled = false,
 }: CancelSubscriptionButtonProps) => {
@@ -24,14 +24,14 @@ const CancelSubscriptionButton = ({
     const isCancelling = !isAlreadyCancelled;
 
     const confirmed = await confirm({
-      title: isCancelling ? 'Cancel Subscription' : 'Reactivate Subscription',
+      title: isCancelling ? "Cancel Subscription" : "Reactivate Subscription",
       message: isCancelling
-        ? 'Are you sure you want to cancel your subscription? You will continue to have access until the end of your current billing period.'
-        : 'Are you sure you want to reactivate your subscription? You will be charged for the next billing period.',
-      confirmText: isCancelling ? 'Yes, Cancel' : 'Yes, Reactivate',
-      cancelText: isCancelling ? 'Keep Subscription' : 'Keep Cancelled',
-      variant: isCancelling ? 'destructive' : 'default',
-      illustration: 'Cancel-bro.svg',
+        ? "Are you sure you want to cancel your subscription? You will continue to have access until the end of your current billing period."
+        : "Are you sure you want to reactivate your subscription? You will be charged for the next billing period.",
+      confirmText: isCancelling ? "Yes, Cancel" : "Yes, Reactivate",
+      cancelText: isCancelling ? "Keep Subscription" : "Keep Cancelled",
+      variant: isCancelling ? "destructive" : "default",
+      illustration: "Cancel-bro.svg",
     });
 
     if (!confirmed) return;
@@ -39,10 +39,10 @@ const CancelSubscriptionButton = ({
     setLoading(true);
 
     try {
-      const response = await fetch('/api/stripe/cancel-subscription', {
-        method: 'POST',
+      const response = await fetch("/api/stripe/cancel-subscription", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           cancelAtPeriodEnd: isCancelling,
@@ -54,8 +54,8 @@ const CancelSubscriptionButton = ({
       if (response.ok) {
         toast.success(
           isCancelling
-            ? 'Subscription cancelled successfully. You will continue to have access until the end of your billing period.'
-            : 'Subscription reactivated successfully. You will be charged for the next billing period.'
+            ? "Subscription cancelled successfully. You will continue to have access until the end of your billing period."
+            : "Subscription reactivated successfully. You will be charged for the next billing period.",
         );
 
         // Call parent refresh function if provided
@@ -65,16 +65,16 @@ const CancelSubscriptionButton = ({
       } else {
         toast.error(
           data.error ||
-            `Failed to ${isCancelling ? 'cancel' : 'reactivate'} subscription`
+            `Failed to ${isCancelling ? "cancel" : "reactivate"} subscription`,
         );
       }
     } catch (error) {
       console.error(
-        `Error ${isCancelling ? 'cancelling' : 'reactivating'} subscription:`,
-        error
+        `Error ${isCancelling ? "cancelling" : "reactivating"} subscription:`,
+        error,
       );
       toast.error(
-        `Failed to ${isCancelling ? 'cancel' : 'reactivate'} subscription`
+        `Failed to ${isCancelling ? "cancel" : "reactivate"} subscription`,
       );
     } finally {
       setLoading(false);
@@ -83,7 +83,7 @@ const CancelSubscriptionButton = ({
 
   return (
     <Button
-      variant={isAlreadyCancelled ? 'outline' : 'destructive'}
+      variant={isAlreadyCancelled ? "outline" : "destructive"}
       onClick={handleSubscriptionAction}
       disabled={loading}
       className={className}
@@ -95,11 +95,11 @@ const CancelSubscriptionButton = ({
       )}
       {loading
         ? isAlreadyCancelled
-          ? 'Reactivating...'
-          : 'Cancelling...'
+          ? "Reactivating..."
+          : "Cancelling..."
         : isAlreadyCancelled
-        ? 'Reactivate Subscription'
-        : 'Cancel Subscription'}
+          ? "Reactivate Subscription"
+          : "Cancel Subscription"}
     </Button>
   );
 };

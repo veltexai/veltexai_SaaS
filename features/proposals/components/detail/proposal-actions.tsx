@@ -14,6 +14,7 @@ import { ProposalStatusActions } from "./proposal-status-actions";
 import { useProposalStatus } from "../../hooks/use-proposal-status";
 import { toSendModalProposal } from "../../utils/send-modal-proposal";
 import { useRouter } from "next/navigation";
+import { ProposalPermissions } from "../../types/proposals";
 
 type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 
@@ -25,6 +26,7 @@ interface ProposalActionsProps {
   onEditSave?: () => void;
   saving?: boolean;
   onProposalUpdated?: (proposal: Proposal) => void;
+  permissions: ProposalPermissions;
 }
 
 export function ProposalActions({
@@ -35,6 +37,7 @@ export function ProposalActions({
   onEditSave,
   saving = false,
   onProposalUpdated,
+  permissions,
 }: ProposalActionsProps) {
   const router = useRouter();
   const { updateStatus, updating, statusError } = useProposalStatus(
@@ -43,7 +46,6 @@ export function ProposalActions({
   );
   const [showSendModal, setShowSendModal] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const { canSend, canDownload, isFreeTrial } = useProposalPermissions();
   const {
     handleSendClick,
     handleDownloadClick,
@@ -56,9 +58,8 @@ export function ProposalActions({
     proposalId: proposal.id,
     clientCompany: proposal.client_company,
     clientName: proposal.client_name,
-    canSend,
-    canDownload,
-    isFreeTrial,
+    canSend: permissions.canSend,
+    canDownload: permissions.canDownload,
   });
 
   const handleSendSuccess = () => {

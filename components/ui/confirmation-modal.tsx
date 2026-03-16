@@ -1,7 +1,7 @@
-import { X } from 'lucide-react';
-import Image from 'next/image';
-import { Button } from './button';
-import { useConfirmation } from '../providers/confirmation-provider';
+import { X } from "lucide-react";
+import Image from "next/image";
+import { Button } from "./button";
+import { useConfirmation } from "@/providers/confirmation-provider";
 
 export function ConfirmationModal() {
   const {
@@ -42,7 +42,7 @@ export function ConfirmationModal() {
         {/* Content */}
         <div className="text-center">
           <h3 className="mb-3 text-lg font-semibold text-gray-900">
-            {title || 'Unsaved Changes'}
+            {title || "Unsaved Changes"}
           </h3>
           <p className="mb-6 text-sm text-gray-600">{message}</p>
         </div>
@@ -50,13 +50,13 @@ export function ConfirmationModal() {
         {/* Actions */}
         <div className="flex gap-3">
           <Button variant="outline" onClick={onCancel} className="flex-1">
-            {cancelText || 'Stay Here'}
+            {cancelText || "Stay Here"}
           </Button>
           <Button
             onClick={onConfirm}
             className="flex-1 bg-destructive hover:bg-red-700"
           >
-            {confirmText || 'Leave Page'}
+            {confirmText || "Leave Page"}
           </Button>
         </div>
       </div>

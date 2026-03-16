@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,151 +10,111 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/client";
-import { Edit, Download, Trash2, Loader2, Send } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Download, Trash2, Loader2, Send } from "lucide-react";
 import { SendProposalModal } from "@/features/proposals/components/send-proposal-modal";
 import { UpgradeModal } from "@/features/billing/components/upgrade-modal";
 import { useProposalActions } from "@/features/proposals/hooks/use-proposal-actions";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatDate } from "@/lib/utils";
-
-interface Proposal {
-  id: string;
-  title: string;
-  client_name: string;
-  client_email: string;
-  status: "draft" | "sent" | "accepted" | "rejected";
-  value: number;
-  created_at: string;
-  updated_at: string;
-  template_id?: string | null;
-}
+import type {
+  Proposal,
+  ProposalPermissions,
+} from "@/features/proposals/types/proposals";
 
 interface ProposalCardProps {
   proposal: Proposal;
-  onUpdate: (id: string, updates: Partial<Proposal>) => void;
-  onDelete: (id: string) => void;
-  canSend: boolean;
-  canDownload: boolean;
-  isFreeTrial: boolean;
+  permissions: ProposalPermissions;
 }
 
-const statusColors = {
+const statusColors: Record<Proposal["status"], string> = {
   draft: "bg-gray-100 text-gray-800",
   sent: "bg-blue-100 text-blue-800",
   accepted: "bg-green-100 text-green-800",
   rejected: "bg-red-100 text-red-800",
 };
 
-const statusLabels = {
+const statusLabels: Record<Proposal["status"], string> = {
   draft: "Draft",
   sent: "Sent",
   accepted: "Accepted",
   rejected: "Rejected",
 };
 
-export function ProposalCard({
-  proposal,
-  onUpdate,
-  onDelete,
-  canSend,
-  canDownload,
-  isFreeTrial,
-}: ProposalCardProps) {
+export function ProposalCard({ proposal, permissions }: ProposalCardProps) {
   const router = useRouter();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
-  const [error, setError] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const {
     handleSendClick,
     handleDownloadClick,
+    handleDeleteProposal,
+    handleUpdateStatus,
+    isDeleting,
+    isUpdatingStatus,
     downloading,
     downloadError,
     clearDownloadError,
+    mutationError,
+    clearMutationError,
     showUpgradeModal,
     setShowUpgradeModal,
   } = useProposalActions({
     proposalId: proposal.id,
     clientName: proposal.client_name,
-    canSend,
-    canDownload,
-    isFreeTrial,
+    canSend: permissions.canSend,
+    canDownload: permissions.canDownload,
   });
 
-  const handleCardClick = () => {
+  const handleCardClick = useCallback(() => {
     router.push(`/dashboard/proposals/${proposal.id}`);
-  };
+  }, [router, proposal.id]);
 
-  const deleteProposal = async () => {
-    if (!confirm("Are you sure you want to delete this proposal?")) {
-      return;
-    }
+  const handleDownloadButtonClick = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      await handleDownloadClick();
+    },
+    [handleDownloadClick],
+  );
 
-    setDeletingId(proposal.id);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("proposals")
-        .delete()
-        .eq("id", proposal.id);
-
-      if (error) throw error;
-
-      onDelete(proposal.id);
-    } catch (error) {
-      console.error("Error deleting proposal:", error);
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const updateStatus = async (status: Proposal["status"]) => {
-    setUpdatingStatus(true);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("proposals")
-        .update({ status })
-        .eq("id", proposal.id);
-
-      if (error) throw error;
-
-      onUpdate(proposal.id, { status });
-    } catch (error) {
-      console.error("Error updating proposal status:", error);
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
-
-  const handleSendSuccess = () => {
+  const handleSendSuccess = useCallback(() => {
     setShowSendModal(false);
-    onUpdate(proposal.id, { status: "sent" });
-  };
+    router.refresh();
+  }, [router]);
+
+  const displayError = mutationError || downloadError;
+  const clearDisplayError = mutationError
+    ? clearMutationError
+    : clearDownloadError;
 
   return (
     <>
-      {(error || downloadError) && (
+      {displayError && (
         <Alert variant="destructive" className="mb-2">
           <AlertDescription>
-            {error || downloadError}
-            {downloadError && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  clearDownloadError();
-                }}
-                className="ml-2 underline focus:outline-none"
-              >
-                Dismiss
-              </button>
-            )}
+            {displayError}
+            <button
+              type="button"
+              onClick={clearDisplayError}
+              className="ml-2 underline focus:outline-none"
+            >
+              Dismiss
+            </button>
           </AlertDescription>
         </Alert>
       )}
+
       <Card
         className="hover:shadow-md transition-shadow cursor-pointer"
         onClick={handleCardClick}
@@ -175,18 +134,16 @@ export function ProposalCard({
             </div>
             <div className="flex items-center">
               <span
-                className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                  statusColors[proposal.status]
-                }`}
+                className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statusColors[proposal.status]}`}
               >
                 {statusLabels[proposal.status]}
               </span>
             </div>
           </div>
         </CardHeader>
+
         <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
           <div className="flex flex-col gap-3">
-            {/* Status Update Buttons - Stack on mobile */}
             {(proposal.status === "draft" || proposal.status === "sent") && (
               <div
                 className="flex flex-wrap gap-2"
@@ -200,13 +157,14 @@ export function ProposalCard({
                       e.stopPropagation();
                       handleSendClick(() => setShowSendModal(true));
                     }}
-                    disabled={updatingStatus}
+                    disabled={isUpdatingStatus}
                     className="flex-1 sm:flex-none"
                   >
                     <Send className="h-4 w-4 mr-1" />
                     Send
                   </Button>
                 )}
+
                 {proposal.status === "sent" && (
                   <>
                     <Button
@@ -227,57 +185,53 @@ export function ProposalCard({
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        updateStatus("accepted");
+                        handleUpdateStatus("accepted");
                       }}
-                      disabled={updatingStatus}
+                      disabled={isUpdatingStatus}
                       className="text-green-600 border-green-600 hover:bg-green-50 flex-1 sm:flex-none"
                     >
-                      <span className="hidden sm:inline">Mark </span>Accepted
+                      {isUpdatingStatus ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <span className="hidden sm:inline">Mark </span>
+                          Accepted
+                        </>
+                      )}
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        updateStatus("rejected");
+                        handleUpdateStatus("rejected");
                       }}
-                      disabled={updatingStatus}
+                      disabled={isUpdatingStatus}
                       className="text-red-600 border-red-600 hover:bg-red-50 flex-1 sm:flex-none"
                     >
-                      <span className="hidden sm:inline">Mark </span>Rejected
+                      {isUpdatingStatus ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <span className="hidden sm:inline">Mark </span>
+                          Rejected
+                        </>
+                      )}
                     </Button>
                   </>
                 )}
               </div>
             )}
 
-            {/* Action Buttons - Always visible */}
             <div
               className="flex items-center gap-2"
               onClick={(e) => e.stopPropagation()}
             >
-              <Link
-                href={`/dashboard/proposals/${proposal.id}`}
-                className="flex-1 sm:flex-none"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                >
-                  <Edit className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Edit</span>
-                </Button>
-              </Link>
               <Button
                 size="sm"
                 variant="outline"
                 className="flex-1 sm:flex-none"
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  await handleDownloadClick();
-                }}
+                onClick={handleDownloadButtonClick}
                 disabled={downloading}
               >
                 {downloading ? (
@@ -289,17 +243,18 @@ export function ProposalCard({
                   </>
                 )}
               </Button>
+
               <Button
                 size="sm"
                 variant="outline"
                 onClick={(e) => {
                   e.stopPropagation();
-                  deleteProposal();
+                  setShowDeleteDialog(true);
                 }}
-                disabled={deletingId === proposal.id}
+                disabled={isDeleting}
                 className="text-red-600 border-red-600 hover:bg-red-50"
               >
-                {deletingId === proposal.id ? (
+                {isDeleting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Trash2 className="h-4 w-4" />
@@ -307,7 +262,6 @@ export function ProposalCard({
               </Button>
             </div>
 
-            {/* Date Info - Stack on mobile */}
             <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-3 text-xs sm:text-sm text-gray-600">
               <div>
                 <span className="font-medium">Created:</span>{" "}
@@ -321,6 +275,27 @@ export function ProposalCard({
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this proposal?</AlertDialogTitle>
+            <AlertDialogDescription>
+              &ldquo;{proposal.title}&rdquo; will be permanently deleted. This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleDeleteProposal}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <SendProposalModal
         proposal={proposal}

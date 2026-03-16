@@ -1,50 +1,24 @@
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { getUser } from '@/queries/user';
-import { ProposalsHeader } from '@/features/proposals/components/proposals-header';
-import { ProposalsList } from '@/features/proposals/components/proposals-list';
-import { EmptyProposals } from '@/features/proposals/components/empty-proposals';
+import { redirect } from "next/navigation";
+import { getUser } from "@/queries/user";
+import { ProposalsHeader } from "@/features/proposals/components/proposals-header";
+import { ProposalsList } from "@/features/proposals/components/proposals-list";
+import { EmptyProposals } from "@/features/proposals/components/empty-proposals";
+import { getUserProposals } from "@/queries/get-user-proposals";
+import { getProposalPermissions } from "@/queries/get-proposal-permissions";
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
-interface Proposal {
-  id: string;
-  title: string;
-  client_name: string;
-  client_email: string;
-  status: 'draft' | 'sent' | 'accepted' | 'rejected';
-  value: number;
-  created_at: string;
-  updated_at: string;
-}
-
-async function getProposals(userId: string): Promise<Proposal[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('proposals')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching proposals:', error);
-    return [];
-  }
-
-  return data || [];
-}
+export const dynamic = "force-dynamic";
 
 export default async function ProposalsPage() {
   const { user } = await getUser();
 
   if (!user) {
-    redirect('/auth/login');
+    redirect("/auth/login");
   }
 
-  const proposals = await getProposals(user.id);
+  const [proposals, permissions] = await Promise.all([
+    getUserProposals(user.id),
+    getProposalPermissions(user.id),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -52,7 +26,7 @@ export default async function ProposalsPage() {
       {proposals.length === 0 ? (
         <EmptyProposals />
       ) : (
-        <ProposalsList proposals={proposals} />
+        <ProposalsList proposals={proposals} permissions={permissions} />
       )}
     </div>
   );

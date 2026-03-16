@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useConfirmation } from '@/components/providers/confirmation-provider';
+import { useEffect, useRef } from "react";
+import { useConfirmation } from "@/providers/confirmation-provider";
 
 // Global state for navigation guards
 let globalNavigationGuards: Array<{
@@ -14,22 +14,22 @@ let isNavigating = false;
 let isConfirmationInProgress = false;
 
 function setupGlobalInterceptor() {
-  if (isGlobalInterceptorSetup || typeof window === 'undefined') return;
+  if (isGlobalInterceptorSetup || typeof window === "undefined") return;
 
   const checkGuards = async () => {
     if (isConfirmationInProgress) return true;
 
     const activeGuard = globalNavigationGuards.find(
-      (guard) => guard.hasUnsavedChanges
+      (guard) => guard.hasUnsavedChanges,
     );
     if (activeGuard) {
       isConfirmationInProgress = true;
       const result = await activeGuard.confirmFn({
-        title: 'Unsaved Changes',
+        title: "Unsaved Changes",
         message: activeGuard.message,
-        confirmText: 'Leave Page',
-        cancelText: 'Stay Here',
-        variant: 'destructive',
+        confirmText: "Leave Page",
+        cancelText: "Stay Here",
+        variant: "destructive",
       });
       isConfirmationInProgress = false;
       return result;
@@ -69,24 +69,24 @@ function setupGlobalInterceptor() {
 
   // Handle popstate (back/forward buttons)
   let isPopstateBlocked = false;
-  window.addEventListener('popstate', async (e) => {
+  window.addEventListener("popstate", async (e) => {
     if (isPopstateBlocked || isConfirmationInProgress) return;
 
     const activeGuard = globalNavigationGuards.find(
-      (guard) => guard.hasUnsavedChanges
+      (guard) => guard.hasUnsavedChanges,
     );
     if (activeGuard) {
       isPopstateBlocked = true;
       const confirmed = await activeGuard.confirmFn({
-        title: 'Unsaved Changes',
+        title: "Unsaved Changes",
         message: activeGuard.message,
-        confirmText: 'Leave Page',
-        cancelText: 'Stay Here',
-        variant: 'destructive',
+        confirmText: "Leave Page",
+        cancelText: "Stay Here",
+        variant: "destructive",
       });
 
       if (!confirmed) {
-        window.history.pushState(null, '', window.location.href);
+        window.history.pushState(null, "", window.location.href);
       }
       setTimeout(() => {
         isPopstateBlocked = false;
@@ -96,10 +96,10 @@ function setupGlobalInterceptor() {
 
   // Intercept Link clicks
   document.addEventListener(
-    'click',
+    "click",
     async (e) => {
       const target = e.target as HTMLElement;
-      const link = target.closest('a[href]') as HTMLAnchorElement;
+      const link = target.closest("a[href]") as HTMLAnchorElement;
 
       if (
         link &&
@@ -110,17 +110,17 @@ function setupGlobalInterceptor() {
         !isConfirmationInProgress
       ) {
         const activeGuard = globalNavigationGuards.find(
-          (guard) => guard.hasUnsavedChanges
+          (guard) => guard.hasUnsavedChanges,
         );
         if (activeGuard) {
           e.preventDefault();
           const confirmed = await activeGuard.confirmFn({
-            title: 'Unsaved Changes',
+            title: "Unsaved Changes",
             message: activeGuard.message,
-            confirmText: 'Leave Page',
-            cancelText: 'Stay Here',
-            variant: 'destructive',
-            illustration: 'Warning-pana.svg',
+            confirmText: "Leave Page",
+            cancelText: "Stay Here",
+            variant: "destructive",
+            illustration: "Warning-pana.svg",
           });
 
           if (confirmed) {
@@ -130,32 +130,32 @@ function setupGlobalInterceptor() {
         }
       }
     },
-    true
+    true,
   );
 
   // Intercept keyboard shortcuts (Cmd+R, F5, etc.)
-  document.addEventListener('keydown', async (e) => {
+  document.addEventListener("keydown", async (e) => {
     if (isConfirmationInProgress) return;
 
     // Check for reload shortcuts
     const isReload =
-      (e.metaKey && e.key === 'r') || // Cmd+R on Mac
-      (e.ctrlKey && e.key === 'r') || // Ctrl+R on Windows
-      e.key === 'F5'; // F5
+      (e.metaKey && e.key === "r") || // Cmd+R on Mac
+      (e.ctrlKey && e.key === "r") || // Ctrl+R on Windows
+      e.key === "F5"; // F5
 
     if (isReload) {
       const activeGuard = globalNavigationGuards.find(
-        (guard) => guard.hasUnsavedChanges
+        (guard) => guard.hasUnsavedChanges,
       );
 
       if (activeGuard) {
         e.preventDefault();
         const confirmed = await activeGuard.confirmFn({
-          title: 'Unsaved Changes',
+          title: "Unsaved Changes",
           message: activeGuard.message,
-          confirmText: 'Leave Page',
-          cancelText: 'Stay Here',
-          variant: 'destructive',
+          confirmText: "Leave Page",
+          cancelText: "Stay Here",
+          variant: "destructive",
         });
 
         if (confirmed) {
@@ -170,7 +170,7 @@ function setupGlobalInterceptor() {
 
 export function useNavigationGuard(
   hasUnsavedChanges: boolean,
-  message?: string
+  message?: string,
 ) {
   const { confirm } = useConfirmation();
   const guardIdRef = useRef<string | undefined>(undefined);
@@ -185,11 +185,11 @@ export function useNavigationGuard(
 
     const guardId = guardIdRef.current;
     const guardMessage =
-      message || 'You have unsaved changes. Are you sure you want to leave?';
+      message || "You have unsaved changes. Are you sure you want to leave?";
 
     // Add or update guard
     const existingIndex = globalNavigationGuards.findIndex(
-      (guard) => guard.id === guardId
+      (guard) => guard.id === guardId,
     );
 
     const guardConfig = {
@@ -208,7 +208,7 @@ export function useNavigationGuard(
     // Cleanup function
     return () => {
       const index = globalNavigationGuards.findIndex(
-        (guard) => guard.id === guardId
+        (guard) => guard.id === guardId,
       );
       if (index >= 0) {
         globalNavigationGuards.splice(index, 1);

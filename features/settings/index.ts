@@ -1,9 +1,11 @@
-export { default as BrandingSettings } from "./components/branding-settings-card";
 export { CompanyProfileSettings } from "./components/company-profile-settings";
 export { NotificationsSettings } from "./components/notifications-settings";
 export { ProfileSettings } from "./components/profile-settings";
+
+// Server Side Components
 export { SecuritySettings } from "./components/security-settings";
 export { SubscriptionBilling } from "./components/subscription-billing";
+export { default as BrandingSettings } from "./components/branding-settings-card";
 
 export { getUserBrandingSettings } from "./services/get-user-branding-serttings";
 export { DEFAULT_BRANDING } from "./constants/branding-constants";

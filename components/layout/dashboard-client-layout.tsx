@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -19,15 +19,14 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth/actions/password";
-import type { User } from "@supabase/supabase-js";
-import type { Profile } from "@/types/database";
 import Image from "next/image";
 import { NavButton } from "../ui/nav-button";
+import { useProfileUserBranding } from "@/providers/profile-user-branding-provider";
+import { applyTheme } from "@/lib/theme";
+import { DEFAULT_BRANDING } from "@/features/settings/constants/branding-constants";
 
 interface DashboardClientLayoutProps {
   children: React.ReactNode;
-  user: User;
-  profile: Profile | null;
 }
 
 const baseNavigation = [
@@ -41,9 +40,11 @@ const adminNavigation = [{ name: "Admin", href: "/admin", icon: Shield }];
 
 export function DashboardClientLayout({
   children,
-  user,
-  profile,
 }: DashboardClientLayoutProps) {
+  const { profile, user, brandingSettings } = useProfileUserBranding();
+  useEffect(() => {
+    applyTheme(brandingSettings || DEFAULT_BRANDING);
+  }, [brandingSettings]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 

@@ -1,66 +1,24 @@
-'use client';
-
-import { useState } from 'react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ProposalCard } from './proposal-card';
-import { useProposalPermissions } from '@/lib/hooks/use-proposal-permissions';
-
-interface Proposal {
-  id: string;
-  title: string;
-  client_name: string;
-  client_email: string;
-  status: 'draft' | 'sent' | 'accepted' | 'rejected';
-  value: number;
-  created_at: string;
-  updated_at: string;
-  template_id?: string | null;
-}
+import { ProposalCard } from "./proposal-card";
+import type {
+  Proposal,
+  ProposalPermissions,
+} from "@/features/proposals/types/proposals";
 
 interface ProposalsListProps {
   proposals: Proposal[];
+  permissions: ProposalPermissions;
 }
 
-export function ProposalsList({
-  proposals: initialProposals,
-}: ProposalsListProps) {
-  const [proposals, setProposals] = useState(initialProposals);
-  const [error, setError] = useState('');
-  const { canSend, canDownload, isFreeTrial } = useProposalPermissions();
-
-  const handleUpdate = (id: string, updates: Partial<Proposal>) => {
-    setProposals((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
-    );
-    setError('');
-  };
-
-  const handleDelete = (id: string) => {
-    setProposals((prev) => prev.filter((p) => p.id !== id));
-    setError('');
-  };
-
+export function ProposalsList({ proposals, permissions }: ProposalsListProps) {
   return (
-    <div className="space-y-6">
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2">
-        {proposals.map((proposal) => (
-          <ProposalCard
-            key={proposal.id}
-            proposal={proposal}
-            onUpdate={handleUpdate}
-            onDelete={handleDelete}
-            canSend={canSend}
-            canDownload={canDownload}
-            isFreeTrial={isFreeTrial}
-          />
-        ))}
-      </div>
+    <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2">
+      {proposals.map((proposal) => (
+        <ProposalCard
+          key={proposal.id}
+          proposal={proposal}
+          permissions={permissions}
+        />
+      ))}
     </div>
   );
 }

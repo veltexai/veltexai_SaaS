@@ -1,6 +1,9 @@
-import { redirect } from 'next/navigation';
-import { getUser } from '@/queries/user';
-import { DashboardClientLayout } from '@/components/layout/dashboard-client-layout';
+import { redirect } from "next/navigation";
+import { getUser } from "@/queries/user";
+import { DashboardClientLayout } from "@/components/layout/dashboard-client-layout";
+import { getUserBrandingSettings } from "@/features/settings";
+import { applyTheme } from "@/lib/theme";
+import { ProfileUserBrandingProvider } from "@/providers/profile-user-branding-provider";
 
 export default async function DashboardLayout({
   children,
@@ -10,12 +13,13 @@ export default async function DashboardLayout({
   const { user, profile } = await getUser();
 
   if (!user) {
-    redirect('/auth/login');
+    redirect("/auth/login");
   }
 
+  const brandingSettings = await getUserBrandingSettings(user.id);
   return (
-    <DashboardClientLayout user={user} profile={profile}>
-      {children}
-    </DashboardClientLayout>
+    <ProfileUserBrandingProvider value={{ brandingSettings, user, profile }}>
+      <DashboardClientLayout>{children}</DashboardClientLayout>
+    </ProfileUserBrandingProvider>
   );
 }
