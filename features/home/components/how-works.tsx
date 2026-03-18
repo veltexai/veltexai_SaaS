@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import React from 'react';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import { CheckCircle, FileText, Zap } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { motion } from "framer-motion";
+import React from "react";
+import { fadeInUp, staggerContainer } from "@/lib/animations/variants";
+import { Card, CardContent } from "@/components/ui/card";
+import { HOW_WORKS_ITEMS } from "../constants/how-works";
 
 const HowItWorksSection = () => {
   return (
@@ -21,7 +21,8 @@ const HowItWorksSection = () => {
             How It Works
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Operational decision layers: Facility Intelligence → Scope & Frequency → Labor + Margin → Client-Ready Output
+            Create and send professional cleaning proposals in minutes <br />
+            no spreadsheets, no guesswork.
           </p>
         </motion.div>
 
@@ -32,29 +33,7 @@ const HowItWorksSection = () => {
           viewport={{ once: true }}
           variants={staggerContainer}
         >
-          {[
-            {
-              step: '01',
-              title: 'Facility Intelligence Input',
-              description:
-                'Enter client and site context, service type, and facility details. Operational inputs, not form filling.',
-              icon: FileText,
-            },
-            {
-              step: '02',
-              title: 'Scope & Frequency Logic',
-              description:
-                'Operational Intelligence Engine applies labor, frequency, and margin rules from real janitorial operations.',
-              icon: Zap,
-            },
-            {
-              step: '03',
-              title: 'Client-Ready Output',
-              description:
-                'Labor + margin modeling produces branded, client-ready proposals. All outputs constrained by your rules.',
-              icon: CheckCircle,
-            },
-          ].map((item, index) => (
+          {HOW_WORKS_ITEMS.map((item, index) => (
             <motion.div key={index} variants={fadeInUp}>
               <Card className="text-center p-8 h-full border-0 shadow-lg hover:shadow-xl transition-shadow">
                 <CardContent className="pt-6">

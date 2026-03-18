@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -90,7 +90,7 @@ const Header = () => {
               <Link href="#faq" className="block text-gray-600">
                 FAQ
               </Link>
-              <div className="pt-4 space-y-2">
+              <div className="flex flex-col gap-2">
                 <Link href="/auth/login">
                   <Button variant="outline" className="w-full bg-white">
                     Sign In

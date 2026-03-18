@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { CheckCircle, Clock, CreditCard, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PRICE_ITEMS } from "../constants/price";
 
 const PricingSection = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
@@ -100,114 +101,62 @@ const PricingSection = () => {
           viewport={{ once: true }}
           variants={staggerContainer}
         >
-          {[
-            {
-              name: "Starter",
-              price: billingCycle === "monthly" ? 19.99 : 24,
-              period:
-                billingCycle === "monthly"
-                  ? "/month"
-                  : "/month (billed annually)",
-              description: "Perfect for small cleaning businesses",
-              features: [
-                "20 proposals per month",
-                "Basic AI templates",
-                "PDF export",
-                "Email support",
-                "Basic branding",
-              ],
-              popular: false,
-            },
-            {
-              name: "Professional",
-              price: billingCycle === "monthly" ? 39.99 : 64,
-              period:
-                billingCycle === "monthly"
-                  ? "/month"
-                  : "/month (billed annually)",
-              description: "For growing cleaning companies",
-              features: [
-                "75 proposals per month",
-                "Advanced AI templates",
-                "Custom branding",
-                "Priority support",
-                "Team collaboration",
-                "Analytics dashboard",
-              ],
-              popular: true,
-            },
-            {
-              name: "Enterprise",
-              price: billingCycle === "monthly" ? 79.99 : 159,
-              period:
-                billingCycle === "monthly"
-                  ? "/month"
-                  : "/month (billed annually)",
-              description: "For large cleaning operations",
-              features: [
-                "Unlimited proposals",
-                "Custom AI training",
-                "White-label solution",
-                "Dedicated support",
-                "API access",
-                "Custom integrations",
-              ],
-              popular: false,
-            },
-          ].map((plan, index) => (
-            <motion.div key={index} variants={fadeInUp}>
-              <Card
-                className={`relative p-8 h-full ${
-                  plan.popular
-                    ? "border-2 border-blue-600 shadow-xl"
-                    : "border shadow-lg"
-                }`}
-              >
-                {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white">
-                    Most Popular
-                  </Badge>
-                )}
-                <CardHeader className="text-center pb-6">
-                  <CardTitle className="text-xl font-bold">
-                    {plan.name}
-                  </CardTitle>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold text-gray-900">
-                      ${plan.price}
-                    </span>
-                    <span className="text-gray-600">{plan.period}</span>
-                  </div>
-                  <CardDescription className="mt-2">
-                    {plan.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center">
-                        <CheckCircle className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0" />
-                        <span className="text-gray-600">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    className={`w-full ${
-                      plan.popular
-                        ? "bg-blue-600 hover:bg-blue-700"
-                        : "bg-gray-900 hover:bg-gray-800"
-                    }`}
-                    size="lg"
-                  >
-                    Start 7-Day Free Trial
-                  </Button>
-                  <p className="text-xs text-center text-gray-500 mt-3">
-                    No credit card required to start
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+          {PRICE_ITEMS(billingCycle as "monthly" | "yearly").map(
+            (plan, index) => (
+              <motion.div key={index} variants={fadeInUp}>
+                <Card
+                  className={`relative p-8 h-full ${
+                    plan.popular
+                      ? "border-2 border-blue-600 shadow-xl"
+                      : "border shadow-lg"
+                  }`}
+                >
+                  {plan.popular && (
+                    <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white">
+                      Most Popular
+                    </Badge>
+                  )}
+                  <CardHeader className="text-center pb-6">
+                    <CardTitle className="text-xl font-bold">
+                      {plan.name}
+                    </CardTitle>
+                    <div className="mt-4">
+                      <span className="text-4xl font-bold text-gray-900">
+                        ${plan.price}
+                      </span>
+                      <span className="text-gray-600">{plan.period}</span>
+                    </div>
+                    <CardDescription className="mt-2">
+                      {plan.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3 mb-8">
+                      {plan.features.map((feature, featureIndex) => (
+                        <li key={featureIndex} className="flex items-center">
+                          <CheckCircle className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0" />
+                          <span className="text-gray-600">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      className={`w-full ${
+                        plan.popular
+                          ? "bg-blue-600 hover:bg-blue-700"
+                          : "bg-gray-900 hover:bg-gray-800"
+                      }`}
+                      size="lg"
+                    >
+                      Start 7-Day Free Trial
+                    </Button>
+                    <p className="text-xs text-center text-gray-500 mt-3">
+                      No credit card required to start
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ),
+          )}
         </motion.div>
       </div>
     </section>
