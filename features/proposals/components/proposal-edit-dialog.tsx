@@ -35,7 +35,7 @@ import {
   Building2,
   DollarSign,
 } from "lucide-react";
-import { proposalFormSchema, ServiceType } from "@/lib/validations/proposal";
+import { proposalFormSchema } from "@/lib/validations/proposal";
 import { ServiceTypeSelector } from "@/features/proposals/components/new/service-type-selector";
 import { GlobalInputsSection } from "@/features/proposals/components/new/global-inputs-section";
 import { ServiceSpecificSection } from "@/features/proposals/components/new/service-specific-section";
@@ -44,6 +44,7 @@ import { EnhancedFacilitySection } from "@/features/proposals/components/new/enh
 import { validateProposalWithServiceData } from "@/lib/validations/proposal";
 import { getValidationMessage } from "@/features/proposals";
 import { CalculatedPricing } from "../types/pricing";
+import { ServiceType } from "../types/proposal";
 
 type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 
@@ -72,7 +73,7 @@ export function ProposalEditDialog({
     resolver: zodResolver(proposalFormSchema),
     defaultValues: {
       title: "",
-      service_type: "residential",
+      service_type: ServiceType.RESIDENTIAL,
       global_inputs: {
         client_name: "",
         client_email: "",

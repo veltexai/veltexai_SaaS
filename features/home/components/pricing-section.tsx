@@ -150,7 +150,7 @@ const PricingSection = () => {
                       Start 7-Day Free Trial
                     </Button>
                     <p className="text-xs text-center text-gray-500 mt-3">
-                      No credit card required to start
+                      No credit card required
                     </p>
                   </CardContent>
                 </Card>

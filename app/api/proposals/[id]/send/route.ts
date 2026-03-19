@@ -89,6 +89,7 @@ export async function POST(
 
     let pdfBuffer: Buffer | undefined;
     let proposalViewUrl: string | undefined;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
     // Generate PDF if needed
     if (
@@ -119,7 +120,7 @@ export async function POST(
       validatedData.delivery_method === "online_only" ||
       validatedData.delivery_method === "both"
     ) {
-      proposalViewUrl = `${process.env.NEXT_PUBLIC_APP_URLL}/proposals/view/${proposal.id}?track=${trackingId}`;
+      proposalViewUrl = `${appUrl}/proposals/view/${proposal.id}?track=${trackingId}`;
     }
 
     // Create proposal tracking record
@@ -148,7 +149,7 @@ export async function POST(
     // Prepare email data
     const companyName = companyProfile?.company_name || "Veltex AI";
     const senderName = profile?.full_name || user.email || "Team";
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const baseUrl = appUrl;
     const logoUrl = `${baseUrl}/images/IMG_3800.png`;
 
     const emailData = {

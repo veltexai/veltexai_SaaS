@@ -6,10 +6,12 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { fadeInUp, staggerContainer } from "@/lib/animations/variants";
-import Image from "next/image";
 import Link from "next/link";
 
 const HeroSection = () => {
+  const videoRef = React.useRef<HTMLVideoElement | null>(null);
+  const [playbackProgress, setPlaybackProgress] = React.useState(0); // 0..1
+
   return (
     <section className="pt-16 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
@@ -81,13 +83,37 @@ const HeroSection = () => {
         >
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-emerald-500/20 rounded-2xl blur-3xl"></div>
-            <Image
-              width={1000}
-              height={600}
-              src="/images/dashboard-light.webp"
-              alt="Veltex AI Dashboard"
-              className="relative rounded-2xl shadow-2xl border border-gray-200"
+            <div
+              className="h-1 rounded-xl bg-blue-600 absolute top-0 left-2 z-40 transition-[width] duration-150 ease-linear"
+              style={{ width: `${playbackProgress * 98}%` }}
             />
+            <div className="relative w-full aspect-[1070/600] overflow-hidden rounded-2xl">
+              <video
+                src="https://iwoaaljitifloolszxlu.supabase.co/storage/v1/object/public/Intro-Video/Untitled%20design.mp4"
+                poster="/images/dashboard-light.webp"
+                className="absolute inset-0 w-full h-full rounded-2xl shadow-2xl border border-gray-200 object-cover"
+                autoPlay
+                loop
+                muted
+                playsInline
+                ref={videoRef}
+                onTimeUpdate={() => {
+                  const video = videoRef.current;
+                  if (
+                    !video ||
+                    !Number.isFinite(video.duration) ||
+                    video.duration <= 0
+                  )
+                    return;
+
+                  const ratio = Math.min(
+                    1,
+                    Math.max(0, video.currentTime / video.duration),
+                  );
+                  setPlaybackProgress(ratio);
+                }}
+              />
+            </div>
           </div>
         </motion.div>
       </div>

@@ -1,10 +1,10 @@
-'use client';
-import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
-import { createClient } from '@/lib/supabase/client';
-import type { SubscriptionTier } from '@/types/subscription';
-import type { TemplateWithTiers } from '@/features/proposals/types/proposals';
-import { templatesCache } from '@/lib/templates/templates-cache';
+"use client";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
+import type { SubscriptionTier } from "@/types/subscription";
+import type { TemplateWithTiers } from "@/features/proposals/types/proposal";
+import { templatesCache } from "@/lib/templates/templates-cache";
 
 interface UseProposalTemplatesReturn {
   templates: TemplateWithTiers[];
@@ -35,10 +35,10 @@ export function useProposalTemplates(): UseProposalTemplatesReturn {
 
       // 2. Fetch all active templates
       const { data: templatesData, error: templatesError } = await supabase
-        .from('proposal_templates')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
+        .from("proposal_templates")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
 
       if (templatesError) throw templatesError;
 
@@ -48,15 +48,15 @@ export function useProposalTemplates(): UseProposalTemplatesReturn {
       const templateIds = safeTemplatesData.map((t) => t.id);
 
       const { data: allTierData, error: tierError } = await supabase
-        .from('template_tier_access')
-        .select('template_id, subscription_tier')
-        .in('template_id', templateIds);
+        .from("template_tier_access")
+        .select("template_id, subscription_tier")
+        .in("template_id", templateIds);
 
       if (tierError) throw tierError;
 
       // 4. Group tier rows by template_id
-      const tiersByTemplateId = (allTierData ?? []).reduce
-        <Record<string, SubscriptionTier[]>
+      const tiersByTemplateId = (allTierData ?? []).reduce<
+        Record<string, SubscriptionTier[]>
       >((acc, row) => {
         acc[row.template_id] = [
           ...(acc[row.template_id] ?? []),
@@ -70,16 +70,16 @@ export function useProposalTemplates(): UseProposalTemplatesReturn {
         (template) => ({
           ...template,
           tiers: tiersByTemplateId[template.id] ?? [],
-        })
+        }),
       );
 
       // 6. Save to cache and update state
       templatesCache.set(templatesWithTiers);
       setTemplates(templatesWithTiers);
     } catch (err) {
-      console.error('Error fetching templates:', err);
-      setError('Failed to load templates');
-      toast.error('Failed to load templates');
+      console.error("Error fetching templates:", err);
+      setError("Failed to load templates");
+      toast.error("Failed to load templates");
     } finally {
       setIsLoading(false);
     }

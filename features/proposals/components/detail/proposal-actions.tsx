@@ -9,12 +9,11 @@ import { ProposalEditDialog } from "@/features/proposals/components/proposal-edi
 import { UpgradeModal } from "@/features/billing/components/upgrade-modal";
 import { useProposalActions } from "@/features/proposals/hooks/use-proposal-actions";
 import { type Database } from "@/types/database";
-import { useProposalPermissions } from "@/lib/hooks/use-proposal-permissions";
 import { ProposalStatusActions } from "./proposal-status-actions";
 import { useProposalStatus } from "../../hooks/use-proposal-status";
 import { toSendModalProposal } from "../../utils/send-modal-proposal";
 import { useRouter } from "next/navigation";
-import { ProposalPermissions } from "../../types/proposals";
+import { ProposalPermissions } from "../../types/proposal";
 
 type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 

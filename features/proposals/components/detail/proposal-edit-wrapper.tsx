@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { ProposalActions } from "./proposal-actions";
 import { ProposalContent } from "./proposal-content";
 import { Database } from "@/types/database";
-import { ProposalPermissions } from "../../types/proposals";
+import { ProposalPermissions } from "../../types/proposal";
 
 type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 

@@ -4,7 +4,7 @@ import { ProposalStatusHistory } from "./proposal-status-history";
 import { Edit, History, Eye } from "lucide-react";
 import { Database } from "@/types/database";
 import { TemplateRenderer } from "@/features/templates";
-import type { ProposalPermissions } from "@/features/proposals/types/proposals";
+import type { ProposalPermissions } from "@/features/proposals/types/proposal";
 
 type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 

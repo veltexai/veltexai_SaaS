@@ -26,10 +26,12 @@ import { SendProposalModal } from "@/features/proposals/components/send-proposal
 import { UpgradeModal } from "@/features/billing/components/upgrade-modal";
 import { useProposalActions } from "@/features/proposals/hooks/use-proposal-actions";
 import { formatDate } from "@/lib/utils";
-import type {
-  Proposal,
-  ProposalPermissions,
-} from "@/features/proposals/types/proposals";
+import {
+  ProposalStatus,
+  type Proposal,
+  type ProposalPermissions,
+} from "@/features/proposals/types/proposal";
+import { toSendModalProposal } from "@/features/proposals/utils/send-modal-proposal";
 
 interface ProposalCardProps {
   proposal: Proposal;
@@ -97,6 +99,8 @@ export function ProposalCard({ proposal, permissions }: ProposalCardProps) {
   const clearDisplayError = mutationError
     ? clearMutationError
     : clearDownloadError;
+
+  const proposalForSendModal = toSendModalProposal(proposal);
 
   return (
     <>
@@ -185,7 +189,7 @@ export function ProposalCard({ proposal, permissions }: ProposalCardProps) {
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleUpdateStatus("accepted");
+                        handleUpdateStatus(ProposalStatus.ACCEPTED);
                       }}
                       disabled={isUpdatingStatus}
                       className="text-green-600 border-green-600 hover:bg-green-50 flex-1 sm:flex-none"
@@ -204,7 +208,7 @@ export function ProposalCard({ proposal, permissions }: ProposalCardProps) {
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleUpdateStatus("rejected");
+                        handleUpdateStatus(ProposalStatus.REJECTED);
                       }}
                       disabled={isUpdatingStatus}
                       className="text-red-600 border-red-600 hover:bg-red-50 flex-1 sm:flex-none"
@@ -298,7 +302,7 @@ export function ProposalCard({ proposal, permissions }: ProposalCardProps) {
       </AlertDialog>
 
       <SendProposalModal
-        proposal={proposal}
+        proposal={proposalForSendModal}
         open={showSendModal}
         onOpenChange={setShowSendModal}
         onSuccess={handleSendSuccess}

@@ -1,6 +1,6 @@
 "use server";
 
-import type { ProposalPermissions } from "@/features/proposals/types/proposals";
+import type { ProposalPermissions } from "@/features/proposals/types/proposal";
 import { createClient } from "@/lib/supabase/server";
 interface RawUsageInfo {
   can_create_proposal: boolean;

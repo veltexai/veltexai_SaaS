@@ -1,14 +1,34 @@
 import { Database } from "@/types/database";
 import { SubscriptionTier } from "@/types/subscription";
 
-export type ProposalStatus = "draft" | "sent" | "accepted" | "rejected";
+export enum ProposalStatus {
+  DRAFT = "draft",
+  SENT = "sent",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+}
+export enum ServiceType {
+  RESIDENTIAL = "residential",
+  COMMERCIAL = "commercial",
+  CARPET = "carpet",
+  WINDOW = "window",
+  FLOOR = "floor",
+}
+
+export enum DeliveryMethod {
+  PDF_ONLY = "pdf_only",
+  ONLINE_ONLY = "online_only",
+  BOTH = "both",
+}
 
 export interface Proposal {
   id: string;
   title: string;
-  client_name: string;
-  client_email: string;
+  client_name?: string;
+  client_email?: string;
+  client_company?: string;
   status: ProposalStatus;
+  service_type: ServiceType;
   value: number;
   created_at: string;
   updated_at: string;
@@ -40,4 +60,17 @@ export interface TemplateItem {
   template_data?:
     | Database["public"]["Tables"]["proposal_templates"]["Row"]["template_data"]
     | null;
+}
+
+// The shape returned from POST /api/proposals/:id/send
+export interface SendProposalApiResponse {
+  trackingId?: string;
+}
+
+// Structured error body the API returns on failure
+export interface SendProposalApiError {
+  message?: string;
+  error?: string;
+  code?: string;
+  details?: string;
 }

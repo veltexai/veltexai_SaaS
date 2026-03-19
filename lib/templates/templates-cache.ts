@@ -1,28 +1,28 @@
-import { TemplateWithTiers } from "@/features/proposals/types/proposals";
+import { TemplateWithTiers } from "@/features/proposals/types/proposal";
 
 interface CacheEntry<T> {
-    data: T;
-    timestamp: number;
+  data: T;
+  timestamp: number;
+}
+
+const CACHE_DURATION_MS = 5 * 60 * 1000;
+
+class InMemoryCache<T> {
+  private entry: CacheEntry<T> | null = null;
+
+  get(): T | null {
+    if (!this.entry) return null;
+    const isExpired = Date.now() - this.entry.timestamp > CACHE_DURATION_MS;
+    return isExpired ? null : this.entry.data;
   }
-  
-  const CACHE_DURATION_MS = 5 * 60 * 1000;
-  
-  class InMemoryCache<T> {
-    private entry: CacheEntry<T> | null = null;
-  
-    get(): T | null {
-      if (!this.entry) return null;
-      const isExpired = Date.now() - this.entry.timestamp > CACHE_DURATION_MS;
-      return isExpired ? null : this.entry.data;
-    }
-  
-    set(data: T): void {
-      this.entry = { data, timestamp: Date.now() };
-    }
-  
-    clear(): void {
-      this.entry = null;
-    }
+
+  set(data: T): void {
+    this.entry = { data, timestamp: Date.now() };
   }
-  
-  export const templatesCache = new InMemoryCache<TemplateWithTiers[]>();
+
+  clear(): void {
+    this.entry = null;
+  }
+}
+
+export const templatesCache = new InMemoryCache<TemplateWithTiers[]>();

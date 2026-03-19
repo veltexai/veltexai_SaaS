@@ -776,6 +776,22 @@ export class EmailTemplates {
     data: EnhancedProposalEmailData,
   ): EmailTemplate {
     const subject = data.subject;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const isLocalAppUrl =
+      !appUrl ||
+      appUrl.includes("localhost") ||
+      appUrl.includes("127.0.0.1") ||
+      appUrl.includes("[::1]");
+
+    const trackingPixelUrl = !isLocalAppUrl
+      ? `${appUrl}/api/tracking/email-open/${data.trackingId}`
+      : undefined;
+
+    // Avoid embedding broken/localhost image URLs; Resend may attempt to fetch them.
+    const logoUrl =
+      !isLocalAppUrl && data.logoUrl && !data.logoUrl.startsWith("undefined")
+        ? data.logoUrl
+        : undefined;
     const primaryColor =
       data.brandingEnabled && data.primaryColor ? data.primaryColor : "#f8fafc";
 
@@ -815,7 +831,11 @@ export class EmailTemplates {
       <body>
         <div class="container">
           <div class="header">
-            <img src="${data.logoUrl}" alt="${data.companyName}" class="logo" style="max-height:60px;width:auto;height:auto;margin-bottom:20px;" />
+            ${
+              logoUrl
+                ? `<img src="${logoUrl}" alt="${data.companyName}" class="logo" style="max-height:60px;width:auto;height:auto;margin-bottom:20px;" />`
+                : ""
+            }
             <h1>📋 ${data.proposalTitle}</h1>
           </div>
           <div class="content">
@@ -860,7 +880,11 @@ export class EmailTemplates {
         </div>
         
         <!-- Tracking pixel for email opens -->
-        <img src="${process.env.NEXT_PUBLIC_APP_URL}/api/tracking/email-open/${data.trackingId}" alt="" class="tracking-pixel" />
+        ${
+          trackingPixelUrl
+            ? `<img src="${trackingPixelUrl}" alt="" class="tracking-pixel" />`
+            : ""
+        }
       </body>
       </html>
     `;

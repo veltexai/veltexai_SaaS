@@ -2,7 +2,7 @@ import { ProposalCard } from "./proposal-card";
 import type {
   Proposal,
   ProposalPermissions,
-} from "@/features/proposals/types/proposals";
+} from "@/features/proposals/types/proposal";
 
 interface ProposalsListProps {
   proposals: Proposal[];

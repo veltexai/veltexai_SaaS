@@ -6,7 +6,7 @@ export const PRICE_ITEMS = (billingCycle: "monthly" | "yearly") => [
     description: "Small cleaning businesses",
     features: [
       "20 proposals per month",
-      "1 AI template to start",
+      "Basic AI templates",
       "PDF export",
       "Email support",
       "Basic branding",
@@ -36,7 +36,8 @@ export const PRICE_ITEMS = (billingCycle: "monthly" | "yearly") => [
       "Unlimited proposals",
       "All AI templates",
       "Custom branding",
-      "Dedicated support",
+      "Priority support",
+      "Team access",
       "Analytics dashboard",
     ],
     popular: false,

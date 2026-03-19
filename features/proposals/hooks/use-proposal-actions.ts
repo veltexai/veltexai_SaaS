@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import type { ProposalStatus } from "@/features/proposals/types/proposals";
+import type { ProposalStatus } from "@/features/proposals/types/proposal";
 
 const DEFAULT_DOWNLOAD_ERROR = "Failed to generate PDF";
 
