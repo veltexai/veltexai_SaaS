@@ -140,7 +140,7 @@ export function DashboardClientLayout({
             <Image
               width={120}
               height={25}
-              src="/images/IMG_3800.png"
+              src="/images/IMG_3800.webp"
               alt="Veltex AI - AI Operating System for Janitorial Companies"
             />
             <span className="text-xs text-gray-500 mt-1">

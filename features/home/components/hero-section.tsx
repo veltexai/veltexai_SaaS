@@ -2,15 +2,25 @@
 
 import { ArrowRight, Mail } from "lucide-react";
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { fadeInUp, staggerContainer } from "@/lib/animations/variants";
 import Link from "next/link";
+import Image from "next/image";
 
 const HeroSection = () => {
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const [playbackProgress, setPlaybackProgress] = React.useState(0); // 0..1
+  const [showVideo, setShowVideo] = React.useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowVideo(true);
+    }, 1500); // 1–1.5s is sweet spot
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <section className="pt-16 pb-20 px-4 sm:px-6 lg:px-8">
@@ -88,31 +98,26 @@ const HeroSection = () => {
               style={{ width: `${playbackProgress * 98}%` }}
             />
             <div className="relative w-full aspect-[1070/600] overflow-hidden rounded-2xl">
-              <video
-                src="https://iwoaaljitifloolszxlu.supabase.co/storage/v1/object/public/Intro-Video/Untitled%20design.mp4"
-                poster="/images/dashboard-light.webp"
+              {/* IMAGE FIRST (fast LCP) */}
+              <Image
+                width={1070}
+                height={600}
+                src="/images/dashboard-light.webp"
                 className="absolute inset-0 w-full h-full rounded-2xl shadow-2xl border border-gray-200 object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
-                ref={videoRef}
-                onTimeUpdate={() => {
-                  const video = videoRef.current;
-                  if (
-                    !video ||
-                    !Number.isFinite(video.duration) ||
-                    video.duration <= 0
-                  )
-                    return;
-
-                  const ratio = Math.min(
-                    1,
-                    Math.max(0, video.currentTime / video.duration),
-                  );
-                  setPlaybackProgress(ratio);
-                }}
+                alt="Preview"
               />
+
+              {/* VIDEO AFTER */}
+              {showVideo && (
+                <video
+                  src="https://iwoaaljitifloolszxlu.supabase.co/storage/v1/object/public/Intro-Video/Untitled%20design.mp4"
+                  className="absolute inset-0 w-full h-full rounded-2xl shadow-2xl border border-gray-200 object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                />
+              )}
             </div>
           </div>
         </motion.div>

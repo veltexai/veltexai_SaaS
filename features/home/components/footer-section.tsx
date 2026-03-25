@@ -1,6 +1,6 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import React from 'react';
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
 
 const FooterSection = () => {
   return (
@@ -12,12 +12,15 @@ const FooterSection = () => {
               <Image
                 width={120}
                 height={25}
-                src="/images/IMG_3800.png"
-                alt="Image"
+                src="/images/IMG_3800.webp"
+                alt="Veltex AI"
+                loading="lazy"
+                sizes="120px"
               />
             </div>
             <p className="text-gray-400 mb-6 max-w-md">
-              AI Operating System for Janitorial Companies. Scope → Labor → Pricing → Proposal. Trusted since 1986.
+              AI Operating System for Janitorial Companies. Scope → Labor →
+              Pricing → Proposal. Trusted since 1986.
             </p>
             <div className="flex space-x-4">
               <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 cursor-pointer">

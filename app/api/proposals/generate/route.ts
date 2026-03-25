@@ -639,23 +639,6 @@ D. Either party may terminate this agreement with 30 days notice.
 ${legalResponsibilityGuidance}
 ${basicProfessionalPricingSection}`;
 
-    const aboutIntro =
-      profile.company_background && profile.company_background.trim().length > 0
-        ? `Summarize in 2–3 sentences based on: "${
-            profile.company_background
-          }". Highlight **reliable scheduling** and **quality assurance** aligned with ${
-            globalInputs.serviceLocation || "your area"
-          }.`
-        : `${
-            profile.company_name || "Our company"
-          } delivers professional commercial cleaning solutions tailored to facilities of all sizes in ${
-            globalInputs.serviceLocation || "your area"
-          }. Our approach blends trained teams, **reliable scheduling**, and **quality assurance** aligned with your operating hours and compliance standards.`;
-    const yearsLabel = (() => {
-      const y = extractYears(profile.company_background);
-      return y ? `${y} years in business` : "10 years in business";
-    })();
-
     // Conditionally build pricing section for Executive Premium template
     const executivePremiumPricingSection = pricing_enabled
       ? `

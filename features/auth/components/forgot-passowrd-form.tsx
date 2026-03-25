@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -14,43 +14,43 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, ArrowLeft } from 'lucide-react';
-import { sendResetPasswordEmail } from '@/lib/auth/actions/password';
-import Image from 'next/image';
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, ArrowLeft } from "lucide-react";
+import { sendResetPasswordEmail } from "@/lib/auth/actions/password";
+import Image from "next/image";
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email("Please enter a valid email address"),
 });
 
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordForm() {
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState('');
+  const [submittedEmail, setSubmittedEmail] = useState("");
 
   const form = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
-      email: '',
+      email: "",
     },
   });
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
-    setError('');
+    setError("");
     setSuccess(false);
 
     const formData = new FormData();
-    formData.append('email', data.email);
+    formData.append("email", data.email);
 
     const result = await sendResetPasswordEmail({}, formData);
 
@@ -88,7 +88,7 @@ export default function ForgotPasswordForm() {
                   Check your email
                 </h3>
                 <p className="text-sm text-gray-600 mb-6">
-                  We&apos;ve sent a password reset link to{' '}
+                  We&apos;ve sent a password reset link to{" "}
                   <strong>{submittedEmail}</strong>
                 </p>
                 <Link href="/auth/login">
@@ -112,7 +112,7 @@ export default function ForgotPasswordForm() {
           <Image
             width={200}
             height={40}
-            src="/images/IMG_3800.png"
+            src="/images/IMG_3800.webp"
             alt="Image"
             className="mx-auto"
           />

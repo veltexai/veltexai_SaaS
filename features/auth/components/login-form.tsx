@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -8,30 +8,30 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import z from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Loader2, Mail } from 'lucide-react';
-import { toast } from 'sonner';
-import { PasswordInput } from '@/components/ui/password-input';
-import Photo from '../../../public/images/pexels-tima-miroshnichenko-6196692.jpg';
-import { signIn } from '@/lib/auth/actions/password';
-import { signInWithGoogle } from '@/lib/auth/actions/oauth';
+} from "@/components/ui/form";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Loader2, Mail } from "lucide-react";
+import { toast } from "sonner";
+import { PasswordInput } from "@/components/ui/password-input";
+import Photo from "../../../public/images/pexels-tima-miroshnichenko-6196692.jpg";
+import { signIn } from "@/lib/auth/actions/password";
+import { signInWithGoogle } from "@/lib/auth/actions/oauth";
 
 const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
 });
 
-const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
+const LoginForm = ({ className, ...props }: React.ComponentProps<"form">) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const router = useRouter();
@@ -39,23 +39,23 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     const formData = new FormData();
-    formData.append('email', values.email);
-    formData.append('password', values.password);
+    formData.append("email", values.email);
+    formData.append("password", values.password);
     const { error } = await signIn({}, formData);
 
     if (error) {
       toast.error(error);
     } else {
-      toast.success('Login successful');
-      router.push('/dashboard');
+      toast.success("Login successful");
+      router.push("/dashboard");
     }
 
     setIsLoading(false);
@@ -67,24 +67,24 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
       const result = await signInWithGoogle();
 
       if (result.error) {
-        toast.error(result.error?.message || 'Failed to sign in with Google');
+        toast.error(result.error?.message || "Failed to sign in with Google");
         setIsLoadingGoogle(false);
       } else if (result.data?.url) {
         // Redirect to Google OAuth URL
         window.location.href = result.data.url;
         // Don't set loading to false since we're redirecting
       } else {
-        toast.error('Failed to get Google sign-in URL');
+        toast.error("Failed to get Google sign-in URL");
         setIsLoadingGoogle(false);
       }
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error("An error occurred. Please try again.");
       setIsLoadingGoogle(false);
     }
   };
 
   return (
-    <section className={cn('flex flex-col gap-6', className)} {...props}>
+    <section className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2 h-full">
           <Form {...form}>
@@ -94,7 +94,7 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
                   <Image
                     width={200}
                     height={40}
-                    src="/images/IMG_3800.png"
+                    src="/images/IMG_3800.webp"
                     alt="Image"
                     className="mx-auto"
                   />
@@ -149,7 +149,7 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
                   {isLoading ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
-                    'Login'
+                    "Login"
                   )}
                 </Button>
                 <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
@@ -194,7 +194,7 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<'form'>) => {
                   </Link>
                 </div>
                 <div className="text-center text-sm">
-                  Don&apos;t have an account?{' '}
+                  Don&apos;t have an account?{" "}
                   <Link
                     href="/auth/signup"
                     className="underline underline-offset-4"

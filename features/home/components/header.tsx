@@ -17,8 +17,10 @@ const Header = () => {
               <Image
                 width={120}
                 height={25}
-                src="/images/IMG_3800.png"
-                alt="Image"
+                src="/images/IMG_3800.webp"
+                alt="Veltex AI"
+                priority
+                sizes="120px"
               />
             </div>
 

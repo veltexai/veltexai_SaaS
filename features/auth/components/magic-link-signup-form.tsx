@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import z from 'zod';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import z from "zod";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   Form,
   FormControl,
@@ -17,39 +17,39 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import Link from 'next/link';
-import { Loader2, Mail } from 'lucide-react';
-import Image from 'next/image';
-import Photo from '../../../public/images/pexels-tima-miroshnichenko-6195879.jpg';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { signInWithGoogle } from '@/lib/auth/actions/oauth';
-import { signUpWithMagicLink } from '@/lib/auth/actions/magic-link';
-import FreeTrialInfoBanner from '@/components/ui/free-trial-info-banner';
+} from "@/components/ui/form";
+import Link from "next/link";
+import { Loader2, Mail } from "lucide-react";
+import Image from "next/image";
+import Photo from "../../../public/images/pexels-tima-miroshnichenko-6195879.jpg";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { signInWithGoogle } from "@/lib/auth/actions/oauth";
+import { signUpWithMagicLink } from "@/lib/auth/actions/magic-link";
+import FreeTrialInfoBanner from "@/components/ui/free-trial-info-banner";
 
 const formSchema = z.object({
-  fullName: z.string().min(3, 'Full name must be at least 3 characters'),
-  email: z.string().email('Please enter a valid email address'),
+  fullName: z.string().min(3, "Full name must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
   companyName: z.string().optional(),
 });
 
 export default function MagicLinkSignupForm({
   className,
   ...props
-}: React.ComponentProps<'div'>) {
+}: React.ComponentProps<"div">) {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const [userInfo, setUserInfo] = useState({ name: '', email: '' });
+  const [userInfo, setUserInfo] = useState({ name: "", email: "" });
 
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: '',
-      email: '',
-      companyName: '',
+      fullName: "",
+      email: "",
+      companyName: "",
     },
   });
 
@@ -59,18 +59,18 @@ export default function MagicLinkSignupForm({
       const result = await signInWithGoogle();
 
       if (result.error) {
-        toast.error(result.error?.message || 'Failed to sign in with Google');
+        toast.error(result.error?.message || "Failed to sign in with Google");
         setIsLoadingGoogle(false);
       } else if (result.data?.url) {
         // Redirect to Google OAuth URL
         window.location.href = result.data.url;
         // Don't set loading to false since we're redirecting
       } else {
-        toast.error('Failed to get Google sign-in URL');
+        toast.error("Failed to get Google sign-in URL");
         setIsLoadingGoogle(false);
       }
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error("An error occurred. Please try again.");
       setIsLoadingGoogle(false);
     }
   };
@@ -80,29 +80,29 @@ export default function MagicLinkSignupForm({
 
     try {
       const formData = new FormData();
-      formData.append('email', values.email);
-      formData.append('fullName', values.fullName);
-      formData.append('companyName', values.companyName || '');
+      formData.append("email", values.email);
+      formData.append("fullName", values.fullName);
+      formData.append("companyName", values.companyName || "");
 
       const { error } = await signUpWithMagicLink({}, formData);
 
       if (error) {
         toast.error(error.message);
         if (
-          error.message.toLowerCase().includes('already exists') ||
-          error.message.toLowerCase().includes('email already')
+          error.message.toLowerCase().includes("already exists") ||
+          error.message.toLowerCase().includes("email already")
         ) {
-          router.push('/auth/login');
+          router.push("/auth/login");
         }
       } else {
         setUserInfo({ name: values.fullName, email: values.email });
         setEmailSent(true);
-        toast.success('Magic link sent! Check your email.');
+        toast.success("Magic link sent! Check your email.");
         form.reset();
       }
     } catch (error) {
-      console.error('Signup error:', error);
-      toast.error('An unexpected error occurred.');
+      console.error("Signup error:", error);
+      toast.error("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +110,7 @@ export default function MagicLinkSignupForm({
 
   const handleBackToForm = () => {
     setEmailSent(false);
-    setUserInfo({ name: '', email: '' });
+    setUserInfo({ name: "", email: "" });
     form.reset();
   };
 
@@ -120,22 +120,22 @@ export default function MagicLinkSignupForm({
     setIsLoading(true);
 
     const formData = new FormData();
-    formData.append('email', userInfo.email);
-    formData.append('fullName', userInfo.name);
+    formData.append("email", userInfo.email);
+    formData.append("fullName", userInfo.name);
 
     const { error } = await signUpWithMagicLink({}, formData);
 
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success('Magic link resent! Check your email.');
+      toast.success("Magic link resent! Check your email.");
     }
     setIsLoading(false);
   };
 
   if (emailSent) {
     return (
-      <div className={cn('flex flex-col gap-6', className)} {...props}>
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
         <Card className="overflow-hidden p-0 h-[526px]">
           <CardContent className="grid p-0 md:grid-cols-2 h-full">
             <div className="p-6 md:p-8">
@@ -144,7 +144,7 @@ export default function MagicLinkSignupForm({
                   <Image
                     width={60}
                     height={60}
-                    src="/images/IMG_3800.png"
+                    src="/images/IMG_3800.webp"
                     alt="Veltex Logo"
                   />
                   <h1 className="text-2xl font-bold">Check your email</h1>
@@ -157,7 +157,7 @@ export default function MagicLinkSignupForm({
                 <Alert>
                   <Mail className="h-4 w-4" />
                   <AlertDescription>
-                    Click the link in your email to create your{' '}
+                    Click the link in your email to create your{" "}
                     <strong>Veltex</strong> account. The link will expire in 1
                     hour.
                   </AlertDescription>
@@ -173,7 +173,7 @@ export default function MagicLinkSignupForm({
                     {isLoading ? (
                       <Loader2 className="size-4 animate-spin" />
                     ) : (
-                      'Resend magic link'
+                      "Resend magic link"
                     )}
                   </Button>
 
@@ -188,7 +188,7 @@ export default function MagicLinkSignupForm({
                 </div>
 
                 <div className="text-center text-sm">
-                  Already have an account?{' '}
+                  Already have an account?{" "}
                   <Link
                     href="/auth/login"
                     className="underline underline-offset-4"
@@ -215,7 +215,7 @@ export default function MagicLinkSignupForm({
   }
 
   return (
-    <div className={cn('flex flex-col gap-6', className)} {...props}>
+    <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
           <Form {...form}>
@@ -225,17 +225,17 @@ export default function MagicLinkSignupForm({
                   <Image
                     width={200}
                     height={40}
-                    src="/images/IMG_3800.png"
+                    src="/images/IMG_3800.webp"
                     alt="Image"
                     className="mx-auto"
                   />
-                   <p className="text-muted-foreground text-balance mt-3.5">
+                  <p className="text-muted-foreground text-balance mt-3.5">
                     AI Operating System for Janitorial Companies — <br />
                     Scope → Labor → Pricing → Proposal
                   </p>
                 </div>
 
-                <FreeTrialInfoBanner component="signup" /> 
+                <FreeTrialInfoBanner component="signup" />
 
                 <div className="flex items-center gap-3">
                   <FormField
@@ -302,7 +302,7 @@ export default function MagicLinkSignupForm({
                   {isLoading ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
-                    'Send magic link'
+                    "Send magic link"
                   )}
                 </Button>
 
@@ -351,7 +351,7 @@ export default function MagicLinkSignupForm({
                 </div>
 
                 <div className="text-center text-sm">
-                  Already have an account?{' '}
+                  Already have an account?{" "}
                   <Link
                     href="/auth/login"
                     className="underline underline-offset-4"

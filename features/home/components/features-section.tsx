@@ -1,17 +1,10 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import React from 'react';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import {
-  BarChart3,
-  CheckCircle,
-  FileText,
-  Shield,
-  Users,
-  Zap,
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { motion } from "framer-motion";
+import React from "react";
+import { fadeInUp, staggerContainer } from "@/lib/animations/variants";
+import { Card, CardContent } from "@/components/ui/card";
+import { FEATURES } from "../constants/features";
 
 const FeatureSection = () => {
   return (
@@ -28,7 +21,8 @@ const FeatureSection = () => {
             Everything You Need
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Vertical AI operating system for janitorial companies, not generic SaaS
+            Vertical AI operating system for janitorial companies, not generic
+            SaaS
           </p>
         </motion.div>
 
@@ -39,44 +33,7 @@ const FeatureSection = () => {
           viewport={{ once: true }}
           variants={staggerContainer}
         >
-          {[
-            {
-              title: 'Operational Intelligence Engine',
-              description:
-                'Scope → Labor → Pricing → Proposal. Outputs constrained by real janitorial labor, frequency, and margin rules.',
-              icon: Zap,
-            },
-            {
-              title: 'Instant PDF Export',
-              description:
-                'Professional, branded PDFs ready to send to clients immediately.',
-              icon: FileText,
-            },
-            {
-              title: 'Subscription Management',
-              description:
-                'Flexible plans with usage limits that scale with your business.',
-              icon: BarChart3,
-            },
-            {
-              title: 'Secure Multi-Tenant',
-              description:
-                'Enterprise-grade security with isolated client data and accounts.',
-              icon: Shield,
-            },
-            {
-              title: 'Admin Dashboard',
-              description:
-                'Comprehensive dashboard for managing proposals, clients, and team members.',
-              icon: Users,
-            },
-            {
-              title: 'Stripe Integration',
-              description:
-                'Seamless payment processing and subscription billing built-in.',
-              icon: CheckCircle,
-            },
-          ].map((feature, index) => (
+          {FEATURES.map((feature, index) => (
             <motion.div key={index} variants={fadeInUp}>
               <Card className="p-6 h-full border-0 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
                 <CardContent className="pt-6">

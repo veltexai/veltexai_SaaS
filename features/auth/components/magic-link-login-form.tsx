@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -8,40 +8,40 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import Image from 'next/image';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import z from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Loader2, Mail } from 'lucide-react';
-import { toast } from 'sonner';
-import Photo from '../../../public/images/pexels-tima-miroshnichenko-6196692.jpg';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { signInWithMagicLink } from '@/lib/auth/actions/magic-link';
-import { signInWithGoogle } from '@/lib/auth/actions/oauth';
+} from "@/components/ui/form";
+import Image from "next/image";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Loader2, Mail } from "lucide-react";
+import { toast } from "sonner";
+import Photo from "../../../public/images/pexels-tima-miroshnichenko-6196692.jpg";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { signInWithMagicLink } from "@/lib/auth/actions/magic-link";
+import { signInWithGoogle } from "@/lib/auth/actions/oauth";
 
 const formSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email("Please enter a valid email address"),
 });
 
 const MagicLinkLoginForm = ({
   className,
   ...props
-}: React.ComponentProps<'form'>) => {
+}: React.ComponentProps<"form">) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const [sentEmail, setSentEmail] = useState('');
+  const [sentEmail, setSentEmail] = useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      email: "",
     },
   });
 
@@ -49,19 +49,19 @@ const MagicLinkLoginForm = ({
     setIsLoading(true);
     try {
       const formData = new FormData();
-      formData.append('email', values.email);
+      formData.append("email", values.email);
 
       const result = await signInWithMagicLink({}, formData);
 
       if (!result.error) {
         setSentEmail(values.email);
         setEmailSent(true);
-        toast.success('Magic link sent to your email!');
+        toast.success("Magic link sent to your email!");
       } else {
-        toast.error(result.error?.message || 'Failed to send magic link');
+        toast.error(result.error?.message || "Failed to send magic link");
       }
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +69,7 @@ const MagicLinkLoginForm = ({
 
   const handleBackToForm = () => {
     setEmailSent(false);
-    setSentEmail('');
+    setSentEmail("");
     form.reset();
   };
 
@@ -79,25 +79,25 @@ const MagicLinkLoginForm = ({
       const result = await signInWithGoogle();
 
       if (result.error) {
-        toast.error(result.error?.message || 'Failed to sign in with Google');
+        toast.error(result.error?.message || "Failed to sign in with Google");
         setIsLoadingGoogle(false);
       } else if (result.data?.url) {
         // Redirect to Google OAuth URL
         window.location.href = result.data.url;
         // Don't set loading to false since we're redirecting
       } else {
-        toast.error('Failed to get Google sign-in URL');
+        toast.error("Failed to get Google sign-in URL");
         setIsLoadingGoogle(false);
       }
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error("An error occurred. Please try again.");
       setIsLoadingGoogle(false);
     }
   };
 
   if (emailSent) {
     return (
-      <section className={cn('flex flex-col gap-6', className)} {...props}>
+      <section className={cn("flex flex-col gap-6", className)} {...props}>
         <Card className="overflow-hidden p-0">
           <CardContent className="grid p-0 md:grid-cols-2">
             <div className="p-6 md:p-8">
@@ -106,12 +106,12 @@ const MagicLinkLoginForm = ({
                   <Image
                     width={60}
                     height={60}
-                    src="/images/IMG_3800.png"
+                    src="/images/IMG_3800.webp"
                     alt="Veltex Logo"
                   />
                   <h1 className="text-2xl font-bold">Check your email</h1>
                   <p className="text-muted-foreground text-balance">
-                    We've sent a magic link to{' '}
+                    We've sent a magic link to{" "}
                     <strong className="text-black">{sentEmail}</strong>
                   </p>
                 </div>
@@ -119,7 +119,7 @@ const MagicLinkLoginForm = ({
                 <Alert>
                   <Mail className="h-4 w-4" />
                   <AlertDescription>
-                    Click the link in your email to sign in to your{' '}
+                    Click the link in your email to sign in to your{" "}
                     <strong>Veltex</strong> account. The link will expire in 1
                     hour.
                   </AlertDescription>
@@ -136,7 +136,7 @@ const MagicLinkLoginForm = ({
                     {isLoading ? (
                       <Loader2 className="size-4 animate-spin" />
                     ) : (
-                      'Resend magic link'
+                      "Resend magic link"
                     )}
                   </Button>
 
@@ -182,7 +182,7 @@ const MagicLinkLoginForm = ({
                 </Button>
 
                 <div className="text-center text-sm">
-                  Don't have an account?{' '}
+                  Don't have an account?{" "}
                   <Link
                     href="/auth/signup"
                     className="underline underline-offset-4"
@@ -209,7 +209,7 @@ const MagicLinkLoginForm = ({
   }
 
   return (
-    <section className={cn('flex flex-col gap-6', className)} {...props}>
+    <section className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0 h-[579px]">
         <CardContent className="grid p-0 md:grid-cols-2 h-full">
           <Form {...form}>
@@ -219,11 +219,11 @@ const MagicLinkLoginForm = ({
                   <Image
                     width={200}
                     height={40}
-                    src="/images/IMG_3800.png"
+                    src="/images/IMG_3800.webp"
                     alt="Image"
                     className="mx-auto"
                   />
-                   <p className="text-muted-foreground text-balance mt-3.5">
+                  <p className="text-muted-foreground text-balance mt-3.5">
                     AI Operating System for Janitorial Companies — <br />
                     Scope → Labor → Pricing → Proposal
                   </p>
@@ -301,7 +301,7 @@ const MagicLinkLoginForm = ({
                 </div>
 
                 <div className="text-center text-sm">
-                  Don't have an account?{' '}
+                  Don't have an account?{" "}
                   <Link
                     href="/auth/signup"
                     className="underline underline-offset-4"

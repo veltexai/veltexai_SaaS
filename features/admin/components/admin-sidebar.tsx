@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState } from "react";
+import Link from "next/link";
 import {
   LayoutDashboard,
   Users,
@@ -16,22 +16,22 @@ import {
   ChevronDown,
   Layout,
   Package,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { cn, truncateText } from '@/lib/utils';
-import { createClient } from '@/lib/supabase/client';
-import { useRouter, usePathname } from 'next/navigation';
-import { toast } from 'sonner';
-import Image from 'next/image';
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { cn, truncateText } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter, usePathname } from "next/navigation";
+import { toast } from "sonner";
+import Image from "next/image";
 
 interface NavItem {
   name: string;
@@ -50,70 +50,70 @@ interface AdminSidebarProps {
 
 const navigation: NavItem[] = [
   {
-    name: 'Dashboard',
-    href: '/admin',
+    name: "Dashboard",
+    href: "/admin",
     icon: LayoutDashboard,
-    description: 'Overview and analytics',
+    description: "Overview and analytics",
   },
   {
-    name: 'Proposals',
-    href: '/admin/proposals',
+    name: "Proposals",
+    href: "/admin/proposals",
     icon: FileText,
-    description: 'Manage proposals',
+    description: "Manage proposals",
   },
   {
-    name: 'Templates',
-    href: '/admin/templates',
+    name: "Templates",
+    href: "/admin/templates",
     icon: Layout,
-    description: 'Manage proposal templates',
+    description: "Manage proposal templates",
   },
   {
-    name: 'Pricing',
-    href: '/admin/pricing-settings',
+    name: "Pricing",
+    href: "/admin/pricing-settings",
     icon: DollarSign,
-    description: 'Configure pricing settings',
+    description: "Configure pricing settings",
   },
   {
-    name: 'Add-Ons',
-    href: '/admin/addons',
+    name: "Add-Ons",
+    href: "/admin/addons",
     icon: Package,
-    description: 'Manage add-on services',
+    description: "Manage add-on services",
   },
   {
-    name: 'Subscriptions',
-    href: '/admin/subscriptions',
+    name: "Subscriptions",
+    href: "/admin/subscriptions",
     icon: DollarSign,
-    description: 'Subscription analytics & billing',
+    description: "Subscription analytics & billing",
   },
   {
-    name: 'Users',
-    href: '/admin/users',
+    name: "Users",
+    href: "/admin/users",
     icon: Users,
-    description: 'Manage user accounts',
+    description: "Manage user accounts",
     disabled: true,
     comingSoon: true,
   },
   {
-    name: 'Prompts',
-    href: '/admin/prompts',
+    name: "Prompts",
+    href: "/admin/prompts",
     icon: MessageSquare,
-    description: 'AI prompt templates',
+    description: "AI prompt templates",
     disabled: true,
     comingSoon: true,
   },
   {
-    name: 'System',
-    href: '/admin/system-settings',
+    name: "System",
+    href: "/admin/system-settings",
     icon: Settings,
-    description: 'System configuration',
+    description: "System configuration",
     disabled: true,
     comingSoon: true,
   },
   {
-    name: 'Audit Logs',
-    href: '/admin/logs',
+    name: "Audit Logs",
+    href: "/admin/logs",
     icon: Activity,
-    description: 'Monitor admin actions',
+    description: "Monitor admin actions",
     disabled: true,
     comingSoon: true,
   },
@@ -131,17 +131,17 @@ export default function AdminSidebar({
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      router.push('/auth/login');
-      toast.success('Signed out successfully');
+      router.push("/auth/login");
+      toast.success("Signed out successfully");
     } catch (error) {
-      console.error('Error signing out:', error);
-      toast.error('Failed to sign out');
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out");
     }
   };
 
   const isCurrentPage = (href: string) => {
-    if (href === '/admin') {
-      return pathname === '/admin';
+    if (href === "/admin") {
+      return pathname === "/admin";
     }
     return pathname.startsWith(href);
   };
@@ -161,8 +161,8 @@ export default function AdminSidebar({
       {/* Sidebar */}
       <div
         className={cn(
-          '!fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          "!fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="flex flex-col h-full">
@@ -172,7 +172,7 @@ export default function AdminSidebar({
               <Image
                 width={130}
                 height={25}
-                src="/images/IMG_3800.png"
+                src="/images/IMG_3800.webp"
                 alt="Image"
               />
             </div>
@@ -198,8 +198,8 @@ export default function AdminSidebar({
                   <div
                     key={item.name}
                     className={cn(
-                      'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium cursor-not-allowed opacity-60',
-                      'text-gray-400 bg-gray-50'
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium cursor-not-allowed opacity-60",
+                      "text-gray-400 bg-gray-50",
                     )}
                   >
                     <Icon className="h-5 w-5" />
@@ -228,10 +228,10 @@ export default function AdminSidebar({
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                     current
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? "bg-primary text-primary-foreground"
+                      : "text-gray-700 hover:bg-gray-100",
                   )}
                   onClick={() => setSidebarOpen(false)}
                 >
@@ -240,8 +240,10 @@ export default function AdminSidebar({
                     <div>{item.name}</div>
                     <div
                       className={cn(
-                        'text-xs',
-                        current ? 'text-primary-foreground/80' : 'text-gray-500'
+                        "text-xs",
+                        current
+                          ? "text-primary-foreground/80"
+                          : "text-gray-500",
                       )}
                     >
                       {item.description}
@@ -262,18 +264,18 @@ export default function AdminSidebar({
                     <AvatarFallback>
                       {currentUser.full_name
                         ? currentUser.full_name
-                            .split(' ')
+                            .split(" ")
                             .map((n: string) => n[0])
-                            .join('')
+                            .join("")
                         : currentUser.email?.[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
                     <div className="text-sm font-medium">
-                      {currentUser.full_name || 'Admin User'}
+                      {currentUser.full_name || "Admin User"}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {truncateText(currentUser.email || '', 19)}
+                      {truncateText(currentUser.email || "", 19)}
                     </div>
                   </div>
                   <ChevronDown className="h-4 w-4 pr-1" />

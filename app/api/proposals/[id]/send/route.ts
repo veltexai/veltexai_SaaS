@@ -150,7 +150,7 @@ export async function POST(
     const companyName = companyProfile?.company_name || "Veltex AI";
     const senderName = profile?.full_name || user.email || "Team";
     const baseUrl = appUrl;
-    const logoUrl = `${baseUrl}/images/IMG_3800.png`;
+    const logoUrl = `${baseUrl}/images/IMG_3800.webp`;
 
     const emailData = {
       clientName: proposal.client_name || "Valued Client",
