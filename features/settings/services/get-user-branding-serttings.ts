@@ -43,12 +43,16 @@ export async function getUserBrandingSettings(
     .from("user_branding_settings")
     .select("*")
     .eq("user_id", userId)
-    .single();
+    .maybeSingle();
+
+  if (!data && !error) {
+    return DEFAULT_BRANDING;
+  }
 
   if (error) {
     console.error("Error fetching branding settings:", error);
     return DEFAULT_BRANDING;
   }
 
-  return data ? mapRowToSettings(data as UserBrandingRow) : DEFAULT_BRANDING;
+  return mapRowToSettings(data as UserBrandingRow);
 }

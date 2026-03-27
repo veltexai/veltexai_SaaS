@@ -8,6 +8,10 @@ import {
   type EnhancedCancellationEmailData,
   type ReactivationEmailData,
   type GracePeriodEmailData,
+  type WelcomeTrialEmailData,
+  type FirstProposalEmailData,
+  type TrialEndingReminderEmailData,
+  type TrialExpiredEmailData,
 } from './templates';
 
 interface EmailConfig {
@@ -515,6 +519,102 @@ export class EmailService {
       return false;
     }
   }
+
+  // ─── Lifecycle / automation senders (via Resend) ───────────────────────────
+  // These use Resend directly (RESEND_API_KEY + EMAIL_SENDER_ADDRESS) so they
+  // are independent of the SMTP credentials stored in system_settings, which
+  // may not be configured or may use Gmail (which rejects plain passwords).
+
+  private static async sendLifecycleEmail(
+    userEmail: string,
+    template: { subject: string; html: string; text: string },
+    label: string
+  ): Promise<boolean> {
+    try {
+      const apiKey = process.env.RESEND_API_KEY;
+      const fromAddress = process.env.EMAIL_SENDER_ADDRESS;
+      const fromName = process.env.EMAIL_SENDER_NAME;
+
+      if (!apiKey?.trim()) {
+        console.error(`❌ EmailService [${label}]: RESEND_API_KEY is not set`);
+        return false;
+      }
+      if (!fromAddress?.trim()) {
+        console.error(`❌ EmailService [${label}]: EMAIL_SENDER_ADDRESS is not set`);
+        return false;
+      }
+
+      const resend = new Resend(apiKey);
+      const from = fromName?.trim()
+        ? `${fromName.trim()} <${fromAddress.trim()}>`
+        : fromAddress.trim();
+
+      const { error } = await resend.emails.send({
+        from,
+        to: userEmail,
+        subject: template.subject,
+        html: template.html,
+        text: template.text ?? undefined,
+      });
+
+      if (error) {
+        console.error(`❌ EmailService [${label}]: Resend error:`, error);
+        return false;
+      }
+
+      console.log(`✅ EmailService [${label}]: sent to ${userEmail}`);
+      return true;
+    } catch (error) {
+      console.error(`❌ EmailService [${label}]: unexpected error:`, error);
+      return false;
+    }
+  }
+
+  static async sendWelcomeTrialEmail(
+    userEmail: string,
+    data: WelcomeTrialEmailData
+  ): Promise<boolean> {
+    return this.sendLifecycleEmail(
+      userEmail,
+      EmailTemplates.getWelcomeTrialEmail(data),
+      'welcome_trial'
+    );
+  }
+
+  static async sendFirstProposalEmail(
+    userEmail: string,
+    data: FirstProposalEmailData
+  ): Promise<boolean> {
+    return this.sendLifecycleEmail(
+      userEmail,
+      EmailTemplates.getFirstProposalEmail(data),
+      'first_proposal'
+    );
+  }
+
+  static async sendTrialEndingReminderEmail(
+    userEmail: string,
+    data: TrialEndingReminderEmailData
+  ): Promise<boolean> {
+    return this.sendLifecycleEmail(
+      userEmail,
+      EmailTemplates.getTrialEndingReminderEmail(data),
+      'trial_ending'
+    );
+  }
+
+  static async sendTrialExpiredEmail(
+    userEmail: string,
+    data: TrialExpiredEmailData
+  ): Promise<boolean> {
+    return this.sendLifecycleEmail(
+      userEmail,
+      EmailTemplates.getTrialExpiredEmail(data),
+      'trial_expired'
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
 
   static async sendEnhancedProposalEmail(
     data: EnhancedProposalEmailData,

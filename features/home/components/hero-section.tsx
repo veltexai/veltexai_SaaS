@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { ArrowRight, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import React, { useEffect } from "react";
@@ -7,20 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { fadeInUp, staggerContainer } from "@/lib/animations/variants";
 import Link from "next/link";
-import Image from "next/image";
+const VideoPlayer = dynamic(() => import("./video-player"), {
+  ssr: false,
+});
 
 const HeroSection = () => {
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const [playbackProgress, setPlaybackProgress] = React.useState(0); // 0..1
-  const [showVideo, setShowVideo] = React.useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowVideo(true);
-    }, 1500); // 1–1.5s is sweet spot
-
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <section className="pt-16 pb-20 px-4 sm:px-6 lg:px-8">
@@ -84,12 +78,12 @@ const HeroSection = () => {
           </motion.p>
         </motion.div>
 
-        {/* Hero Image/Dashboard Mockup */}
+        {/* Hero Image/Dashboard Mockup — opacity stays 1 so LCP is not delayed */}
         <motion.div
           className="mt-16 max-w-5xl mx-auto"
-          initial={{ opacity: 0, y: 100 }}
+          initial={{ opacity: 1, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
         >
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-emerald-500/20 rounded-2xl blur-3xl"></div>
@@ -98,26 +92,12 @@ const HeroSection = () => {
               style={{ width: `${playbackProgress * 98}%` }}
             />
             <div className="relative w-full aspect-[1070/600] overflow-hidden rounded-2xl">
-              {/* IMAGE FIRST (fast LCP) */}
-              <Image
-                width={1070}
-                height={600}
-                src="/images/dashboard-light.webp"
-                className="absolute inset-0 w-full h-full rounded-2xl shadow-2xl border border-gray-200 object-cover"
-                alt="Preview"
+              <VideoPlayer
+                src="https://iwoaaljitifloolszxlu.supabase.co/storage/v1/object/public/Intro-Video/Untitled%20design.mp4"
+                placeholderImage="/images/dashboard-light.webp"
+                playbackProgress={playbackProgress}
+                setPlaybackProgress={setPlaybackProgress}
               />
-
-              {/* VIDEO AFTER */}
-              {showVideo && (
-                <video
-                  src="https://iwoaaljitifloolszxlu.supabase.co/storage/v1/object/public/Intro-Video/Untitled%20design.mp4"
-                  className="absolute inset-0 w-full h-full rounded-2xl shadow-2xl border border-gray-200 object-cover"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                />
-              )}
             </div>
           </div>
         </motion.div>

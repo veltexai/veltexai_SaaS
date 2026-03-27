@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient as createServiceClientRaw } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { getUser } from '@/queries/user';
 import { proposalFormSchema } from '@/lib/validations/proposal';
 import { stripe } from '@/lib/stripe';
+import { EmailService } from '@/lib/email/service';
+import config from '@/config/config';
 
 export async function POST(request: NextRequest) {
   try {
@@ -138,6 +141,51 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ Usage not incremented - no active subscription found for user:', user.id);
     } else {
       console.log('✅ Usage incremented successfully for user:', user.id);
+
+      const newUsageAfterIncrement = (usage?.current_usage || 0) + 1;
+
+      // First proposal: send congratulatory email (fire-and-forget)
+      if (newUsageAfterIncrement === 1) {
+        const serviceClient = createServiceClientRaw(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+
+        void (async () => {
+          try {
+            const { data: existing } = await serviceClient
+              .from('email_automation_log')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('email_type', 'first_proposal')
+              .maybeSingle();
+
+            if (!existing) {
+              const { data: profile } = await serviceClient
+                .from('profiles')
+                .select('email')
+                .eq('id', user.id)
+                .single();
+
+              if (profile?.email) {
+                const upgradeUrl = `${config.domainName}/dashboard/billing`;
+                const sent = await EmailService.sendFirstProposalEmail(
+                  profile.email,
+                  { upgradeUrl }
+                );
+                if (sent) {
+                  await serviceClient.from('email_automation_log').insert({
+                    user_id: user.id,
+                    email_type: 'first_proposal',
+                  });
+                }
+              }
+            }
+          } catch (err) {
+            console.error('❌ First proposal email error:', err);
+          }
+        })();
+      }
 
       const isFreeTrial = usage?.subscription_status === 'free_trial';
 
