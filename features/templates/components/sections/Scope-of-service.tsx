@@ -109,7 +109,7 @@ export default function ScopeOfService({
           {premium ? (
             <>
               <div
-                className={`text-center grid grid-cols-2 text-[var(--color-primary)] gap-4 sm:px-5 px-2 mb-2 sm:text-base text-2xs
+                className={`text-center grid grid-cols-3 text-[var(--color-primary)] gap-4 sm:px-5 px-2 mb-2 sm:text-base text-2xs
                 ${
                   templateType === "luxury_elite"
                     ? `${arvo.className} font-normal`
@@ -118,7 +118,7 @@ export default function ScopeOfService({
               >
                 <div className="">Service Area</div>
                 <div className="">Frequency</div>
-                {/* <div className=" col-span-2">Notes</div> */}
+                <div className="">Notes</div>
               </div>
               {rows.map((row, i) => (
                 <div
@@ -136,7 +136,7 @@ export default function ScopeOfService({
                           : "bg-[var(--color-primary)] text-white"
                     }`}
                 >
-                  <div className="grid grid-cols-2 gap-4 sm:text-xs text-2xs justify-center items-center text-center">
+                  <div className="grid grid-cols-3 gap-4 sm:text-xs text-2xs justify-center items-center text-center">
                     <div
                       className={`whitespace-pre-line font-bold ${
                         templateType === "modern_corporate"
@@ -147,9 +147,9 @@ export default function ScopeOfService({
                       {row.area}
                     </div>
                     <div className="">{row.frequency}</div>
-                    {/* <div className="whitespace-pre-line col-span-2">
-                      {row.note || ''}
-                    </div> */}
+                    <div className="whitespace-pre-line">
+                      {row.note || "N/A"}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -175,6 +175,12 @@ export default function ScopeOfService({
                       {formatCurrencySafe(row.monthlyCost) ?? "N/A"}
                     </div>
                   </div>
+                  {row.note && (
+                    <div className="mt-1 text-2xs sm:text-xs text-center opacity-85 border-t border-white/20 pt-1">
+                      <span className="font-semibold">Note: </span>
+                      {row.note}
+                    </div>
+                  )}
                 </div>
               ))}
             </>

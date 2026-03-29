@@ -37,8 +37,10 @@ export function ServiceScopeCard({ serviceType }: ServiceScopeCardProps) {
   const {
     areasIncluded,
     frequencyDetails,
+    areaNotes,
     handleToggleArea,
     handleAreaFrequencyChange,
+    handleAreaNoteChange,
     handleRemoveArea,
     handleAddCustomArea,
     setShowCustomAreaInput,
@@ -112,35 +114,43 @@ export function ServiceScopeCard({ serviceType }: ServiceScopeCardProps) {
               {areasIncluded.map((area) => (
                 <div
                   key={area}
-                  className="flex items-center gap-3 rounded-lg border p-3"
+                  className="flex flex-col gap-2 rounded-lg border p-3"
                 >
-                  <span className="flex-1 text-sm font-medium">{area}</span>
-                  <Select
-                    value={frequencyDetails[area] ?? DEFAULT_AREA_FREQUENCY}
-                    onValueChange={(value) =>
-                      handleAreaFrequencyChange(area, value)
-                    }
-                  >
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {AREA_FREQUENCY_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveArea(area)}
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    <span className="flex-1 text-sm font-medium">{area}</span>
+                    <Select
+                      value={frequencyDetails[area] ?? DEFAULT_AREA_FREQUENCY}
+                      onValueChange={(value) =>
+                        handleAreaFrequencyChange(area, value)
+                      }
+                    >
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {AREA_FREQUENCY_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveArea(area)}
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Input
+                    placeholder="Add notes for this area (e.g. Disinfect fixtures, replenish supplies)"
+                    value={areaNotes[area] ?? ""}
+                    onChange={(e) => handleAreaNoteChange(area, e.target.value)}
+                    className="text-xs h-8"
+                  />
                 </div>
               ))}
             </div>
@@ -188,23 +198,6 @@ export function ServiceScopeCard({ serviceType }: ServiceScopeCardProps) {
             </Button>
           )}
         </div>
-
-        <FormField
-          name="service_scope.special_notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Special Notes</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Add any special instructions, additional areas, or specific requirements for the cleaning service..."
-                  className="min-h-[100px]"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <FormField
           name="service_scope.areas_excluded"

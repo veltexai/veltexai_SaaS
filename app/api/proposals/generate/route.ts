@@ -252,13 +252,14 @@ export async function POST(request: NextRequest) {
             Object.keys(service_scope.frequency_details).length > 0;
 
           if (hasFrequencyDetails) {
-            enhancedInfo += "Areas with Frequencies:\n";
+            enhancedInfo += "Areas with Frequencies and Notes:\n";
             for (const area of service_scope.areas_included) {
               const freq = service_scope.frequency_details?.[area];
               const label = freq
                 ? getAreaFrequencyLabel(freq)
                 : getServiceFrequencyLabel(service_frequency);
-              enhancedInfo += `  - ${area} – ${label}\n`;
+              const note = service_scope.area_notes?.[area];
+              enhancedInfo += `  - ${area} – ${label}${note ? ` (Note: ${note})` : ""}\n`;
             }
           } else {
             enhancedInfo += `Areas Included: ${service_scope.areas_included.join(", ")}\n`;
@@ -438,6 +439,7 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
             )
               ? null
               : tableMonthlyCost || null,
+            note: service_scope?.area_notes?.[area] || null,
           }))
         : [
             {
@@ -445,6 +447,7 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
               frequency: getServiceFrequencyLabel(service_frequency),
               costPerVisit: tableCostPerVisit || null,
               monthlyCost: tableMonthlyCost || null,
+              note: null,
             },
           ],
     };
@@ -488,18 +491,12 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
                 service_scope!.frequency_details?.[area] ?? service_frequency,
               )
             : getServiceFrequencyLabel(service_frequency),
-          note:
-            typeof service_scope?.special_notes === "string"
-              ? service_scope!.special_notes
-              : null,
+          note: service_scope?.area_notes?.[area] || null,
         }))
       : scopeTableData.rows.map((r) => ({
           area: r.area,
           frequency: r.frequency,
-          note:
-            typeof service_scope?.special_notes === "string"
-              ? service_scope!.special_notes
-              : null,
+          note: r.note || null,
         }));
     const scopeTablePremiumFenced = `\n\`\`\`veliz_scope_table\n${JSON.stringify(
       { rows: premiumScopeRows },

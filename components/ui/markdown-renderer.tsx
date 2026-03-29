@@ -704,7 +704,7 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
               <div className="flex justify-between">
                 <span className="text-white/70">Notes:</span>
                 <span className="text-white font-medium text-right">
-                  {row.note}
+                  {row.note || "N/A"}
                 </span>
               </div>
             )}
@@ -714,7 +714,7 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
             <div className="whitespace-pre-line text-white/90">{row.area}</div>
             <div className="text-white/90">{row.frequency}</div>
             <div className="text-white font-medium whitespace-pre-line">
-              {row.note || ""}
+              {row.note || "N/A"}
             </div>
           </div>
         </div>

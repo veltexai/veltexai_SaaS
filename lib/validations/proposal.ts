@@ -76,6 +76,8 @@ export const serviceScopeSchema = z.object({
   areas_excluded: z.array(z.string()).default([]),
   special_services: z.array(z.string()).default([]),
   frequency_details: z.record(z.any()).default({}),
+  area_notes: z.record(z.string()).default({}),
+  // kept for backward compatibility with old proposals
   special_notes: z.string().optional(),
 });
 
