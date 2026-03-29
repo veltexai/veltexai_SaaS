@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useRef, useCallback, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Upload, X } from 'lucide-react';
-import Image from 'next/image';
+import { useRef, useCallback, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { User, Upload, X } from "lucide-react";
+import Image from "next/image";
 
 // Components
 import {
@@ -13,12 +13,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Form,
   FormControl,
@@ -26,23 +26,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 
 // Hooks and utilities
-import { useImageUpload } from '@/hooks/use-image-upload';
-import { useProfileUpdate } from '@/hooks/use-profile-update';
-import { profileSchema, type ProfileFormData } from '@/lib/validations/profile';
-import { type User as UserType, type Profile } from '@/types/database';
-import { useNavigationGuard } from '@/hooks/use-navigation-guard';
-import { toast } from 'sonner';
+import { useImageUpload } from "@/hooks/use-image-upload";
+import { useProfileUpdate } from "@/hooks/use-profile-update";
+import { profileSchema, type ProfileFormData } from "@/lib/validations/profile";
+import { type User as UserType, type Profile } from "@/types/database";
+import { useNavigationGuard } from "@/hooks/use-navigation-guard";
+import { toast } from "sonner";
 
 // Constants
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ACCEPTED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp',
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
 ];
 
 interface ProfileSettingsProps {
@@ -72,7 +72,7 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
     hasLogoChanged,
   } = useImageUpload({
     initialUrl: profile?.logo_url,
-    bucket: 'profile-logos',
+    bucket: "profile-logos",
     folder: user.id,
   });
 
@@ -82,14 +82,17 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
     resolver: zodResolver(profileSchema),
     defaultValues: useMemo(
       () => ({
-        full_name: profile?.full_name || '',
-        company_name: profile?.company_name || '',
-        phone: profile?.phone || '',
-        website: profile?.website || '',
-        logo_url: profile?.logo_url || '',
-        company_background: profile?.company_background || '',
+        full_name: profile?.full_name || "",
+        company_name: profile?.company_name || "",
+        phone: profile?.phone || "",
+        website: profile?.website || "",
+        logo_url: profile?.logo_url || "",
+        company_background: profile?.company_background || "",
+        company_founded_date: profile?.company_founded_date || "",
+        industries_served: profile?.industries_served || "",
+        satisfaction_guarantee: profile?.satisfaction_guarantee || "",
       }),
-      [profile]
+      [profile],
     ),
   });
 
@@ -99,15 +102,15 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
   // Navigation guard hook
   useNavigationGuard(
     hasChanges,
-    'You have unsaved profile changes. Leave anyway?'
+    "You have unsaved profile changes. Leave anyway?",
   );
 
   const validateFile = useCallback((file: File): string | null => {
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      return 'Please select a valid image file (JPEG, PNG, WebP).';
+      return "Please select a valid image file (JPEG, PNG, WebP).";
     }
     if (file.size > MAX_FILE_SIZE) {
-      return 'Image must be less than 2MB.';
+      return "Image must be less than 2MB.";
     }
     return null;
   }, []);
@@ -115,39 +118,39 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
   const handleFileSelect = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
-      
+
       // If no file selected (user cancelled), keep existing logo
       if (!file) {
         // Reset the input value to allow selecting the same file again
-        event.target.value = '';
+        event.target.value = "";
         return;
       }
 
       const validationError = validateFile(file);
       if (validationError) {
         // Show validation error to user
-        console.error('File validation failed:', validationError);
+        console.error("File validation failed:", validationError);
         toast.error(validationError);
-        
+
         // Reset the input value
-        event.target.value = '';
+        event.target.value = "";
         return;
       }
 
       try {
         // Upload the new image (this will replace the existing one in the bucket)
         const imageUrl = await handleImageUpload(file);
-        form.setValue('logo_url', imageUrl, { shouldDirty: true });
-        
+        form.setValue("logo_url", imageUrl, { shouldDirty: true });
+
         // Reset the input value to allow selecting the same file again
-        event.target.value = '';
+        event.target.value = "";
       } catch (error) {
-        console.error('Upload failed:', error);
+        console.error("Upload failed:", error);
         // Reset the input value on error
-        event.target.value = '';
+        event.target.value = "";
       }
     },
-    [validateFile, handleImageUpload, form]
+    [validateFile, handleImageUpload, form],
   );
 
   const handleRemoveLogo = useCallback(async () => {
@@ -155,9 +158,9 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
 
     try {
       await handleImageRemove(logoPreview);
-      form.setValue('logo_url', '', { shouldDirty: true });
+      form.setValue("logo_url", "", { shouldDirty: true });
     } catch (error) {
-      console.error('Remove failed:', error);
+      console.error("Remove failed:", error);
     }
   }, [logoPreview, handleImageRemove, form]);
 
@@ -168,15 +171,18 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
         await updateProfile({
           ...data,
           logo_url: finalLogoUrl,
+          company_founded_date: data.company_founded_date || null,
+          industries_served: data.industries_served || null,
+          satisfaction_guarantee: data.satisfaction_guarantee || null,
         });
-        const updatedData = { ...data, logo_url: finalLogoUrl || '' };
+        const updatedData = { ...data, logo_url: finalLogoUrl || "" };
         form.reset(updatedData);
         resetLogoToSaved(finalLogoUrl);
       } catch (error) {
-        console.error('Profile update failed:', error);
+        console.error("Profile update failed:", error);
       }
     },
-    [updateProfile, logoPreview, form, resetLogoToSaved]
+    [updateProfile, logoPreview, form, resetLogoToSaved],
   );
 
   const isLoading = isUploading || isUpdating;
@@ -298,7 +304,7 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
                       <Input
                         placeholder="https://yourcompany.com (optional)"
                         {...field}
-                        value={field.value || ''}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -325,12 +331,78 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
               )}
             />
 
+            <div className="grid grid-cols-1 gap-4">
+              <FormField
+                control={form.control}
+                name="company_founded_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Founded Date</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        {...field}
+                        value={field.value || ""}
+                        max={new Date().toISOString().split("T")[0]}
+                      />
+                    </FormControl>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Used to calculate years in business on proposals
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="industries_served"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Industries Served</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g. Education, offices, retail & healthcare"
+                        {...field}
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Displayed in the About Our Company section
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="satisfaction_guarantee"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Satisfaction Guarantee</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g. 100% Satisfaction"
+                        {...field}
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Displayed in the About Our Company section
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <Button
               type="submit"
               disabled={isLoading || !hasChanges}
               className="!w-full md:w-auto"
             >
-              {isLoading ? 'Updating...' : 'Update Profile'}
+              {isLoading ? "Updating..." : "Update Profile"}
             </Button>
           </form>
         </Form>
@@ -371,7 +443,7 @@ function LogoUpload({
                 disabled={isUploading}
               >
                 <Upload className="h-4 w-4 mr-2" />
-                {isUploading ? 'Uploading...' : 'Change Logo'}
+                {isUploading ? "Uploading..." : "Change Logo"}
               </Button>
               <Button
                 type="button"
@@ -396,7 +468,7 @@ function LogoUpload({
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
               >
-                {isUploading ? 'Uploading...' : 'Upload Logo'}
+                {isUploading ? "Uploading..." : "Upload Logo"}
               </Button>
               <p className="text-sm text-gray-500 mt-2">
                 PNG, JPG, WebP up to 2MB

@@ -187,6 +187,50 @@ export async function POST(request: NextRequest) {
         })();
       }
 
+      // All 3 free-trial proposals used: send "Still need proposals?" immediately
+      // (same email_type as the cron — deduplication prevents a double-send later)
+      if (newUsageAfterIncrement >= 3 && usage?.subscription_status === 'free_trial') {
+        const serviceClient = createServiceClientRaw(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+
+        void (async () => {
+          try {
+            const { data: existing } = await serviceClient
+              .from('email_automation_log')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('email_type', 'trial_expired')
+              .maybeSingle();
+
+            if (!existing) {
+              const { data: profile } = await serviceClient
+                .from('profiles')
+                .select('email')
+                .eq('id', user.id)
+                .single();
+
+              if (profile?.email) {
+                const upgradeUrl = `${config.domainName}/dashboard/billing`;
+                const sent = await EmailService.sendTrialExpiredEmail(
+                  profile.email,
+                  { upgradeUrl }
+                );
+                if (sent) {
+                  await serviceClient.from('email_automation_log').insert({
+                    user_id: user.id,
+                    email_type: 'trial_expired',
+                  });
+                }
+              }
+            }
+          } catch (err) {
+            console.error('❌ Trial proposals-exhausted email error:', err);
+          }
+        })();
+      }
+
       const isFreeTrial = usage?.subscription_status === 'free_trial';
 
       if (!isFreeTrial) {

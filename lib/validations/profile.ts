@@ -49,6 +49,23 @@ export const profileSchema = z.object({
     .string()
     .min(50, 'Company background must be at least 50 characters')
     .max(1000, 'Company background must be less than 1000 characters'),
+
+  company_founded_date: z
+    .string()
+    .optional()
+    .nullable(),
+
+  industries_served: z
+    .string()
+    .max(200, 'Industries served must be less than 200 characters')
+    .optional()
+    .nullable(),
+
+  satisfaction_guarantee: z
+    .string()
+    .max(100, 'Satisfaction guarantee must be less than 100 characters')
+    .optional()
+    .nullable(),
 });
 
 export type ProfileFormData = z.infer<typeof profileSchema>;

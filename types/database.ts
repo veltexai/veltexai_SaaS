@@ -19,6 +19,9 @@ export interface Database {
           website: string | null;
           logo_url: string | null;
           company_background: string | null;
+          company_founded_date: string | null;
+          industries_served: string | null;
+          satisfaction_guarantee: string | null;
           role: 'user' | 'admin' | 'moderator';
           subscription_status:
             | 'trial'
@@ -40,6 +43,9 @@ export interface Database {
           website?: string | null;
           logo_url?: string | null;
           company_background?: string | null;
+          company_founded_date?: string | null;
+          industries_served?: string | null;
+          satisfaction_guarantee?: string | null;
           role?: 'user' | 'admin' | 'moderator';
           subscription_status?:
             | 'trial'
@@ -61,6 +67,9 @@ export interface Database {
           website?: string | null;
           logo_url?: string | null;
           company_background?: string | null;
+          company_founded_date?: string | null;
+          industries_served?: string | null;
+          satisfaction_guarantee?: string | null;
           role?: 'user' | 'admin' | 'moderator';
           subscription_status?:
             | 'trial'

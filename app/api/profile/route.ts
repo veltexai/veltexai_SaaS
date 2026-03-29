@@ -12,7 +12,10 @@ const profileUpdateSchema = z.object({
     .optional(),
   website: z.string().url().optional().or(z.literal('')).or(z.null()),
   logo_url: z.string().optional().or(z.literal('')).or(z.null()),
-  company_background: z.string().min(50).max(500).optional(),
+  company_background: z.string().min(50).max(1000).optional(),
+  company_founded_date: z.string().optional().or(z.null()),
+  industries_served: z.string().max(200).optional().or(z.null()),
+  satisfaction_guarantee: z.string().max(100).optional().or(z.null()),
 });
 
 export async function PATCH(request: NextRequest) {

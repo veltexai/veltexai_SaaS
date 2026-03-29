@@ -652,6 +652,20 @@ Notes:
 `
       : "";
 
+    // Calculate years in business from company_founded_date; minimum 1 year
+    const yearsInBusiness = (() => {
+      if (!profile.company_founded_date) return "10+ years";
+      const founded = new Date(profile.company_founded_date);
+      const now = new Date();
+      const years = now.getFullYear() - founded.getFullYear() -
+        (now < new Date(now.getFullYear(), founded.getMonth(), founded.getDate()) ? 1 : 0);
+      const displayYears = Math.max(1, years);
+      return `${displayYears} year${displayYears === 1 ? "" : "s"}`;
+    })();
+
+    const industriesServed = profile.industries_served || "Education, offices, retail & healthcare";
+    const satisfactionGuarantee = profile.satisfaction_guarantee || "100% Satisfaction";
+
     const executivePremiumStructure = `
 Return markdown with ONLY these top-level sections using exact headings:${!pricing_enabled ? '\nIMPORTANT: Do NOT include any "Service Quote & Pricing" section - the client has disabled pricing for this proposal.' : ""}
 Include the fenced JSON blocks exactly as shown; do not alter their content or formatting.
@@ -659,10 +673,10 @@ Include the fenced JSON blocks exactly as shown; do not alter their content or f
 ## About Our Company
 We specialize in supporting education, retail, office, and healthcare facilities with structured service programs designed for operational consistency. Our approach blends trained teams, **reliable scheduling**, and **quality assurance** aligned with your operating hours and compliance standards.
 
-- 10 years in business
+- ${yearsInBusiness} in business
 - ${`${city}, ${globalInputs.regionalLocation}` || "Service Location To Be Confirmed"}
-- Education, offices, retail & healthcare
-- 100% Satisfaction
+- ${industriesServed}
+- ${satisfactionGuarantee}
 
 ## Our Commitment
 We are committed to delivering **consistent quality**, **responsive communication**, and a **safe**, **healthy environment**. Every service plan includes supervision, documented inspections, and continuous improvement measures to ensure your facility looks its best.
