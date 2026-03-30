@@ -7,6 +7,7 @@ import { ConfirmationProvider } from "@/providers/confirmation-provider";
 import MetaPixel from "@/components/MetaPixel";
 import MetaPixelTracker from "@/components/MetaPixelTracker";
 import Script from "next/script";
+import { Meta } from "@/components/Meta";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,6 +47,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${dmSerifText.variable} ${arvo.variable} antialiased`}
       >
+        <Meta
+          title="Generate Professional Cleaning Proposals in Minutes"
+          description="Price jobs correctly and win more contracts with Veltex AI"
+        />
         <MetaPixel />
         <MetaPixelTracker />
         <ConfirmationProvider>
