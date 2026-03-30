@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { montserrat, dmSerifText, arvo } from "@/lib/fonts";
 import "./globals.css";
@@ -7,7 +6,6 @@ import { ConfirmationProvider } from "@/providers/confirmation-provider";
 import MetaPixel from "@/components/MetaPixel";
 import MetaPixelTracker from "@/components/MetaPixelTracker";
 import Script from "next/script";
-import { Meta } from "@/components/Meta";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,11 +16,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-export const metadata: Metadata = {
-  title: "Veltex AI",
-  description: "Generate your proposal with Veltex AI",
-};
 
 export default function RootLayout({
   children,
@@ -47,10 +40,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${dmSerifText.variable} ${arvo.variable} antialiased`}
       >
-        <Meta
-          title="Generate Professional Cleaning Proposals in Minutes"
-          description="Price jobs correctly and win more contracts with Veltex AI"
-        />
         <MetaPixel />
         <MetaPixelTracker />
         <ConfirmationProvider>
