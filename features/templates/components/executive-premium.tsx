@@ -118,9 +118,7 @@ export function ExecutivePremiumTemplate({
                         className={`${montserrat.className}`}
                       />
                     ) : (
-                      <div className="text-sm text-muted-foreground">
-                        No content
-                      </div>
+                      <div className="text-sm text-muted-foreground"></div>
                     )}
                   </div>
                   <Image
@@ -156,9 +154,7 @@ export function ExecutivePremiumTemplate({
                           className={`${montserrat.className}`}
                         />
                       ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No content
-                        </div>
+                        <div className="text-sm text-muted-foreground"></div>
                       )}
                     </div>
                     <div className="mt-6 sm:mt-10">
@@ -170,9 +166,7 @@ export function ExecutivePremiumTemplate({
                           className={`${montserrat.className}`}
                         />
                       ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No content
-                        </div>
+                        <div className="text-sm text-muted-foreground"></div>
                       )}
                     </div>
                   </div>

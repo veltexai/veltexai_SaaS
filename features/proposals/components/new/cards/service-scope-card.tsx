@@ -116,25 +116,27 @@ export function ServiceScopeCard({ serviceType }: ServiceScopeCardProps) {
                   key={area}
                   className="flex flex-col gap-2 rounded-lg border p-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="flex-1 text-sm font-medium">{area}</span>
-                    <Select
-                      value={frequencyDetails[area] ?? DEFAULT_AREA_FREQUENCY}
-                      onValueChange={(value) =>
-                        handleAreaFrequencyChange(area, value)
-                      }
-                    >
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {AREA_FREQUENCY_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="flex sm:items-center items-end justify-between gap-3 sm:flex-row flex-col-reverse">
+                    <div className="flex items-center gap-3 justify-between w-full">
+                      <span className="flex-1 text-sm font-medium">{area}</span>
+                      <Select
+                        value={frequencyDetails[area] ?? DEFAULT_AREA_FREQUENCY}
+                        onValueChange={(value) =>
+                          handleAreaFrequencyChange(area, value)
+                        }
+                      >
+                        <SelectTrigger className="">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {AREA_FREQUENCY_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <Button
                       type="button"
                       variant="ghost"

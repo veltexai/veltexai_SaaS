@@ -1,6 +1,6 @@
-import nodemailer from 'nodemailer';
-import { createClient } from '@supabase/supabase-js';
-import { Resend } from 'resend';
+import nodemailer from "nodemailer";
+import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
 import {
   EmailTemplates,
   type SubscriptionEmailData,
@@ -12,7 +12,7 @@ import {
   type FirstProposalEmailData,
   type TrialEndingReminderEmailData,
   type TrialExpiredEmailData,
-} from './templates';
+} from "./templates";
 
 interface EmailConfig {
   smtp_host: string;
@@ -68,31 +68,31 @@ interface EnhancedProposalEmailData {
 
 export class EmailService {
   private static async getEmailConfig(): Promise<EmailConfig | null> {
-    console.log('📧 EmailService: Initializing Supabase client...');
+    console.log("📧 EmailService: Initializing Supabase client...");
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
-    console.log('📧 EmailService: Querying system_settings table...');
+    console.log("📧 EmailService: Querying system_settings table...");
     const { data: settings, error } = await supabase
-      .from('system_settings')
+      .from("system_settings")
       .select(
-        'smtp_host, smtp_port, smtp_username, smtp_password, smtp_from_email, smtp_from_name, enable_email_notifications'
+        "smtp_host, smtp_port, smtp_username, smtp_password, smtp_from_email, smtp_from_name, enable_email_notifications",
       )
-      .order('updated_at', { ascending: false })
+      .order("updated_at", { ascending: false })
       .limit(1)
       .single();
 
     if (error) {
-      console.error('❌ EmailService: Database error:', error);
-      console.error('❌ EmailService: Error code:', error.code);
-      console.error('❌ EmailService: Error message:', error.message);
+      console.error("❌ EmailService: Database error:", error);
+      console.error("❌ EmailService: Error code:", error.code);
+      console.error("❌ EmailService: Error message:", error.message);
       return null;
     }
 
     if (error || !settings) {
-      console.error('Failed to get email settings:', error);
+      console.error("Failed to get email settings:", error);
       return null;
     }
 
@@ -102,7 +102,7 @@ export class EmailService {
   private static async createTransporter() {
     const config = await this.getEmailConfig();
     if (!config) {
-      throw new Error('Email configuration not available');
+      throw new Error("Email configuration not available");
     }
 
     return nodemailer.createTransport({
@@ -118,14 +118,14 @@ export class EmailService {
 
   static async sendSubscriptionEmail(data: EmailData): Promise<boolean> {
     try {
-      console.log('📧 EmailService: Getting email config...');
+      console.log("📧 EmailService: Getting email config...");
       const config = await this.getEmailConfig();
       if (!config) {
-        console.error('❌ EmailService: Email configuration not available');
+        console.error("❌ EmailService: Email configuration not available");
         return false;
       }
 
-      console.log('📧 EmailService: Config retrieved:', {
+      console.log("📧 EmailService: Config retrieved:", {
         smtp_host: config.smtp_host,
         smtp_port: config.smtp_port,
         smtp_from_email: config.smtp_from_email,
@@ -134,14 +134,14 @@ export class EmailService {
 
       // Check if email notifications are enabled
       if (!config.enable_email_notifications) {
-        console.log('⚠️ EmailService: Email notifications are disabled');
+        console.log("⚠️ EmailService: Email notifications are disabled");
         return true; // Return true to not fail the webhook
       }
 
-      console.log('📧 EmailService: Creating transporter...');
+      console.log("📧 EmailService: Creating transporter...");
       const transporter = await this.createTransporter();
 
-      console.log('📧 EmailService: Getting email template...');
+      console.log("📧 EmailService: Getting email template...");
       const template = EmailTemplates.getSubscriptionEmail(data);
 
       const mailOptions = {
@@ -152,7 +152,7 @@ export class EmailService {
         text: template.text,
       };
 
-      console.log('📧 EmailService: Sending email with options:', {
+      console.log("📧 EmailService: Sending email with options:", {
         from: mailOptions.from,
         to: mailOptions.to,
         subject: mailOptions.subject,
@@ -160,13 +160,13 @@ export class EmailService {
 
       await transporter.sendMail(mailOptions);
       console.log(
-        `✅ EmailService: Subscription email sent successfully to ${data.userEmail}`
+        `✅ EmailService: Subscription email sent successfully to ${data.userEmail}`,
       );
       return true;
     } catch (error) {
       console.error(
-        '❌ EmailService: Failed to send subscription email:',
-        error
+        "❌ EmailService: Failed to send subscription email:",
+        error,
       );
       return false;
     }
@@ -183,14 +183,14 @@ export class EmailService {
       await transporter.verify();
       return true;
     } catch (error) {
-      console.error('Email configuration test failed:', error);
+      console.error("Email configuration test failed:", error);
       return false;
     }
   }
 
   static async sendTestEmail(
     userEmail: string,
-    userName: string
+    userName: string,
   ): Promise<boolean> {
     try {
       const config = await this.getEmailConfig();
@@ -203,7 +203,7 @@ export class EmailService {
       const mailOptions = {
         from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
         to: userEmail,
-        subject: 'Test Email - Veltex Services',
+        subject: "Test Email - Veltex Services",
         html: `
           <h2>Email Configuration Test</h2>
           <p>Hi ${userName},</p>
@@ -217,24 +217,24 @@ export class EmailService {
       await transporter.sendMail(mailOptions);
       return true;
     } catch (error) {
-      console.error('Failed to send test email:', error);
+      console.error("Failed to send test email:", error);
       return false;
     }
   }
 
   static async sendPaymentFailureEmail(
-    data: PaymentFailureEmailData
+    data: PaymentFailureEmailData,
   ): Promise<boolean> {
     try {
-      console.log('📧 EmailService: Sending payment failure email...');
+      console.log("📧 EmailService: Sending payment failure email...");
       const config = await this.getEmailConfig();
       if (!config) {
-        console.error('❌ EmailService: Email configuration not available');
+        console.error("❌ EmailService: Email configuration not available");
         return false;
       }
 
       if (!config.enable_email_notifications) {
-        console.log('⚠️ EmailService: Email notifications are disabled');
+        console.log("⚠️ EmailService: Email notifications are disabled");
         return true;
       }
 
@@ -251,31 +251,31 @@ export class EmailService {
 
       await transporter.sendMail(mailOptions);
       console.log(
-        `✅ EmailService: Payment failure email sent successfully to ${data.userEmail}`
+        `✅ EmailService: Payment failure email sent successfully to ${data.userEmail}`,
       );
       return true;
     } catch (error) {
       console.error(
-        '❌ EmailService: Failed to send payment failure email:',
-        error
+        "❌ EmailService: Failed to send payment failure email:",
+        error,
       );
       return false;
     }
   }
 
   static async sendCancellationEmail(
-    data: CancellationEmailData
+    data: CancellationEmailData,
   ): Promise<boolean> {
     try {
-      console.log('📧 EmailService: Sending cancellation email...');
+      console.log("📧 EmailService: Sending cancellation email...");
       const config = await this.getEmailConfig();
       if (!config) {
-        console.error('❌ EmailService: Email configuration not available');
+        console.error("❌ EmailService: Email configuration not available");
         return false;
       }
 
       if (!config.enable_email_notifications) {
-        console.log('⚠️ EmailService: Email notifications are disabled');
+        console.log("⚠️ EmailService: Email notifications are disabled");
         return true;
       }
 
@@ -292,31 +292,31 @@ export class EmailService {
 
       await transporter.sendMail(mailOptions);
       console.log(
-        `✅ EmailService: Cancellation email sent successfully to ${data.userEmail}`
+        `✅ EmailService: Cancellation email sent successfully to ${data.userEmail}`,
       );
       return true;
     } catch (error) {
       console.error(
-        '❌ EmailService: Failed to send cancellation email:',
-        error
+        "❌ EmailService: Failed to send cancellation email:",
+        error,
       );
       return false;
     }
   }
 
   static async sendEnhancedCancellationEmail(
-    data: EnhancedCancellationEmailData
+    data: EnhancedCancellationEmailData,
   ): Promise<boolean> {
     try {
-      console.log('📧 EmailService: Sending enhanced cancellation email...');
+      console.log("📧 EmailService: Sending enhanced cancellation email...");
       const config = await this.getEmailConfig();
       if (!config) {
-        console.error('❌ EmailService: Email configuration not available');
+        console.error("❌ EmailService: Email configuration not available");
         return false;
       }
 
       if (!config.enable_email_notifications) {
-        console.log('⚠️ EmailService: Email notifications are disabled');
+        console.log("⚠️ EmailService: Email notifications are disabled");
         return true;
       }
 
@@ -333,31 +333,31 @@ export class EmailService {
 
       await transporter.sendMail(mailOptions);
       console.log(
-        `✅ EmailService: Enhanced cancellation email sent successfully to ${data.userEmail}`
+        `✅ EmailService: Enhanced cancellation email sent successfully to ${data.userEmail}`,
       );
       return true;
     } catch (error) {
       console.error(
-        '❌ EmailService: Failed to send enhanced cancellation email:',
-        error
+        "❌ EmailService: Failed to send enhanced cancellation email:",
+        error,
       );
       return false;
     }
   }
 
   static async sendReactivationEmail(
-    data: ReactivationEmailData
+    data: ReactivationEmailData,
   ): Promise<boolean> {
     try {
-      console.log('📧 EmailService: Sending reactivation email...');
+      console.log("📧 EmailService: Sending reactivation email...");
       const config = await this.getEmailConfig();
       if (!config) {
-        console.error('❌ EmailService: Email configuration not available');
+        console.error("❌ EmailService: Email configuration not available");
         return false;
       }
 
       if (!config.enable_email_notifications) {
-        console.log('⚠️ EmailService: Email notifications are disabled');
+        console.log("⚠️ EmailService: Email notifications are disabled");
         return true;
       }
 
@@ -374,31 +374,31 @@ export class EmailService {
 
       await transporter.sendMail(mailOptions);
       console.log(
-        `✅ EmailService: Reactivation email sent successfully to ${data.userEmail}`
+        `✅ EmailService: Reactivation email sent successfully to ${data.userEmail}`,
       );
       return true;
     } catch (error) {
       console.error(
-        '❌ EmailService: Failed to send reactivation email:',
-        error
+        "❌ EmailService: Failed to send reactivation email:",
+        error,
       );
       return false;
     }
   }
 
   static async sendGracePeriodEmail(
-    data: GracePeriodEmailData
+    data: GracePeriodEmailData,
   ): Promise<boolean> {
     try {
-      console.log('📧 EmailService: Sending grace period email...');
+      console.log("📧 EmailService: Sending grace period email...");
       const config = await this.getEmailConfig();
       if (!config) {
-        console.error('❌ EmailService: Email configuration not available');
+        console.error("❌ EmailService: Email configuration not available");
         return false;
       }
 
       if (!config.enable_email_notifications) {
-        console.log('⚠️ EmailService: Email notifications are disabled');
+        console.log("⚠️ EmailService: Email notifications are disabled");
         return true;
       }
 
@@ -415,31 +415,31 @@ export class EmailService {
 
       await transporter.sendMail(mailOptions);
       console.log(
-        `✅ EmailService: Grace period email sent successfully to ${data.userEmail}`
+        `✅ EmailService: Grace period email sent successfully to ${data.userEmail}`,
       );
       return true;
     } catch (error) {
       console.error(
-        '❌ EmailService: Failed to send grace period email:',
-        error
+        "❌ EmailService: Failed to send grace period email:",
+        error,
       );
       return false;
     }
   }
 
   static async sendTrialEndingEmail(
-    data: TrialEndingEmailData
+    data: TrialEndingEmailData,
   ): Promise<boolean> {
     try {
-      console.log('📧 EmailService: Sending trial ending email...');
+      console.log("📧 EmailService: Sending trial ending email...");
       const config = await this.getEmailConfig();
       if (!config) {
-        console.error('❌ EmailService: Email configuration not available');
+        console.error("❌ EmailService: Email configuration not available");
         return false;
       }
 
       if (!config.enable_email_notifications) {
-        console.log('⚠️ EmailService: Email notifications are disabled');
+        console.log("⚠️ EmailService: Email notifications are disabled");
         return true;
       }
 
@@ -456,13 +456,13 @@ export class EmailService {
 
       await transporter.sendMail(mailOptions);
       console.log(
-        `✅ EmailService: Trial ending email sent successfully to ${data.userEmail}`
+        `✅ EmailService: Trial ending email sent successfully to ${data.userEmail}`,
       );
       return true;
     } catch (error) {
       console.error(
-        '❌ EmailService: Failed to send trial ending email:',
-        error
+        "❌ EmailService: Failed to send trial ending email:",
+        error,
       );
       return false;
     }
@@ -470,18 +470,18 @@ export class EmailService {
 
   static async sendProposalEmail(
     data: ProposalEmailData,
-    pdfBuffer?: Buffer
+    pdfBuffer?: Buffer,
   ): Promise<boolean> {
     try {
-      console.log('📧 EmailService: Sending proposal email...');
+      console.log("📧 EmailService: Sending proposal email...");
       const config = await this.getEmailConfig();
       if (!config) {
-        console.error('❌ EmailService: Email configuration not available');
+        console.error("❌ EmailService: Email configuration not available");
         return false;
       }
 
       if (!config.enable_email_notifications) {
-        console.log('⚠️ EmailService: Email notifications are disabled');
+        console.log("⚠️ EmailService: Email notifications are disabled");
         return true;
       }
 
@@ -501,21 +501,21 @@ export class EmailService {
         mailOptions.attachments = [
           {
             filename: `${data.proposalTitle
-              .replace(/[^a-z0-9]/gi, '_')
+              .replace(/[^a-z0-9]/gi, "_")
               .toLowerCase()}_proposal.pdf`,
             content: pdfBuffer,
-            contentType: 'application/pdf',
+            contentType: "application/pdf",
           },
         ];
       }
 
       await transporter.sendMail(mailOptions);
       console.log(
-        `✅ EmailService: Proposal email sent successfully to ${data.clientEmail}`
+        `✅ EmailService: Proposal email sent successfully to ${data.clientEmail}`,
       );
       return true;
     } catch (error) {
-      console.error('❌ EmailService: Failed to send proposal email:', error);
+      console.error("❌ EmailService: Failed to send proposal email:", error);
       return false;
     }
   }
@@ -528,7 +528,7 @@ export class EmailService {
   private static async sendLifecycleEmail(
     userEmail: string,
     template: { subject: string; html: string; text: string },
-    label: string
+    label: string,
   ): Promise<boolean> {
     try {
       const apiKey = process.env.RESEND_API_KEY;
@@ -540,7 +540,9 @@ export class EmailService {
         return false;
       }
       if (!fromAddress?.trim()) {
-        console.error(`❌ EmailService [${label}]: EMAIL_SENDER_ADDRESS is not set`);
+        console.error(
+          `❌ EmailService [${label}]: EMAIL_SENDER_ADDRESS is not set`,
+        );
         return false;
       }
 
@@ -572,45 +574,45 @@ export class EmailService {
 
   static async sendWelcomeTrialEmail(
     userEmail: string,
-    data: WelcomeTrialEmailData
+    data: WelcomeTrialEmailData,
   ): Promise<boolean> {
     return this.sendLifecycleEmail(
       userEmail,
       EmailTemplates.getWelcomeTrialEmail(data),
-      'welcome_trial'
+      "welcome_trial",
     );
   }
 
   static async sendFirstProposalEmail(
     userEmail: string,
-    data: FirstProposalEmailData
+    data: FirstProposalEmailData,
   ): Promise<boolean> {
     return this.sendLifecycleEmail(
       userEmail,
       EmailTemplates.getFirstProposalEmail(data),
-      'first_proposal'
+      "first_proposal",
     );
   }
 
   static async sendTrialEndingReminderEmail(
     userEmail: string,
-    data: TrialEndingReminderEmailData
+    data: TrialEndingReminderEmailData,
   ): Promise<boolean> {
     return this.sendLifecycleEmail(
       userEmail,
       EmailTemplates.getTrialEndingReminderEmail(data),
-      'trial_ending'
+      "trial_ending",
     );
   }
 
   static async sendTrialExpiredEmail(
     userEmail: string,
-    data: TrialExpiredEmailData
+    data: TrialExpiredEmailData,
   ): Promise<boolean> {
     return this.sendLifecycleEmail(
       userEmail,
       EmailTemplates.getTrialExpiredEmail(data),
-      'trial_expired'
+      "trial_expired",
     );
   }
 
@@ -618,51 +620,53 @@ export class EmailService {
 
   static async sendEnhancedProposalEmail(
     data: EnhancedProposalEmailData,
-    pdfBuffer?: Buffer
+    pdfBuffer?: Buffer,
   ): Promise<boolean> {
     try {
-      console.log('📧 EmailService: Sending enhanced proposal email (Resend)...');
+      console.log(
+        "📧 EmailService: Sending enhanced proposal email (Resend)...",
+      );
+      console.log("📧 EmailService: Data:", data);
 
       const apiKey = process.env.RESEND_API_KEY;
       const fromName = process.env.EMAIL_SENDER_NAME;
       const fromAddress = process.env.EMAIL_SENDER_ADDRESS;
 
       if (!apiKey?.trim()) {
-        console.error('❌ EmailService: RESEND_API_KEY is not set');
+        console.error("❌ EmailService: RESEND_API_KEY is not set");
         return false;
       }
       if (!fromAddress?.trim()) {
-        console.error('❌ EmailService: EMAIL_SENDER_ADDRESS is not set');
+        console.error("❌ EmailService: EMAIL_SENDER_ADDRESS is not set");
         return false;
       }
 
       const config = await this.getEmailConfig();
       if (!config) {
-        console.error('❌ EmailService: Email configuration not available');
+        console.error("❌ EmailService: Email configuration not available");
         return false;
       }
 
       if (!config.enable_email_notifications) {
-        console.log('⚠️ EmailService: Email notifications are disabled');
+        console.log("⚠️ EmailService: Email notifications are disabled");
         return true;
       }
 
       const resend = new Resend(apiKey);
       const template = EmailTemplates.getEnhancedProposalEmail(data);
 
-      const from =
-        fromName?.trim() ?
-          `"${fromName.trim()}" <${fromAddress.trim()}>`
+      const from = fromName?.trim()
+        ? `"${fromName.trim()}" <${fromAddress.trim()}>`
         : fromAddress.trim();
 
-      const payload: Parameters<Resend['emails']['send']>[0] = {
+      const payload: Parameters<Resend["emails"]["send"]>[0] = {
         from,
         to: data.clientEmail,
         subject: template.subject,
         html: template.html,
         text: template.text ?? undefined,
         headers: {
-          'X-Proposal-Tracking-ID': data.trackingId,
+          "X-Proposal-Tracking-ID": data.trackingId,
         },
       };
 
@@ -676,7 +680,7 @@ export class EmailService {
       if (pdfBuffer) {
         payload.attachments = [
           {
-            filename: `${data.proposalTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_proposal.pdf`,
+            filename: `${data.proposalTitle.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_proposal.pdf`,
             content: pdfBuffer,
           },
         ];
@@ -685,18 +689,18 @@ export class EmailService {
       const { data: sendData, error } = await resend.emails.send(payload);
 
       if (error) {
-        console.error('❌ EmailService: Resend API error:', error);
+        console.error("❌ EmailService: Resend API error:", error);
         return false;
       }
 
       console.log(
-        `✅ EmailService: Enhanced proposal email sent successfully to ${data.clientEmail}${sendData?.id ? ` (id: ${sendData.id})` : ''}`
+        `✅ EmailService: Enhanced proposal email sent successfully to ${data.clientEmail}${sendData?.id ? ` (id: ${sendData.id})` : ""}`,
       );
       return true;
     } catch (error) {
       console.error(
-        '❌ EmailService: Failed to send enhanced proposal email:',
-        error
+        "❌ EmailService: Failed to send enhanced proposal email:",
+        error,
       );
       return false;
     }

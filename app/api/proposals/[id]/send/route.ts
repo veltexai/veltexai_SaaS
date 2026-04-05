@@ -150,7 +150,9 @@ export async function POST(
     const companyName = companyProfile?.company_name || "Veltex AI";
     const senderName = profile?.full_name || user.email || "Team";
     const baseUrl = appUrl;
-    const logoUrl = `${baseUrl}/images/IMG_3800.webp`;
+    // PNG for email: Gmail’s image proxy and desktop clients handle PNG + explicit
+    // dimensions more reliably than WebP (scaling, transparency halos).
+    const logoUrl = `${baseUrl}/images/IMG_3800.png`;
 
     const emailData = {
       clientName: proposal.client_name || "Valued Client",

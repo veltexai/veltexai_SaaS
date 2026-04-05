@@ -158,9 +158,7 @@ export function BasicTemplate({
                     additionalServicesRows={extrasRows}
                   />
                 ) : (
-                  <div className="text-xs sm:text-sm text-muted-foreground">
-                    No content
-                  </div>
+                  <div className="text-xs sm:text-sm text-muted-foreground"></div>
                 )}
               </div>
               <VerticalBar variant="gradientGray" />

@@ -128,7 +128,13 @@ export function ModernCorporateTemplate({
 
       <ProposalTableOfContents templateType="modern_corporate" />
 
-      {content.about || content.commitment || content.whyUs || content.scope || content.addons || content.pricing || content.notes
+      {content.about ||
+      content.commitment ||
+      content.whyUs ||
+      content.scope ||
+      content.addons ||
+      content.pricing ||
+      content.notes
         ? (() => {
             return (
               <>
@@ -145,9 +151,7 @@ export function ModernCorporateTemplate({
                         className={`${montserrat.className}`}
                       />
                     ) : (
-                      <div className="text-sm text-muted-foreground">
-                        No content
-                      </div>
+                      <div className="text-sm text-muted-foreground"></div>
                     )}
                   </div>
                   <Image
@@ -185,9 +189,7 @@ export function ModernCorporateTemplate({
                           className={`${montserrat.className}`}
                         />
                       ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No content
-                        </div>
+                        <div className="text-sm text-muted-foreground"></div>
                       )}
                     </div>
                     <div className="mt-10">
@@ -199,9 +201,7 @@ export function ModernCorporateTemplate({
                           className={`${montserrat.className}`}
                         />
                       ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No content
-                        </div>
+                        <div className="text-sm text-muted-foreground"></div>
                       )}
                     </div>
                   </div>
@@ -259,9 +259,7 @@ export function ModernCorporateTemplate({
                         }
                       />
                     ) : (
-                      <div className="text-sm text-muted-foreground">
-                        No content
-                      </div>
+                      <div className="text-sm text-muted-foreground"></div>
                     )}
                   </div>
                   {!hasAdditionalScopePages && (
@@ -274,9 +272,7 @@ export function ModernCorporateTemplate({
                           className={`${montserrat.className}`}
                         />
                       ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No content
-                        </div>
+                        <div className="text-sm text-muted-foreground"></div>
                       )}
                     </div>
                   )}
@@ -316,16 +312,17 @@ export function ModernCorporateTemplate({
                               isContinuation
                             />
                           </div>
-                          {isLastScopeOverflowPage && content.addons?.content && (
-                            <div className="max-w-[95%] mt-6">
-                              <Addons
-                                title={content.addons.title ?? "Add-ons"}
-                                content={content.addons.content}
-                                templateType="modern_corporate"
-                                className={`${montserrat.className}`}
-                              />
-                            </div>
-                          )}
+                          {isLastScopeOverflowPage &&
+                            content.addons?.content && (
+                              <div className="max-w-[95%] mt-6">
+                                <Addons
+                                  title={content.addons.title ?? "Add-ons"}
+                                  content={content.addons.content}
+                                  templateType="modern_corporate"
+                                  className={`${montserrat.className}`}
+                                />
+                              </div>
+                            )}
                           <VerticalBar variant="gradientGray" />
                           <HorizontalBar variant="gradientGray" />
                           <PoweredBy colorLogo="gray" isRight />
@@ -347,7 +344,9 @@ export function ModernCorporateTemplate({
                   <div className="max-w-[95%] sm:space-y-8 space-y-4">
                     {content.pricing?.content ? (
                       <ServiceQuotePricing
-                        title={content.pricing.title ?? "Service Quote & Pricing"}
+                        title={
+                          content.pricing.title ?? "Service Quote & Pricing"
+                        }
                         content={content.pricing.content}
                         description={content.pricing.description}
                         templateType="modern_corporate"

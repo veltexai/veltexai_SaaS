@@ -122,9 +122,7 @@ export function LuxuryEliteTemplate({
                         className={`${arvo.className}`}
                       />
                     ) : (
-                      <div className="text-sm text-muted-foreground">
-                        No content
-                      </div>
+                      <div className="text-sm text-muted-foreground"></div>
                     )}
                   </div>
                   <Image
@@ -159,9 +157,7 @@ export function LuxuryEliteTemplate({
                           className={`${montserrat.className}`}
                         />
                       ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No content
-                        </div>
+                        <div className="text-sm text-muted-foreground"></div>
                       )}
                     </div>
                     <div className="sm:mt-10 mt-4">
@@ -173,9 +169,7 @@ export function LuxuryEliteTemplate({
                           className={`${montserrat.className} relative z-20`}
                         />
                       ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No content
-                        </div>
+                        <div className="text-sm text-muted-foreground"></div>
                       )}
                     </div>
                   </div>
@@ -233,9 +227,7 @@ export function LuxuryEliteTemplate({
                           }
                         />
                       ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No content
-                        </div>
+                        <div className="text-sm text-muted-foreground"></div>
                       )}
                     </div>
                     {!hasAdditionalScopePages && (
@@ -248,9 +240,7 @@ export function LuxuryEliteTemplate({
                             className={`${montserrat.className}`}
                           />
                         ) : (
-                          <div className="text-sm text-muted-foreground">
-                            No content
-                          </div>
+                          <div className="text-sm text-muted-foreground"></div>
                         )}
                       </div>
                     )}

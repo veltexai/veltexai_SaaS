@@ -795,7 +795,7 @@ export class EmailTemplates {
   // ─── Lifecycle / automation templates ──────────────────────────────────────
 
   static getWelcomeTrialEmail(data: WelcomeTrialEmailData): EmailTemplate {
-    const subject = 'Your Veltex AI trial is ready';
+    const subject = "Your Veltex AI trial is ready";
     const text = `Hi,\n\nYour Veltex AI free trial is active.\n\nYou can create up to 3 proposals with no credit card required.\n\nMost users create their first proposal in under 5 minutes.\n\nLogin here:\n${data.loginUrl}\n\nIf you need help, reply to this email.\n\n– Veltex AI`;
 
     const html = `
@@ -836,7 +836,7 @@ export class EmailTemplates {
   }
 
   static getFirstProposalEmail(data: FirstProposalEmailData): EmailTemplate {
-    const subject = 'Your first proposal is ready';
+    const subject = "Your first proposal is ready";
     const text = `Nice work!\n\nMost cleaning companies use Veltex AI to create multiple proposals per week.\n\nYour free trial includes 3 proposals. Upgrade anytime to keep using your templates and branding.\n\nUpgrade here:\n${data.upgradeUrl}\n\nLet me know if you need help.\n\n– Veltex AI`;
 
     const html = `
@@ -881,7 +881,7 @@ export class EmailTemplates {
   static getTrialEndingReminderEmail(
     data: TrialEndingReminderEmailData,
   ): EmailTemplate {
-    const subject = 'Your free trial ends soon';
+    const subject = "Your free trial ends soon";
     const text = `Your Veltex AI trial will end soon.\n\nYou can upgrade to keep creating proposals and using your saved templates.\n\nPlans start at $19.99/month.\n\nUpgrade here:\n${data.upgradeUrl}\n\nMost users upgrade after their first few proposals.\n\n– Veltex AI`;
 
     const html = `
@@ -922,7 +922,7 @@ export class EmailTemplates {
   }
 
   static getTrialExpiredEmail(data: TrialExpiredEmailData): EmailTemplate {
-    const subject = 'Still need proposals?';
+    const subject = "Still need proposals?";
     const text = `If you're still bidding on cleaning contracts, Veltex AI can save hours every week.\n\nYou can restart your access anytime.\n\nUpgrade here:\n${data.upgradeUrl}\n\n– Veltex AI`;
 
     const html = `
@@ -984,6 +984,12 @@ export class EmailTemplates {
     const primaryColor =
       data.brandingEnabled && data.primaryColor ? data.primaryColor : "#f8fafc";
 
+    const logoAlt = data.companyName
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
     const text = `Dear ${data.clientName},\n\n${data.message}\n\n${data.proposalViewUrl ? `You can view the full proposal online at: ${data.proposalViewUrl}` : "Please find the proposal attached to this email."}\n\nBest regards,\n${data.senderName}\n${data.companyName}`;
 
     const html = `
@@ -998,7 +1004,6 @@ export class EmailTemplates {
           .header { background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%); color: black; padding: 40px 30px; text-align: center; }
           .header h1 { margin: 0; font-size: 28px; font-weight: 300; }
           .header .company { font-size: 16px; opacity: 0.9; margin-top: 8px; }
-          .logo { max-height: 60px; width: auto; height: auto; margin-bottom: 20px; display: inline-block; }
           .content { padding: 40px 30px; }
           .greeting { font-size: 18px; margin-bottom: 20px; color: ${primaryColor}; }
           .message { background: #f8fafc; padding: 25px; margin: 25px 0; border-radius: 8px; border-left: 4px solid ${primaryColor}; }
@@ -1022,7 +1027,20 @@ export class EmailTemplates {
           <div class="header">
             ${
               logoUrl
-                ? `<img src="${logoUrl}" alt="${data.companyName}" class="logo" style="max-height:60px;width:auto;height:auto;margin-bottom:20px;" />`
+                ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 20px auto;border-collapse:collapse;">
+              <tr>
+                <td align="center" style="padding:0;line-height:0;mso-line-height-rule:exactly;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;background-color:#ffffff;border-radius:8px;">
+                    <tr>
+                      <td style="padding:10px 14px;line-height:0;mso-line-height-rule:exactly;">
+                        <!-- 2× intrinsic size (348×120) displayed at 174×60 for sharp rendering in Gmail and other clients -->
+                        <img src="${logoUrl}" alt="${logoAlt}" width="348" height="120" border="0" style="display:block;border:0;outline:none;text-decoration:none;width:174px;height:60px;margin:0;padding:0;" />
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>`
                 : ""
             }
             <h1>📋 ${data.proposalTitle}</h1>

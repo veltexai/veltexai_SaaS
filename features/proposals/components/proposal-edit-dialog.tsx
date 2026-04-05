@@ -110,6 +110,7 @@ export function ProposalEditDialog({
         areas_excluded: [],
         special_services: [],
         frequency_details: {},
+        area_notes: {},
         special_notes: "",
       },
       special_requirements: {
@@ -218,6 +219,10 @@ export function ProposalEditDialog({
                 scope.frequency_details &&
                 typeof scope.frequency_details === "object"
                   ? scope.frequency_details
+                  : {},
+              area_notes:
+                scope.area_notes && typeof scope.area_notes === "object"
+                  ? scope.area_notes
                   : {},
               special_notes:
                 typeof scope.special_notes === "string"
