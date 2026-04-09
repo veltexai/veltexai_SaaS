@@ -42,6 +42,7 @@ import { ServiceSpecificSection } from "@/features/proposals/components/new/serv
 import { PricingSection } from "@/features/proposals/components/new/pricing-section";
 import { EnhancedFacilitySection } from "@/features/proposals/components/new/enhanced-facility-section";
 import { validateProposalWithServiceData } from "@/lib/validations/proposal";
+import { syncServiceScopeIntoGeneratedContent } from "@/lib/proposals/sync-service-scope-to-generated-content";
 import { getValidationMessage } from "@/features/proposals";
 import { CalculatedPricing } from "../types/pricing";
 import { ServiceType } from "../types/proposal";
@@ -276,6 +277,21 @@ export function ProposalEditDialog({
         };
       }
 
+      const baseGeneratedContent =
+        typeof validatedData.generated_content === "string"
+          ? validatedData.generated_content
+          : proposal.generated_content || "";
+
+      const generatedContentSynced = syncServiceScopeIntoGeneratedContent(
+        baseGeneratedContent,
+        {
+          service_scope: validatedData.service_scope,
+          service_frequency:
+            validatedData.global_inputs?.service_frequency ?? "one-time",
+          pricing_data: validatedData.pricing_data,
+        },
+      );
+
       // Prepare base update payload with only guaranteed fields (keep proposal's template)
       const updatePayload: any = {
         title: validatedData.title,
@@ -293,7 +309,7 @@ export function ProposalEditDialog({
         service_specific_data: validatedData.service_specific_data,
         pricing_enabled: validatedData.pricing_enabled,
         pricing_data: validatedData.pricing_data,
-        generated_content: validatedData.generated_content,
+        generated_content: generatedContentSynced,
         status: validatedData.status,
         updated_at: new Date().toISOString(),
       };
@@ -305,9 +321,8 @@ export function ProposalEditDialog({
       if (proposal.traffic_analysis !== undefined) {
         updatePayload.traffic_analysis = validatedData.traffic_analysis;
       }
-      if (proposal.service_scope !== undefined) {
-        updatePayload.service_scope = validatedData.service_scope;
-      }
+      // Always persist structured scope (column may be null on legacy rows; still save edits)
+      updatePayload.service_scope = validatedData.service_scope;
       if (proposal.special_requirements !== undefined) {
         updatePayload.special_requirements = validatedData.special_requirements;
       }

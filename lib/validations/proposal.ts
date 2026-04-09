@@ -70,15 +70,45 @@ export const trafficAnalysisSchema = z.object({
   traffic_level: z.enum(['light', 'medium', 'heavy']).optional(),
 });
 
+/** Coerce DB/UI maps so RHF + zodResolver never block save (undefined/null notes, etc.) */
+function normalizeStringRecord(
+  val: unknown,
+): Record<string, string> {
+  if (!val || typeof val !== 'object' || Array.isArray(val)) return {};
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
+    if (v == null) out[k] = '';
+    else out[k] = typeof v === 'string' ? v : String(v);
+  }
+  return out;
+}
+
+function normalizeFrequencyDetails(val: unknown): Record<string, unknown> {
+  if (!val || typeof val !== 'object' || Array.isArray(val)) return {};
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
+    if (v == null) continue;
+    out[k] = typeof v === 'string' || typeof v === 'number' ? v : String(v);
+  }
+  return out;
+}
+
 // Enhanced service scope schema
 export const serviceScopeSchema = z.object({
   areas_included: z.array(z.string()).default([]),
   areas_excluded: z.array(z.string()).default([]),
   special_services: z.array(z.string()).default([]),
-  frequency_details: z.record(z.any()).default({}),
-  area_notes: z.record(z.string()).default({}),
+  frequency_details: z
+    .preprocess((v) => normalizeFrequencyDetails(v), z.record(z.any()))
+    .default({}),
+  area_notes: z
+    .preprocess((v) => normalizeStringRecord(v), z.record(z.string()))
+    .default({}),
   // kept for backward compatibility with old proposals
-  special_notes: z.string().optional(),
+  special_notes: z.preprocess(
+    (v) => (v == null ? '' : String(v)),
+    z.string().default(''),
+  ),
 });
 
 // Enhanced special requirements schema

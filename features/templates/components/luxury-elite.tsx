@@ -208,7 +208,7 @@ export function LuxuryEliteTemplate({
                 {/* Page six - Scope of Service (with PDF pagination support) */}
                 <div
                   id="page-six"
-                  className="relative sm:aspect-[1/1.4] h-full bg-white overflow-hidden sm:pl-16 pl-12 sm:!pt-[38px] pt-10 sm:pb-0 pb-10"
+                  className="relative h-full bg-white overflow-hidden sm:pl-16 pl-12 sm:!pt-[38px] pt-10 pb-10"
                 >
                   <LuxuryEliteBackgroundTitle className="z-10 absolute sm:-top-[20px] -top-[10px] sm:-left-[20px] -left-[10px] sm:w-[353px] w-[253px] sm:h-[350px] h-[250px]" />
                   <div className="gap-6 max-w-[95%]">

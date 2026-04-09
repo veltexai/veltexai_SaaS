@@ -23,7 +23,6 @@ import { cn } from "@/lib/utils";
 import z from "zod";
 import { useUserTier } from "@/features/proposals/hooks/use-user-tier";
 import { AiTone } from "@/types/proposal";
-import { FieldPath } from "react-hook-form";
 import { scrollToTopOnMobile } from "@/lib/scroll";
 import { FormNavigation, TemplateSelectionSection } from "@/features/proposals";
 
@@ -260,7 +259,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
           // Set form errors for service-specific fields
           error.errors.forEach((err) => {
             const fieldPath = `service_specific_data.${err.path.join(".")}`;
-            form.setError(fieldPath as FieldPath<ProposalFormData>, {
+            form.setError(fieldPath as any, {
               type: "manual",
               message: err.message,
             });
