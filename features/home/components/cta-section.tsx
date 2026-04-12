@@ -5,6 +5,7 @@ import React from "react";
 import { fadeInUp } from "@/lib/animations/variants";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 const CTASection = () => {
   return (
@@ -23,13 +24,15 @@ const CTASection = () => {
             Join hundreds of cleaning companies saving time and winning more
             business
           </p>
-          <Button
-            size="lg"
-            className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
-          >
-            Request Demo
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+          <Link href="/auth/login">
+            <Button
+              size="lg"
+              className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
+            >
+              Request Demo
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
           <p className="text-sm text-blue-100/80 mt-4">
             7-day free trial with 3 proposals • No credit card required to start
           </p>
