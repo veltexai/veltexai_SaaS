@@ -22,10 +22,7 @@ import { AREA_FREQUENCY_OPTIONS } from "@/features/proposals/constants/area-freq
 import { Clock, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  AREAS_INCLUDED_OPTIONS,
-  DEFAULT_AREA_FREQUENCY,
-} from "../../../constants/facility-options";
+import { AREAS_INCLUDED_OPTIONS } from "../../../constants/facility-options";
 import { useAreaFrequency } from "../../../hooks/use-area-frequency";
 
 interface ServiceScopeCardProps {
@@ -37,6 +34,7 @@ export function ServiceScopeCard({ serviceType }: ServiceScopeCardProps) {
   const {
     areasIncluded,
     frequencyDetails,
+    defaultAreaFrequency,
     areaNotes,
     handleToggleArea,
     handleAreaFrequencyChange,
@@ -120,7 +118,7 @@ export function ServiceScopeCard({ serviceType }: ServiceScopeCardProps) {
                     <div className="flex items-center gap-3 justify-between w-full">
                       <span className="flex-1 text-sm font-medium">{area}</span>
                       <Select
-                        value={frequencyDetails[area] ?? DEFAULT_AREA_FREQUENCY}
+                        value={frequencyDetails[area] ?? defaultAreaFrequency}
                         onValueChange={(value) =>
                           handleAreaFrequencyChange(area, value)
                         }

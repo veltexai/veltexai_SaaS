@@ -15,6 +15,32 @@ export const AREA_FREQUENCY_OPTIONS = [
 export type AreaFrequencyValue =
   (typeof AREA_FREQUENCY_OPTIONS)[number]["value"];
 
+/** Aligns with `global_inputs.service_frequency` / `serviceFrequencySchema` (+ UI-only `6x-week`). */
+const GLOBAL_SERVICE_TO_AREA_FREQUENCY = {
+  "one-time": "on_demand",
+  "1x-month": "monthly",
+  "bi-weekly": "biweekly",
+  weekly: "1x_weekly",
+  "2x-week": "2x_weekly",
+  "3x-week": "3x_weekly",
+  "5x-week": "5x_weekly",
+  "6x-week": "6x_weekly",
+  daily: "daily",
+} as const satisfies Record<string, AreaFrequencyValue>;
+
+const AREA_FREQUENCY_FALLBACK: AreaFrequencyValue = "1x_weekly";
+
+export function globalServiceFrequencyToAreaFrequency(
+  global: string | undefined | null,
+): AreaFrequencyValue {
+  if (global == null || global === "") return AREA_FREQUENCY_FALLBACK;
+  const mapped =
+    GLOBAL_SERVICE_TO_AREA_FREQUENCY[
+      global as keyof typeof GLOBAL_SERVICE_TO_AREA_FREQUENCY
+    ];
+  return mapped ?? AREA_FREQUENCY_FALLBACK;
+}
+
 export const ON_DEMAND_FREQUENCY: AreaFrequencyValue = "on_demand";
 
 export function getAreaFrequencyLabel(value: string): string {

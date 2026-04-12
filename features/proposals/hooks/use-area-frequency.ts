@@ -2,11 +2,13 @@
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import type { ProposalFormData } from "@/lib/validations/proposal";
-import { DEFAULT_AREA_FREQUENCY } from "../constants/facility-options";
+import { globalServiceFrequencyToAreaFrequency } from "../constants/area-frequency";
 
 interface UseAreaFrequencyReturn {
   areasIncluded: string[];
   frequencyDetails: Record<string, string>;
+  /** Per-area default from global Service Frequency; used for new areas and Select fallback. */
+  defaultAreaFrequency: string;
   areaNotes: Record<string, string>;
   customAreaInput: string;
   showCustomAreaInput: boolean;
@@ -33,6 +35,10 @@ export function useAreaFrequency(): UseAreaFrequencyReturn {
     {};
   const areaNotes: Record<string, string> =
     (form.watch("service_scope.area_notes") as Record<string, string>) ?? {};
+  const globalServiceFrequency = form.watch("global_inputs.service_frequency");
+  const defaultAreaFrequency = globalServiceFrequencyToAreaFrequency(
+    globalServiceFrequency,
+  );
 
   const updateAreasForm = (
     areas: string[],
@@ -60,7 +66,7 @@ export function useAreaFrequency(): UseAreaFrequencyReturn {
         restNotes,
       );
     } else {
-      details[area] = DEFAULT_AREA_FREQUENCY;
+      details[area] = defaultAreaFrequency;
       updateAreasForm([...areasIncluded, area], details, notes);
     }
   };
@@ -92,7 +98,7 @@ export function useAreaFrequency(): UseAreaFrequencyReturn {
     if (!name || areasIncluded.includes(name)) return;
     updateAreasForm([...areasIncluded, name], {
       ...frequencyDetails,
-      [name]: DEFAULT_AREA_FREQUENCY,
+      [name]: defaultAreaFrequency,
     });
     setCustomAreaInput("");
     setShowCustomAreaInput(false);
@@ -102,7 +108,7 @@ export function useAreaFrequency(): UseAreaFrequencyReturn {
     const newAreas = [...new Set([...areasIncluded, ...presetOptions])];
     const details = { ...frequencyDetails };
     for (const area of presetOptions) {
-      if (!details[area]) details[area] = DEFAULT_AREA_FREQUENCY;
+      if (!details[area]) details[area] = defaultAreaFrequency;
     }
     updateAreasForm(newAreas, details);
   };
@@ -122,6 +128,7 @@ export function useAreaFrequency(): UseAreaFrequencyReturn {
   return {
     areasIncluded,
     frequencyDetails,
+    defaultAreaFrequency,
     areaNotes,
     customAreaInput,
     showCustomAreaInput,
