@@ -95,6 +95,11 @@ const PricingSection = () => {
           </div> */}
         </motion.div>
 
+        <p className="text-center text-lg text-gray-700 max-w-2xl mx-auto mb-10 px-2">
+          Most cleaning companies recover their subscription with just one new
+          contract
+        </p>
+
         <motion.div
           className="grid md:grid-cols-3 gap-7 max-w-5xl mx-auto"
           initial="initial"
@@ -149,7 +154,7 @@ const PricingSection = () => {
                         }`}
                         size="lg"
                       >
-                        Start 7-Day Free Trial
+                        Start Free Trial
                       </Button>
                     </Link>
                     <p className="text-xs text-center text-gray-500 mt-3">

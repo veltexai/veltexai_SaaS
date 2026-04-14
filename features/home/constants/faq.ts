@@ -10,6 +10,16 @@ export const FAQ_ITEMS: FAQItem[] = [
       "Veltex AI is a proposal generator built specifically for cleaning companies designed by a real business owner with over 40 years of experience in the field. It helps you create professional janitorial proposals, scopes of work, and pricing in minutes instead of hours.",
   },
   {
+    question: "How fast can I create a proposal?",
+    answer:
+      "Most teams complete a polished proposal in minutes. You enter job details, Veltex AI drafts scope and pricing, and you refine before you send—without starting from a blank page.",
+  },
+  {
+    question: "Will this help me win more bids?",
+    answer:
+      "It helps you respond faster with clear, professional proposals and consistent pricing—so you look credible and don’t leave money on the table. Many users say speed and presentation are what move the needle on win rate.",
+  },
+  {
     question: "Do I need a credit card to start?",
     answer:
       "No. You can sign up with email only and create up to 3 proposals for free. A credit card is only required after the free limit.",

@@ -3,7 +3,7 @@ export const PRICE_ITEMS = (billingCycle: "monthly" | "yearly") => [
     name: "Starter",
     price: billingCycle === "monthly" ? 19.99 : 24,
     period: billingCycle === "monthly" ? "/month" : "/month (billed annually)",
-    description: "Small cleaning businesses",
+    description: "Best for solo cleaners & small teams",
     features: [
       "20 proposals per month",
       "Basic AI templates",
@@ -17,7 +17,7 @@ export const PRICE_ITEMS = (billingCycle: "monthly" | "yearly") => [
     name: "Professional",
     price: billingCycle === "monthly" ? 39.99 : 64,
     period: billingCycle === "monthly" ? "/month" : "/month (billed annually)",
-    description: "Growing cleaning companies",
+    description: "Best for growing companies",
     features: [
       "75 proposals per month",
       "All AI templates",
@@ -31,7 +31,7 @@ export const PRICE_ITEMS = (billingCycle: "monthly" | "yearly") => [
     name: "Enterprise",
     price: billingCycle === "monthly" ? 79.99 : 159,
     period: billingCycle === "monthly" ? "/month" : "/month (billed annually)",
-    description: "Large cleaning operations",
+    description: "Best for scaling operations",
     features: [
       "Unlimited proposals",
       "All AI templates",

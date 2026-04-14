@@ -17,24 +17,23 @@ const CTASection = () => {
           viewport={{ once: true }}
           variants={fadeInUp}
         >
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-            Ready to Streamline Your Proposals?
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-balance">
+            Ready to Win More Cleaning Contracts?
           </h2>
-          <p className="text-xl mb-6 text-blue-100">
-            Join hundreds of cleaning companies saving time and winning more
-            business
+          <p className="text-lg sm:text-xl mb-8 text-blue-100 max-w-2xl mx-auto text-pretty">
+            Start your free trial and create your first proposal in minutes.
           </p>
           <Link href="/auth/login">
             <Button
               size="lg"
               className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
             >
-              Request Demo
+              Start Free Trial
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
           <p className="text-sm text-blue-100/80 mt-4">
-            7-day free trial with 3 proposals • No credit card required to start
+            No credit card required
           </p>
         </motion.div>
       </div>

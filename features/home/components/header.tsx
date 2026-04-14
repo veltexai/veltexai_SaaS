@@ -58,7 +58,7 @@ const Header = () => {
               </Link>
               <Link href="/auth/signup">
                 <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                  Get Started
+                  Start Free Trial
                 </Button>
               </Link>
             </div>
@@ -100,7 +100,7 @@ const Header = () => {
                 </Link>
                 <Link href="/auth/signup">
                   <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                    Get Started
+                    Start Free Trial
                   </Button>
                 </Link>
               </div>
