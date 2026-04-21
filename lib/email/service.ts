@@ -12,6 +12,7 @@ import {
   type FirstProposalEmailData,
   type TrialEndingReminderEmailData,
   type TrialExpiredEmailData,
+  type ProposalReminderEmailData,
 } from "./templates";
 
 interface EmailConfig {
@@ -613,6 +614,17 @@ export class EmailService {
       userEmail,
       EmailTemplates.getTrialExpiredEmail(data),
       "trial_expired",
+    );
+  }
+
+  static async sendProposalReminderEmail(
+    userEmail: string,
+    data: ProposalReminderEmailData,
+  ): Promise<boolean> {
+    return this.sendLifecycleEmail(
+      userEmail,
+      EmailTemplates.getProposalReminderEmail(data),
+      "proposal_reminder_24h",
     );
   }
 

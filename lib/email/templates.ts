@@ -92,6 +92,12 @@ export interface TrialExpiredEmailData {
   upgradeUrl: string;
 }
 
+export interface ProposalReminderEmailData {
+  userName: string;
+  createProposalUrl: string;
+  unsubscribeUrl?: string;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface EnhancedProposalEmailData {
@@ -917,6 +923,160 @@ export class EmailTemplates {
       </body>
       </html>
     `;
+
+    return { subject, html, text };
+  }
+
+  static getProposalReminderEmail(
+    data: ProposalReminderEmailData,
+  ): EmailTemplate {
+    const subject = "Your first proposal is just 5 minutes away ⏰";
+    const safeName = (data.userName || "there").trim();
+    const unsubscribeHref = data.unsubscribeUrl || "#";
+    const currentYear = new Date().getFullYear();
+
+    const text = `Hi ${safeName},
+
+We noticed you haven't created your first proposal yet — and that's where Veltex AI really starts to shine.
+
+Most users generate their first professional proposal in under 5 minutes.
+
+Once you do, you'll be able to:
+• See exactly how your proposals look to clients
+• Customize your scope, pricing, and branding
+• Save time on every future bid
+
+Your free trial includes up to 3 proposals, so this is the perfect time to try it out.
+
+Create your first proposal now: ${data.createProposalUrl}
+
+If you have any questions or need help getting started, just reply to this email — happy to help.
+
+– Veltex AI`;
+
+    const html = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" lang="en">
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <title>${subject}</title>
+  </head>
+  <body style='background-color:rgb(243,244,246);font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";padding-top:40px;padding-bottom:40px'>
+    <div style="display:none;overflow:hidden;line-height:1px;opacity:0;max-height:0;max-width:0" data-skip-in-text="true">
+      Your first proposal is just 5 minutes away ⏰
+    </div>
+    <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background-color:rgb(255,255,255);border-radius:8px;max-width:580px;margin-left:auto;margin-right:auto;padding:40px">
+      <tbody>
+        <tr style="width:100%">
+          <td>
+            <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:32px">
+              <tbody>
+                <tr>
+                  <td>
+                    <h1 style="font-size:24px;font-weight:700;color:rgb(17,24,39);margin:0;margin-bottom:8px">
+                      Hi ${safeName},
+                    </h1>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:32px">
+              <tbody>
+                <tr>
+                  <td>
+                    <p style="font-size:16px;color:rgb(55,65,81);line-height:24px;margin:0;margin-bottom:16px">
+                      We noticed you haven&#x27;t created your first proposal yet — and that&#x27;s where
+                      <strong>Veltex AI</strong> really starts to shine.
+                    </p>
+                    <p style="font-size:16px;color:rgb(55,65,81);line-height:24px;margin:0;margin-bottom:24px">
+                      Most users generate their first professional proposal in under <strong>5 minutes</strong>.
+                    </p>
+                    <p style="font-size:16px;color:rgb(55,65,81);line-height:24px;margin:0;margin-bottom:16px">
+                      Once you do, you&#x27;ll be able to:
+                    </p>
+                    <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:24px">
+                      <tbody>
+                        <tr>
+                          <td>
+                            <p style="font-size:16px;color:rgb(55,65,81);line-height:24px;margin:0;margin-bottom:8px">
+                              • See exactly how your proposals look to clients
+                            </p>
+                            <p style="font-size:16px;color:rgb(55,65,81);line-height:24px;margin:0;margin-bottom:8px">
+                              • Customize your scope, pricing, and branding
+                            </p>
+                            <p style="font-size:16px;color:rgb(55,65,81);line-height:24px;margin:0;margin-bottom:16px">
+                              • Save time on every future bid
+                            </p>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <p style="font-size:16px;color:rgb(55,65,81);line-height:24px;margin:0;margin-bottom:24px">
+                      Your free trial includes up to <strong>3 proposals</strong>, so this is the perfect time to try it out.
+                    </p>
+                    <p style="font-size:16px;color:rgb(55,65,81);line-height:24px;margin:0;margin-bottom:24px">
+                      👉 Create your first proposal now:
+                    </p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:32px;text-align:center">
+              <tbody>
+                <tr>
+                  <td align="center">
+                    <a href="${data.createProposalUrl}"
+                       style="background-color:rgb(37,99,235);color:rgb(255,255,255);padding:16px 32px;border-radius:8px;font-size:16px;font-weight:600;text-decoration:none;display:inline-block;line-height:100%"
+                       target="_blank">
+                      <span style="display:inline-block;line-height:120%">CREATE PROPOSAL</span>
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:32px">
+              <tbody>
+                <tr>
+                  <td>
+                    <p style="font-size:16px;color:rgb(55,65,81);line-height:24px;margin:0">
+                      If you have any questions or need help getting started, just reply to this email — happy to help.
+                    </p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:32px">
+              <tbody>
+                <tr>
+                  <td>
+                    <p style="font-size:16px;color:rgb(55,65,81);line-height:24px;margin:0;font-weight:500">
+                      – Veltex AI
+                    </p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-top:1px solid rgb(229,231,235);padding-top:24px">
+              <tbody>
+                <tr>
+                  <td>
+                    <p style="font-size:12px;color:rgb(107,114,128);line-height:16px;margin:0;margin-bottom:8px">
+                      Veltex AI
+                    </p>
+                    <p style="font-size:12px;color:rgb(107,114,128);line-height:16px;margin:0">
+                      <a href="${unsubscribeHref}" style="color:rgb(107,114,128);text-decoration:underline" target="_blank">Unsubscribe</a>
+                      &nbsp;|&nbsp; © ${currentYear} Veltex AI. All rights reserved.
+                    </p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>`;
 
     return { subject, html, text };
   }

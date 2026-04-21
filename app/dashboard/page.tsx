@@ -1,15 +1,15 @@
-import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { getUser } from '@/queries/user';
-import { WelcomeSection } from '@/features/dashboard/components/welcome-section';
-import { DashboardStats } from '@/features/dashboard/components/dashboard-stats';
-import { RecentProposals } from '@/features/dashboard/components/recent-proposals';
-import { QuickActions } from '@/features/dashboard/components/quick-actions';
-import MetaPixelTracker from '@/components/MetaPixelTracker';
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/queries/user";
+import { WelcomeSection } from "@/features/dashboard/components/welcome-section";
+import { DashboardStats } from "@/features/dashboard/components/dashboard-stats";
+import { RecentProposals } from "@/features/dashboard/components/recent-proposals";
+import { QuickActions } from "@/features/dashboard/components/quick-actions";
+import { OnboardingBanner } from "@/features/dashboard/components/onboarding-banner";
+import MetaPixelTracker from "@/components/MetaPixelTracker";
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 interface DashboardStats {
@@ -39,13 +39,13 @@ async function getDashboardData(userId: string) {
 
   // Fetch proposals for stats
   const { data: proposals, error } = await supabase
-    .from('proposals')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .from("proposals")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error('Error fetching proposals:', error);
+    console.error("Error fetching proposals:", error);
     return {
       stats: {
         totalProposals: 0,
@@ -60,10 +60,10 @@ async function getDashboardData(userId: string) {
   // Calculate stats
   const totalProposals = proposals?.length || 0;
   const activeProposals =
-    proposals?.filter((p) => p.status === 'sent' || p.status === 'viewed')
+    proposals?.filter((p) => p.status === "sent" || p.status === "viewed")
       .length || 0;
   const wonProposals =
-    proposals?.filter((p) => p.status === 'accepted').length || 0;
+    proposals?.filter((p) => p.status === "accepted").length || 0;
   const totalValue =
     proposals?.reduce((sum, p) => {
       // Extract total from pricing_data JSON
@@ -90,13 +90,13 @@ async function getUserProfile(userId: string) {
   const supabase = await createClient();
 
   const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('id, full_name, email')
-    .eq('id', userId)
+    .from("profiles")
+    .select("id, full_name, email")
+    .eq("id", userId)
     .single();
 
   if (error) {
-    console.error('Error fetching profile:', error);
+    console.error("Error fetching profile:", error);
     return null;
   }
 
@@ -107,7 +107,7 @@ export default async function DashboardPage() {
   const { user } = await getUser();
 
   if (!user) {
-    redirect('/auth/login');
+    redirect("/auth/login");
   }
 
   const [{ stats, recentProposals }, profile] = await Promise.all([
@@ -115,10 +115,16 @@ export default async function DashboardPage() {
     getUserProfile(user.id),
   ]);
 
+  const firstName = profile?.full_name?.split(" ")[0]?.trim() || null;
+
   return (
     <div className="space-y-6">
       <MetaPixelTracker />
       <WelcomeSection profile={profile} />
+      <OnboardingBanner
+        totalProposals={stats.totalProposals}
+        firstName={firstName}
+      />
       <DashboardStats stats={stats} />
       <RecentProposals proposals={recentProposals} />
       <QuickActions />
