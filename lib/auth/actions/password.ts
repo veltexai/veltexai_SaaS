@@ -43,7 +43,7 @@ export const signIn = validatedAction(signInSchema, async (data) => {
       console.error("Error creating profile entry:", insertError);
     }
   }
-  redirect(`${config.domainName}${AUTH_ROUTES.PROPOSALS}`);
+  redirect(`${config.domainName}${AUTH_ROUTES.DASHBOARD}`);
 });
 
 const signUpSchema = z.object({

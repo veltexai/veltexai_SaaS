@@ -1,10 +1,14 @@
 /**
  * Cron endpoint — runs once per day.
  *
- * Handles three automated lifecycle emails:
+ * Handles four automated lifecycle emails:
  *   1. proposal_reminder_24h — sent 24–72h after signup if the user has 0 proposals
- *   2. trial_ending           — sent when a free-trial user has ≤ 2 days left
- *   3. trial_expired          — sent once after trial_end_at has passed with no subscription
+ *   2. trial_ending          — "2-day notice": trial ends in 24–48 hours
+ *   3. trial_ending_1d       — "final day notice": trial ends in 0–24 hours
+ *   4. trial_expired         — sent once after trial_end_at has passed with no subscription
+ *
+ * Each email_type has its own row in `email_automation_log` with a UNIQUE
+ * (user_id, email_type) constraint, so a user receives each notice at most once.
  *
  * Protect this route by setting CRON_SECRET in your environment and including it
  * in the scheduler request:  Authorization: Bearer <CRON_SECRET>
@@ -48,10 +52,14 @@ export async function GET(request: NextRequest) {
   const results = {
     proposal_reminder_24h: 0,
     trial_ending: 0,
+    trial_ending_1d: 0,
     trial_expired: 0,
     errors: 0,
   };
   const now = Date.now();
+  const nowIso = new Date(now).toISOString();
+  const in24hIso = new Date(now + ONE_DAY_MS).toISOString();
+  const in48hIso = new Date(now + 2 * ONE_DAY_MS).toISOString();
 
   // ── 1. 24h-after-signup reminder (no proposal created) ──────────────────────
   // Target: users who signed up between 24h and 72h ago, still on free_trial,
@@ -130,20 +138,22 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // ── 2. Trial ending reminder ────────────────────────────────────────────────
-  // Target: free_trial users whose trial ends within the next 2 days.
+  // ── 2. Trial ending — 2-day notice ──────────────────────────────────────────
+  // Target: free_trial users whose trial ends in 24–48 hours from now.
   const { data: endingSoon, error: endingError } = await supabase
     .from("profiles")
     .select("id, email")
     .eq("subscription_status", "free_trial")
-    .gt("trial_end_at", new Date().toISOString())
-    .lt("trial_end_at", new Date(now + 2 * ONE_DAY_MS).toISOString());
+    .gt("trial_end_at", in24hIso)
+    .lte("trial_end_at", in48hIso);
 
   if (endingError) {
     console.error("❌ Cron: error querying ending-soon users:", endingError);
   } else if (endingSoon) {
     for (const profile of endingSoon) {
       try {
+        if (!profile.email) continue;
+
         const { data: alreadySent } = await supabase
           .from("email_automation_log")
           .select("id")
@@ -175,7 +185,59 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // ── 3. Trial expired follow-up ──────────────────────────────────────────────
+  // ── 3. Trial ending — final day notice ──────────────────────────────────────
+  // Target: free_trial users whose trial ends within the next 24 hours.
+  // Fires independently from `trial_ending` via its own email_type so each
+  // user gets the 2-day notice AND the 1-day notice (at most once each).
+  const { data: endingToday, error: endingTodayError } = await supabase
+    .from("profiles")
+    .select("id, email")
+    .eq("subscription_status", "free_trial")
+    .gt("trial_end_at", nowIso)
+    .lte("trial_end_at", in24hIso);
+
+  if (endingTodayError) {
+    console.error(
+      "❌ Cron: error querying final-day users:",
+      endingTodayError,
+    );
+  } else if (endingToday) {
+    for (const profile of endingToday) {
+      try {
+        if (!profile.email) continue;
+
+        const { data: alreadySent } = await supabase
+          .from("email_automation_log")
+          .select("id")
+          .eq("user_id", profile.id)
+          .eq("email_type", "trial_ending_1d")
+          .maybeSingle();
+
+        if (alreadySent) continue;
+
+        const sent = await EmailService.sendTrialEndingFinalDayEmail(
+          profile.email,
+          { upgradeUrl: UPGRADE_URL },
+        );
+
+        if (sent) {
+          await supabase.from("email_automation_log").insert({
+            user_id: profile.id,
+            email_type: "trial_ending_1d",
+          });
+          results.trial_ending_1d++;
+        }
+      } catch (err) {
+        console.error(
+          `❌ Cron: trial_ending_1d email failed for ${profile.id}:`,
+          err,
+        );
+        results.errors++;
+      }
+    }
+  }
+
+  // ── 4. Trial expired follow-up ──────────────────────────────────────────────
   // Target: free_trial users whose trial_end_at is in the past (expired).
   const { data: expired, error: expiredError } = await supabase
     .from("profiles")

@@ -88,6 +88,10 @@ export interface TrialEndingReminderEmailData {
   upgradeUrl: string;
 }
 
+export interface TrialEndingFinalDayEmailData {
+  upgradeUrl: string;
+}
+
 export interface TrialExpiredEmailData {
   upgradeUrl: string;
 }
@@ -917,6 +921,54 @@ export class EmailTemplates {
             <div class="highlight">Plans start at <strong>$19.99/month</strong>.</div>
             <p><a href="${data.upgradeUrl}" class="cta">Upgrade Now</a></p>
             <p>Most users upgrade after their first few proposals.</p>
+          </div>
+          <div class="footer"><p>– Veltex AI</p></div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return { subject, html, text };
+  }
+
+  static getTrialEndingFinalDayEmail(
+    data: TrialEndingFinalDayEmailData,
+  ): EmailTemplate {
+    const subject = "Last day of your Veltex AI trial ⏳";
+    const text = `Your Veltex AI free trial ends in less than 24 hours.\n\nUpgrade today to keep your templates, branding, and saved proposals — and continue generating new ones without interruption.\n\nPlans start at $19.99/month.\n\nUpgrade here:\n${data.upgradeUrl}\n\nAfter your trial ends, you won't be able to create or send new proposals until you upgrade.\n\n– Veltex AI`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Last day of your Veltex AI trial</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.7; color: #333; margin: 0; padding: 0; background: #f5f5f5; }
+          .container { max-width: 560px; margin: 0 auto; background: #fff; }
+          .header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; padding: 32px 30px; text-align: center; }
+          .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+          .header .subtitle { margin: 8px 0 0; font-size: 14px; opacity: 0.9; }
+          .body { padding: 36px 30px; }
+          .body p { margin: 0 0 16px; }
+          .highlight { background: #fef2f2; border-left: 4px solid #ef4444; padding: 14px 16px; border-radius: 0 6px 6px 0; margin: 20px 0; }
+          .cta { display: inline-block; margin: 12px 0 20px; padding: 13px 28px; background: #dc2626; color: #fff !important; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 15px; }
+          .footer { padding: 20px 30px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 13px; }
+          .fine-print { font-size: 13px; color: #6b7280; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Your trial ends in less than 24 hours</h1>
+            <p class="subtitle">Upgrade now to keep creating proposals</p>
+          </div>
+          <div class="body">
+            <p>This is a quick heads-up: your Veltex AI free trial ends within the next <strong>24 hours</strong>.</p>
+            <p>Upgrade today to keep your templates, branding, and saved proposals — and continue generating new ones without interruption.</p>
+            <div class="highlight">Plans start at <strong>$19.99/month</strong>. Cancel anytime.</div>
+            <p><a href="${data.upgradeUrl}" class="cta">Upgrade Now</a></p>
+            <p class="fine-print">After your trial ends, you won&#x27;t be able to create or send new proposals until you upgrade.</p>
           </div>
           <div class="footer"><p>– Veltex AI</p></div>
         </div>

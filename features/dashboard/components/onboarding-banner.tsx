@@ -58,9 +58,9 @@ export function OnboardingBanner({
     }
   };
 
-  if (!mounted) return null;
-  if (totalProposals > 0) return null;
-  if (dismissed) return null;
+  // if (!mounted) return null;
+  // if (totalProposals > 0) return null;
+  // if (dismissed) return null;
 
   const greeting = firstName ? `Welcome, ${firstName}!` : "Welcome!";
 

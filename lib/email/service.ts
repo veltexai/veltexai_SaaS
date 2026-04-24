@@ -11,6 +11,7 @@ import {
   type WelcomeTrialEmailData,
   type FirstProposalEmailData,
   type TrialEndingReminderEmailData,
+  type TrialEndingFinalDayEmailData,
   type TrialExpiredEmailData,
   type ProposalReminderEmailData,
 } from "./templates";
@@ -603,6 +604,17 @@ export class EmailService {
       userEmail,
       EmailTemplates.getTrialEndingReminderEmail(data),
       "trial_ending",
+    );
+  }
+
+  static async sendTrialEndingFinalDayEmail(
+    userEmail: string,
+    data: TrialEndingFinalDayEmailData,
+  ): Promise<boolean> {
+    return this.sendLifecycleEmail(
+      userEmail,
+      EmailTemplates.getTrialEndingFinalDayEmail(data),
+      "trial_ending_1d",
     );
   }
 
