@@ -1,42 +1,40 @@
-'use client';
+"use client";
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   CreditCard,
   Calendar,
   TrendingUp,
   AlertCircle,
   Gift,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { PricingPlans } from '@/features/pricing/components/pricing-plans';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { SubscriptionPlan } from '@/types/database';
+} from "lucide-react";
+import { toast } from "sonner";
+import { PricingPlans } from "@/features/pricing/components/pricing-plans";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { SubscriptionPlan } from "@/types/database";
 import {
   UsageData,
   SubscriptionData,
   BillingHistory,
-} from '@/types/subscription';
-import {
-  formatCurrency,
-  formatDate,
-  getDaysRemaining,
-  getStatusColor,
-} from '@/lib/utils';
-import ChangePlanButton from '@/features/billing/components/change-plan';
-import CancelSubscriptionButton from '@/features/billing/components/cancel-subscription';
-import FreeTrialInfoBanner from '@/components/ui/free-trial-info-banner';
-import { trackStartTrial } from '@/lib/meta-pixel';
+} from "@/types/subscription";
+import { formatDate } from "@/lib/utils/date";
+import { formatCurrency } from "@/lib/utils/format";
+import { getDaysRemaining } from "@/lib/utils/date";
+import { getStatusColor } from "@/features/billing/utils/status-colors";
+import ChangePlanButton from "@/features/billing/components/change-plan";
+import CancelSubscriptionButton from "@/features/billing/components/cancel-subscription";
+import FreeTrialInfoBanner from "@/components/ui/free-trial-info-banner";
+import { trackStartTrial } from "@/lib/analytics/meta-pixel";
 
 interface BillingClientProps {
   initialUsage: UsageData | null;
@@ -58,10 +56,10 @@ export function BillingClient({
   // Add state for dynamic data
   const [usage, setUsage] = useState<UsageData | null>(initialUsage);
   const [subscription, setSubscription] = useState<SubscriptionData | null>(
-    initialSubscription
+    initialSubscription,
   );
   const [billingHistory, setBillingHistory] = useState<BillingHistory[]>(
-    initialBillingHistory
+    initialBillingHistory,
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -70,28 +68,28 @@ export function BillingClient({
     setIsRefreshing(true);
     try {
       // Fetch usage data
-      const usageResponse = await fetch('/api/usage/check');
+      const usageResponse = await fetch("/api/usage/check");
       if (usageResponse.ok) {
         const usageData = await usageResponse.json();
         setUsage(usageData);
       }
 
       // Fetch subscription data
-      const subResponse = await fetch('/api/billing/subscription');
+      const subResponse = await fetch("/api/billing/subscription");
       if (subResponse.ok) {
         const subData = await subResponse.json();
         setSubscription(subData);
       }
 
       // Fetch billing history
-      const historyResponse = await fetch('/api/billing/history');
+      const historyResponse = await fetch("/api/billing/history");
       if (historyResponse.ok) {
         const historyData = await historyResponse.json();
         setBillingHistory(historyData);
       }
     } catch (error) {
-      console.error('Error refreshing billing data:', error);
-      toast.error('Failed to refresh billing information');
+      console.error("Error refreshing billing data:", error);
+      toast.error("Failed to refresh billing information");
     } finally {
       setIsRefreshing(false);
     }
@@ -99,7 +97,7 @@ export function BillingClient({
 
   // Use dynamic data instead of initial props
   const currentPlan = plans?.find(
-    (plan) => plan.name === usage?.subscriptionPlan
+    (plan) => plan.name === usage?.subscriptionPlan,
   );
   const usagePercentage =
     usage && usage.proposalLimit > 0
@@ -112,26 +110,27 @@ export function BillingClient({
   const trialDaysRemaining = usage?.trialEndAt
     ? getDaysRemaining(usage.trialEndAt)
     : 0;
-  
-  // free_trial: user signed up but hasn't subscribed yet
-  const isFreeTrial = usage?.subscriptionStatus === 'free_trial';
-  // Fallback for legacy pending users
-  const isPending = usage?.subscriptionStatus === 'pending' ||
-    (usage?.subscriptionPlan === 'none' && !subscription && !isFreeTrial);
 
-  const trialStarted = searchParams.get('trial_started') === 'true';
-  const justSubscribed = searchParams.get('subscribed') === 'true';
+  // free_trial: user signed up but hasn't subscribed yet
+  const isFreeTrial = usage?.subscriptionStatus === "free_trial";
+  // Fallback for legacy pending users
+  const isPending =
+    usage?.subscriptionStatus === "pending" ||
+    (usage?.subscriptionPlan === "none" && !subscription && !isFreeTrial);
+
+  const trialStarted = searchParams.get("trial_started") === "true";
+  const justSubscribed = searchParams.get("subscribed") === "true";
 
   // Sync subscription from Stripe if returning from checkout
   useEffect(() => {
-    const sessionId = searchParams.get('session_id');
+    const sessionId = searchParams.get("session_id");
 
     if (sessionId && (trialStarted || justSubscribed)) {
       const syncSubscription = async () => {
         try {
-          const response = await fetch('/api/stripe/sync-subscription', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          const response = await fetch("/api/stripe/sync-subscription", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ sessionId }),
           });
 
@@ -139,7 +138,7 @@ export function BillingClient({
             refreshBillingData();
           }
         } catch (error) {
-          console.error('Error syncing subscription:', error);
+          console.error("Error syncing subscription:", error);
         }
       };
 
@@ -150,24 +149,32 @@ export function BillingClient({
   const trialTrackedRef = useRef(false);
 
   useEffect(() => {
-    const error = searchParams.get('error');
-    if (error === 'subscription_required') {
-      toast.error('Your free trial has ended. Please subscribe to continue.');
+    const error = searchParams.get("error");
+    if (error === "subscription_required") {
+      toast.error("Your free trial has ended. Please subscribe to continue.");
     }
 
     if (justSubscribed) {
-      toast.success('Your subscription is now active! You can create, send, and download proposals.');
+      toast.success(
+        "Your subscription is now active! You can create, send, and download proposals.",
+      );
     }
 
     if (trialStarted && !trialTrackedRef.current) {
       trialTrackedRef.current = true;
       const plan = plans?.find((p) => p.name === usage?.subscriptionPlan);
       trackStartTrial({
-        planName: plan?.name ?? 'unknown',
+        planName: plan?.name ?? "unknown",
         value: plan?.price_monthly ?? 0,
       });
     }
-  }, [searchParams, trialStarted, justSubscribed, plans, usage?.subscriptionPlan]);
+  }, [
+    searchParams,
+    trialStarted,
+    justSubscribed,
+    plans,
+    usage?.subscriptionPlan,
+  ]);
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -199,12 +206,24 @@ export function BillingClient({
         <Alert className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
           <Gift className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
-            <strong>You&apos;re on a free trial!</strong> You have{' '}
-            <strong>{usage?.remainingProposals}</strong> of 3 free proposals remaining
-            {trialDaysRemaining > 0 && <> and <strong>{trialDaysRemaining} day{trialDaysRemaining !== 1 ? 's' : ''}</strong> left</>}.
+            <strong>You&apos;re on a free trial!</strong> You have{" "}
+            <strong>{usage?.remainingProposals}</strong> of 3 free proposals
+            remaining
+            {trialDaysRemaining > 0 && (
+              <>
+                {" "}
+                and{" "}
+                <strong>
+                  {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""}
+                </strong>{" "}
+                left
+              </>
+            )}
+            .
             <br />
             <span className="text-sm">
-              Subscribe to unlock unlimited proposals, email sending, and PDF downloads.
+              Subscribe to unlock unlimited proposals, email sending, and PDF
+              downloads.
             </span>
           </AlertDescription>
         </Alert>
@@ -215,26 +234,35 @@ export function BillingClient({
         <Alert className="border-red-200 bg-red-50">
           <AlertCircle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800">
-            <strong>Your free trial has ended.</strong> You&apos;ve either used all 3 free proposals
-            or your 7-day trial period has expired. Choose a subscription plan below to continue
-            creating proposals.
+            <strong>Your free trial has ended.</strong> You&apos;ve either used
+            all 3 free proposals or your 7-day trial period has expired. Choose
+            a subscription plan below to continue creating proposals.
           </AlertDescription>
         </Alert>
       )}
 
       {/* Legacy pending user alert */}
-      {isPending && (
-        <FreeTrialInfoBanner component="pricing" />
-      )}
+      {isPending && <FreeTrialInfoBanner component="pricing" />}
 
       {/* Stripe trial alert (backward compat) */}
       {!isFreeTrial && isTrialActive && usage?.isTrial && (
         <Alert className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
           <Gift className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
-            <strong>You&apos;re on a trial!</strong> You have{' '}
-            <strong>{usage?.remainingProposals}</strong> of 3 proposals remaining
-            {trialDaysRemaining > 0 && <> and <strong>{trialDaysRemaining} day{trialDaysRemaining !== 1 ? 's' : ''}</strong> left</>}.
+            <strong>You&apos;re on a trial!</strong> You have{" "}
+            <strong>{usage?.remainingProposals}</strong> of 3 proposals
+            remaining
+            {trialDaysRemaining > 0 && (
+              <>
+                {" "}
+                and{" "}
+                <strong>
+                  {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""}
+                </strong>{" "}
+                left
+              </>
+            )}
+            .
           </AlertDescription>
         </Alert>
       )}
@@ -253,21 +281,21 @@ export function BillingClient({
           <CardContent>
             <div className="text-2xl font-bold capitalize">
               {usage?.isTrial
-                ? 'Free Trial'
-                : usage?.subscriptionPlan || 'No Plan'}
+                ? "Free Trial"
+                : usage?.subscriptionPlan || "No Plan"}
             </div>
             <p className="text-xs text-muted-foreground">
               {usage?.isTrial
                 ? `${usage.proposalLimit} free proposals`
                 : currentPlan
-                ? formatCurrency(currentPlan.price_monthly) + '/month'
-                : 'No active subscription'}
+                  ? formatCurrency(currentPlan.price_monthly) + "/month"
+                  : "No active subscription"}
             </p>
             {usage && (
               <Badge
                 className={`mt-2 ${getStatusColor(usage.subscriptionStatus)}`}
               >
-                {usage.isTrial ? 'Trial' : usage.subscriptionStatus}
+                {usage.isTrial ? "Trial" : usage.subscriptionStatus}
               </Badge>
             )}
           </CardContent>
@@ -289,7 +317,7 @@ export function BillingClient({
                 usage?.proposalLimit &&
                 usage.proposalLimit > 0 && (
                   <span className="text-sm text-muted-foreground">
-                    {' '}
+                    {" "}
                     / {usage.proposalLimit}
                   </span>
                 )
@@ -297,7 +325,7 @@ export function BillingClient({
             </div>
             <p className="text-xs text-muted-foreground">
               {usage?.proposalLimit === -1
-                ? 'Unlimited'
+                ? "Unlimited"
                 : `${usage?.remainingProposals || 0} remaining`}
             </p>
             {usage && usage.proposalLimit > 0 && (
@@ -310,39 +338,39 @@ export function BillingClient({
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {isPending
-                ? 'Trial Status'
+                ? "Trial Status"
                 : usage?.isTrial
-                ? 'Trial Ends'
-                : subscription?.canceled_at
-                ? 'Access Ends'
-                : 'Next Billing'}
+                  ? "Trial Ends"
+                  : subscription?.canceled_at
+                    ? "Access Ends"
+                    : "Next Billing"}
             </CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {isPending
-                ? 'Not Started'
+                ? "Not Started"
                 : usage?.isTrial && usage?.trialEndAt
-                ? formatDate(usage.trialEndAt)
-                : subscription?.current_period_end
-                ? formatDate(subscription.current_period_end)
-                : 'N/A'}
+                  ? formatDate(usage.trialEndAt)
+                  : subscription?.current_period_end
+                    ? formatDate(subscription.current_period_end)
+                    : "N/A"}
             </div>
             <p className="text-xs text-muted-foreground">
               {isFreeTrial
                 ? isTrialActive
                   ? `${trialDaysRemaining} days remaining`
-                  : 'Trial ended - subscribe to continue'
+                  : "Trial ended - subscribe to continue"
                 : isPending
-                ? 'Choose a plan to get started'
-                : usage?.isTrial
-                ? `${trialDaysRemaining} days remaining`
-                : subscription?.canceled_at
-                ? 'Subscription will end'
-                : currentPlan
-                ? formatCurrency(currentPlan.price_monthly) + ' due'
-                : 'No upcoming charges'}
+                  ? "Choose a plan to get started"
+                  : usage?.isTrial
+                    ? `${trialDaysRemaining} days remaining`
+                    : subscription?.canceled_at
+                      ? "Subscription will end"
+                      : currentPlan
+                        ? formatCurrency(currentPlan.price_monthly) + " due"
+                        : "No upcoming charges"}
             </p>
           </CardContent>
         </Card>
@@ -354,11 +382,11 @@ export function BillingClient({
           <CardContent className="flex items-center gap-2 pt-6">
             <AlertCircle className="h-4 w-4 text-yellow-600" />
             <p className="text-sm text-yellow-800">
-              You've used {Math.round(usagePercentage)}% of your{' '}
-              {usage.isTrial ? 'trial' : 'monthly'} proposal limit.
+              You've used {Math.round(usagePercentage)}% of your{" "}
+              {usage.isTrial ? "trial" : "monthly"} proposal limit.
               {usage.isTrial
-                ? ' Choose a plan below to continue creating proposals.'
-                : ' Consider upgrading your plan to avoid interruptions.'}
+                ? " Choose a plan below to continue creating proposals."
+                : " Consider upgrading your plan to avoid interruptions."}
             </p>
           </CardContent>
         </Card>
@@ -370,13 +398,13 @@ export function BillingClient({
           <CardHeader>
             <CardTitle>
               {isFreeTrial && isTrialActive
-                ? 'Upgrade Your Plan'
-                : 'Choose Your Plan'}
+                ? "Upgrade Your Plan"
+                : "Choose Your Plan"}
             </CardTitle>
             <CardDescription>
               {isFreeTrial && isTrialActive
-                ? 'Subscribe now to unlock unlimited proposals, email sending, and PDF downloads.'
-                : 'Get started with a subscription plan to create, send, and download proposals.'}
+                ? "Subscribe now to unlock unlimited proposals, email sending, and PDF downloads."
+                : "Get started with a subscription plan to create, send, and download proposals."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -394,44 +422,44 @@ export function BillingClient({
         <CardHeader>
           <CardTitle>Billing History</CardTitle>
           <CardDescription>
-            {usage?.isTrial 
-              ? 'Your billing will start after the free trial ends'
-              : 'Your recent invoices and payments'
-            }
+            {usage?.isTrial
+              ? "Your billing will start after the free trial ends"
+              : "Your recent invoices and payments"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {billingHistory.filter(b => b.amount > 0 || b.status === 'pending').length > 0 ? (
+          {billingHistory.filter((b) => b.amount > 0 || b.status === "pending")
+            .length > 0 ? (
             <div className="space-y-4">
               {billingHistory
-                .filter(b => b.amount > 0 || b.status === 'pending')
+                .filter((b) => b.amount > 0 || b.status === "pending")
                 .map((invoice) => {
                   // Determine description based on action and status
                   const getDescription = () => {
                     const action = invoice.action;
-                    const isPending = invoice.status === 'pending';
-                    
-                    if (action === 'subscription_start') {
+                    const isPending = invoice.status === "pending";
+
+                    if (action === "subscription_start") {
                       if (isPending) {
-                        return `Subscription to ${invoice.new_plan || 'plan'} (pending trial end)`;
+                        return `Subscription to ${invoice.new_plan || "plan"} (pending trial end)`;
                       }
-                      return `First payment - ${invoice.new_plan || 'Subscription'} plan`;
+                      return `First payment - ${invoice.new_plan || "Subscription"} plan`;
                     }
-                    
-                    if (action === 'upgrade' || action === 'downgrade') {
+
+                    if (action === "upgrade" || action === "downgrade") {
                       if (isPending) {
-                        return `Plan change to ${invoice.new_plan || 'new plan'} (pending trial end)`;
+                        return `Plan change to ${invoice.new_plan || "new plan"} (pending trial end)`;
                       }
-                      return `Plan change to ${invoice.new_plan || 'new plan'}`;
+                      return `Plan change to ${invoice.new_plan || "new plan"}`;
                     }
-                    
+
                     if (invoice.stripe_invoice_id) {
                       return `Invoice #${invoice.stripe_invoice_id.slice(-8)}`;
                     }
-                    
-                    return isPending ? 'Pending charge' : 'Payment';
+
+                    return isPending ? "Pending charge" : "Payment";
                   };
-                  
+
                   return (
                     <div
                       key={invoice.id}
@@ -447,10 +475,15 @@ export function BillingClient({
                       </div>
                       <div className="text-right">
                         <p className="font-medium">
-                          {invoice.status === 'pending'
-                            ? formatCurrency(invoice.amount / 100, invoice.currency) + ' (pending)'
-                            : formatCurrency(invoice.amount / 100, invoice.currency)
-                          }
+                          {invoice.status === "pending"
+                            ? formatCurrency(
+                                invoice.amount / 100,
+                                invoice.currency,
+                              ) + " (pending)"
+                            : formatCurrency(
+                                invoice.amount / 100,
+                                invoice.currency,
+                              )}
                         </p>
                         <Badge className={getStatusColor(invoice.status)}>
                           {invoice.status}
@@ -462,10 +495,9 @@ export function BillingClient({
             </div>
           ) : (
             <p className="text-muted-foreground text-center py-8">
-              {usage?.isTrial 
-                ? 'No charges yet - you\'re on a free trial'
-                : 'No billing history available'
-              }
+              {usage?.isTrial
+                ? "No charges yet - you're on a free trial"
+                : "No billing history available"}
             </p>
           )}
         </CardContent>

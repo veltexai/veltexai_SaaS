@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { useSubscription } from '@/lib/hooks/use-subscription';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { useSubscription } from "@/hooks/use-subscription";
 
 const ManageBillingButton = () => {
   const {
@@ -20,7 +20,7 @@ const ManageBillingButton = () => {
       disabled={subscriptionLoading}
       className="w-full"
     >
-      {subscriptionLoading ? 'Loading...' : 'Manage Billing'}
+      {subscriptionLoading ? "Loading..." : "Manage Billing"}
     </Button>
   );
 };

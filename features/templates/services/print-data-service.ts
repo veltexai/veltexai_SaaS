@@ -1,5 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server';
-import { formatCurrencySafe } from '@/lib/utils';
+import { formatCurrencySafe } from "@/lib/utils/format";
 import {
   normalizeTitle,
   splitMarkdownIntoSections,

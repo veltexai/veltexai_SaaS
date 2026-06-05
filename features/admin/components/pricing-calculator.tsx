@@ -11,8 +11,7 @@ import {
   Calculator,
   AlertTriangle,
 } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
-
+import { formatCurrency } from "@/lib/utils/format";
 interface PreviewCalculation {
   laborHours: number;
   productionItems: { [key: string]: number };

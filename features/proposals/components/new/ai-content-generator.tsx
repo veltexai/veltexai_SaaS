@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Wand2, RefreshCw, Edit3 } from "lucide-react";
-import { ProposalFormData } from "@/lib/validations/proposal";
+import { ProposalFormData } from "@/features/proposals/schemas/proposal";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import { AITone } from "@/types/database";
 import { Textarea } from "@/components/ui/textarea";

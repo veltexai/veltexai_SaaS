@@ -17,8 +17,7 @@ import {
   Clock,
   CheckCircle,
 } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
-
+import { formatDate } from "@/lib/utils/date";
 interface ProposalData {
   id: string;
   title: string;

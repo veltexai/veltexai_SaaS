@@ -20,7 +20,7 @@ import {
 import type {
   ProposalFormData,
   ServiceType,
-} from "@/lib/validations/proposal";
+} from "@/features/proposals/schemas/proposal";
 import { Building2 } from "lucide-react";
 import {
   BUILDING_TYPE_OPTIONS,
@@ -64,9 +64,7 @@ export function FacilityDetailsCard({ serviceType }: FacilityDetailsCardProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  {isResidential
-                    ? "Home Age (years)"
-                    : "Building Age (years)"}
+                  {isResidential ? "Home Age (years)" : "Building Age (years)"}
                 </FormLabel>
                 <FormControl>
                   <Input

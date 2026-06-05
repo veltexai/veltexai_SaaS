@@ -1,7 +1,10 @@
-import { exportProposalToPDF, PDFExportOptions } from '@/lib/pdf-export';
-import { type Database } from '@/types/database';
+import {
+  exportProposalToPDF,
+  PDFExportOptions,
+} from "@/features/proposals/services/pdf/export-jspdf";
+import { type Database } from "@/types/database";
 
-type Proposal = Database['public']['Tables']['proposals']['Row'];
+type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 
 interface ProposalWithCompanyProfile extends Proposal {
   company_profiles?: {
@@ -13,12 +16,12 @@ interface ProposalWithCompanyProfile extends Proposal {
 }
 
 export async function generateProposalPDF(
-  proposal: ProposalWithCompanyProfile
+  proposal: ProposalWithCompanyProfile,
 ): Promise<Buffer> {
   try {
     // Prepare export options
     const exportOptions: Partial<PDFExportOptions> = {
-      template: 'professional',
+      template: "professional",
       includeServiceDetails: true,
       includePricingBreakdown: true,
       includeServiceReferences: false,
@@ -35,11 +38,11 @@ export async function generateProposalPDF(
 
     // Generate PDF using the existing export function
     const pdfBytes = await exportProposalToPDF(proposal, exportOptions);
-    
+
     // Convert Uint8Array to Buffer for Node.js compatibility
     return Buffer.from(pdfBytes);
   } catch (error) {
-    console.error('Error generating PDF:', error);
-    throw new Error('Failed to generate PDF');
+    console.error("Error generating PDF:", error);
+    throw new Error("Failed to generate PDF");
   }
 }

@@ -1,12 +1,12 @@
-import { redirect } from 'next/navigation';
-import { getUser } from '@/queries/user';
-import { createClient } from '@/lib/supabase/server';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { ProposalForm } from '@/features/proposals';
+import { redirect } from "next/navigation";
+import { getUser } from "@/features/auth/services/get-user";
+import { createClient } from "@/lib/supabase/server";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { ProposalForm } from "@/features/proposals";
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 interface UsageInfo {
@@ -24,11 +24,11 @@ async function checkUserCanCreateProposal(userId: string) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .rpc('get_user_usage_info', { user_uuid: userId })
+    .rpc("get_user_usage_info", { user_uuid: userId })
     .single();
 
   if (error) {
-    console.error('Error checking user proposal permissions:', error);
+    console.error("Error checking user proposal permissions:", error);
     return { canCreate: false, usageInfo: null };
   }
 
@@ -41,13 +41,13 @@ export default async function NewProposalPage() {
   const { user } = await getUser();
 
   if (!user) {
-    redirect('/auth/login');
+    redirect("/auth/login");
   }
 
   const { canCreate, usageInfo } = await checkUserCanCreateProposal(user.id);
 
   if (!canCreate) {
-    redirect('/dashboard/billing?error=subscription_required');
+    redirect("/dashboard/billing?error=subscription_required");
   }
 
   return (
@@ -57,10 +57,12 @@ export default async function NewProposalPage() {
           Create New Proposal
         </h1>
         <p className="mt-2 text-sm text-gray-600">
-          Facility intelligence → Scope & frequency → Labor + margin → Client-ready output.
+          Facility intelligence → Scope & frequency → Labor + margin →
+          Client-ready output.
         </p>
         <p className="mt-1 text-xs text-gray-500 italic">
-          All outputs are constrained by labor, frequency, and margin rules based on real janitorial operations.
+          All outputs are constrained by labor, frequency, and margin rules
+          based on real janitorial operations.
         </p>
       </div>
 
@@ -70,11 +72,11 @@ export default async function NewProposalPage() {
           <AlertCircle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-800">
             You have {usageInfo.remaining_proposals} proposal
-            {usageInfo.remaining_proposals !== 1 ? 's' : ''} remaining in your
-            free trial.{' '}
+            {usageInfo.remaining_proposals !== 1 ? "s" : ""} remaining in your
+            free trial.{" "}
             <a href="/dashboard/billing" className="underline font-semibold">
               Upgrade your plan
-            </a>{' '}
+            </a>{" "}
             to continue creating proposals.
           </AlertDescription>
         </Alert>

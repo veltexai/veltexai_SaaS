@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/lib/auth/use-auth';
-import { createClient } from '@/lib/supabase/client';
-import { getStripeJs } from '@/lib/stripe-client';
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { createClient } from "@/lib/supabase/client";
+import { getStripeJs } from "@/lib/stripe/client";
 
 const supabase = createClient();
 
@@ -38,40 +38,40 @@ export function useSubscription() {
   const fetchSubscriptionData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('🚀 ~ fetchSubscriptionData ~ user:', user);
-      console.log('🚀 ~ Environment check:', {
+      console.log("🚀 ~ fetchSubscriptionData ~ user:", user);
+      console.log("🚀 ~ Environment check:", {
         url: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
         key: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       });
 
       // Fetch subscription - get the most recent one regardless of status
       // Debug the auth state first
-      console.log('🚀 ~ Auth state:', {
+      console.log("🚀 ~ Auth state:", {
         userId: user?.id,
         userExists: !!user,
         supabaseUrl:
-          process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 20) + '...',
+          process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 20) + "...",
       });
 
       // Test basic connectivity
       try {
         const testQuery = await supabase.auth.getUser();
-        console.log('🚀 ~ Supabase auth test:', testQuery);
+        console.log("🚀 ~ Supabase auth test:", testQuery);
       } catch (authError) {
-        console.error('🚀 ~ Auth error:', authError);
+        console.error("🚀 ~ Auth error:", authError);
       }
 
       // Try the subscription query with timeout
       const subscriptionPromise = supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Query timeout after 3s')), 3000)
+        setTimeout(() => reject(new Error("Query timeout after 3s")), 3000),
       );
 
       try {
@@ -79,58 +79,63 @@ export function useSubscription() {
           subscriptionPromise,
           timeoutPromise,
         ]);
-        
+
         // Test without RLS first
-        console.log('🚀 ~ Testing basic query...');
-        
+        console.log("🚀 ~ Testing basic query...");
+
         try {
           // Test 1: Simple count query (should work even with RLS)
           const { count, error: countError } = await supabase
-            .from('subscriptions')
-            .select('*', { count: 'exact', head: true });
-          
-          console.log('🚀 ~ Table count:', count, 'Error:', countError);
-          
+            .from("subscriptions")
+            .select("*", { count: "exact", head: true });
+
+          console.log("🚀 ~ Table count:", count, "Error:", countError);
+
           // Test 2: Your actual query
           const { data: subData, error: subError } = await supabase
-            .from('subscriptions')
-            .select('*')
-            .eq('user_id', user?.id)
-            .order('created_at', { ascending: false })
+            .from("subscriptions")
+            .select("*")
+            .eq("user_id", user?.id)
+            .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
-            
-          console.log('🚀 ~ Subscription data:', subData, 'Error:', subError);
-          
+
+          console.log("🚀 ~ Subscription data:", subData, "Error:", subError);
+
           setSubscription(subData);
         } catch (err) {
-          console.error('🚀 ~ Query error:', err);
+          console.error("🚀 ~ Query error:", err);
         }
       } catch (timeoutError) {
-        console.error('🚀 ~ Query failed or timed out:', timeoutError);
-        if (timeoutError instanceof Error && timeoutError.message.includes('timeout')) {
-          console.error('🚀 ~ This is likely an RLS policy issue blocking the query');
+        console.error("🚀 ~ Query failed or timed out:", timeoutError);
+        if (
+          timeoutError instanceof Error &&
+          timeoutError.message.includes("timeout")
+        ) {
+          console.error(
+            "🚀 ~ This is likely an RLS policy issue blocking the query",
+          );
         }
         throw timeoutError;
       }
 
       // Fetch usage info
-      const response = await fetch('/api/usage/check');
+      const response = await fetch("/api/usage/check");
       if (response.ok) {
         const usageData = await response.json();
         setUsageInfo(usageData);
       }
     } catch (err) {
-      console.error('Error fetching subscription data:', err);
-      setError('Failed to fetch subscription data');
+      console.error("Error fetching subscription data:", err);
+      setError("Failed to fetch subscription data");
     } finally {
       setLoading(false);
     }
   }, [user?.id]);
 
   useEffect(() => {
-    console.log('🚀 ~ useSubscription ~ user:', user);
-    console.log('🚀 ~ useSubscription ~ authLoading:', authLoading);
+    console.log("🚀 ~ useSubscription ~ user:", user);
+    console.log("🚀 ~ useSubscription ~ authLoading:", authLoading);
     if (authLoading) {
       // Still loading auth, don't do anything yet
       return;
@@ -146,7 +151,7 @@ export function useSubscription() {
 
   // Poll for subscription updates after checkout
   useEffect(() => {
-    const pendingCheckout = localStorage.getItem('pending_checkout');
+    const pendingCheckout = localStorage.getItem("pending_checkout");
     if (pendingCheckout && user) {
       let pollCount = 0;
       const maxPolls = 15;
@@ -155,8 +160,8 @@ export function useSubscription() {
         pollCount++;
         await fetchSubscriptionData();
 
-        if (subscription?.status === 'active' || pollCount >= maxPolls) {
-          localStorage.removeItem('pending_checkout');
+        if (subscription?.status === "active" || pollCount >= maxPolls) {
+          localStorage.removeItem("pending_checkout");
           clearInterval(pollInterval);
         }
       }, 2000);
@@ -169,29 +174,29 @@ export function useSubscription() {
     try {
       setLoading(true);
       setError(null);
-      console.log('Creating checkout session for plan:', plan);
-      const response = await fetch('/api/stripe/create-checkout-session', {
-        method: 'POST',
+      console.log("Creating checkout session for plan:", plan);
+      const response = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ plan }),
       });
-      console.log('Checkout session response status:', response.status);
+      console.log("Checkout session response status:", response.status);
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        throw new Error("Failed to create checkout session");
       }
 
       const { sessionId } = await response.json();
       const stripe = await getStripeJs();
 
       if (!stripe) {
-        throw new Error('Stripe not loaded');
+        throw new Error("Stripe not loaded");
       }
 
       // Store checkout session for polling
-      localStorage.setItem('pending_checkout', sessionId);
+      localStorage.setItem("pending_checkout", sessionId);
 
       const { error } = await stripe.redirectToCheckout({ sessionId });
 
@@ -199,8 +204,8 @@ export function useSubscription() {
         throw error;
       }
     } catch (err) {
-      console.error('Error creating checkout session:', err);
-      setError('Failed to start checkout process');
+      console.error("Error creating checkout session:", err);
+      setError("Failed to start checkout process");
     } finally {
       setLoading(false);
     }
@@ -209,33 +214,33 @@ export function useSubscription() {
   const createPortalSession = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/stripe/create-portal-session', {
-        method: 'POST',
+      const response = await fetch("/api/stripe/create-portal-session", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create portal session');
+        throw new Error("Failed to create portal session");
       }
 
       const { url } = await response.json();
       window.location.href = url;
     } catch (err) {
-      console.error('Error creating portal session:', err);
-      setError('Failed to open billing portal');
+      console.error("Error creating portal session:", err);
+      setError("Failed to open billing portal");
     } finally {
       setLoading(false);
     }
   };
 
-  const isSubscribed = subscription && subscription.status === 'active';
+  const isSubscribed = subscription && subscription.status === "active";
   const isPro =
-    isSubscribed && ['professional', 'enterprise'].includes(subscription.plan);
-  const isEnterprise = isSubscribed && subscription.plan === 'enterprise';
+    isSubscribed && ["professional", "enterprise"].includes(subscription.plan);
+  const isEnterprise = isSubscribed && subscription.plan === "enterprise";
   const isTrial = usageInfo?.isTrial || false;
-  const isFreeTrial = usageInfo?.subscriptionStatus === 'free_trial';
+  const isFreeTrial = usageInfo?.subscriptionStatus === "free_trial";
   const canCreateProposal = usageInfo?.canCreateProposal || false;
 
   return {

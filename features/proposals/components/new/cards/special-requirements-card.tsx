@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type {
   ProposalFormData,
   ServiceType,
-} from "@/lib/validations/proposal";
+} from "@/features/proposals/schemas/proposal";
 import { AlertTriangle } from "lucide-react";
 import {
   SPECIAL_EQUIPMENT_OPTIONS,

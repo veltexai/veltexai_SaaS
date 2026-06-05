@@ -1,16 +1,16 @@
-import { UseFormReturn } from 'react-hook-form';
-import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { UseFormReturn } from "react-hook-form";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 
-import { Upload, X, FileText } from 'lucide-react';
-import { ProposalFormData } from '@/lib/validations/proposal';
+import { Upload, X, FileText } from "lucide-react";
+import { ProposalFormData } from "@/features/proposals/schemas/proposal";
 
 interface AttachmentsSectionProps {
   form: UseFormReturn<ProposalFormData>;
@@ -45,61 +45,61 @@ export function AttachmentsSection({ form }: AttachmentsSectionProps) {
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Upload Files
             </label>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <Input
-                      type="file"
-                      multiple
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="file-upload"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() =>
-                        document.getElementById('file-upload')?.click()
-                      }
-                    >
-                      <Upload className="mr-2 h-4 w-4" />
-                      Choose Files
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      PDF, DOC, DOCX, JPG, PNG, GIF (max 10MB each)
-                    </span>
-                  </div>
-
-                  {files.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Selected Files:</p>
-                      {files.map((file, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-2 border rounded"
-                        >
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4" />
-                            <span className="text-sm">{file.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                            </span>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeFile(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Input
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    document.getElementById("file-upload")?.click()
+                  }
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Choose Files
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  PDF, DOC, DOCX, JPG, PNG, GIF (max 10MB each)
+                </span>
               </div>
+
+              {files.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Selected Files:</p>
+                  {files.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 border rounded"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        <span className="text-sm">{file.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+          </div>
+        </div>
       </CardContent>
     </>
   );

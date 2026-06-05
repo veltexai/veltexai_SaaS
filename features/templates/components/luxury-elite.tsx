@@ -2,7 +2,7 @@
 
 import type { TemplateProps } from "@/features/templates/types/templates";
 import Image from "next/image";
-import { formatDateLong } from "@/lib/utils";
+import { formatDateLong } from "@/lib/utils/date";
 import { arvo, montserrat } from "@/lib/fonts";
 import {
   PoweredBy,

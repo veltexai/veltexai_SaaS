@@ -27,7 +27,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { cn, truncateText } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
+import { truncateText } from "@/lib/utils/format";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";

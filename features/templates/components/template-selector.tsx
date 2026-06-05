@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Lock, Check, Crown, Star } from 'lucide-react';
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Lock, Check, Crown, Star } from "lucide-react";
 import {
   useTemplates,
   type TemplateWithAccess,
-} from '@/lib/templates/use-templates';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-import Image from 'next/image';
+} from "@/features/templates/hooks/use-templates";
+import { cn } from "@/lib/utils/cn";
+import { toast } from "sonner";
+import Image from "next/image";
 
 interface TemplateSelectorProps {
   selectedTemplateId?: string | null;
@@ -30,7 +30,7 @@ export function TemplateSelector({
 
   const handleTemplateSelect = async (template: TemplateWithAccess) => {
     if (!template.hasAccess) {
-      toast.error('Upgrade to unlock this template');
+      toast.error("Upgrade to unlock this template");
       return;
     }
 
@@ -39,14 +39,14 @@ export function TemplateSelector({
       onTemplateSelect(template.id);
       toast.success(`${template.display_name} template selected`);
     } catch (error) {
-      toast.error('Failed to select template');
+      toast.error("Failed to select template");
     } finally {
       setSelecting(null);
     }
   };
 
   const getTemplateIcon = (template: TemplateWithAccess) => {
-    if (template.name === 'basic-professional') {
+    if (template.name === "basic-professional") {
       return <Star className="h-4 w-4" />;
     }
     return <Crown className="h-4 w-4" />;
@@ -55,13 +55,13 @@ export function TemplateSelector({
   const getTierBadge = (template: TemplateWithAccess) => {
     const tiers = template.tierAccess.map((t) => t.subscription_tier);
 
-    if (tiers.includes('starter')) {
+    if (tiers.includes("starter")) {
       return <Badge variant="secondary">Basic</Badge>;
     }
-    if (tiers.includes('professional') && !tiers.includes('enterprise')) {
+    if (tiers.includes("professional") && !tiers.includes("enterprise")) {
       return <Badge variant="default">Premium</Badge>;
     }
-    if (tiers.includes('enterprise')) {
+    if (tiers.includes("enterprise")) {
       return <Badge variant="destructive">Elite</Badge>;
     }
 
@@ -72,8 +72,8 @@ export function TemplateSelector({
     return (
       <div
         className={cn(
-          'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4',
-          className
+          "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4",
+          className,
         )}
       >
         {Array.from({ length: 4 }).map((_, i) => (
@@ -114,17 +114,17 @@ export function TemplateSelector({
   return (
     <div
       className={cn(
-        'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4',
-        className
+        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4",
+        className,
       )}
     >
       {templates.map((template) => (
         <Card
           key={template.id}
           className={cn(
-            'overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg',
-            selectedTemplateId === template.id && 'ring-2 ring-primary',
-            !template.hasAccess && 'opacity-60'
+            "overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg",
+            selectedTemplateId === template.id && "ring-2 ring-primary",
+            !template.hasAccess && "opacity-60",
           )}
           onClick={() => handleTemplateSelect(template)}
         >
@@ -135,8 +135,8 @@ export function TemplateSelector({
                 src={template.preview_image_url}
                 alt={template.display_name}
                 className={cn(
-                  'w-full h-full object-cover',
-                  !template.hasAccess && 'blur-sm'
+                  "w-full h-full object-cover",
+                  !template.hasAccess && "blur-sm",
                 )}
                 width={200}
                 height={150}
@@ -144,8 +144,8 @@ export function TemplateSelector({
             ) : (
               <div
                 className={cn(
-                  'w-full h-full flex items-center justify-center',
-                  !template.hasAccess && 'blur-sm'
+                  "w-full h-full flex items-center justify-center",
+                  !template.hasAccess && "blur-sm",
                 )}
               >
                 {getTemplateIcon(template)}
@@ -188,7 +188,7 @@ export function TemplateSelector({
 
             <Button
               size="sm"
-              variant={template.hasAccess ? 'default' : 'secondary'}
+              variant={template.hasAccess ? "default" : "secondary"}
               className="w-full"
               disabled={selecting === template.id}
               onClick={(e) => {
@@ -197,12 +197,12 @@ export function TemplateSelector({
               }}
             >
               {selecting === template.id
-                ? 'Selecting...'
+                ? "Selecting..."
                 : template.hasAccess
-                ? selectedTemplateId === template.id
-                  ? 'Selected'
-                  : 'Select'
-                : 'Upgrade to Unlock'}
+                  ? selectedTemplateId === template.id
+                    ? "Selected"
+                    : "Select"
+                  : "Upgrade to Unlock"}
             </Button>
           </CardContent>
         </Card>

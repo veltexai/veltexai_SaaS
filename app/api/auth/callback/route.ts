@@ -1,7 +1,7 @@
 import config from "@/config/config";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
-import { getUser } from "@/queries/user";
+import { getUser } from "@/features/auth/services/get-user";
 import { EmailService } from "@/lib/email/service";
 import { NextResponse } from "next/server";
 

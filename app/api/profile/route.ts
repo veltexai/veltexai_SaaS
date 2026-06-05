@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getUser } from '@/lib/auth/auth-helpers';
-import { createClient } from '@/lib/supabase/server';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { getUser } from "@/features/auth/services/get-user";
+import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
 
 const profileUpdateSchema = z.object({
   full_name: z.string().min(1).max(100).optional(),
@@ -10,8 +10,8 @@ const profileUpdateSchema = z.object({
     .string()
     .regex(/^[+]?[1-9]\d{1,14}$/)
     .optional(),
-  website: z.string().url().optional().or(z.literal('')).or(z.null()),
-  logo_url: z.string().optional().or(z.literal('')).or(z.null()),
+  website: z.string().url().optional().or(z.literal("")).or(z.null()),
+  logo_url: z.string().optional().or(z.literal("")).or(z.null()),
   company_background: z.string().min(50).max(1000).optional(),
   company_founded_date: z.string().optional().or(z.null()),
   industries_served: z.string().max(200).optional().or(z.null()),
@@ -20,9 +20,9 @@ const profileUpdateSchema = z.object({
 
 export async function PATCH(request: NextRequest) {
   try {
-    const user = await getUser();
+    const { user } = await getUser();
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -32,10 +32,10 @@ export async function PATCH(request: NextRequest) {
     const cleanedUpdates = { ...validatedData };
 
     // Convert empty strings to null for optional fields
-    if (cleanedUpdates.website === '') {
+    if (cleanedUpdates.website === "") {
       cleanedUpdates.website = null;
     }
-    if (cleanedUpdates.logo_url === '') {
+    if (cleanedUpdates.logo_url === "") {
       cleanedUpdates.logo_url = null;
     }
 
@@ -48,56 +48,56 @@ export async function PATCH(request: NextRequest) {
 
     const supabase = await createClient();
     const { data, error } = await supabase
-      .from('profiles')
+      .from("profiles")
       .update(cleanedUpdates)
-      .eq('id', user.id)
+      .eq("id", user.id)
       .select()
       .single();
 
     if (error) {
-      console.error('Profile update error:', error);
+      console.error("Profile update error:", error);
 
       // Handle specific constraint violations
-      if (error.code === '23514') {
-        if (error.message.includes('check_website_format')) {
+      if (error.code === "23514") {
+        if (error.message.includes("check_website_format")) {
           return NextResponse.json(
-            { error: 'Website must start with http:// or https://' },
-            { status: 400 }
+            { error: "Website must start with http:// or https://" },
+            { status: 400 },
           );
         }
-        if (error.message.includes('check_phone_format')) {
+        if (error.message.includes("check_phone_format")) {
           return NextResponse.json(
-            { error: 'Please enter a valid phone number' },
-            { status: 400 }
+            { error: "Please enter a valid phone number" },
+            { status: 400 },
           );
         }
-        if (error.message.includes('check_company_background_length')) {
+        if (error.message.includes("check_company_background_length")) {
           return NextResponse.json(
-            { error: 'Company background must be between 50-500 characters' },
-            { status: 400 }
+            { error: "Company background must be between 50-500 characters" },
+            { status: 400 },
           );
         }
       }
 
       return NextResponse.json(
-        { error: error.message || 'Failed to update profile' },
-        { status: 500 }
+        { error: error.message || "Failed to update profile" },
+        { status: 500 },
       );
     }
 
     return NextResponse.json({ data });
   } catch (error: any) {
-    if (error.name === 'ZodError') {
+    if (error.name === "ZodError") {
       return NextResponse.json(
-        { error: 'Invalid data provided', details: error.errors },
-        { status: 400 }
+        { error: "Invalid data provided", details: error.errors },
+        { status: 400 },
       );
     }
 
-    console.error('Unexpected error:', error);
+    console.error("Unexpected error:", error);
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
-      { status: 500 }
+      { error: "An unexpected error occurred" },
+      { status: 500 },
     );
   }
 }

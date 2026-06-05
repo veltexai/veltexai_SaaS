@@ -1,57 +1,57 @@
-'use client';
+"use client";
 
-import { useFormContext } from 'react-hook-form';
+import { useFormContext } from "react-hook-form";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
 import {
   type ProposalFormData,
   type ServiceType,
-} from '@/lib/validations/proposal';
-import { Building, Home, Brush, Square, Grid3X3 } from 'lucide-react';
+} from "@/features/proposals/schemas/proposal";
+import { Building, Home, Brush, Square, Grid3X3 } from "lucide-react";
 
 const serviceTypes = [
   {
-    value: 'residential' as ServiceType,
-    label: 'Residential Cleaning',
-    description: 'Houses, apartments, condos, and townhouses',
+    value: "residential" as ServiceType,
+    label: "Residential Cleaning",
+    description: "Houses, apartments, condos, and townhouses",
     icon: Home,
   },
   {
-    value: 'commercial' as ServiceType,
-    label: 'Commercial Cleaning',
-    description: 'Offices, retail spaces, and business facilities',
+    value: "commercial" as ServiceType,
+    label: "Commercial Cleaning",
+    description: "Offices, retail spaces, and business facilities",
     icon: Building,
   },
   {
-    value: 'carpet' as ServiceType,
-    label: 'Carpet Cleaning',
-    description: 'Deep cleaning and stain removal for carpets',
+    value: "carpet" as ServiceType,
+    label: "Carpet Cleaning",
+    description: "Deep cleaning and stain removal for carpets",
     icon: Brush,
   },
   {
-    value: 'window' as ServiceType,
-    label: 'Window Cleaning',
-    description: 'Interior and exterior window cleaning services',
+    value: "window" as ServiceType,
+    label: "Window Cleaning",
+    description: "Interior and exterior window cleaning services",
     icon: Square,
   },
   {
-    value: 'floor' as ServiceType,
-    label: 'Floor Care',
-    description: 'Hardwood, tile, and specialty floor treatments',
+    value: "floor" as ServiceType,
+    label: "Floor Care",
+    description: "Hardwood, tile, and specialty floor treatments",
     icon: Grid3X3,
   },
 ];
@@ -98,8 +98,8 @@ export function ServiceTypeSelector() {
                         <Card
                           className={`transition-all hover:shadow-md ${
                             field.value === serviceType.value
-                              ? 'ring-2 ring-primary border-primary'
-                              : 'hover:border-primary/50'
+                              ? "ring-2 ring-primary border-primary"
+                              : "hover:border-primary/50"
                           }`}
                         >
                           <CardHeader className="pb-3">

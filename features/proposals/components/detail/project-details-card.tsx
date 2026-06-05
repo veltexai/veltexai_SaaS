@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from "@/lib/utils/format";
 import { Database } from '@/types/database';
 
 type Proposal = Database['public']['Tables']['proposals']['Row'];

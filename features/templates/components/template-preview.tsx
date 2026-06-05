@@ -1,12 +1,11 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Crown, Star, Lock, Check } from 'lucide-react';
-import type { TemplateWithAccess } from '@/lib/templates/use-templates';
-import { cn } from '@/lib/utils';
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Crown, Star, Lock, Check } from "lucide-react";
+import type { TemplateWithAccess } from "@/features/templates/hooks/use-templates";
+import { cn } from "@/lib/utils/cn";
 interface TemplatePreviewProps {
   template: TemplateWithAccess;
   isSelected?: boolean;
@@ -23,7 +22,7 @@ export function TemplatePreview({
   className,
 }: TemplatePreviewProps) {
   const getTemplateIcon = () => {
-    if (template.name === 'basic-professional') {
+    if (template.name === "basic-professional") {
       return <Star className="h-5 w-5" />;
     }
     return <Crown className="h-5 w-5" />;
@@ -32,13 +31,13 @@ export function TemplatePreview({
   const getTierBadge = () => {
     const tiers = template.tierAccess.map((t) => t.subscription_tier);
 
-    if (tiers.includes('starter')) {
+    if (tiers.includes("starter")) {
       return <Badge variant="secondary">Basic</Badge>;
     }
-    if (tiers.includes('professional') && !tiers.includes('enterprise')) {
+    if (tiers.includes("professional") && !tiers.includes("enterprise")) {
       return <Badge variant="default">Premium</Badge>;
     }
-    if (tiers.includes('enterprise')) {
+    if (tiers.includes("enterprise")) {
       return <Badge variant="destructive">Elite</Badge>;
     }
 
@@ -46,17 +45,17 @@ export function TemplatePreview({
   };
 
   const getAccessibleTiers = () => {
-    return template.tierAccess.map((t) => t.subscription_tier).join(', ');
+    return template.tierAccess.map((t) => t.subscription_tier).join(", ");
   };
 
   return (
     <Card
       className={cn(
-        'transition-all duration-200 hover:shadow-md',
-        isSelected && 'ring-2 ring-primary',
-        !template.hasAccess && 'opacity-60',
-        onSelect && 'cursor-pointer',
-        className
+        "transition-all duration-200 hover:shadow-md",
+        isSelected && "ring-2 ring-primary",
+        !template.hasAccess && "opacity-60",
+        onSelect && "cursor-pointer",
+        className,
       )}
       onClick={onSelect}
     >
@@ -84,15 +83,15 @@ export function TemplatePreview({
               src={template.preview_image_url}
               alt={template.display_name}
               className={cn(
-                'w-full h-full object-cover',
-                !template.hasAccess && 'blur-sm'
+                "w-full h-full object-cover",
+                !template.hasAccess && "blur-sm",
               )}
             />
           ) : (
             <div
               className={cn(
-                'w-full h-full flex items-center justify-center',
-                !template.hasAccess && 'blur-sm'
+                "w-full h-full flex items-center justify-center",
+                !template.hasAccess && "blur-sm",
               )}
             >
               {getTemplateIcon()}
@@ -120,7 +119,7 @@ export function TemplatePreview({
         {showDetails && (
           <div className="space-y-2 text-xs text-muted-foreground">
             <div>
-              <span className="font-medium">Available for:</span>{' '}
+              <span className="font-medium">Available for:</span>{" "}
               {getAccessibleTiers()}
             </div>
             <div>
@@ -128,11 +127,11 @@ export function TemplatePreview({
             </div>
             {template.template_data && (
               <div>
-                <span className="font-medium">Features:</span>{' '}
+                <span className="font-medium">Features:</span>{" "}
                 {
                   Object.keys(template.template_data as Record<string, any>)
                     .length
-                }{' '}
+                }{" "}
                 customizations
               </div>
             )}
@@ -142,7 +141,7 @@ export function TemplatePreview({
         {/* Action Button */}
         {onSelect && (
           <Button
-            variant={template.hasAccess ? 'default' : 'secondary'}
+            variant={template.hasAccess ? "default" : "secondary"}
             className="w-full"
             onClick={(e) => {
               e.stopPropagation();
@@ -151,9 +150,9 @@ export function TemplatePreview({
           >
             {template.hasAccess
               ? isSelected
-                ? 'Selected'
-                : 'Select Template'
-              : 'Upgrade to Unlock'}
+                ? "Selected"
+                : "Select Template"
+              : "Upgrade to Unlock"}
           </Button>
         )}
       </CardContent>

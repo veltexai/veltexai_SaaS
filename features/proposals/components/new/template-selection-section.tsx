@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Layout, AlertCircle, Sparkles } from "lucide-react";
-import { ProposalFormData } from "@/lib/validations/proposal";
+import { ProposalFormData } from "@/features/proposals/schemas/proposal";
 import { SubscriptionTier } from "@/types/subscription";
 import {
   handleSelectTemplate,

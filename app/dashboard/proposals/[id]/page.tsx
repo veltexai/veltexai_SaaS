@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getUser } from "@/queries/user";
+import { getUser } from "@/features/auth/services/get-user";
 import { ProposalHeader } from "@/features/proposals/components/detail/proposal-header";
 import { ProposalSidebar } from "@/features/proposals/components/detail/proposal-sidebar";
 import { ProposalDetailTabs } from "@/features/proposals/components/detail/proposal-detail-tabs";

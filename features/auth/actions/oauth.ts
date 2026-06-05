@@ -1,23 +1,23 @@
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { AUTH_REDIRECTS, AUTH_ERRORS } from '@/lib/auth/constants';
-import type { AuthResponse } from '@/lib/auth/types';
-import config from '@/config/config';
+import { createClient } from "@/lib/supabase/server";
+import { AUTH_REDIRECTS, AUTH_ERRORS } from "@/features/auth/constants";
+import type { AuthResponse } from "@/features/auth/types";
+import config from "@/config/config";
 
 export const signInWithGoogle = async (
-  priceId?: string
+  priceId?: string,
 ): Promise<AuthResponse> => {
   const supabase = await createClient();
 
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: "google",
       options: {
         redirectTo: `${
           config.domainName
         }/api/auth/callback?priceId=${encodeURIComponent(
-          priceId || ''
+          priceId || "",
         )}&redirect=${encodeURIComponent(AUTH_REDIRECTS.DEFAULT_REDIRECT)}`,
       },
     });

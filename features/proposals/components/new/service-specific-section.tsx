@@ -1,30 +1,30 @@
-'use client';
+"use client";
 
-import { useFormContext } from 'react-hook-form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useFormContext } from "react-hook-form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   type ProposalFormData,
   type ServiceType,
-} from '@/lib/validations/proposal';
+} from "@/features/proposals/schemas/proposal";
 import {
   Home,
   Building,
@@ -34,10 +34,10 @@ import {
   Plus,
   X,
   Layers,
-} from 'lucide-react';
-import { useState } from 'react';
-import Image from 'next/image';
-import { InfoCard } from '@/components/ui/info-card';
+} from "lucide-react";
+import { useState } from "react";
+import Image from "next/image";
+import { InfoCard } from "@/components/ui/info-card";
 
 interface ServiceSpecificSectionProps {
   serviceType: ServiceType;
@@ -47,7 +47,7 @@ export function ServiceSpecificSection({
   serviceType,
 }: ServiceSpecificSectionProps) {
   const form = useFormContext<ProposalFormData>();
-  const [newItem, setNewItem] = useState('');
+  const [newItem, setNewItem] = useState("");
 
   // const addArrayItem = (fieldName: string, item: string) => {
   //   if (!item.trim()) return;
@@ -118,7 +118,7 @@ export function ServiceSpecificSection({
                   type="number"
                   min="1"
                   max="10"
-                  value={field.value || ''}
+                  value={field.value || ""}
                   onChange={(e) => {
                     // Allow any input during typing
                     field.onChange(e.target.value);
@@ -127,7 +127,7 @@ export function ServiceSpecificSection({
                     // Validate and sanitize only on blur
                     const value = e.target.value;
                     field.onChange(
-                      value === '' ? undefined : parseInt(value, 10) || 1
+                      value === "" ? undefined : parseInt(value, 10) || 1,
                     );
                   }}
                 />
@@ -147,7 +147,7 @@ export function ServiceSpecificSection({
                   type="number"
                   min="1"
                   max="10"
-                  value={field.value || ''}
+                  value={field.value || ""}
                   onChange={(e) => {
                     // Allow any input during typing
                     field.onChange(e.target.value);
@@ -156,7 +156,7 @@ export function ServiceSpecificSection({
                     // Validate and sanitize only on blur
                     const value = e.target.value;
                     field.onChange(
-                      value === '' ? undefined : parseInt(value, 10) || 1
+                      value === "" ? undefined : parseInt(value, 10) || 1,
                     );
                   }}
                 />
@@ -205,7 +205,7 @@ export function ServiceSpecificSection({
         />
       </div>
 
-      {form.watch('service_specific_data.pets') && (
+      {form.watch("service_specific_data.pets") && (
         <FormField
           control={form.control}
           name="service_specific_data.pet_details"
@@ -215,7 +215,7 @@ export function ServiceSpecificSection({
               <FormControl>
                 <Textarea
                   placeholder="Describe pets (type, number, special considerations)"
-                  value={field.value || ''}
+                  value={field.value || ""}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                   name={field.name}
@@ -237,7 +237,7 @@ export function ServiceSpecificSection({
             <FormControl>
               <Textarea
                 placeholder="Any special instructions or requirements"
-                value={field.value || ''}
+                value={field.value || ""}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
                 name={field.name}
@@ -253,7 +253,6 @@ export function ServiceSpecificSection({
 
   const renderCommercialForm = () => (
     <div className="space-y-4">
-
       <FormField
         control={form.control}
         name="service_specific_data.operating_hours"
@@ -261,9 +260,9 @@ export function ServiceSpecificSection({
           <FormItem>
             <FormLabel>Operating Hours</FormLabel>
             <FormControl>
-              <Input 
-                placeholder="e.g., Monday-Friday 9AM-5PM" 
-                value={field.value || ''}
+              <Input
+                placeholder="e.g., Monday-Friday 9AM-5PM"
+                value={field.value || ""}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
                 name={field.name}
@@ -313,7 +312,7 @@ export function ServiceSpecificSection({
             <FormControl>
               <Textarea
                 placeholder="Access codes, key procedures, security protocols"
-                value={field.value || ''}
+                value={field.value || ""}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
                 name={field.name}
@@ -434,7 +433,7 @@ export function ServiceSpecificSection({
               <Input
                 type="number"
                 min="1"
-                value={field.value || ''}
+                value={field.value || ""}
                 onChange={(e) => {
                   // Allow any input during typing
                   field.onChange(e.target.value);
@@ -443,7 +442,7 @@ export function ServiceSpecificSection({
                   // Validate and sanitize only on blur
                   const value = e.target.value;
                   field.onChange(
-                    value === '' ? undefined : parseInt(value, 10) || 1
+                    value === "" ? undefined : parseInt(value, 10) || 1,
                   );
                 }}
               />
@@ -617,15 +616,15 @@ export function ServiceSpecificSection({
 
   const getServiceIcon = () => {
     switch (serviceType) {
-      case 'residential':
+      case "residential":
         return Home;
-      case 'commercial':
+      case "commercial":
         return Building;
-      case 'carpet':
+      case "carpet":
         return Layers;
-      case 'window':
+      case "window":
         return Square;
-      case 'floor':
+      case "floor":
         return Grid3X3;
       default:
         return Home;
@@ -634,32 +633,32 @@ export function ServiceSpecificSection({
 
   const getServiceTitle = () => {
     switch (serviceType) {
-      case 'residential':
-        return 'Residential Cleaning Details';
-      case 'commercial':
-        return 'Commercial Cleaning Details';
-      case 'carpet':
-        return 'Carpet Cleaning Details';
-      case 'window':
-        return 'Window Cleaning Details';
-      case 'floor':
-        return 'Floor Care Details';
+      case "residential":
+        return "Residential Cleaning Details";
+      case "commercial":
+        return "Commercial Cleaning Details";
+      case "carpet":
+        return "Carpet Cleaning Details";
+      case "window":
+        return "Window Cleaning Details";
+      case "floor":
+        return "Floor Care Details";
       default:
-        return 'Service Details';
+        return "Service Details";
     }
   };
 
   const renderServiceForm = () => {
     switch (serviceType) {
-      case 'residential':
+      case "residential":
         return renderResidentialForm();
-      case 'commercial':
+      case "commercial":
         return renderCommercialForm();
-      case 'carpet':
+      case "carpet":
         return renderCarpetForm();
-      case 'window':
+      case "window":
         return renderWindowForm();
-      case 'floor':
+      case "floor":
         return renderFloorForm();
       default:
         return null;

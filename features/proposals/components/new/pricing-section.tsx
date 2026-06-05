@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
-import { type ProposalFormData } from "@/lib/validations/proposal";
+import { type ProposalFormData } from "@/features/proposals/schemas/proposal";
 import { AIContentGenerator } from "./ai-content-generator";
 import { AddonItem, CalculatedPricing } from "../../types/pricing";
 import { usePricingSettings } from "@/hooks/use-pricing-settings";

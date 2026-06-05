@@ -1,7 +1,7 @@
 // features/proposals/hooks/use-area-frequency.ts
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import type { ProposalFormData } from "@/lib/validations/proposal";
+import type { ProposalFormData } from "@/features/proposals/schemas/proposal";
 import { globalServiceFrequencyToAreaFrequency } from "../constants/area-frequency";
 
 interface UseAreaFrequencyReturn {

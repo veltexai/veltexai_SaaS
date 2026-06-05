@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,8 +23,8 @@ import { Loader2, Mail } from "lucide-react";
 import Image from "next/image";
 import Photo from "../../../public/images/pexels-tima-miroshnichenko-6195879.jpg";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { signInWithGoogle } from "@/lib/auth/actions/oauth";
-import { signUpWithMagicLink } from "@/lib/auth/actions/magic-link";
+import { signInWithGoogle } from "@/features/auth/actions/oauth";
+import { signUpWithMagicLink } from "@/features/auth/actions/magic-link";
 import FreeTrialInfoBanner from "@/components/ui/free-trial-info-banner";
 
 const formSchema = z.object({

@@ -35,14 +35,14 @@ import {
   Building2,
   DollarSign,
 } from "lucide-react";
-import { proposalFormSchema } from "@/lib/validations/proposal";
+import { proposalFormSchema } from "@/features/proposals/schemas/proposal";
 import { ServiceTypeSelector } from "@/features/proposals/components/new/service-type-selector";
 import { GlobalInputsSection } from "@/features/proposals/components/new/global-inputs-section";
 import { ServiceSpecificSection } from "@/features/proposals/components/new/service-specific-section";
 import { PricingSection } from "@/features/proposals/components/new/pricing-section";
 import { EnhancedFacilitySection } from "@/features/proposals/components/new/enhanced-facility-section";
-import { validateProposalWithServiceData } from "@/lib/validations/proposal";
-import { syncServiceScopeIntoGeneratedContent } from "@/lib/proposals/sync-service-scope-to-generated-content";
+import { validateProposalWithServiceData } from "@/features/proposals/schemas/proposal";
+import { syncServiceScopeIntoGeneratedContent } from "@/features/proposals/services/sync-service-scope-to-generated-content";
 import { getValidationMessage } from "@/features/proposals";
 import { CalculatedPricing } from "../types/pricing";
 import { ServiceType } from "../types/proposal";

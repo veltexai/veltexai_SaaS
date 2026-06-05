@@ -23,8 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { XCircle, RotateCcw, AlertTriangle, Calendar, Shield } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatDate } from '@/lib/utils';
-
+import { formatDate } from "@/lib/utils/date";
 interface EnhancedCancelSubscriptionProps {
   className?: string;
   onCancellationChanged?: () => Promise<void>;

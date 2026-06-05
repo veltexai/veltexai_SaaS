@@ -2,11 +2,11 @@ import React from "react";
 import { TemplateType } from "@/features/templates/types/templates";
 import { dmSerifText } from "@/lib/fonts";
 import { ProposalTitle } from "../shared";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import {
   isOneTimeFrequency,
   isStandardJanitorialService,
-} from "@/lib/recurring-monthly-functions";
+} from "@/lib/utils/frequency";
 import { FrequencyLabel } from "./frequency-label";
 
 interface ServiceQuotePricingProps {

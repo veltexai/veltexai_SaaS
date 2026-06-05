@@ -1,46 +1,46 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Upload, Building2 } from 'lucide-react';
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, Upload, Building2 } from "lucide-react";
 import {
   useCompanyProfile,
   type CompanyProfileUpdate,
-} from '@/hooks/use-company-profile';
-import { useImageUpload } from '@/hooks/use-image-upload';
-import { toast } from 'sonner';
+} from "@/features/settings/hooks/use-company-profile";
+import { useImageUpload } from "@/hooks/use-image-upload";
+import { toast } from "sonner";
 
 // Validation schema for company profile
 const companyProfileSchema = z.object({
-  company_name: z.string().min(1, 'Company name is required').max(255),
+  company_name: z.string().min(1, "Company name is required").max(255),
   contact_info: z.object({
     primary_contact: z.string().optional(),
     phone: z.string().optional(),
     email: z
       .string()
-      .email('Invalid email format')
+      .email("Invalid email format")
       .optional()
-      .or(z.literal('')),
+      .or(z.literal("")),
     address: z.string().optional(),
     billing_contact: z.string().optional(),
     emergency_contact: z.string().optional(),
   }),
-  logo_url: z.string().url().optional().or(z.literal('')).or(z.null()),
+  logo_url: z.string().url().optional().or(z.literal("")).or(z.null()),
   company_background: z.string().optional(),
   service_references: z.array(
     z.object({
@@ -49,7 +49,7 @@ const companyProfileSchema = z.object({
       duration: z.string().optional(),
       contact_info: z.string().optional(),
       testimonial: z.string().optional(),
-    })
+    }),
   ),
 });
 
@@ -57,7 +57,7 @@ type CompanyProfileFormData = z.infer<typeof companyProfileSchema>;
 
 export function CompanyProfileSettings() {
   const [isLoading, setIsLoading] = useState(true);
-  const [savedUrl, setSavedUrl] = useState<string>('');
+  const [savedUrl, setSavedUrl] = useState<string>("");
   const {
     fetchCompanyProfile,
     updateCompanyProfile,
@@ -71,30 +71,30 @@ export function CompanyProfileSettings() {
     resetToSaved,
   } = useImageUpload({
     initialUrl: savedUrl || null,
-    bucket: 'company-logos',
-    folder: 'company-profiles',
+    bucket: "company-logos",
+    folder: "company-profiles",
   });
 
   const form = useForm<CompanyProfileFormData>({
     resolver: zodResolver(companyProfileSchema),
     defaultValues: {
-      company_name: '',
+      company_name: "",
       contact_info: {
-        primary_contact: '',
-        phone: '',
-        email: '',
-        address: '',
-        billing_contact: '',
-        emergency_contact: '',
+        primary_contact: "",
+        phone: "",
+        email: "",
+        address: "",
+        billing_contact: "",
+        emergency_contact: "",
       },
-      logo_url: '',
-      company_background: '',
+      logo_url: "",
+      company_background: "",
       service_references: [],
     },
   });
 
   const { watch, setValue, getValues } = form;
-  const serviceReferences = watch('service_references');
+  const serviceReferences = watch("service_references");
 
   // Load existing company profile
   useEffect(() => {
@@ -103,23 +103,23 @@ export function CompanyProfileSettings() {
         const profile = await fetchCompanyProfile();
         if (profile) {
           form.reset({
-            company_name: profile.company_name || '',
+            company_name: profile.company_name || "",
             contact_info: {
-              primary_contact: profile.contact_info?.primary_contact || '',
-              phone: profile.contact_info?.phone || '',
-              email: profile.contact_info?.email || '',
-              address: profile.contact_info?.address || '',
-              billing_contact: profile.contact_info?.billing_contact || '',
-              emergency_contact: profile.contact_info?.emergency_contact || '',
+              primary_contact: profile.contact_info?.primary_contact || "",
+              phone: profile.contact_info?.phone || "",
+              email: profile.contact_info?.email || "",
+              address: profile.contact_info?.address || "",
+              billing_contact: profile.contact_info?.billing_contact || "",
+              emergency_contact: profile.contact_info?.emergency_contact || "",
             },
-            logo_url: profile.logo_url || '',
-            company_background: profile.company_background || '',
+            logo_url: profile.logo_url || "",
+            company_background: profile.company_background || "",
             service_references: profile.service_references || [],
           });
-          setSavedUrl(profile.logo_url || '');
+          setSavedUrl(profile.logo_url || "");
         }
       } catch (error) {
-        console.error('Failed to load company profile:', error);
+        console.error("Failed to load company profile:", error);
       } finally {
         setIsLoading(false);
       }
@@ -130,7 +130,7 @@ export function CompanyProfileSettings() {
 
   // Handle logo upload
   const handleLogoUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -138,36 +138,36 @@ export function CompanyProfileSettings() {
     try {
       const uploadedUrl = await uploadImage(file);
       if (uploadedUrl) {
-        setValue('logo_url', uploadedUrl);
+        setValue("logo_url", uploadedUrl);
         setSavedUrl(uploadedUrl);
       }
     } catch (error) {
-      console.error('Failed to upload logo:', error);
-      toast.error('Failed to upload logo');
+      console.error("Failed to upload logo:", error);
+      toast.error("Failed to upload logo");
     }
   };
 
   // Add new service reference
   const addServiceReference = () => {
-    const currentReferences = getValues('service_references');
-    setValue('service_references', [
+    const currentReferences = getValues("service_references");
+    setValue("service_references", [
       ...currentReferences,
       {
-        client_name: '',
-        service_type: '',
-        duration: '',
-        contact_info: '',
-        testimonial: '',
+        client_name: "",
+        service_type: "",
+        duration: "",
+        contact_info: "",
+        testimonial: "",
       },
     ]);
   };
 
   // Remove service reference
   const removeServiceReference = (index: number) => {
-    const currentReferences = getValues('service_references');
+    const currentReferences = getValues("service_references");
     setValue(
-      'service_references',
-      currentReferences.filter((_, i) => i !== index)
+      "service_references",
+      currentReferences.filter((_, i) => i !== index),
     );
   };
 
@@ -186,8 +186,8 @@ export function CompanyProfileSettings() {
         await createCompanyProfile(profileData);
       }
     } catch (error) {
-      console.error('Failed to save company profile:', error);
-      toast.error('Failed to save company profile');
+      console.error("Failed to save company profile:", error);
+      toast.error("Failed to save company profile");
     }
   };
 
@@ -236,7 +236,7 @@ export function CompanyProfileSettings() {
                 <Label htmlFor="company_name">Company Name *</Label>
                 <Input
                   id="company_name"
-                  {...form.register('company_name')}
+                  {...form.register("company_name")}
                   placeholder="Enter company name"
                 />
                 {form.formState.errors.company_name && (
@@ -250,7 +250,7 @@ export function CompanyProfileSettings() {
                 <Label htmlFor="primary_contact">Primary Contact</Label>
                 <Input
                   id="primary_contact"
-                  {...form.register('contact_info.primary_contact')}
+                  {...form.register("contact_info.primary_contact")}
                   placeholder="Primary contact person"
                 />
               </div>
@@ -260,7 +260,7 @@ export function CompanyProfileSettings() {
               <Label htmlFor="company_background">Company Background</Label>
               <Textarea
                 id="company_background"
-                {...form.register('company_background')}
+                {...form.register("company_background")}
                 placeholder="Brief description of your company, services, and expertise..."
                 rows={4}
               />
@@ -317,7 +317,7 @@ export function CompanyProfileSettings() {
                 <Label htmlFor="phone">Phone</Label>
                 <Input
                   id="phone"
-                  {...form.register('contact_info.phone')}
+                  {...form.register("contact_info.phone")}
                   placeholder="Company phone number"
                 />
               </div>
@@ -327,7 +327,7 @@ export function CompanyProfileSettings() {
                 <Input
                   id="email"
                   type="email"
-                  {...form.register('contact_info.email')}
+                  {...form.register("contact_info.email")}
                   placeholder="company@example.com"
                 />
                 {form.formState.errors.contact_info?.email && (
@@ -342,7 +342,7 @@ export function CompanyProfileSettings() {
               <Label htmlFor="address">Address</Label>
               <Textarea
                 id="address"
-                {...form.register('contact_info.address')}
+                {...form.register("contact_info.address")}
                 placeholder="Company address"
                 rows={2}
               />
@@ -353,7 +353,7 @@ export function CompanyProfileSettings() {
                 <Label htmlFor="billing_contact">Billing Contact</Label>
                 <Input
                   id="billing_contact"
-                  {...form.register('contact_info.billing_contact')}
+                  {...form.register("contact_info.billing_contact")}
                   placeholder="Billing contact person"
                 />
               </div>
@@ -362,7 +362,7 @@ export function CompanyProfileSettings() {
                 <Label htmlFor="emergency_contact">Emergency Contact</Label>
                 <Input
                   id="emergency_contact"
-                  {...form.register('contact_info.emergency_contact')}
+                  {...form.register("contact_info.emergency_contact")}
                   placeholder="Emergency contact information"
                 />
               </div>
@@ -417,7 +417,7 @@ export function CompanyProfileSettings() {
                         <Input
                           id={`client_name_${index}`}
                           {...form.register(
-                            `service_references.${index}.client_name`
+                            `service_references.${index}.client_name`,
                           )}
                           placeholder="Client company name"
                         />
@@ -430,7 +430,7 @@ export function CompanyProfileSettings() {
                         <Input
                           id={`service_type_${index}`}
                           {...form.register(
-                            `service_references.${index}.service_type`
+                            `service_references.${index}.service_type`,
                           )}
                           placeholder="Type of service provided"
                         />
@@ -441,7 +441,7 @@ export function CompanyProfileSettings() {
                         <Input
                           id={`duration_${index}`}
                           {...form.register(
-                            `service_references.${index}.duration`
+                            `service_references.${index}.duration`,
                           )}
                           placeholder="e.g., 6 months, 2 years"
                         />
@@ -454,7 +454,7 @@ export function CompanyProfileSettings() {
                         <Input
                           id={`contact_info_${index}`}
                           {...form.register(
-                            `service_references.${index}.contact_info`
+                            `service_references.${index}.contact_info`,
                           )}
                           placeholder="Reference contact information"
                         />
@@ -468,7 +468,7 @@ export function CompanyProfileSettings() {
                       <Textarea
                         id={`testimonial_${index}`}
                         {...form.register(
-                          `service_references.${index}.testimonial`
+                          `service_references.${index}.testimonial`,
                         )}
                         placeholder="Client testimonial or project description..."
                         rows={3}
@@ -486,7 +486,7 @@ export function CompanyProfileSettings() {
               disabled={isUpdating || isUploading}
               className="min-w-[120px]"
             >
-              {isUpdating ? 'Saving...' : 'Save Changes'}
+              {isUpdating ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>

@@ -2,8 +2,7 @@ import React from "react";
 import { TemplateType } from "@/features/templates/types/templates";
 import { dmSerifText, montserrat } from "@/lib/fonts";
 import { splitTitleWithAmpersand } from "@/features/templates/utils/utils";
-import { cn } from "@/lib/utils";
-
+import { cn } from "@/lib/utils/cn";
 type ProposalTitleProps = {
   templateType: TemplateType;
   title: string;

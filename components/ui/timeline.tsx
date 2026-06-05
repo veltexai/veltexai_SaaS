@@ -1,6 +1,5 @@
 import React from 'react';
-import { cn } from '@/lib/utils';
-
+import { cn } from "@/lib/utils/cn";
 const Timeline = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>

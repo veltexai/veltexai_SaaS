@@ -1,11 +1,11 @@
-import { redirect } from 'next/navigation';
-import { getUser } from '@/queries/user';
-import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { AdminAnalytics } from '@/features/admin/components/admin-analytics';
-import { AdminClientWrapper } from '@/features/admin/components/admin-client-wrapper';
+import { redirect } from "next/navigation";
+import { getUser } from "@/features/auth/services/get-user";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { AdminAnalytics } from "@/features/admin/components/admin-analytics";
+import { AdminClientWrapper } from "@/features/admin/components/admin-client-wrapper";
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 interface Analytics {
@@ -56,7 +56,7 @@ async function fetchAnalytics(): Promise<Analytics> {
   const startOfMonth = new Date(
     now.getFullYear(),
     now.getMonth(),
-    1
+    1,
   ).toISOString();
 
   // Fetch all data in parallel
@@ -69,11 +69,11 @@ async function fetchAnalytics(): Promise<Analytics> {
     recentProposalsResult,
   ] = await Promise.all([
     // Total users count
-    supabase.from('profiles').select('id', { count: 'exact' }),
+    supabase.from("profiles").select("id", { count: "exact" }),
 
     // All proposals with pricing data
     supabase
-      .from('proposals')
+      .from("proposals")
       .select(
         `
         id,
@@ -84,32 +84,32 @@ async function fetchAnalytics(): Promise<Analytics> {
         created_at,
         user_id,
         profiles!inner(email)
-      `
+      `,
       )
-      .order('created_at', { ascending: false }),
+      .order("created_at", { ascending: false }),
 
     // Active subscriptions with plan info
     supabase
-      .from('subscriptions')
-      .select('status, plan, user_id')
-      .eq('status', 'active'),
+      .from("subscriptions")
+      .select("status, plan, user_id")
+      .eq("status", "active"),
 
     // New users this month
     supabase
-      .from('profiles')
-      .select('id', { count: 'exact' })
-      .gte('created_at', startOfMonth),
+      .from("profiles")
+      .select("id", { count: "exact" })
+      .gte("created_at", startOfMonth),
 
     // Recent users (last 10)
     supabase
-      .from('profiles')
-      .select('id, email, full_name, company_name, created_at, role')
-      .order('created_at', { ascending: false })
+      .from("profiles")
+      .select("id, email, full_name, company_name, created_at, role")
+      .order("created_at", { ascending: false })
       .limit(10),
 
     // Recent proposals with user email (last 10)
     supabase
-      .from('proposals')
+      .from("proposals")
       .select(
         `
         id,
@@ -119,9 +119,9 @@ async function fetchAnalytics(): Promise<Analytics> {
         pricing_data,
         created_at,
         profiles!inner(email)
-      `
+      `,
       )
-      .order('created_at', { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(10),
   ]);
 
@@ -143,7 +143,7 @@ async function fetchAnalytics(): Promise<Analytics> {
     if (!pricingData) return 0;
 
     // Handle different pricing_data structures
-    if (typeof pricingData === 'object') {
+    if (typeof pricingData === "object") {
       // Try different possible price fields
       if (pricingData.total_price)
         return parseFloat(pricingData.total_price) || 0;
@@ -165,24 +165,24 @@ async function fetchAnalytics(): Promise<Analytics> {
   const newUsersThisMonth = newUsersResult.count || 0;
 
   // Revenue calculations
-  const acceptedProposals = proposals.filter((p) => p.status === 'accepted');
+  const acceptedProposals = proposals.filter((p) => p.status === "accepted");
   const totalRevenue = acceptedProposals.reduce(
     (sum, p) => sum + extractPrice(p.pricing_data),
-    0
+    0,
   );
 
   // Monthly revenue (accepted proposals this month)
   const monthlyAcceptedProposals = acceptedProposals.filter(
-    (p) => new Date(p.created_at) >= new Date(startOfMonth)
+    (p) => new Date(p.created_at) >= new Date(startOfMonth),
   );
   const monthlyRevenue = monthlyAcceptedProposals.reduce(
     (sum, p) => sum + extractPrice(p.pricing_data),
-    0
+    0,
   );
 
   // Conversion rate
   const sentProposals = proposals.filter(
-    (p) => p.status === 'sent' || p.status === 'accepted'
+    (p) => p.status === "sent" || p.status === "accepted",
   );
   const conversionRate =
     sentProposals.length > 0
@@ -195,18 +195,18 @@ async function fetchAnalytics(): Promise<Analytics> {
 
   // Proposals by status
   const proposalsByStatus = {
-    draft: proposals.filter((p) => p.status === 'draft').length,
-    sent: proposals.filter((p) => p.status === 'sent').length,
-    accepted: proposals.filter((p) => p.status === 'accepted').length,
-    rejected: proposals.filter((p) => p.status === 'rejected').length,
+    draft: proposals.filter((p) => p.status === "draft").length,
+    sent: proposals.filter((p) => p.status === "sent").length,
+    accepted: proposals.filter((p) => p.status === "accepted").length,
+    rejected: proposals.filter((p) => p.status === "rejected").length,
   };
 
   // Users by plan
   const usersByPlan = {
     trial: 0,
-    starter: subscriptions.filter((s) => s.plan === 'starter').length,
-    professional: subscriptions.filter((s) => s.plan === 'professional').length,
-    enterprise: subscriptions.filter((s) => s.plan === 'enterprise').length,
+    starter: subscriptions.filter((s) => s.plan === "starter").length,
+    professional: subscriptions.filter((s) => s.plan === "professional").length,
+    enterprise: subscriptions.filter((s) => s.plan === "enterprise").length,
   };
   usersByPlan.trial =
     totalUsers -
@@ -215,11 +215,11 @@ async function fetchAnalytics(): Promise<Analytics> {
   // Format recent users
   const formattedRecentUsers = recentUsers.map((user) => ({
     id: user.id,
-    email: user.email || '',
-    full_name: user.full_name || '',
-    company_name: user.company_name || '',
+    email: user.email || "",
+    full_name: user.full_name || "",
+    company_name: user.company_name || "",
     created_at: user.created_at,
-    role: user.role || 'user',
+    role: user.role || "user",
   }));
 
   // Format recent proposals
@@ -230,7 +230,7 @@ async function fetchAnalytics(): Promise<Analytics> {
     total_value: extractPrice(proposal.pricing_data),
     status: proposal.status,
     created_at: proposal.created_at,
-    user_email: proposal.profiles?.[0]?.email || '',
+    user_email: proposal.profiles?.[0]?.email || "",
   }));
 
   return {
@@ -253,18 +253,18 @@ export default async function AdminDashboard() {
   const { user } = await getUser();
 
   if (!user) {
-    redirect('/dashboard');
+    redirect("/dashboard");
   }
 
   const supabase = await createClient();
   const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
     .single();
 
-  if (profile?.role !== 'admin') {
-    redirect('/dashboard');
+  if (profile?.role !== "admin") {
+    redirect("/dashboard");
   }
 
   const analytics = await fetchAnalytics();

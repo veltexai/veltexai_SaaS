@@ -1,7 +1,5 @@
 import { TemplateCardInfo, TemplateItem, TemplateCardPreview  } from "@/features/proposals";
-import { cn } from "@/lib/utils";
-
-
+import { cn } from "@/lib/utils/cn";
 interface TemplateCardProps {
     template: TemplateItem;
     isSelected: boolean;

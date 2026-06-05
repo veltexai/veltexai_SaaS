@@ -4,8 +4,12 @@ import { z } from "zod";
 import { validatedAction } from "@/lib/auth/middleware";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AUTH_ROUTES, AUTH_ERRORS, AUTH_REDIRECTS } from "@/lib/auth/constants";
-import type { AuthResponse } from "@/lib/auth/types";
+import {
+  AUTH_ROUTES,
+  AUTH_ERRORS,
+  AUTH_REDIRECTS,
+} from "@/features/auth/constants";
+import type { AuthResponse } from "@/features/auth/types";
 import config from "@/config/config";
 
 const signInSchema = z.object({

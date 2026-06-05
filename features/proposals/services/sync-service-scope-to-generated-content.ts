@@ -2,7 +2,7 @@ import {
   getAreaFrequencyLabel,
   isOnDemandFrequency,
 } from "@/features/proposals/constants/area-frequency";
-import type { ProposalFormData } from "@/lib/validations/proposal";
+import type { ProposalFormData } from "@/features/proposals/schemas/proposal";
 
 type ServiceScope = ProposalFormData["service_scope"];
 type PricingData = ProposalFormData["pricing_data"];
@@ -91,9 +91,16 @@ function isBasicScopeRow(row: unknown): boolean {
 function buildCostLookup(
   prevRows: unknown[],
 ): Map<string, { costPerVisit: unknown; monthlyCost: unknown }> {
-  const map = new Map<string, { costPerVisit: unknown; monthlyCost: unknown }>();
+  const map = new Map<
+    string,
+    { costPerVisit: unknown; monthlyCost: unknown }
+  >();
   for (const r of prevRows) {
-    const row = r as { area?: string; costPerVisit?: unknown; monthlyCost?: unknown };
+    const row = r as {
+      area?: string;
+      costPerVisit?: unknown;
+      monthlyCost?: unknown;
+    };
     if (row?.area && typeof row.area === "string") {
       map.set(row.area.trim().toLowerCase(), {
         costPerVisit: row.costPerVisit ?? null,
@@ -200,8 +207,7 @@ export function syncServiceScopeIntoGeneratedContent(
         const rows = hasPerAreaFrequencies
           ? areasInOrder.map((area: string) => {
               const rawFreq = service_scope.frequency_details?.[area];
-              const freqKey =
-                rawFreq == null ? "" : String(rawFreq);
+              const freqKey = rawFreq == null ? "" : String(rawFreq);
               const frequency = freqKey
                 ? getAreaFrequencyLabel(freqKey)
                 : getServiceFrequencyLabel(service_frequency);
@@ -209,9 +215,7 @@ export function syncServiceScopeIntoGeneratedContent(
               const onDemand = isOnDemandFrequency(freqKey);
               const noteRaw = service_scope.area_notes?.[area];
               const note =
-                noteRaw == null || noteRaw === ""
-                  ? null
-                  : String(noteRaw);
+                noteRaw == null || noteRaw === "" ? null : String(noteRaw);
               return {
                 area,
                 frequency,
@@ -256,7 +260,9 @@ export function syncServiceScopeIntoGeneratedContent(
   );
 
   result = replaceFencedJsonBlock(result, "veliz_additional_services", () => {
-    const additionalServicesRows = Array.isArray(service_scope?.special_services)
+    const additionalServicesRows = Array.isArray(
+      service_scope?.special_services,
+    )
       ? (service_scope.special_services as string[]).map((s: string) => ({
           service: s,
           pricePerTime: null,

@@ -30,7 +30,7 @@ import {
 
 // Hooks and utilities
 import { useImageUpload } from "@/hooks/use-image-upload";
-import { useProfileUpdate } from "@/hooks/use-profile-update";
+import { useProfileUpdate } from "@/features/settings/hooks/use-profile-update";
 import { profileSchema, type ProfileFormData } from "@/lib/validations/profile";
 import { type User as UserType, type Profile } from "@/types/database";
 import { useNavigationGuard } from "@/hooks/use-navigation-guard";

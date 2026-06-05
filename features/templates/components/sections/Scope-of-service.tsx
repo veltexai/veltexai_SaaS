@@ -1,6 +1,7 @@
 import { TemplateType } from "@/features/templates/types/templates";
 import Image from "next/image";
-import { cn, formatCurrencySafe } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
+import { formatCurrencySafe } from "@/lib/utils/format";
 import React from "react";
 import { ProposalTitle } from "../shared";
 import { arvo } from "@/lib/fonts";

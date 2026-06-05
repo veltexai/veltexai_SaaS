@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, ArrowLeft } from "lucide-react";
-import { sendResetPasswordEmail } from "@/lib/auth/actions/password";
+import { sendResetPasswordEmail } from "@/features/auth/actions/password";
 import Image from "next/image";
 
 const forgotPasswordSchema = z.object({

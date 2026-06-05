@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { CalculatedPricing } from "../types/pricing";
-import { ProposalFormData } from "@/lib/validations/proposal";
+import { ProposalFormData } from "@/features/proposals/schemas/proposal";
 import { usePricingSettings } from "@/hooks/use-pricing-settings";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";

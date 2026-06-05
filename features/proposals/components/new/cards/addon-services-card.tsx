@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Clock, Plus, Trash2 } from "lucide-react";
 import { AddonServicePickerModal } from "../addon-service-picker-modal";
 import { useProposalAddons } from "../../../hooks/use-proposal-addons";
-import type { ProposalFormData } from "@/lib/validations/proposal";
+import type { ProposalFormData } from "@/features/proposals/schemas/proposal";
 import type { PASRow } from "../../../types/addons";
 
 interface AddonServicesCardProps {
@@ -42,7 +42,14 @@ export function AddonServicesCard({ proposalId }: AddonServicesCardProps) {
     onExternalChange: syncToForm,
   });
   // #region agent log
-  console.log('[DEBUG-a3a74d] H3: addons in AddonServicesCard', JSON.stringify({proposalId:proposalId||null,addonsCount:addons.length,addonLabels:addons.map((a:any)=>a.label)}));
+  console.log(
+    "[DEBUG-a3a74d] H3: addons in AddonServicesCard",
+    JSON.stringify({
+      proposalId: proposalId || null,
+      addonsCount: addons.length,
+      addonLabels: addons.map((a: any) => a.label),
+    }),
+  );
   // #endregion
 
   return (

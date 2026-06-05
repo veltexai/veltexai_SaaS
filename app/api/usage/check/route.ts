@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { getUser } from '@/queries/user';
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/features/auth/services/get-user";
 
 interface UsageInfo {
   current_usage: number;
@@ -18,21 +18,21 @@ export async function GET(request: NextRequest) {
     const { user } = await getUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabase = await createClient();
 
     // Use the new database function to get comprehensive usage info
     const { data, error } = await supabase
-      .rpc('get_user_usage_info', { user_uuid: user.id })
+      .rpc("get_user_usage_info", { user_uuid: user.id })
       .single();
 
     if (error) {
-      console.error('Error fetching usage info:', error);
+      console.error("Error fetching usage info:", error);
       return NextResponse.json(
-        { error: 'Failed to fetch usage information' },
-        { status: 500 }
+        { error: "Failed to fetch usage information" },
+        { status: 500 },
       );
     }
     const usageData = data as UsageInfo;
@@ -45,14 +45,14 @@ export async function GET(request: NextRequest) {
       subscriptionStatus: usageData.subscription_status,
       remainingProposals: usageData.remaining_proposals,
       isTrial: usageData.is_trial,
-      isFreeTrial: usageData.subscription_status === 'free_trial',
+      isFreeTrial: usageData.subscription_status === "free_trial",
       trialEndAt: usageData.trial_end_at,
     });
   } catch (error) {
-    console.error('Error checking usage:', error);
+    console.error("Error checking usage:", error);
     return NextResponse.json(
-      { error: 'Failed to check usage' },
-      { status: 500 }
+      { error: "Failed to check usage" },
+      { status: 500 },
     );
   }
 }

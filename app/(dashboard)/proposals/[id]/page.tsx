@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { type Database } from '@/types/database';
+import { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { type Database } from "@/types/database";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,8 +25,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { toast } from 'sonner';
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Edit,
@@ -46,22 +46,22 @@ import {
   X,
   Ruler,
   BookOpenText,
-} from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
-import { ProposalEditDialog } from '@/features/proposals/components/proposal-edit-dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
-import LoadingPage from '@/components/ui/loading-page';
-import { ServiceSpecificSection } from '@/features/proposals/components/new/service-specific-section';
-import { Form } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+} from "lucide-react";
+import { formatCurrency } from "@/lib/utils/format";
+import { ProposalEditDialog } from "@/features/proposals/components/proposal-edit-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import LoadingPage from "@/components/ui/loading-page";
+import { ServiceSpecificSection } from "@/features/proposals/components/new/service-specific-section";
+import { Form } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   proposalFormSchema,
   ProposalFormData,
-} from '@/lib/validations/proposal';
+} from "@/features/proposals/schemas/proposal";
 
-type Proposal = Database['public']['Tables']['proposals']['Row'];
+type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 
 interface ProposalDetailPageProps {
   params: Promise<{
@@ -78,7 +78,7 @@ export default function ProposalDetailPage({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [editingAIContent, setEditingAIContent] = useState(false);
-  const [aiContentDraft, setAiContentDraft] = useState('');
+  const [aiContentDraft, setAiContentDraft] = useState("");
   const [savingAIContent, setSavingAIContent] = useState(false);
   const router = useRouter();
   const supabase = createClient();
@@ -87,23 +87,23 @@ export default function ProposalDetailPage({
   const form = useForm({
     resolver: zodResolver(proposalFormSchema),
     defaultValues: {
-      title: '',
-      service_type: 'residential' as const,
-      status: 'draft' as const,
+      title: "",
+      service_type: "residential" as const,
+      status: "draft" as const,
       global_inputs: {
-        client_name: '',
-        client_email: '',
-        client_company: '',
-        contact_phone: '',
-        service_location: '',
+        client_name: "",
+        client_email: "",
+        client_company: "",
+        contact_phone: "",
+        service_location: "",
         facility_size: 0,
-        service_frequency: 'one-time' as const,
-        regional_location: '',
+        service_frequency: "one-time" as const,
+        regional_location: "",
       },
       service_specific_data: {},
       pricing_enabled: false,
       pricing_data: undefined,
-      generated_content: '',
+      generated_content: "",
       facility_details: {
         building_age: undefined,
         building_type: undefined,
@@ -132,7 +132,7 @@ export default function ProposalDetailPage({
         certifications_required: [],
         insurance_requirements: [],
       },
-      ai_tone: 'professional' as const,
+      ai_tone: "professional" as const,
     },
   });
 
@@ -144,28 +144,28 @@ export default function ProposalDetailPage({
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('proposals')
-        .select('*')
-        .eq('id', id)
+        .from("proposals")
+        .select("*")
+        .eq("id", id)
         .single();
 
       if (error) {
-        console.error('Error fetching proposal:', error);
-        console.error('Error code:', error.code); // Check if it's PGRST116
-        if (error.code === 'PGRST116') {
-          console.error('No rows found - proposal does not exist');
-          toast.error('Proposal not found');
+        console.error("Error fetching proposal:", error);
+        console.error("Error code:", error.code); // Check if it's PGRST116
+        if (error.code === "PGRST116") {
+          console.error("No rows found - proposal does not exist");
+          toast.error("Proposal not found");
         } else {
-          toast.error('Failed to load proposal');
+          toast.error("Failed to load proposal");
         }
-        router.push('/dashboard/proposals');
+        router.push("/dashboard/proposals");
         return;
       }
       setProposal(data);
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Failed to load proposal');
-      router.push('/dashboard/proposals');
+      console.error("Error:", error);
+      toast.error("Failed to load proposal");
+      router.push("/dashboard/proposals");
     } finally {
       setLoading(false);
     }
@@ -175,19 +175,20 @@ export default function ProposalDetailPage({
   useEffect(() => {
     if (proposal) {
       form.reset({
-        service_specific_data: (proposal.service_specific_data as Record<string, any>) || {},
+        service_specific_data:
+          (proposal.service_specific_data as Record<string, any>) || {},
       });
     }
   }, [proposal, form]);
 
   const handleAIContentEdit = () => {
-    setAiContentDraft(proposal?.generated_content || '');
+    setAiContentDraft(proposal?.generated_content || "");
     setEditingAIContent(true);
   };
 
   const handleAIContentCancel = () => {
     setEditingAIContent(false);
-    setAiContentDraft('');
+    setAiContentDraft("");
   };
 
   const handleAIContentSave = async () => {
@@ -196,12 +197,12 @@ export default function ProposalDetailPage({
     try {
       setSavingAIContent(true);
       const { error } = await supabase
-        .from('proposals')
+        .from("proposals")
         .update({
           generated_content: aiContentDraft,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', proposal.id);
+        .eq("id", proposal.id);
 
       if (error) throw error;
 
@@ -211,14 +212,14 @@ export default function ProposalDetailPage({
               ...prev,
               generated_content: aiContentDraft,
             }
-          : null
+          : null,
       );
       setEditingAIContent(false);
-      setAiContentDraft('');
-      toast.success('AI content updated successfully');
+      setAiContentDraft("");
+      toast.success("AI content updated successfully");
     } catch (error) {
-      console.error('Error updating AI content:', error);
-      toast.error('Failed to update AI content');
+      console.error("Error updating AI content:", error);
+      toast.error("Failed to update AI content");
     } finally {
       setSavingAIContent(false);
     }
@@ -230,35 +231,35 @@ export default function ProposalDetailPage({
     try {
       setDeleting(true);
       const { error } = await supabase
-        .from('proposals')
+        .from("proposals")
         .delete()
-        .eq('id', proposal.id);
+        .eq("id", proposal.id);
 
       if (error) throw error;
 
-      toast.success('Proposal deleted successfully');
-      router.push('/dashboard/proposals');
+      toast.success("Proposal deleted successfully");
+      router.push("/dashboard/proposals");
     } catch (error) {
-      console.error('Error deleting proposal:', error);
-      toast.error('Failed to delete proposal');
+      console.error("Error deleting proposal:", error);
+      toast.error("Failed to delete proposal");
     } finally {
       setDeleting(false);
     }
   };
 
   const handleStatusUpdate = async (
-    newStatus: 'draft' | 'sent' | 'accepted' | 'rejected'
+    newStatus: "draft" | "sent" | "accepted" | "rejected",
   ) => {
     if (!proposal) return;
 
     try {
       const { error } = await supabase
-        .from('proposals')
+        .from("proposals")
         .update({
           status: newStatus,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', proposal.id);
+        .eq("id", proposal.id);
 
       if (error) throw error;
 
@@ -266,39 +267,39 @@ export default function ProposalDetailPage({
         prev
           ? {
               ...prev,
-              status: newStatus as 'draft' | 'sent' | 'accepted' | 'rejected',
+              status: newStatus as "draft" | "sent" | "accepted" | "rejected",
             }
-          : null
+          : null,
       );
       toast.success(`Proposal ${newStatus}`);
     } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Failed to update proposal status');
+      console.error("Error updating status:", error);
+      toast.error("Failed to update proposal status");
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'draft':
-        return 'secondary';
-      case 'sent':
-        return 'default';
-      case 'accepted':
-        return 'default';
-      case 'rejected':
-        return 'destructive';
+      case "draft":
+        return "secondary";
+      case "sent":
+        return "default";
+      case "accepted":
+        return "default";
+      case "rejected":
+        return "destructive";
       default:
-        return 'secondary';
+        return "secondary";
     }
   };
 
   const getServiceTypeLabel = (serviceType: string) => {
     const labels: Record<string, string> = {
-      residential: 'Residential Cleaning',
-      commercial: 'Commercial Cleaning',
-      carpet: 'Carpet Cleaning',
-      window: 'Window Cleaning',
-      floor: 'Floor Cleaning',
+      residential: "Residential Cleaning",
+      commercial: "Commercial Cleaning",
+      carpet: "Carpet Cleaning",
+      window: "Window Cleaning",
+      floor: "Floor Cleaning",
     };
     return labels[serviceType] || serviceType;
   };
@@ -307,7 +308,7 @@ export default function ProposalDetailPage({
     if (!proposal?.service_specific_data) return null;
 
     const data = proposal.service_specific_data as any;
-    console.log('🚀 ~ renderServiceSpecificData ~ data:', data);
+    console.log("🚀 ~ renderServiceSpecificData ~ data:", data);
     const serviceType = proposal.service_type;
 
     return (
@@ -394,7 +395,7 @@ export default function ProposalDetailPage({
               <div className="flex justify-between items-center text-sm">
                 <span>Production Rate</span>
                 <span>
-                  {pricing.assumptions?.production_rate?.min || 0} -{' '}
+                  {pricing.assumptions?.production_rate?.min || 0} -{" "}
                   {pricing.assumptions?.production_rate?.max || 0} sq ft/hr
                 </span>
               </div>
@@ -417,7 +418,7 @@ export default function ProposalDetailPage({
                 {formatCurrency(
                   pricing.price_range?.low && pricing.price_range?.high
                     ? (pricing.price_range.low + pricing.price_range.high) / 2
-                    : 0
+                    : 0,
                 )}
               </span>
             </div>
@@ -438,7 +439,7 @@ export default function ProposalDetailPage({
         <p className="text-muted-foreground mb-4">
           The proposal you're looking for doesn't exist.
         </p>
-        <Button onClick={() => router.push('/dashboard/proposals')}>
+        <Button onClick={() => router.push("/dashboard/proposals")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Proposals
         </Button>
@@ -456,7 +457,7 @@ export default function ProposalDetailPage({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push('/dashboard/proposals')}
+            onClick={() => router.push("/dashboard/proposals")}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
@@ -483,8 +484,8 @@ export default function ProposalDetailPage({
             Edit
           </Button>
 
-          {proposal.status === 'draft' && (
-            <Button onClick={() => handleStatusUpdate('sent')}>
+          {proposal.status === "draft" && (
+            <Button onClick={() => handleStatusUpdate("sent")}>
               <Send className="h-4 w-4 mr-2" />
               Send Proposal
             </Button>
@@ -547,7 +548,7 @@ export default function ProposalDetailPage({
                     <User className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="font-medium">
-                        {globalInputs?.client_name || 'N/A'}
+                        {globalInputs?.client_name || "N/A"}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Client Name
@@ -569,7 +570,7 @@ export default function ProposalDetailPage({
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="font-medium">
-                        {globalInputs?.client_email || 'N/A'}
+                        {globalInputs?.client_email || "N/A"}
                       </p>
                       <p className="text-sm text-muted-foreground">Email</p>
                     </div>
@@ -579,7 +580,7 @@ export default function ProposalDetailPage({
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="font-medium">
-                        {globalInputs?.contact_phone || 'N/A'}
+                        {globalInputs?.contact_phone || "N/A"}
                       </p>
                       <p className="text-sm text-muted-foreground">Phone</p>
                     </div>
@@ -611,7 +612,7 @@ export default function ProposalDetailPage({
                     <MapPin className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="font-medium">
-                        {globalInputs?.service_location || 'N/A'}
+                        {globalInputs?.service_location || "N/A"}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Service Address
@@ -623,7 +624,7 @@ export default function ProposalDetailPage({
                     <Ruler className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="font-medium">
-                        {globalInputs?.facility_size || 'N/A'} sq ft
+                        {globalInputs?.facility_size || "N/A"} sq ft
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Facility Size
@@ -636,9 +637,9 @@ export default function ProposalDetailPage({
                     <div>
                       <p className="font-medium">
                         {globalInputs?.service_frequency
-                          ?.replace('_', ' ')
+                          ?.replace("_", " ")
                           .replace(/\b\w/g, (l: string) => l.toUpperCase()) ||
-                          'N/A'}
+                          "N/A"}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Service Frequency

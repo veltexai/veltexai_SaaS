@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { PricingEngine } from "@/lib/pricing-engine";
+import { PricingEngine } from "@/features/proposals/services/pricing-engine";
 import { getUser } from "@/lib/auth/auth-helpers";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import {
   serviceTypeSchema,
   serviceFrequencySchema,
-} from "@/lib/validations/proposal";
+} from "@/features/proposals/schemas/proposal";
 import { AITone } from "@/types/database";
-import { formatCurrencySafe } from "@/lib/utils";
+import { formatCurrencySafe } from "@/lib/utils/format";
 import {
   getAreaFrequencyLabel,
   isOnDemandFrequency,
@@ -654,14 +654,21 @@ Notes:
       if (!profile.company_founded_date) return "10+ years";
       const founded = new Date(profile.company_founded_date);
       const now = new Date();
-      const years = now.getFullYear() - founded.getFullYear() -
-        (now < new Date(now.getFullYear(), founded.getMonth(), founded.getDate()) ? 1 : 0);
+      const years =
+        now.getFullYear() -
+        founded.getFullYear() -
+        (now <
+        new Date(now.getFullYear(), founded.getMonth(), founded.getDate())
+          ? 1
+          : 0);
       const displayYears = Math.max(1, years);
       return `${displayYears} year${displayYears === 1 ? "" : "s"}`;
     })();
 
-    const industriesServed = profile.industries_served || "Education, offices, retail & healthcare";
-    const satisfactionGuarantee = profile.satisfaction_guarantee || "100% Satisfaction";
+    const industriesServed =
+      profile.industries_served || "Education, offices, retail & healthcare";
+    const satisfactionGuarantee =
+      profile.satisfaction_guarantee || "100% Satisfaction";
 
     const executivePremiumStructure = `
 Return markdown with ONLY these top-level sections using exact headings:${!pricing_enabled ? '\nIMPORTANT: Do NOT include any "Service Quote & Pricing" section - the client has disabled pricing for this proposal.' : ""}

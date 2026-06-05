@@ -13,17 +13,17 @@ import {
   type ServiceType,
   validateProposalWithServiceData,
   getServiceSpecificSchema,
-} from "@/lib/validations/proposal";
+} from "@/features/proposals/schemas/proposal";
 import { ServiceTypeSelector } from "./service-type-selector";
 import { GlobalInputsSection } from "./global-inputs-section";
 import { ServiceSpecificSection } from "./service-specific-section";
 import { EnhancedFacilitySection } from "./enhanced-facility-section";
 import { PricingSection } from "./pricing-section";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import z from "zod";
 import { useUserTier } from "@/features/proposals/hooks/use-user-tier";
 import { AiTone } from "@/types/proposal";
-import { scrollToTopOnMobile } from "@/lib/scroll";
+import { scrollToTopOnMobile } from "@/lib/utils/scroll";
 import { FormNavigation, TemplateSelectionSection } from "@/features/proposals";
 
 interface ProposalFormProps {

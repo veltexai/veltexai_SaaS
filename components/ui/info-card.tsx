@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-
+import { cn } from "@/lib/utils/cn";
 interface InfoCardProps {
   title: string;
   description?: string;

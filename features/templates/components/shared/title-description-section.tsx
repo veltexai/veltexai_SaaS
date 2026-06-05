@@ -1,6 +1,6 @@
 import { arvo, dmSerifText, montserrat } from "@/lib/fonts";
-import { cn } from "@/lib/utils";
-import { dataTerms } from "@/lib/templates/content";
+import { cn } from "@/lib/utils/cn";
+import { dataTerms } from "@/features/templates/constants/content";
 import { TemplateType } from "@/features/templates/types/templates";
 import React from "react";
 

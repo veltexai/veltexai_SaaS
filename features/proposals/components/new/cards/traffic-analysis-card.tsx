@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ProposalFormData } from "@/lib/validations/proposal";
+import type { ProposalFormData } from "@/features/proposals/schemas/proposal";
 import { Users } from "lucide-react";
 import {
   VISITOR_FREQUENCY_OPTIONS,
@@ -127,9 +127,7 @@ export function TrafficAnalysisCard() {
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel>
-                  Special Events or High-Traffic Periods
-                </FormLabel>
+                <FormLabel>Special Events or High-Traffic Periods</FormLabel>
                 <p className="text-sm text-muted-foreground">
                   Check if the facility hosts special events that require
                   additional cleaning

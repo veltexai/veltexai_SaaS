@@ -1,6 +1,6 @@
 import React from "react";
 import { arvo, dmSerifText, montserrat } from "@/lib/fonts";
-import { formatDateToMMDDYY } from "@/lib/utils";
+import { formatDateToMMDDYY } from "@/lib/utils/date";
 import { TemplateType } from "@/features/templates/types/templates";
 
 export const HeaderTemplate = ({

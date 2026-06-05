@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { getIconForLabel } from "@/lib/icon-map";
+import { getIconForLabel } from "@/features/templates/constants/icon-map";
 import { ProposalAcceptance } from "@/features/templates/components/shared/proposal-acceptance";
 import { dmSerifText } from "@/lib/fonts";
 import {
@@ -10,12 +10,12 @@ import {
   StartIcon,
   EductationIcon,
 } from "@/components/icons";
-import { formatCurrencySafe } from "@/lib/utils";
+import { formatCurrencySafe } from "@/lib/utils/format";
 import { createClient } from "@/lib/supabase/client";
 import {
   isOneTimeFrequency,
   isStandardJanitorialService,
-} from "@/lib/recurring-monthly-functions";
+} from "@/lib/utils/frequency";
 import { FrequencyLabel } from "@/features/templates/components";
 
 interface MarkdownRendererProps {

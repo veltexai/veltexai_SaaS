@@ -1,19 +1,22 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { User } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
-import { AUTH_ERRORS } from '@/lib/auth/constants';
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+import { AUTH_ERRORS } from "@/features/auth/constants";
 import type {
   AuthState,
   Profile,
   AuthResponse,
   MagicLinkOptions,
   OAuthOptions,
-} from '@/lib/auth/types';
+} from "@/features/auth/types";
 
 export function useAuth(): AuthState & {
-  updateProfile: (updates: Partial<Profile>, userOverride?: User) => Promise<AuthResponse>;
+  updateProfile: (
+    updates: Partial<Profile>,
+    userOverride?: User,
+  ) => Promise<AuthResponse>;
   updatePassword: (password: string) => Promise<AuthResponse>;
   refreshSession: () => Promise<void>;
 } {
@@ -34,22 +37,22 @@ export function useAuth(): AuthState & {
     async (userId: string) => {
       try {
         const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
           .single();
 
         if (error) {
-          console.error('Error fetching profile:', error);
+          console.error("Error fetching profile:", error);
           return;
         }
 
         updateState({ profile: data });
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error("Error fetching profile:", error);
       }
     },
-    [supabase, updateState]
+    [supabase, updateState],
   );
 
   const refreshSession = useCallback(async () => {
@@ -79,7 +82,7 @@ export function useAuth(): AuthState & {
         }
       }
     } catch (err) {
-      console.error('Session refresh error:', err);
+      console.error("Session refresh error:", err);
       updateState({ error: AUTH_ERRORS.SESSION_INIT_FAILED });
     }
   }, [supabase, updateState, fetchProfile]);
@@ -121,20 +124,23 @@ export function useAuth(): AuthState & {
   }, [supabase, updateState, fetchProfile, refreshSession]);
 
   const updateProfile = useCallback(
-    async (updates: Partial<Profile>, userOverride?: User): Promise<AuthResponse> => {
+    async (
+      updates: Partial<Profile>,
+      userOverride?: User,
+    ): Promise<AuthResponse> => {
       try {
-        console.log('updateProfile called with:', updates);
-        
+        console.log("updateProfile called with:", updates);
+
         const currentUser = userOverride || state.user;
         if (!currentUser) {
-          console.log('No user found');
+          console.log("No user found");
           return { error: { message: AUTH_ERRORS.NO_USER } };
         }
 
-        const response = await fetch('/api/profile', {
-          method: 'PATCH',
+        const response = await fetch("/api/profile", {
+          method: "PATCH",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(updates),
         });
@@ -145,15 +151,17 @@ export function useAuth(): AuthState & {
           return { error: { message: result.error } };
         }
 
-        console.log('Profile updated successfully:', result.data);
+        console.log("Profile updated successfully:", result.data);
         updateState({ profile: result.data });
         return { data: result.data };
       } catch (error: any) {
-        console.error('Unexpected error in updateProfile:', error);
-        return { error: { message: error.message || 'An unexpected error occurred' } };
+        console.error("Unexpected error in updateProfile:", error);
+        return {
+          error: { message: error.message || "An unexpected error occurred" },
+        };
       }
     },
-    [state.user, updateState]
+    [state.user, updateState],
   );
 
   const updatePassword = useCallback(
@@ -168,7 +176,7 @@ export function useAuth(): AuthState & {
 
       return { data };
     },
-    [supabase]
+    [supabase],
   );
 
   return {

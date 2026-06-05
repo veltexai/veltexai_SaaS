@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { formatDate } from '@/lib/utils'
+import { formatDate } from "@/lib/utils/date";
 import { ArrowLeft } from 'lucide-react'
 import { Database } from '@/types/database'
 

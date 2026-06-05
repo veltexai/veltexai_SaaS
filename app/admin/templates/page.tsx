@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/button';
-import Image from 'next/image';
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,13 +34,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Edit, Trash2, Settings, Layout } from 'lucide-react';
-import { cn, getTierBadgeColor } from '@/lib/utils';
-import { toast } from 'sonner';
-import { ProposalTemplate } from '@/types/database';
-import { SubscriptionTier } from '@/types/subscription';
+} from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Edit, Trash2, Settings, Layout } from "lucide-react";
+import { getTierBadgeColor } from "@/features/billing/utils/tier-colors";
+import { cn } from "@/lib/utils/cn";
+import { toast } from "sonner";
+import { ProposalTemplate } from "@/types/database";
+import { SubscriptionTier } from "@/types/subscription";
 
 interface TemplateFormData {
   name: string;
@@ -57,22 +58,21 @@ interface TemplateWithTiers extends ProposalTemplate {
   accessible_tiers?: string[];
 }
 
-
 const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
-  'starter',
-  'professional',
-  'enterprise',
+  "starter",
+  "professional",
+  "enterprise",
 ];
 
 const TEMPLATE_CATEGORIES = [
-  'Residential Cleaning',
-  'Commercial Cleaning',
-  'Deep Cleaning',
-  'Move-in/Move-out',
-  'Post-Construction',
-  'Carpet Cleaning',
-  'Window Cleaning',
-  'Specialized Services',
+  "Residential Cleaning",
+  "Commercial Cleaning",
+  "Deep Cleaning",
+  "Move-in/Move-out",
+  "Post-Construction",
+  "Carpet Cleaning",
+  "Window Cleaning",
+  "Specialized Services",
 ];
 
 export default function AdminTemplatesPage() {
@@ -84,12 +84,12 @@ export default function AdminTemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] =
     useState<TemplateWithTiers | null>(null);
   const [formData, setFormData] = useState<TemplateFormData>({
-    name: '',
-    display_name: '',
-    description: '',
+    name: "",
+    display_name: "",
+    description: "",
     template_data: {
-      category: '',
-      content: '',
+      category: "",
+      content: "",
     },
   });
   const [selectedTiers, setSelectedTiers] = useState<SubscriptionTier[]>([]);
@@ -104,9 +104,9 @@ export default function AdminTemplatesPage() {
     try {
       // Fetch templates with their tier access
       const { data: templates, error: templatesError } = await supabase
-        .from('proposal_templates')
-        .select('*')
-        .order('sort_order', { ascending: true });
+        .from("proposal_templates")
+        .select("*")
+        .order("sort_order", { ascending: true });
 
       if (templatesError) throw templatesError;
 
@@ -114,21 +114,21 @@ export default function AdminTemplatesPage() {
       const templatesWithTiers = await Promise.all(
         (templates || []).map(async (template) => {
           const { data: tierAccess } = await supabase
-            .from('template_tier_access')
-            .select('subscription_tier')
-            .eq('template_id', template.id);
+            .from("template_tier_access")
+            .select("subscription_tier")
+            .eq("template_id", template.id);
 
           return {
             ...template,
             accessible_tiers: tierAccess?.map((t) => t.subscription_tier) || [],
           };
-        })
+        }),
       );
 
       setTemplates(templatesWithTiers);
     } catch (error) {
-      console.error('Error fetching templates:', error);
-      toast.error('Failed to load templates');
+      console.error("Error fetching templates:", error);
+      toast.error("Failed to load templates");
     } finally {
       setLoading(false);
     }
@@ -137,20 +137,20 @@ export default function AdminTemplatesPage() {
   const handleCreateTemplate = async () => {
     try {
       const { data, error } = await supabase
-        .from('proposal_templates')
+        .from("proposal_templates")
         .insert([formData])
         .select()
         .single();
 
       if (error) throw error;
 
-      toast.success('Template created successfully');
+      toast.success("Template created successfully");
       setCreateDialogOpen(false);
       resetForm();
       fetchTemplates();
     } catch (error) {
-      console.error('Error creating template:', error);
-      toast.error('Failed to create template');
+      console.error("Error creating template:", error);
+      toast.error("Failed to create template");
     }
   };
 
@@ -159,36 +159,36 @@ export default function AdminTemplatesPage() {
 
     try {
       const { error } = await supabase
-        .from('proposal_templates')
+        .from("proposal_templates")
         .update(formData)
-        .eq('id', selectedTemplate.id);
+        .eq("id", selectedTemplate.id);
 
       if (error) throw error;
 
-      toast.success('Template updated successfully');
+      toast.success("Template updated successfully");
       setEditDialogOpen(false);
       resetForm();
       fetchTemplates();
     } catch (error) {
-      console.error('Error updating template:', error);
-      toast.error('Failed to update template');
+      console.error("Error updating template:", error);
+      toast.error("Failed to update template");
     }
   };
 
   const handleDeleteTemplate = async (template: TemplateWithTiers) => {
     try {
       const { error } = await supabase
-        .from('proposal_templates')
+        .from("proposal_templates")
         .update({ is_active: false })
-        .eq('id', template.id);
+        .eq("id", template.id);
 
       if (error) throw error;
 
-      toast.success('Template deleted successfully');
+      toast.success("Template deleted successfully");
       fetchTemplates();
     } catch (error) {
-      console.error('Error deleting template:', error);
-      toast.error('Failed to delete template');
+      console.error("Error deleting template:", error);
+      toast.error("Failed to delete template");
     }
   };
 
@@ -198,9 +198,9 @@ export default function AdminTemplatesPage() {
     try {
       // Delete existing tier access
       await supabase
-        .from('template_tier_access')
+        .from("template_tier_access")
         .delete()
-        .eq('template_id', selectedTemplate.id);
+        .eq("template_id", selectedTemplate.id);
 
       // Insert new tier access
       if (selectedTiers.length > 0) {
@@ -210,18 +210,18 @@ export default function AdminTemplatesPage() {
         }));
 
         const { error } = await supabase
-          .from('template_tier_access')
+          .from("template_tier_access")
           .insert(tierAccessData);
 
         if (error) throw error;
       }
 
-      toast.success('Tier access updated successfully');
+      toast.success("Tier access updated successfully");
       setTierDialogOpen(false);
       fetchTemplates();
     } catch (error) {
-      console.error('Error updating tier access:', error);
-      toast.error('Failed to update tier access');
+      console.error("Error updating tier access:", error);
+      toast.error("Failed to update tier access");
     }
   };
 
@@ -236,10 +236,10 @@ export default function AdminTemplatesPage() {
     setFormData({
       name: template.name,
       display_name: template.display_name,
-      description: template.description || '',
+      description: template.description || "",
       template_data: {
-        category: td.category || '',
-        content: td.content || '',
+        category: td.category || "",
+        content: td.content || "",
         preview_image_url: template.preview_image_url || undefined,
       },
     });
@@ -254,12 +254,12 @@ export default function AdminTemplatesPage() {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      display_name: '',
-      description: '',
+      name: "",
+      display_name: "",
+      description: "",
       template_data: {
-        category: '',
-        content: '',
+        category: "",
+        content: "",
       },
     });
     setSelectedTemplate(null);
@@ -295,7 +295,10 @@ export default function AdminTemplatesPage() {
         </div>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button disabled title="AI Scope-of-Work from Facility Photos/Videos (Phase 2)">
+            <Button
+              disabled
+              title="AI Scope-of-Work from Facility Photos/Videos (Phase 2)"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Create Template — Phase 2
             </Button>
@@ -399,13 +402,13 @@ export default function AdminTemplatesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {templates.map((template) => {
-          console.log('🚀 ~ AdminTemplatesPage ~ template:', template);
+          console.log("🚀 ~ AdminTemplatesPage ~ template:", template);
           return (
             <div
               key={template.id}
               className={cn(
-                'relative border-2 rounded-lg overflow-hidden transition-all',
-                'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                "relative border-2 rounded-lg overflow-hidden transition-all",
+                "border-gray-200 hover:border-gray-300 hover:shadow-md",
               )}
             >
               {/* Template Preview */}
@@ -413,7 +416,7 @@ export default function AdminTemplatesPage() {
                 {template?.preview_image_url ? (
                   <Image
                     src={template.preview_image_url}
-                    alt={template.display_name || 'Template Preview'}
+                    alt={template.display_name || "Template Preview"}
                     className="w-full h-full object-cover"
                     width={200}
                     height={150}
@@ -448,8 +451,8 @@ export default function AdminTemplatesPage() {
                           key={tier}
                           variant="secondary"
                           className={cn(
-                            'text-xs capitalize',
-                            getTierBadgeColor(tier as SubscriptionTier)
+                            "text-xs capitalize",
+                            getTierBadgeColor(tier as SubscriptionTier),
                           )}
                         >
                           {tier}
@@ -469,13 +472,13 @@ export default function AdminTemplatesPage() {
                   <Badge
                     variant="outline"
                     className={cn(
-                      'text-xs capitalize',
+                      "text-xs capitalize",
                       template?.is_active
-                        ? 'bg-green-500 text-white'
-                        : 'bg-red-500 text-white'
+                        ? "bg-green-500 text-white"
+                        : "bg-red-500 text-white",
                     )}
                   >
-                    {template?.is_active ? 'Active' : 'Inactive'}
+                    {template?.is_active ? "Active" : "Inactive"}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
                     Created {new Date(template.created_at).toLocaleDateString()}

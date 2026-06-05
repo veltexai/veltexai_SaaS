@@ -1,7 +1,7 @@
 import React from 'react'
 import { TemplateItem } from '@/features/proposals';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils/cn";
 import { Check, Layout, Lock } from 'lucide-react';
 
 interface TemplateCardPreviewProps {

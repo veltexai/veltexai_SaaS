@@ -25,7 +25,7 @@ import { Download, Trash2, Loader2, Send } from "lucide-react";
 import { SendProposalModal } from "@/features/proposals/components/send-proposal-modal";
 import { UpgradeModal } from "@/features/billing/components/upgrade-modal";
 import { useProposalActions } from "@/features/proposals/hooks/use-proposal-actions";
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils/date";
 import {
   ProposalStatus,
   type Proposal,

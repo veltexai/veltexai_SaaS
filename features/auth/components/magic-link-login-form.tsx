@@ -14,7 +14,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,8 @@ import { Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import Photo from "../../../public/images/pexels-tima-miroshnichenko-6196692.jpg";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { signInWithMagicLink } from "@/lib/auth/actions/magic-link";
-import { signInWithGoogle } from "@/lib/auth/actions/oauth";
+import { signInWithMagicLink } from "@/features/auth/actions/magic-link";
+import { signInWithGoogle } from "@/features/auth/actions/oauth";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),

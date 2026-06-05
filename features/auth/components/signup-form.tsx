@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,8 +30,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import PasswordStength from "@/components/ui/password-stength";
-import { signInWithGoogle } from "@/lib/auth/actions/oauth";
-import { signUp } from "@/lib/auth/actions/password";
+import { signInWithGoogle } from "@/features/auth/actions/oauth";
+import { signUp } from "@/features/auth/actions/password";
 import FreeTrialInfoBanner from "@/components/ui/free-trial-info-banner";
 
 const formSchema = z.object({

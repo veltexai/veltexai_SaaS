@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { cva } from 'class-variance-authority';
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils/cn";
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 

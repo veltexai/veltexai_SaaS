@@ -4,18 +4,18 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { CreditCard, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
-import Link from 'next/link';
-import ManageBillingButton from '@/features/billing/components/manage-billing';
-import { getSubscriptionPlans, getUserSubscription } from '@/lib/stripe';
-import ChangePlanButton from '@/features/billing/components/change-plan';
-import EnhancedCancelSubscription from '@/features/billing/components/enhanced-cancel-subscription';
-import ReactivateSubscription from '@/features/billing/components/reactivate-subscription';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { CreditCard, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { formatDate } from "@/lib/utils/date";
+import Link from "next/link";
+import ManageBillingButton from "@/features/billing/components/manage-billing";
+import { getSubscriptionPlans, getUserSubscription } from "@/lib/stripe/stripe";
+import ChangePlanButton from "@/features/billing/components/change-plan";
+import EnhancedCancelSubscription from "@/features/billing/components/enhanced-cancel-subscription";
+import ReactivateSubscription from "@/features/billing/components/reactivate-subscription";
 
 export async function SubscriptionBilling({ userId }: { userId: string }) {
   const plans = await getSubscriptionPlans();
@@ -43,19 +43,24 @@ export async function SubscriptionBilling({ userId }: { userId: string }) {
                 <span className="font-medium">Current Plan</span>
                 <div className="flex items-center gap-2">
                   {/* Auto-renewal status */}
-                  {subscription.auto_renewal !== false && !subscription.canceled_at && (
-                    <Badge variant="secondary" className="text-xs">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Auto-renew
-                    </Badge>
-                  )}
-                  
+                  {subscription.auto_renewal !== false &&
+                    !subscription.canceled_at && (
+                      <Badge variant="secondary" className="text-xs">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Auto-renew
+                      </Badge>
+                    )}
+
                   {/* Main status */}
                   <Badge
-                    variant={subscription.canceled_at ? 'destructive' : 'default'}
+                    variant={
+                      subscription.canceled_at ? "destructive" : "default"
+                    }
                     className="text-xs"
                   >
-                    {subscription.canceled_at ? 'Cancelled' : subscription.status}
+                    {subscription.canceled_at
+                      ? "Cancelled"
+                      : subscription.status}
                   </Badge>
                 </div>
               </div>
@@ -64,7 +69,7 @@ export async function SubscriptionBilling({ userId }: { userId: string }) {
               </p>
               <p className="text-gray-600 dark:text-gray-400">
                 {subscription.canceled_at
-                  ? 'Access until period end'
+                  ? "Access until period end"
                   : `$${currentPlan?.price_monthly}/month`}
               </p>
             </div>
@@ -77,8 +82,9 @@ export async function SubscriptionBilling({ userId }: { userId: string }) {
                   <div className="space-y-1">
                     <p className="font-medium">Subscription Cancelled</p>
                     <p className="text-sm">
-                      You'll continue to have access until {formatDate(subscription.current_period_end)}.
-                      You can reactivate anytime before then.
+                      You'll continue to have access until{" "}
+                      {formatDate(subscription.current_period_end)}. You can
+                      reactivate anytime before then.
                     </p>
                   </div>
                 </AlertDescription>
@@ -86,36 +92,40 @@ export async function SubscriptionBilling({ userId }: { userId: string }) {
             )}
 
             {/* Grace Period Alert */}
-            {subscription.grace_period_end && new Date(subscription.grace_period_end) > new Date() && (
-              <Alert>
-                <Clock className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="space-y-1">
-                    <p className="font-medium">Grace Period Active</p>
-                    <p className="text-sm">
-                      Extended access until {formatDate(subscription.grace_period_end)}.
-                    </p>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
+            {subscription.grace_period_end &&
+              new Date(subscription.grace_period_end) > new Date() && (
+                <Alert>
+                  <Clock className="h-4 w-4" />
+                  <AlertDescription>
+                    <div className="space-y-1">
+                      <p className="font-medium">Grace Period Active</p>
+                      <p className="text-sm">
+                        Extended access until{" "}
+                        {formatDate(subscription.grace_period_end)}.
+                      </p>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
 
             {/* Subscription Details */}
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
                   {subscription.canceled_at
-                    ? 'Access ends:'
-                    : 'Current period ends:'}
+                    ? "Access ends:"
+                    : "Current period ends:"}
                 </span>
                 <span className="font-medium">
                   {formatDate(subscription.current_period_end)}
                 </span>
               </div>
-              
+
               {subscription.canceled_at && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Canceled on:</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Canceled on:
+                  </span>
                   <span className="font-medium text-red-600">
                     {formatDate(subscription.canceled_at)}
                   </span>
@@ -124,17 +134,21 @@ export async function SubscriptionBilling({ userId }: { userId: string }) {
 
               {subscription.cancellation_reason && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Reason:</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Reason:
+                  </span>
                   <span className="font-medium text-gray-700 dark:text-gray-300 capitalize">
-                    {subscription.cancellation_reason.replace(/_/g, ' ')}
+                    {subscription.cancellation_reason.replace(/_/g, " ")}
                   </span>
                 </div>
               )}
 
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Auto-renewal:</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Auto-renewal:
+                </span>
                 <span className="font-medium">
-                  {subscription.auto_renewal !== false ? 'Enabled' : 'Disabled'}
+                  {subscription.auto_renewal !== false ? "Enabled" : "Disabled"}
                 </span>
               </div>
             </div>
@@ -147,7 +161,7 @@ export async function SubscriptionBilling({ userId }: { userId: string }) {
                 currentPlan={currentPlan}
                 className="w-full"
               />
-              
+
               {subscription.canceled_at ? (
                 <ReactivateSubscription
                   subscription={{

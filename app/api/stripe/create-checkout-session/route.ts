@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
-import { createServerSupabaseClient } from '@/lib/auth/auth-helpers';
+import { NextRequest, NextResponse } from "next/server";
+import { stripe } from "@/lib/stripe/stripe";
+import { createServerSupabaseClient } from "@/lib/auth/auth-helpers";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,44 +15,44 @@ export async function POST(req: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: "Authentication required" },
+        { status: 401 },
       );
     }
 
     // Fetch subscription plan from database
     const { data: selectedPlan, error: planError } = await supabase
-      .from('subscription_plans')
-      .select('*')
-      .eq('name', plan)
+      .from("subscription_plans")
+      .select("*")
+      .eq("name", plan)
       .single();
 
     if (planError || !selectedPlan) {
       return NextResponse.json(
-        { error: 'Invalid subscription plan' },
-        { status: 400 }
+        { error: "Invalid subscription plan" },
+        { status: 400 },
       );
     }
 
     // Check if plan has a valid Stripe price ID
     if (!selectedPlan.stripe_price_id_monthly) {
       return NextResponse.json(
-        { error: 'Plan not configured for billing' },
-        { status: 400 }
+        { error: "Plan not configured for billing" },
+        { status: 400 },
       );
     }
 
     // Get user profile
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
       .single();
 
     if (!profile) {
       return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
+        { error: "User profile not found" },
+        { status: 404 },
       );
     }
 
@@ -73,23 +73,23 @@ export async function POST(req: NextRequest) {
 
       // Update profile with Stripe customer ID
       await supabase
-        .from('profiles')
+        .from("profiles")
         .update({ stripe_customer_id: customerId })
-        .eq('id', user.id);
+        .eq("id", user.id);
     }
 
     // Free trial is handled without Stripe (profile-based).
     // When the user subscribes, they pay immediately -- no Stripe trial period.
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ['card'],
+      payment_method_types: ["card"],
       line_items: [
         {
           price: selectedPlan.stripe_price_id_monthly,
           quantity: 1,
         },
       ],
-      mode: 'subscription',
+      mode: "subscription",
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?session_id={CHECKOUT_SESSION_ID}&subscribed=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing`,
       metadata: {
@@ -106,10 +106,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ sessionId: session.id });
   } catch (error) {
-    console.error('Error creating checkout session:', error);
+    console.error("Error creating checkout session:", error);
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
-      { status: 500 }
+      { error: "Failed to create checkout session" },
+      { status: 500 },
     );
   }
 }

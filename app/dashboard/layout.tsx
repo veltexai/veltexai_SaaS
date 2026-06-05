@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getUser } from "@/queries/user";
+import { getUser } from "@/features/auth/services/get-user";
 import { DashboardClientLayout } from "@/components/layout/dashboard-client-layout";
 import { getUserBrandingSettings } from "@/features/settings";
 import { applyTheme } from "@/lib/theme";

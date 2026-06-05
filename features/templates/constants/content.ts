@@ -9,7 +9,7 @@ import {
   staffIcon,
   StartIcon,
   suplliseIcon,
-} from "../../components/icons/veltex-icons";
+} from "../../../components/icons/veltex-icons";
 
 export type TocItem = { id: string; number: string; title: string };
 export type TermItem = {

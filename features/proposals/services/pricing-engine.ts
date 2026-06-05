@@ -1,25 +1,25 @@
 import {
   type ServiceType,
   type ServiceFrequency,
-} from '@/lib/validations/proposal';
-import { 
+} from "@/features/proposals/schemas/proposal";
+import {
   type Database,
   type RegionalMultiplier,
   type PropertyBaseline,
   type TrafficAnalysis,
-  type PricingBreakdown as DBPricingBreakdown
-} from '@/types/database';
+  type PricingBreakdown as DBPricingBreakdown,
+} from "@/types/database";
 
-type PricingSettings = Database['public']['Tables']['pricing_settings']['Row'];
+type PricingSettings = Database["public"]["Tables"]["pricing_settings"]["Row"];
 
 type FrequencyMultipliers = {
-  'one-time': number;
-  '1x-month': number;
-  'bi-weekly': number;
+  "one-time": number;
+  "1x-month": number;
+  "bi-weekly": number;
   weekly: number;
-  '2x-week': number;
-  '3x-week': number;
-  '5x-week': number;
+  "2x-week": number;
+  "3x-week": number;
+  "5x-week": number;
   daily: number;
 };
 
@@ -79,15 +79,15 @@ export interface PricingBreakdown {
 export interface PricingAdjustment {
   name: string;
   amount: number;
-  type: 'fixed' | 'percentage';
+  type: "fixed" | "percentage";
   description: string;
 }
 
 export class PricingEngine {
   private settings: PricingSettings;
   private defaultSettings: PricingSettings = {
-    id: 'default',
-    user_id: '',
+    id: "default",
+    user_id: "",
     labor_rate: 35.0,
     overhead_percentage: 15.0,
     margin_percentage: 25.0,
@@ -99,9 +99,9 @@ export class PricingEngine {
       floor: 900,
     },
     frequency_multipliers: {
-      'one-time': 1.0,
+      "one-time": 1.0,
       weekly: 0.9,
-      'bi-weekly': 0.95,
+      "bi-weekly": 0.95,
       monthly: 1.0,
       quarterly: 1.1,
     },
@@ -113,9 +113,19 @@ export class PricingEngine {
       floor: 0.18,
     },
     traffic_multipliers: {
-      light: { rate: 3500, description: "Light traffic areas (under 20 staff, minimal visitors)" },
-      medium: { rate: 2500, description: "Medium traffic areas (20-60 staff, moderate visitors)" },
-      heavy: { rate: 1750, description: "Heavy traffic areas (60+ staff, high visitor volume, 5x+ weekly cleaning)" }
+      light: {
+        rate: 3500,
+        description: "Light traffic areas (under 20 staff, minimal visitors)",
+      },
+      medium: {
+        rate: 2500,
+        description: "Medium traffic areas (20-60 staff, moderate visitors)",
+      },
+      heavy: {
+        rate: 1750,
+        description:
+          "Heavy traffic areas (60+ staff, high visitor volume, 5x+ weekly cleaning)",
+      },
     },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -123,7 +133,7 @@ export class PricingEngine {
 
   constructor(settings: PricingSettings | null | undefined) {
     if (!settings) {
-      throw new Error('PricingSettings is required');
+      throw new Error("PricingSettings is required");
     }
     this.settings = settings;
   }
@@ -131,14 +141,14 @@ export class PricingEngine {
   private getFrequencyMultipliers(): FrequencyMultipliers {
     const multipliers = this.settings.frequency_multipliers as any;
     return {
-      'one-time': multipliers?.['one-time'] || 1.0,
-      '1x-month': multipliers?.['1x-month'] || 1.0,
-      'bi-weekly': multipliers?.['bi-weekly'] || 1.1,
-      weekly: multipliers?.['weekly'] || 1.2,
-      '2x-week': multipliers?.['2x-week'] || 1.3,
-      '3x-week': multipliers?.['3x-week'] || 1.4,
-      '5x-week': multipliers?.['5x-week'] || 1.5,
-      daily: multipliers?.['daily'] || 1.6,
+      "one-time": multipliers?.["one-time"] || 1.0,
+      "1x-month": multipliers?.["1x-month"] || 1.0,
+      "bi-weekly": multipliers?.["bi-weekly"] || 1.1,
+      weekly: multipliers?.["weekly"] || 1.2,
+      "2x-week": multipliers?.["2x-week"] || 1.3,
+      "3x-week": multipliers?.["3x-week"] || 1.4,
+      "5x-week": multipliers?.["5x-week"] || 1.5,
+      daily: multipliers?.["daily"] || 1.6,
     };
   }
 
@@ -187,16 +197,18 @@ export class PricingEngine {
     let propertyComplexityFactor = 1.0;
     if (buildingType && propertyBaselines) {
       // Map buildingType to property_type for database compatibility
-      const baseline = propertyBaselines.find(pb => pb.property_type === buildingType);
+      const baseline = propertyBaselines.find(
+        (pb) => pb.property_type === buildingType,
+      );
       if (baseline) {
         propertyBaseline = baseline.baseline_rate;
         baseRate = baseline.baseline_rate; // Use property baseline as base rate
-        
+
         // Apply property complexity factors
         const complexityFactors = baseline.complexity_factors as any;
         if (complexityFactors && serviceSpecificData) {
           // Apply relevant complexity factors based on service data
-          Object.keys(complexityFactors).forEach(factor => {
+          Object.keys(complexityFactors).forEach((factor) => {
             if (serviceSpecificData[factor]) {
               propertyComplexityFactor *= complexityFactors[factor] || 1.0;
             }
@@ -209,21 +221,25 @@ export class PricingEngine {
       serviceType,
       facilitySize,
       serviceSpecificData,
-      baseRate
+      baseRate,
     );
 
     // Calculate complexity factor
-    const complexityFactor = this.calculateComplexityFactor(
-      serviceType,
-      serviceSpecificData,
-      globalInputs
-    ) * propertyComplexityFactor;
+    const complexityFactor =
+      this.calculateComplexityFactor(
+        serviceType,
+        serviceSpecificData,
+        globalInputs,
+      ) * propertyComplexityFactor;
 
     // Apply complexity adjustment
     const adjustedBasePrice = basePrice * complexityFactor;
 
     // Calculate frequency multiplier
-    const multipliers = settings.frequency_multipliers as Record<string, number>;
+    const multipliers = settings.frequency_multipliers as Record<
+      string,
+      number
+    >;
     const frequencyMultiplier = multipliers?.[serviceFrequency] || 1.0;
     let frequencyAdjustedPrice = adjustedBasePrice * frequencyMultiplier;
 
@@ -231,19 +247,21 @@ export class PricingEngine {
     let regionalMultiplier = 1.0;
     let regionalMultiplierPercentage = 0;
     if (regionalLocation && regionalMultipliers) {
-      const regional = regionalMultipliers.find(rm => 
-        rm.region_name.toLowerCase() === regionalLocation.toLowerCase() && rm.is_active
+      const regional = regionalMultipliers.find(
+        (rm) =>
+          rm.region_name.toLowerCase() === regionalLocation.toLowerCase() &&
+          rm.is_active,
       );
       if (regional) {
         regionalMultiplierPercentage = regional.multiplier_percentage;
-        regionalMultiplier = 1 + (regional.multiplier_percentage / 100);
+        regionalMultiplier = 1 + regional.multiplier_percentage / 100;
         frequencyAdjustedPrice *= regionalMultiplier;
       }
     }
 
     // Apply traffic multiplier if available
     let trafficMultiplier = 1.0;
-    let trafficLevel = '';
+    let trafficLevel = "";
     if (trafficAnalysis?.traffic_level && settings.traffic_multipliers) {
       const trafficMultipliers = settings.traffic_multipliers as any;
       const trafficData = trafficMultipliers[trafficAnalysis.traffic_level];
@@ -261,7 +279,7 @@ export class PricingEngine {
       serviceType,
       serviceSpecificData,
       settings,
-      basePrice
+      basePrice,
     );
 
     // Calculate subtotal
@@ -271,7 +289,7 @@ export class PricingEngine {
     const laborHours = this.calculateLaborHours(
       serviceType,
       facilitySize,
-      serviceSpecificData
+      serviceSpecificData,
     );
     const laborCost = laborHours * settings.labor_rate;
 
@@ -323,24 +341,24 @@ export class PricingEngine {
     serviceType: ServiceType,
     facilitySize: number,
     serviceData: Record<string, any>,
-    baseRate: number
+    baseRate: number,
   ): { basePrice: number; units: number; unitType: string } {
     switch (serviceType) {
-      case 'window':
+      case "window":
         const windowCount = serviceData.window_count || 1;
         return {
           basePrice: windowCount * baseRate,
           units: windowCount,
-          unitType: 'windows',
+          unitType: "windows",
         };
 
-      case 'carpet':
-      case 'floor':
+      case "carpet":
+      case "floor":
         // For carpet and floor, use square footage
         return {
           basePrice: facilitySize * baseRate,
           units: facilitySize,
-          unitType: 'square feet',
+          unitType: "square feet",
         };
 
       default:
@@ -348,7 +366,7 @@ export class PricingEngine {
         return {
           basePrice: facilitySize * baseRate,
           units: facilitySize,
-          unitType: 'square feet',
+          unitType: "square feet",
         };
     }
   }
@@ -359,40 +377,40 @@ export class PricingEngine {
   private calculateComplexityFactor(
     serviceType: ServiceType,
     serviceData: Record<string, any>,
-    globalInputs: Record<string, any>
+    globalInputs: Record<string, any>,
   ): number {
     let factor = 1.0;
 
     switch (serviceType) {
-      case 'residential':
+      case "residential":
         if (serviceData.bedrooms > 4) factor += 0.1;
         if (serviceData.bathrooms > 3) factor += 0.1;
         if (serviceData.pets) factor += 0.05;
         break;
 
-      case 'commercial':
+      case "commercial":
         if (serviceData.employee_count > 100) factor += 0.2;
         if (serviceData.employee_count > 50) factor += 0.1;
-        if (serviceData.cleaning_schedule_preference === 'during_hours')
+        if (serviceData.cleaning_schedule_preference === "during_hours")
           factor += 0.15;
         break;
 
-      case 'carpet':
-        if (serviceData.carpet_age === '5+_years') factor += 0.15;
-        if (serviceData.carpet_age === '3-5_years') factor += 0.1;
-        if (serviceData.floor_condition === 'poor') factor += 0.2;
+      case "carpet":
+        if (serviceData.carpet_age === "5+_years") factor += 0.15;
+        if (serviceData.carpet_age === "3-5_years") factor += 0.1;
+        if (serviceData.floor_condition === "poor") factor += 0.2;
         break;
 
-      case 'window':
-        if (serviceData.story_height === 'three_plus') factor += 0.3;
-        if (serviceData.story_height === 'two') factor += 0.15;
-        if (serviceData.exterior_access === 'lift_required') factor += 0.4;
-        if (serviceData.exterior_access === 'ladder_required') factor += 0.2;
+      case "window":
+        if (serviceData.story_height === "three_plus") factor += 0.3;
+        if (serviceData.story_height === "two") factor += 0.15;
+        if (serviceData.exterior_access === "lift_required") factor += 0.4;
+        if (serviceData.exterior_access === "ladder_required") factor += 0.2;
         break;
 
-      case 'floor':
-        if (serviceData.floor_condition === 'poor') factor += 0.25;
-        if (serviceData.floor_condition === 'fair') factor += 0.15;
+      case "floor":
+        if (serviceData.floor_condition === "poor") factor += 0.25;
+        if (serviceData.floor_condition === "fair") factor += 0.15;
         if (serviceData.furniture_moving) factor += 0.2;
         break;
     }
@@ -407,14 +425,14 @@ export class PricingEngine {
     serviceType: ServiceType,
     serviceData: Record<string, any>,
     settings: PricingSettings,
-    basePrice: number
+    basePrice: number,
   ): { total: number; breakdown: Record<string, number> } {
     const adjustments: Record<string, number> = {};
     // Service adjustments are handled through service type rates
     const serviceAdjustments = {};
 
     switch (serviceType) {
-      case 'residential':
+      case "residential":
         if (serviceData.pets) {
           adjustments.pets = 25; // Fixed pet cleaning fee
         }
@@ -423,8 +441,8 @@ export class PricingEngine {
         }
         break;
 
-      case 'commercial':
-        if (serviceData.cleaning_schedule_preference === 'after_hours') {
+      case "commercial":
+        if (serviceData.cleaning_schedule_preference === "after_hours") {
           adjustments.after_hours = 50; // Fixed after hours premium
         }
         if (serviceData.employee_count > 50) {
@@ -432,7 +450,7 @@ export class PricingEngine {
         }
         break;
 
-      case 'carpet':
+      case "carpet":
         if (serviceData.pet_odors) {
           adjustments.pet_odors = 50; // Fixed pet odor treatment fee
         }
@@ -441,7 +459,7 @@ export class PricingEngine {
         }
         break;
 
-      case 'window':
+      case "window":
         const windowCount = serviceData.window_count || 1;
         if (serviceData.screen_cleaning) {
           adjustments.screen_cleaning = windowCount * 2; // Fixed screen cleaning fee per window
@@ -449,19 +467,19 @@ export class PricingEngine {
         if (serviceData.sill_cleaning) {
           adjustments.sill_cleaning = windowCount * 1.5; // Fixed sill cleaning fee per window
         }
-        if (serviceData.story_height === 'two') {
+        if (serviceData.story_height === "two") {
           adjustments.height_premium = basePrice * 0.25; // Two story premium
         }
-        if (serviceData.story_height === 'three_plus') {
+        if (serviceData.story_height === "three_plus") {
           adjustments.height_premium = basePrice * 0.5; // Three+ story premium
         }
         break;
 
-      case 'floor':
+      case "floor":
         if (serviceData.furniture_moving) {
           adjustments.furniture_moving = 75; // Fixed furniture moving fee
         }
-        if (serviceData.drying_time_preference === 'quick_dry') {
+        if (serviceData.drying_time_preference === "quick_dry") {
           adjustments.quick_dry = 25; // Fixed quick dry fee
         }
         break;
@@ -469,7 +487,7 @@ export class PricingEngine {
 
     const total = Object.values(adjustments).reduce(
       (sum, value) => sum + value,
-      0
+      0,
     );
     return { total, breakdown: adjustments };
   }
@@ -480,38 +498,38 @@ export class PricingEngine {
   private calculateLaborHours(
     serviceType: ServiceType,
     facilitySize: number,
-    serviceData: Record<string, any>
+    serviceData: Record<string, any>,
   ): number {
     let baseHours = 0;
 
     switch (serviceType) {
-      case 'residential':
+      case "residential":
         baseHours = Math.ceil(facilitySize / 400); // 400 sq ft per hour
         if (serviceData.bedrooms > 3) baseHours += 1;
         if (serviceData.bathrooms > 2) baseHours += 0.5;
         break;
 
-      case 'commercial':
+      case "commercial":
         baseHours = Math.ceil(facilitySize / 600); // 600 sq ft per hour for commercial
         if (serviceData.employee_count > 50) baseHours += 2;
         break;
 
-      case 'carpet':
+      case "carpet":
         baseHours = Math.ceil(facilitySize / 300); // 300 sq ft per hour for carpet
         if (serviceData.pet_odors) baseHours += 1;
         if (serviceData.protection_treatment) baseHours += 0.5;
         break;
 
-      case 'window':
+      case "window":
         const windowCount = serviceData.window_count || 1;
         baseHours = Math.ceil(windowCount / 12); // 12 windows per hour
-        if (serviceData.story_height === 'two')
+        if (serviceData.story_height === "two")
           baseHours += Math.ceil(windowCount / 20);
-        if (serviceData.story_height === 'three_plus')
+        if (serviceData.story_height === "three_plus")
           baseHours += Math.ceil(windowCount / 15);
         break;
 
-      case 'floor':
+      case "floor":
         baseHours = Math.ceil(facilitySize / 250); // 250 sq ft per hour for floor care
         if (serviceData.furniture_moving) baseHours += 2;
         break;
@@ -531,7 +549,7 @@ export class PricingEngine {
    * Get pricing adjustments for a specific service type
    */
   private getServiceAdjustments(
-    serviceType: ServiceType
+    serviceType: ServiceType,
   ): Record<string, number> {
     // Service adjustments can be derived from service-specific data
     // For now, return empty object as adjustments are handled elsewhere
@@ -558,7 +576,7 @@ export class PricingEngine {
   getQuickEstimate(
     serviceType: ServiceType,
     facilitySize: number,
-    frequency: ServiceFrequency = 'one-time'
+    frequency: ServiceFrequency = "one-time",
   ): number {
     const serviceTypeRates = this.getServiceTypeRates();
     const baseRate = serviceTypeRates[serviceType] || 0.15;
@@ -586,7 +604,7 @@ export function calculateQuickEstimate(
   serviceType: ServiceType,
   facilitySize: number,
   serviceFrequency: ServiceFrequency,
-  settings: PricingSettings
+  settings: PricingSettings,
 ): number {
   const baseRate = 0.15; // Default rate per sq ft
   const multipliers = settings.frequency_multipliers as any;
@@ -595,7 +613,7 @@ export function calculateQuickEstimate(
 
   return (
     Math.round(
-      facilitySize * baseRate * frequencyMultiplier * serviceMultiplier * 100
+      facilitySize * baseRate * frequencyMultiplier * serviceMultiplier * 100,
     ) / 100
   );
 }
@@ -631,7 +649,7 @@ export function calculateDetailedPricing(
   facilitySize: number,
   serviceFrequency: ServiceFrequency,
   serviceSpecificData: Record<string, any>,
-  settings: PricingSettings
+  settings: PricingSettings,
 ): DetailedPricingResult {
   const laborRate = settings.labor_rate || 50;
   const overheadPercentage = settings.overhead_percentage || 20;
@@ -665,9 +683,9 @@ export function calculateDetailedPricing(
 }
 
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
   }).format(amount);
 };
 

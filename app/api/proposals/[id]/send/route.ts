@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth/auth-helpers";
 import { createClient } from "@/lib/supabase/server";
 import { EmailService } from "@/lib/email/service";
-import { generateProposalPDFWithPlaywright } from "@/lib/pdf/playwright-generator";
+import { generateProposalPDFWithPlaywright } from "@/features/proposals/services/pdf/playwright-generator";
 import { Database } from "@/types/database";
 import { z } from "zod";
 

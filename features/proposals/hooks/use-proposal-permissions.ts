@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/lib/auth/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ProposalPermissions {
   canCreate: boolean;

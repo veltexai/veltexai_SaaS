@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { stripe } from '@/lib/stripe';
-import { getUser } from '@/lib/auth/auth-helpers';
+import { NextRequest, NextResponse } from "next/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { stripe } from "@/lib/stripe/stripe";
+import { getUser } from "@/lib/auth/auth-helpers";
 
 export async function POST(request: NextRequest) {
   try {
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { newPriceId, newPlan } = await request.json();
@@ -16,33 +16,33 @@ export async function POST(request: NextRequest) {
 
     // Get current subscription
     const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'trialing'])
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .in("status", ["active", "trialing"])
       .single();
 
     if (!subscription) {
       return NextResponse.json(
-        { error: 'No active subscription found' },
-        { status: 404 }
+        { error: "No active subscription found" },
+        { status: 404 },
       );
     }
 
     // Get current plan details
     const { data: currentPlanData } = await supabase
-      .from('subscription_plans')
-      .select('*')
-      .eq('name', subscription.plan)
+      .from("subscription_plans")
+      .select("*")
+      .eq("name", subscription.plan)
       .single();
 
     const { data: newPlanData } = await supabase
-      .from('subscription_plans')
-      .select('*')
-      .eq('name', newPlan)
+      .from("subscription_plans")
+      .select("*")
+      .eq("name", newPlan)
       .single();
     if (!currentPlanData || !newPlanData) {
-      return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
+      return NextResponse.json({ error: "Plan not found" }, { status: 404 });
     }
 
     // Determine if upgrade or downgrade
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       newPlanData.price_monthly < currentPlanData.price_monthly;
 
     // Check if subscription is in trial period
-    const isTrialing = subscription.status === 'trialing';
+    const isTrialing = subscription.status === "trialing";
 
     // Calculate the exact difference for immediate charging (only if not trialing)
     const priceDifference =
@@ -71,12 +71,12 @@ export async function POST(request: NextRequest) {
       try {
         // Get the customer's default payment method
         const customer = await stripe.customers.retrieve(
-          subscription.stripe_customer_id
+          subscription.stripe_customer_id,
         );
 
         // Check if customer is deleted
         if (customer.deleted) {
-          throw new Error('Customer account has been deleted');
+          throw new Error("Customer account has been deleted");
         }
 
         let defaultPaymentMethod =
@@ -86,12 +86,12 @@ export async function POST(request: NextRequest) {
         if (!defaultPaymentMethod) {
           const paymentMethods = await stripe.paymentMethods.list({
             customer: subscription.stripe_customer_id,
-            type: 'card',
+            type: "card",
             limit: 1,
           });
 
           if (paymentMethods.data.length === 0) {
-            throw new Error('No payment method found for customer');
+            throw new Error("No payment method found for customer");
           }
 
           defaultPaymentMethod = paymentMethods.data[0].id;
@@ -100,10 +100,10 @@ export async function POST(request: NextRequest) {
         // Create an immediate charge for the price difference
         const paymentIntent = await stripe.paymentIntents.create({
           amount: Math.round(immediateChargeAmount * 100), // Convert to cents
-          currency: 'usd',
+          currency: "usd",
           customer: subscription.stripe_customer_id,
           payment_method:
-            typeof defaultPaymentMethod === 'string'
+            typeof defaultPaymentMethod === "string"
               ? defaultPaymentMethod
               : defaultPaymentMethod.id,
           description: `Upgrade from ${currentPlanData.name} to ${newPlanData.name} - Immediate charge for difference`,
@@ -117,19 +117,19 @@ export async function POST(request: NextRequest) {
           off_session: true, // Indicates this is for an existing customer
         });
 
-        if (paymentIntent.status === 'succeeded') {
+        if (paymentIntent.status === "succeeded") {
           prorationAmount = paymentIntent.amount;
           chargeResult = paymentIntent;
         } else {
           throw new Error(
-            `Payment failed with status: ${paymentIntent.status}`
+            `Payment failed with status: ${paymentIntent.status}`,
           );
         }
       } catch (chargeError) {
-        console.error('❌ Immediate charge failed:', chargeError);
+        console.error("❌ Immediate charge failed:", chargeError);
         return NextResponse.json(
-          { error: 'Failed to process immediate upgrade charge' },
-          { status: 400 }
+          { error: "Failed to process immediate upgrade charge" },
+          { status: 400 },
         );
       }
     }
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
           {
             id: (
               await stripe.subscriptions.retrieve(
-                subscription.stripe_subscription_id
+                subscription.stripe_subscription_id,
               )
             ).items.data[0].id,
             price: newPriceId,
@@ -154,9 +154,13 @@ export async function POST(request: NextRequest) {
         // During trial: no proration (user hasn't paid yet)
         // Active upgrade: no proration (charged separately)
         // Active downgrade: create prorations for credits
-        proration_behavior: isTrialing ? 'none' : (isUpgrade ? 'none' : 'create_prorations'),
-        billing_cycle_anchor: 'unchanged', // Keep current billing cycle
-      }
+        proration_behavior: isTrialing
+          ? "none"
+          : isUpgrade
+            ? "none"
+            : "create_prorations",
+        billing_cycle_anchor: "unchanged", // Keep current billing cycle
+      },
     );
 
     // For downgrades (not during trial), get the proration credit
@@ -172,7 +176,7 @@ export async function POST(request: NextRequest) {
 
       // Find the proration invoice - check for proration line items
       const prorationInvoice = invoices.data.find((invoice) =>
-        invoice.lines.data.some((line) => (line as any).proration === true)
+        invoice.lines.data.some((line) => (line as any).proration === true),
       );
 
       prorationAmount = prorationInvoice?.amount_paid || 0;
@@ -180,37 +184,43 @@ export async function POST(request: NextRequest) {
 
     // Update subscription in database
     await supabase
-      .from('subscriptions')
+      .from("subscriptions")
       .update({
         plan: newPlan,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', subscription.id);
+      .eq("id", subscription.id);
 
     // Update user profile
     await supabase
-      .from('profiles')
+      .from("profiles")
       .update({
         subscription_plan: newPlan,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', user.id);
+      .eq("id", user.id);
 
     // Add billing history record
     // During trial: amount is 0 since no charge was made
     const billingHistoryData = {
       user_id: user.id,
       subscription_id: subscription.id,
-      action: isUpgrade ? 'upgrade' : 'downgrade',
+      action: isUpgrade ? "upgrade" : "downgrade",
       previous_plan: subscription.plan,
       new_plan: newPlan,
-      amount: isTrialing 
+      amount: isTrialing
         ? 0 // No charge during trial
         : isUpgrade
           ? Math.round(immediateChargeAmount * 100)
           : prorationAmount, // Use actual charge amount for upgrades
-      currency: 'usd',
-      status: isTrialing ? 'pending' : (isUpgrade ? (chargeResult ? 'paid' : 'failed') : 'paid'),
+      currency: "usd",
+      status: isTrialing
+        ? "pending"
+        : isUpgrade
+          ? chargeResult
+            ? "paid"
+            : "failed"
+          : "paid",
       stripe_invoice_id: isUpgrade && !isTrialing ? chargeResult?.id : null,
       invoice_url: null,
       invoice_date: new Date().toISOString(),
@@ -220,14 +230,14 @@ export async function POST(request: NextRequest) {
     // Use service client for billing history insertion to bypass RLS (like initial subscriptions)
     const serviceSupabase = await createServiceClient();
     const { data: billingHistoryResult, error: billingHistoryError } =
-      await serviceSupabase.from('billing_history').insert(billingHistoryData);
+      await serviceSupabase.from("billing_history").insert(billingHistoryData);
 
     if (billingHistoryError) {
-      console.error('❌ Billing history insert error:', billingHistoryError);
+      console.error("❌ Billing history insert error:", billingHistoryError);
     } else {
       console.log(
-        '✅ Billing history inserted successfully:',
-        billingHistoryResult
+        "✅ Billing history inserted successfully:",
+        billingHistoryResult,
       );
     }
 
@@ -250,7 +260,8 @@ export async function POST(request: NextRequest) {
       isDowngrade,
       isTrialing,
       chargeAmount: isUpgrade && !isTrialing ? immediateChargeAmount : 0,
-      creditAmount: isDowngrade && !isTrialing ? Math.abs(prorationAmount / 100) : 0,
+      creditAmount:
+        isDowngrade && !isTrialing ? Math.abs(prorationAmount / 100) : 0,
       prorationAmount: isTrialing ? 0 : prorationAmount / 100, // Return in dollars for display
       invoiceId: isUpgrade && !isTrialing ? chargeResult?.id : null,
       paymentIntentId: isUpgrade && !isTrialing ? chargeResult?.id : null,
@@ -261,10 +272,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error upgrading subscription:', error);
+    console.error("Error upgrading subscription:", error);
     return NextResponse.json(
-      { error: 'Failed to upgrade subscription' },
-      { status: 500 }
+      { error: "Failed to upgrade subscription" },
+      { status: 500 },
     );
   }
 }

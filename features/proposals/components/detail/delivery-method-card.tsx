@@ -2,8 +2,7 @@ import { RadioGroupItem } from "@/components/ui/radio-group";
 import { DeliveryMethodOption } from "../../constants/delivery-methods";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-
+import { cn } from "@/lib/utils/cn";
 interface DeliveryMethodCardProps {
   option: DeliveryMethodOption;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ServiceType } from "@/lib/validations/proposal";
+import type { ServiceType } from "@/features/proposals/schemas/proposal";
 import {
   SERVICE_TYPE_LABELS,
   SERVICE_TYPE_FEATURES,

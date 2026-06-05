@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getUser } from "@/queries/user";
+import { getUser } from "@/features/auth/services/get-user";
 import { WelcomeSection } from "@/features/dashboard/components/welcome-section";
 import { DashboardStats } from "@/features/dashboard/components/dashboard-stats";
 import { RecentProposals } from "@/features/dashboard/components/recent-proposals";

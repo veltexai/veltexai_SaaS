@@ -1,20 +1,20 @@
-import { UseFormReturn } from 'react-hook-form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { UseFormReturn } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   FormField,
   FormItem,
   FormLabel,
   FormControl,
   FormMessage,
-} from '@/components/ui/form';
-import { ProposalFormData } from '@/lib/validations/proposal';
+} from "@/components/ui/form";
+import { ProposalFormData } from "@/features/proposals/schemas/proposal";
 
 interface ProposalDetailsSectionProps {
   form: UseFormReturn<ProposalFormData>;
@@ -46,8 +46,6 @@ export function ProposalDetailsSection({ form }: ProposalDetailsSectionProps) {
             </FormItem>
           )}
         />
-
-
       </CardContent>
     </>
   );

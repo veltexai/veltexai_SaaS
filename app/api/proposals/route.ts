@@ -1,49 +1,49 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient as createServiceClientRaw } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/server';
-import { getUser } from '@/queries/user';
-import { proposalFormSchema } from '@/lib/validations/proposal';
-import { stripe } from '@/lib/stripe';
-import { EmailService } from '@/lib/email/service';
-import config from '@/config/config';
+import { NextRequest, NextResponse } from "next/server";
+import { createClient as createServiceClientRaw } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/features/auth/services/get-user";
+import { proposalFormSchema } from "@/features/proposals/schemas/proposal";
+import { stripe } from "@/lib/stripe/stripe";
+import { EmailService } from "@/lib/email/service";
+import config from "@/config/config";
 
 export async function POST(request: NextRequest) {
   try {
     const { user } = await getUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabase = await createClient();
 
     // Check if user can create proposals using get_user_usage_info (more reliable)
     const { data: usageInfo, error: checkError } = await supabase
-      .rpc('get_user_usage_info', { user_uuid: user.id })
+      .rpc("get_user_usage_info", { user_uuid: user.id })
       .single();
 
-    const usage = usageInfo as { 
-      current_usage?: number; 
-      proposal_limit?: number; 
+    const usage = usageInfo as {
+      current_usage?: number;
+      proposal_limit?: number;
       can_create_proposal?: boolean;
       subscription_status?: string;
       remaining_proposals?: number;
     } | null;
 
-    console.log('🔍 User usage info:', usage);
+    console.log("🔍 User usage info:", usage);
 
     if (checkError) {
-      console.error('❌ Error checking proposal limit:', checkError);
+      console.error("❌ Error checking proposal limit:", checkError);
       return NextResponse.json(
         {
-          error: 'Error checking proposal limit. Please try again.',
+          error: "Error checking proposal limit. Please try again.",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (!usage?.can_create_proposal) {
-      console.log('🚫 User cannot create proposal:', {
+      console.log("🚫 User cannot create proposal:", {
         userId: user.id,
         usageInfo: usage,
       });
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
         {
           error: `You have reached your proposal limit (${usage?.current_usage || 0}/${usage?.proposal_limit || 0}). Please upgrade your plan.`,
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -92,16 +92,16 @@ export async function POST(request: NextRequest) {
 
     // Create the proposal
     const { data: proposal, error: proposalError } = await supabase
-      .from('proposals')
+      .from("proposals")
       .insert(proposalData)
       .select()
       .single();
 
     if (proposalError) {
-      console.error('Error creating proposal:', proposalError);
+      console.error("Error creating proposal:", proposalError);
       return NextResponse.json(
-        { error: 'Failed to create proposal' },
-        { status: 500 }
+        { error: "Failed to create proposal" },
+        { status: 500 },
       );
     }
 
@@ -123,24 +123,30 @@ export async function POST(request: NextRequest) {
         notes: a.notes || null,
       }));
       const { error: addonsError } = await supabase
-        .from('proposal_additional_services')
+        .from("proposal_additional_services")
         .insert(rows);
       if (addonsError) {
-        console.error('Error inserting add-ons:', addonsError);
+        console.error("Error inserting add-ons:", addonsError);
       }
     }
 
     // Increment user's proposal usage
-    const { data: usageIncremented, error: usageError } = await supabase.rpc('increment_user_usage', {
-      user_uuid: user.id,
-    });
+    const { data: usageIncremented, error: usageError } = await supabase.rpc(
+      "increment_user_usage",
+      {
+        user_uuid: user.id,
+      },
+    );
 
     if (usageError) {
-      console.error('Error incrementing usage:', usageError);
+      console.error("Error incrementing usage:", usageError);
     } else if (usageIncremented === false) {
-      console.warn('⚠️ Usage not incremented - no active subscription found for user:', user.id);
+      console.warn(
+        "⚠️ Usage not incremented - no active subscription found for user:",
+        user.id,
+      );
     } else {
-      console.log('✅ Usage incremented successfully for user:', user.id);
+      console.log("✅ Usage incremented successfully for user:", user.id);
 
       const newUsageAfterIncrement = (usage?.current_usage || 0) + 1;
 
@@ -148,90 +154,93 @@ export async function POST(request: NextRequest) {
       if (newUsageAfterIncrement === 1) {
         const serviceClient = createServiceClientRaw(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
         );
 
         void (async () => {
           try {
             const { data: existing } = await serviceClient
-              .from('email_automation_log')
-              .select('id')
-              .eq('user_id', user.id)
-              .eq('email_type', 'first_proposal')
+              .from("email_automation_log")
+              .select("id")
+              .eq("user_id", user.id)
+              .eq("email_type", "first_proposal")
               .maybeSingle();
 
             if (!existing) {
               const { data: profile } = await serviceClient
-                .from('profiles')
-                .select('email')
-                .eq('id', user.id)
+                .from("profiles")
+                .select("email")
+                .eq("id", user.id)
                 .single();
 
               if (profile?.email) {
                 const upgradeUrl = `${config.domainName}/dashboard/billing`;
                 const sent = await EmailService.sendFirstProposalEmail(
                   profile.email,
-                  { upgradeUrl }
+                  { upgradeUrl },
                 );
                 if (sent) {
-                  await serviceClient.from('email_automation_log').insert({
+                  await serviceClient.from("email_automation_log").insert({
                     user_id: user.id,
-                    email_type: 'first_proposal',
+                    email_type: "first_proposal",
                   });
                 }
               }
             }
           } catch (err) {
-            console.error('❌ First proposal email error:', err);
+            console.error("❌ First proposal email error:", err);
           }
         })();
       }
 
       // All 3 free-trial proposals used: send "Still need proposals?" immediately
       // (same email_type as the cron — deduplication prevents a double-send later)
-      if (newUsageAfterIncrement >= 3 && usage?.subscription_status === 'free_trial') {
+      if (
+        newUsageAfterIncrement >= 3 &&
+        usage?.subscription_status === "free_trial"
+      ) {
         const serviceClient = createServiceClientRaw(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
         );
 
         void (async () => {
           try {
             const { data: existing } = await serviceClient
-              .from('email_automation_log')
-              .select('id')
-              .eq('user_id', user.id)
-              .eq('email_type', 'trial_expired')
+              .from("email_automation_log")
+              .select("id")
+              .eq("user_id", user.id)
+              .eq("email_type", "trial_expired")
               .maybeSingle();
 
             if (!existing) {
               const { data: profile } = await serviceClient
-                .from('profiles')
-                .select('email')
-                .eq('id', user.id)
+                .from("profiles")
+                .select("email")
+                .eq("id", user.id)
                 .single();
 
               if (profile?.email) {
                 const upgradeUrl = `${config.domainName}/dashboard/billing`;
                 const sent = await EmailService.sendTrialExpiredEmail(
                   profile.email,
-                  { upgradeUrl }
+                  { upgradeUrl },
                 );
                 if (sent) {
-                  await serviceClient.from('email_automation_log').insert({
+                  await serviceClient.from("email_automation_log").insert({
                     user_id: user.id,
-                    email_type: 'trial_expired',
+                    email_type: "trial_expired",
                   });
                 }
               }
             }
           } catch (err) {
-            console.error('❌ Trial proposals-exhausted email error:', err);
+            console.error("❌ Trial proposals-exhausted email error:", err);
           }
         })();
       }
 
-      const isFreeTrial = usage?.subscription_status === 'free_trial';
+      const isFreeTrial = usage?.subscription_status === "free_trial";
 
       if (!isFreeTrial) {
         // Stripe-backed trial: end trial after 3rd proposal
@@ -239,29 +248,41 @@ export async function POST(request: NextRequest) {
 
         if (newUsageCount >= 3) {
           const { data: subscription } = await supabase
-            .from('subscriptions')
-            .select('stripe_subscription_id, status, plan, current_period_start, current_period_end')
-            .eq('user_id', user.id)
-            .eq('status', 'trialing')
+            .from("subscriptions")
+            .select(
+              "stripe_subscription_id, status, plan, current_period_start, current_period_end",
+            )
+            .eq("user_id", user.id)
+            .eq("status", "trialing")
             .single();
 
           if (subscription?.stripe_subscription_id) {
-            console.log('🎯 User used 3rd trial proposal - ending Stripe trial immediately');
+            console.log(
+              "🎯 User used 3rd trial proposal - ending Stripe trial immediately",
+            );
 
             try {
-              const updatedSubscription = await stripe.subscriptions.update(subscription.stripe_subscription_id, {
-                trial_end: 'now',
-              });
+              const updatedSubscription = await stripe.subscriptions.update(
+                subscription.stripe_subscription_id,
+                {
+                  trial_end: "now",
+                },
+              );
 
-              const periodStart = (updatedSubscription as any).current_period_start
-                ? new Date((updatedSubscription as any).current_period_start * 1000).toISOString()
+              const periodStart = (updatedSubscription as any)
+                .current_period_start
+                ? new Date(
+                    (updatedSubscription as any).current_period_start * 1000,
+                  ).toISOString()
                 : new Date().toISOString();
               const periodEnd = (updatedSubscription as any).current_period_end
-                ? new Date((updatedSubscription as any).current_period_end * 1000).toISOString()
+                ? new Date(
+                    (updatedSubscription as any).current_period_end * 1000,
+                  ).toISOString()
                 : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-              await supabase.from('usage').delete().eq('user_id', user.id);
-              await supabase.from('usage').insert({
+              await supabase.from("usage").delete().eq("user_id", user.id);
+              await supabase.from("usage").insert({
                 user_id: user.id,
                 proposal_count: 0,
                 period_start: periodStart,
@@ -269,27 +290,30 @@ export async function POST(request: NextRequest) {
               });
 
               await supabase
-                .from('subscriptions')
+                .from("subscriptions")
                 .update({
-                  status: 'active',
+                  status: "active",
                   current_period_start: periodStart,
                   current_period_end: periodEnd,
                   updated_at: new Date().toISOString(),
                 })
-                .eq('stripe_subscription_id', subscription.stripe_subscription_id);
+                .eq(
+                  "stripe_subscription_id",
+                  subscription.stripe_subscription_id,
+                );
 
               await supabase
-                .from('profiles')
+                .from("profiles")
                 .update({
-                  subscription_status: 'active',
+                  subscription_status: "active",
                   trial_end_at: null,
                   updated_at: new Date().toISOString(),
                 })
-                .eq('id', user.id);
+                .eq("id", user.id);
 
-              console.log('✅ Stripe trial ended, database updated');
+              console.log("✅ Stripe trial ended, database updated");
             } catch (stripeError) {
-              console.error('❌ Error ending Stripe trial:', stripeError);
+              console.error("❌ Error ending Stripe trial:", stripeError);
             }
           }
         }
@@ -298,10 +322,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(proposal);
   } catch (error) {
-    console.error('Error in proposal creation:', error);
+    console.error("Error in proposal creation:", error);
     return NextResponse.json(
-      { error: 'Failed to create proposal' },
-      { status: 500 }
+      { error: "Failed to create proposal" },
+      { status: 500 },
     );
   }
 }

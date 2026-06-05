@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import {
   Form,
@@ -16,30 +16,30 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { createClient } from '@/lib/supabase/client';
-import { updatePassword } from '@/lib/auth/actions/password';
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { createClient } from "@/lib/supabase/client";
+import { updatePassword } from "@/features/auth/actions/password";
 
 const resetPasswordSchema = z
   .object({
-    password: z.string().min(6, 'Password must be at least 6 characters long'),
+    password: z.string().min(6, "Password must be at least 6 characters long"),
     confirmPassword: z
       .string()
-      .min(6, 'Password must be at least 6 characters long'),
+      .min(6, "Password must be at least 6 characters long"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
-    path: ['confirmPassword'],
+    path: ["confirmPassword"],
   });
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
@@ -55,29 +55,29 @@ export default function ResetPasswordForm() {
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      password: '',
-      confirmPassword: '',
+      password: "",
+      confirmPassword: "",
     },
   });
 
   useEffect(() => {
     const handlePasswordReset = async () => {
-      const code = searchParams.get('code');
-      const accessToken = searchParams.get('access_token');
-      const refreshToken = searchParams.get('refresh_token');
+      const code = searchParams.get("code");
+      const accessToken = searchParams.get("access_token");
+      const refreshToken = searchParams.get("refresh_token");
 
       if (code) {
         try {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) {
             setError(
-              'Invalid or expired reset link. Please request a new one.'
+              "Invalid or expired reset link. Please request a new one.",
             );
           } else {
             setSessionReady(true);
           }
         } catch (err) {
-          setError('Failed to process reset link.');
+          setError("Failed to process reset link.");
         }
       } else if (accessToken && refreshToken) {
         try {
@@ -87,16 +87,16 @@ export default function ResetPasswordForm() {
           });
           if (error) {
             setError(
-              'Invalid or expired reset link. Please request a new one.'
+              "Invalid or expired reset link. Please request a new one.",
             );
           } else {
             setSessionReady(true);
           }
         } catch (err) {
-          setError('Failed to process reset link.');
+          setError("Failed to process reset link.");
         }
       } else {
-        setError('Invalid reset link. Please request a new password reset.');
+        setError("Invalid reset link. Please request a new password reset.");
       }
 
       setIsLoading(false);
@@ -107,21 +107,21 @@ export default function ResetPasswordForm() {
 
   async function onSubmit(values: ResetPasswordFormData) {
     if (!sessionReady) {
-      toast.error('Session not ready. Please try again.');
+      toast.error("Session not ready. Please try again.");
       return;
     }
 
     setIsLoading(true);
 
     const formData = new FormData();
-    formData.append('password', values.password);
+    formData.append("password", values.password);
 
     const result = await updatePassword({}, formData);
 
     if (result.error) {
       toast.error(result.error.message);
     } else {
-      toast.success('Password reset successfully');
+      toast.success("Password reset successfully");
       setIsSubmitted(true);
     }
     setIsLoading(false);
@@ -258,7 +258,7 @@ export default function ResetPasswordForm() {
                   {isLoading ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
-                    'Reset Password'
+                    "Reset Password"
                   )}
                 </Button>
               </div>

@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import type { SubscriptionTier } from "@/types/subscription";
 import type { TemplateWithTiers } from "@/features/proposals/types/proposal";
-import { templatesCache } from "@/lib/templates/templates-cache";
+import { templatesCache } from "@/features/templates/utils/cache";
 
 interface UseProposalTemplatesReturn {
   templates: TemplateWithTiers[];

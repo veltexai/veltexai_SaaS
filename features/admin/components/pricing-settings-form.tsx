@@ -25,8 +25,7 @@ import {
   Package,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatCurrency } from '@/lib/utils';
-
+import { formatCurrency } from "@/lib/utils/format";
 interface PricingSettings {
   id: string;
   user_id: string;

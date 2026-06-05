@@ -6,8 +6,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency } from '@/lib/utils';
-
+import { formatCurrency } from "@/lib/utils/format";
 interface Proposal {
   id: string;
   title: string;

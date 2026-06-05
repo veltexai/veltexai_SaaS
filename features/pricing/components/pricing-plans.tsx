@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useSubscription } from '@/lib/hooks/use-subscription';
-import { trackInitiateCheckout } from '@/lib/meta-pixel';
-import { SubscriptionPlan } from '@/types/database';
+import { useState } from "react";
+import { Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useSubscription } from "@/hooks/use-subscription";
+import { trackInitiateCheckout } from "@/lib/analytics/meta-pixel";
+import { SubscriptionPlan } from "@/types/database";
 
 export function PricingPlans({
   plans,
@@ -56,7 +56,7 @@ export function PricingPlans({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {plans.map((plan) => (
           <Card key={plan.id} className="relative">
-            {plan.name === 'professional' && (
+            {plan.name === "professional" && (
               <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2">
                 Most Popular
               </Badge>
@@ -66,7 +66,7 @@ export function PricingPlans({
               <div className="text-3xl font-bold">
                 ${isAnnual ? plan.price_annual : plan.price_monthly}
                 <span className="text-sm font-normal text-muted-foreground">
-                  /{isAnnual ? 'year' : 'month'}
+                  /{isAnnual ? "year" : "month"}
                 </span>
               </div>
             </CardHeader>
@@ -82,11 +82,11 @@ export function PricingPlans({
               <Button
                 className="w-full"
                 size="lg"
-                variant={plan.name === 'professional' ? 'default' : 'outline'}
+                variant={plan.name === "professional" ? "default" : "outline"}
                 onClick={() => handleGetStarted(plan.name)}
                 disabled={checkoutLoading}
               >
-                {checkoutLoading ? 'Loading...' : 'Subscribe Now'}
+                {checkoutLoading ? "Loading..." : "Subscribe Now"}
               </Button>
               <p className="text-xs text-center text-muted-foreground mt-2">
                 Cancel anytime

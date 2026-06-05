@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent } from "@/components/ui/tooltip";
 import { TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils/format";
 import { DollarSign, Info } from "lucide-react";
 import { PricingRow } from "./pricing-row";
 import { Separator } from "@/components/ui/separator";

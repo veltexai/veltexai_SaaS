@@ -1,39 +1,37 @@
-'use client';
+"use client";
 
-import { useFormContext } from 'react-hook-form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useFormContext } from "react-hook-form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { type ProposalFormData } from '@/lib/validations/proposal';
-import { formatPhoneNumber } from '@/lib/utils';
-import { User, Mail, Building, Phone, MapPin, Ruler } from 'lucide-react';
+} from "@/components/ui/select";
+import { type ProposalFormData } from "@/features/proposals/schemas/proposal";
+import { formatPhoneNumber } from "@/lib/utils/format";
+import { User, Mail, Building, Phone, MapPin, Ruler } from "lucide-react";
 
 const serviceFrequencyOptions = [
-  { value: 'one-time', label: 'One-time Service' },
-  { value: '1x-month', label: 'Once per Month' },
-  { value: 'bi-weekly', label: 'Bi-weekly (Every 2 weeks)' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: '2x-week', label: '2x Week' },
-  { value: '3x-week', label: '3x Week' },
-  { value: '5x-week', label: '5x Week' },
-  { value: '6x-week', label: '6x Week' },
-  { value: 'daily', label: 'Daily' },
+  { value: "one-time", label: "One-time Service" },
+  { value: "1x-month", label: "Once per Month" },
+  { value: "bi-weekly", label: "Bi-weekly (Every 2 weeks)" },
+  { value: "weekly", label: "Weekly" },
+  { value: "2x-week", label: "2x Week" },
+  { value: "3x-week", label: "3x Week" },
+  { value: "5x-week", label: "5x Week" },
+  { value: "6x-week", label: "6x Week" },
+  { value: "daily", label: "Daily" },
 ];
-
-
 
 export function GlobalInputsSection() {
   const form = useFormContext<ProposalFormData>();
@@ -115,7 +113,9 @@ export function GlobalInputsSection() {
                       type="tel"
                       placeholder="(555) 123-4567"
                       {...field}
-                      onChange={(e) => field.onChange(formatPhoneNumber(e.target.value))}
+                      onChange={(e) =>
+                        field.onChange(formatPhoneNumber(e.target.value))
+                      }
                     />
                   </FormControl>
                   <FormMessage />
@@ -163,7 +163,7 @@ export function GlobalInputsSection() {
                       type="number"
                       min="1"
                       placeholder="Enter square footage"
-                      value={field.value || ''}
+                      value={field.value || ""}
                       onChange={(e) => {
                         // Allow any input during typing
                         field.onChange(e.target.value);
@@ -171,10 +171,12 @@ export function GlobalInputsSection() {
                       onBlur={(e) => {
                         // Validate and sanitize only on blur
                         const raw = e.target.value;
-                        const digits = raw.replace(/[^\d]/g, '');
-                        const sanitized = digits.replace(/^0+(?!$)/, '');
+                        const digits = raw.replace(/[^\d]/g, "");
+                        const sanitized = digits.replace(/^0+(?!$)/, "");
                         field.onChange(
-                          sanitized === '' ? undefined : parseInt(sanitized, 10)
+                          sanitized === ""
+                            ? undefined
+                            : parseInt(sanitized, 10),
                         );
                       }}
                     />
@@ -218,10 +220,7 @@ export function GlobalInputsSection() {
                 <FormItem>
                   <FormLabel>City</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="e.g., Seattle"
-                      {...field}
-                    />
+                    <Input placeholder="e.g., Seattle" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -235,10 +234,7 @@ export function GlobalInputsSection() {
                 <FormItem>
                   <FormLabel>Regional Location</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="e.g., Seattle, WA"
-                      {...field}
-                    />
+                    <Input placeholder="e.g., Seattle, WA" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -1,27 +1,27 @@
-import { UseFormReturn } from 'react-hook-form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { UseFormReturn } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   FormField,
   FormItem,
   FormLabel,
   FormControl,
   FormMessage,
-} from '@/components/ui/form';
-import { ProposalFormData } from '@/lib/validations/proposal';
+} from "@/components/ui/form";
+import { ProposalFormData } from "@/features/proposals/schemas/proposal";
 
 interface ServiceDetailsSectionProps {
   form: UseFormReturn<ProposalFormData>;
@@ -82,7 +82,7 @@ export function ServiceDetailsSection({ form }: ServiceDetailsSectionProps) {
                     type="number"
                     min="1"
                     placeholder="e.g., 5000"
-                    value={field.value || ''}
+                    value={field.value || ""}
                     onChange={(e) => {
                       // Allow any input during typing
                       field.onChange(e.target.value);
@@ -90,10 +90,10 @@ export function ServiceDetailsSection({ form }: ServiceDetailsSectionProps) {
                     onBlur={(e) => {
                       // Validate and sanitize only on blur
                       const raw = e.target.value;
-                      const digits = raw.replace(/[^\d]/g, '');
-                      const sanitized = digits.replace(/^0+(?!$)/, '');
+                      const digits = raw.replace(/[^\d]/g, "");
+                      const sanitized = digits.replace(/^0+(?!$)/, "");
                       field.onChange(
-                        sanitized === '' ? undefined : parseInt(sanitized, 10)
+                        sanitized === "" ? undefined : parseInt(sanitized, 10),
                       );
                     }}
                   />

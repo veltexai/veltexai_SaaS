@@ -17,10 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ServiceType } from "@/lib/validations/proposal";
+import type { ServiceType } from "@/features/proposals/schemas/proposal";
 import { AREA_FREQUENCY_OPTIONS } from "@/features/proposals/constants/area-frequency";
 import { Clock, Plus, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { AREAS_INCLUDED_OPTIONS } from "../../../constants/facility-options";
 import { useAreaFrequency } from "../../../hooks/use-area-frequency";

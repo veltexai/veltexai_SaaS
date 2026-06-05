@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-
+import { cn } from "@/lib/utils/cn";
 type NavButtonProps = {
   href: string;
   icon?: React.ReactNode;

@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MoreHorizontal, Trash2, Eye, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from "@/lib/utils/format";
 import ProposalFilters from './proposal-filters';
 
 interface Proposal {

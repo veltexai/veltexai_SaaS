@@ -14,8 +14,7 @@ import {
   BarChart3,
   UserPlus,
 } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
-
+import { formatCurrency } from "@/lib/utils/format";
 interface AnalyticsProps {
   totalUsers: number;
   totalProposals: number;

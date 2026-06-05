@@ -1,4 +1,4 @@
-import type { ServiceType } from "@/lib/validations/proposal";
+import type { ServiceType } from "@/features/proposals/schemas/proposal";
 
 export const DEFAULT_AREA_FREQUENCY = "1x_weekly";
 // Building type options by service type

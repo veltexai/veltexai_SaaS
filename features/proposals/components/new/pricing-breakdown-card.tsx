@@ -1,5 +1,5 @@
 import { Separator } from "@/components/ui/separator";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils/format";
 import { CalculatedPricing } from "../../types/pricing";
 import { PricingRow } from "./pricing-row";
 

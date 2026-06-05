@@ -17,8 +17,8 @@ import {
   ArrowLeftIcon,
   CreditCard,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { signOut } from "@/lib/auth/actions/password";
+import { cn } from "@/lib/utils/cn";
+import { signOut } from "@/features/auth/actions/password";
 import Image from "next/image";
 import { NavButton } from "../ui/nav-button";
 import { useProfileUserBranding } from "@/providers/profile-user-branding-provider";

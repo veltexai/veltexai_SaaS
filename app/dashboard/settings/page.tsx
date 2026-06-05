@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getUser } from "@/queries/user";
+import { getUser } from "@/features/auth/services/get-user";
 import { ProfileSettings } from "@/features/settings/components/profile-settings";
 // import { CompanyProfileSettings } from "@/features/settings/components/company-profile-settings";
 import { SubscriptionBilling } from "@/features/settings/components/subscription-billing";

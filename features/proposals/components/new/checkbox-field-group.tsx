@@ -8,9 +8,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import type { ProposalFormData } from "@/lib/validations/proposal";
-import { cn } from "@/lib/utils";
-
+import type { ProposalFormData } from "@/features/proposals/schemas/proposal";
+import { cn } from "@/lib/utils/cn";
 interface CheckboxFieldGroupProps {
   name: string; // form field path
   label: string;

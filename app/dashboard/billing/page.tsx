@@ -1,13 +1,13 @@
-import { Suspense } from 'react';
-import { createClient } from '@/lib/supabase/server';
-import { getUser } from '@/queries/user';
-import { BillingClient } from '@/features/dashboard/components/billing/billing-client';
-import { redirect } from 'next/navigation';
-import { getSubscriptionPlans } from '@/lib/stripe';
-import type { SubscriptionPlan } from '@/types/database';
+import { Suspense } from "react";
+import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/features/auth/services/get-user";
+import { BillingClient } from "@/features/dashboard/components/billing/billing-client";
+import { redirect } from "next/navigation";
+import { getSubscriptionPlans } from "@/lib/stripe/stripe";
+import type { SubscriptionPlan } from "@/types/database";
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 interface UsageData {
@@ -59,42 +59,42 @@ async function getBillingData() {
     const supabase = await createClient();
 
     if (!user) {
-      redirect('/auth/login');
+      redirect("/auth/login");
     }
 
     // Fetch usage data with proper typing
     const { data: usageData, error: usageError } = await supabase
-      .rpc('get_user_usage_info', { user_uuid: user.id })
+      .rpc("get_user_usage_info", { user_uuid: user.id })
       .single();
 
     if (usageError) {
-      console.error('Error fetching usage info:', usageError);
+      console.error("Error fetching usage info:", usageError);
     }
 
     // Fetch subscription data (include 'trialing' status for trial users)
     const { data: subscriptionData, error: subscriptionError } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'trialing', 'canceled'])
-      .order('created_at', { ascending: false })
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .in("status", ["active", "trialing", "canceled"])
+      .order("created_at", { ascending: false })
       .limit(1)
       .single();
 
-    if (subscriptionError && subscriptionError.code !== 'PGRST116') {
-      console.error('Error fetching subscription:', subscriptionError);
+    if (subscriptionError && subscriptionError.code !== "PGRST116") {
+      console.error("Error fetching subscription:", subscriptionError);
     }
 
     // Fetch billing history
     const { data: billingHistoryData, error: billingError } = await supabase
-      .from('billing_history')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('invoice_date', { ascending: false })
+      .from("billing_history")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("invoice_date", { ascending: false })
       .limit(10);
 
     if (billingError) {
-      console.error('Error fetching billing history:', billingError);
+      console.error("Error fetching billing history:", billingError);
     }
 
     // Transform usage data to match interface
@@ -119,7 +119,7 @@ async function getBillingData() {
           status: subscriptionData.status,
           current_period_start: subscriptionData.current_period_start,
           current_period_end: subscriptionData.current_period_end,
-          stripe_customer_id: subscriptionData.stripe_customer_id || '',
+          stripe_customer_id: subscriptionData.stripe_customer_id || "",
           canceled_at: subscriptionData.canceled_at,
         }
       : null;
@@ -144,7 +144,7 @@ async function getBillingData() {
       billingHistory,
     };
   } catch (error) {
-    console.error('Error fetching billing data:', error);
+    console.error("Error fetching billing data:", error);
     return {
       usage: null,
       subscription: null,
@@ -176,11 +176,11 @@ export default async function BillingPage() {
   try {
     plans = await getSubscriptionPlans();
   } catch (error) {
-    console.error('Error fetching subscription plans:', error);
+    console.error("Error fetching subscription plans:", error);
     plansError =
       error instanceof Error
         ? error.message
-        : 'Failed to fetch subscription plans';
+        : "Failed to fetch subscription plans";
   }
 
   return (
