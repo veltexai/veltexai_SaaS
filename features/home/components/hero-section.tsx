@@ -64,6 +64,15 @@ const HeroSection = () => {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
+            <Link href="/demo-proposal">
+              <Button
+                size="lg"
+                variant="outline"
+                className="text-lg px-8 py-3 border-gray-300"
+              >
+                Try a Demo Proposal
+              </Button>
+            </Link>
           </motion.div>
 
           <motion.ul
