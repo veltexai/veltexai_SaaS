@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AUTH_ROUTES } from "@/features/auth/constants";
 
-const SIGNUP_HREF = "/auth/signup?from=demo";
+const SIGNUP_HREF = AUTH_ROUTES.SIGNUP_FROM_DEMO;
 
 export function DemoCTA() {
   return (

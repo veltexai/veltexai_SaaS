@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DemoProposalData } from "../types/demo-proposal";
+import { getDemoAccent } from "../lib/demo-accent";
 import { DemoSectionBlock } from "./demo-section";
 import { DemoCTA } from "./demo-cta";
 
@@ -58,8 +59,8 @@ function PreviewSkeleton() {
 }
 
 export function DemoPreview({ data, isLoading = false }: DemoPreviewProps) {
-  const isCommercial = data.type === "commercial";
-  const Icon = isCommercial ? Building2 : Home;
+  const accent = getDemoAccent(data.type);
+  const Icon = data.type === "commercial" ? Building2 : Home;
 
   const handleGatedClick = () => {
     toast.info(GATED_MESSAGE, {
@@ -79,20 +80,14 @@ export function DemoPreview({ data, isLoading = false }: DemoPreviewProps) {
     <div className="space-y-8">
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         {/* Cover header */}
-        <div
-          className={
-            isCommercial
-              ? "bg-gradient-to-r from-blue-700 to-blue-900 text-white px-6 py-10 sm:px-10 sm:py-12"
-              : "bg-gradient-to-r from-emerald-700 to-teal-800 text-white px-6 py-10 sm:px-10 sm:py-12"
-          }
-        >
+        <div className={accent.coverHeader}>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <p className="text-sm font-medium opacity-90 mb-1">
                 Veltex Demo Cleaning Co.
               </p>
               <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-                {isCommercial
+                {data.type === "commercial"
                   ? "Janitorial Services Proposal"
                   : "Residential Deep Cleaning Proposal"}
               </h2>

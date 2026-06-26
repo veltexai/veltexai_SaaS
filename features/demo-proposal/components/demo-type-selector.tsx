@@ -11,12 +11,24 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Building2, Home, Check } from "lucide-react";
 import type { DemoCardConfig, DemoType } from "../types/demo-proposal";
-import { COMMERCIAL_DEMO_CARD, RESIDENTIAL_DEMO_CARD } from "../constants";
+import {
+  COMMERCIAL_DEMO_CARD,
+  RESIDENTIAL_DEMO_CARD,
+  getDemoData,
+} from "../constants";
+import { getDemoAccent } from "../lib/demo-accent";
 
 const DEMO_CARDS: DemoCardConfig[] = [
   COMMERCIAL_DEMO_CARD,
   RESIDENTIAL_DEMO_CARD,
 ];
+
+function getCardSummary(type: DemoType): string {
+  const data = getDemoData(type);
+  const serviceLabel =
+    type === "commercial" ? "Office janitorial" : "Home deep clean";
+  return `${serviceLabel} · ${data.estimatedSize} · ${data.city}`;
+}
 
 interface DemoTypeSelectorProps {
   selected: DemoType;
@@ -33,6 +45,7 @@ export function DemoTypeSelector({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {DEMO_CARDS.map((card) => {
         const isSelected = selected === card.type;
+        const accent = getDemoAccent(card.type);
         const Icon = card.type === "commercial" ? Building2 : Home;
 
         return (
@@ -48,12 +61,8 @@ export function DemoTypeSelector({
           >
             <Card
               className={cn(
-                "h-full cursor-pointer transition-all hover:shadow-md",
-                isSelected
-                  ? card.type === "commercial"
-                    ? "ring-2 ring-blue-600 border-blue-200 bg-blue-50/30"
-                    : "ring-2 ring-emerald-600 border-emerald-200 bg-emerald-50/30"
-                  : "hover:border-gray-300",
+                "h-full transition-all hover:shadow-md",
+                isSelected ? accent.selectedCard : "hover:border-gray-300",
               )}
             >
               <CardHeader className="pb-3">
@@ -61,9 +70,7 @@ export function DemoTypeSelector({
                   <div
                     className={cn(
                       "flex h-10 w-10 items-center justify-center rounded-lg",
-                      card.type === "commercial"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-emerald-100 text-emerald-700",
+                      accent.iconBox,
                     )}
                   >
                     <Icon className="h-5 w-5" />
@@ -72,9 +79,7 @@ export function DemoTypeSelector({
                     <span
                       className={cn(
                         "flex h-6 w-6 items-center justify-center rounded-full text-white",
-                        card.type === "commercial"
-                          ? "bg-blue-600"
-                          : "bg-emerald-600",
+                        accent.checkCircle,
                       )}
                     >
                       <Check className="h-3.5 w-3.5" />
@@ -83,23 +88,13 @@ export function DemoTypeSelector({
                 </div>
                 <CardTitle className="text-lg">{card.title}</CardTitle>
                 <CardDescription>{card.subtitle}</CardDescription>
-                <Badge
-                  variant="secondary"
-                  className={cn(
-                    "w-fit",
-                    card.type === "commercial"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-emerald-100 text-emerald-800",
-                  )}
-                >
+                <Badge variant="secondary" className={cn("w-fit", accent.typeBadge)}>
                   {card.badge}
                 </Badge>
               </CardHeader>
               <CardContent className="pt-0">
                 <p className="text-xs text-muted-foreground">
-                  {card.type === "commercial"
-                    ? "Office janitorial · 12,000 sq. ft. · Seattle, WA"
-                    : "Home deep clean · 2,800 sq. ft. · Tacoma, WA"}
+                  {getCardSummary(card.type)}
                 </p>
               </CardContent>
             </Card>

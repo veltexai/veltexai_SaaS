@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils/cn";
+import { getDemoAccent } from "../lib/demo-accent";
 import type { DemoSection } from "../types/demo-proposal";
 
 interface DemoSectionProps {
@@ -12,10 +13,7 @@ export function DemoSectionBlock({
   index,
   variant = "commercial",
 }: DemoSectionProps) {
-  const accentClass =
-    variant === "commercial"
-      ? "border-blue-600 text-blue-700"
-      : "border-emerald-600 text-emerald-700";
+  const accent = getDemoAccent(variant);
 
   return (
     <section
@@ -26,7 +24,7 @@ export function DemoSectionBlock({
         <span
           className={cn(
             "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white",
-            variant === "commercial" ? "bg-blue-600" : "bg-emerald-600",
+            accent.stepBadge,
           )}
         >
           {index + 1}
@@ -42,7 +40,7 @@ export function DemoSectionBlock({
         <div
           className={cn(
             "rounded-lg border-l-4 bg-gray-50 px-4 py-3 mb-4 text-sm font-medium",
-            accentClass,
+            accent.highlightBorder,
           )}
         >
           {section.highlight}
@@ -51,15 +49,15 @@ export function DemoSectionBlock({
 
       {section.bullets && section.bullets.length > 0 && (
         <ul className="space-y-2">
-          {section.bullets.map((bullet) => (
+          {section.bullets.map((bullet, bulletIndex) => (
             <li
-              key={bullet}
+              key={`${section.id}-${bulletIndex}`}
               className="flex items-start gap-2 text-sm text-gray-700"
             >
               <span
                 className={cn(
                   "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",
-                  variant === "commercial" ? "bg-blue-500" : "bg-emerald-500",
+                  accent.bulletDot,
                 )}
               />
               <span>{bullet}</span>

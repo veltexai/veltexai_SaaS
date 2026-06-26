@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,15 @@ export default function DemoProposalPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
+  const generateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (generateTimeoutRef.current !== null) {
+        clearTimeout(generateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSelectType = (type: DemoType) => {
     setSelectedType(type);
@@ -27,9 +36,10 @@ export default function DemoProposalPage() {
     setIsGenerating(true);
     setShowPreview(true);
 
-    window.setTimeout(() => {
+    generateTimeoutRef.current = setTimeout(() => {
       setIsGenerating(false);
       previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      generateTimeoutRef.current = null;
     }, 300);
   }, []);
 

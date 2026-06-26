@@ -3,6 +3,7 @@ import config from "@/config/config";
 export const AUTH_ROUTES = {
   LOGIN: "/auth/login",
   SIGNUP: "/auth/signup",
+  SIGNUP_FROM_DEMO: "/auth/signup?from=demo",
   DASHBOARD: "/dashboard",
   FORGOT_PASSWORD: "/auth/forgot-password",
   RESET_PASSWORD: "/auth/reset-password",
