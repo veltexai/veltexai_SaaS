@@ -10,6 +10,21 @@ export type TemplateType =
   | 'modern_corporate'
   | 'luxury_elite';
 
+/**
+ * Optional image overrides for demo mode. When provided, luxury-elite.tsx
+ * renders these instead of the default template images. Has no effect in
+ * production (the prop is never passed from real proposal routes).
+ */
+export interface DemoTemplateImages {
+  coverBg?: string;
+  coverMask?: string;
+  aboutImage?: string;
+  tocImage?: string;
+  qualificationsImage?: string;
+  /** Inline CSS variable override for --color-primary (demo only). */
+  accentColor?: string;
+}
+
 export interface TemplateProps {
   proposal: Proposal & { template?: ProposalTemplateRow | null };
   template?: ProposalTemplateRow | null;
@@ -27,6 +42,8 @@ export interface TemplateProps {
     pricePerTime: string | null;
     pricePerMonth: string | null;
   }>;
+  /** Demo-only: overrides images and accent color. Ignored in production. */
+  demoImages?: DemoTemplateImages;
 }
 
 export type Branding = {

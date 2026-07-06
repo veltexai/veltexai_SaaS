@@ -13,8 +13,10 @@ import {
 
 export const ProposalTableOfContents = ({
   templateType,
+  tocImage,
 }: {
   templateType: TemplateType;
+  tocImage?: string;
 }) => {
   return (
     <div
@@ -38,7 +40,7 @@ export const ProposalTableOfContents = ({
         <>
           <div className="z-10 absolute bottom-0 right-0 sm:h-[400px] h-[190px]">
             <Image
-              src="/images/templates/Images/Mask group-1.png"
+              src={tocImage ?? "/images/templates/Images/Mask group-1.png"}
               alt="Table of Contents"
               className=" object-contain"
               height={1600}

@@ -1,5 +1,19 @@
 export type DemoType = "commercial" | "residential";
 
+export type ResidentialPackageType =
+  | "recurring"
+  | "deep-clean"
+  | "move-in-out"
+  | "premium-detail";
+
+export interface ResidentialPackageConfig {
+  type: ResidentialPackageType;
+  label: string;
+  subtitle: string;
+  badge: string;
+  priceSummary: string;
+}
+
 export interface DemoSection {
   id: string;
   title: string;

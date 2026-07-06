@@ -6,8 +6,10 @@ import { PoweredBy } from "./powered-by";
 
 const ContentQualificationsSection = ({
   templateType,
+  qualificationsImage,
 }: {
   templateType: TemplateType;
+  qualificationsImage?: string;
 }) => {
   return (
     <div className="text-2xs">
@@ -112,7 +114,7 @@ const ContentQualificationsSection = ({
       {templateType === "luxury_elite" ? (
         <div className="z-10 absolute bottom-0 right-0 sm:max-w-[100%] max-w-[80%]">
           <Image
-            src="/images/templates/Images/Maskgroup-3.png"
+            src={qualificationsImage ?? "/images/templates/Images/Maskgroup-3.png"}
             alt="Table of Contents"
             className="object-contain"
             height={1600}
