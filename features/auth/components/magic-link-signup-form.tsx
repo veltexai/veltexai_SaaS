@@ -26,6 +26,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { signInWithGoogle } from "@/features/auth/actions/oauth";
 import { signUpWithMagicLink } from "@/features/auth/actions/magic-link";
 import FreeTrialInfoBanner from "@/components/ui/free-trial-info-banner";
+import { buildAuthPathWithRedirect } from "@/features/auth/utils/redirect";
 
 const formSchema = z.object({
   fullName: z.string().min(3, "Full name must be at least 3 characters"),
@@ -35,8 +36,9 @@ const formSchema = z.object({
 
 export default function MagicLinkSignupForm({
   className,
+  redirectTo,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & { redirectTo?: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -56,7 +58,7 @@ export default function MagicLinkSignupForm({
   const signUpWithGoogle = async () => {
     setIsLoadingGoogle(true);
     try {
-      const result = await signInWithGoogle();
+      const result = await signInWithGoogle(undefined, redirectTo);
 
       if (result.error) {
         toast.error(result.error?.message || "Failed to sign in with Google");
@@ -69,7 +71,7 @@ export default function MagicLinkSignupForm({
         toast.error("Failed to get Google sign-in URL");
         setIsLoadingGoogle(false);
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred. Please try again.");
       setIsLoadingGoogle(false);
     }
@@ -83,6 +85,9 @@ export default function MagicLinkSignupForm({
       formData.append("email", values.email);
       formData.append("fullName", values.fullName);
       formData.append("companyName", values.companyName || "");
+      if (redirectTo) {
+        formData.append("redirectTo", redirectTo);
+      }
 
       const { error } = await signUpWithMagicLink({}, formData);
 
@@ -92,7 +97,12 @@ export default function MagicLinkSignupForm({
           error.message.toLowerCase().includes("already exists") ||
           error.message.toLowerCase().includes("email already")
         ) {
-          router.push("/auth/login");
+          router.push(
+            buildAuthPathWithRedirect({
+              pathname: "/auth/login",
+              redirectTo,
+            }),
+          );
         }
       } else {
         setUserInfo({ name: values.fullName, email: values.email });
@@ -122,6 +132,9 @@ export default function MagicLinkSignupForm({
     const formData = new FormData();
     formData.append("email", userInfo.email);
     formData.append("fullName", userInfo.name);
+    if (redirectTo) {
+      formData.append("redirectTo", redirectTo);
+    }
 
     const { error } = await signUpWithMagicLink({}, formData);
 
@@ -149,7 +162,7 @@ export default function MagicLinkSignupForm({
                   />
                   <h1 className="text-2xl font-bold">Check your email</h1>
                   <p className="text-muted-foreground text-balance mt-4">
-                    Hi <strong>{userInfo.name}</strong>, we've sent a magic link
+                    Hi <strong>{userInfo.name}</strong>, we&apos;ve sent a magic link
                     to <strong>{userInfo.email}</strong>
                   </p>
                 </div>
@@ -190,7 +203,10 @@ export default function MagicLinkSignupForm({
                 <div className="text-center text-sm">
                   Already have an account?{" "}
                   <Link
-                    href="/auth/login"
+                    href={buildAuthPathWithRedirect({
+                      pathname: "/auth/login",
+                      redirectTo,
+                    })}
                     className="underline underline-offset-4"
                   >
                     Sign in
@@ -338,7 +354,12 @@ export default function MagicLinkSignupForm({
                       </>
                     )}
                   </Button>
-                  <Link href="/auth/signup">
+                  <Link
+                    href={buildAuthPathWithRedirect({
+                      pathname: "/auth/signup",
+                      redirectTo,
+                    })}
+                  >
                     <Button
                       variant="outline"
                       type="button"
@@ -353,7 +374,10 @@ export default function MagicLinkSignupForm({
                 <div className="text-center text-sm">
                   Already have an account?{" "}
                   <Link
-                    href="/auth/login"
+                    href={buildAuthPathWithRedirect({
+                      pathname: "/auth/login",
+                      redirectTo,
+                    })}
                     className="underline underline-offset-4"
                   >
                     Sign in

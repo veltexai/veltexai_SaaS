@@ -4,19 +4,14 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { getUser } from "@/features/auth/services/get-user";
 import { EmailService } from "@/lib/email/service";
 import { NextResponse } from "next/server";
+import { getSafeRedirectPath } from "@/features/auth/utils/redirect";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const encodedRedirectTo =
-    requestUrl.searchParams.get("redirect") || "/dashboard";
-  const priceId = decodeURIComponent(
-    requestUrl.searchParams.get("priceId") || "",
+  const redirectTo = getSafeRedirectPath(
+    requestUrl.searchParams.get("redirect"),
   );
-  const discountCode = decodeURIComponent(
-    requestUrl.searchParams.get("discountCode") || "",
-  );
-  const redirectTo = decodeURIComponent(encodedRedirectTo);
 
   const supabase = await createClient();
   const baseUrl = config.domainName || requestUrl.origin;

@@ -3,13 +3,14 @@
 import { z } from "zod";
 import { validatedAction } from "@/lib/auth/middleware";
 import { createClient } from "@/lib/supabase/server";
-import { AUTH_REDIRECTS, AUTH_ERRORS } from "@/features/auth/constants";
 import type { AuthResponse } from "@/features/auth/types";
 import config from "@/config/config";
+import { buildAuthCallbackUrl } from "@/features/auth/utils/redirect";
 
 const magicLinkSchema = z.object({
   email: z.string().email(),
   redirect: z.string().optional(),
+  redirectTo: z.string().optional(),
   priceId: z.string().optional(),
 });
 
@@ -17,16 +18,16 @@ export const signInWithMagicLink = validatedAction(
   magicLinkSchema,
   async (data): Promise<AuthResponse> => {
     const supabase = await createClient();
-    const { email, priceId } = data;
+    const { email, priceId, redirectTo, redirect } = data;
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${
-          config.domainName
-        }/api/auth/callback?priceId=${encodeURIComponent(
-          priceId || "",
-        )}&redirect=${encodeURIComponent(AUTH_REDIRECTS.DEFAULT_REDIRECT)}`,
+        emailRedirectTo: buildAuthCallbackUrl({
+          baseUrl: config.domainName,
+          priceId,
+          redirectTo: redirectTo || redirect,
+        }),
       },
     });
 
@@ -44,13 +45,14 @@ const signUpMagicLinkSchema = z.object({
   fullName: z.string().min(3, "Full name must be at least 3 characters"),
   companyName: z.string().optional(),
   priceId: z.string().optional(),
+  redirectTo: z.string().optional(),
 });
 
 export const signUpWithMagicLink = validatedAction(
   signUpMagicLinkSchema,
   async (data): Promise<AuthResponse> => {
     const supabase = await createClient();
-    const { email, fullName, companyName, priceId } = data;
+    const { email, fullName, companyName, priceId, redirectTo } = data;
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -59,11 +61,11 @@ export const signUpWithMagicLink = validatedAction(
           full_name: fullName,
           company_name: companyName || "",
         },
-        emailRedirectTo: `${
-          config.domainName
-        }/api/auth/callback?priceId=${encodeURIComponent(
-          priceId || "",
-        )}&redirect=${encodeURIComponent(AUTH_REDIRECTS.DEFAULT_REDIRECT)}`,
+        emailRedirectTo: buildAuthCallbackUrl({
+          baseUrl: config.domainName,
+          priceId,
+          redirectTo,
+        }),
       },
     });
 

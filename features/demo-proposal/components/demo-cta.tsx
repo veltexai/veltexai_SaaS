@@ -4,10 +4,32 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AUTH_ROUTES } from "@/features/auth/constants";
+import type { DemoType } from "../types/demo-proposal";
+import type { ScopeTemplateId } from "@/features/proposals/quick";
 
 const SIGNUP_HREF = AUTH_ROUTES.SIGNUP_FROM_DEMO;
 
-export function DemoCTA() {
+interface DemoCTAProps {
+  demoType: DemoType;
+  scopeTemplateId: ScopeTemplateId;
+}
+
+function buildQuickProposalHref(
+  demoType: DemoType,
+  scopeTemplateId: ScopeTemplateId,
+) {
+  const params = new URLSearchParams({
+    source: "demo",
+    demoType,
+    scopeTemplateId,
+  });
+
+  return `${AUTH_ROUTES.QUICK_PROPOSAL}?${params.toString()}`;
+}
+
+export function DemoCTA({ demoType, scopeTemplateId }: DemoCTAProps) {
+  const quickProposalHref = buildQuickProposalHref(demoType, scopeTemplateId);
+
   return (
     <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 sm:p-8 text-center">
       <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
@@ -18,7 +40,7 @@ export function DemoCTA() {
         and client details — no credit card required.
       </p>
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        <Link href={SIGNUP_HREF}>
+        <Link href={quickProposalHref}>
           <Button
             size="lg"
             className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 px-8"

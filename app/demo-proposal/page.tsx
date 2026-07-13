@@ -16,6 +16,7 @@ import {
   type DemoType,
   type ResidentialPackageType,
 } from "@/features/demo-proposal";
+import type { ScopeTemplateId } from "@/features/proposals/quick";
 
 export default function DemoProposalPage() {
   const [selectedType, setSelectedType] = useState<DemoType>("commercial");
@@ -69,6 +70,8 @@ export default function DemoProposalPage() {
       : selectedType === "residential"
         ? "Residential Cleaning"
         : "";
+  const quickScopeTemplateId: ScopeTemplateId =
+    selectedType === "commercial" ? "commercial_office" : "move_out_turnover";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -192,7 +195,10 @@ export default function DemoProposalPage() {
                   </div>
                 </div>
 
-                <DemoCTA />
+                <DemoCTA
+                  demoType={selectedType}
+                  scopeTemplateId={quickScopeTemplateId}
+                />
               </div>
             )}
           </div>

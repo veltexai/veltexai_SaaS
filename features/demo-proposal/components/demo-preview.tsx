@@ -173,7 +173,10 @@ export function DemoPreview({ data, isLoading = false }: DemoPreviewProps) {
         </div>
       </div>
 
-      <DemoCTA />
+      <DemoCTA
+        demoType={data.type}
+        scopeTemplateId={data.scopeTemplateId || "commercial_office"}
+      />
     </div>
   );
 }

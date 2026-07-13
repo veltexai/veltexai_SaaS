@@ -24,15 +24,21 @@ import Photo from "../../../public/images/pexels-tima-miroshnichenko-6196692.jpg
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { signInWithMagicLink } from "@/features/auth/actions/magic-link";
 import { signInWithGoogle } from "@/features/auth/actions/oauth";
+import { buildAuthPathWithRedirect } from "@/features/auth/utils/redirect";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
 });
 
+interface MagicLinkLoginFormProps extends React.ComponentProps<"form"> {
+  redirectTo?: string;
+}
+
 const MagicLinkLoginForm = ({
   className,
+  redirectTo,
   ...props
-}: React.ComponentProps<"form">) => {
+}: MagicLinkLoginFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -50,6 +56,9 @@ const MagicLinkLoginForm = ({
     try {
       const formData = new FormData();
       formData.append("email", values.email);
+      if (redirectTo) {
+        formData.append("redirectTo", redirectTo);
+      }
 
       const result = await signInWithMagicLink({}, formData);
 
@@ -60,7 +69,7 @@ const MagicLinkLoginForm = ({
       } else {
         toast.error(result.error?.message || "Failed to send magic link");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -76,7 +85,7 @@ const MagicLinkLoginForm = ({
   const handleGoogleSignIn = async () => {
     setIsLoadingGoogle(true);
     try {
-      const result = await signInWithGoogle();
+      const result = await signInWithGoogle(undefined, redirectTo);
 
       if (result.error) {
         toast.error(result.error?.message || "Failed to sign in with Google");
@@ -89,7 +98,7 @@ const MagicLinkLoginForm = ({
         toast.error("Failed to get Google sign-in URL");
         setIsLoadingGoogle(false);
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred. Please try again.");
       setIsLoadingGoogle(false);
     }
@@ -111,7 +120,7 @@ const MagicLinkLoginForm = ({
                   />
                   <h1 className="text-2xl font-bold">Check your email</h1>
                   <p className="text-muted-foreground text-balance">
-                    We've sent a magic link to{" "}
+                    We&apos;ve sent a magic link to{" "}
                     <strong className="text-black">{sentEmail}</strong>
                   </p>
                 </div>
@@ -182,9 +191,12 @@ const MagicLinkLoginForm = ({
                 </Button>
 
                 <div className="text-center text-sm">
-                  Don't have an account?{" "}
+                  Don&apos;t have an account?{" "}
                   <Link
-                    href="/auth/signup"
+                    href={buildAuthPathWithRedirect({
+                      pathname: "/auth/signup",
+                      redirectTo,
+                    })}
                     className="underline underline-offset-4"
                   >
                     Sign up
@@ -288,7 +300,12 @@ const MagicLinkLoginForm = ({
                     )}
                     Sign in with Google
                   </Button>
-                  <Link href="/auth/login">
+                  <Link
+                    href={buildAuthPathWithRedirect({
+                      pathname: "/auth/login",
+                      redirectTo,
+                    })}
+                  >
                     <Button
                       variant="outline"
                       type="button"
@@ -301,9 +318,12 @@ const MagicLinkLoginForm = ({
                 </div>
 
                 <div className="text-center text-sm">
-                  Don't have an account?{" "}
+                  Don&apos;t have an account?{" "}
                   <Link
-                    href="/auth/signup"
+                    href={buildAuthPathWithRedirect({
+                      pathname: "/auth/signup",
+                      redirectTo,
+                    })}
                     className="underline underline-offset-4"
                   >
                     Sign up

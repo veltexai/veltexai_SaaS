@@ -7,19 +7,23 @@ import { createClient } from "@/lib/supabase/server";
 import {
   AUTH_ROUTES,
   AUTH_ERRORS,
-  AUTH_REDIRECTS,
 } from "@/features/auth/constants";
 import type { AuthResponse } from "@/features/auth/types";
 import config from "@/config/config";
+import {
+  buildAuthCallbackUrl,
+  getSafeRedirectPath,
+} from "@/features/auth/utils/redirect";
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
   password: z.string().min(8).max(100),
+  redirectTo: z.string().optional(),
 });
 
 export const signIn = validatedAction(signInSchema, async (data) => {
   const supabase = await createClient();
-  const { email, password } = data;
+  const { email, password, redirectTo } = data;
 
   const { data: signInData, error } = await supabase.auth.signInWithPassword({
     email,
@@ -31,7 +35,7 @@ export const signIn = validatedAction(signInSchema, async (data) => {
   }
 
   // Ensure user_data entry exists
-  const { data: userData, error: userDataError } = await supabase
+  const { error: userDataError } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", signInData.user?.id)
@@ -47,7 +51,7 @@ export const signIn = validatedAction(signInSchema, async (data) => {
       console.error("Error creating profile entry:", insertError);
     }
   }
-  redirect(`${config.domainName}${AUTH_ROUTES.DASHBOARD}`);
+  redirect(`${config.domainName}${getSafeRedirectPath(redirectTo)}`);
 });
 
 const signUpSchema = z.object({
@@ -56,11 +60,12 @@ const signUpSchema = z.object({
   fullName: z.string().min(1),
   companyName: z.string().optional(),
   inviteId: z.string().optional(),
+  redirectTo: z.string().optional(),
 });
 
 export const signUp = validatedAction(signUpSchema, async (data) => {
   const supabase = await createClient();
-  const { email, password, fullName, companyName } = data;
+  const { email, password, fullName, companyName, redirectTo } = data;
 
   // Check if user already exists first
   const { data: existingProfile } = await supabase
@@ -81,11 +86,10 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
         full_name: fullName,
         company_name: companyName || "",
       },
-      emailRedirectTo: `${
-        config.domainName
-      }/api/auth/callback?redirect=${encodeURIComponent(
-        AUTH_REDIRECTS.DEFAULT_REDIRECT,
-      )}`,
+      emailRedirectTo: buildAuthCallbackUrl({
+        baseUrl: config.domainName,
+        redirectTo,
+      }),
     },
   });
 
