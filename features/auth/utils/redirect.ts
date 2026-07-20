@@ -6,7 +6,10 @@ export function getSafeRedirectPath(redirectTo?: string | null) {
   if (
     !redirectTo ||
     !redirectTo.startsWith("/") ||
-    redirectTo.startsWith("//")
+    redirectTo.startsWith("//") ||
+    // Browsers treat "\" as "/" when resolving redirects, so "/\evil.com"
+    // resolves to https://evil.com — reject backslashes entirely.
+    redirectTo.includes("\\")
   ) {
     return AUTH_ROUTES.DASHBOARD;
   }

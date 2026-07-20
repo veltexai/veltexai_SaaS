@@ -21,15 +21,6 @@ export const RESIDENTIAL_DEMO_DATA: DemoProposalData = {
   samplePriceRange: "$525 – $750",
   scopeTemplateName: "Residential Deep Clean",
   scopeTemplateId: "move_out_turnover",
-  defaultQuickInputs: {
-    serviceType: "residential",
-    propertyType: "Move-Out/Turnover",
-    squareFootage: 2800,
-    frequency: "one-time",
-    location: "Tacoma, WA",
-    bedrooms: 4,
-    bathrooms: 3,
-  },
   sections: [
     {
       id: "cover",

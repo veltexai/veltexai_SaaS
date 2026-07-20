@@ -4,7 +4,9 @@ import {
   QuickProposalFlow,
   getScopeTemplate,
   getScopeTemplateIdForDemo,
+  pickQuickDesignTemplate,
 } from "@/features/proposals/quick";
+import { getUserAccessibleTemplates } from "@/lib/templates/template-service";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,19 @@ interface QuickProposalPageProps {
   }>;
 }
 
+async function getDefaultDesignTemplate() {
+  try {
+    const templates = await getUserAccessibleTemplates();
+    const picked = pickQuickDesignTemplate(templates);
+    return picked
+      ? { id: picked.id, name: picked.display_name || picked.name }
+      : undefined;
+  } catch (error) {
+    console.error("Quick proposal: failed to load design templates:", error);
+    return undefined;
+  }
+}
+
 export default async function QuickProposalPage({
   searchParams,
 }: QuickProposalPageProps) {
@@ -25,6 +40,7 @@ export default async function QuickProposalPage({
   const template =
     getScopeTemplate(requestedTemplateId) ??
     getScopeTemplate(DEFAULT_SCOPE_TEMPLATE_ID)!;
+  const designTemplate = await getDefaultDesignTemplate();
 
   return (
     <QuickProposalFlow
@@ -33,6 +49,8 @@ export default async function QuickProposalPage({
       requestedScopeTemplateId={requestedTemplateId}
       template={template}
       usedFallback={template.id !== requestedTemplateId}
+      designTemplateId={designTemplate?.id}
+      designTemplateName={designTemplate?.name}
     />
   );
 }

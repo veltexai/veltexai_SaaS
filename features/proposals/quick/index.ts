@@ -19,6 +19,7 @@ export { buildQuickProposalPayload } from "./lib/build-quick-proposal-payload";
 export { buildQuickProposalGenerateRequest } from "./lib/build-quick-proposal-payload";
 export { buildQuickProposalSavePayload } from "./lib/build-quick-proposal-payload";
 export { buildPropertyAssumptionsLite } from "./lib/property-assumptions-lite";
+export { pickQuickDesignTemplate } from "./lib/select-design-template";
 export {
   QUICK_SERVICE_FREQUENCY_OPTIONS,
   getQuickProposalDefaults,

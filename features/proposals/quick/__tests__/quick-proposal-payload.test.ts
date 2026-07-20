@@ -29,9 +29,116 @@ describe("quick proposal payload adapter", () => {
       "client@example.com",
     );
     expect(result.payload.global_inputs.contact_phone).toBe("(555) 123-4567");
-    expect(result.payload.pricing_enabled).toBe(false);
+    expect(result.payload.pricing_enabled).toBe(true);
     expect(result.payload.generated_content).toBe("");
     expect(result.payload.status).toBe("draft");
+  });
+
+  it("sends per-area frequencies and scope-template task notes", () => {
+    const template = getScopeTemplate("commercial_office")!;
+    const values = getQuickProposalDefaults({
+      demoType: "commercial",
+      template,
+    });
+    values.clientEmail = "client@example.com";
+    values.clientPhone = "(555) 123-4567";
+
+    const result = buildQuickProposalSavePayload(values, "## Content");
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    const areas = template.scopeSections.map((section) => section.title);
+    const { areas_included, frequency_details, area_notes } =
+      result.payload.service_scope;
+
+    expect(areas_included).toEqual(areas);
+
+    // 5x-week maps to the per-area frequency value the generate route expects.
+    for (const area of areas) {
+      expect(frequency_details[area]).toBe("5x_weekly");
+      expect(area_notes[area]).toBe(
+        template.scopeSections
+          .find((section) => section.title === area)!
+          .tasks.join(" "),
+      );
+    }
+  });
+
+  it("never sends the scope template slug as template_id (UUID FK column)", () => {
+    const values = getQuickProposalDefaults({
+      demoType: "commercial",
+      template: getScopeTemplate("commercial_office")!,
+    });
+    values.clientEmail = "client@example.com";
+    values.clientPhone = "(555) 123-4567";
+
+    const saveResult = buildQuickProposalSavePayload(values, "## Content");
+    const generateResult = buildQuickProposalGenerateRequest(values);
+
+    expect(saveResult.success).toBe(true);
+    if (!saveResult.success) return;
+    expect(saveResult.payload.template_id).toBeUndefined();
+    expect(saveResult.payload.service_specific_data.scope_template_id).toBe(
+      "commercial_office",
+    );
+
+    expect(generateResult.success).toBe(true);
+    if (!generateResult.success) return;
+    expect(generateResult.payload).not.toHaveProperty("template_id");
+    expect(
+      generateResult.payload.service_specific_data.scope_template_id,
+    ).toBe("commercial_office");
+  });
+
+  it("uses a provided design template UUID as template_id in both payloads", () => {
+    const designTemplateId = "3f2b6c1a-9d4e-4b7a-8c5d-1e2f3a4b5c6d";
+    const values = getQuickProposalDefaults({
+      demoType: "commercial",
+      template: getScopeTemplate("commercial_office")!,
+    });
+    values.clientEmail = "client@example.com";
+    values.clientPhone = "(555) 123-4567";
+
+    const saveResult = buildQuickProposalSavePayload(
+      values,
+      "## Content",
+      designTemplateId,
+    );
+    const generateResult = buildQuickProposalGenerateRequest(
+      values,
+      designTemplateId,
+    );
+
+    expect(saveResult.success).toBe(true);
+    if (!saveResult.success) return;
+    expect(saveResult.payload.template_id).toBe(designTemplateId);
+    expect(saveResult.payload.service_specific_data.scope_template_id).toBe(
+      "commercial_office",
+    );
+
+    expect(generateResult.success).toBe(true);
+    if (!generateResult.success) return;
+    expect(generateResult.payload.template_id).toBe(designTemplateId);
+  });
+
+  it("does not send selected_addons in the save payload (catalog-only table)", () => {
+    const values = getQuickProposalDefaults({
+      demoType: "commercial",
+      template: getScopeTemplate("commercial_office")!,
+    });
+    values.clientEmail = "client@example.com";
+    values.clientPhone = "(555) 123-4567";
+
+    const result = buildQuickProposalSavePayload(values, "## Content");
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    expect(result.payload.selected_addons).toBeUndefined();
+    expect(result.payload.service_scope.special_services).toEqual(
+      values.addOns,
+    );
   });
 
   it("builds a save payload that includes generated_content", () => {
@@ -62,6 +169,7 @@ describe("quick proposal payload adapter", () => {
       template: getScopeTemplate("commercial_office")!,
     });
     values.clientEmail = "real-client@example.com";
+    values.clientPhone = "(555) 123-4567";
 
     const result = buildQuickProposalGenerateRequest(values);
 
@@ -72,8 +180,24 @@ describe("quick proposal payload adapter", () => {
     expect(result.payload.client_email).not.toBe(
       "pending-client@example.com",
     );
-    expect(result.payload.contact_phone).toBeUndefined();
+    expect(result.payload.contact_phone).toBe("(555) 123-4567");
     expect(result.payload.contact_phone).not.toBe("Not provided");
+  });
+
+  it("fails generation when client phone is missing", () => {
+    const values = getQuickProposalDefaults({
+      demoType: "commercial",
+      template: getScopeTemplate("commercial_office")!,
+    });
+    values.clientEmail = "client@example.com";
+
+    const result = buildQuickProposalGenerateRequest(values);
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+
+    expect(result.error).toContain("Client phone is required");
+    expect(result.fieldErrors?.clientPhone).toBeDefined();
   });
 
   it("returns an explicit validation error when client email is missing", () => {
@@ -91,7 +215,7 @@ describe("quick proposal payload adapter", () => {
     expect(result.fieldErrors?.clientEmail).toBeDefined();
   });
 
-  it("returns an explicit existing-schema adapter error when phone is missing", () => {
+  it("returns an explicit phone error when phone is missing at save", () => {
     const values = getQuickProposalDefaults({
       demoType: "commercial",
       template: getScopeTemplate("commercial_office")!,
@@ -106,7 +230,7 @@ describe("quick proposal payload adapter", () => {
     expect(result.success).toBe(false);
     if (result.success) return;
 
-    expect(result.error).toContain("existing proposal form schema");
+    expect(result.error).toContain("Client phone is required");
     expect(result.fieldErrors?.clientPhone).toBeDefined();
   });
 
@@ -132,6 +256,7 @@ describe("quick proposal payload adapter", () => {
       template: getScopeTemplate("commercial_office")!,
     });
     values.clientEmail = "client@example.com";
+    values.clientPhone = "(555) 123-4567";
 
     const result = buildQuickProposalGenerateRequest(values);
 
@@ -140,10 +265,15 @@ describe("quick proposal payload adapter", () => {
 
     expect(result.payload.client_name).toBe("Evergreen Professional Offices");
     expect(result.payload.client_email).toBe("client@example.com");
-    expect(result.payload.contact_phone).toBeUndefined();
-    expect(result.payload.pricing_enabled).toBe(false);
+    expect(result.payload.pricing_enabled).toBe(true);
     expect(result.payload).not.toHaveProperty("generated_content");
     expect(result.payload).not.toHaveProperty("status");
+    // Quick add-ons have no catalog sku/rate/qty, so they must stay out of the
+    // generated pricing table.
+    expect(result.payload).not.toHaveProperty("selected_addons");
+    expect(result.payload.service_scope.special_services).toEqual(
+      values.addOns,
+    );
   });
 
   it("does not expose unsupported quick frequency values", () => {

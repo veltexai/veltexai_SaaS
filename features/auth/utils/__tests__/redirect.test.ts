@@ -51,4 +51,14 @@ describe("auth redirect helpers", () => {
     );
     expect(getSafeRedirectPath("//evil.example/dashboard")).toBe("/dashboard");
   });
+
+  it("rejects backslash paths that browsers resolve as external hosts", () => {
+    expect(getSafeRedirectPath("/\\evil.example")).toBe("/dashboard");
+    expect(getSafeRedirectPath("/\\/evil.example")).toBe("/dashboard");
+    expect(getSafeRedirectPath("/dashboard\\..\\evil")).toBe("/dashboard");
+    // Sanity check the attack this guards against
+    expect(new URL("/\\evil.example", "https://app.veltex.test").host).toBe(
+      "evil.example",
+    );
+  });
 });

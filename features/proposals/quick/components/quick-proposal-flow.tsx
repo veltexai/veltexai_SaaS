@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -29,7 +29,9 @@ import {
 import { buildPropertyAssumptionsLite } from "../lib/property-assumptions-lite";
 import {
   QUICK_SERVICE_FREQUENCY_OPTIONS,
+  QUICK_STEP_ONE_FIELDS,
   getQuickProposalDefaults,
+  getQuickProposalFieldErrors,
   type QuickProposalFormData,
 } from "../schemas/quick-proposal";
 import { PropertyAssumptionsLite } from "./property-assumptions-lite";
@@ -40,6 +42,9 @@ interface QuickProposalFlowProps {
   requestedScopeTemplateId?: string;
   template: ScopeTemplate;
   usedFallback: boolean;
+  /** proposal_templates UUID used for AI structure and detail rendering. */
+  designTemplateId?: string;
+  designTemplateName?: string;
 }
 
 const STEP_LABELS = [
@@ -89,6 +94,8 @@ export function QuickProposalFlow({
   requestedScopeTemplateId,
   template,
   usedFallback,
+  designTemplateId,
+  designTemplateName,
 }: QuickProposalFlowProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -96,7 +103,11 @@ export function QuickProposalFlow({
   const [isSaving, setIsSaving] = useState(false);
   const [generationError, setGenerationError] = useState("");
   const [saveError, setSaveError] = useState("");
+  const [stepOneError, setStepOneError] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
+  const [isPreviewStale, setIsPreviewStale] = useState(false);
+  const generateInFlightRef = useRef(false);
+  const saveInFlightRef = useRef(false);
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<keyof QuickProposalFormData, string>>
   >({});
@@ -107,14 +118,15 @@ export function QuickProposalFlow({
       template,
     }),
   );
-  const selectedTemplate = getScopeTemplate(formData.scopeTemplateId) ?? template;
+  const selectedTemplate =
+    getScopeTemplate(formData.scopeTemplateId) ?? template;
   const assumptions = useMemo(
     () => buildPropertyAssumptionsLite(formData),
     [formData],
   );
   const draftGenerateRequest = useMemo(
-    () => buildQuickProposalGenerateRequest(formData),
-    [formData],
+    () => buildQuickProposalGenerateRequest(formData, designTemplateId),
+    [formData, designTemplateId],
   );
   const hasDemoContext = source === "demo" || Boolean(demoType);
 
@@ -124,7 +136,12 @@ export function QuickProposalFlow({
   ) => {
     setGenerationError("");
     setSaveError("");
-    setGeneratedContent("");
+    setStepOneError("");
+    // Keep the generated preview (and any manual edits) instead of wiping it;
+    // just flag it as possibly out of date with the changed inputs.
+    if (generatedContent) {
+      setIsPreviewStale(true);
+    }
     setFieldErrors((current) => {
       const { [field]: removedFieldError, ...rest } = current;
       void removedFieldError;
@@ -136,6 +153,31 @@ export function QuickProposalFlow({
     }));
   };
 
+  const goToStep = (target: number) => {
+    const nextStep = Math.min(3, Math.max(1, target));
+
+    // Leaving Step 1 forward requires its fields to be complete.
+    if (step === 1 && nextStep > 1) {
+      const allErrors = getQuickProposalFieldErrors(formData);
+      const stepOneErrors = Object.fromEntries(
+        QUICK_STEP_ONE_FIELDS.filter((field) => allErrors[field]).map(
+          (field) => [field, allErrors[field]],
+        ),
+      ) as typeof allErrors;
+
+      if (Object.keys(stepOneErrors).length > 0) {
+        setFieldErrors(stepOneErrors);
+        setStepOneError(
+          "Please fill in the required fields before continuing.",
+        );
+        return;
+      }
+    }
+
+    setStepOneError("");
+    setStep(nextStep);
+  };
+
   const applyRecommendedTemplate = () => {
     const recommendedTemplate = getScopeTemplate(
       assumptions.recommendedScopeTemplateId,
@@ -145,6 +187,9 @@ export function QuickProposalFlow({
       return;
     }
 
+    if (generatedContent) {
+      setIsPreviewStale(true);
+    }
     setFormData((current) => ({
       ...current,
       scopeTemplateId: recommendedTemplate.id,
@@ -155,12 +200,20 @@ export function QuickProposalFlow({
   };
 
   const generateProposalPreview = async () => {
+    if (generateInFlightRef.current) {
+      return;
+    }
+
     setGenerationError("");
     setSaveError("");
     setGeneratedContent("");
+    setIsPreviewStale(false);
     setFieldErrors({});
 
-    const request = buildQuickProposalGenerateRequest(formData);
+    const request = buildQuickProposalGenerateRequest(
+      formData,
+      designTemplateId,
+    );
 
     if (!request.success) {
       setGenerationError(request.error);
@@ -168,6 +221,7 @@ export function QuickProposalFlow({
       return;
     }
 
+    generateInFlightRef.current = true;
     setIsGenerating(true);
 
     try {
@@ -192,20 +246,30 @@ export function QuickProposalFlow({
       }
 
       setGeneratedContent(data.content);
+      setIsPreviewStale(false);
     } catch {
       setGenerationError(
         "We could not reach the proposal generator. Please try again in a moment.",
       );
     } finally {
+      generateInFlightRef.current = false;
       setIsGenerating(false);
     }
   };
 
   const saveGeneratedProposal = async () => {
+    if (saveInFlightRef.current) {
+      return;
+    }
+
     setSaveError("");
     setFieldErrors({});
 
-    const result = buildQuickProposalSavePayload(formData, generatedContent);
+    const result = buildQuickProposalSavePayload(
+      formData,
+      generatedContent,
+      designTemplateId,
+    );
 
     if (!result.success) {
       setSaveError(result.error);
@@ -213,6 +277,7 @@ export function QuickProposalFlow({
       return;
     }
 
+    saveInFlightRef.current = true;
     setIsSaving(true);
 
     try {
@@ -233,15 +298,19 @@ export function QuickProposalFlow({
           data.error ||
             "We could not save this proposal. Please review the inputs and try again.",
         );
+        saveInFlightRef.current = false;
+        setIsSaving(false);
         return;
       }
 
+      // Keep the saving state active until the redirect unmounts this
+      // component so the button doesn't flicker back to "Save Proposal".
       router.push(`/dashboard/proposals/${data.id}`);
     } catch {
       setSaveError(
         "We could not reach the proposal save service. Please try again in a moment.",
       );
-    } finally {
+      saveInFlightRef.current = false;
       setIsSaving(false);
     }
   };
@@ -273,8 +342,9 @@ export function QuickProposalFlow({
       {usedFallback && requestedScopeTemplateId && (
         <Card className="border-yellow-200 bg-yellow-50">
           <CardContent className="pt-6 text-sm text-yellow-900">
-            The requested scope template &quot;{requestedScopeTemplateId}&quot; was not
-            found, so the commercial office template is selected for now.
+            The requested scope template &quot;{requestedScopeTemplateId}&quot;
+            was not found, so the commercial office template is selected for
+            now.
           </CardContent>
         </Card>
       )}
@@ -290,7 +360,7 @@ export function QuickProposalFlow({
               <button
                 key={label}
                 type="button"
-                onClick={() => setStep(stepNumber)}
+                onClick={() => goToStep(stepNumber)}
                 className={`flex items-center gap-3 rounded-lg border p-3 text-left text-sm transition ${
                   isActive
                     ? "border-blue-600 bg-blue-50 text-blue-950"
@@ -331,7 +401,9 @@ export function QuickProposalFlow({
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2 text-sm">
-                    <span className="font-medium text-gray-900">Client name</span>
+                    <span className="font-medium text-gray-900">
+                      Client name*
+                    </span>
                     <Input
                       value={formData.clientName}
                       onChange={(event) =>
@@ -339,6 +411,7 @@ export function QuickProposalFlow({
                       }
                       placeholder="Client or property contact"
                     />
+                    <FieldError message={fieldErrors.clientName} />
                   </label>
                   <label className="space-y-2 text-sm">
                     <span className="font-medium text-gray-900">
@@ -357,7 +430,7 @@ export function QuickProposalFlow({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2 text-sm">
                     <span className="font-medium text-gray-900">
-                      Client email required
+                      Client email*
                     </span>
                     <Input
                       type="email"
@@ -371,7 +444,10 @@ export function QuickProposalFlow({
                   </label>
                   <label className="space-y-2 text-sm">
                     <span className="font-medium text-gray-900">
-                      Client phone - required to save, helps with follow-up
+                      Client phone*{" "}
+                      <span className="text-gray-500 text-xs">
+                        Save & follow-up required
+                      </span>
                     </span>
                     <Input
                       type="tel"
@@ -387,7 +463,7 @@ export function QuickProposalFlow({
 
                 <label className="space-y-2 text-sm">
                   <span className="font-medium text-gray-900">
-                    Service location
+                    Service location*
                   </span>
                   <Input
                     value={formData.serviceLocation}
@@ -399,9 +475,9 @@ export function QuickProposalFlow({
                   <FieldError message={fieldErrors.serviceLocation} />
                 </label>
 
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-3 mt-4">
                   <label className="space-y-2 text-sm">
-                    <span className="font-medium text-gray-900">City</span>
+                    <span className="font-medium text-gray-900">City*</span>
                     <Input
                       value={formData.city}
                       onChange={(event) => setField("city", event.target.value)}
@@ -410,7 +486,7 @@ export function QuickProposalFlow({
                     <FieldError message={fieldErrors.city} />
                   </label>
                   <label className="space-y-2 text-sm">
-                    <span className="font-medium text-gray-900">State</span>
+                    <span className="font-medium text-gray-900">State*</span>
                     <Input
                       value={formData.state}
                       maxLength={2}
@@ -423,7 +499,7 @@ export function QuickProposalFlow({
                   </label>
                   <label className="space-y-2 text-sm">
                     <span className="font-medium text-gray-900">
-                      Square footage
+                      Square footage*
                     </span>
                     <Input
                       type="number"
@@ -444,7 +520,7 @@ export function QuickProposalFlow({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2 text-sm">
                     <span className="font-medium text-gray-900">
-                      Property type
+                      Property type*
                     </span>
                     <Input
                       value={formData.propertyType}
@@ -457,7 +533,7 @@ export function QuickProposalFlow({
                   </label>
                   <label className="space-y-2 text-sm">
                     <span className="font-medium text-gray-900">
-                      Service frequency
+                      Service frequency*
                     </span>
                     <select
                       className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
@@ -465,7 +541,8 @@ export function QuickProposalFlow({
                       onChange={(event) =>
                         setField(
                           "serviceFrequency",
-                          event.target.value as QuickProposalFormData["serviceFrequency"],
+                          event.target
+                            .value as QuickProposalFormData["serviceFrequency"],
                         )
                       }
                     >
@@ -495,6 +572,9 @@ export function QuickProposalFlow({
                           .value as ScopeTemplateId;
                         const nextTemplate = getScopeTemplate(nextTemplateId);
 
+                        if (generatedContent) {
+                          setIsPreviewStale(true);
+                        }
                         setFormData((current) => ({
                           ...current,
                           scopeTemplateId: nextTemplateId,
@@ -679,12 +759,12 @@ export function QuickProposalFlow({
                   />
                 </label>
 
-                <Card className="border-blue-100 bg-blue-50">
+                <Card className="border-blue-100 bg-blue-50 mt-4">
                   <CardContent className="space-y-2 pt-6 text-sm text-blue-950">
-                    <p className="font-medium">Draft payload prepared</p>
+                    <p className="font-medium">Draft inputs ready</p>
                     <p>
-                      This data is ready for proposal generation. Saving is
-                      still disconnected until the next checkpoint.
+                      Generate the proposal below, review or edit the preview,
+                      then save it to your proposals.
                     </p>
                     <p className="text-xs">
                       Prepared title:{" "}
@@ -702,15 +782,12 @@ export function QuickProposalFlow({
                 type="button"
                 variant="outline"
                 disabled={step === 1}
-                onClick={() => setStep((current) => Math.max(1, current - 1))}
+                onClick={() => goToStep(step - 1)}
               >
                 Back
               </Button>
               {step < 3 ? (
-                <Button
-                  type="button"
-                  onClick={() => setStep((current) => Math.min(3, current + 1))}
-                >
+                <Button type="button" onClick={() => goToStep(step + 1)}>
                   Continue
                 </Button>
               ) : (
@@ -725,6 +802,12 @@ export function QuickProposalFlow({
                 </Button>
               )}
             </div>
+
+            {stepOneError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+                {stepOneError}
+              </div>
+            )}
 
             {generationError && (
               <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900">
@@ -741,6 +824,13 @@ export function QuickProposalFlow({
                     the existing proposal creation flow.
                   </p>
                 </div>
+                {isPreviewStale && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                    Form inputs changed after this preview was generated. You
+                    can still edit and save it, or generate again to refresh it
+                    with the new inputs.
+                  </div>
+                )}
                 <Textarea
                   className="min-h-[420px] bg-white font-mono text-sm leading-6"
                   value={generatedContent}
@@ -778,6 +868,9 @@ export function QuickProposalFlow({
                 label="Scope template ID"
                 value={formData.scopeTemplateId}
               />
+              {designTemplateName && (
+                <ReviewRow label="Design template" value={designTemplateName} />
+              )}
             </CardContent>
           </Card>
 

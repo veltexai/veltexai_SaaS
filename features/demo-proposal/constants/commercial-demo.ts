@@ -20,15 +20,6 @@ export const COMMERCIAL_DEMO_DATA: DemoProposalData = {
   samplePriceRange: "$2,850 – $3,400/month",
   scopeTemplateName: "Standard Office Janitorial",
   scopeTemplateId: "commercial_office",
-  defaultQuickInputs: {
-    serviceType: "commercial",
-    propertyType: "Commercial Office",
-    squareFootage: 12000,
-    frequency: "5x-week",
-    location: "Seattle, WA",
-    restrooms: 4,
-    breakrooms: 1,
-  },
   sections: [
     {
       id: "cover",

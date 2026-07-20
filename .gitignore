@@ -50,3 +50,6 @@ next-env.d.ts
 
 # cursor rules
 /cursor
+
+# claude
+AGENTS.md

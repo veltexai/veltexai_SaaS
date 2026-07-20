@@ -25,10 +25,8 @@ export const QUICK_SERVICE_FREQUENCY_OPTIONS = [
 
 export const quickProposalSchema = z.object({
   clientName: z.string().min(1, "Client name is required"),
-  clientEmail: z
-    .string()
-    .email("Client email is required before generation"),
-  clientPhone: z.string().optional(),
+  clientEmail: z.string().email("Client email is required before generation"),
+  clientPhone: z.string().min(1, "Client phone is required"),
   companyName: z.string().optional(),
   serviceLocation: z.string().min(1, "Service location is required"),
   city: z.string().min(1, "City is required"),
@@ -48,6 +46,45 @@ export const quickProposalSchema = z.object({
 });
 
 export type QuickProposalFormData = z.infer<typeof quickProposalSchema>;
+
+export type QuickProposalFieldErrors = Partial<
+  Record<keyof QuickProposalFormData, string>
+>;
+
+/** Fields the user must complete on Step 1 before moving forward. */
+export const QUICK_STEP_ONE_FIELDS = [
+  "clientName",
+  "clientEmail",
+  "clientPhone",
+  "serviceLocation",
+  "city",
+  "state",
+  "squareFootage",
+  "propertyType",
+] as const satisfies readonly (keyof QuickProposalFormData)[];
+
+/** Maps zod issues to one message per field; empty object when valid. */
+export function getQuickProposalFieldErrors(
+  values: QuickProposalFormData,
+): QuickProposalFieldErrors {
+  const validation = quickProposalSchema.safeParse(values);
+
+  if (validation.success) {
+    return {};
+  }
+
+  const fieldErrors: QuickProposalFieldErrors = {};
+
+  for (const issue of validation.error.issues) {
+    const field = issue.path[0] as keyof QuickProposalFormData | undefined;
+
+    if (field && !fieldErrors[field]) {
+      fieldErrors[field] = issue.message;
+    }
+  }
+
+  return fieldErrors;
+}
 
 export interface QuickProposalDefaultContext {
   demoType?: DemoType | string;

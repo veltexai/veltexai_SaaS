@@ -45,27 +45,31 @@ export async function middleware(request: NextRequest) {
   // Refresh session if expired - required for Server Components
   await supabase.auth.getUser()
 
-  if (request.nextUrl.pathname.startsWith('/dashboard/proposals/quick')) {
+  // Proposal creation routes require auth and remaining proposal capacity
+  const isQuickProposalRoute = request.nextUrl.pathname.startsWith(
+    '/dashboard/proposals/quick',
+  )
+  const isNewProposalRoute = request.nextUrl.pathname.startsWith(
+    '/dashboard/proposals/new',
+  )
+
+  if (isQuickProposalRoute || isNewProposalRoute) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      const redirectUrl = new URL(
-        buildAuthPathWithRedirect({
-          pathname: '/auth/signup',
-          redirectTo: `${request.nextUrl.pathname}${request.nextUrl.search}`,
-          params: { from: 'demo' },
-        }),
-        request.url,
-      )
-      return NextResponse.redirect(redirectUrl)
-    }
-  }
-
-  // Check if accessing proposal creation routes
-  if (request.nextUrl.pathname.startsWith('/dashboard/proposals/new')) {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
+      // Quick route preserves demo context through signup; the advanced
+      // builder keeps its existing login redirect.
+      if (isQuickProposalRoute) {
+        const redirectUrl = new URL(
+          buildAuthPathWithRedirect({
+            pathname: '/auth/signup',
+            redirectTo: `${request.nextUrl.pathname}${request.nextUrl.search}`,
+            params: { from: 'demo' },
+          }),
+          request.url,
+        )
+        return NextResponse.redirect(redirectUrl)
+      }
       return NextResponse.redirect(new URL('/auth/login', request.url))
     }
 

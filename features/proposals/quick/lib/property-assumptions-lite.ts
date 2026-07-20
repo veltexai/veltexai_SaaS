@@ -180,7 +180,7 @@ export function buildPropertyAssumptionsLite(
       `${restroomCount} restroom group${restroomCount === 1 ? "" : "s"} assumed for routine sanitation.`,
       `${breakroomCount} breakroom or kitchenette area${breakroomCount === 1 ? "" : "s"} assumed.`,
       `Traffic level is treated as ${trafficLevel} for scope planning.`,
-      "Final labor, price, and production assumptions will be confirmed in the generation checkpoint.",
+      "Final labor, price, and production assumptions are confirmed during proposal generation.",
     ],
     warnings,
   };

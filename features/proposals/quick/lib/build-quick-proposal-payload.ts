@@ -1,11 +1,15 @@
+import { globalServiceFrequencyToAreaFrequency } from "@/features/proposals/constants/area-frequency";
 import {
   proposalFormSchema,
   type ProposalFormData,
   type ServiceType,
 } from "@/features/proposals/schemas/proposal";
-import { getScopeTemplate } from "../constants/scope-templates";
 import {
-  quickProposalSchema,
+  getScopeTemplate,
+  type ScopeTemplate,
+} from "../constants/scope-templates";
+import {
+  getQuickProposalFieldErrors,
   type QuickProposalFormData,
 } from "../schemas/quick-proposal";
 import { buildPropertyAssumptionsLite } from "./property-assumptions-lite";
@@ -57,14 +61,42 @@ export interface QuickProposalGenerateRequest {
   facility_size: number;
   service_specific_data: ProposalFormData["service_specific_data"];
   pricing_data?: ProposalFormData["pricing_data"];
-  pricing_enabled: false;
+  pricing_enabled: true;
   facility_details: ProposalFormData["facility_details"];
   traffic_analysis: ProposalFormData["traffic_analysis"];
   service_scope: ProposalFormData["service_scope"];
   special_requirements: ProposalFormData["special_requirements"];
   ai_tone: ProposalFormData["ai_tone"];
+  /** Real proposal_templates UUID (design template), never the scope slug. */
   template_id?: string;
-  selected_addons?: ProposalFormData["selected_addons"];
+}
+
+/**
+ * Per-area scope rows for the generated table. Sending per-area frequencies is
+ * what makes the generate route emit one row per area (instead of a single
+ * joined row), and the scope template task lists become the row notes.
+ */
+function buildQuickServiceScope(
+  values: QuickProposalFormData,
+  template: ScopeTemplate | null,
+): ProposalFormData["service_scope"] {
+  const sections = template?.scopeSections ?? [];
+  const areaFrequency = globalServiceFrequencyToAreaFrequency(
+    values.serviceFrequency,
+  );
+
+  return {
+    areas_included: sections.map((section) => section.title),
+    areas_excluded: [],
+    special_services: values.addOns,
+    frequency_details: Object.fromEntries(
+      sections.map((section) => [section.title, areaFrequency]),
+    ),
+    area_notes: Object.fromEntries(
+      sections.map((section) => [section.title, section.tasks.join(" ")]),
+    ),
+    special_notes: values.notes || "",
+  };
 }
 
 function getServiceTypeFromQuickInputs(
@@ -98,6 +130,9 @@ function getBuildingType(
   if (normalized.includes("house") || normalized.includes("residential")) {
     return "house";
   }
+  if (normalized.includes("move") || normalized.includes("turnover")) {
+    return "residential";
+  }
 
   return "office";
 }
@@ -105,24 +140,16 @@ function getBuildingType(
 export function buildQuickProposalPayload(
   values: QuickProposalFormData,
   generatedContent = "",
+  designTemplateId?: string,
 ): QuickProposalPayloadResult {
-  const quickValidation = quickProposalSchema.safeParse(values);
+  const fieldErrors = getQuickProposalFieldErrors(values);
 
-  if (!quickValidation.success) {
-    const fieldErrors: Partial<Record<keyof QuickProposalFormData, string>> = {};
-
-    for (const issue of quickValidation.error.issues) {
-      const field = issue.path[0] as keyof QuickProposalFormData | undefined;
-
-      if (field && !fieldErrors[field]) {
-        fieldErrors[field] = issue.message;
-      }
-    }
-
+  if (Object.keys(fieldErrors).length > 0) {
     return {
       success: false,
       error:
         fieldErrors.clientEmail ??
+        fieldErrors.clientPhone ??
         "Please review the required quick proposal fields before generation.",
       fieldErrors,
     };
@@ -139,19 +166,20 @@ export function buildQuickProposalPayload(
   if (!clientPhone) {
     return {
       success: false,
-      error:
-        "Client phone is required before this draft can match the existing proposal form schema.",
+      error: "Client phone is required to save this proposal.",
       fieldErrors: {
-        clientPhone:
-          "Enter the client's phone before saving with the existing proposal form.",
+        clientPhone: "Enter the client's phone number before saving.",
       },
     };
   }
 
+  // proposals.template_id is a UUID FK to proposal_templates, so the scope
+  // template slug must travel in service_specific_data instead. Only a real
+  // design template UUID may be set as template_id.
   const payload: ProposalFormData = {
     title,
     service_type: serviceType,
-    template_id: values.scopeTemplateId,
+    ...(designTemplateId ? { template_id: designTemplateId } : {}),
     global_inputs: {
       client_name: clientName || "Client",
       client_email: clientEmail,
@@ -164,13 +192,17 @@ export function buildQuickProposalPayload(
       city: values.city,
     },
     service_specific_data: {
+      scope_template_id: values.scopeTemplateId,
       property_type: values.propertyType,
       restroom_count: assumptions.restroomCount,
       breakroom_count: assumptions.breakroomCount,
       cleaning_goals: values.cleaningGoals || "",
       notes: values.notes || "",
     },
-    pricing_enabled: false,
+    // Pricing is enabled so the generated proposal includes the standard
+    // "Service Quote & Pricing" section (which also anchors the Notes block).
+    // pricing_data stays undefined: the API prices via PricingEngine.
+    pricing_enabled: true,
     pricing_data: undefined,
     generated_content: generatedContent,
     status: "draft",
@@ -192,19 +224,10 @@ export function buildQuickProposalPayload(
       special_events: false,
       traffic_level: assumptions.trafficLevel,
     },
-    service_scope: {
-      areas_included:
-        template?.scopeSections.map((section) => section.title) ?? [],
-      areas_excluded: [],
-      special_services: values.addOns,
-      frequency_details: {},
-      area_notes: {},
-      special_notes: values.notes || "",
-    },
-    selected_addons: values.addOns.map((addOn) => ({
-      label: addOn,
-      frequency: values.serviceFrequency,
-    })),
+    service_scope: buildQuickServiceScope(values, template),
+    // No selected_addons here: proposal_additional_services requires catalog
+    // rows (sku/rate/qty) the quick flow doesn't collect. Add-ons persist in
+    // service_scope.special_services instead.
     special_requirements: {
       security_clearance: false,
       after_hours_access: true,
@@ -221,7 +244,7 @@ export function buildQuickProposalPayload(
     return {
       success: false,
       error:
-        "The draft proposal inputs are incomplete. Please review the form before generation.",
+        "Some proposal inputs are incomplete. Please review the form and try again.",
     };
   }
 
@@ -234,6 +257,7 @@ export function buildQuickProposalPayload(
 export function buildQuickProposalSavePayload(
   values: QuickProposalFormData,
   generatedContent: string,
+  designTemplateId?: string,
 ): QuickProposalSavePayloadResult {
   if (!generatedContent.trim()) {
     return {
@@ -242,29 +266,21 @@ export function buildQuickProposalSavePayload(
     };
   }
 
-  return buildQuickProposalPayload(values, generatedContent);
+  return buildQuickProposalPayload(values, generatedContent, designTemplateId);
 }
 
 export function buildQuickProposalGenerateRequest(
   values: QuickProposalFormData,
+  designTemplateId?: string,
 ): QuickProposalGenerateRequestResult {
-  const quickValidation = quickProposalSchema.safeParse(values);
+  const fieldErrors = getQuickProposalFieldErrors(values);
 
-  if (!quickValidation.success) {
-    const fieldErrors: Partial<Record<keyof QuickProposalFormData, string>> = {};
-
-    for (const issue of quickValidation.error.issues) {
-      const field = issue.path[0] as keyof QuickProposalFormData | undefined;
-
-      if (field && !fieldErrors[field]) {
-        fieldErrors[field] = issue.message;
-      }
-    }
-
+  if (Object.keys(fieldErrors).length > 0) {
     return {
       success: false,
       error:
         fieldErrors.clientEmail ??
+        fieldErrors.clientPhone ??
         "Please review the required quick proposal fields before generation.",
       fieldErrors,
     };
@@ -293,13 +309,14 @@ export function buildQuickProposalGenerateRequest(
       service_frequency: values.serviceFrequency,
       facility_size: Number(values.squareFootage),
       service_specific_data: {
+        scope_template_id: values.scopeTemplateId,
         property_type: values.propertyType,
         restroom_count: assumptions.restroomCount,
         breakroom_count: assumptions.breakroomCount,
         cleaning_goals: values.cleaningGoals || "",
         notes: values.notes || "",
       },
-      pricing_enabled: false,
+      pricing_enabled: true,
       facility_details: {
         building_type: getBuildingType(values),
         accessibility_requirements: [],
@@ -318,15 +335,7 @@ export function buildQuickProposalGenerateRequest(
         special_events: false,
         traffic_level: assumptions.trafficLevel,
       },
-      service_scope: {
-        areas_included:
-          template?.scopeSections.map((section) => section.title) ?? [],
-        areas_excluded: [],
-        special_services: values.addOns,
-        frequency_details: {},
-        area_notes: {},
-        special_notes: values.notes || "",
-      },
+      service_scope: buildQuickServiceScope(values, template),
       special_requirements: {
         security_clearance: false,
         after_hours_access: true,
@@ -335,11 +344,10 @@ export function buildQuickProposalGenerateRequest(
         insurance_requirements: [],
       },
       ai_tone: "professional",
-      template_id: values.scopeTemplateId,
-      selected_addons: values.addOns.map((addOn) => ({
-        label: addOn,
-        frequency: values.serviceFrequency,
-      })),
+      ...(designTemplateId ? { template_id: designTemplateId } : {}),
+      // No selected_addons: quick add-ons carry no catalog sku/rate/qty, so
+      // they would price at $0.00 in the generated pricing table. They reach
+      // the prompt through service_scope.special_services instead.
     },
   };
 }
