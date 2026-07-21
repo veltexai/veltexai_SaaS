@@ -35,6 +35,7 @@ import {
   type QuickProposalFormData,
 } from "../schemas/quick-proposal";
 import { PropertyAssumptionsLite } from "./property-assumptions-lite";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 interface QuickProposalFlowProps {
   demoType?: DemoType | string;
@@ -108,6 +109,7 @@ export function QuickProposalFlow({
   const [isPreviewStale, setIsPreviewStale] = useState(false);
   const generateInFlightRef = useRef(false);
   const saveInFlightRef = useRef(false);
+  const quickStartedRef = useRef(false);
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<keyof QuickProposalFormData, string>>
   >({});
@@ -130,10 +132,21 @@ export function QuickProposalFlow({
   );
   const hasDemoContext = source === "demo" || Boolean(demoType);
 
+  const markQuickProposalStarted = () => {
+    if (quickStartedRef.current) return;
+    quickStartedRef.current = true;
+    captureEvent(ANALYTICS_EVENTS.QUICK_PROPOSAL_STARTED, {
+      source: source || "direct",
+      demo_type: demoType || "none",
+      scope_template_id: formData.scopeTemplateId,
+    });
+  };
+
   const setField = <K extends keyof QuickProposalFormData>(
     field: K,
     value: QuickProposalFormData[K],
   ) => {
+    markQuickProposalStarted();
     setGenerationError("");
     setSaveError("");
     setStepOneError("");
@@ -187,6 +200,8 @@ export function QuickProposalFlow({
       return;
     }
 
+    markQuickProposalStarted();
+
     if (generatedContent) {
       setIsPreviewStale(true);
     }
@@ -223,6 +238,10 @@ export function QuickProposalFlow({
 
     generateInFlightRef.current = true;
     setIsGenerating(true);
+    captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATION_STARTED, {
+      flow: "quick",
+      is_regenerate: Boolean(generatedContent),
+    });
 
     try {
       const response = await fetch("/api/proposals/generate", {
@@ -238,6 +257,11 @@ export function QuickProposalFlow({
       };
 
       if (!response.ok || !data.content) {
+        captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATION_FAILED, {
+          flow: "quick",
+          failure_type: response.ok ? "invalid_response" : "http",
+          status_code: response.ok ? undefined : response.status,
+        });
         setGenerationError(
           data.error ||
             "We could not generate the proposal preview. Please review the inputs and try again.",
@@ -247,7 +271,15 @@ export function QuickProposalFlow({
 
       setGeneratedContent(data.content);
       setIsPreviewStale(false);
+      captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATED, {
+        flow: "quick",
+        is_regenerate: Boolean(generatedContent),
+      });
     } catch {
+      captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATION_FAILED, {
+        flow: "quick",
+        failure_type: "network",
+      });
       setGenerationError(
         "We could not reach the proposal generator. Please try again in a moment.",
       );
@@ -279,6 +311,9 @@ export function QuickProposalFlow({
 
     saveInFlightRef.current = true;
     setIsSaving(true);
+    captureEvent(ANALYTICS_EVENTS.PROPOSAL_SAVE_STARTED, {
+      flow: "quick",
+    });
 
     try {
       const response = await fetch("/api/proposals", {
@@ -294,6 +329,11 @@ export function QuickProposalFlow({
       };
 
       if (!response.ok || !data.id) {
+        captureEvent(ANALYTICS_EVENTS.PROPOSAL_SAVE_FAILED, {
+          flow: "quick",
+          failure_type: response.ok ? "invalid_response" : "http",
+          status_code: response.ok ? undefined : response.status,
+        });
         setSaveError(
           data.error ||
             "We could not save this proposal. Please review the inputs and try again.",
@@ -305,8 +345,18 @@ export function QuickProposalFlow({
 
       // Keep the saving state active until the redirect unmounts this
       // component so the button doesn't flicker back to "Save Proposal".
+      captureEvent(ANALYTICS_EVENTS.PROPOSAL_SAVED, { flow: "quick" });
+      captureEvent(ANALYTICS_EVENTS.QUICK_PROPOSAL_COMPLETED, {
+        source: source || "direct",
+        demo_type: demoType || "none",
+        scope_template_id: formData.scopeTemplateId,
+      });
       router.push(`/dashboard/proposals/${data.id}`);
     } catch {
+      captureEvent(ANALYTICS_EVENTS.PROPOSAL_SAVE_FAILED, {
+        flow: "quick",
+        failure_type: "network",
+      });
       setSaveError(
         "We could not reach the proposal save service. Please try again in a moment.",
       );
@@ -568,6 +618,7 @@ export function QuickProposalFlow({
                       className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                       value={formData.scopeTemplateId}
                       onChange={(event) => {
+                        markQuickProposalStarted();
                         const nextTemplateId = event.target
                           .value as ScopeTemplateId;
                         const nextTemplate = getScopeTemplate(nextTemplateId);
@@ -816,7 +867,7 @@ export function QuickProposalFlow({
             )}
 
             {generatedContent && (
-              <div className="space-y-4 rounded-lg border border-green-200 bg-green-50 p-4">
+              <div className="ph-no-capture space-y-4 rounded-lg border border-green-200 bg-green-50 p-4">
                 <div className="text-sm text-green-950">
                   <p className="font-medium">Generated proposal preview</p>
                   <p>
@@ -885,7 +936,9 @@ function ReviewItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border p-3 text-sm">
       <p className="text-xs font-medium uppercase text-gray-500">{label}</p>
-      <p className="mt-1 font-medium text-gray-900">{value || "Not set"}</p>
+      <p className="ph-no-capture mt-1 font-medium text-gray-900">
+        {value || "Not set"}
+      </p>
     </div>
   );
 }

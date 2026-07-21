@@ -14,6 +14,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TrendingUp, AlertCircle, Gift, CreditCard } from "lucide-react";
 import { useProposalPermissions } from "@/features/proposals/hooks/use-proposal-permissions";
 import Link from "next/link";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
+
+function trackUsageUpgrade(placement: string) {
+  captureEvent(ANALYTICS_EVENTS.UPGRADE_CLICKED, {
+    placement,
+    destination: "billing",
+  });
+}
 
 export function ProposalUsageCard() {
   const {
@@ -100,6 +108,7 @@ export function ProposalUsageCard() {
                 <Link
                   href="/dashboard/billing"
                   className="ml-1 underline font-medium"
+                  onClick={() => trackUsageUpgrade("trial_usage_warning")}
                 >
                   Choose a plan to continue
                 </Link>
@@ -108,6 +117,7 @@ export function ProposalUsageCard() {
               <Link
                 href="/dashboard/billing"
                 className="ml-1 underline font-medium"
+                onClick={() => trackUsageUpgrade("paid_usage_warning")}
               >
                 Upgrade your plan
               </Link>
@@ -125,7 +135,10 @@ export function ProposalUsageCard() {
               ? "Your trial has ended. You've either used all 3 free proposals or your 7-day trial period has expired. Choose a plan to continue creating proposals."
               : "You've reached your monthly proposal limit. Upgrade your plan or wait for next billing cycle."}
             <div className="mt-2">
-              <Link href="/dashboard/billing">
+              <Link
+                href="/dashboard/billing"
+                onClick={() => trackUsageUpgrade("usage_limit_reached")}
+              >
                 <Button size="sm" variant="outline">
                   <CreditCard className="mr-2 h-4 w-4" />
                   {isTrial ? "Choose Plan" : "Upgrade Plan"}

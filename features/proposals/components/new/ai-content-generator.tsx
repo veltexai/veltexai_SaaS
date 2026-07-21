@@ -22,6 +22,7 @@ import { ProposalFormData } from "@/features/proposals/schemas/proposal";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import { AITone } from "@/types/database";
 import { Textarea } from "@/components/ui/textarea";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 interface AIContentGeneratorProps {
   form: ProposalFormData;
@@ -88,6 +89,11 @@ export function AIContentGenerator({
 
     setGenerating(true);
     onGeneratingChange?.(true);
+    let failureCaptured = false;
+    captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATION_STARTED, {
+      flow: "advanced",
+      is_regenerate: isRegenerate,
+    });
 
     try {
       const response = await fetch("/api/proposals/generate", {
@@ -128,13 +134,38 @@ export function AIContentGenerator({
       });
 
       if (!response.ok) {
+        failureCaptured = true;
+        captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATION_FAILED, {
+          flow: "advanced",
+          failure_type: "http",
+          status_code: response.status,
+        });
         throw new Error("Failed to generate proposal content");
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { content?: string };
+      if (!data.content) {
+        failureCaptured = true;
+        captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATION_FAILED, {
+          flow: "advanced",
+          failure_type: "invalid_response",
+        });
+        onError("Failed to generate proposal content. Please try again.");
+        return;
+      }
       onContentGenerated(data.content);
+      captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATED, {
+        flow: "advanced",
+        is_regenerate: isRegenerate,
+      });
     } catch (error) {
       console.error("Error generating content:", error);
+      if (!failureCaptured) {
+        captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATION_FAILED, {
+          flow: "advanced",
+          failure_type: "network",
+        });
+      }
       onError("Failed to generate proposal content. Please try again.");
     } finally {
       setGenerating(false);
@@ -256,7 +287,7 @@ export function AIContentGenerator({
 
         {/* Content Display/Edit */}
         {generatedContent && (
-          <div className="mt-4 space-y-4">
+          <div className="ph-no-capture mt-4 space-y-4">
             <Label>Generated Content Preview</Label>
 
             {isEditing ? (

@@ -67,7 +67,7 @@ export default function SignupForm({
   const signUpWithGoogle = async () => {
     setIsLoadingGoogle(true);
     try {
-      const result = await signInWithGoogle(undefined, redirectTo);
+      const result = await signInWithGoogle(undefined, redirectTo, "signup");
 
       if (result.error) {
         toast.error(result.error?.message || "Failed to sign in with Google");

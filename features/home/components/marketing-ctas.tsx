@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AUTH_ROUTES } from "@/features/auth/constants";
 import { cn } from "@/lib/utils/cn";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 type MarketingCTAsVariant = "hero" | "gradient";
 
@@ -30,6 +31,12 @@ export function MarketingCTAs({ variant, className }: MarketingCTAsProps) {
     >
       <Link href={TRIAL_HREF[variant]}>
         <Button
+          onClick={() =>
+            captureEvent(ANALYTICS_EVENTS.LANDING_CTA_CLICKED, {
+              placement: variant,
+              destination: variant === "hero" ? "pricing" : "login",
+            })
+          }
           size="lg"
           className={cn(
             "text-lg px-8 py-3",
@@ -44,6 +51,12 @@ export function MarketingCTAs({ variant, className }: MarketingCTAsProps) {
       </Link>
       <Link href="/demo-proposal">
         <Button
+          onClick={() =>
+            captureEvent(ANALYTICS_EVENTS.LANDING_CTA_CLICKED, {
+              placement: variant,
+              destination: "demo",
+            })
+          }
           size="lg"
           variant="outline"
           className={cn(

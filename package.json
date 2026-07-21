@@ -51,6 +51,8 @@
     "openai": "^5.12.2",
     "pdfjs-dist": "^5.4.394",
     "playwright-core": "^1.57.0",
+    "posthog-js": "^1.405.3",
+    "posthog-node": "^5.46.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",

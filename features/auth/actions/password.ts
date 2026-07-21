@@ -89,6 +89,7 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
       emailRedirectTo: buildAuthCallbackUrl({
         baseUrl: config.domainName,
         redirectTo,
+        authIntent: "signup",
       }),
     },
   });

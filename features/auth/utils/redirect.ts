@@ -21,15 +21,21 @@ export function buildAuthCallbackUrl({
   baseUrl,
   redirectTo,
   priceId,
+  authIntent,
 }: {
   baseUrl: string;
   redirectTo?: string | null;
   priceId?: string | null;
+  authIntent?: "signup";
 }) {
   const callbackUrl = new URL("/api/auth/callback", baseUrl);
 
   if (priceId) {
     callbackUrl.searchParams.set("priceId", priceId);
+  }
+
+  if (authIntent) {
+    callbackUrl.searchParams.set("auth_intent", authIntent);
   }
 
   callbackUrl.searchParams.set("redirect", getSafeRedirectPath(redirectTo));

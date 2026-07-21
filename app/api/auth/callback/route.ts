@@ -5,6 +5,9 @@ import { getUser } from "@/features/auth/services/get-user";
 import { EmailService } from "@/lib/email/service";
 import { NextResponse } from "next/server";
 import { getSafeRedirectPath } from "@/features/auth/utils/redirect";
+import { after } from "next/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { captureServerEvent } from "@/lib/analytics/server";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -12,6 +15,8 @@ export async function GET(request: Request) {
   const redirectTo = getSafeRedirectPath(
     requestUrl.searchParams.get("redirect"),
   );
+  const isSignupCallback =
+    requestUrl.searchParams.get("auth_intent") === "signup";
 
   const supabase = await createClient();
   const baseUrl = config.domainName || requestUrl.origin;
@@ -26,6 +31,23 @@ export async function GET(request: Request) {
     if (data?.user && !error) {
       console.log("After user check");
       const user = data.user;
+
+      if (isSignupCallback) {
+        const authMethod =
+          typeof user.app_metadata?.provider === "string"
+            ? user.app_metadata.provider
+            : "unknown";
+        after(() =>
+          captureServerEvent({
+            distinctId: user.id,
+            event: ANALYTICS_EVENTS.SIGNUP_COMPLETED,
+            properties: {
+              auth_method: authMethod,
+              $insert_id: `signup_completed:${user.id}`,
+            },
+          }),
+        );
+      }
 
       // Mark signup as completed on every new session exchange so downstream
       // code can rely on this flag.

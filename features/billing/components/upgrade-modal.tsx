@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles } from "lucide-react";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 interface UpgradeModalProps {
   open: boolean;
@@ -26,6 +27,10 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
   const router = useRouter();
 
   const handleUpgrade = () => {
+    captureEvent(ANALYTICS_EVENTS.UPGRADE_CLICKED, {
+      placement: "upgrade_modal",
+      destination: "billing",
+    });
     onOpenChange(false);
     router.push("/dashboard/billing");
   };

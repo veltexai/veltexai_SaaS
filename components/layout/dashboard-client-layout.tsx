@@ -24,6 +24,7 @@ import { NavButton } from "../ui/nav-button";
 import { useProfileUserBranding } from "@/providers/profile-user-branding-provider";
 import { applyTheme } from "@/lib/theme";
 import { DEFAULT_BRANDING } from "@/features/settings/constants/branding-constants";
+import { identifyUser, resetAnalytics } from "@/lib/analytics";
 
 interface DashboardClientLayoutProps {
   children: React.ReactNode;
@@ -45,8 +46,16 @@ export function DashboardClientLayout({
   useEffect(() => {
     applyTheme(brandingSettings || DEFAULT_BRANDING);
   }, [brandingSettings]);
+  useEffect(() => {
+    identifyUser(user.id);
+  }, [user.id]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+
+  const handleSignOut = () => {
+    resetAnalytics();
+    void signOut();
+  };
 
   // Combine navigation based on user role
   const navigation =
@@ -124,7 +133,7 @@ export function DashboardClientLayout({
               variant="ghost"
               size="sm"
               className="mt-3 w-full justify-start"
-              onClick={signOut}
+              onClick={handleSignOut}
             >
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
@@ -192,7 +201,7 @@ export function DashboardClientLayout({
               variant="ghost"
               size="sm"
               className="mt-3 w-full justify-start"
-              onClick={signOut}
+              onClick={handleSignOut}
             >
               <LogOut className="mr-2 h-4 w-4" />
               Sign out

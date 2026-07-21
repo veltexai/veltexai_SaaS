@@ -12,6 +12,7 @@ import {
 export const signInWithGoogle = async (
   priceId?: string,
   redirectTo?: string,
+  authIntent?: "signup",
 ): Promise<AuthResponse> => {
   const supabase = await createClient();
   const safeRedirectTo = getSafeRedirectPath(
@@ -26,6 +27,7 @@ export const signInWithGoogle = async (
           baseUrl: config.domainName,
           priceId,
           redirectTo: safeRedirectTo,
+          authIntent,
         }),
       },
     });

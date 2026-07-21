@@ -21,6 +21,7 @@ import {
 } from '@/types/subscription';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import { ANALYTICS_EVENTS, captureEvent } from '@/lib/analytics';
 
 interface UsageInfo {
   can_create_proposal: boolean;
@@ -86,6 +87,16 @@ const ChangePlanButton = ({
     }
 
     setLoading(true);
+
+    if (
+      currentPlan &&
+      Number(plan.price_monthly) > Number(currentPlan.price_monthly)
+    ) {
+      captureEvent(ANALYTICS_EVENTS.UPGRADE_CLICKED, {
+        placement: 'change_plan_dialog',
+        destination: 'billing',
+      });
+    }
 
     try {
       const response = await fetch('/api/stripe/upgrade-subscription', {

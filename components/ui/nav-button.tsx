@@ -12,6 +12,7 @@ type NavButtonProps = {
   className?: string;
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
   size?: 'default' | 'sm' | 'lg' | 'icon';
+  onClick?: () => void;
 };
 
 export function NavButton({
@@ -21,6 +22,7 @@ export function NavButton({
   className,
   variant = 'default',
   size = 'default',
+  onClick,
 }: NavButtonProps) {
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
@@ -31,6 +33,7 @@ export function NavButton({
   }, [href]);
 
   const handleClick = () => {
+    onClick?.();
     setIsNavigating(true);
     router.push(href);
   };

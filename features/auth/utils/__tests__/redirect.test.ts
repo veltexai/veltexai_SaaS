@@ -31,11 +31,13 @@ describe("auth redirect helpers", () => {
       baseUrl: "https://app.veltex.test",
       redirectTo: QUICK_REDIRECT,
       priceId: "price_demo",
+      authIntent: "signup",
     });
 
     const parsedCallbackUrl = new URL(callbackUrl);
     expect(parsedCallbackUrl.pathname).toBe("/api/auth/callback");
     expect(parsedCallbackUrl.searchParams.get("priceId")).toBe("price_demo");
+    expect(parsedCallbackUrl.searchParams.get("auth_intent")).toBe("signup");
     expect(parsedCallbackUrl.searchParams.get("redirect")).toBe(
       QUICK_REDIRECT,
     );

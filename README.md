@@ -16,6 +16,22 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## PostHog analytics
+
+PostHog is disabled unless all three variables below are configured. Keep it
+disabled for normal local development and enable it explicitly in production:
+
+```bash
+NEXT_PUBLIC_POSTHOG_ENABLED=true
+NEXT_PUBLIC_POSTHOG_KEY=phc_your_project_token
+NEXT_PUBLIC_POSTHOG_HOST=https://your-posthog-ingestion-host
+```
+
+The project token is intended for client use; do not configure a PostHog
+personal API key in the application. Session Replay runs only in production on
+the activation-route allowlist and masks all inputs, URL query strings,
+generated proposals, and proposal-detail content.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

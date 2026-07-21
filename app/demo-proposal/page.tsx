@@ -17,6 +17,7 @@ import {
   type ResidentialPackageType,
 } from "@/features/demo-proposal";
 import type { ScopeTemplateId } from "@/features/proposals/quick";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 export default function DemoProposalPage() {
   const [selectedType, setSelectedType] = useState<DemoType>("commercial");
@@ -51,13 +52,18 @@ export default function DemoProposalPage() {
 
     generateTimeoutRef.current = setTimeout(() => {
       setIsGenerating(false);
+      captureEvent(ANALYTICS_EVENTS.DEMO_STARTED, {
+        demo_type: selectedType,
+        package_type:
+          selectedType === "residential" ? selectedPackage : undefined,
+      });
       previewRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
       generateTimeoutRef.current = null;
     }, 300);
-  }, []);
+  }, [selectedPackage, selectedType]);
 
   const demoData = getDemoTemplateData(
     selectedType,

@@ -65,6 +65,7 @@ export const signUpWithMagicLink = validatedAction(
           baseUrl: config.domainName,
           priceId,
           redirectTo,
+          authIntent: "signup",
         }),
       },
     });

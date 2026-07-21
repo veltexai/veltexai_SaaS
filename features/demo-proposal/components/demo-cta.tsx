@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AUTH_ROUTES } from "@/features/auth/constants";
 import type { DemoType } from "../types/demo-proposal";
 import type { ScopeTemplateId } from "@/features/proposals/quick";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 const SIGNUP_HREF = AUTH_ROUTES.SIGNUP_FROM_DEMO;
 
@@ -42,6 +43,15 @@ export function DemoCTA({ demoType, scopeTemplateId }: DemoCTAProps) {
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Link href={quickProposalHref}>
           <Button
+            onClick={() =>
+              captureEvent(
+                ANALYTICS_EVENTS.CREATE_MY_REAL_PROPOSAL_CLICKED,
+                {
+                  demo_type: demoType,
+                  scope_template_id: scopeTemplateId,
+                },
+              )
+            }
             size="lg"
             className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 px-8"
           >
