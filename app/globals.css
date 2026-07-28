@@ -152,3 +152,173 @@ select {
   /* other styles */
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Demo proposal design system (Stitch: "Veltex AI Interactive Demo").
+   Namespaced under `demo-*` so these are purely additive — no existing utility
+   changes behaviour. Consumed only by features/demo-proposal + /demo-proposal.
+   ───────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-demo-primary: #004ac6;
+  --color-demo-on-primary: #ffffff;
+  --color-demo-primary-container: #2563eb;
+  --color-demo-on-primary-container: #eeefff;
+  --color-demo-primary-fixed: #dbe1ff;
+  --color-demo-primary-fixed-dim: #b4c5ff;
+  --color-demo-secondary: #4648d4;
+  --color-demo-on-secondary: #ffffff;
+  --color-demo-secondary-container: #6063ee;
+  --color-demo-tertiary: #943700;
+  --color-demo-background: #faf8ff;
+  --color-demo-surface: #faf8ff;
+  --color-demo-surface-bright: #faf8ff;
+  --color-demo-surface-dim: #d9d9e5;
+  --color-demo-surface-variant: #e1e2ed;
+  --color-demo-surface-tint: #0053db;
+  --color-demo-surface-container-lowest: #ffffff;
+  --color-demo-surface-container-low: #f3f3fe;
+  --color-demo-surface-container: #ededf9;
+  --color-demo-surface-container-high: #e7e7f3;
+  --color-demo-surface-container-highest: #e1e2ed;
+  --color-demo-on-surface: #191b23;
+  --color-demo-on-surface-variant: #434655;
+  --color-demo-outline: #737686;
+  --color-demo-outline-variant: #c3c6d7;
+
+  --text-demo-display-lg: 48px;
+  --text-demo-display-lg--line-height: 56px;
+  --text-demo-display-lg--letter-spacing: -0.02em;
+  --text-demo-display-lg--font-weight: 700;
+
+  --text-demo-display-sm: 36px;
+  --text-demo-display-sm--line-height: 44px;
+  --text-demo-display-sm--letter-spacing: -0.02em;
+  --text-demo-display-sm--font-weight: 700;
+
+  --text-demo-headline-lg: 30px;
+  --text-demo-headline-lg--line-height: 38px;
+  --text-demo-headline-lg--letter-spacing: -0.01em;
+  --text-demo-headline-lg--font-weight: 600;
+
+  --text-demo-headline-md: 24px;
+  --text-demo-headline-md--line-height: 32px;
+  --text-demo-headline-md--letter-spacing: -0.01em;
+  --text-demo-headline-md--font-weight: 600;
+
+  --text-demo-body-lg: 18px;
+  --text-demo-body-lg--line-height: 28px;
+  --text-demo-body-lg--font-weight: 400;
+
+  --text-demo-body-md: 16px;
+  --text-demo-body-md--line-height: 24px;
+  --text-demo-body-md--font-weight: 400;
+
+  --text-demo-body-sm: 14px;
+  --text-demo-body-sm--line-height: 20px;
+  --text-demo-body-sm--font-weight: 400;
+
+  --text-demo-label-md: 14px;
+  --text-demo-label-md--line-height: 20px;
+  --text-demo-label-md--font-weight: 500;
+
+  --text-demo-label-sm: 12px;
+  --text-demo-label-sm--line-height: 16px;
+  --text-demo-label-sm--letter-spacing: 0.05em;
+  --text-demo-label-sm--font-weight: 600;
+}
+
+/* Frosted panel used by the demo nav, viewer toolbar and generating card. */
+@utility demo-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@keyframes demo-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes demo-glow-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 15px rgba(0, 74, 198, 0.3));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 30px rgba(96, 99, 238, 0.6));
+    transform: scale(1.05);
+  }
+}
+
+@keyframes demo-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes demo-scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(400%);
+  }
+}
+
+@keyframes demo-check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@utility demo-animate-fade-in {
+  animation: demo-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@utility demo-animate-glow-pulse {
+  animation: demo-glow-pulse 3s infinite ease-in-out;
+}
+
+@utility demo-progress-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: demo-shimmer 1.5s infinite linear;
+}
+
+@utility demo-animate-scan {
+  animation: demo-scan 3s ease-in-out infinite;
+}
+
+@utility demo-check-draw {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: demo-check-draw 0.4s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-animate-fade-in,
+  .demo-animate-glow-pulse,
+  .demo-progress-shimmer,
+  .demo-animate-scan,
+  .demo-check-draw {
+    animation: none !important;
+  }
+  .demo-check-draw {
+    stroke-dashoffset: 0;
+  }
+}
+

@@ -1,27 +1,31 @@
 "use client";
 
+import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Building2, Home, Check } from "lucide-react";
+import { Building2, Home } from "lucide-react";
 import type { DemoCardConfig, DemoType } from "../types/demo-proposal";
 import {
   COMMERCIAL_DEMO_CARD,
   RESIDENTIAL_DEMO_CARD,
   getDemoData,
 } from "../constants";
-import { getDemoAccent } from "../lib/demo-accent";
+import { getDemoStitchAccent } from "../lib/demo-accent";
 
 const DEMO_CARDS: DemoCardConfig[] = [
   COMMERCIAL_DEMO_CARD,
   RESIDENTIAL_DEMO_CARD,
 ];
+
+const CARD_IMAGES: Record<DemoType, { src: string; alt: string }> = {
+  commercial: {
+    src: "/images/commercial-demo.jpg",
+    alt: "Bright multi-storey commercial office atrium",
+  },
+  residential: {
+    src: "/images/residential-demo.jpg",
+    alt: "Cleaning team working in a modern home interior",
+  },
+};
 
 function getCardSummary(type: DemoType): string {
   const data = getDemoData(type);
@@ -42,11 +46,12 @@ export function DemoTypeSelector({
   disabled = false,
 }: DemoTypeSelectorProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-2">
       {DEMO_CARDS.map((card) => {
         const isSelected = selected === card.type;
-        const accent = getDemoAccent(card.type);
+        const accent = getDemoStitchAccent(card.type);
         const Icon = card.type === "commercial" ? Building2 : Home;
+        const image = CARD_IMAGES[card.type];
 
         return (
           <button
@@ -54,50 +59,46 @@ export function DemoTypeSelector({
             type="button"
             disabled={disabled}
             onClick={() => onSelect(card.type)}
+            aria-pressed={isSelected}
             className={cn(
-              "text-left transition-all rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
-              disabled && "opacity-60 cursor-not-allowed",
+              "group flex cursor-pointer flex-col items-center rounded-3xl border bg-demo-surface p-8 text-center transition-all duration-300",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+              accent.focusRing,
+              isSelected
+                ? accent.ring
+                : cn("border-demo-outline-variant", accent.hoverBorder),
+              !disabled && "hover:shadow-xl",
+              disabled && "cursor-not-allowed opacity-60",
             )}
           >
-            <Card
+            <div
               className={cn(
-                "h-full transition-all hover:shadow-md",
-                isSelected ? accent.selectedCard : "hover:border-gray-300",
+                "mb-6 flex size-20 items-center justify-center rounded-2xl transition-transform group-hover:scale-110",
+                accent.iconTile,
               )}
             >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div
-                    className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-lg",
-                      accent.iconBox,
-                    )}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  {isSelected && (
-                    <span
-                      className={cn(
-                        "flex h-6 w-6 items-center justify-center rounded-full text-white",
-                        accent.checkCircle,
-                      )}
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                    </span>
-                  )}
-                </div>
-                <CardTitle className="text-lg">{card.title}</CardTitle>
-                <CardDescription>{card.subtitle}</CardDescription>
-                <Badge variant="secondary" className={cn("w-fit", accent.typeBadge)}>
-                  {card.badge}
-                </Badge>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-xs text-muted-foreground">
-                  {getCardSummary(card.type)}
-                </p>
-              </CardContent>
-            </Card>
+              <Icon className="size-10" />
+            </div>
+
+            <h3 className="mb-2 text-demo-headline-md text-demo-on-surface">
+              {card.title}
+            </h3>
+            <p className="mb-2 text-demo-body-md text-demo-on-surface-variant">
+              {card.subtitle}
+            </p>
+            <p className="mb-6 text-demo-label-sm text-demo-outline">
+              {getCardSummary(card.type)}
+            </p>
+
+            <div className="relative h-40 w-full overflow-hidden rounded-xl bg-demo-surface-container-low">
+              <Image
+                src={image.src}
+                alt={image.alt}
+                fill
+                sizes="(max-width: 768px) 100vw, 400px"
+                className="object-center opacity-80"
+              />
+            </div>
           </button>
         );
       })}

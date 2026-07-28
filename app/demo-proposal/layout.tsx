@@ -1,4 +1,13 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+
+// Scoped to /demo-proposal only — the root layout keeps Geist/Montserrat/Arvo.
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Try a Demo Proposal | Veltex AI",
@@ -12,5 +21,5 @@ export default function DemoProposalLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <div className={inter.variable}>{children}</div>;
 }

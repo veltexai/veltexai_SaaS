@@ -1,17 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Sparkles, ShieldCheck } from "lucide-react";
 import { ModernCorporateTemplate } from "@/features/templates/components/modern-corporate";
 import { LuxuryEliteTemplate } from "@/features/templates/components/luxury-elite";
 import {
   DemoTypeSelector,
   DemoPackageSelector,
-  DemoActions,
-  DemoCTA,
+  DemoShell,
+  DemoStepper,
+  DemoGeneratingOverlay,
+  DemoResultLayout,
   getDemoTemplateData,
   type DemoType,
   type ResidentialPackageType,
@@ -19,10 +18,22 @@ import {
 import type { ScopeTemplateId } from "@/features/proposals/quick";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
+/** Length of the generating choreography — keep in sync with DemoGeneratingOverlay. */
+const GENERATION_DURATION_MS = 2800;
+
+type DemoStep = "service" | "package" | "generate";
+
+const STEP_LABELS: Record<DemoStep, string> = {
+  service: "Service Selection",
+  package: "Package Selection",
+  generate: "Generate Proposal",
+};
+
 export default function DemoProposalPage() {
   const [selectedType, setSelectedType] = useState<DemoType>("commercial");
   const [selectedPackage, setSelectedPackage] =
     useState<ResidentialPackageType>("recurring");
+  const [step, setStep] = useState<DemoStep>("service");
   const [showPreview, setShowPreview] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -36,14 +47,41 @@ export default function DemoProposalPage() {
     };
   }, []);
 
+  // Residential adds a package step: Service → Package → Generate → Preview.
+  // Commercial skips it: Service → Generate → Preview.
+  const isResidential = selectedType === "residential";
+  const totalSteps = isResidential ? 4 : 3;
+  const stepIndex: Record<DemoStep, number> = {
+    service: 1,
+    package: 2,
+    generate: isResidential ? 3 : 2,
+  };
+
   const handleSelectType = (type: DemoType) => {
     setSelectedType(type);
     setShowPreview(false);
+    setStep(type === "residential" ? "package" : "generate");
   };
 
   const handleSelectPackage = (pkg: ResidentialPackageType) => {
     setSelectedPackage(pkg);
     setShowPreview(false);
+    setStep("generate");
+  };
+
+  const handleBack = () => {
+    setShowPreview(false);
+    setStep((current) => {
+      if (current === "generate") return isResidential ? "package" : "service";
+      if (current === "package") return "service";
+      return current;
+    });
+  };
+
+  const handleStartOver = () => {
+    setShowPreview(false);
+    setStep("service");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleGenerate = useCallback(() => {
@@ -62,7 +100,7 @@ export default function DemoProposalPage() {
         block: "start",
       });
       generateTimeoutRef.current = null;
-    }, 300);
+    }, GENERATION_DURATION_MS);
   }, [selectedPackage, selectedType]);
 
   const demoData = getDemoTemplateData(
@@ -79,137 +117,114 @@ export default function DemoProposalPage() {
   const quickScopeTemplateId: ScopeTemplateId =
     selectedType === "commercial" ? "commercial_office" : "move_out_turnover";
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="border-b border-white/60 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+  if (isGenerating) {
+    return (
+      <DemoShell>
+        <DemoGeneratingOverlay durationMs={GENERATION_DURATION_MS} />
+      </DemoShell>
+    );
+  }
+
+  if (showPreview) {
+    return (
+      <DemoShell>
+        <div ref={previewRef}>
+          <DemoResultLayout
+            proposal={demoData.proposal}
+            demoType={selectedType}
+            scopeTemplateId={quickScopeTemplateId}
+            previewLabel={previewLabel}
+            onStartOver={handleStartOver}
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Back to home</span>
-            <span className="sm:hidden">Home</span>
-          </Link>
-          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
-            Free demo · No signup required
-          </Badge>
-        </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
-        {/* Hero */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-            Try a Professional Cleaning Proposal
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Choose a demo type, generate instantly, and see what your clients
-            would receive — in under 3 minutes.
-          </p>
-        </div>
-
-        {/* Demo type selection */}
-        <div className="mb-6">
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
-            Choose your demo
-          </h2>
-          <DemoTypeSelector
-            selected={selectedType}
-            onSelect={handleSelectType}
-            disabled={isGenerating}
-          />
-        </div>
-
-        {/* Package selector (residential only) */}
-        {selectedType === "residential" && (
-          <div className="mb-6">
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
-              Choose a package
-            </h2>
-            <DemoPackageSelector
-              selected={selectedPackage}
-              onSelect={handleSelectPackage}
-              disabled={isGenerating}
-            />
-          </div>
-        )}
-
-        {/* Generate button */}
-        <div className="flex justify-center mb-12">
-          <Button
-            size="lg"
-            onClick={handleGenerate}
-            disabled={isGenerating}
-            className="bg-blue-600 hover:bg-blue-700 text-base px-8 py-6 h-auto"
-          >
-            <Sparkles className="h-5 w-5" />
-            {isGenerating ? "Generating…" : "Generate Demo Proposal"}
-          </Button>
-        </div>
-
-        {/* Preview */}
-        {showPreview && (
-          <div ref={previewRef} className="max-w-3xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Proposal Preview
-              </h2>
-              <Badge variant="outline" className="text-xs">
-                {previewLabel}
-              </Badge>
-            </div>
-
-            {isGenerating ? (
-              <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-                <div className="space-y-6 p-6 sm:p-8 animate-pulse">
-                  <div className="h-32 w-full rounded-xl bg-gray-100" />
-                  <div className="h-24 w-full bg-gray-100 rounded" />
-                  <div className="h-48 w-full bg-gray-100 rounded" />
-                  <div className="h-40 w-full bg-gray-100 rounded" />
-                </div>
-              </div>
+            {/* Real template output — rendered exactly as before. */}
+            {selectedType === "commercial" ? (
+              <ModernCorporateTemplate
+                proposal={demoData.proposal}
+                branding={demoData.branding}
+                pages={demoData.pages}
+                print={true}
+              />
             ) : (
-              <div className="space-y-8">
-                {/* Gated action bar */}
-                <div className="rounded-t-xl border border-b-0 border-gray-200 bg-white shadow-sm overflow-hidden">
-                  <DemoActions />
-                </div>
-
-                {/* Real template output */}
-                <div className="rounded-b-xl border bg-[#e0e7ff] shadow-sm overflow-hidden -mt-8 pt-0">
-                  <div className="w-full overflow-x-auto">
-                    <div className="min-w-[320px]">
-                      {selectedType === "commercial" ? (
-                        <ModernCorporateTemplate
-                          proposal={demoData.proposal}
-                          branding={demoData.branding}
-                          pages={demoData.pages}
-                          print={true}
-                        />
-                      ) : (
-                        <LuxuryEliteTemplate
-                          proposal={demoData.proposal}
-                          branding={demoData.branding}
-                          pages={demoData.pages}
-                          print={true}
-                          demoImages={demoData.demoImages}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <DemoCTA
-                  demoType={selectedType}
-                  scopeTemplateId={quickScopeTemplateId}
-                />
-              </div>
+              <LuxuryEliteTemplate
+                proposal={demoData.proposal}
+                branding={demoData.branding}
+                pages={demoData.pages}
+                print={true}
+                demoImages={demoData.demoImages}
+              />
             )}
+          </DemoResultLayout>
+        </div>
+      </DemoShell>
+    );
+  }
+
+  return (
+    <DemoShell>
+      <main className="flex-grow py-8">
+        {/* Hero */}
+        <section className="mx-auto mb-16 max-w-4xl px-4 text-center">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-demo-secondary/20 bg-demo-secondary-container/10 px-3 py-1 text-demo-secondary">
+            <ShieldCheck className="size-4" />
+            <span className="text-demo-label-sm">No Signup Required</span>
           </div>
-        )}
+          <h1 className="mb-6 text-demo-display-sm tracking-tight text-demo-on-surface md:text-demo-display-lg">
+            Try a Professional{" "}
+            <span className="text-demo-primary">Cleaning Proposal</span>
+          </h1>
+          <p className="mx-auto max-w-2xl text-demo-body-lg text-demo-on-surface-variant">
+            Experience the precision of AI-engineered bidding. Select a service
+            below to generate a high-fidelity document in seconds.
+          </p>
+        </section>
+
+        <div className="mx-auto max-w-[1280px] px-4 md:px-10">
+          <DemoStepper
+            currentStep={stepIndex[step]}
+            totalSteps={totalSteps}
+            label={STEP_LABELS[step]}
+            onBack={step === "service" ? undefined : handleBack}
+          />
+
+          {step === "service" && (
+            <div className="demo-animate-fade-in">
+              <DemoTypeSelector
+                selected={selectedType}
+                onSelect={handleSelectType}
+              />
+            </div>
+          )}
+
+          {step === "package" && (
+            <div className="demo-animate-fade-in">
+              <DemoPackageSelector
+                selected={selectedPackage}
+                onSelect={handleSelectPackage}
+              />
+            </div>
+          )}
+
+          {step === "generate" && (
+            <div className="demo-animate-fade-in mx-auto max-w-xl py-10 text-center">
+              <h3 className="mb-4 text-demo-headline-md text-demo-on-surface">
+                Ready to build your {previewLabel.toLowerCase()} proposal
+              </h3>
+              <p className="mb-8 text-demo-body-md text-demo-on-surface-variant">
+                We&apos;ll assemble the scope, pricing and branded document so
+                you can see exactly what your client would receive.
+              </p>
+              <button
+                type="button"
+                onClick={handleGenerate}
+                className="flex w-full items-center justify-center gap-3 rounded-xl bg-demo-primary py-4 text-demo-headline-md text-demo-on-primary transition-all hover:opacity-90 active:scale-[0.98]"
+              >
+                <Sparkles className="size-6 fill-current" />
+                Generate Demo Proposal
+              </button>
+            </div>
+          )}
+        </div>
       </main>
-    </div>
+    </DemoShell>
   );
 }

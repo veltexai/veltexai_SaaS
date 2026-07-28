@@ -24,3 +24,28 @@ export function getDemoAccent(type: DemoType) {
       : "bg-gradient-to-r from-emerald-700 to-teal-800 text-white px-6 py-10 sm:px-10 sm:py-12",
   };
 }
+
+/**
+ * Stitch ("Veltex AI Interactive Demo") accent tokens for the redesigned demo
+ * shell. The Stitch system tints commercial with `primary` and residential with
+ * `secondary`; both share the same neutral surface palette.
+ */
+export function getDemoStitchAccent(type: DemoType) {
+  const isCommercial = type === "commercial";
+
+  return {
+    iconTile: isCommercial
+      ? "bg-demo-primary/10 text-demo-primary"
+      : "bg-demo-secondary/10 text-demo-secondary",
+    ring: isCommercial
+      ? "border-demo-primary ring-1 ring-demo-primary/20"
+      : "border-demo-secondary ring-1 ring-demo-secondary/20",
+    focusRing: isCommercial
+      ? "focus-visible:ring-demo-primary"
+      : "focus-visible:ring-demo-secondary",
+    hoverBorder: isCommercial
+      ? "hover:border-demo-primary"
+      : "hover:border-demo-secondary",
+    text: isCommercial ? "text-demo-primary" : "text-demo-secondary",
+  };
+}

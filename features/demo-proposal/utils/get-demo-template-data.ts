@@ -7,7 +7,7 @@ import type { DemoType, ResidentialPackageType } from "../types/demo-proposal";
 
 const DEMO_BRANDING: Branding = {
   name: "Veltex Demo Cleaning Co.",
-  logo_url: null,
+  logo_url: "/images/veltex-mock-logo.png",
   phone: "(555) 000-0000",
   website: "www.veltexdemo.com",
   email: "hello@veltexdemo.com",
