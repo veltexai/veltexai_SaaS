@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import type { TemplateProps } from "@/features/templates/types/templates";
 import Image from "next/image";
 import { formatDateLong } from "@/lib/utils/date";
@@ -35,6 +36,7 @@ export function LuxuryEliteTemplate({
   branding,
   pages,
   print,
+  demoImages,
 }: TemplateProps) {
   const {
     branding: b,
@@ -44,8 +46,18 @@ export function LuxuryEliteTemplate({
     hasAdditionalScopePages,
   } = useTemplateData(proposal, branding, pages, print);
 
+  // Resolve demo image overrides with safe defaults (no-op in production)
+  const coverBg = demoImages?.coverBg ?? "/images/templates/bgLuxi.png";
+  const coverMask =
+    demoImages?.coverMask ?? "/images/templates/Images/Maskgroup.png";
+  const aboutImage =
+    demoImages?.aboutImage ?? "/images/templates/Images/Mask group-2.png";
+  const accentStyle = demoImages?.accentColor
+    ? ({ "--color-primary": demoImages.accentColor } as React.CSSProperties)
+    : undefined;
+
   return (
-    <section className="space-y-6">
+    <section className="space-y-6" style={accentStyle}>
       <div
         id="page-one"
         className="relative aspect-[1/1.4] bg-white overflow-hidden"
@@ -66,7 +78,7 @@ export function LuxuryEliteTemplate({
           />
         ) : null}
         <Image
-          src="/images/templates/bgLuxi.png"
+          src={coverBg}
           alt="Background"
           className="absolute inset-0 w-full h-full object-cover"
           height={1600}
@@ -88,7 +100,7 @@ export function LuxuryEliteTemplate({
           />
         </div>
         <Image
-          src="/images/templates/Images/Maskgroup.png"
+          src={coverMask}
           alt="Logo"
           className="absolute bottom-0 -left-8 object-contain opacity-70"
           height={1000}
@@ -97,7 +109,10 @@ export function LuxuryEliteTemplate({
         <PoweredBy colorLogo="gray" isRight template="luxury_elite" />
       </div>
 
-      <ProposalTableOfContents templateType="luxury_elite" />
+      <ProposalTableOfContents
+        templateType="luxury_elite"
+        tocImage={demoImages?.tocImage}
+      />
 
       {content.about ||
       content.commitment ||
@@ -126,7 +141,7 @@ export function LuxuryEliteTemplate({
                     )}
                   </div>
                   <Image
-                    src={`/images/templates/Images/Mask group-2.png`}
+                    src={aboutImage}
                     alt="qualifications"
                     width={800}
                     height={500}
@@ -194,7 +209,10 @@ export function LuxuryEliteTemplate({
                     templateType="luxury_elite"
                     title="Our Qualifications"
                   />
-                  <ContentQualificationsSection templateType="luxury_elite" />
+                  <ContentQualificationsSection
+                    templateType="luxury_elite"
+                    qualificationsImage={demoImages?.qualificationsImage}
+                  />
 
                   <NavitationNumber
                     value={5}

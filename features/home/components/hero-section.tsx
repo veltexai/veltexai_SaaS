@@ -1,13 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ArrowRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { motion } from "framer-motion";
-import React, { useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { fadeInUp, staggerContainer } from "@/lib/animations/variants";
-import Link from "next/link";
+import { MarketingCTAs } from "./marketing-ctas";
 const VideoPlayer = dynamic(() => import("./video-player"), {
   ssr: false,
 });
@@ -51,19 +50,8 @@ const HeroSection = () => {
             real janitorial pricing logic.
           </motion.p>
 
-          <motion.div
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-            variants={fadeInUp}
-          >
-            <Link href={"#pricing"}>
-              <Button
-                size="lg"
-                className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
-              >
-                Start Free Trial
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+          <motion.div variants={fadeInUp}>
+            <MarketingCTAs variant="hero" />
           </motion.div>
 
           <motion.ul
@@ -82,12 +70,6 @@ const HeroSection = () => {
               </li>
             ))}
           </motion.ul>
-          {/* <motion.p
-            className="mt-3 text-center text-xs text-gray-500 sm:text-sm"
-            variants={fadeInUp}
-          >
-            7-day free trial with 3 proposals
-          </motion.p> */}
         </motion.div>
 
         {/* Video demo — opacity stays 1 so LCP is not delayed */}
@@ -103,12 +85,6 @@ const HeroSection = () => {
               className="h-1 rounded-xl bg-blue-600 absolute top-0 left-2 z-40 transition-[width] duration-150 ease-linear"
               style={{ width: `${playbackProgress * 98}%` }}
             />
-            {/* <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl lg:text-4xl px-2 mt-10 mb-3">
-              See How Veltex AI Creates Proposals in Under 60 Seconds
-            </h2>
-            <p className="text-center text-sm text-gray-500 sm:text-base max-w-2xl mx-auto mb-8 px-2">
-              Short walkthrough—see inputs turn into a polished proposal, fast.
-            </p> */}
             <div className="relative w-full aspect-[1070/600] overflow-hidden rounded-2xl ring-1 ring-gray-200/80 shadow-2xl">
               <VideoPlayer
                 src="https://iwoaaljitifloolszxlu.supabase.co/storage/v1/object/public/Intro-Video/Untitled%20design.mp4"

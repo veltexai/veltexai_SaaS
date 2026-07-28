@@ -15,6 +15,7 @@ import { CheckCircle, Clock, CreditCard, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PRICE_ITEMS } from "../constants/price";
 import Link from "next/link";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 const PricingSection = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
@@ -147,6 +148,15 @@ const PricingSection = () => {
                     </ul>
                     <Link href="/auth/login">
                       <Button
+                        onClick={() =>
+                          captureEvent(
+                            ANALYTICS_EVENTS.LANDING_CTA_CLICKED,
+                            {
+                              placement: "pricing",
+                              destination: "login",
+                            },
+                          )
+                        }
                         className={`w-full ${
                           plan.popular
                             ? "bg-blue-600 hover:bg-blue-700"

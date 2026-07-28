@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { getStripeJs } from "@/lib/stripe/client";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 const supabase = createClient();
 
@@ -189,6 +190,7 @@ export function useSubscription() {
       }
 
       const { sessionId } = await response.json();
+      captureEvent(ANALYTICS_EVENTS.CHECKOUT_STARTED, { plan });
       const stripe = await getStripeJs();
 
       if (!stripe) {

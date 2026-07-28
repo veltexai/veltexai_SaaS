@@ -6,6 +6,7 @@ import { ConfirmationProvider } from "@/providers/confirmation-provider";
 import MetaPixel from "@/components/MetaPixel";
 import MetaPixelTracker from "@/components/MetaPixelTracker";
 import Script from "next/script";
+import { AnalyticsController } from "@/components/analytics-controller";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +43,7 @@ export default function RootLayout({
       >
         <MetaPixel />
         <MetaPixelTracker />
+        <AnalyticsController />
         <ConfirmationProvider>
           {children}
           <Toaster />

@@ -24,6 +24,7 @@ import z from "zod";
 import { useUserTier } from "@/features/proposals/hooks/use-user-tier";
 import { AiTone } from "@/types/proposal";
 import { scrollToTopOnMobile } from "@/lib/utils/scroll";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 import { FormNavigation, TemplateSelectionSection } from "@/features/proposals";
 
 interface ProposalFormProps {
@@ -305,10 +306,16 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     }
     setLoading(true);
     setError("");
+    let requestStarted = false;
+    let failureCaptured = false;
 
     try {
       // Validate service-specific data
       const validatedData = validateProposalWithServiceData(data);
+      requestStarted = true;
+      captureEvent(ANALYTICS_EVENTS.PROPOSAL_SAVE_STARTED, {
+        flow: "advanced",
+      });
 
       const response = await fetch("/api/proposals", {
         method: "POST",
@@ -322,6 +329,12 @@ export function ProposalForm({ userId }: ProposalFormProps) {
       });
 
       if (!response.ok) {
+        failureCaptured = true;
+        captureEvent(ANALYTICS_EVENTS.PROPOSAL_SAVE_FAILED, {
+          flow: "advanced",
+          failure_type: "http",
+          status_code: response.status,
+        });
         const error = await response.json();
         throw new Error(error.error || "Failed to create proposal");
       }
@@ -329,9 +342,16 @@ export function ProposalForm({ userId }: ProposalFormProps) {
       const proposalData = await response.json();
 
       toast.success("Proposal created successfully!");
+      captureEvent(ANALYTICS_EVENTS.PROPOSAL_SAVED, { flow: "advanced" });
       router.push(`/dashboard/proposals/${proposalData.id}`);
     } catch (error) {
       console.error("Error creating proposal:", error);
+      if (requestStarted && !failureCaptured) {
+        captureEvent(ANALYTICS_EVENTS.PROPOSAL_SAVE_FAILED, {
+          flow: "advanced",
+          failure_type: "network",
+        });
+      }
       setError("Failed to create proposal. Please try again.");
       toast.error("Failed to create proposal");
     } finally {

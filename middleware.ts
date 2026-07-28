@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { buildAuthPathWithRedirect } from '@/features/auth/utils/redirect'
 
 interface UsageInfo {
   can_create_proposal: boolean;
@@ -26,7 +27,10 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value, options: cookieOptions }) => {
+            void cookieOptions
+            request.cookies.set(name, value)
+          })
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -41,11 +45,31 @@ export async function middleware(request: NextRequest) {
   // Refresh session if expired - required for Server Components
   await supabase.auth.getUser()
 
-  // Check if accessing proposal creation routes
-  if (request.nextUrl.pathname.startsWith('/dashboard/proposals/new')) {
+  // Proposal creation routes require auth and remaining proposal capacity
+  const isQuickProposalRoute = request.nextUrl.pathname.startsWith(
+    '/dashboard/proposals/quick',
+  )
+  const isNewProposalRoute = request.nextUrl.pathname.startsWith(
+    '/dashboard/proposals/new',
+  )
+
+  if (isQuickProposalRoute || isNewProposalRoute) {
     const { data: { user } } = await supabase.auth.getUser()
-    
+
     if (!user) {
+      // Quick route preserves demo context through signup; the advanced
+      // builder keeps its existing login redirect.
+      if (isQuickProposalRoute) {
+        const redirectUrl = new URL(
+          buildAuthPathWithRedirect({
+            pathname: '/auth/signup',
+            redirectTo: `${request.nextUrl.pathname}${request.nextUrl.search}`,
+            params: { from: 'demo' },
+          }),
+          request.url,
+        )
+        return NextResponse.redirect(redirectUrl)
+      }
       return NextResponse.redirect(new URL('/auth/login', request.url))
     }
 

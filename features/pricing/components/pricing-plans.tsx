@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useSubscription } from "@/hooks/use-subscription";
 import { trackInitiateCheckout } from "@/lib/analytics/meta-pixel";
 import { SubscriptionPlan } from "@/types/database";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 export function PricingPlans({
   plans,
@@ -40,6 +41,10 @@ export function PricingPlans({
 
   const handleGetStarted = async (planName: string) => {
     setCheckoutLoading(true);
+    captureEvent(ANALYTICS_EVENTS.UPGRADE_CLICKED, {
+      placement: "billing_pricing_plans",
+      destination: "billing",
+    });
 
     const selectedPlan = plans.find((p) => p.name === planName);
     trackInitiateCheckout({

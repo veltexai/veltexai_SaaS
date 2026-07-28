@@ -33,6 +33,7 @@ import PasswordStength from "@/components/ui/password-stength";
 import { signInWithGoogle } from "@/features/auth/actions/oauth";
 import { signUp } from "@/features/auth/actions/password";
 import FreeTrialInfoBanner from "@/components/ui/free-trial-info-banner";
+import { buildAuthPathWithRedirect } from "@/features/auth/utils/redirect";
 
 const formSchema = z.object({
   fullName: z.string().min(3),
@@ -43,8 +44,9 @@ const formSchema = z.object({
 
 export default function SignupForm({
   className,
+  redirectTo,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & { redirectTo?: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
@@ -65,7 +67,7 @@ export default function SignupForm({
   const signUpWithGoogle = async () => {
     setIsLoadingGoogle(true);
     try {
-      const result = await signInWithGoogle();
+      const result = await signInWithGoogle(undefined, redirectTo, "signup");
 
       if (result.error) {
         toast.error(result.error?.message || "Failed to sign in with Google");
@@ -78,7 +80,7 @@ export default function SignupForm({
         toast.error("Failed to get Google sign-in URL");
         setIsLoadingGoogle(false);
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred. Please try again.");
       setIsLoadingGoogle(false);
     }
@@ -93,6 +95,9 @@ export default function SignupForm({
       formData.append("password", values.password);
       formData.append("fullName", values.fullName);
       formData.append("companyName", values.companyName || "");
+      if (redirectTo) {
+        formData.append("redirectTo", redirectTo);
+      }
       const result = await signUp({}, formData);
 
       if (result?.error) {
@@ -101,7 +106,12 @@ export default function SignupForm({
           result.error.toLowerCase().includes("already exists") ||
           result.error.toLowerCase().includes("email already")
         ) {
-          router.push("/auth/login");
+          router.push(
+            buildAuthPathWithRedirect({
+              pathname: "/auth/login",
+              redirectTo,
+            }),
+          );
         }
       } else {
         // Show verification toast and modal
@@ -262,7 +272,13 @@ export default function SignupForm({
                     </svg>{" "}
                     Sign Up with Google
                   </Button>
-                  <Link href="/auth/signup?method=magic">
+                  <Link
+                    href={buildAuthPathWithRedirect({
+                      pathname: "/auth/signup",
+                      redirectTo,
+                      params: { method: "magic" },
+                    })}
+                  >
                     <Button
                       variant="outline"
                       type="button"
@@ -277,7 +293,10 @@ export default function SignupForm({
                 <div className="text-center text-sm">
                   Already have Account{" "}
                   <Link
-                    href="/auth/login"
+                    href={buildAuthPathWithRedirect({
+                      pathname: "/auth/login",
+                      redirectTo,
+                    })}
                     className="underline underline-offset-4"
                   >
                     Sign In
@@ -321,7 +340,7 @@ export default function SignupForm({
               <br />
               <br />
               <span className="text-sm text-muted-foreground">
-                Don't see the email? Check your spam or junk folder.
+                Don&apos;t see the email? Check your spam or junk folder.
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>

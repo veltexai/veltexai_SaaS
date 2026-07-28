@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -57,7 +58,16 @@ const Header = () => {
                 </Button>
               </Link>
               <Link href="/auth/signup">
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                <Button
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() =>
+                    captureEvent(ANALYTICS_EVENTS.LANDING_CTA_CLICKED, {
+                      placement: "header",
+                      destination: "signup",
+                    })
+                  }
+                >
                   Start Free Trial
                 </Button>
               </Link>
@@ -99,7 +109,15 @@ const Header = () => {
                   </Button>
                 </Link>
                 <Link href="/auth/signup">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                  <Button
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    onClick={() =>
+                      captureEvent(ANALYTICS_EVENTS.LANDING_CTA_CLICKED, {
+                        placement: "header",
+                        destination: "signup",
+                      })
+                    }
+                  >
                     Start Free Trial
                   </Button>
                 </Link>

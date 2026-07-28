@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavButton } from "@/components/ui/nav-button";
+import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 const DISMISS_STORAGE_KEY = "veltex:trial-upgrade-banner:dismissed";
 
@@ -107,6 +108,12 @@ export function TrialUpgradeBanner({
                 variant="default"
                 href={upgradeHref}
                 icon={<ArrowRight className="h-4 w-4" />}
+                onClick={() =>
+                  captureEvent(ANALYTICS_EVENTS.UPGRADE_CLICKED, {
+                    placement: "trial_ended_banner",
+                    destination: "billing",
+                  })
+                }
               >
                 Upgrade Plan
               </NavButton>
@@ -182,6 +189,12 @@ export function TrialUpgradeBanner({
               variant="default"
               href={upgradeHref}
               icon={<ArrowRight className="h-4 w-4" />}
+              onClick={() =>
+                captureEvent(ANALYTICS_EVENTS.UPGRADE_CLICKED, {
+                  placement: "trial_active_banner",
+                  destination: "billing",
+                })
+              }
             >
               Upgrade Plan
             </NavButton>

@@ -6,6 +6,9 @@ import { proposalFormSchema } from "@/features/proposals/schemas/proposal";
 import { stripe } from "@/lib/stripe/stripe";
 import { EmailService } from "@/lib/email/service";
 import config from "@/config/config";
+import { after } from "next/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { captureServerEvent } from "@/lib/analytics/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -149,6 +152,30 @@ export async function POST(request: NextRequest) {
       console.log("✅ Usage incremented successfully for user:", user.id);
 
       const newUsageAfterIncrement = (usage?.current_usage || 0) + 1;
+
+      if (
+        usage?.subscription_status === "free_trial" ||
+        usage?.subscription_status === "trialing"
+      ) {
+        after(() =>
+          captureServerEvent({
+            distinctId: user.id,
+            event: ANALYTICS_EVENTS.TRIAL_USAGE_CONSUMED,
+            properties: {
+              usage_number: newUsageAfterIncrement,
+              remaining_proposals: Math.max(
+                0,
+                (usage.proposal_limit || 0) - newUsageAfterIncrement,
+              ),
+              trial_type:
+                usage.subscription_status === "free_trial"
+                  ? "free_trial"
+                  : "stripe_trial",
+              $insert_id: `trial_usage_consumed:${proposal.id}`,
+            },
+          }),
+        );
+      }
 
       // First proposal: send congratulatory email (fire-and-forget)
       if (newUsageAfterIncrement === 1) {

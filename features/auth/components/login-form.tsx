@@ -25,13 +25,18 @@ import { PasswordInput } from "@/components/ui/password-input";
 import Photo from "../../../public/images/pexels-tima-miroshnichenko-6196692.jpg";
 import { signIn } from "@/features/auth/actions/password";
 import { signInWithGoogle } from "@/features/auth/actions/oauth";
+import { buildAuthPathWithRedirect } from "@/features/auth/utils/redirect";
 
 const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
 });
 
-const LoginForm = ({ className, ...props }: React.ComponentProps<"form">) => {
+interface LoginFormProps extends React.ComponentProps<"form"> {
+  redirectTo?: string;
+}
+
+const LoginForm = ({ className, redirectTo, ...props }: LoginFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const router = useRouter();
@@ -49,13 +54,16 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<"form">) => {
     const formData = new FormData();
     formData.append("email", values.email);
     formData.append("password", values.password);
+    if (redirectTo) {
+      formData.append("redirectTo", redirectTo);
+    }
     const { error } = await signIn({}, formData);
 
     if (error) {
       toast.error(error);
     } else {
       toast.success("Login successful");
-      router.push("/dashboard");
+      router.push(redirectTo || "/dashboard");
     }
 
     setIsLoading(false);
@@ -64,7 +72,7 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<"form">) => {
   const handleGoogleSignIn = async () => {
     setIsLoadingGoogle(true);
     try {
-      const result = await signInWithGoogle();
+      const result = await signInWithGoogle(undefined, redirectTo);
 
       if (result.error) {
         toast.error(result.error?.message || "Failed to sign in with Google");
@@ -77,7 +85,7 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<"form">) => {
         toast.error("Failed to get Google sign-in URL");
         setIsLoadingGoogle(false);
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred. Please try again.");
       setIsLoadingGoogle(false);
     }
@@ -182,7 +190,13 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<"form">) => {
                     )}
                     Login with Google
                   </Button>
-                  <Link href="/auth/login?method=magic">
+                  <Link
+                    href={buildAuthPathWithRedirect({
+                      pathname: "/auth/login",
+                      redirectTo,
+                      params: { method: "magic" },
+                    })}
+                  >
                     <Button
                       variant="outline"
                       type="button"
@@ -196,7 +210,10 @@ const LoginForm = ({ className, ...props }: React.ComponentProps<"form">) => {
                 <div className="text-center text-sm">
                   Don&apos;t have an account?{" "}
                   <Link
-                    href="/auth/signup"
+                    href={buildAuthPathWithRedirect({
+                      pathname: "/auth/signup",
+                      redirectTo,
+                    })}
                     className="underline underline-offset-4"
                   >
                     Sign up

@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { AUTH_ROUTES } from "@/features/auth/constants";
 import config from "@/config/config";
+import { after } from "next/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { captureServerEvent } from "@/lib/analytics/server";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -39,6 +42,19 @@ export async function GET(request: NextRequest) {
             signup_timestamp: new Date().toISOString(),
           },
         });
+
+        if (data.user) {
+          after(() =>
+            captureServerEvent({
+              distinctId: data.user!.id,
+              event: ANALYTICS_EVENTS.SIGNUP_COMPLETED,
+              properties: {
+                auth_method: "email",
+                $insert_id: `signup_completed:${data.user!.id}`,
+              },
+            }),
+          );
+        }
       }
 
       if (plan) {

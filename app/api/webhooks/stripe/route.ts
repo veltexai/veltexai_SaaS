@@ -8,6 +8,9 @@ import {
   sendPurchaseEvent,
 } from "@/lib/analytics/meta-capi";
 import Stripe from "stripe";
+import { after } from "next/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { captureServerEvent } from "@/lib/analytics/server";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -43,6 +46,7 @@ export async function POST(req: NextRequest) {
         await handleSubscriptionCreated(
           event.data.object as Stripe.Subscription,
           supabase,
+          event.id,
         );
         break;
 
@@ -91,6 +95,7 @@ export async function POST(req: NextRequest) {
 async function handleSubscriptionCreated(
   subscription: Stripe.Subscription,
   supabase: any,
+  stripeEventId: string,
 ) {
   try {
     console.log("🆕 Processing subscription created:", subscription.id);
@@ -273,6 +278,17 @@ async function handleSubscriptionCreated(
       console.log(
         "✅ Profile updated with status:",
         profileUpdateData.subscription_status,
+      );
+      after(() =>
+        captureServerEvent({
+          distinctId: userId,
+          event: ANALYTICS_EVENTS.SUBSCRIPTION_STARTED,
+          properties: {
+            plan: planName,
+            subscription_status: subscription.status,
+            $insert_id: `subscription_started:${stripeEventId}`,
+          },
+        }),
       );
     }
 
