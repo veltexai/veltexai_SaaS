@@ -10,6 +10,7 @@ export const PRICE_ITEMS = (billingCycle: "monthly" | "yearly") => [
       "PDF export",
       "Email support",
       "Basic branding",
+      "Keep watermark",
     ],
     popular: false,
   },
@@ -24,7 +25,9 @@ export const PRICE_ITEMS = (billingCycle: "monthly" | "yearly") => [
       "Custom branding",
       "Priority support",
       "Analytics dashboard",
+      "No watermark",
     ],
+
     popular: true,
   },
   {
@@ -39,6 +42,7 @@ export const PRICE_ITEMS = (billingCycle: "monthly" | "yearly") => [
       "Priority support",
       "Team access",
       "Analytics dashboard",
+      "No watermark",
     ],
     popular: false,
   },

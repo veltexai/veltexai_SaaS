@@ -5,6 +5,7 @@ export { VerticalBar } from "./vertical-bar";
 export { HorizontalBar } from "./horizontal-bar";
 export { NavitationNumber } from "./navigation";
 export { PoweredBy } from "./powered-by";
+export { PoweredByProvider, usePoweredByVisible } from "./powered-by-context";
 export { ProposalTableOfContents } from "../sections/table-of-contents";
 export { ProposalTitle } from "./proposal-title";
 export { SignatureSection } from "./signature-section";

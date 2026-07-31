@@ -44,6 +44,11 @@ export interface TemplateProps {
   }>;
   /** Demo-only: overrides images and accent color. Ignored in production. */
   demoImages?: DemoTemplateImages;
+  /**
+   * When false, the Veltex footer logo is suppressed on every page.
+   * Consumed by PrintTemplateSwitcher only — never forwarded to the templates.
+   */
+  showPoweredBy?: boolean;
 }
 
 export type Branding = {

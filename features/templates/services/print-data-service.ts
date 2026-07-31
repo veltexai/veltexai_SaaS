@@ -1,4 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server';
+import { shouldShowPoweredBy } from '@/features/billing/utils/watermark';
 import { formatCurrencySafe } from "@/lib/utils/format";
 import {
   normalizeTitle,
@@ -33,6 +34,21 @@ async function getBranding(proposal: any) {
         email: profile.email || null,
       }
     : undefined;
+}
+
+async function getShowPoweredBy(proposal: any) {
+  if (!proposal) return true;
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .rpc('get_user_usage_info', { user_uuid: proposal.user_id })
+    .single();
+  if (error || !data) {
+    console.warn('Plan fetch failed:', error?.message ?? error);
+    return true;
+  }
+  return shouldShowPoweredBy(
+    (data as { subscription_plan?: string | null }).subscription_plan
+  );
 }
 
 async function getColors(proposal: any) {
@@ -441,12 +457,14 @@ async function getExtrasRows(proposal: any) {
 
 export async function getPrintPageData(id: string) {
   const proposal = await getProposalData(id);
-  const [branding, colors, pages, extrasRows] = await Promise.all([
-    getBranding(proposal),
-    getColors(proposal),
-    getPages(proposal),
-    getExtrasRows(proposal),
-  ]);
+  const [branding, colors, pages, extrasRows, showPoweredBy] =
+    await Promise.all([
+      getBranding(proposal),
+      getColors(proposal),
+      getPages(proposal),
+      getExtrasRows(proposal),
+      getShowPoweredBy(proposal),
+    ]);
 
   return {
     proposal,
@@ -454,5 +472,6 @@ export async function getPrintPageData(id: string) {
     colors,
     pages,
     extrasRows,
+    showPoweredBy,
   };
 }

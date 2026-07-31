@@ -10,7 +10,7 @@ export default async function PrintProposalPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { proposal, branding, colors, pages, extrasRows } =
+  const { proposal, branding, colors, pages, extrasRows, showPoweredBy } =
     await getPrintPageData(id);
 
   if (!proposal) {
@@ -35,6 +35,7 @@ export default async function PrintProposalPage({
         pages={pages}
         print
         extrasRows={extrasRows}
+        showPoweredBy={showPoweredBy}
       />
       <script
         dangerouslySetInnerHTML={{

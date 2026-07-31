@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import React from "react";
-import { TemplateType } from "../../template-renderer";
+import type { TemplateType } from "../../types/templates";
+import { usePoweredByVisible } from "./powered-by-context";
 
 export const PoweredBy = ({
   colorLogo,
@@ -15,6 +18,9 @@ export const PoweredBy = ({
   className?: string;
   template?: TemplateType;
 }) => {
+  const visible = usePoweredByVisible();
+  if (!visible) return null;
+
   const srlUrl = `/images/templates/logofooter-${colorLogo}.svg`;
   const position = isRight
     ? "right-3 sm:right-5 md:right-7"

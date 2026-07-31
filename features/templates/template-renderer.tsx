@@ -12,6 +12,7 @@ import {
   ModernCorporateTemplate,
   LuxuryEliteTemplate,
 } from './components';
+import { PoweredByProvider } from './components/shared/powered-by-context';
 
 const COMPONENTS: Record<TemplateType, React.FC<TemplateProps>> = {
   basic: BasicTemplate,
@@ -22,13 +23,16 @@ const COMPONENTS: Record<TemplateType, React.FC<TemplateProps>> = {
 
 export async function TemplateRenderer({ proposal }: { proposal: Proposal }) {
   try {
-    const { templateRow, branding } = await loadTemplateData(proposal);
+    const { templateRow, branding, showPoweredBy } =
+      await loadTemplateData(proposal);
     const type = detectTemplateType(templateRow);
     const Component = COMPONENTS[type] ?? BasicTemplate;
     return (
       <div className="w-full overflow-x-auto">
         <div className="min-w-[320px]">
-          <Component proposal={proposal} template={templateRow} branding={branding} />
+          <PoweredByProvider show={showPoweredBy}>
+            <Component proposal={proposal} template={templateRow} branding={branding} />
+          </PoweredByProvider>
         </div>
       </div>
     );

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { shouldShowPoweredBy } from '@/features/billing/utils/watermark';
 import type {
   ProposalTemplateRow,
   Proposal,
@@ -42,10 +43,25 @@ export async function getBrandingByUserId(userId: string): Promise<Branding> {
   };
 }
 
+export async function getShowPoweredBy(userId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .rpc('get_user_usage_info', { user_uuid: userId })
+    .single();
+  if (error || !data) {
+    console.warn('Plan fetch failed:', error?.message ?? error);
+    return true;
+  }
+  return shouldShowPoweredBy(
+    (data as { subscription_plan?: string | null }).subscription_plan
+  );
+}
+
 export async function loadTemplateData(proposal: Proposal) {
-  const [templateRow, branding] = await Promise.all([
+  const [templateRow, branding, showPoweredBy] = await Promise.all([
     getTemplateById(proposal.template_id),
     getBrandingByUserId(proposal.user_id),
+    getShowPoweredBy(proposal.user_id),
   ]);
-  return { templateRow, branding } as const;
+  return { templateRow, branding, showPoweredBy } as const;
 }
