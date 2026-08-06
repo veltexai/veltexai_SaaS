@@ -35,6 +35,8 @@ import {
   type QuickProposalFormData,
 } from "../schemas/quick-proposal";
 import { PropertyAssumptionsLite } from "./property-assumptions-lite";
+import { DesignTemplatePicker } from "./design-template-picker";
+import { useUserTier } from "@/features/proposals/hooks/use-user-tier";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 interface QuickProposalFlowProps {
@@ -43,7 +45,8 @@ interface QuickProposalFlowProps {
   requestedScopeTemplateId?: string;
   template: ScopeTemplate;
   usedFallback: boolean;
-  /** proposal_templates UUID used for AI structure and detail rendering. */
+  userId: string;
+  /** Initial proposal_templates UUID; the step 2 picker can change it. */
   designTemplateId?: string;
   designTemplateName?: string;
 }
@@ -95,10 +98,16 @@ export function QuickProposalFlow({
   requestedScopeTemplateId,
   template,
   usedFallback,
+  userId,
   designTemplateId,
   designTemplateName,
 }: QuickProposalFlowProps) {
   const router = useRouter();
+  const userTier = useUserTier(userId);
+  const [selectedDesignTemplate, setSelectedDesignTemplate] = useState<{
+    id?: string;
+    name?: string;
+  }>({ id: designTemplateId, name: designTemplateName });
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -127,8 +136,8 @@ export function QuickProposalFlow({
     [formData],
   );
   const draftGenerateRequest = useMemo(
-    () => buildQuickProposalGenerateRequest(formData, designTemplateId),
-    [formData, designTemplateId],
+    () => buildQuickProposalGenerateRequest(formData, selectedDesignTemplate.id),
+    [formData, selectedDesignTemplate.id],
   );
   const hasDemoContext = source === "demo" || Boolean(demoType);
 
@@ -191,6 +200,19 @@ export function QuickProposalFlow({
     setStep(nextStep);
   };
 
+  const selectDesignTemplate = (templateId: string, displayName: string) => {
+    if (templateId === selectedDesignTemplate.id) {
+      return;
+    }
+
+    markQuickProposalStarted();
+    // Same contract as the scope-template select: keep the draft, flag it stale.
+    if (generatedContent) {
+      setIsPreviewStale(true);
+    }
+    setSelectedDesignTemplate({ id: templateId, name: displayName });
+  };
+
   const applyRecommendedTemplate = () => {
     const recommendedTemplate = getScopeTemplate(
       assumptions.recommendedScopeTemplateId,
@@ -227,7 +249,7 @@ export function QuickProposalFlow({
 
     const request = buildQuickProposalGenerateRequest(
       formData,
-      designTemplateId,
+      selectedDesignTemplate.id,
     );
 
     if (!request.success) {
@@ -300,7 +322,7 @@ export function QuickProposalFlow({
     const result = buildQuickProposalSavePayload(
       formData,
       generatedContent,
-      designTemplateId,
+      selectedDesignTemplate.id,
     );
 
     if (!result.success) {
@@ -609,6 +631,14 @@ export function QuickProposalFlow({
 
             {step === 2 && (
               <div className="space-y-5">
+                <DesignTemplatePicker
+                  userTier={userTier}
+                  selectedTemplateId={selectedDesignTemplate.id}
+                  onSelectTemplate={selectDesignTemplate}
+                />
+
+                <div className="border-t pt-5" />
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2 text-sm">
                     <span className="font-medium text-gray-900">
@@ -919,8 +949,11 @@ export function QuickProposalFlow({
                 label="Scope template ID"
                 value={formData.scopeTemplateId}
               />
-              {designTemplateName && (
-                <ReviewRow label="Design template" value={designTemplateName} />
+              {selectedDesignTemplate.name && (
+                <ReviewRow
+                  label="Design template"
+                  value={selectedDesignTemplate.name}
+                />
               )}
             </CardContent>
           </Card>

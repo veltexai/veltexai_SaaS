@@ -13,7 +13,7 @@ export { DEMO_INSIGHTS } from "./constants/demo-insights";
 export type { DemoInsight } from "./constants/demo-insights";
 export { getDemoTemplateData } from "./utils/get-demo-template-data";
 export type { DemoTemplateData } from "./utils/get-demo-template-data";
-export type { DemoTemplateImages } from "@/features/templates/types/templates";
+export type { TemplateImages } from "@/features/templates/types/templates";
 
 export { DemoTypeSelector } from "./components/demo-type-selector";
 export { DemoPreview } from "./components/demo-preview";

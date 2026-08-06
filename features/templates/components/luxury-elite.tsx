@@ -36,7 +36,7 @@ export function LuxuryEliteTemplate({
   branding,
   pages,
   print,
-  demoImages,
+  images,
 }: TemplateProps) {
   const {
     branding: b,
@@ -46,14 +46,14 @@ export function LuxuryEliteTemplate({
     hasAdditionalScopePages,
   } = useTemplateData(proposal, branding, pages, print);
 
-  // Resolve demo image overrides with safe defaults (no-op in production)
-  const coverBg = demoImages?.coverBg ?? "/images/templates/bgLuxi.png";
+  // Resolve image overrides with safe defaults (stock art when unset)
+  const coverBg = images?.coverBg ?? "/images/templates/bgLuxi.png";
   const coverMask =
-    demoImages?.coverMask ?? "/images/templates/Images/Maskgroup.png";
+    images?.coverMask ?? "/images/templates/Images/Maskgroup.png";
   const aboutImage =
-    demoImages?.aboutImage ?? "/images/templates/Images/Mask group-2.png";
-  const accentStyle = demoImages?.accentColor
-    ? ({ "--color-primary": demoImages.accentColor } as React.CSSProperties)
+    images?.aboutImage ?? "/images/templates/Images/Mask group-2.png";
+  const accentStyle = images?.accentColor
+    ? ({ "--color-primary": images.accentColor } as React.CSSProperties)
     : undefined;
 
   return (
@@ -111,7 +111,7 @@ export function LuxuryEliteTemplate({
 
       <ProposalTableOfContents
         templateType="luxury_elite"
-        tocImage={demoImages?.tocImage}
+        tocImage={images?.tocImage}
       />
 
       {content.about ||
@@ -211,7 +211,7 @@ export function LuxuryEliteTemplate({
                   />
                   <ContentQualificationsSection
                     templateType="luxury_elite"
-                    qualificationsImage={demoImages?.qualificationsImage}
+                    qualificationsImage={images?.qualificationsImage}
                   />
 
                   <NavitationNumber
@@ -421,6 +421,7 @@ export function LuxuryEliteTemplate({
           logoUrl={b.logoUrl}
           companyName={b.companyName}
           templateType="luxury_elite"
+          thankYouImage={images?.thankYouImage}
         />
       </div>
     </section>

@@ -1,4 +1,5 @@
 import { detectTemplateType } from './utils/utils';
+import { resolveTemplateImages } from './utils/resolve-template-images';
 import { loadTemplateData } from './services/template-service';
 import type {
   TemplateProps,
@@ -31,7 +32,12 @@ export async function TemplateRenderer({ proposal }: { proposal: Proposal }) {
       <div className="w-full overflow-x-auto">
         <div className="min-w-[320px]">
           <PoweredByProvider show={showPoweredBy}>
-            <Component proposal={proposal} template={templateRow} branding={branding} />
+            <Component
+            proposal={proposal}
+            template={templateRow}
+            branding={branding}
+            images={resolveTemplateImages(proposal, type)}
+          />
           </PoweredByProvider>
         </div>
       </div>

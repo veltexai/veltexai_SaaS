@@ -35,6 +35,7 @@ export function ModernCorporateTemplate({
   branding,
   pages,
   print,
+  images,
 }: TemplateProps) {
   const {
     branding: b,
@@ -92,7 +93,10 @@ export function ModernCorporateTemplate({
         </div>
         <div className="absolute w-[90%] h-[40%] sm:bottom-8 bottom-0 left-1/2 -translate-x-1/2">
           <Image
-            src="/images/templates/Images/pexels-exnl-9318871-1.png"
+            src={
+              images?.coverImage ??
+              "/images/templates/Images/pexels-exnl-9318871-1.png"
+            }
             alt="Background"
             className="size-full object-cover"
             height={1600}
@@ -155,7 +159,10 @@ export function ModernCorporateTemplate({
                     )}
                   </div>
                   <Image
-                    src={`/images/templates/Images/image 12-1.png`}
+                    src={
+                      images?.aboutImage ??
+                      "/images/templates/Images/image 12-1.png"
+                    }
                     alt="qualifications"
                     width={800}
                     height={500}
@@ -228,7 +235,10 @@ export function ModernCorporateTemplate({
                     templateType="modern_corporate"
                     title="Our Qualifications"
                   />
-                  <ContentQualificationsSection templateType="modern_corporate" />
+                  <ContentQualificationsSection
+                    templateType="modern_corporate"
+                    qualificationsImage={images?.qualificationsImage}
+                  />
 
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
@@ -436,6 +446,7 @@ export function ModernCorporateTemplate({
           logoUrl={b.logoUrl}
           companyName={b.companyName}
           templateType="modern_corporate"
+          thankYouImage={images?.thankYouImage}
         />
       </div>
     </section>

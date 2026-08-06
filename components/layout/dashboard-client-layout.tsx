@@ -226,7 +226,8 @@ export function DashboardClientLayout({
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
-              {pathname === "/dashboard/proposals/new" ? (
+              {pathname === "/dashboard/proposals/new" ||
+              pathname === "/dashboard/proposals/quick" ? (
                 <NavButton
                   size="sm"
                   variant="outline"
@@ -237,7 +238,7 @@ export function DashboardClientLayout({
                 </NavButton>
               ) : (
                 <NavButton
-                  href="/dashboard/proposals/new"
+                  href="/dashboard/proposals/quick"
                   icon={<Plus className="h-4 w-4" />}
                 >
                   New Proposal

@@ -25,7 +25,11 @@ export function BasicTemplate({
   pages,
   print,
   extrasRows,
+  images,
 }: TemplateProps) {
+  // Basic has no photographic slots — only these decorative blue backgrounds.
+  const coverBg =
+    images?.coverBg ?? "/images/templates/secondBlueBackground.svg";
   const logoUrl = branding?.logo_url ?? null;
   const companyName = branding?.name ?? "Company";
   const preparedFor =
@@ -89,7 +93,7 @@ export function BasicTemplate({
         <VerticalBar />
         <HorizontalBar />
         <Image
-          src="/images/templates/secondBlueBackground.svg"
+          src={coverBg}
           alt="Background"
           className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
           height={1600}
@@ -204,7 +208,7 @@ export function BasicTemplate({
         <VerticalBar className="right-6 sm:right-12 md:right-20" />
         <HorizontalBar className="top-6 sm:top-12 md:top-20" />
         <Image
-          src="/images/templates/secondBlueBackground.svg"
+          src={coverBg}
           alt="Background"
           className="absolute inset-0 w-full h-full object-cover"
           height={1600}

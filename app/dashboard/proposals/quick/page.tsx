@@ -6,7 +6,9 @@ import {
   getScopeTemplateIdForDemo,
   pickQuickDesignTemplate,
 } from "@/features/proposals/quick";
+import { getUser } from "@/features/auth/services/get-user";
 import { getUserAccessibleTemplates } from "@/lib/templates/template-service";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +36,12 @@ async function getDefaultDesignTemplate() {
 export default async function QuickProposalPage({
   searchParams,
 }: QuickProposalPageProps) {
+  const { user } = await getUser();
+
+  if (!user) {
+    redirect("/auth/login");
+  }
+
   const params = await searchParams;
   const templateIdFromDemo = getScopeTemplateIdForDemo(params.demoType);
   const requestedTemplateId = params.scopeTemplateId || templateIdFromDemo;
@@ -49,6 +57,7 @@ export default async function QuickProposalPage({
       requestedScopeTemplateId={requestedTemplateId}
       template={template}
       usedFallback={template.id !== requestedTemplateId}
+      userId={user.id}
       designTemplateId={designTemplate?.id}
       designTemplateName={designTemplate?.name}
     />

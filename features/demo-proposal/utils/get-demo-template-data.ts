@@ -1,7 +1,7 @@
 import type {
   Proposal,
   Branding,
-  DemoTemplateImages,
+  TemplateImages,
 } from "@/features/templates/types/templates";
 import type { DemoType, ResidentialPackageType } from "../types/demo-proposal";
 
@@ -328,7 +328,7 @@ const PREMIUM_DETAIL_PROPOSAL = makeMockProposal({
 
 const RESIDENTIAL_ACCENT = "#001B7A";
 
-const RESIDENTIAL_IMAGES: Record<ResidentialPackageType, DemoTemplateImages> = {
+const RESIDENTIAL_IMAGES: Record<ResidentialPackageType, TemplateImages> = {
   recurring: {
     coverBg: "/images/templates/bgLuxi.png",
     coverMask: "/images/templates/Images/Maskgroup.png",
@@ -367,7 +367,7 @@ export interface DemoTemplateData {
   proposal: Proposal;
   branding: Branding;
   pages: string[];
-  demoImages?: DemoTemplateImages;
+  images?: TemplateImages;
 }
 
 export function getDemoTemplateData(
@@ -406,6 +406,6 @@ export function getDemoTemplateData(
     proposal,
     branding: DEMO_BRANDING,
     pages,
-    demoImages: RESIDENTIAL_IMAGES[pkg],
+    images: RESIDENTIAL_IMAGES[pkg],
   };
 }

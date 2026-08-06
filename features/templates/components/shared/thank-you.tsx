@@ -11,6 +11,7 @@ export const ThankYouPage = ({
   logoUrl,
   companyName,
   templateType,
+  thankYouImage,
 }: {
   email: string | null;
   phone: string | null;
@@ -18,13 +19,15 @@ export const ThankYouPage = ({
   logoUrl: string | null;
   companyName: string;
   templateType: TemplateType;
+  thankYouImage?: string;
 }) => {
   const SrcImage =
-    templateType === "modern_corporate"
+    thankYouImage ??
+    (templateType === "modern_corporate"
       ? "/images/templates/Images/image17-1.png"
       : templateType === "luxury_elite"
         ? "/images/templates/Images/Mask group-4.png"
-        : "/images/templates/Images/image17.png";
+        : "/images/templates/Images/image17.png");
 
   return (
     <>

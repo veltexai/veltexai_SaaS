@@ -26,6 +26,7 @@ import { AiTone } from "@/types/proposal";
 import { scrollToTopOnMobile } from "@/lib/utils/scroll";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 import { FormNavigation, TemplateSelectionSection } from "@/features/proposals";
+import { deriveScopeTemplateId } from "@/features/templates/utils/resolve-template-images";
 
 interface ProposalFormProps {
   userId: string;
@@ -322,6 +323,12 @@ export function ProposalForm({ userId }: ProposalFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...validatedData,
+          // Injected after validation: the service-specific zod schemas strip
+          // unknown keys, so this would not survive validateProposalWithServiceData.
+          service_specific_data: {
+            ...validatedData.service_specific_data,
+            scope_template_id: deriveScopeTemplateId(data),
+          },
           selected_addons: Array.isArray(data?.selected_addons)
             ? data.selected_addons
             : [],

@@ -35,6 +35,7 @@ export function ExecutivePremiumTemplate({
   branding,
   pages,
   print,
+  images,
 }: TemplateProps) {
   const {
     branding: b,
@@ -51,7 +52,10 @@ export function ExecutivePremiumTemplate({
         <div className="absolute w-[85%] h-[40%] sm:bottom-12 bottom-6 left-1/2 -translate-x-1/2">
           <div className="absolute h-2.5 w-[200px] bg-[var(--color-primary)] -top-[5px]"></div>
           <Image
-            src="/images/templates/Images/pexels-exnl-931887-1.png"
+            src={
+              images?.coverImage ??
+              "/images/templates/Images/pexels-exnl-931887-1.png"
+            }
             alt="Background"
             className="size-full object-cover"
             height={1600}
@@ -122,7 +126,10 @@ export function ExecutivePremiumTemplate({
                     )}
                   </div>
                   <Image
-                    src={`/images/templates/Images/image 12.png`}
+                    src={
+                      images?.aboutImage ??
+                      "/images/templates/Images/image 12.png"
+                    }
                     alt="qualifications"
                     width={800}
                     height={500}
@@ -196,7 +203,10 @@ export function ExecutivePremiumTemplate({
                       title="Our Qualifications"
                     />
                   </div>
-                  <ContentQualificationsSection templateType="executive_premium" />
+                  <ContentQualificationsSection
+                    templateType="executive_premium"
+                    qualificationsImage={images?.qualificationsImage}
+                  />
 
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber
@@ -424,6 +434,7 @@ export function ExecutivePremiumTemplate({
           logoUrl={b.logoUrl}
           companyName={b.companyName}
           templateType="executive_premium"
+          thankYouImage={images?.thankYouImage}
         />
       </div>
     </section>

@@ -1,5 +1,7 @@
 export { QuickProposalFlow } from "./components/quick-proposal-flow";
 export { PropertyAssumptionsLite } from "./components/property-assumptions-lite";
+export { DesignTemplatePicker } from "./components/design-template-picker";
+export { DesignTemplateCard } from "./components/design-template-card";
 export {
   DEFAULT_SCOPE_TEMPLATE_ID,
   SCOPE_TEMPLATE_IDS,

@@ -150,7 +150,7 @@ export default function DemoProposalPage() {
                 branding={demoData.branding}
                 pages={demoData.pages}
                 print={true}
-                demoImages={demoData.demoImages}
+                images={demoData.images}
               />
             )}
           </DemoResultLayout>

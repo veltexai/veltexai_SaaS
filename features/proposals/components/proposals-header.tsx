@@ -1,5 +1,5 @@
-import { Plus } from 'lucide-react';
-import { NavButton } from '@/components/ui/nav-button';
+import { Plus } from "lucide-react";
+import { NavButton } from "@/components/ui/nav-button";
 
 export function ProposalsHeader() {
   return (
@@ -10,7 +10,10 @@ export function ProposalsHeader() {
           Manage your business proposals and track their status.
         </p>
       </div>
-      <NavButton href="/dashboard/proposals/new" icon={<Plus className="h-4 w-4" />}>
+      <NavButton
+        href="/dashboard/proposals/quick"
+        icon={<Plus className="h-4 w-4" />}
+      >
         New Proposal
       </NavButton>
     </div>

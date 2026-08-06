@@ -292,7 +292,7 @@ export function buildQuickProposalGenerateRequest(
   const clientEmail = values.clientEmail.trim();
   const clientPhone = values.clientPhone?.trim();
   const serviceType = getServiceTypeFromQuickInputs(values);
-  const title = `${clientName || "Client"} ${values.propertyType} Cleaning Proposal`;
+  const title = `${values.propertyType} Cleaning Proposal`;
 
   return {
     success: true,

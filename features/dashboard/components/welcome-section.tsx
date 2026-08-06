@@ -31,7 +31,7 @@ export function WelcomeSection({ profile }: WelcomeSectionProps) {
       </div>
       <div className="mt-4 flex md:ml-4 md:mt-0">
         <NavButton
-          href="/dashboard/proposals/new"
+          href="/dashboard/proposals/quick"
           icon={<Plus className="h-4 w-4" />}
           size="lg"
           variant="default"

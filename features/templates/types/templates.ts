@@ -11,17 +11,27 @@ export type TemplateType =
   | 'luxury_elite';
 
 /**
- * Optional image overrides for demo mode. When provided, luxury-elite.tsx
- * renders these instead of the default template images. Has no effect in
- * production (the prop is never passed from real proposal routes).
+ * Optional image overrides for a template. Every slot is `??`-guarded at the
+ * render site, so an omitted (or entirely absent) override renders the stock
+ * template art. Produced in production by `resolveTemplateImages` and in the
+ * demo flow by `getDemoTemplateData`.
  */
-export interface DemoTemplateImages {
+export interface TemplateImages {
+  /** Full-bleed cover background (luxury_elite bgLuxi, basic blue SVG). */
   coverBg?: string;
+  /** Cover photograph (executive_premium, modern_corporate). */
+  coverImage?: string;
+  /** Cover mask overlay (luxury_elite only). */
   coverMask?: string;
-  aboutImage?: string;
+  /** Table-of-contents photo (luxury_elite only — other TOCs render no image). */
   tocImage?: string;
+  /** About / page-three photo. */
+  aboutImage?: string;
+  /** Qualifications page photo. */
   qualificationsImage?: string;
-  /** Inline CSS variable override for --color-primary (demo only). */
+  /** Closing "thank you" page photo. */
+  thankYouImage?: string;
+  /** Inline CSS variable override for --color-primary. */
   accentColor?: string;
 }
 
@@ -42,8 +52,8 @@ export interface TemplateProps {
     pricePerTime: string | null;
     pricePerMonth: string | null;
   }>;
-  /** Demo-only: overrides images and accent color. Ignored in production. */
-  demoImages?: DemoTemplateImages;
+  /** Per-proposal image and accent overrides. Falls back to stock art when omitted. */
+  images?: TemplateImages;
   /**
    * When false, the Veltex footer logo is suppressed on every page.
    * Consumed by PrintTemplateSwitcher only — never forwarded to the templates.

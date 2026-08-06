@@ -126,7 +126,7 @@ const ContentQualificationsSection = ({
         </div>
       ) : (
         <Image
-          src={`/images/templates/Images/image12-2.png`}
+          src={qualificationsImage ?? "/images/templates/Images/image12-2.png"}
           alt="qualifications"
           width={800}
           height={500}
