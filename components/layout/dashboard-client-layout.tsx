@@ -25,6 +25,7 @@ import { useProfileUserBranding } from "@/providers/profile-user-branding-provid
 import { applyTheme } from "@/lib/theme";
 import { DEFAULT_BRANDING } from "@/features/settings/constants/branding-constants";
 import { identifyUser, resetAnalytics } from "@/lib/analytics";
+import { identifySentryUser, resetSentryUser } from "@/lib/monitoring";
 
 interface DashboardClientLayoutProps {
   children: React.ReactNode;
@@ -48,12 +49,14 @@ export function DashboardClientLayout({
   }, [brandingSettings]);
   useEffect(() => {
     identifyUser(user.id);
+    identifySentryUser(user.id);
   }, [user.id]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
   const handleSignOut = () => {
     resetAnalytics();
+    resetSentryUser();
     void signOut();
   };
 

@@ -41,6 +41,10 @@ scripts*
 # vercel
 .vercel
 
+# sentry
+.sentryclirc
+.env.sentry-build-plugin
+
 # supabase
 supabase/.temp
 

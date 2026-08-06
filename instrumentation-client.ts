@@ -1,5 +1,7 @@
 import posthog from "posthog-js";
+import * as Sentry from "@sentry/nextjs";
 import { isPostHogEnabled, postHogConfig } from "@/lib/analytics/config";
+import { isSentryEnabled, sentryConfig } from "@/lib/monitoring/config";
 
 if (isPostHogEnabled && postHogConfig.key && postHogConfig.host) {
   posthog.init(postHogConfig.key, {
@@ -26,3 +28,19 @@ if (isPostHogEnabled && postHogConfig.key && postHogConfig.host) {
     },
   });
 }
+
+if (isSentryEnabled) {
+  Sentry.init({
+    dsn: sentryConfig.dsn,
+    environment: sentryConfig.environment,
+    tracesSampleRate: sentryConfig.tracesSampleRate,
+
+    // No replayIntegration on purpose: PostHog already records sessions above.
+    sendDefaultPii: false,
+
+    debug: false,
+  });
+}
+
+// Required by the App Router so Sentry can trace client-side navigations.
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
