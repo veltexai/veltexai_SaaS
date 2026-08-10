@@ -1,0 +1,22 @@
+{
+  "_notice": "Synthetic offline fixtures for 100D operator previews. No real contacts, no real events, no live calls. The workspace/campaign ids match the approved 100C pilot allowlist so allowlisting can be exercised; every email here is fabricated.",
+  "assignments": [
+    { "contactId": "11111111-1111-4111-8111-111111111111", "campaignConfigId": "veltex-100c-pilot-no-send", "normalizedEmail": "dir@buildingcleaningnw.example", "hasLeadMapping": true }
+  ],
+  "lateAssignments": [
+    { "contactId": "22222222-2222-4222-8222-222222222222", "campaignConfigId": "veltex-100c-pilot-no-send", "normalizedEmail": "late@prospectco.example", "hasLeadMapping": false }
+  ],
+  "instantlyEvents": [
+    { "event_type": "email_sent", "workspace": "698b2090-f4d5-484b-a0b1-44016fee7515", "campaign_id": "c01e55de-f1c8-4a0c-9817-13fe7456ab66", "lead_email": "dir@buildingcleaningnw.example", "timestamp": "2026-08-10T00:01:00.000Z", "step": 1, "variant": 1, "is_first": true },
+    { "event_type": "email_opened", "workspace": "698b2090-f4d5-484b-a0b1-44016fee7515", "campaign_id": "c01e55de-f1c8-4a0c-9817-13fe7456ab66", "lead_email": "dir@buildingcleaningnw.example", "timestamp": "2026-08-10T00:02:00.000Z", "step": 1, "variant": 1 },
+    { "event_type": "email_bounced", "workspace": "698b2090-f4d5-484b-a0b1-44016fee7515", "campaign_id": "c01e55de-f1c8-4a0c-9817-13fe7456ab66", "lead_email": "dir@buildingcleaningnw.example", "timestamp": "2026-08-10T00:03:00.000Z", "step": 1 },
+    { "event_type": "lead_unsubscribed", "workspace": "698b2090-f4d5-484b-a0b1-44016fee7515", "campaign_id": "c01e55de-f1c8-4a0c-9817-13fe7456ab66", "lead_email": "late@prospectco.example", "timestamp": "2026-08-10T00:04:00.000Z" },
+    { "event_type": "email_opened", "workspace": "698b2090-f4d5-484b-a0b1-44016fee7515", "campaign_id": "c01e55de-f1c8-4a0c-9817-13fe7456ab66", "lead_email": "unmapped@nowhere.example", "timestamp": "2026-08-10T00:05:00.000Z" },
+    { "event_type": "email_sent", "workspace": "00000000-0000-4000-8000-000000000999", "campaign_id": "c01e55de-f1c8-4a0c-9817-13fe7456ab66", "lead_email": "dir@buildingcleaningnw.example", "timestamp": "2026-08-10T00:06:00.000Z" },
+    { "event_type": "some_custom_label", "workspace": "698b2090-f4d5-484b-a0b1-44016fee7515", "campaign_id": "c01e55de-f1c8-4a0c-9817-13fe7456ab66", "lead_email": "dir@buildingcleaningnw.example", "timestamp": "2026-08-10T00:07:00.000Z" }
+  ],
+  "customerStatusEvents": [
+    { "status": "subscription_active", "email": "owner@existingcustomer.example", "occurredAt": "2026-08-09T12:00:00.000Z", "externalReference": "sub_synthetic_1" },
+    { "status": "trial_started", "email": "trial@prospectco.example", "occurredAt": "2026-08-09T12:05:00.000Z" }
+  ]
+}

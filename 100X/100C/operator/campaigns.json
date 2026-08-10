@@ -1,0 +1,19 @@
+{
+  "_notice": "APPROVED CAMPAIGN ALLOWLIST. 100C never accepts an arbitrary campaign id — only an entry here that is approved+active, bound to the approved environment, and observed live in a pilot-safe state (Draft or Paused) may receive leads. One campaign is approved for the read-only pilot verification: a dedicated, never-activated Instantly campaign bound to the approved 100c-pilot environment with a daily cap of 1 and a total pilot cap of 1. This assignment is read-only (provider-preview); controlled-write remains a separate founder action. This file holds only nonsecret configuration: no API keys, workspace secrets, or contact data.",
+  "campaigns": [
+    {
+      "configId": "veltex-100c-pilot-no-send",
+      "instantlyCampaignId": "c01e55de-f1c8-4a0c-9817-13fe7456ab66",
+      "label": "Veltex AI 100C Pilot — No Send",
+      "segment": "seattle-commercial-cleaning-pilot",
+      "environment": "100c-pilot",
+      "approved": true,
+      "approvalReference": "100C-INSTANTLY-PILOT-CAMPAIGN-APPROVED-2026-08-09",
+      "expectedWorkspaceId": "698b2090-f4d5-484b-a0b1-44016fee7515",
+      "allowedStates": ["draft", "paused"],
+      "dailySyncCap": 1,
+      "totalPilotCap": 1,
+      "active": true
+    }
+  ]
+}
