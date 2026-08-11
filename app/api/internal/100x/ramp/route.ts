@@ -19,7 +19,10 @@ function authorized(header: string | null, secret: string | undefined): boolean 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const config = load100FConfig(process.env);
   if (!config.enabled) return NextResponse.json({ ok: false }, { status: 404 });
-  if (!authorized(req.headers.get("authorization"), process.env.VELTEX_100F_CRON_SECRET)) return NextResponse.json({ ok: false }, { status: 401 });
+  const bearer = req.headers.get("authorization");
+  const workerHeader = req.headers.get("x-veltex-100f-secret");
+  const workerAuthorized = authorized(workerHeader ? `Bearer ${workerHeader}` : bearer, process.env.VELTEX_100F_CRON_SECRET);
+  if (!workerAuthorized) return NextResponse.json({ ok: false }, { status: 401 });
   const url = process.env.VELTEX_100F_SUPABASE_URL;
   const anonKey = process.env.VELTEX_100F_SUPABASE_ANON_KEY;
   const jwt = process.env.VELTEX_100F_RAMP_JWT;

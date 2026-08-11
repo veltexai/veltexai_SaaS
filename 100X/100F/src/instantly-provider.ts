@@ -27,12 +27,18 @@ export class InstantlyRampProvider implements RampProvider {
 }
 
 export class InstantlyMetricsProvider implements RampMetricsProvider {
-  constructor(private readonly apiKey: string, private readonly fetchImpl: typeof fetch = fetch) {}
+  constructor(private readonly apiKey: string, private readonly fetchImpl: typeof fetch = fetch, private readonly timeoutMs = 10_000) {}
 
   private async json(path: string): Promise<unknown> {
-    const response = await this.fetchImpl(`https://api.instantly.ai/api/v2${path}`, { headers: { Authorization: `Bearer ${this.apiKey}` } });
-    if (!response.ok) throw new Error(`Instantly metrics read failed (${response.status})`);
-    return response.json();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    try {
+      const response = await this.fetchImpl(`https://api.instantly.ai/api/v2${path}`, { headers: { Authorization: `Bearer ${this.apiKey}` }, signal: controller.signal });
+      if (!response.ok) throw new Error(`Instantly metrics read failed (${response.status})`);
+      return response.json();
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   async collect(campaignId: string, date: string): Promise<Omit<DailyRampMetrics, "spamComplaints" | "webhookFailures">> {
