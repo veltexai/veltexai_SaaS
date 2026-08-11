@@ -46,10 +46,8 @@ export class InstantlyMetricsProvider implements RampMetricsProvider {
 
   async collect(campaignId: string, date: string): Promise<Omit<DailyRampMetrics, "spamComplaints" | "webhookFailures">> {
     const id = encodeURIComponent(campaignId);
-    const [campaignRaw, analyticsRaw] = await Promise.all([
-      this.json(`/campaigns/${id}`),
-      this.json(`/campaigns/analytics?id=${id}&start_date=${date}&end_date=${date}&exclude_total_leads_count=true`),
-    ]);
+    const campaignRaw = await this.json(`/campaigns/${id}`);
+    const analyticsRaw = await this.json(`/campaigns/analytics?id=${id}&start_date=${date}&end_date=${date}&exclude_total_leads_count=true`);
     const campaign = objectValue(campaignRaw);
     const analyticsItems = Array.isArray(analyticsRaw) ? analyticsRaw : [];
     const analytics = objectValue(analyticsItems[0]);
