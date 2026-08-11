@@ -41,8 +41,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await repository.upsertMetrics({ ...providerMetrics, ...internal });
     const decision = await runRampController(config.campaignId, { enabled: true, executeMutations: config.executeMutations, policy: config.policy, repository, provider: new InstantlyRampProvider(instantlyKey) });
     return NextResponse.json({ ok: true, mode: config.executeMutations ? "execute" : "dry_run", action: decision.action, targetStage: decision.targetStage, reason: decision.reason });
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 502 });
+  } catch (error) {
+    const diagnostic = error instanceof Error ? error.message : "Unknown 100F failure";
+    console.error("100F ramp controller failed:", diagnostic);
+    return NextResponse.json({ ok: false, diagnostic }, { status: 502 });
   }
 }
 
