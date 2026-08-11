@@ -17,6 +17,7 @@ import { SupabaseDiagnosticSink as CDiagnostics, SupabaseSyncRepository } from "
 import campaignsFile from "../../100C/operator/campaigns.json";
 import type { ApprovedCampaign } from "../../100C/src/types";
 import type { StageRunner, StageResult } from "./types";
+import { discoveryGeographies } from "./national-geographies";
 
 type Env = Record<string, string | undefined>;
 const required = (env: Env, name: string): string => {
@@ -29,6 +30,12 @@ const client = (url: string, anon: string, jwt: string): SupabaseClient => creat
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
 const result = (stage: StageResult["stage"], produced: number, reason: string): StageResult => ({ stage, status: "completed", produced, reason });
+const positive = (value: string | undefined, fallback: number): number => {
+  const parsed = value === undefined ? fallback : Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) throw new Error("100G database-build limits must be positive integers");
+  return parsed;
+};
+const disabled = (stage: StageResult["stage"]): StageResult => ({ stage, status: "skipped", produced: 0, reason: `${stage} is not enabled for 100G` });
 
 async function enrichmentTargets(orchestrationClient: SupabaseClient, limit: number): Promise<string[]> {
   const { data, error } = await orchestrationClient.rpc("load_100g_enrichment_target_ids", { requested_limit: limit });
@@ -50,14 +57,23 @@ async function remainingCampaignCapacity(db: SupabaseClient, campaign: ApprovedC
 export function createProductionStages(env: Env, orchestrationClient: SupabaseClient): Record<"100A" | "100B" | "100C", StageRunner> {
   return {
     "100A": { run: async ({ requestedLeads }) => {
+      if (env.VELTEX_100A_ALLOW_100G !== "true") return disabled("100A");
       const db = client(required(env, "VELTEX_100A_SUPABASE_URL"), required(env, "VELTEX_100A_SUPABASE_ANON_KEY"), required(env, "VELTEX_100A_WORKER_JWT"));
-      const config = load100AConfig(env, [{ id: "seattle-wa", label: "Seattle, WA" }]);
-      config.limits.maxNewProspectsPerRun = Math.min(config.limits.maxNewProspectsPerRun, requestedLeads);
-      config.limits.maxSourceRecordsPerRun = Math.min(config.limits.maxSourceRecordsPerRun, requestedLeads);
-      const summary = await run100A(config, { places: new GooglePlacesTextSearchClient(required(env, "VELTEX_100A_GOOGLE_PLACES_API_KEY")), qualifier: new RulesCleaningQualifier(), repository: new SupabaseProspectRepository(db), diagnostics: new ADiagnostics(db) }, "100g");
-      return result("100A", summary.canonicalProspectsCreated, `discovered ${summary.canonicalProspectsCreated} new prospects`);
+      const config = load100AConfig(env, discoveryGeographies(env.VELTEX_100A_GEOGRAPHY_MODE));
+      const perMarket = positive(env.VELTEX_100A_MAX_NEW_PROSPECTS_PER_MARKET, 5);
+      let created = 0; let markets = 0;
+      while (created < requestedLeads && markets < Math.ceil(requestedLeads / perMarket)) {
+        const remaining = requestedLeads - created;
+        config.limits.maxNewProspectsPerRun = Math.min(positive(env.VELTEX_100A_MAX_NEW_PROSPECTS, 5), perMarket, remaining);
+        config.limits.maxSourceRecordsPerRun = Math.min(positive(env.VELTEX_100A_MAX_SOURCE_RECORDS, 5), perMarket, remaining);
+        const summary = await run100A(config, { places: new GooglePlacesTextSearchClient(required(env, "VELTEX_100A_GOOGLE_PLACES_API_KEY")), qualifier: new RulesCleaningQualifier(), repository: new SupabaseProspectRepository(db), diagnostics: new ADiagnostics(db) }, "100g");
+        created += summary.canonicalProspectsCreated; markets += 1;
+        if (summary.canonicalProspectsCreated === 0) continue;
+      }
+      return result("100A", created, `discovered ${created} new prospects across ${markets} market${markets === 1 ? "" : "s"}`);
     } },
     "100B": { run: async ({ requestedLeads }) => {
+      if (env.VELTEX_100B_ALLOW_100G !== "true") return disabled("100B");
       const ids = await enrichmentTargets(orchestrationClient, requestedLeads);
       if (ids.length === 0) return { stage: "100B", status: "skipped", produced: 0, reason: "no discovered prospects require enrichment" };
       const db = client(required(env, "VELTEX_100B_SUPABASE_URL"), required(env, "VELTEX_100B_SUPABASE_ANON_KEY"), required(env, "VELTEX_100B_WORKER_JWT"));
@@ -67,6 +83,7 @@ export function createProductionStages(env: Env, orchestrationClient: SupabaseCl
       return result("100B", summary.readyForOutreach, `verified ${summary.readyForOutreach} outreach-ready contacts`);
     } },
     "100C": { run: async ({ runDate, requestedLeads }) => {
+      if (env.VELTEX_100C_ALLOW_100G !== "true" || env.VELTEX_100C_ALLOW_ACTIVE_CAMPAIGN !== "true") return disabled("100C");
       const campaigns = (campaignsFile as { campaigns: ApprovedCampaign[] }).campaigns;
       const campaign = selectApprovedCampaign(required(env, "VELTEX_100C_CAMPAIGN_CONFIG_ID"), campaigns, required(env, "VELTEX_100C_ENVIRONMENT_ID"));
       const db = client(required(env, "VELTEX_100C_SUPABASE_URL"), required(env, "VELTEX_100C_SUPABASE_ANON_KEY"), required(env, "VELTEX_100C_WORKER_JWT"));

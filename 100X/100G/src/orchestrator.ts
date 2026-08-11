@@ -12,15 +12,17 @@ export async function run100G(config: OrchestrationConfig, deps: OrchestrationDe
   const supply = await deps.repository.getSupplySnapshot();
   const desiredQueue = Math.min(config.maximumRequestedLeads, supply.currentDailySendStage * config.queueDays);
   const requestedLeads = Math.max(0, desiredQueue - supply.queuedEligibleLeads);
+  const databaseBuildRequestedLeads = Math.max(requestedLeads, config.databaseBuildTarget);
   const results: StageResult[] = [];
 
-  if (!config.enabled || !config.executeStages || requestedLeads === 0) {
-    const reason = !config.enabled ? "100G is disabled" : !config.executeStages ? "100G is in dry-run mode" : "eligible queue target already satisfied";
+  if (!config.enabled || !config.executeStages || databaseBuildRequestedLeads === 0) {
+    const reason = !config.enabled ? "100G is disabled" : !config.executeStages ? "100G is in dry-run mode" : "eligible queue and database-build targets are satisfied";
     for (const stage of ORDER) results.push({ stage, status: "skipped", produced: 0, reason });
   } else {
     for (const stage of ORDER) {
       try {
-        const result = await deps.stages[stage].run({ runDate, requestedLeads });
+        const stageRequestedLeads = stage === "100C" ? requestedLeads : databaseBuildRequestedLeads;
+        const result = await deps.stages[stage].run({ runDate, requestedLeads: stageRequestedLeads });
         results.push(result);
         if (result.status === "failed") break;
       } catch (error) {

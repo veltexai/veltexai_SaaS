@@ -17,7 +17,7 @@ function setup(overrides: Partial<{ stage: number; queued: number; fail: StageId
   return { repository, calls, stages: { "100A": runner("100A"), "100B": runner("100B"), "100C": runner("100C") } };
 }
 
-const live = { enabled: true, executeStages: true, queueDays: 7, maximumRequestedLeads: 500 };
+const live = { enabled: true, executeStages: true, queueDays: 7, maximumRequestedLeads: 500, databaseBuildTarget: 1 };
 
 describe("100G acquisition orchestrator", () => {
   it("calculates replenishment from the active send stage and runs in order", async () => {
@@ -47,7 +47,7 @@ describe("100G acquisition orchestrator", () => {
     await run100G({ ...live, executeStages: false }, { ...dry, now: () => new Date("2026-08-12T12:00:00Z") });
     expect(dry.calls).toEqual([]);
     const full = setup({ queued: 70 });
-    await run100G(live, { ...full, now: () => new Date("2026-08-12T12:00:00Z") });
+    await run100G({ ...live, databaseBuildTarget: 0 }, { ...full, now: () => new Date("2026-08-12T12:00:00Z") });
     expect(full.calls).toEqual([]);
   });
 
@@ -58,5 +58,16 @@ describe("100G acquisition orchestrator", () => {
     const executed = await run100G(live, { ...deps, now });
     expect(executed.mode).toBe("execute");
     expect(deps.calls).toEqual(["100A", "100B", "100C"]);
+  });
+
+  it("keeps database acquisition ahead of the sender warm-up without increasing 100C demand", async () => {
+    const calls: Array<[StageId, number]> = [];
+    const deps = setup({ stage: 1, queued: 0 });
+    const runner = (stage: StageId): StageRunner => ({ run: async ({ requestedLeads }) => {
+      calls.push([stage, requestedLeads]); return { stage, status: "completed", produced: 0, reason: "ok" };
+    } });
+    const stages = { "100A": runner("100A"), "100B": runner("100B"), "100C": runner("100C") };
+    await run100G({ ...live, databaseBuildTarget: 25 }, { ...deps, stages, now: () => new Date("2026-08-13T12:00:00Z") });
+    expect(calls).toEqual([["100A", 25], ["100B", 25], ["100C", 7]]);
   });
 });
