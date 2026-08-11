@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { load100GConfig } from "@/100X/100G/src/config";
 import { run100G } from "@/100X/100G/src/orchestrator";
 import { SupabaseOrchestrationRepository } from "@/100X/100G/src/supabase-repository";
-import type { StageId, StageRunner } from "@/100X/100G/src/types";
+import { createProductionStages } from "@/100X/100G/src/production-stages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,10 +15,6 @@ function authorized(header: string | null, secret: string | undefined): boolean 
   const expected = Buffer.from(secret);
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
-
-const unavailable = (stage: StageId): StageRunner => ({
-  run: async () => ({ stage, status: "failed", produced: 0, reason: `${stage} production adapter is not installed` }),
-});
 
 async function execute(req: NextRequest): Promise<NextResponse> {
   const config = load100GConfig(process.env);
@@ -39,10 +35,8 @@ async function execute(req: NextRequest): Promise<NextResponse> {
       global: { headers: { Authorization: `Bearer ${jwt}` } },
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
-    const run = await run100G(config, {
-      repository: new SupabaseOrchestrationRepository(client),
-      stages: { "100A": unavailable("100A"), "100B": unavailable("100B"), "100C": unavailable("100C") },
-    });
+    const repository = new SupabaseOrchestrationRepository(client);
+    const run = await run100G(config, { repository, stages: createProductionStages(process.env, client) });
     return NextResponse.json({ ok: run.status === "completed", mode: config.executeStages ? "execute" : "dry_run", run });
   } catch (error) {
     const diagnostic = error instanceof Error ? error.message : "Unknown 100G failure";

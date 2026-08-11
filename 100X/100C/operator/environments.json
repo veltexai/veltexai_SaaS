@@ -1,0 +1,11 @@
+[
+  {
+    "id": "100c-pilot",
+    "label": "100C Instantly Campaign Sync Pilot",
+    "expectedSupabaseHostname": "wzpgbbwdqtpyfiojowdj.supabase.co",
+    "approved": true,
+    "approvalReference": "100C-PILOT-ENV-APPROVED-2026-08-09",
+    "controlledWritesAllowed": true,
+    "type": "pilot"
+  }
+]

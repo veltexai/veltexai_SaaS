@@ -1,0 +1,11 @@
+[
+  {
+    "id": "100b-pilot",
+    "label": "100B Contact Enrichment Pilot",
+    "expectedSupabaseHostname": "wzpgbbwdqtpyfiojowdj.supabase.co",
+    "approved": true,
+    "approvalReference": "100B-PILOT-ENV-APPROVED-2026-08-08",
+    "controlledWritesAllowed": true,
+    "type": "pilot"
+  }
+]

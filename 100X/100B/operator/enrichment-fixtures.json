@@ -1,0 +1,44 @@
+{
+  "_fixtureNotice": "SYNTHETIC TEST FIXTURE - NOT REAL CONTACTS. Every person, title, and email below is fabricated for offline 100B fixture-preview only. All emails use RFC-2606 reserved example.com domains and were never observed from any provider. No live provider call and no database write occur when this file is used. Do not use any identity here for outreach.",
+  "prospectIds": [
+    "3920f34e-ddde-40ce-8bc9-1af92f536b53",
+    "687ddcd1-5d0f-4ba3-b89d-d43c5528abb7",
+    "e26a220b-9990-440b-911f-b5e93547c669",
+    "907f8851-0784-4575-964c-73c20d73ecd7",
+    "3f4ac58c-8293-4a94-82a0-973c8b54c016"
+  ],
+  "companies": [
+    { "prospectId": "3920f34e-ddde-40ce-8bc9-1af92f536b53", "companyName": "Seattle Commercial Cleaning Co.", "companyType": "commercial_cleaning", "websiteDomain": "seattle-commercial.example.com", "eligibleCleaningCompany": true, "isCustomer": false, "isGloballySuppressed": false },
+    { "prospectId": "687ddcd1-5d0f-4ba3-b89d-d43c5528abb7", "companyName": "Building Cleaning North West", "companyType": "building_cleaning", "websiteDomain": "building-cleaning-nw.example.com", "eligibleCleaningCompany": true, "isCustomer": false, "isGloballySuppressed": false },
+    { "prospectId": "e26a220b-9990-440b-911f-b5e93547c669", "companyName": "Noble Janitorial", "companyType": "commercial_janitorial", "websiteDomain": "noble-janitorial.example.com", "eligibleCleaningCompany": true, "isCustomer": false, "isGloballySuppressed": false },
+    { "prospectId": "907f8851-0784-4575-964c-73c20d73ecd7", "companyName": "Mercury Commercial Cleaning", "companyType": "commercial_cleaning", "websiteDomain": "mercury-commercial.example.com", "eligibleCleaningCompany": true, "isCustomer": false, "isGloballySuppressed": false },
+    { "prospectId": "3f4ac58c-8293-4a94-82a0-973c8b54c016", "companyName": "Shine Bright Commercial Cleaning", "companyType": "commercial_cleaning", "websiteDomain": "shine-bright.example.com", "eligibleCleaningCompany": false, "isCustomer": false, "isGloballySuppressed": false }
+  ],
+  "candidates": {
+    "3920f34e-ddde-40ce-8bc9-1af92f536b53": [
+      { "providerRecordId": "fx-p1-owner", "firstName": "Casey", "lastName": "Testperson", "title": "Owner", "email": "owner@seattle-commercial.example.com", "providerVerificationStatus": "verified", "linkedinUrl": "https://www.linkedin.com/in/example-synthetic-owner", "_synthetic": true },
+      { "providerRecordId": "fx-p1-generic", "fullName": null, "title": null, "email": "info@seattle-commercial.example.com", "providerVerificationStatus": "unknown", "_synthetic": true }
+    ],
+    "687ddcd1-5d0f-4ba3-b89d-d43c5528abb7": [
+      { "providerRecordId": "fx-p2-gm", "firstName": "Jordan", "lastName": "Fixture", "title": "General Manager", "email": "gm@building-cleaning-nw.example.com", "providerVerificationStatus": "verified", "_synthetic": true }
+    ],
+    "e26a220b-9990-440b-911f-b5e93547c669": [
+      { "providerRecordId": "fx-p3-owner", "firstName": "Riley", "lastName": "Sample", "title": "Owner", "email": "owner@noble-janitorial.example.com", "providerVerificationStatus": "verified", "_synthetic": true }
+    ],
+    "907f8851-0784-4575-964c-73c20d73ecd7": [
+      { "providerRecordId": "fx-p4-president", "firstName": "Alex", "lastName": "Placeholder", "title": "President", "email": "president@mercury-commercial.example.com", "providerVerificationStatus": "accept_all", "_synthetic": true },
+      { "providerRecordId": "fx-p4-noemail", "firstName": "Morgan", "lastName": "Synthetic", "title": "Operations Manager", "email": null, "providerVerificationStatus": null, "_synthetic": true }
+    ],
+    "3f4ac58c-8293-4a94-82a0-973c8b54c016": [
+      { "providerRecordId": "fx-p5-owner", "firstName": "Sydney", "lastName": "Example", "title": "Owner", "email": "owner@shine-bright.example.com", "providerVerificationStatus": "verified", "_synthetic": true }
+    ]
+  },
+  "suppression": {
+    "unsubscribed": ["owner@noble-janitorial.example.com"],
+    "hardBounced": [],
+    "blocked": [],
+    "globallySuppressed": [],
+    "activeInCampaign": [],
+    "alreadyReceivedCampaign": []
+  }
+}

@@ -1,0 +1,17 @@
+[
+  { "id":"janitorial-1", "displayName":{"text":"Evergreen Commercial Janitorial"}, "websiteUri":"https://evergreen.example", "nationalPhoneNumber":"206-555-0101", "formattedAddress":"1 Pine St, Seattle, WA", "addressComponents":[{"longText":"Seattle","types":["locality"]},{"shortText":"WA","types":["administrative_area_level_1"]}], "primaryType":"cleaning_service" },
+  { "id":"commercial-1", "displayName":{"text":"Acme Commercial Cleaning"}, "primaryType":"cleaning_service" },
+  { "id":"office-1", "displayName":{"text":"Pro Office Cleaning"}, "primaryType":"cleaning_service" },
+  { "id":"building-1", "displayName":{"text":"Metro Building Cleaning"}, "primaryType":"cleaning_service" },
+  { "id":"maid-1", "displayName":{"text":"Molly Maid Service"}, "primaryType":"house_cleaning_service" },
+  { "id":"residential-1", "displayName":{"text":"Bright Residential Cleaning"}, "primaryType":"house_cleaning_service" },
+  { "id":"supply-1", "displayName":{"text":"Acme Cleaning Supply Store"}, "primaryType":"store" },
+  { "id":"laundry-1", "displayName":{"text":"Clean Day Laundromat"}, "primaryType":"laundry" },
+  { "id":"dry-1", "displayName":{"text":"Spotless Dry Cleaner"}, "primaryType":"dry_cleaner" },
+  { "id":"carwash-1", "displayName":{"text":"Sparkle Car Wash"}, "primaryType":"car_wash" },
+  { "id":"restore-1", "displayName":{"text":"Clean Restoration Company"}, "primaryType":"restoration_service" },
+  { "id":"pressure-1", "displayName":{"text":"Pro Pressure Washing Company"}, "primaryType":"pressure_washing_service" },
+  { "id":"ambiguous-1", "displayName":{"text":"Clean Solutions"}, "primaryType":"business" },
+  { "id":"franchise-sea", "displayName":{"text":"National Maid Seattle"}, "websiteUri":"https://nationalmaid.example", "nationalPhoneNumber":"800-555-0100", "formattedAddress":"1 First Ave, Seattle, WA", "primaryType":"house_cleaning_service" },
+  { "id":"franchise-tac", "displayName":{"text":"National Maid Tacoma"}, "websiteUri":"https://nationalmaid.example", "nationalPhoneNumber":"800-555-0100", "formattedAddress":"2 Main St, Tacoma, WA", "primaryType":"house_cleaning_service" }
+]

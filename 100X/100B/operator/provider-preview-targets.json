@@ -1,0 +1,24 @@
+{
+  "_notice": "APPROVED PUBLIC-BUSINESS PILOT TARGETS from 100A discovery — these are real, public cleaning-company records (company name, website, normalized domain, type) approved for a READ-ONLY, in-memory Apollo provider-preview. They are NOT synthetic contacts and NOT authorization for outreach. This file contains only nonsecret public-business identifiers: no contact names, no email addresses, no phone numbers, no Apollo person IDs, no Apollo response data, no API keys, no JWTs, no Supabase keys, and no invented personal data.",
+  "_approval": {
+    "origin": "100A Seattle pilot discovery output (five discovered prospects)",
+    "authorizedBy": "founder directive (2026-08-08 provider-preview target-binding correction)",
+    "targetProject": "wzpgbbwdqtpyfiojowdj.supabase.co (isolated 100A/100B pilot)",
+    "prospectIdsMatch": "identical to the recorded 100A prospect IDs and the enrichment-fixtures.json keys",
+    "verification": "prospect IDs, company names, and company types verified against the existing 100A pilot records; each website domain is the normalized host of its website URL"
+  },
+  "prospectIds": [
+    "3920f34e-ddde-40ce-8bc9-1af92f536b53",
+    "687ddcd1-5d0f-4ba3-b89d-d43c5528abb7",
+    "e26a220b-9990-440b-911f-b5e93547c669",
+    "907f8851-0784-4575-964c-73c20d73ecd7",
+    "3f4ac58c-8293-4a94-82a0-973c8b54c016"
+  ],
+  "companies": [
+    { "prospectId": "3920f34e-ddde-40ce-8bc9-1af92f536b53", "companyName": "Seattle Commercial Cleaning Co.", "website": "https://premiumserviceswa.us/", "websiteDomain": "premiumserviceswa.us", "companyType": "commercial_cleaning", "eligibleCleaningCompany": true, "isCustomer": false, "isGloballySuppressed": false },
+    { "prospectId": "687ddcd1-5d0f-4ba3-b89d-d43c5528abb7", "companyName": "Building Cleaning North West", "website": "http://buildingcleaningnw.com/", "websiteDomain": "buildingcleaningnw.com", "companyType": "building_cleaning", "eligibleCleaningCompany": true, "isCustomer": false, "isGloballySuppressed": false },
+    { "prospectId": "e26a220b-9990-440b-911f-b5e93547c669", "companyName": "Noble Janitorial", "website": "http://www.noblejanitorial.com/", "websiteDomain": "noblejanitorial.com", "companyType": "commercial_janitorial", "eligibleCleaningCompany": true, "isCustomer": false, "isGloballySuppressed": false },
+    { "prospectId": "907f8851-0784-4575-964c-73c20d73ecd7", "companyName": "Mercury Commercial Cleaning", "website": "http://www.mercuryclean.com/", "websiteDomain": "mercuryclean.com", "companyType": "commercial_cleaning", "eligibleCleaningCompany": true, "isCustomer": false, "isGloballySuppressed": false },
+    { "prospectId": "3f4ac58c-8293-4a94-82a0-973c8b54c016", "companyName": "Shine Bright Commercial Cleaning", "website": "https://shinebrightcleaningsllc.com/", "websiteDomain": "shinebrightcleaningsllc.com", "companyType": "commercial_cleaning", "eligibleCleaningCompany": true, "isCustomer": false, "isGloballySuppressed": false }
+  ]
+}

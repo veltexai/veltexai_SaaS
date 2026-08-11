@@ -1,0 +1,29 @@
+{
+  "_fixtureNotice": "SYNTHETIC TEST FIXTURE — NOT REAL CONTACTS OR A REAL CAMPAIGN. Every contact, email, and the campaign below is fabricated for offline 100C fixture-preview only. All emails use RFC-2606 reserved example.com domains. No live Instantly call, lead creation, email, or database write occurs when this file is used. Not authorization for outreach.",
+  "campaign": {
+    "configId": "fixture-campaign",
+    "instantlyCampaignId": "00000000-0000-4000-8000-000000000000",
+    "label": "Fixture Campaign (offline)",
+    "segment": "fixture",
+    "environment": "100c-pilot",
+    "approved": true,
+    "approvalReference": "FIXTURE-ONLY",
+    "expectedWorkspaceId": "fixture-workspace-0001",
+    "allowedStates": ["draft", "paused"],
+    "dailySyncCap": 1,
+    "totalPilotCap": 1,
+    "active": true
+  },
+  "providerScript": { "campaignState": "draft", "observedWorkspaceId": "fixture-workspace-0001", "createByEmail": {}, "reconcileByEmail": {} },
+  "suppressionRegistry": [
+    { "normalizedEmail": "owner@customer-co.example.com", "normalizedDomain": null, "entry": { "kind": "existing_customer", "matchedBy": "email", "source": "pilot_seed", "reason": "existing Veltex AI customer (fixture)", "externalReference": null, "occurredAt": "2026-08-01T00:00:00Z" } }
+  ],
+  "candidates": [
+    { "canonicalContactId": "fx-c1-suppressed", "canonicalProspectId": "fx-p1", "workEmail": "owner@suppressed-co.example.com", "normalizedEmail": "owner@suppressed-co.example.com", "firstName": "Sam", "lastName": "Suppressed", "fullName": "Sam Suppressed", "title": "Owner", "companyName": "Suppressed Co", "website": "https://suppressed-co.example.com", "outreachEligibility": "ready_for_outreach", "emailVerificationStatus": "verified", "suppressionStatus": "unsubscribed", "isCurrentContact": true, "provider": "apollo", "providerRecordId": "fx-r1", "lastVerifiedAt": "2026-08-08T00:00:00Z", "eligibleCleaningCompany": true, "isCustomer": false },
+    { "canonicalContactId": "fx-c2-unverified", "canonicalProspectId": "fx-p2", "workEmail": "gm@unverified-co.example.com", "normalizedEmail": "gm@unverified-co.example.com", "firstName": "Uma", "lastName": "Unverified", "fullName": "Uma Unverified", "title": "General Manager", "companyName": "Unverified Co", "website": "https://unverified-co.example.com", "outreachEligibility": "ready_for_outreach", "emailVerificationStatus": "accept_all", "suppressionStatus": "none", "isCurrentContact": true, "provider": "apollo", "providerRecordId": "fx-r2", "lastVerifiedAt": "2026-08-08T00:00:00Z", "eligibleCleaningCompany": true, "isCustomer": false },
+    { "canonicalContactId": "fx-c3-stale", "canonicalProspectId": "fx-p3", "workEmail": "owner@stale-co.example.com", "normalizedEmail": "owner@stale-co.example.com", "firstName": "Ola", "lastName": "Stale", "fullName": "Ola Stale", "title": "Owner", "companyName": "Stale Co", "website": "https://stale-co.example.com", "outreachEligibility": "ready_for_outreach", "emailVerificationStatus": "verified", "suppressionStatus": "none", "isCurrentContact": true, "provider": "apollo", "providerRecordId": "fx-r3", "lastVerifiedAt": "2000-01-01T00:00:00Z", "eligibleCleaningCompany": true, "isCustomer": false },
+    { "canonicalContactId": "fx-c6-customer", "canonicalProspectId": "fx-p6", "workEmail": "owner@customer-co.example.com", "normalizedEmail": "owner@customer-co.example.com", "firstName": "Cara", "lastName": "Customer", "fullName": "Cara Customer", "title": "Owner", "companyName": "Customer Co", "website": "https://customer-co.example.com", "outreachEligibility": "ready_for_outreach", "emailVerificationStatus": "verified", "suppressionStatus": "none", "isCurrentContact": true, "provider": "apollo", "providerRecordId": "fx-r6", "lastVerifiedAt": "2026-08-08T00:00:00Z", "eligibleCleaningCompany": true, "isCustomer": false },
+    { "canonicalContactId": "fx-c5-eligible", "canonicalProspectId": "fx-p5", "workEmail": "director@buildingcleaning.example.com", "normalizedEmail": "director@buildingcleaning.example.com", "firstName": "Dana", "lastName": "Director", "fullName": "Dana Director", "title": "Director of Operations", "companyName": "Building Cleaning North West (fixture)", "website": "https://buildingcleaning.example.com", "outreachEligibility": "ready_for_outreach", "emailVerificationStatus": "verified", "suppressionStatus": "none", "isCurrentContact": true, "provider": "apollo", "providerRecordId": "fx-r5", "lastVerifiedAt": "2026-08-08T00:00:00Z", "eligibleCleaningCompany": true, "isCustomer": false }
+  ],
+  "suppression": {}
+}

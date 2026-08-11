@@ -1,0 +1,83 @@
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { load100AConfig } from "../../100A/src/config";
+import { GooglePlacesTextSearchClient } from "../../100A/src/google-places";
+import { RulesCleaningQualifier } from "../../100A/src/qualifier";
+import { run100A } from "../../100A/src/run";
+import { SupabaseDiagnosticSink as ADiagnostics, SupabaseProspectRepository } from "../../100A/src/supabase-adapters";
+import { ApolloEnrichmentProvider } from "../../100B/src/apollo-provider";
+import { load100BConfig } from "../../100B/src/config";
+import { run100B } from "../../100B/src/run";
+import { SupabaseContactRepository, SupabaseDiagnosticSink as BDiagnostics } from "../../100B/src/supabase-adapters";
+import { NullSuppressionResolver } from "../../100B/src/suppression";
+import { selectApprovedCampaign } from "../../100C/src/campaign-allowlist";
+import { load100CConfig } from "../../100C/src/config";
+import { InstantlyOutboundProvider } from "../../100C/src/instantly-provider";
+import { run100C } from "../../100C/src/run";
+import { SupabaseDiagnosticSink as CDiagnostics, SupabaseSyncRepository } from "../../100C/src/supabase-adapters";
+import campaignsFile from "../../100C/operator/campaigns.json";
+import type { ApprovedCampaign } from "../../100C/src/types";
+import type { StageRunner, StageResult } from "./types";
+
+type Env = Record<string, string | undefined>;
+const required = (env: Env, name: string): string => {
+  const value = env[name]?.trim();
+  if (!value) throw new Error(`${name} is required for 100G execution`);
+  return value;
+};
+const client = (url: string, anon: string, jwt: string): SupabaseClient => createClient(url, anon, {
+  global: { headers: { Authorization: `Bearer ${jwt}` } },
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+});
+const result = (stage: StageResult["stage"], produced: number, reason: string): StageResult => ({ stage, status: "completed", produced, reason });
+
+async function enrichmentTargets(orchestrationClient: SupabaseClient, limit: number): Promise<string[]> {
+  const { data, error } = await orchestrationClient.rpc("load_100g_enrichment_target_ids", { requested_limit: limit });
+  if (error) throw new Error(`load 100G enrichment targets: ${error.message}`);
+  return Array.isArray(data) ? data.map(String) : [];
+}
+
+async function remainingCampaignCapacity(db: SupabaseClient, campaign: ApprovedCampaign, runDate: string): Promise<number> {
+  const base = db.from("campaign_contact_assignments").select("id", { count: "exact", head: true }).eq("campaign_config_id", campaign.configId).eq("state", "submitted");
+  const [total, daily] = await Promise.all([
+    base,
+    db.from("campaign_contact_assignments").select("id", { count: "exact", head: true }).eq("campaign_config_id", campaign.configId).eq("state", "submitted").gte("updated_at", `${runDate}T00:00:00.000Z`).lt("updated_at", `${runDate}T23:59:59.999Z`),
+  ]);
+  if (total.error) throw new Error(`read 100C total cap: ${total.error.message}`);
+  if (daily.error) throw new Error(`read 100C daily cap: ${daily.error.message}`);
+  return Math.max(0, Math.min(campaign.totalPilotCap - (total.count ?? 0), campaign.dailySyncCap - (daily.count ?? 0)));
+}
+
+export function createProductionStages(env: Env, orchestrationClient: SupabaseClient): Record<"100A" | "100B" | "100C", StageRunner> {
+  return {
+    "100A": { run: async ({ requestedLeads }) => {
+      const db = client(required(env, "VELTEX_100A_SUPABASE_URL"), required(env, "VELTEX_100A_SUPABASE_ANON_KEY"), required(env, "VELTEX_100A_WORKER_JWT"));
+      const config = load100AConfig(env, [{ id: "seattle-wa", label: "Seattle, WA" }]);
+      config.limits.maxNewProspectsPerRun = Math.min(config.limits.maxNewProspectsPerRun, requestedLeads);
+      config.limits.maxSourceRecordsPerRun = Math.min(config.limits.maxSourceRecordsPerRun, requestedLeads);
+      const summary = await run100A(config, { places: new GooglePlacesTextSearchClient(required(env, "VELTEX_100A_GOOGLE_PLACES_API_KEY")), qualifier: new RulesCleaningQualifier(), repository: new SupabaseProspectRepository(db), diagnostics: new ADiagnostics(db) }, "100g");
+      return result("100A", summary.canonicalProspectsCreated, `discovered ${summary.canonicalProspectsCreated} new prospects`);
+    } },
+    "100B": { run: async ({ requestedLeads }) => {
+      const ids = await enrichmentTargets(orchestrationClient, requestedLeads);
+      if (ids.length === 0) return { stage: "100B", status: "skipped", produced: 0, reason: "no discovered prospects require enrichment" };
+      const db = client(required(env, "VELTEX_100B_SUPABASE_URL"), required(env, "VELTEX_100B_SUPABASE_ANON_KEY"), required(env, "VELTEX_100B_WORKER_JWT"));
+      const config = load100BConfig(env, "apollo");
+      config.limits.maxCompaniesPerRun = Math.min(config.limits.maxCompaniesPerRun, ids.length);
+      const summary = await run100B(config, { provider: new ApolloEnrichmentProvider(required(env, "VELTEX_100B_APOLLO_API_KEY")), suppression: new NullSuppressionResolver(), repository: new SupabaseContactRepository(db), diagnostics: new BDiagnostics(db), prospectIds: ids }, "100g");
+      return result("100B", summary.readyForOutreach, `verified ${summary.readyForOutreach} outreach-ready contacts`);
+    } },
+    "100C": { run: async ({ runDate, requestedLeads }) => {
+      const campaigns = (campaignsFile as { campaigns: ApprovedCampaign[] }).campaigns;
+      const campaign = selectApprovedCampaign(required(env, "VELTEX_100C_CAMPAIGN_CONFIG_ID"), campaigns, required(env, "VELTEX_100C_ENVIRONMENT_ID"));
+      const db = client(required(env, "VELTEX_100C_SUPABASE_URL"), required(env, "VELTEX_100C_SUPABASE_ANON_KEY"), required(env, "VELTEX_100C_WORKER_JWT"));
+      const capacity = Math.min(requestedLeads, await remainingCampaignCapacity(db, campaign, runDate));
+      if (capacity <= 0) return { stage: "100C", status: "skipped", produced: 0, reason: "approved campaign daily or total sync cap reached" };
+      const config = load100CConfig(env, "instantly");
+      config.limits.maxLeadsSubmitted = Math.min(config.limits.maxLeadsSubmitted, capacity);
+      config.limits.maxInstantlyWriteRequests = Math.min(config.limits.maxInstantlyWriteRequests, capacity);
+      config.limits.maxContactsConsidered = Math.max(config.limits.maxContactsConsidered, capacity);
+      const summary = await run100C(config, { provider: new InstantlyOutboundProvider(required(env, "VELTEX_100C_INSTANTLY_API_KEY")), repository: new SupabaseSyncRepository(db), diagnostics: new CDiagnostics(db), campaign }, "100g");
+      return result("100C", summary.submitted, `submitted ${summary.submitted} eligible leads`);
+    } },
+  };
+}

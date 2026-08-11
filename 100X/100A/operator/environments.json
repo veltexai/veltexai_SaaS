@@ -1,0 +1,11 @@
+[
+  {
+    "id": "100a-pilot",
+    "label": "100A Seattle Pilot",
+    "expectedSupabaseHostname": "wzpgbbwdqtpyfiojowdj.supabase.co",
+    "approved": true,
+    "approvalReference": "100A-PILOT-ENV-APPROVED-2026-08-07",
+    "controlledWritesAllowed": true,
+    "type": "pilot"
+  }
+]
