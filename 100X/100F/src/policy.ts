@@ -45,8 +45,12 @@ export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], poli
   if (stageAgeDays < policy.minimumDaysAtStage) {
     return makeDecision(state, today, "hold", state.currentStage, `stage dwell time is ${stageAgeDays}/${policy.minimumDaysAtStage} days`);
   }
-  if (sent < policy.minimumDeliveredAtStage) {
-    return makeDecision(state, today, "hold", state.currentStage, `observed volume is ${sent}/${policy.minimumDeliveredAtStage}`);
+  const requiredDelivered = Math.min(
+    policy.minimumDeliveredAtStage,
+    state.currentStage * policy.minimumDaysAtStage,
+  );
+  if (sent < requiredDelivered) {
+    return makeDecision(state, today, "hold", state.currentStage, `observed volume is ${sent}/${requiredDelivered}`);
   }
 
   const index = policy.stages.indexOf(state.currentStage);

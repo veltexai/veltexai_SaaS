@@ -61,6 +61,12 @@ describe("100F ramp policy", () => {
     expect(evaluateRamp(state, [metric({ sent: 3 })], policy, "2026-08-11").reason).toContain("observed volume");
   });
 
+  it("allows the one-per-day bootstrap stage to graduate after three clean deliveries", () => {
+    const bootstrap = { ...state, currentStage: 1 as const };
+    expect(evaluateRamp(bootstrap, [metric({ sent: 2 })], policy, "2026-08-11").reason).toContain("2/3");
+    expect(evaluateRamp(bootstrap, [metric({ sent: 3 })], policy, "2026-08-11")).toMatchObject({ action: "advance", targetStage: 10 });
+  });
+
   it("produces deterministic daily idempotency keys", () => {
     const first = evaluateRamp(state, [metric()], policy, "2026-08-11");
     const second = evaluateRamp(state, [metric()], policy, "2026-08-11");
