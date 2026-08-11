@@ -27,6 +27,7 @@ async function executeRamp(req: NextRequest): Promise<NextResponse> {
   const anonKey = process.env.VELTEX_100F_SUPABASE_ANON_KEY;
   const jwt = process.env.VELTEX_100F_RAMP_JWT;
   const instantlyKey =
+    process.env.VELTEX_100F_INSTANTLY_API_KEY_V4 ??
     process.env.VELTEX_100F_INSTANTLY_API_KEY_V3 ??
     process.env.VELTEX_100F_INSTANTLY_API_KEY_V2 ??
     process.env.VELTEX_100F_INSTANTLY_API_KEY;
