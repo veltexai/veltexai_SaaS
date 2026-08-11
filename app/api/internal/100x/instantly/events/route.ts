@@ -7,6 +7,11 @@ import { ingestInstantlyEvent } from "@/100X/100D/src/ingest";
 import { SupabaseIngestRepository } from "@/100X/100D/src/supabase-adapters";
 import { toAllowlist } from "@/100X/100D/operator/command";
 import type { InstantlyWebhookPayload } from "@/100X/100D/src/types";
+import { matchApprovedCampaign } from "@/100X/100D/src/allowlist";
+import { load100EConfig, resolve100EPilotTarget } from "@/100X/100E/src/config";
+import { processReply } from "@/100X/100E/src/process-reply";
+import { SupabaseReplyRepository } from "@/100X/100E/src/supabase-adapter";
+import type { ReplyPayload } from "@/100X/100E/src/types";
 import campaignsFile from "@/100X/100C/operator/campaigns.json";
 
 // 100D Instantly event webhook. DISABLED BY DEFAULT and NOT deployed in this phase. Node runtime is
@@ -45,14 +50,43 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   });
 
   try {
+    const campaigns = toAllowlist(campaignsFile as { campaigns?: Array<Record<string, unknown>> });
     const result = await ingestInstantlyEvent(payload as InstantlyWebhookPayload, {
-      campaigns: toAllowlist(campaignsFile as { campaigns?: Array<Record<string, unknown>> }),
+      campaigns,
       repository: new SupabaseIngestRepository(client),
       now: () => new Date(),
       enabled: true,
       runId: randomUUID(),
     });
     const okOutcomes = new Set(["processed", "duplicate", "held_unmatched"]);
+    // 100E is an independently gated, reply-only consumer. The reply body is inspected transiently
+    // and is never persisted; only classification, routing metadata, length, and SHA-256 are stored.
+    // A 100E failure returns 502 so Instantly retries. 100D and 100E are both idempotent, making a
+    // replay safe even when 100D committed before 100E failed.
+    const replyConfig = load100EConfig(process.env);
+    const eventType = typeof (payload as ReplyPayload).event_type === "string" ? (payload as ReplyPayload).event_type : "";
+    if (replyConfig.enabled && (eventType === "reply_received" || eventType === "auto_reply_received")) {
+      const allowed = matchApprovedCampaign(
+        typeof (payload as ReplyPayload).workspace === "string" ? (payload as ReplyPayload).workspace as string : null,
+        typeof (payload as ReplyPayload).campaign_id === "string" ? (payload as ReplyPayload).campaign_id as string : null,
+        campaigns,
+      );
+      if (!allowed.ok || !allowed.campaignConfigId || !result.providerEventId) return NextResponse.json({ ok: false }, { status: 403 });
+      const replyTarget = resolve100EPilotTarget(process.env);
+      if (!replyTarget.ok) return NextResponse.json({ ok: false }, { status: 503 });
+      const replyClient = createClient(replyTarget.url, replyTarget.anonKey, {
+        global: { headers: { Authorization: `Bearer ${replyTarget.jwt}` } },
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      });
+      await processReply(payload as ReplyPayload, {
+        enabled: true,
+        maxReplyChars: replyConfig.maxReplyChars,
+        campaignConfigId: allowed.campaignConfigId,
+        providerEventId: result.providerEventId,
+        repository: new SupabaseReplyRepository(replyClient),
+        now: () => new Date(),
+      });
+    }
     const status = okOutcomes.has(result.outcome) ? 200 : result.outcome === "rejected_allowlist" ? 403 : 400;
     return NextResponse.json({ ok: okOutcomes.has(result.outcome), outcome: result.outcome }, { status });
   } catch {
