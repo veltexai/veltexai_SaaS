@@ -57,6 +57,7 @@ describe("100F ramp policy", () => {
 
   it("holds until stage dwell time and evidence volume are sufficient", () => {
     expect(evaluateRamp({ ...state, stageStartedAt: "2026-08-10T00:00:00Z" }, [metric()], policy, "2026-08-11").reason).toContain("dwell");
+    expect(evaluateRamp({ ...state, stageStartedAt: "2026-08-11T18:00:00Z" }, [metric()], policy, "2026-08-11").reason).toContain("0/3 days");
     expect(evaluateRamp(state, [metric({ sent: 3 })], policy, "2026-08-11").reason).toContain("observed volume");
   });
 

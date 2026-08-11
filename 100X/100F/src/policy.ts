@@ -41,7 +41,7 @@ export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], poli
 
   if (state.lastDecisionDate === today) return makeDecision(state, today, "hold", state.currentStage, "a decision was already recorded today");
 
-  const stageAgeDays = Math.floor((Date.parse(`${today}T00:00:00Z`) - Date.parse(state.stageStartedAt)) / DAY_MS);
+  const stageAgeDays = Math.max(0, Math.floor((Date.parse(`${today}T00:00:00Z`) - Date.parse(state.stageStartedAt)) / DAY_MS));
   if (stageAgeDays < policy.minimumDaysAtStage) {
     return makeDecision(state, today, "hold", state.currentStage, `stage dwell time is ${stageAgeDays}/${policy.minimumDaysAtStage} days`);
   }
