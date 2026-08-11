@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/trial-automation",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/internal/100x/ramp",
+      "schedule": "0 15 * * *"
     }
   ]
 }

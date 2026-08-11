@@ -16,7 +16,7 @@ function authorized(header: string | null, secret: string | undefined): boolean 
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
-export async function POST(req: NextRequest): Promise<NextResponse> {
+async function executeRamp(req: NextRequest): Promise<NextResponse> {
   const config = load100FConfig(process.env);
   if (!config.enabled) return NextResponse.json({ ok: false }, { status: 404 });
   const bearer = req.headers.get("authorization");
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const anonKey = process.env.VELTEX_100F_SUPABASE_ANON_KEY;
   const jwt = process.env.VELTEX_100F_RAMP_JWT;
   const instantlyKey =
+    process.env.VELTEX_100F_INSTANTLY_API_KEY_V3 ??
     process.env.VELTEX_100F_INSTANTLY_API_KEY_V2 ??
     process.env.VELTEX_100F_INSTANTLY_API_KEY;
   if (!config.campaignId || !url || !anonKey || !jwt || !instantlyKey) return NextResponse.json({ ok: false }, { status: 503 });
@@ -48,4 +49,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 }
 
-export async function GET(): Promise<NextResponse> { return NextResponse.json({ ok: false }, { status: 405 }); }
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  return executeRamp(req);
+}
+
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  return executeRamp(req);
+}
