@@ -34,7 +34,10 @@ export class InstantlyMetricsProvider implements RampMetricsProvider {
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
       const response = await this.fetchImpl(`https://api.instantly.ai/api/v2${path}`, { headers: { Authorization: `Bearer ${this.apiKey}` }, signal: controller.signal });
-      if (!response.ok) throw new Error(`Instantly metrics read failed (${response.status})`);
+      if (!response.ok) {
+        const endpoint = path.split("?", 1)[0];
+        throw new Error(`Instantly metrics read failed (${response.status}) at ${endpoint}`);
+      }
       return response.json();
     } finally {
       clearTimeout(timer);
