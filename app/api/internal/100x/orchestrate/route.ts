@@ -5,6 +5,7 @@ import { load100GConfig } from "@/100X/100G/src/config";
 import { run100G } from "@/100X/100G/src/orchestrator";
 import { SupabaseOrchestrationRepository } from "@/100X/100G/src/supabase-repository";
 import { createProductionStages } from "@/100X/100G/src/production-stages";
+import { readProductionStageReadiness } from "@/100X/100G/src/readiness";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +25,10 @@ async function execute(req: NextRequest): Promise<NextResponse> {
   const cronSecret = process.env.VELTEX_100G_CRON_SECRET ?? process.env.CRON_SECRET;
   if (!authorized(custom ? `Bearer ${custom}` : bearer, cronSecret)) {
     return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  if (req.nextUrl.searchParams.get("readiness") === "1") {
+    const readiness = readProductionStageReadiness(process.env);
+    return NextResponse.json(readiness, { status: readiness.ok ? 200 : 503 });
   }
   const url = process.env.VELTEX_100G_SUPABASE_URL;
   const anonKey = process.env.VELTEX_100G_SUPABASE_ANON_KEY;
