@@ -26,7 +26,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const url = process.env.VELTEX_100F_SUPABASE_URL;
   const anonKey = process.env.VELTEX_100F_SUPABASE_ANON_KEY;
   const jwt = process.env.VELTEX_100F_RAMP_JWT;
-  const instantlyKey = process.env.VELTEX_100F_INSTANTLY_API_KEY;
+  const instantlyKey =
+    process.env.VELTEX_100F_INSTANTLY_API_KEY_V2 ??
+    process.env.VELTEX_100F_INSTANTLY_API_KEY;
   if (!config.campaignId || !url || !anonKey || !jwt || !instantlyKey) return NextResponse.json({ ok: false }, { status: 503 });
   try {
     const client = createClient(url, anonKey, { global: { headers: { Authorization: `Bearer ${jwt}` } }, auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
