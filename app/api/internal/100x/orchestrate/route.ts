@@ -6,6 +6,7 @@ import { run100G } from "@/100X/100G/src/orchestrator";
 import { SupabaseOrchestrationRepository } from "@/100X/100G/src/supabase-repository";
 import { createProductionStages } from "@/100X/100G/src/production-stages";
 import { readProductionStageReadiness } from "@/100X/100G/src/readiness";
+import type { StageId } from "@/100X/100G/src/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +16,10 @@ function authorized(header: string | null, secret: string | undefined): boolean 
   const actual = Buffer.from(header.slice(7));
   const expected = Buffer.from(secret);
   return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+
+function rehearsalStage(value: string | null): StageId | null {
+  return value === "100A" || value === "100B" || value === "100C" ? value : null;
 }
 
 async function execute(req: NextRequest): Promise<NextResponse> {
@@ -41,6 +46,15 @@ async function execute(req: NextRequest): Promise<NextResponse> {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
     const repository = new SupabaseOrchestrationRepository(client);
+    const requestedRehearsal = rehearsalStage(req.nextUrl.searchParams.get("rehearse"));
+    if (requestedRehearsal) {
+      if (process.env.VELTEX_100G_ALLOW_REHEARSAL !== "true") return NextResponse.json({ ok: false }, { status: 403 });
+      const result = await createProductionStages(process.env, client)[requestedRehearsal].run({
+        runDate: new Date().toISOString().slice(0, 10),
+        requestedLeads: 1,
+      });
+      return NextResponse.json({ ok: result.status !== "failed", mode: "rehearsal", providerCallsMade: true, result });
+    }
     const run = await run100G(config, { repository, stages: createProductionStages(process.env, client) });
     return NextResponse.json({ ok: run.status === "completed", mode: config.executeStages ? "execute" : "dry_run", run });
   } catch (error) {
