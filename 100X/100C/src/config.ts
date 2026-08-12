@@ -1,4 +1,5 @@
 import type { OutboundProvider } from "./types";
+import { assertOutboundComplianceReady, loadOutboundCompliance, type OutboundComplianceConfig } from "./compliance";
 
 // Centralized, conservative 100C pilot limits — the single source of truth. Retries count as
 // physical provider requests. Nothing here is active by default.
@@ -18,6 +19,7 @@ export interface SyncConfig {
   lockTtlMs: number;                  // exactly 15 min
   provider: OutboundProvider;
   limits: SyncLimits;
+  compliance?: OutboundComplianceConfig;
 }
 
 export const APPROVED_PILOT_SYNC_LIMITS = Object.freeze({
@@ -47,6 +49,7 @@ export function load100CConfig(env: Record<string, string | undefined>, provider
     allowActiveCampaign: env.VELTEX_100C_ALLOW_ACTIVE_CAMPAIGN === "true",
     lockTtlMs,
     provider,
+    compliance: loadOutboundCompliance(env),
     limits: {
       maxContactsConsidered: positiveInt(env.VELTEX_100C_MAX_CONTACTS, APPROVED_PILOT_SYNC_LIMITS.maxContactsConsidered, "contacts-considered cap"),
       maxLeadsSubmitted: positiveInt(env.VELTEX_100C_MAX_LEADS, APPROVED_PILOT_SYNC_LIMITS.maxLeadsSubmitted, "leads-submitted cap"),
@@ -60,6 +63,15 @@ export function load100CConfig(env: Record<string, string | undefined>, provider
 
 export function assertSafeToRun(config: SyncConfig, trigger: string): void {
   if (!config.enabled) throw new Error("100C is inactive; set VELTEX_100C_ENABLED=true for a manual run");
-  if (trigger === "100g" && config.orchestrationEnabled) return;
-  if (trigger !== "manual") throw new Error("100C permits manual execution only unless 100G orchestration is explicitly enabled");
+  if (trigger !== "manual" && !(trigger === "100g" && config.orchestrationEnabled)) {
+    throw new Error("100C permits manual execution only unless 100G orchestration is explicitly enabled");
+  }
+  // Fixture/offline runs may exercise workflow logic without sender credentials. Any real
+  // Instantly run must prove the complete compliance configuration before the first write.
+  if (config.provider === "instantly") {
+    if (!config.compliance) throw new Error("outbound compliance configuration is required");
+    assertOutboundComplianceReady(config.compliance);
+    if (process.env.VELTEX_100C_GLOBAL_SEND_PAUSE === "true") throw new Error("global outbound sending pause is active");
+    if (process.env.VELTEX_100C_NEW_AUDIENCE_PAUSE === "true") throw new Error("new-audience sending pause is active");
+  }
 }
