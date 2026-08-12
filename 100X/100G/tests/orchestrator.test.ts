@@ -7,7 +7,13 @@ function setup(overrides: Partial<{ stage: number; queued: number; fail: StageId
   const repository: OrchestrationRepository = {
     getSupplySnapshot: async () => ({ currentDailySendStage: overrides.stage ?? 10, queuedEligibleLeads: overrides.queued ?? 5 }),
     findRun: async (date, mode) => saved.get(`${date}:${mode}`) ?? null,
-    recordRun: async (run) => { const key = `${run.runDate}:${run.mode}`; if (saved.has(key)) return false; saved.set(key, run); return true; },
+    recordRun: async (run) => {
+      const key = `${run.runDate}:${run.mode}`;
+      const previous = saved.get(key);
+      if (previous?.status === "completed") return false;
+      saved.set(key, run);
+      return true;
+    },
   };
   const runner = (stage: StageId): StageRunner => ({ run: async () => {
     calls.push(stage);
@@ -40,6 +46,15 @@ describe("100G acquisition orchestrator", () => {
     const second = await run100G(live, { ...deps, now: () => new Date("2026-08-12T18:00:00Z") });
     expect(second).toEqual(first);
     expect(deps.calls).toHaveLength(3);
+  });
+
+  it("retries a failed run after a lock or transient stage failure", async () => {
+    const deps = setup({ fail: "100A" });
+    const now = () => new Date("2026-08-12T12:00:00Z");
+    const failed = await run100G(live, { ...deps, now });
+    expect(failed.status).toBe("failed");
+    const recovered = await run100G(live, { ...deps, stages: setup().stages, now });
+    expect(recovered.status).toBe("completed");
   });
 
   it("does not call stages in dry-run mode or when inventory is sufficient", async () => {

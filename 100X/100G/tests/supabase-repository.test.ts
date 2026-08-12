@@ -7,7 +7,11 @@ describe("100G Supabase repository", () => {
   });
 
   it("treats a unique-date collision as idempotent", async () => {
-    const client = { from: () => ({ insert: jest.fn().mockResolvedValue({ error: { code: "23505" } }) }) };
+    const client = { from: () => {
+      const query: any = { eq: jest.fn(() => query), select: jest.fn().mockResolvedValue({ data: [], error: null }), insert: jest.fn().mockResolvedValue({ error: { code: "23505" } }) };
+      query.update = jest.fn(() => query);
+      return query;
+    } };
     const repo = new SupabaseOrchestrationRepository(client as any);
     await expect(repo.recordRun({ runDate: "2026-08-12", mode: "execute", requestedLeads: 3, status: "completed", results: [] })).resolves.toBe(false);
   });

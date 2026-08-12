@@ -7,7 +7,10 @@ export async function run100G(config: OrchestrationConfig, deps: OrchestrationDe
   const runDate = (deps.now?.() ?? new Date()).toISOString().slice(0, 10);
   const mode = config.executeStages ? "execute" : "dry_run";
   const existing = await deps.repository.findRun(runDate, mode);
-  if (existing) return existing;
+  // A completed run is terminal for its date and mode. A failed run is deliberately retriable:
+  // provider/stage locks can outlive an interrupted serverless request, and retrying after the
+  // lock expires is safe because each downstream workflow retains its own idempotency guards.
+  if (existing?.status === "completed") return existing;
 
   const supply = await deps.repository.getSupplySnapshot();
   const desiredQueue = Math.min(config.maximumRequestedLeads, supply.currentDailySendStage * config.queueDays);

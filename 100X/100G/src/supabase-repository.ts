@@ -26,6 +26,13 @@ export class SupabaseOrchestrationRepository implements OrchestrationRepository 
   }
 
   async recordRun(run: OrchestrationRun): Promise<boolean> {
+    // Replace only a prior failed attempt. A completed row is never overwritten here; the
+    // orchestrator returns it before execution, and this conditional preserves that invariant.
+    const replaced = await this.client.from("acquisition_orchestration_runs")
+      .update({ requested_leads: run.requestedLeads, status: run.status, results: run.results })
+      .eq("run_date", run.runDate).eq("mode", run.mode).eq("status", "failed").select("run_date");
+    assertNoError(replaced.error, "replace failed 100G run");
+    if ((replaced.data ?? []).length > 0) return true;
     const { error } = await this.client.from("acquisition_orchestration_runs").insert({ run_date: run.runDate, mode: run.mode, requested_leads: run.requestedLeads, status: run.status, results: run.results });
     if (!error) return true;
     if (error.code === "23505") return false;
