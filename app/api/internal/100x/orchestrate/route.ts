@@ -52,6 +52,7 @@ async function execute(req: NextRequest): Promise<NextResponse> {
       const result = await createProductionStages(process.env, client)[requestedRehearsal].run({
         runDate: new Date().toISOString().slice(0, 10),
         requestedLeads: 1,
+        currentDailySendStage: 1,
       });
       return NextResponse.json({ ok: result.status !== "failed", mode: "rehearsal", providerCallsMade: true, result });
     }

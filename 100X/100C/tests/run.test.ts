@@ -2,8 +2,8 @@ import { run100C } from "../src/run";
 import { InMemorySyncRepository } from "../src/in-memory-repository";
 import { FixtureOutboundProvider } from "../src/fixture-provider";
 import { MemoryDiagnosticSink } from "../src/diagnostics";
-import { APPROVED_PILOT_SYNC_LIMITS } from "../src/config";
-import type { ApprovedCampaign, CampaignState, SyncCandidate, SyncConfig } from "../src/types";
+import { APPROVED_PILOT_SYNC_LIMITS, type SyncConfig } from "../src/config";
+import type { ApprovedCampaign, CampaignState, SyncCandidate } from "../src/types";
 
 const config = (over: Partial<SyncConfig["limits"]> = {}): SyncConfig => ({
   enabled: true, manualOnly: true, lockTtlMs: APPROVED_PILOT_SYNC_LIMITS.lockTtlMs, provider: "fixture",

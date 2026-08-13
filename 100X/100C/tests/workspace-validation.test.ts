@@ -5,8 +5,8 @@ import { run100C } from "../src/run";
 import { InMemorySyncRepository } from "../src/in-memory-repository";
 import { FixtureOutboundProvider } from "../src/fixture-provider";
 import { MemoryDiagnosticSink } from "../src/diagnostics";
-import { APPROVED_PILOT_SYNC_LIMITS } from "../src/config";
-import type { ApprovedCampaign, SyncCandidate, SyncConfig } from "../src/types";
+import { APPROVED_PILOT_SYNC_LIMITS, type SyncConfig } from "../src/config";
+import type { ApprovedCampaign, SyncCandidate } from "../src/types";
 
 const WS = "11111111-1111-4111-8111-111111111111";
 const withWs = (over: Partial<ApprovedCampaign> = {}): ApprovedCampaign => ({ configId: "cfg1", instantlyCampaignId: "c-id", label: "L", segment: "s", environment: "100c-pilot", approved: true, approvalReference: "R", expectedWorkspaceId: WS, allowedStates: ["draft", "paused"], dailySyncCap: 1, totalPilotCap: 1, active: true, ...over });
@@ -26,7 +26,7 @@ describe("C1 adapter parses Instantly `organization` as observed workspace", () 
     const fetchImpl = jest.fn(async () => new Response(JSON.stringify({ id: "c-id", status: 0, organization: WS }), { status: 200, headers: { "Content-Type": "application/json" } }));
     const out = await new InstantlyOutboundProvider("k", fetchImpl as any, { sleep: async () => {} }).getCampaignState("c-id", 4);
     expect(out.observedWorkspaceId).toBe(WS);
-    expect(fetchImpl.mock.calls[0][0]).toBe(INSTANTLY_ENDPOINTS.campaignById("c-id"));
+    expect((fetchImpl as jest.Mock).mock.calls[0][0]).toBe(INSTANTLY_ENDPOINTS.campaignById("c-id"));
   });
   it("yields null observed workspace when organization is absent", async () => {
     const fetchImpl = jest.fn(async () => new Response(JSON.stringify({ id: "c-id", status: 0 }), { status: 200, headers: { "Content-Type": "application/json" } }));

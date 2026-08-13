@@ -107,7 +107,10 @@ describe("Instantly V2 adapter — secrets, scopes", () => {
   it("keeps the API key out of thrown errors and never logs", async () => {
     const spies = ["log", "error", "info", "warn"].map((m) => jest.spyOn(console, m as any).mockImplementation(() => {}));
     const r = router({ campaign: () => res({}, 403) });
-    const err = await provider(r.fetchImpl).getCampaignState(CID, 4).catch((e) => e as InstantlyError);
+    let err: InstantlyError | undefined;
+    try { await provider(r.fetchImpl).getCampaignState(CID, 4); } catch (error) { err = error as InstantlyError; }
+    expect(err).toBeDefined();
+    if (!err) throw new Error("expected provider error");
     expect(err.message).not.toContain(KEY);
     for (const s of spies) expect(s).not.toHaveBeenCalled();
     for (const s of spies) s.mockRestore();
