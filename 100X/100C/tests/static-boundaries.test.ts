@@ -13,13 +13,18 @@ describe("100C static safety boundaries", () => {
     expect(all).not.toMatch(/instantly\.ai\/api\/v1/);
     expect(all).not.toMatch(/\/api\/v1\//);
   });
-  it("exposes no campaign create/activate/update, email-send, webhook, route, cron, or schedule", () => {
-    expect(all).not.toMatch(/campaigns\/(create|activate|pause|resume)/i);
-    expect(all).not.toMatch(/POST[^\n]*\/campaigns\b/);           // no campaign creation
+  it("exposes no campaign create/pause, email-send, webhook, route, cron, or schedule", () => {
+    expect(all).not.toMatch(/campaigns\/(create|pause|resume)/i);
+    expect(all).not.toMatch(/createCampaign|campaignsCreate/);       // no campaign creation capability
     expect(all).not.toMatch(/\/emails?\/send|send_email|sendEmail/i);
     expect(all).not.toMatch(/createWebhook|webhook_url|\/webhooks?\b/i);
     expect(all).not.toMatch(/createServer\(|\.listen\(|from ["']express|from ["']next/i);
     expect(all).not.toMatch(/node-cron|setInterval\(|cron\.schedule/i);
+  });
+  it("binds continuity activation to the dedicated approved-campaign endpoint and explicit gate", () => {
+    expect(src).toContain("/activate");
+    expect(src).toContain('env.VELTEX_100C_ALLOW_COMPLETED_REACTIVATION === "true"');
+    expect(src).toContain('stateResult.state === "completed" && summary.submitted > 0');
   });
   it("imports no email-sending or CRM outbound capability", () => {
     expect(src).not.toMatch(/from ["'].*(?:nodemailer|resend|mailgun|sendgrid|@sendgrid|smtp|hubspot)/i);

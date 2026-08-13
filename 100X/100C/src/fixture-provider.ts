@@ -11,11 +11,12 @@ export interface FixtureSyncScript {
   observedWorkspaceId?: string | null;
   createByEmail?: Record<string, LeadCreateResult["disposition"] | "ambiguous">;
   reconcileByEmail?: Record<string, boolean>;
+  activationFails?: boolean;
 }
 
 export class FixtureOutboundProvider implements OutboundSyncProvider {
   readonly name = "fixture" as const;
-  private readonly accounting: OutboundRequestAccounting = { campaignReads: 0, leadWrites: 0, reconcileReads: 0, retryAttempts: 0, providerErrors: 0, ambiguousOutcomes: 0 };
+  private readonly accounting: OutboundRequestAccounting = { campaignReads: 0, campaignWrites: 0, leadWrites: 0, reconcileReads: 0, retryAttempts: 0, providerErrors: 0, ambiguousOutcomes: 0 };
   constructor(private readonly script: FixtureSyncScript = {}) {}
 
   getAccounting(): OutboundRequestAccounting { return { ...this.accounting }; }
@@ -37,5 +38,11 @@ export class FixtureOutboundProvider implements OutboundSyncProvider {
     this.accounting.reconcileReads += 1;
     const exists = this.script.reconcileByEmail?.[workEmail] ?? false;
     return { existsInCampaign: exists, providerLeadId: exists ? `fixture-lead-${workEmail}` : null, requestsUsed: 1 };
+  }
+
+  async activateCampaign(_id: string, _budget: number) {
+    this.accounting.campaignWrites += 1;
+    if (this.script.activationFails) throw new InstantlyError("transient", "fixture activation failure");
+    return { activated: true, requestsUsed: 1 };
   }
 }

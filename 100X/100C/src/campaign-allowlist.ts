@@ -3,7 +3,8 @@ import type { ApprovedCampaign, CampaignState } from "./types";
 
 // Campaign safety model. 100C never accepts an arbitrary campaign id: a campaign must be present in
 // the approved allowlist, approved+active, bound to the approved environment, and (before any live
-// lead) observed in a pilot-safe state (draft/paused). Every other state fails closed.
+// lead) observed in a specifically authorized state. Completed is accepted only under the separate
+// continuity gate; unhealthy, suspended, bounce-protected, subsequence, and unknown states fail closed.
 
 export function selectApprovedCampaign(configId: string, campaigns: ApprovedCampaign[], environmentId: string): ApprovedCampaign {
   const campaign = campaigns.find((c) => c.configId === configId);
@@ -18,15 +19,25 @@ export function selectApprovedCampaign(configId: string, campaigns: ApprovedCamp
 }
 
 // Verify the freshly-read provider campaign state is safe for the pilot. Called BEFORE any lead
-// creation. Rejects active/completed/unknown/unhealthy/etc.
-export function assertCampaignStateSafe(campaign: ApprovedCampaign, observed: CampaignState, allowActive = false): void {
+// creation. Active and completed each require their own explicit gate.
+export function assertCampaignStateSafe(
+  campaign: ApprovedCampaign,
+  observed: CampaignState,
+  allowActive = false,
+  allowCompletedReactivation = false,
+): void {
   const allowed = campaign.allowedStates.length ? campaign.allowedStates : [...PILOT_SAFE_CAMPAIGN_STATES];
-  const permitted = allowActive ? [...PILOT_SAFE_CAMPAIGN_STATES, "active" as const] : [...PILOT_SAFE_CAMPAIGN_STATES];
+  const permitted: CampaignState[] = [
+    ...PILOT_SAFE_CAMPAIGN_STATES,
+    ...(allowActive ? ["active" as const] : []),
+    ...(allowCompletedReactivation ? ["completed" as const] : []),
+  ];
   if (observed === "active" && !allowActive) throw new Error("campaign is active; active sync requires explicit authorization");
-  if (!allowed.every((s) => permitted.includes(s as typeof permitted[number]))) {
+  if (observed === "completed" && !allowCompletedReactivation) throw new Error("campaign is completed; continuity reactivation requires explicit authorization");
+  if (!allowed.every((s) => permitted.includes(s))) {
     throw new Error("campaign allowlist permits a non-pilot-safe state");
   }
-  if (!permitted.includes(observed as typeof permitted[number])) throw new Error(`campaign state '${observed}' is not authorized; failing closed`);
+  if (!permitted.includes(observed)) throw new Error(`campaign state '${observed}' is not authorized; failing closed`);
   if (!allowed.includes(observed)) throw new Error(`campaign state '${observed}' is not in the campaign allowlist`);
 }
 

@@ -6,8 +6,8 @@ an ephemeral PostgreSQL for SQL security). No live Instantly/Supabase call occur
 ## Suites
 - `tests/eligibility-recheck.test.ts` — only ready contacts pass; verification, suppression, customer,
   currency, missing/unverified email, staleness, and duplicate all fail closed.
-- `tests/campaign-allowlist.test.ts` — Draft/Paused accepted; Active/Completed/Unhealthy/Suspended/
-  Unknown rejected; unapproved/disabled/placeholder/wrong-environment/wrong-workspace rejected.
+- `tests/campaign-allowlist.test.ts` — Draft/Paused accepted; Active and Completed require independent
+  gates; unhealthy/suspended/unknown and unapproved/disabled/wrong-environment/workspace rejected.
 - `tests/instantly-provider.test.ts` — V2-only endpoints (no V1), Bearer auth, numeric-status mapping,
   explicit skip flags + `verify_leads_on_import:false` + no phone/metadata, reconciliation read, the
   full error matrix, create-timeout/5xx → ambiguous (no blind retry), retries count against budget,
@@ -20,8 +20,8 @@ an ephemeral PostgreSQL for SQL security). No live Instantly/Supabase call occur
   provider-preview read-only (controlled context never built); controlled-write disabled by default and
   built only after all gates; production rejected; shipped env/campaign are unapproved placeholders that
   fail closed.
-- `tests/static-boundaries.test.ts` — V2 only; no campaign create/activate/update, email-send, webhook,
-  route, cron, or schedule; explicit skip flags; terminal-only, worker-JWT-scoped, service-role free;
+- `tests/static-boundaries.test.ts` — V2 only; no campaign creation/pause or email-send capability;
+  continuity activation requires a new submission and its explicit gate; explicit skip flags;
   DB mutations only via fixed-search-path `SECURITY DEFINER` functions with the idempotency constraint.
 
 ## SQL security (ephemeral PostgreSQL)

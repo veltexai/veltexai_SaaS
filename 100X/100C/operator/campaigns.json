@@ -10,7 +10,7 @@
       "approved": true,
       "approvalReference": "FOUNDER-LIVE-SEND-APPROVED-2026-08-11",
       "expectedWorkspaceId": "698b2090-f4d5-484b-a0b1-44016fee7515",
-      "allowedStates": ["active"],
+      "allowedStates": ["active", "completed"],
       "dailySyncCap": 500,
       "totalPilotCap": 50000,
       "active": true

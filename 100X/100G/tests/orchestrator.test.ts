@@ -85,4 +85,16 @@ describe("100G acquisition orchestrator", () => {
     await run100G({ ...live, databaseBuildTarget: 25 }, { ...deps, stages, now: () => new Date("2026-08-13T12:00:00Z") });
     expect(calls).toEqual([["100A", 25], ["100B", 25], ["100C", 7]]);
   });
+
+  it("passes the audited daily send stage to every production stage", async () => {
+    const seen: Array<[StageId, number]> = [];
+    const deps = setup({ stage: 3, queued: 0 });
+    const runner = (stage: StageId): StageRunner => ({ run: async ({ currentDailySendStage }) => {
+      seen.push([stage, currentDailySendStage]);
+      return { stage, status: "completed", produced: 0, reason: "ok" };
+    } });
+    const stages = { "100A": runner("100A"), "100B": runner("100B"), "100C": runner("100C") };
+    await run100G(live, { ...deps, stages, now: () => new Date("2026-08-13T12:00:00Z") });
+    expect(seen).toEqual([["100A", 3], ["100B", 3], ["100C", 3]]);
+  });
 });

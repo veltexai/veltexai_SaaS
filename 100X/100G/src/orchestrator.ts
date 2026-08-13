@@ -25,7 +25,11 @@ export async function run100G(config: OrchestrationConfig, deps: OrchestrationDe
     for (const stage of ORDER) {
       try {
         const stageRequestedLeads = stage === "100C" ? requestedLeads : databaseBuildRequestedLeads;
-        const result = await deps.stages[stage].run({ runDate, requestedLeads: stageRequestedLeads });
+        const result = await deps.stages[stage].run({
+          runDate,
+          requestedLeads: stageRequestedLeads,
+          currentDailySendStage: supply.currentDailySendStage,
+        });
         results.push(result);
         if (result.status === "failed") break;
       } catch (error) {

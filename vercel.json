@@ -11,6 +11,10 @@
     {
       "path": "/api/internal/100x/orchestrate",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/internal/100x/reconcile",
+      "schedule": "30 14 * * *"
     }
   ]
 }

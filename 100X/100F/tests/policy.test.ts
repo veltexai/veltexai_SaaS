@@ -2,7 +2,7 @@ import { evaluateRamp } from "../src/policy";
 import type { DailyRampMetrics, RampPolicy, RampState } from "../src/types";
 
 const policy: RampPolicy = {
-  stages: [1, 10, 25, 50, 120, 250, 500],
+  stages: [1, 3, 5, 10, 25, 50, 120, 250, 500],
   minimumDaysAtStage: 3,
   minimumDeliveredAtStage: 10,
   maximumBounceRate: 0.02,
@@ -64,7 +64,7 @@ describe("100F ramp policy", () => {
   it("allows the one-per-day bootstrap stage to graduate after three clean deliveries", () => {
     const bootstrap = { ...state, currentStage: 1 as const };
     expect(evaluateRamp(bootstrap, [metric({ sent: 2 })], policy, "2026-08-11").reason).toContain("2/3");
-    expect(evaluateRamp(bootstrap, [metric({ sent: 3 })], policy, "2026-08-11")).toMatchObject({ action: "advance", targetStage: 10 });
+    expect(evaluateRamp(bootstrap, [metric({ sent: 3 })], policy, "2026-08-11")).toMatchObject({ action: "advance", targetStage: 3 });
   });
 
   it("produces deterministic daily idempotency keys", () => {

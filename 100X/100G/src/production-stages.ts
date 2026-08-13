@@ -82,17 +82,22 @@ export function createProductionStages(env: Env, orchestrationClient: SupabaseCl
       const summary = await run100B(config, { provider: new ApolloEnrichmentProvider(required(env, "VELTEX_100B_APOLLO_API_KEY")), suppression: new NullSuppressionResolver(), repository: new SupabaseContactRepository(db), diagnostics: new BDiagnostics(db), prospectIds: ids }, "100g");
       return result("100B", summary.readyForOutreach, `verified ${summary.readyForOutreach} outreach-ready contacts`);
     } },
-    "100C": { run: async ({ runDate, requestedLeads }) => {
+    "100C": { run: async ({ runDate, requestedLeads, currentDailySendStage }) => {
       if (env.VELTEX_100C_ALLOW_100G !== "true" || env.VELTEX_100C_ALLOW_ACTIVE_CAMPAIGN !== "true") return disabled("100C");
       const campaigns = (campaignsFile as { campaigns: ApprovedCampaign[] }).campaigns;
       const campaign = selectApprovedCampaign(required(env, "VELTEX_100C_CAMPAIGN_CONFIG_ID"), campaigns, required(env, "VELTEX_100C_ENVIRONMENT_ID"));
       const db = client(required(env, "VELTEX_100C_SUPABASE_URL"), required(env, "VELTEX_100C_SUPABASE_ANON_KEY"), required(env, "VELTEX_100C_WORKER_JWT"));
-      const capacity = Math.min(requestedLeads, await remainingCampaignCapacity(db, campaign, runDate));
+      // Replenish no faster than the controller's audited daily stage. This keeps queue writes
+      // synchronized with the send cap while allowing conservative 1 -> 3 -> 5 progression.
+      const capacity = Math.min(requestedLeads, currentDailySendStage, await remainingCampaignCapacity(db, campaign, runDate));
       if (capacity <= 0) return { stage: "100C", status: "skipped", produced: 0, reason: "approved campaign daily or total sync cap reached" };
       const config = load100CConfig(env, "instantly");
-      config.limits.maxLeadsSubmitted = Math.min(config.limits.maxLeadsSubmitted, capacity);
-      config.limits.maxInstantlyWriteRequests = Math.min(config.limits.maxInstantlyWriteRequests, capacity);
+      config.limits.maxLeadsSubmitted = capacity;
+      config.limits.maxInstantlyWriteRequests = capacity;
       config.limits.maxContactsConsidered = Math.max(config.limits.maxContactsConsidered, capacity);
+      // One campaign read, up to one write plus one ambiguity reconciliation per candidate,
+      // one conditional activation, and a small fixed margin.
+      config.limits.maxProviderRequestsPerRun = Math.max(config.limits.maxProviderRequestsPerRun, (capacity * 2) + 4);
       const summary = await run100C(config, { provider: new InstantlyOutboundProvider(required(env, "VELTEX_100C_INSTANTLY_API_KEY")), repository: new SupabaseSyncRepository(db), diagnostics: new CDiagnostics(db), campaign }, "100g");
       return result("100C", summary.submitted, `submitted ${summary.submitted} eligible leads`);
     } },

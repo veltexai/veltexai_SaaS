@@ -1,6 +1,6 @@
 export const WORKFLOW_ID = "100F" as const;
 
-export const RAMP_STAGES = [1, 10, 25, 50, 120, 250, 500] as const;
+export const RAMP_STAGES = [1, 3, 5, 10, 25, 50, 120, 250, 500] as const;
 export type RampStage = (typeof RAMP_STAGES)[number];
 export type RampAction = "hold" | "advance" | "pause";
 

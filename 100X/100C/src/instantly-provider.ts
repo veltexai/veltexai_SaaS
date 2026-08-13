@@ -34,9 +34,9 @@ export interface InstantlyClientOptions {
 
 const clean = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
 const isObject = (v: unknown): v is Record<string, unknown> => Boolean(v) && typeof v === "object";
-const zero = (): OutboundRequestAccounting => ({ campaignReads: 0, leadWrites: 0, reconcileReads: 0, retryAttempts: 0, providerErrors: 0, ambiguousOutcomes: 0 });
+const zero = (): OutboundRequestAccounting => ({ campaignReads: 0, campaignWrites: 0, leadWrites: 0, reconcileReads: 0, retryAttempts: 0, providerErrors: 0, ambiguousOutcomes: 0 });
 
-type Kind = "campaign_read" | "lead_write" | "reconcile_read";
+type Kind = "campaign_read" | "campaign_write" | "lead_write" | "reconcile_read";
 
 export class InstantlyOutboundProvider implements OutboundSyncProvider {
   readonly name = "instantly" as const;
@@ -102,6 +102,12 @@ export class InstantlyOutboundProvider implements OutboundSyncProvider {
     return { existsInCampaign: Boolean(match), providerLeadId: match ? clean(match.id) : null, requestsUsed: ctx.used };
   }
 
+  async activateCampaign(instantlyCampaignId: string, budget: number) {
+    const ctx = { remaining: budget, used: 0 };
+    await this.request("POST", INSTANTLY_ENDPOINTS.activateCampaign(instantlyCampaignId), undefined, "campaign_write", ctx, false, true);
+    return { activated: true, requestsUsed: ctx.used };
+  }
+
   private headers(): Record<string, string> {
     // The key travels only in this Authorization header; it is never logged or placed in an error.
     return { "Content-Type": "application/json", Authorization: `Bearer ${this.apiKey}` };
@@ -109,6 +115,7 @@ export class InstantlyOutboundProvider implements OutboundSyncProvider {
 
   private countKind(kind: Kind): void {
     if (kind === "campaign_read") this.accounting.campaignReads += 1;
+    else if (kind === "campaign_write") this.accounting.campaignWrites += 1;
     else if (kind === "lead_write") this.accounting.leadWrites += 1;
     else this.accounting.reconcileReads += 1;
   }
@@ -129,7 +136,7 @@ export class InstantlyOutboundProvider implements OutboundSyncProvider {
   // acceptance becomes ambiguous on timeout / 5xx (no blind retry).
   private async request(
     method: "GET" | "POST", url: string, body: Record<string, unknown> | undefined, kind: Kind,
-    ctx: { remaining: number; used: number }, writeUncertain: boolean,
+    ctx: { remaining: number; used: number }, writeUncertain: boolean, allowEmptyResponse = false,
   ): Promise<unknown> {
     let lastError: InstantlyError | undefined;
     for (let attempt = 1; attempt <= this.maxAttempts; attempt += 1) {
@@ -147,6 +154,7 @@ export class InstantlyOutboundProvider implements OutboundSyncProvider {
           if (TERMINAL_KINDS.has(error.kind) || attempt === this.maxAttempts) { this.accounting.providerErrors += 1; throw error; }
           lastError = error;
         } else {
+          if (allowEmptyResponse && response.status === 204) return {};
           let payload: unknown;
           try { payload = await response.json(); } catch { throw new InstantlyError("malformed", "Instantly returned invalid JSON", response.status, attempt); }
           return payload;

@@ -49,11 +49,11 @@ export async function run100C(config: SyncConfig, deps: Run100CDependencies, tri
 
   const summary: SyncSummary = {
     runId, campaignConfigId: campaign.configId, campaignState: "unknown",
-    considered: 0, eligibleAfterRecheck: 0, reserved: 0, submitted: 0, skippedDuplicate: 0,
+    considered: 0, eligibleAfterRecheck: 0, reserved: 0, submitted: 0, campaignReactivated: false, skippedDuplicate: 0,
     suppressed: 0, ineligible: 0, stale: 0, reconciliationRequired: 0, failedRetryable: 0, failedTerminal: 0,
     providerRequests: 0, providerErrors: 0, ambiguousOutcomes: 0, capped: false, diagnosticFailures: 0,
   };
-  const totalRequests = () => { const a = deps.provider.getAccounting(); return a.campaignReads + a.leadWrites + a.reconcileReads; };
+  const totalRequests = () => { const a = deps.provider.getAccounting(); return a.campaignReads + a.campaignWrites + a.leadWrites + a.reconcileReads; };
   const remaining = () => config.limits.maxProviderRequestsPerRun - totalRequests();
   const cap = async (reason: SyncSummary["capReason"]) => { summary.capped = true; summary.capReason = reason; await safeEmit("warn", "run.capped", { reason }); };
   const durationExceeded = () => clock.now().getTime() - startedAt.getTime() >= config.limits.maxRunDurationMs;
@@ -65,7 +65,12 @@ export async function run100C(config: SyncConfig, deps: Run100CDependencies, tri
     if (remaining() <= 0) { await cap("provider_requests"); return finalize(); }
     const stateResult = await deps.provider.getCampaignState(campaign.instantlyCampaignId!, remaining());
     summary.campaignState = stateResult.state;
-    assertCampaignStateSafe(campaign, stateResult.state, config.allowActiveCampaign === true); // throws -> fail closed
+    assertCampaignStateSafe(
+      campaign,
+      stateResult.state,
+      config.allowActiveCampaign === true,
+      config.allowCompletedCampaignReactivation === true,
+    ); // throws -> fail closed
     assertWorkspaceAllowed(campaign, stateResult.observedWorkspaceId); // fail closed on workspace mismatch/absence
     await safeEmit("info", "campaign.state_verified", { state: stateResult.state, workspaceVerified: Boolean(campaign.expectedWorkspaceId) });
 
@@ -164,6 +169,16 @@ export async function run100C(config: SyncConfig, deps: Run100CDependencies, tri
         if (SYSTEMIC.has(kind)) { await cap("provider_error"); break; }
       }
     }
+    // A completed campaign is reactivated only after at least one newly verified lead was safely
+    // submitted in this run. This prevents activating an empty campaign and keeps the action bound
+    // to the exact approved campaign id, explicit continuity gate, and physical request budget.
+    if (stateResult.state === "completed" && summary.submitted > 0) {
+      if (!config.allowCompletedCampaignReactivation) throw new Error("completed campaign reactivation is not authorized");
+      if (remaining() <= 0) throw new InstantlyError("request_cap", "campaign reactivation request budget exhausted");
+      const activation = await deps.provider.activateCampaign(campaign.instantlyCampaignId!, remaining());
+      summary.campaignReactivated = activation.activated;
+      await safeEmit("info", "campaign.reactivated_after_submission", { campaignConfigId: campaign.configId });
+    }
     return finalize();
   } finally {
     await deps.repository.releaseLock(WORKFLOW_ID, runId);
@@ -171,7 +186,7 @@ export async function run100C(config: SyncConfig, deps: Run100CDependencies, tri
 
   function finalize(): SyncSummary {
     const acc = deps.provider.getAccounting();
-    summary.providerRequests = acc.campaignReads + acc.leadWrites + acc.reconcileReads;
+    summary.providerRequests = acc.campaignReads + acc.campaignWrites + acc.leadWrites + acc.reconcileReads;
     summary.providerErrors = acc.providerErrors;
     summary.ambiguousOutcomes = acc.ambiguousOutcomes;
     summary.diagnosticFailures = diagnosticFailures;

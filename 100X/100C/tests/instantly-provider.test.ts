@@ -7,11 +7,12 @@ const CID = "22222222-2222-4222-8222-222222222222";
 const res = (body: unknown, status = 200, headers: Record<string, string> = {}) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...headers } });
 const lead: OutboundLead = { campaignConfigId: "cfg1", workEmail: "dir@biz.example.com", firstName: "Dana", lastName: "Director", companyName: "Biz", website: "https://biz.example.com", jobTitle: "Director of Operations", personalization: null, attribution: { canonicalContactId: "c1", campaignConfigId: "cfg1" } };
 
-function router(handlers: { campaign?: (url: string) => Response | Promise<Response>; create?: (body: any) => Response | Promise<Response>; list?: (body: any) => Response | Promise<Response> }) {
+function router(handlers: { campaign?: (url: string) => Response | Promise<Response>; activate?: () => Response | Promise<Response>; create?: (body: any) => Response | Promise<Response>; list?: (body: any) => Response | Promise<Response> }) {
   const createBodies: any[] = []; const urls: string[] = [];
   const fetchImpl = jest.fn(async (url: any, init: any) => {
     urls.push(url);
     const body = init.body ? JSON.parse(init.body) : undefined;
+    if (url === INSTANTLY_ENDPOINTS.activateCampaign(CID)) return handlers.activate ? handlers.activate() : new Response(null, { status: 204 });
     if (typeof url === "string" && url.includes("/campaigns/")) return handlers.campaign ? handlers.campaign(url) : res({ id: CID, status: 0 });
     if (url === INSTANTLY_ENDPOINTS.createLead) { createBodies.push(body); return handlers.create ? handlers.create(body) : res({ id: "lead-1" }); }
     if (url === INSTANTLY_ENDPOINTS.listLeads) return handlers.list ? handlers.list(body) : res({ items: [] });
@@ -58,6 +59,12 @@ describe("Instantly V2 adapter — endpoints, payload, mapping", () => {
     const out = await provider(r.fetchImpl).reconcileLead(CID, "dir@biz.example.com", 4);
     expect(out).toMatchObject({ existsInCampaign: true, providerLeadId: "lead-9" });
     expect(r.urls.includes(INSTANTLY_ENDPOINTS.listLeads)).toBe(true);
+  });
+  it("activates only the supplied campaign through the dedicated V2 endpoint", async () => {
+    const r = router({ activate: () => new Response(null, { status: 204 }) });
+    expect(await provider(r.fetchImpl).activateCampaign(CID, 1)).toEqual({ activated: true, requestsUsed: 1 });
+    expect(r.urls).toEqual([`${INSTANTLY_BASE_URL}/campaigns/${CID}/activate`]);
+    expect(r.fetchImpl.mock.calls[0][1].method).toBe("POST");
   });
 });
 
@@ -109,6 +116,7 @@ describe("Instantly V2 adapter — secrets, scopes", () => {
     expect(() => new InstantlyOutboundProvider("", async () => res({}))).toThrow("INSTANTLY_API_KEY");
     const scopes = InstantlyOutboundProvider.requiredScopes();
     expect(scopes.campaignsRead).toBe("campaigns:read");
+    expect(scopes.campaignsUpdate).toBe("campaigns:update");
     expect(scopes.leadsCreate).toBe("leads:create");
     expect(scopes.leadsRead).toBe("leads:read");
   });
@@ -116,6 +124,7 @@ describe("Instantly V2 adapter — secrets, scopes", () => {
     const r = router({ create: () => res({ id: "L1" }) });
     const p = provider(r.fetchImpl);
     await p.getCampaignState(CID, 4); await p.createLead(CID, lead, 4); await p.reconcileLead(CID, lead.workEmail, 4);
-    expect(p.getAccounting()).toMatchObject({ campaignReads: 1, leadWrites: 1, reconcileReads: 1 });
+    await p.activateCampaign(CID, 1);
+    expect(p.getAccounting()).toMatchObject({ campaignReads: 1, campaignWrites: 1, leadWrites: 1, reconcileReads: 1 });
   });
 });

@@ -4,7 +4,7 @@
 
 ## Safety model
 
-- Stages: 1, 10, 25, 50, 120, 250, and 500 emails/day.
+- Stages: 1, 3, 5, 10, 25, 50, 120, 250, and 500 emails/day. The 3 and 5 stages provide conservative live evidence before double-digit volume.
 - An increase requires dwell time, observed volume, healthy inbox capacity, acceptable bounce rate, zero complaints, and healthy webhook processing.
 - Safety failures pause; missing evidence holds. A run can advance only one stage.
 - Every decision has a deterministic idempotency key and an audit record.

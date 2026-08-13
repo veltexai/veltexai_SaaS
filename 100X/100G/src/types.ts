@@ -23,7 +23,7 @@ export interface OrchestrationRun {
 }
 
 export interface StageRunner {
-  run(input: { runDate: string; requestedLeads: number }): Promise<StageResult>;
+  run(input: { runDate: string; requestedLeads: number; currentDailySendStage: number }): Promise<StageResult>;
 }
 
 export interface OrchestrationRepository {

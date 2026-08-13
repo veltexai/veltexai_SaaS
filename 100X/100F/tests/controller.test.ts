@@ -1,7 +1,7 @@
 import { runRampController } from "../src/controller";
 import type { DailyRampMetrics, RampDecision, RampPolicy, RampProvider, RampRepository, RampState } from "../src/types";
 
-const policy: RampPolicy = { stages: [1, 10, 25, 50, 120, 250, 500], minimumDaysAtStage: 1, minimumDeliveredAtStage: 1, maximumBounceRate: 0.02, maximumSpamComplaints: 0, minimumAccountHealth: 95, perAccountDailyLimit: 25, requireZeroWebhookFailures: true };
+const policy: RampPolicy = { stages: [1, 3, 5, 10, 25, 50, 120, 250, 500], minimumDaysAtStage: 1, minimumDeliveredAtStage: 1, maximumBounceRate: 0.02, maximumSpamComplaints: 0, minimumAccountHealth: 95, perAccountDailyLimit: 25, requireZeroWebhookFailures: true };
 const state: RampState = { campaignId: "pilot", currentStage: 1, stageStartedAt: "2026-08-01T00:00:00Z", lastDecisionDate: null, pausedByController: false };
 const metrics: DailyRampMetrics[] = [{ date: "2026-08-11", campaignId: "pilot", campaignStatus: 1, configuredDailyLimit: 1, sent: 1, bounced: 0, replies: 0, unsubscribes: 0, spamComplaints: 0, webhookFailures: 0, healthySendingAccounts: 4, minimumAccountHealth: 100 }];
 
@@ -29,7 +29,7 @@ class MemoryProvider implements RampProvider {
 describe("100F controller", () => {
   it("records dry-run decisions without mutating the provider", async () => {
     const repository = new MemoryRepository(); const provider = new MemoryProvider();
-    expect(await runRampController("pilot", { enabled: true, executeMutations: false, policy, repository, provider, now: () => new Date("2026-08-11T12:00:00Z") })).toMatchObject({ action: "advance", targetStage: 10 });
+    expect(await runRampController("pilot", { enabled: true, executeMutations: false, policy, repository, provider, now: () => new Date("2026-08-11T12:00:00Z") })).toMatchObject({ action: "advance", targetStage: 3 });
     expect(provider.limits).toEqual([]);
     expect(repository.decisions).toHaveLength(1);
     expect(repository.current.currentStage).toBe(1);
@@ -38,7 +38,7 @@ describe("100F controller", () => {
   it("updates the provider only when mutation execution is enabled", async () => {
     const repository = new MemoryRepository(); const provider = new MemoryProvider();
     await runRampController("pilot", { enabled: true, executeMutations: true, policy, repository, provider, now: () => new Date("2026-08-11T12:00:00Z") });
-    expect(provider.limits).toEqual([10]);
+    expect(provider.limits).toEqual([3]);
   });
 
   it("makes a replay a no-op", async () => {

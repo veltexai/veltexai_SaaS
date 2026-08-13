@@ -5,6 +5,8 @@
 
 ## Endpoints (verified 2026-08)
 - Campaign state read — `GET https://api.instantly.ai/api/v2/campaigns/{id}` (scope `campaigns:read`).
+- Completed-campaign continuity — `POST https://api.instantly.ai/api/v2/campaigns/{id}/activate`
+  (scope `campaigns:update`; exact approved id only, after a verified lead submission).
 - Lead creation — `POST https://api.instantly.ai/api/v2/leads` (scope `leads:create`).
 - Read-only reconciliation — `POST https://api.instantly.ai/api/v2/leads/list` (scope `leads:read`).
 
@@ -14,9 +16,9 @@ log, error, or plan.
 ## Campaign status → normalized state
 Instantly returns a numeric `status`: `0 Draft`, `1 Active`, `2 Paused`, `3 Completed`,
 `4 Running Subsequences`, `-1 Accounts Unhealthy`, `-2 Bounce Protect`, `-99 Account Suspended`.
-100C maps these to named states; anything else is `unknown`. **Only Draft and Paused are pilot-safe;
-every other state (and unknown) fails closed.** A campaign-state read always occurs before any lead
-creation.
+100C maps these to named states; anything else is `unknown`. Active sync and Completed continuity
+require separate explicit gates; Completed is followed by activation only after a new verified lead is
+submitted. Unhealthy, bounce-protected, suspended, subsequence, and unknown states fail closed.
 
 ## Workspace identity (fail-closed)
 The Instantly V2 campaign object exposes `organization` (a UUID) as the workspace/organization
@@ -46,7 +48,7 @@ Reads (campaign state, reconcile) are idempotent and may retry transient/rate-li
 was sent is **ambiguous** (Instantly may have created the lead), so it raises `ambiguous` and the runner
 routes the pair to `reconciliation_required`, then resolves it read-only via `leads/list`. Every
 physical request — including retries — counts against the ≤4 total-provider-request budget and is
-recorded in `OutboundRequestAccounting` (campaignReads, leadWrites, reconcileReads, retryAttempts,
+recorded in `OutboundRequestAccounting` (campaignReads, campaignWrites, leadWrites, reconcileReads, retryAttempts,
 providerErrors, ambiguousOutcomes).
 
 ## Error categories
@@ -58,8 +60,8 @@ runner/allowlist. `auth`, `scope`, `payment`, `campaign_not_found`, `invalid_lea
 are systemic and stop the run.
 
 ## Required Instantly V2 scopes (least privilege)
-Require **only** `campaigns:read`, `leads:create`, and (if reconciliation runs) `leads:read`. Do **not**
-require campaign create/update/activate, email-sending, account modification, webhook creation, or
+Require **only** `campaigns:read`, `campaigns:update`, `leads:create`, and (if reconciliation runs)
+`leads:read`. Do **not** require campaign creation, email-sending, account modification, webhook creation, or
 workspace administration / master `all:all`. Verify exact scope labels in Instantly's V2 docs before
 issuing a key.
 

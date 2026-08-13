@@ -16,6 +16,7 @@ export interface SyncConfig {
   manualOnly: true;
   orchestrationEnabled?: boolean;
   allowActiveCampaign?: boolean;
+  allowCompletedCampaignReactivation?: boolean;
   lockTtlMs: number;                  // exactly 15 min
   provider: OutboundProvider;
   limits: SyncLimits;
@@ -47,6 +48,7 @@ export function load100CConfig(env: Record<string, string | undefined>, provider
     manualOnly: true,
     orchestrationEnabled: env.VELTEX_100C_ALLOW_100G === "true",
     allowActiveCampaign: env.VELTEX_100C_ALLOW_ACTIVE_CAMPAIGN === "true",
+    allowCompletedCampaignReactivation: env.VELTEX_100C_ALLOW_COMPLETED_REACTIVATION === "true",
     lockTtlMs,
     provider,
     compliance: loadOutboundCompliance(env),

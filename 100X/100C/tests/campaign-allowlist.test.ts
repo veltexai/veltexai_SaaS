@@ -39,6 +39,11 @@ describe("100C campaign allowlist", () => {
     expect(() => assertCampaignStateSafe(live, "active")).toThrow(/explicit authorization/);
     expect(() => assertCampaignStateSafe(live, "active", true)).not.toThrow();
   });
+  it("permits a completed campaign only with explicit continuity authorization", () => {
+    const completed = { ...approved, allowedStates: ["completed"] as CampaignState[] };
+    expect(() => assertCampaignStateSafe(completed, "completed", false, false)).toThrow(/reactivation requires explicit authorization/);
+    expect(() => assertCampaignStateSafe(completed, "completed", false, true)).not.toThrow();
+  });
   it("rejects a mismatched Instantly workspace", () => {
     expect(() => assertWorkspaceAllowed(approved, "ws-2")).toThrow(/workspace does not match/);
     expect(() => assertWorkspaceAllowed(approved, "ws-1")).not.toThrow();

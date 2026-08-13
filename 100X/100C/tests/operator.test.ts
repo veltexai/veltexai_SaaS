@@ -12,6 +12,12 @@ const campaign: ApprovedCampaign = { configId: "cfg1", instantlyCampaignId: "c-i
 const jwt = `x.${Buffer.from(JSON.stringify({ role: "veltex_100c_worker" })).toString("base64url")}.x`;
 const clock = () => new Date("2026-08-09T00:00:00Z");
 const eligible: SyncCandidate = { canonicalContactId: "c1", canonicalProspectId: "p1", workEmail: "dir@biz.example.com", normalizedEmail: "dir@biz.example.com", firstName: "D", lastName: "D", fullName: "D D", title: "Owner", companyName: "Biz", website: "https://biz.example.com", outreachEligibility: "ready_for_outreach", emailVerificationStatus: "verified", suppressionStatus: "none", isCurrentContact: true, provider: "apollo", providerRecordId: "r1", lastVerifiedAt: "2026-08-08T00:00:00Z", eligibleCleaningCompany: true, isCustomer: false };
+const compliance = {
+  VELTEX_100C_COMPLIANCE_APPROVED: "true", VELTEX_100C_SENDER_NAME: "Anthony Veliz",
+  VELTEX_100C_FROM_EMAIL: "anthony@tryveltexai.com", VELTEX_100C_REPLY_TO: "anthony@tryveltexai.com",
+  VELTEX_100C_POSTAL_ADDRESS: "123 Pilot St", VELTEX_100C_UNSUBSCRIBE_URL: "https://pilot.example.com/unsubscribe",
+  VELTEX_100C_SPF_DKIM_DMARC_VERIFIED: "true", VELTEX_100C_ONE_CLICK_UNSUBSCRIBE_VERIFIED: "true",
+};
 
 const records: Record<string, unknown>[] = [];
 const output = { info: (r: Record<string, unknown>) => records.push(r) };
@@ -52,7 +58,7 @@ describe("100C operator mode isolation & gating", () => {
   });
   it("controlled-write constructs clients only after every gate passes", async () => {
     const f = factories();
-    const env = { VELTEX_100C_ENABLED: "true", VELTEX_100C_TARGET_ENVIRONMENT: "100c-pilot", INSTANTLY_API_KEY: "k", NEXT_PUBLIC_SUPABASE_URL: "https://pilot.supabase.co", NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon", SUPABASE_100C_WORKER_JWT: jwt };
+    const env = { ...compliance, VELTEX_100C_ENABLED: "true", VELTEX_100C_TARGET_ENVIRONMENT: "100c-pilot", INSTANTLY_API_KEY: "k", NEXT_PUBLIC_SUPABASE_URL: "https://pilot.supabase.co", NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon", SUPABASE_100C_WORKER_JWT: jwt };
     await executeOperator(["--mode=controlled-write", "--provider=instantly", "--target=100c-pilot", "--campaign=cfg1", "--confirm-target=100c-pilot", "--confirm-campaign=cfg1", "--confirm-writes=LEADS_MAX_1"], env, [pilot], f, output);
     expect(f.controlled).toHaveBeenCalledTimes(1);
   });
@@ -88,7 +94,7 @@ describe("100C shipped config is pinned to the approved pilot", () => {
     expect(c.active).toBe(true);
     expect(c.approvalReference).toBe("FOUNDER-LIVE-SEND-APPROVED-2026-08-11");
     expect(c.expectedWorkspaceId).toBe("698b2090-f4d5-484b-a0b1-44016fee7515");
-    expect(c.allowedStates).toEqual(["active"]);
+    expect(c.allowedStates).toEqual(["active", "completed"]);
     expect(c.dailySyncCap).toBe(500);
     expect(c.totalPilotCap).toBe(50000);
   });

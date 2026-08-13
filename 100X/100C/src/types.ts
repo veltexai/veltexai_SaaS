@@ -1,8 +1,8 @@
 // 100C Instantly Campaign Sync — provider-neutral outbound-sync contracts.
 // Synchronizes ONLY currently-verified, eligible, non-suppressed 100B contacts into an APPROVED
 // Instantly campaign. Eligibility from 100B is a point-in-time input, not permanent permission to
-// send: 100C rechecks every applicable rule immediately before creating a lead. Nothing here sends
-// email, activates a campaign, exposes a route, or runs on a schedule.
+// send: 100C rechecks every applicable rule immediately before creating a lead. A separately gated
+// continuity action may reactivate the exact approved campaign only after a verified lead is added.
 
 export const WORKFLOW_ID = "100C" as const;
 export const SYNC_RULES_VERSION = "campaign-sync-rules-v1" as const;
@@ -111,9 +111,11 @@ export interface CampaignStateResult { state: CampaignState; observedWorkspaceId
 export type LeadCreateDisposition = "submitted" | "skipped_duplicate";
 export interface LeadCreateResult { disposition: LeadCreateDisposition; providerLeadId: string | null; requestsUsed: number }
 export interface LeadReconcileResult { existsInCampaign: boolean; providerLeadId: string | null; requestsUsed: number }
+export interface CampaignActivationResult { activated: boolean; requestsUsed: number }
 
 export interface OutboundRequestAccounting {
   campaignReads: number;      // GET campaign state calls
+  campaignWrites: number;     // POST exact-campaign activation calls
   leadWrites: number;         // POST create-lead calls
   reconcileReads: number;     // POST leads/list reconciliation calls
   retryAttempts: number;      // physical calls that were retries (attempt > 1)
@@ -128,6 +130,7 @@ export interface OutboundSyncProvider {
   getCampaignState(instantlyCampaignId: string, budget: number): Promise<CampaignStateResult>;
   createLead(instantlyCampaignId: string, lead: OutboundLead, budget: number): Promise<LeadCreateResult>;
   reconcileLead(instantlyCampaignId: string, workEmail: string, budget: number): Promise<LeadReconcileResult>;
+  activateCampaign(instantlyCampaignId: string, budget: number): Promise<CampaignActivationResult>;
   getAccounting(): OutboundRequestAccounting;
 }
 
@@ -170,6 +173,7 @@ export interface SyncSummary {
   eligibleAfterRecheck: number;
   reserved: number;
   submitted: number;
+  campaignReactivated: boolean;
   skippedDuplicate: number;
   suppressed: number;
   ineligible: number;

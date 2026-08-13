@@ -7,6 +7,7 @@ import type { CampaignState } from "./types";
 export const INSTANTLY_BASE_URL = "https://api.instantly.ai/api/v2" as const;
 export const INSTANTLY_ENDPOINTS = Object.freeze({
   campaignById: (id: string) => `${INSTANTLY_BASE_URL}/campaigns/${id}`, // GET  — campaign state read
+  activateCampaign: (id: string) => `${INSTANTLY_BASE_URL}/campaigns/${id}/activate`,
   createLead: `${INSTANTLY_BASE_URL}/leads`,                            // POST — capped lead creation
   listLeads: `${INSTANTLY_BASE_URL}/leads/list`,                        // POST — read-only reconciliation
 } as const);
@@ -46,11 +47,12 @@ export const INSTANTLY_PILOT_LEAD_FLAGS = Object.freeze({
 // Least-privilege Instantly V2 scopes the pilot plans to require. Verified against V2 docs.
 export const REQUIRED_INSTANTLY_SCOPES = Object.freeze({
   campaignsRead: "campaigns:read", // GET /campaigns/{id}
+  campaignsUpdate: "campaigns:update", // POST /campaigns/{id}/activate
   leadsCreate: "leads:create",     // POST /leads
   leadsRead: "leads:read",         // POST /leads/list (only if reconciliation is used)
 } as const);
 // Scopes 100C must NOT require (documented for the founder before issuing a key).
 export const FORBIDDEN_INSTANTLY_SCOPES: readonly string[] = [
-  "campaigns:create", "campaigns:update", "campaigns:all", "emails:send", "accounts:update",
+  "campaigns:create", "campaigns:all", "emails:send", "accounts:update",
   "webhooks:create", "workspaces:admin", "all:all",
 ];

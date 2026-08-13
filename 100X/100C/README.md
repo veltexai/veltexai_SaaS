@@ -2,8 +2,9 @@
 
 100C is the safe, capped bridge from a **100B outreach-ready contact** to a lead in an **approved
 Instantly campaign**. It synchronizes **only currently verified, eligible, non-suppressed** contacts,
-rechecking every rule immediately before it creates a lead. It creates no campaign, sends no email,
-exposes no route, and runs on no schedule. **Not activated.**
+rechecking every rule immediately before it creates a lead. It creates no campaign and sends no email
+directly. The deployed 100G scheduler invokes it daily, while 100C retains its lock, caps, compliance
+gate, and exact campaign allowlist.
 
 ```
 100B ready contact → fresh eligibility + suppression recheck → approved campaign mapping
@@ -12,8 +13,9 @@ exposes no route, and runs on no schedule. **Not activated.**
 ```
 
 ## Status and safety
-- Inactive by default (`VELTEX_100C_ENABLED` must equal `true`); manual, terminal execution only.
-- No route, webhook, cron, schedule, or campaign create/activate/pause/resume/update.
+- Inactive by default (`VELTEX_100C_ENABLED` must equal `true`); 100G execution requires a second gate.
+- No campaign creation, arbitrary update, pause, or direct email-send capability. A dedicated activate
+  endpoint is available only for completed-campaign continuity under its own explicit gate.
 - Instantly **API V2 only** (never V1). Bearer auth; the key is supplied only at runtime and never logged.
 - Reuses the 100A/100B safety architecture: run-owned lock, request/write caps, resilient
   diagnostics, environment + campaign allowlists, operator preflight-before-clients, in-memory
@@ -44,14 +46,11 @@ one contact, and the registry is later fed automatically (HubSpot / customer DB)
 
 ## Campaign safety model
 Campaign ids are **allowlisted** (`operator/campaigns.json` + the `campaign_configs` table). A
-campaign must be approved, active, bound to the approved environment, and — read live before any
-lead — observed in a **Draft or Paused** state. Active, Completed, Running-Subsequences, Unhealthy,
-Bounce-Protect, Suspended, or Unknown states **fail closed**. 100C never creates, activates, pauses,
-resumes, or modifies a campaign. One campaign is approved for the read-only pilot: a dedicated,
-never-activated Instantly campaign ("Veltex AI 100C Pilot — No Send", config `veltex-100c-pilot-no-send`)
-bound to the approved `100c-pilot` environment, with a pinned workspace, caps of 1/1, and allowed states
-Draft/Paused. It has been verified live as **Draft** with zero leads. Controlled-write remains a separate
-founder action; until then this campaign is used only for read-only provider-preview.
+campaign must be approved, active, bound to the approved environment, and read live before any lead.
+Active sync and Completed continuity each require separate explicit authorization. A completed
+campaign is reactivated only after a newly verified lead is submitted during that run; an empty
+campaign is never activated. Running-Subsequences, Unhealthy, Bounce-Protect, Suspended, and Unknown
+states **fail closed**. The exact campaign and workspace are pinned in the isolated pilot allowlist.
 
 ## Idempotency
 A stable `(canonical contact id, approved campaign id)` identity is enforced by a unique database
@@ -80,7 +79,7 @@ verified email; enabling Instantly verification could add cost/async behavior �
   `LEADS_MAX_1`; disabled by default.
 
 ## Pilot limits (centralized in `src/config.ts`)
-≤5 contacts considered, ≤1 lead submitted, ≤1 Instantly write request, ≤4 total provider requests
+≤5 contacts considered, ≤1 lead submitted, ≤1 Instantly lead-write request, ≤4 total provider requests
 (retries count), ≤10 min runtime, exactly 15-min lock TTL, one approved campaign, one approved
 environment.
 

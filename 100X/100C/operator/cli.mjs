@@ -20,9 +20,9 @@ Controlled write (capped pilot lead submission into an approved Draft/Paused cam
     --campaign=<approved-campaign> --confirm-target=<approved-pilot-environment> --confirm-campaign=<approved-campaign> --confirm-writes=LEADS_MAX_1
 
 Instantly API V2 only. The environment and the campaign must be approved (operator/environments.json,
-operator/campaigns.json). Production is unconditionally prohibited. Only a Draft or Paused campaign is
-pilot-safe; Active/Completed/unknown states fail closed. Plans display credential presence only, never
-secret values. No campaign create/activate/update, no email send, no webhook, no route, no cron/schedule.`;
+operator/campaigns.json). Production is unconditionally prohibited. Active and Completed states require
+separate explicit deployment gates; unhealthy/unknown states fail closed. Plans display credential
+presence only, never secret values. No campaign creation, arbitrary update, or direct email send.`;
 if (process.argv.includes("--help") || process.argv.includes("-h")) { console.info(help); process.exit(0); }
 
 const buildDirectory = mkdtempSync(join(tmpdir(), "veltex-100c-operator-"));
