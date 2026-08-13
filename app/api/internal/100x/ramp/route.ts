@@ -21,7 +21,13 @@ async function executeRamp(req: NextRequest): Promise<NextResponse> {
   if (!config.enabled) return NextResponse.json({ ok: false }, { status: 404 });
   const bearer = req.headers.get("authorization");
   const workerHeader = req.headers.get("x-veltex-100f-secret");
-  const workerAuthorized = authorized(workerHeader ? `Bearer ${workerHeader}` : bearer, process.env.VELTEX_100F_CRON_SECRET);
+  // Vercel Cron authenticates scheduled requests with the project-level CRON_SECRET.
+  // Keep the workflow-specific secret for manual/worker calls, while accepting the
+  // platform secret as the fail-closed fallback used by scheduled evaluations.
+  const presented = workerHeader ? `Bearer ${workerHeader}` : bearer;
+  const workerAuthorized =
+    authorized(presented, process.env.VELTEX_100F_CRON_SECRET) ||
+    authorized(presented, process.env.CRON_SECRET);
   if (!workerAuthorized) return NextResponse.json({ ok: false }, { status: 401 });
   const url = process.env.VELTEX_100F_SUPABASE_URL;
   const anonKey = process.env.VELTEX_100F_SUPABASE_ANON_KEY;
