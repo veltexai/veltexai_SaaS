@@ -27,8 +27,10 @@ async function execute(req: NextRequest): Promise<NextResponse> {
   if (!config.enabled) return NextResponse.json({ ok: false }, { status: 404 });
   const bearer = req.headers.get("authorization");
   const custom = req.headers.get("x-veltex-100g-secret");
-  const cronSecret = process.env.VELTEX_100G_CRON_SECRET ?? process.env.CRON_SECRET;
-  if (!authorized(custom ? `Bearer ${custom}` : bearer, cronSecret)) {
+  const presented = custom ? `Bearer ${custom}` : bearer;
+  const workflowAuthorized = authorized(presented, process.env.VELTEX_100G_CRON_SECRET);
+  const vercelCronAuthorized = authorized(presented, process.env.CRON_SECRET);
+  if (!workflowAuthorized && !vercelCronAuthorized) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
   if (req.nextUrl.searchParams.get("readiness") === "1") {
