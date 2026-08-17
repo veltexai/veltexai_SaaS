@@ -42,7 +42,7 @@ export const ProposalTableOfContents = ({
             <Image
               src={tocImage ?? "/images/templates/Images/Mask group-1.png"}
               alt="Table of Contents"
-              className=" object-contain"
+              className="image-frame-2 bg-cover bg-top"
               height={1600}
               width={1100}
             />

@@ -102,7 +102,7 @@ export function LuxuryEliteTemplate({
         <Image
           src={coverMask}
           alt="Logo"
-          className="absolute bottom-0 -left-8 object-contain opacity-70"
+          className="absolute bottom-0 -left-8 opacity-70 image-frame-1 bg-cover bg-center"
           height={1000}
           width={600}
         />
@@ -145,7 +145,7 @@ export function LuxuryEliteTemplate({
                     alt="qualifications"
                     width={800}
                     height={500}
-                    className="z-30 absolute top-0 left-0 sm:max-w-[85%] max-w-[75%]"
+                    className="z-30 absolute top-0 left-0 sm:max-w-[85%] max-w-[75%] sm:max-h-[600px] max-h-[345px] image-frame-3"
                   />
                   <PoweredBy colorLogo="gray" isRight />
                   <NavitationNumber

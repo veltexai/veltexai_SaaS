@@ -114,9 +114,11 @@ const ContentQualificationsSection = ({
       {templateType === "luxury_elite" ? (
         <div className="z-10 absolute bottom-0 right-0 sm:max-w-[100%] max-w-[80%]">
           <Image
-            src={qualificationsImage ?? "/images/templates/Images/Maskgroup-3.png"}
+            src={
+              qualificationsImage ?? "/images/templates/Images/Maskgroup-3.png"
+            }
             alt="Table of Contents"
-            className="object-contain"
+            className="object-contain image-frame-4"
             height={1600}
             width={1100}
             priority

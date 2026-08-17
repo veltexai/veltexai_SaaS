@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -322,3 +322,67 @@ select {
   }
 }
 
+/* Framing Luxury Elite Images */
+
+.image-frame-1 {
+  width: 100%;
+  aspect-ratio: 1322 / 769;
+  object-fit: cover;
+  /* clip-path: polygon(
+    58.2% 0%,
+    94.3% 61.8%,
+    94.3% 81.3%,
+    83.4% 100%,
+    5.1% 100%,
+    5.1% 90.9%
+  ); */
+  /* clip-path: polygon(
+    58.17% 0%,
+    94.33% 61.77%,
+    94.33% 81.27%,
+    83.43% 100%,
+    5.07% 100%,
+    5.07% 90.9%
+  ); */
+  clip-path: polygon(
+    58.17% 0%,
+    100% 68.77%,
+    100% 68.77%,
+    83.43% 100%,
+    0% 100%,
+    5.07% 90.9%
+  );
+}
+
+.image-frame-2 {
+  width: 100%;
+  object-fit: cover;
+  aspect-ratio: 1322 / 769;
+  clip-path: polygon(92% 0, 100% 14%, 100% 100%, 29% 100%);
+}
+
+.image-frame-3 {
+  object-fit: cover;
+  clip-path: polygon(20.5% 0, 100% 0, 16.5% 100%, 0 81%, 0 24%);
+}
+
+.image-frame-4 {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: polygon(0% 15%, 82.5% 15%, 100% 44%, 100% 100%, 64.8% 100%);
+}
+
+.image-frame-5 {
+  width: 1100 px;
+  height:  1315px;
+  object-fit: cover;
+  clip-path: polygon(
+    70.68% 0%,
+    100% 21.25%,
+    100% 92%,
+    93% 100%,
+    0% 100%,
+    0% 63%
+  );
+}

@@ -42,7 +42,9 @@ export const ThankYouPage = ({
           src={SrcImage}
           alt="Background"
           className={`size-full ${
-            templateType === "luxury_elite" ? "object-fill" : "object-cover"
+            templateType === "luxury_elite"
+              ? "object-fill image-frame-5"
+              : "object-cover"
           }`}
           height={1600}
           width={1000}
