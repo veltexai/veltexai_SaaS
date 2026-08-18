@@ -117,6 +117,15 @@ function getServiceTypeFromQuickInputs(
   return "commercial";
 }
 
+/**
+ * Deliberately excludes the client name: the title is a document heading, not a
+ * record label. Shared by the save payload and the generate request so the
+ * "Prepared title" shown in the flow is the title that actually gets persisted.
+ */
+function buildProposalTitle(values: QuickProposalFormData): string {
+  return `${values.propertyType} Cleaning Proposal`;
+}
+
 function getBuildingType(
   values: QuickProposalFormData,
 ): NonNullable<ProposalFormData["facility_details"]["building_type"]> {
@@ -161,7 +170,7 @@ export function buildQuickProposalPayload(
   const clientName = values.clientName.trim();
   const clientEmail = values.clientEmail.trim();
   const clientPhone = values.clientPhone?.trim() ?? "";
-  const title = `${clientName || "Client"} ${values.propertyType} Cleaning Proposal`;
+  const title = buildProposalTitle(values);
 
   if (!clientPhone) {
     return {
@@ -292,7 +301,7 @@ export function buildQuickProposalGenerateRequest(
   const clientEmail = values.clientEmail.trim();
   const clientPhone = values.clientPhone?.trim();
   const serviceType = getServiceTypeFromQuickInputs(values);
-  const title = `${values.propertyType} Cleaning Proposal`;
+  const title = buildProposalTitle(values);
 
   return {
     success: true,

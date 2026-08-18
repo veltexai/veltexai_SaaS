@@ -15,6 +15,11 @@ export type TemplateType =
  * render site, so an omitted (or entirely absent) override renders the stock
  * template art. Produced in production by `resolveTemplateImages` and in the
  * demo flow by `getDemoTemplateData`.
+ *
+ * In production the photo slots below come from the proposal's service type —
+ * `resolveServicePhotos` picks them out of `public/images/templates/commercial`
+ * or `.../residential`, seeded by proposal id so the preview and the printed
+ * PDF always agree. Service types without a folder yet fall back to stock art.
  */
 export interface TemplateImages {
   /** Full-bleed cover background (luxury_elite bgLuxi, basic blue SVG). */

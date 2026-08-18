@@ -143,6 +143,7 @@ export default function DemoProposalPage() {
                 branding={demoData.branding}
                 pages={demoData.pages}
                 print={true}
+                images={demoData.images}
               />
             ) : (
               <LuxuryEliteTemplate

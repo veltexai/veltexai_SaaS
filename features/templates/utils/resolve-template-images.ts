@@ -7,6 +7,13 @@ import {
   type ScopeTemplateId,
 } from '@/features/proposals/quick/constants/scope-templates';
 import type { Proposal, TemplateImages, TemplateType } from '../types/templates';
+import { resolveServicePhotos } from './service-photos';
+
+// Re-exported so this module stays the single entrypoint for template art.
+// Import './service-photos' directly when you only need the photo pick and not
+// the scope derivation below (as the demo does).
+export { resolveServicePhotos } from './service-photos';
+export type { ServicePhotoSource } from './service-photos';
 
 const IMAGES_DIR = '/images/templates/Images';
 
@@ -21,14 +28,21 @@ function luxurySet(prefix: string): TemplateImages {
 }
 
 /**
- * Art available per scope of work, keyed by template family.
+ * Legacy art keyed by scope of work, then by template family.
  *
- * Only `luxury_elite` has bespoke art today: the `deep_cleaning_*`,
+ * Superseded by SERVICE_PHOTO_POOLS for `commercial` and `residential`
+ * proposals; this map is only reached by the service types that have no photo
+ * folder yet (`carpet`, `window`, `floor`).
+ *
+ * Only `luxury_elite` ever had bespoke art here: the `deep_cleaning_*`,
  * `move_in_out_*` and `premium_detail_*` PNGs are 1322x769 alpha-masked cutouts
- * shaped to luxury_elite's slots, so they would render as floating shapes in
- * the rectangular photo slots of the other templates. Those families resolve to
- * `undefined` and fall through to their stock art. Adding rectangular art later
- * is a data-only change to this map.
+ * pre-shaped to luxury_elite's slots, so they would render as floating shapes
+ * in the rectangular photo slots of the other templates. Those families resolve
+ * to `undefined` and fall through to their stock art.
+ *
+ * Note these cutouts predate the `.image-frame-*` clip-paths in app/globals.css,
+ * which now do the shaping in CSS — so a cutout routed here gets clipped twice.
+ * Retire this map once the remaining service types get photo folders.
  */
 const SCOPE_IMAGE_SETS: Partial<
   Record<ScopeTemplateId, Partial<Record<TemplateType, TemplateImages>>>
@@ -122,12 +136,19 @@ export function deriveScopeTemplateId(
 
 /**
  * Image overrides for a proposal, or `undefined` when no bespoke art exists for
- * its scope and template family (in which case the template renders stock art).
+ * it (in which case the template renders stock art).
+ *
+ * Service-type photographs win over the legacy scope art: they are plain
+ * rectangles that the `.image-frame-*` clip-paths shape correctly, whereas the
+ * scope cutouts are pre-masked and would be clipped twice.
  */
 export function resolveTemplateImages(
   proposal: Proposal,
   templateType: TemplateType
 ): TemplateImages | undefined {
+  const servicePhotos = resolveServicePhotos(proposal);
+  if (servicePhotos) return servicePhotos;
+
   const scopeTemplateId = deriveScopeTemplateId(proposal);
   return SCOPE_IMAGE_SETS[scopeTemplateId]?.[templateType];
 }

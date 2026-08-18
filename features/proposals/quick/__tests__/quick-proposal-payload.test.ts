@@ -34,6 +34,46 @@ describe("quick proposal payload adapter", () => {
     expect(result.payload.status).toBe("draft");
   });
 
+  it("keeps the client name out of the saved title", () => {
+    const values = getQuickProposalDefaults({
+      demoType: "commercial",
+      template: getScopeTemplate("commercial_office")!,
+    });
+    values.clientName = "Zorbelda Quintwhistle";
+    values.clientEmail = "client@example.com";
+    values.clientPhone = "(555) 123-4567";
+
+    const saved = buildQuickProposalSavePayload(values, "## Content");
+    expect(saved.success).toBe(true);
+    if (!saved.success) return;
+
+    expect(saved.payload.title).toBe(`${values.propertyType} Cleaning Proposal`);
+    expect(saved.payload.title).not.toContain("Zorbelda");
+    // The name still belongs on the record itself, just not in the heading.
+    expect(saved.payload.global_inputs.client_name).toBe(
+      "Zorbelda Quintwhistle",
+    );
+  });
+
+  it("saves the same title the flow previewed before generating", () => {
+    const values = getQuickProposalDefaults({
+      demoType: "residential",
+      template: getScopeTemplate("move_out_turnover")!,
+    });
+    values.clientName = "Zorbelda Quintwhistle";
+    values.clientEmail = "client@example.com";
+    values.clientPhone = "(555) 123-4567";
+
+    const generate = buildQuickProposalGenerateRequest(values);
+    const saved = buildQuickProposalSavePayload(values, "## Content");
+
+    expect(generate.success).toBe(true);
+    expect(saved.success).toBe(true);
+    if (!generate.success || !saved.success) return;
+
+    expect(saved.payload.title).toBe(generate.payload.title);
+  });
+
   it("sends per-area frequencies and scope-template task notes", () => {
     const template = getScopeTemplate("commercial_office")!;
     const values = getQuickProposalDefaults({

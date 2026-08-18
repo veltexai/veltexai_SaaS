@@ -3,6 +3,9 @@ import type {
   Branding,
   TemplateImages,
 } from "@/features/templates/types/templates";
+// The photo picker only — not `resolve-template-images`, which also carries the
+// scope-of-work derivation this file has no use for.
+import { resolveServicePhotos } from "@/features/templates/utils/service-photos";
 import type { DemoType, ResidentialPackageType } from "../types/demo-proposal";
 
 const DEMO_BRANDING: Branding = {
@@ -324,42 +327,30 @@ const PREMIUM_DETAIL_PROPOSAL = makeMockProposal({
   property_type: "Luxury Estate",
 });
 
-// ─── Residential demo images & accent color ───────────────────────────────────
+// ─── Demo images & accent color ───────────────────────────────────────────────
 
 const RESIDENTIAL_ACCENT = "#001B7A";
 
-const RESIDENTIAL_IMAGES: Record<ResidentialPackageType, TemplateImages> = {
-  recurring: {
-    coverBg: "/images/templates/bgLuxi.png",
-    coverMask: "/images/templates/Images/Maskgroup.png",
-    aboutImage: "/images/templates/Images/Mask group-2.png",
-    accentColor: RESIDENTIAL_ACCENT,
-  },
-  "deep-clean": {
-    coverBg: "/images/templates/bgLuxi.png",
-    coverMask: "/images/templates/Images/deep_cleaning_one.png",
-    tocImage: "/images/templates/Images/deep_cleaning_two.png",
-    aboutImage: "/images/templates/Images/deep_cleaning_three.png",
-    qualificationsImage: "/images/templates/Images/deep_cleaning_four.png",
-    accentColor: RESIDENTIAL_ACCENT,
-  },
-  "move-in-out": {
-    coverBg: "/images/templates/bgLuxi.png",
-    coverMask: "/images/templates/Images/move_in_out_one.png",
-    tocImage: "/images/templates/Images/move_in_out_two.png",
-    aboutImage: "/images/templates/Images/move_in_out_three.png",
-    qualificationsImage: "/images/templates/Images/move_in_out_four.png",
-    accentColor: RESIDENTIAL_ACCENT,
-  },
-  "premium-detail": {
-    coverBg: "/images/templates/bgLuxi.png",
-    coverMask: "/images/templates/Images/premium_detail_one.png",
-    tocImage: "/images/templates/Images/premium_detail_two.png",
-    aboutImage: "/images/templates/Images/premium_detail_three.png",
-    qualificationsImage: "/images/templates/Images/premium_detail_four.png",
-    accentColor: RESIDENTIAL_ACCENT,
-  },
-};
+/**
+ * Photos for a demo proposal, drawn from the same service-type folders
+ * production uses so the demo shows real output rather than a parallel set of
+ * hardcoded art.
+ *
+ * `resolveServicePhotos` never sets `accentColor`, so the residential navy tint
+ * has to be layered back on here — luxury_elite reads it into `--color-primary`.
+ *
+ * Every mock proposal carries `id: ""` (the demo-isolation guard), so the pick
+ * seeds on `title` instead. The five titles are distinct, which is what gives
+ * each package its own deterministic photo set with no extra plumbing.
+ */
+function getDemoImages(
+  proposal: Proposal,
+  accentColor?: string,
+): TemplateImages | undefined {
+  const photos = resolveServicePhotos(proposal);
+  if (!photos) return accentColor ? { accentColor } : undefined;
+  return accentColor ? { ...photos, accentColor } : photos;
+}
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
@@ -379,6 +370,7 @@ export function getDemoTemplateData(
       proposal: COMMERCIAL_PROPOSAL,
       branding: DEMO_BRANDING,
       pages: COMMERCIAL_PAGES,
+      images: getDemoImages(COMMERCIAL_PROPOSAL),
     };
   }
 
@@ -406,6 +398,6 @@ export function getDemoTemplateData(
     proposal,
     branding: DEMO_BRANDING,
     pages,
-    images: RESIDENTIAL_IMAGES[pkg],
+    images: getDemoImages(proposal, RESIDENTIAL_ACCENT),
   };
 }
