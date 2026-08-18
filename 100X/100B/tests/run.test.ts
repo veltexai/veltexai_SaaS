@@ -77,8 +77,26 @@ describe("100B controlled enrichment", () => {
 
   it("enforces the provider request cap across companies", async () => {
     const capped = { ...base, limits: { ...base.limits, maxProviderRequestsPerRun: 1 } } satisfies EnrichmentConfig;
-    const summary = await run100B(capped, deps([company("p1"), company("p2")], { p1: [cand("a1")], p2: [cand("b1")] }), "manual");
-    expect(summary).toMatchObject({ providerRequests: 1, capped: true, capReason: "provider_requests" });
+    const companies = [company("p1"), company("p2")];
+    const repo = new InMemoryContactRepository(companies, clock.now);
+    const first = await run100B(capped, deps(companies, { p1: [cand("a1")], p2: [cand("b1")] }, { repo }), "manual");
+    expect(first).toMatchObject({ providerRequests: 1, capped: true, capReason: "provider_requests", cursorAdvanced: true });
+
+    const second = await run100B(capped, deps(companies, { p1: [cand("a1")], p2: [cand("b1")] }, { repo }), "manual");
+    expect(second).toMatchObject({ contactsCreated: 1, readyForOutreach: 1 });
+    expect(repo.contacts.map(({ prospectId }) => prospectId)).toEqual(["p1", "p2"]);
+  });
+
+  it("uses the persisted cursor to rotate a bounded target window", async () => {
+    const bounded = { ...base, limits: { ...base.limits, maxCompaniesPerRun: 1 } } satisfies EnrichmentConfig;
+    const companies = [company("p1"), company("p2"), company("p3")];
+    const repo = new InMemoryContactRepository(companies, clock.now);
+
+    await run100B(bounded, deps(companies, {}, { repo }), "manual");
+    const second = await run100B(bounded, deps(companies, { p2: [cand("b1")] }, { repo }), "manual");
+
+    expect(second).toMatchObject({ companiesProcessed: 1, contactsCreated: 1, readyForOutreach: 1 });
+    expect(repo.contacts[0]?.prospectId).toBe("p2");
   });
 
   it("caps contacts per company without failing the run", async () => {

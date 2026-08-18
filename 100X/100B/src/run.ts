@@ -38,7 +38,17 @@ export async function run100B(config: EnrichmentConfig, dependencies: Run100BDep
   let primaryError: unknown;
   try {
     const startCursor = await dependencies.repository.getCursor(WORKFLOW_ID);
-    const targets = (await dependencies.repository.loadTargets(dependencies.prospectIds)).slice(0, config.limits.maxCompaniesPerRun);
+    const loadedTargets = await dependencies.repository.loadTargets(dependencies.prospectIds);
+    const cursorOffset = loadedTargets.length === 0 ? 0 : startCursor % loadedTargets.length;
+    const targets = [
+      ...loadedTargets.slice(cursorOffset),
+      ...loadedTargets.slice(0, cursorOffset),
+    ].slice(0, config.limits.maxCompaniesPerRun);
+    // companiesFullyProcessed is deliberately separate from the public attempted-company
+    // count. A provider/contact cap may interrupt a company mid-stream; that company must
+    // remain the next target. Companies completed before a normal run cap are safe to
+    // advance past, which prevents the same oldest prospects from starving the queue.
+    let companiesFullyProcessed = 0;
     const summary: RunSummary = {
       runId, companiesProcessed: 0, providerRequests: 0, candidates: 0, contactsProcessed: 0,
       contactsCreated: 0, sourceRecordsCreated: 0, existingSources: 0, confidentMatches: 0,
@@ -58,6 +68,7 @@ export async function run100B(config: EnrichmentConfig, dependencies: Run100BDep
       } catch (error) {
         summary.providerErrors += 1; summary.companiesProcessed += 1;
         await safeEmit("warn", "company.provider_error", { prospectId: company.prospectId, message: error instanceof Error ? error.message : "provider error" });
+        companiesFullyProcessed += 1;
         continue;
       }
       summary.providerRequests += result.requestsUsed;
@@ -111,8 +122,13 @@ export async function run100B(config: EnrichmentConfig, dependencies: Run100BDep
           throw error;
         }
       }
+      companiesFullyProcessed += 1;
     }
-    if (!summary.capped) { await renew(); await dependencies.repository.setCursor(WORKFLOW_ID, runId, startCursor + summary.companiesProcessed); summary.cursorAdvanced = true; }
+    if (companiesFullyProcessed > 0 || !summary.capped) {
+      await renew();
+      await dependencies.repository.setCursor(WORKFLOW_ID, runId, startCursor + companiesFullyProcessed);
+      summary.cursorAdvanced = true;
+    }
     summary.diagnosticFailures = diagnosticFailures;
     await safeEmit("info", "run.completed", { ...summary });
     summary.diagnosticFailures = diagnosticFailures;
