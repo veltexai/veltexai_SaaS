@@ -54,4 +54,18 @@ describe("100F controller", () => {
     expect(repository.decisions).toHaveLength(0);
     expect(provider.limits).toEqual([]);
   });
+
+  it("uses the completed observation date for the decision key", async () => {
+    const repository = new MemoryRepository(); const provider = new MemoryProvider();
+    const decision = await runRampController("pilot", {
+      enabled: true,
+      executeMutations: false,
+      policy,
+      repository,
+      provider,
+      now: () => new Date("2026-08-12T03:00:00Z"),
+      evaluationDate: "2026-08-11",
+    });
+    expect(decision.observedAt).toBe("2026-08-11T12:00:00.000Z");
+  });
 });

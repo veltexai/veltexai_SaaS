@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/internal/100x/ramp",
-      "schedule": "0 15 * * *"
+      "schedule": "0 3 * * *"
     },
     {
       "path": "/api/internal/100x/orchestrate",

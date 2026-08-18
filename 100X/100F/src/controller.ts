@@ -8,11 +8,12 @@ export interface ControllerDependencies {
   repository: RampRepository;
   provider: RampProvider;
   now?: () => Date;
+  evaluationDate?: string;
 }
 
 export async function runRampController(campaignId: string, deps: ControllerDependencies): Promise<RampDecision> {
   const now = deps.now?.() ?? new Date();
-  const today = now.toISOString().slice(0, 10);
+  const today = deps.evaluationDate ?? now.toISOString().slice(0, 10);
   const state = await deps.repository.getState(campaignId);
   const metrics = await deps.repository.getMetrics(campaignId, Math.max(7, deps.policy.minimumDaysAtStage + 1));
   const decision = evaluateRamp(state, metrics, deps.policy, today);

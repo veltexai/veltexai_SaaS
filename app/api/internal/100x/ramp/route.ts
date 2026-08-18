@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { load100FConfig } from "@/100X/100F/src/config";
 import { runRampController } from "@/100X/100F/src/controller";
 import { InstantlyMetricsProvider, InstantlyRampProvider } from "@/100X/100F/src/instantly-provider";
+import { completedObservationDate } from "@/100X/100F/src/observation-date";
 import { SupabaseRampRepository } from "@/100X/100F/src/supabase-repository";
 
 export const runtime = "nodejs";
@@ -41,13 +42,26 @@ async function executeRamp(req: NextRequest): Promise<NextResponse> {
   try {
     const client = createClient(url, anonKey, { global: { headers: { Authorization: `Bearer ${jwt}` } }, auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
     const repository = new SupabaseRampRepository(client);
-    const date = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const date = completedObservationDate(
+      now,
+      process.env.VELTEX_100F_TIME_ZONE ?? "America/Los_Angeles",
+      Number(process.env.VELTEX_100F_SEND_WINDOW_END_HOUR ?? "18"),
+    );
     const [providerMetrics, internal] = await Promise.all([
       new InstantlyMetricsProvider(instantlyKey).collect(config.campaignId, date),
       repository.getInternalSignals(config.campaignId, date),
     ]);
     await repository.upsertMetrics({ ...providerMetrics, ...internal });
-    const decision = await runRampController(config.campaignId, { enabled: true, executeMutations: config.executeMutations, policy: config.policy, repository, provider: new InstantlyRampProvider(instantlyKey) });
+    const decision = await runRampController(config.campaignId, {
+      enabled: true,
+      executeMutations: config.executeMutations,
+      policy: config.policy,
+      repository,
+      provider: new InstantlyRampProvider(instantlyKey),
+      now: () => now,
+      evaluationDate: date,
+    });
     return NextResponse.json({ ok: true, mode: config.executeMutations ? "execute" : "dry_run", action: decision.action, targetStage: decision.targetStage, reason: decision.reason });
   } catch (error) {
     const diagnostic = error instanceof Error ? error.message : "Unknown 100F failure";
