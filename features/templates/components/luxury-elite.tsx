@@ -30,6 +30,7 @@ import {
 import { LuxuryEliteBackgroundTitle } from "@/components/icons";
 import { type ScopeRow } from "../utils/split-scope-rows";
 import { useTemplateData } from "../hooks/use-template-data";
+import { resolvePaymentTerms } from "../utils/payment-terms";
 
 export function LuxuryEliteTemplate({
   proposal,
@@ -45,6 +46,8 @@ export function LuxuryEliteTemplate({
     scopeRowChunks,
     hasAdditionalScopePages,
   } = useTemplateData(proposal, branding, pages, print);
+
+  const paymentTerms = resolvePaymentTerms(proposal);
 
   // Resolve image overrides with safe defaults (stock art when unset)
   const coverBg = images?.coverBg ?? "/images/templates/bgLuxi.png";
@@ -333,6 +336,7 @@ export function LuxuryEliteTemplate({
                   <div className="space-y-8 max-w-[95%]">
                     {content.pricing?.content ? (
                       <ServiceQuotePricing
+                        paymentTerms={paymentTerms}
                         title={
                           content.pricing.title ?? "Service Quote & Pricing"
                         }
@@ -374,7 +378,10 @@ export function LuxuryEliteTemplate({
         <LuxuryEliteBackgroundTitle className="z-10 absolute sm:-top-[20px] -top-[10px] sm:-left-[20px] -left-[10px] sm:w-[353px] w-[253px] sm:h-[350px] h-[250px]" />
         <ProposalTitle templateType="luxury_elite" title="Terms & Legal" />
 
-        <TitleDescriptionSection templateType="luxury_elite" />
+        <TitleDescriptionSection
+          templateType="luxury_elite"
+          paymentTerms={paymentTerms}
+        />
         <PoweredBy colorLogo="gray" isRight />
         <NavitationNumber
           value={8}

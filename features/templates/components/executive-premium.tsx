@@ -29,6 +29,7 @@ import {
 } from "./sections";
 import { type ScopeRow } from "../utils/split-scope-rows";
 import { useTemplateData } from "../hooks/use-template-data";
+import { resolvePaymentTerms } from "../utils/payment-terms";
 
 export function ExecutivePremiumTemplate({
   proposal,
@@ -44,6 +45,8 @@ export function ExecutivePremiumTemplate({
     scopeRowChunks,
     hasAdditionalScopePages,
   } = useTemplateData(proposal, branding, pages, print);
+
+  const paymentTerms = resolvePaymentTerms(proposal);
 
   return (
     <section className="space-y-8">
@@ -331,6 +334,7 @@ export function ExecutivePremiumTemplate({
                   <div className="max-w-none sm:pl-[95px] pl-10 space-y-8">
                     {content.pricing?.content ? (
                       <ServiceQuotePricing
+                        paymentTerms={paymentTerms}
                         title={
                           content.pricing.title ?? "Service Quote & Pricing"
                         }
@@ -382,7 +386,10 @@ export function ExecutivePremiumTemplate({
           />
         </div>
 
-        <TitleDescriptionSection templateType="executive_premium" />
+        <TitleDescriptionSection
+          templateType="executive_premium"
+          paymentTerms={paymentTerms}
+        />
         <PoweredBy colorLogo="gray" isRight />
         <NavitationNumber
           value={8}

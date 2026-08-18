@@ -1,5 +1,6 @@
 import React from "react";
 import { TemplateType } from "@/features/templates/types/templates";
+import type { PaymentTerms } from "@/features/templates/utils/payment-terms";
 import { dmSerifText } from "@/lib/fonts";
 import { ProposalTitle } from "../shared";
 import { cn } from "@/lib/utils/cn";
@@ -14,6 +15,7 @@ interface ServiceQuotePricingProps {
   content: string;
   description?: string | null;
   templateType: TemplateType;
+  paymentTerms: PaymentTerms;
   className?: string;
 }
 
@@ -37,6 +39,7 @@ export default function ServiceQuotePricing({
   content,
   description,
   templateType,
+  paymentTerms,
   className = "",
 }: ServiceQuotePricingProps) {
   const lines = (content ?? "")
@@ -196,7 +199,8 @@ export default function ServiceQuotePricing({
                   Months
                 </p>
                 <p className="text-xs">
-                  <span className="font-semibold">Billing Terms: </span>Net 30
+                  <span className="font-semibold">Billing Terms: </span>
+                  {paymentTerms.label}
                 </p>
                 <p className="text-xs mt-10">
                   This investment reflects the full scope of services outlined

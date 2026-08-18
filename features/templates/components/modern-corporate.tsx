@@ -29,6 +29,7 @@ import {
 } from "./sections";
 import { type ScopeRow } from "../utils/split-scope-rows";
 import { useTemplateData } from "../hooks/use-template-data";
+import { resolvePaymentTerms } from "../utils/payment-terms";
 
 export function ModernCorporateTemplate({
   proposal,
@@ -44,6 +45,8 @@ export function ModernCorporateTemplate({
     scopeRowChunks,
     hasAdditionalScopePages,
   } = useTemplateData(proposal, branding, pages, print);
+
+  const paymentTerms = resolvePaymentTerms(proposal);
 
   return (
     <section className="space-y-6">
@@ -354,6 +357,7 @@ export function ModernCorporateTemplate({
                   <div className="max-w-[95%] sm:space-y-8 space-y-4">
                     {content.pricing?.content ? (
                       <ServiceQuotePricing
+                        paymentTerms={paymentTerms}
                         title={
                           content.pricing.title ?? "Service Quote & Pricing"
                         }
@@ -398,7 +402,10 @@ export function ModernCorporateTemplate({
         <HorizontalBar variant="gradientGray" />
         <ProposalTitle templateType="modern_corporate" title="Terms & Legal" />
 
-        <TitleDescriptionSection templateType="modern_corporate" />
+        <TitleDescriptionSection
+          templateType="modern_corporate"
+          paymentTerms={paymentTerms}
+        />
         <PoweredBy colorLogo="gray" isRight />
         <NavitationNumber
           value={8}

@@ -1,4 +1,5 @@
 import { type ReactNode, createElement } from "react";
+import type { PaymentTerms } from "../utils/payment-terms";
 import {
   DisputIcon,
   DocumentIcon,
@@ -49,7 +50,10 @@ export const dataTOC: ReadonlyArray<TocItem> = (() => {
   });
 })();
 
-export const dataTerms: ReadonlyArray<TermItem> = [
+/** Term id whose body is resolved per-proposal by {@link getDataTerms}. */
+const BILLING_TERMS_ID = 2;
+
+const BASE_TERMS: ReadonlyArray<TermItem> = [
   {
     id: 1,
     icons: createElement(DocumentIcon),
@@ -61,8 +65,8 @@ export const dataTerms: ReadonlyArray<TermItem> = [
     id: 2,
     icons: createElement(paymentcardIcon),
     title: "Billing & Payment Terms",
-    description:
-      "invoices are issued monthly in advance unless otherwise agreed in writing. Payment is due within the selected terms (Due Upon Receipt, Net 15, or Net 30). Late balances may incur a finance charge of 1.5% per month or the maximum allowed by law. Invoices are issued monthly in advance. The initial invoice is due upon contract execution or prior to service commencement. Thereafter, payment terms are Net 30 from invoice date.",
+    // Supplied per-proposal from resolvePaymentTerms; see getDataTerms below.
+    description: "",
   },
   {
     id: 3,
@@ -107,3 +111,19 @@ export const dataTerms: ReadonlyArray<TermItem> = [
       "Disputes shall first be addressed through good-faith negotiation. If unresolved, parties agree to mediation prior to litigation, under the governing laws of the state in which services are performed.",
   },
 ];
+
+/**
+ * Terms & Legal entries for one proposal.
+ *
+ * Every entry is static except "Billing & Payment Terms", whose body comes from
+ * `resolvePaymentTerms` so the card and the pricing page cannot disagree.
+ */
+export function getDataTerms(
+  paymentTerms: PaymentTerms,
+): ReadonlyArray<TermItem> {
+  return BASE_TERMS.map((term) =>
+    term.id === BILLING_TERMS_ID
+      ? { ...term, description: paymentTerms.body }
+      : term,
+  );
+}
