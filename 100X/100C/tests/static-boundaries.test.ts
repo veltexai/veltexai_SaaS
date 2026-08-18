@@ -22,9 +22,11 @@ describe("100C static safety boundaries", () => {
     expect(all).not.toMatch(/node-cron|setInterval\(|cron\.schedule/i);
   });
   it("binds continuity activation to the dedicated approved-campaign endpoint and explicit gate", () => {
+    const runner = readFileSync(join(process.cwd(), "100X/100C/src/run.ts"), "utf8");
     expect(src).toContain("/activate");
     expect(src).toContain('env.VELTEX_100C_ALLOW_COMPLETED_REACTIVATION === "true"');
-    expect(src).toContain('stateResult.state === "completed" && summary.submitted > 0');
+    expect(src).toContain('stateResult.state === "completed" && !summary.campaignReactivated');
+    expect(runner.indexOf("activateCampaign")).toBeLessThan(runner.indexOf("createLead"));
   });
   it("imports no email-sending or CRM outbound capability", () => {
     expect(src).not.toMatch(/from ["'].*(?:nodemailer|resend|mailgun|sendgrid|@sendgrid|smtp|hubspot)/i);

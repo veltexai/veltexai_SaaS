@@ -16,17 +16,20 @@ export interface FixtureSyncScript {
 
 export class FixtureOutboundProvider implements OutboundSyncProvider {
   readonly name = "fixture" as const;
+  readonly operations: string[] = [];
   private readonly accounting: OutboundRequestAccounting = { campaignReads: 0, campaignWrites: 0, leadWrites: 0, reconcileReads: 0, retryAttempts: 0, providerErrors: 0, ambiguousOutcomes: 0 };
   constructor(private readonly script: FixtureSyncScript = {}) {}
 
   getAccounting(): OutboundRequestAccounting { return { ...this.accounting }; }
 
   async getCampaignState(_id: string, _budget: number): Promise<CampaignStateResult> {
+    this.operations.push("campaign_read");
     this.accounting.campaignReads += 1;
     return { state: this.script.campaignState ?? "draft", observedWorkspaceId: this.script.observedWorkspaceId ?? null, providerStatusRaw: null, requestsUsed: 1 };
   }
 
   async createLead(_id: string, lead: OutboundLead, _budget: number): Promise<LeadCreateResult> {
+    this.operations.push("lead_create");
     this.accounting.leadWrites += 1;
     const disposition = this.script.createByEmail?.[lead.workEmail] ?? "submitted";
     if (disposition === "ambiguous") { this.accounting.ambiguousOutcomes += 1; throw new InstantlyError("ambiguous", "fixture ambiguous create outcome"); }
@@ -35,12 +38,14 @@ export class FixtureOutboundProvider implements OutboundSyncProvider {
   }
 
   async reconcileLead(_id: string, workEmail: string, _budget: number): Promise<LeadReconcileResult> {
+    this.operations.push("lead_reconcile");
     this.accounting.reconcileReads += 1;
     const exists = this.script.reconcileByEmail?.[workEmail] ?? false;
     return { existsInCampaign: exists, providerLeadId: exists ? `fixture-lead-${workEmail}` : null, requestsUsed: 1 };
   }
 
   async activateCampaign(_id: string, _budget: number) {
+    this.operations.push("campaign_activate");
     this.accounting.campaignWrites += 1;
     if (this.script.activationFails) throw new InstantlyError("transient", "fixture activation failure");
     return { activated: true, requestsUsed: 1 };

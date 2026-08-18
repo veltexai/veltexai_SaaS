@@ -37,7 +37,7 @@ describe("100C sync runner", () => {
     expect(repo.assignments[0].state).toBe("submitted");
     expect(repo.leadMappings).toHaveLength(1);
   });
-  it("reactivates a completed campaign only after a verified lead is submitted and the gate is explicit", async () => {
+  it("reactivates a completed campaign before creating the verified reserved lead", async () => {
     const repo = new InMemorySyncRepository([cand("c1")], {}, clock.now);
     const provider = new FixtureOutboundProvider({ campaignState: "completed" });
     const completed = { ...campaign, allowedStates: ["completed"] as CampaignState[] };
@@ -48,6 +48,7 @@ describe("100C sync runner", () => {
     );
     expect(s).toMatchObject({ submitted: 1, campaignReactivated: true, providerRequests: 3 });
     expect(provider.getAccounting()).toMatchObject({ campaignReads: 1, leadWrites: 1, campaignWrites: 1 });
+    expect(provider.operations).toEqual(["campaign_read", "campaign_activate", "lead_create"]);
   });
   it("never activates a completed campaign when no lead was submitted", async () => {
     const repo = new InMemorySyncRepository([cand("c1", { suppressionStatus: "unsubscribed" })], {}, clock.now);

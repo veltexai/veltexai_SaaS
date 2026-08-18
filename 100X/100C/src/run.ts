@@ -134,7 +134,21 @@ export async function run100C(config: SyncConfig, deps: Run100CDependencies, tri
       }
 
       const lead = buildLead(cand, campaign);
+      let activationAttempted = false;
       try {
+        // Instantly assigns a newly-created lead the campaign's current status. Creating while the
+        // campaign is Completed therefore produces a Completed lead that will never send, even if
+        // the campaign is activated immediately afterward. Once a specific lead has passed both
+        // eligibility checks and has a durable reservation, reactivate the approved campaign first,
+        // then create that lead while the campaign is Active.
+        if (stateResult.state === "completed" && !summary.campaignReactivated) {
+          if (!config.allowCompletedCampaignReactivation) throw new Error("completed campaign reactivation is not authorized");
+          if (remaining() <= 0) throw new InstantlyError("request_cap", "campaign reactivation request budget exhausted");
+          activationAttempted = true;
+          const activation = await deps.provider.activateCampaign(campaign.instantlyCampaignId!, remaining());
+          summary.campaignReactivated = activation.activated;
+          await safeEmit("info", "campaign.reactivated_before_submission", { campaignConfigId: campaign.configId });
+        }
         const result = await deps.provider.createLead(campaign.instantlyCampaignId!, lead, remaining());
         if (result.disposition === "skipped_duplicate") {
           await deps.repository.transitionAssignment(runId, reservation.assignmentId, "skipped_duplicate", "provider skip (already in workspace/campaign/list)");
@@ -150,7 +164,7 @@ export async function run100C(config: SyncConfig, deps: Run100CDependencies, tri
         }
       } catch (error) {
         const kind = error instanceof InstantlyError ? error.kind : "transient";
-        await deps.repository.recordAttempt(runId, reservation.assignmentId, "create_failed", kind);
+        await deps.repository.recordAttempt(runId, reservation.assignmentId, activationAttempted && !summary.campaignReactivated ? "campaign_reactivation_failed" : "create_failed", kind);
         if (kind === "ambiguous") {
           await handleAmbiguous(deps, config, runId, reservation.assignmentId, campaign, lead, summary, remaining, safeEmit, base);
         } else if (kind === "duplicate") {
@@ -168,16 +182,6 @@ export async function run100C(config: SyncConfig, deps: Run100CDependencies, tri
         }
         if (SYSTEMIC.has(kind)) { await cap("provider_error"); break; }
       }
-    }
-    // A completed campaign is reactivated only after at least one newly verified lead was safely
-    // submitted in this run. This prevents activating an empty campaign and keeps the action bound
-    // to the exact approved campaign id, explicit continuity gate, and physical request budget.
-    if (stateResult.state === "completed" && summary.submitted > 0) {
-      if (!config.allowCompletedCampaignReactivation) throw new Error("completed campaign reactivation is not authorized");
-      if (remaining() <= 0) throw new InstantlyError("request_cap", "campaign reactivation request budget exhausted");
-      const activation = await deps.provider.activateCampaign(campaign.instantlyCampaignId!, remaining());
-      summary.campaignReactivated = activation.activated;
-      await safeEmit("info", "campaign.reactivated_after_submission", { campaignConfigId: campaign.configId });
     }
     return finalize();
   } finally {
