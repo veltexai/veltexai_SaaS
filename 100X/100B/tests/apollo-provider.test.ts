@@ -240,8 +240,11 @@ describe("Apollo two-stage adapter — secrets, redaction, capabilities", () => 
   it("keeps the API key out of thrown errors and never logs", async () => {
     const spies = ["log", "error", "info", "warn"].map((m) => jest.spyOn(console, m as any).mockImplementation(() => {}));
     const r = router({ search: () => res({}, 403) });
-    const err = await provider(r.fetchImpl).enrichCompany(company, 6).catch((e) => e as ApolloError);
-    expect(err.message).not.toContain(KEY);
+    let err: ApolloError | undefined;
+    try { await provider(r.fetchImpl).enrichCompany(company, 6); }
+    catch (error) { err = error as ApolloError; }
+    expect(err).toBeInstanceOf(ApolloError);
+    expect(err?.message).not.toContain(KEY);
     for (const s of spies) expect(s).not.toHaveBeenCalled();
     for (const s of spies) s.mockRestore();
   });

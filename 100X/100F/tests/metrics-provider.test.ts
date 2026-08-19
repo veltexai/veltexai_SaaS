@@ -24,4 +24,25 @@ describe("InstantlyMetricsProvider", () => {
     });
     await expect(new InstantlyMetricsProvider("secret", fetchMock as typeof fetch).collect("pilot", "2026-08-11")).rejects.toThrow("inventory is incomplete");
   });
+
+  it("reuses one campaign/account snapshot while reconciling multiple dates", async () => {
+    const fetchMock = jest.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      const body = url.includes("/campaigns/analytics?") ? [{ emails_sent_count: 1 }]
+        : url.includes("/campaigns/pilot") ? { status: 1, daily_limit: 3, email_list: ["a@example.com"] }
+          : url.includes("/accounts/analytics/daily") ? []
+            : { items: [{ email: "a@example.com", status: 1, stat_warmup_score: 100 }] };
+      return { ok: true, json: async () => body } as Response;
+    });
+    const provider = new InstantlyMetricsProvider("secret", fetchMock as typeof fetch);
+
+    await provider.collect("pilot", "2026-08-11");
+    await provider.collect("pilot", "2026-08-12");
+
+    const urls = fetchMock.mock.calls.map(([input]) => String(input));
+    expect(urls.filter((url) => url.endsWith("/campaigns/pilot"))).toHaveLength(1);
+    expect(urls.filter((url) => url.includes("/accounts?limit=100"))).toHaveLength(1);
+    expect(urls.filter((url) => url.includes("/campaigns/analytics?"))).toHaveLength(2);
+    expect(urls.filter((url) => url.includes("/accounts/analytics/daily"))).toHaveLength(2);
+  });
 });

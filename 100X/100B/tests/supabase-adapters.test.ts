@@ -15,7 +15,7 @@ const input: PersistContactInput = {
 
 describe("Supabase 100B adapter mappings", () => {
   it("maps run-owned lock and cursor RPCs in order", async () => {
-    const rpc = jest.fn(async () => ({ data: true, error: null }));
+    const rpc = jest.fn(async (_name: string, _args?: Record<string, unknown>) => ({ data: true, error: null }));
     const repo = new SupabaseContactRepository({ rpc } as never);
     await repo.acquireLock("100B", "run", "e"); await repo.renewLock("100B", "run", "e2");
     await repo.setCursor("100B", "run", 3); await repo.releaseLock("100B", "run");

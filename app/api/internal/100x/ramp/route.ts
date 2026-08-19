@@ -5,6 +5,7 @@ import { load100FConfig } from "@/100X/100F/src/config";
 import { runRampController } from "@/100X/100F/src/controller";
 import { InstantlyMetricsProvider, InstantlyRampProvider } from "@/100X/100F/src/instantly-provider";
 import { completedObservationDate } from "@/100X/100F/src/observation-date";
+import { rampReconciliationLookback, reconcileRampMetrics } from "@/100X/100F/src/reconciliation";
 import { SupabaseRampRepository } from "@/100X/100F/src/supabase-repository";
 
 export const runtime = "nodejs";
@@ -48,11 +49,14 @@ async function executeRamp(req: NextRequest): Promise<NextResponse> {
       process.env.VELTEX_100F_TIME_ZONE ?? "America/Los_Angeles",
       Number(process.env.VELTEX_100F_SEND_WINDOW_END_HOUR ?? "18"),
     );
-    const [providerMetrics, internal] = await Promise.all([
-      new InstantlyMetricsProvider(instantlyKey).collect(config.campaignId, date),
-      repository.getInternalSignals(config.campaignId, date),
-    ]);
-    await repository.upsertMetrics({ ...providerMetrics, ...internal });
+    const metricsProvider = new InstantlyMetricsProvider(instantlyKey);
+    const reconciled = await reconcileRampMetrics(
+      config.campaignId,
+      date,
+      rampReconciliationLookback(process.env.VELTEX_100F_RECONCILE_LOOKBACK_DAYS),
+      metricsProvider,
+      repository,
+    );
     const decision = await runRampController(config.campaignId, {
       enabled: true,
       executeMutations: config.executeMutations,
@@ -62,7 +66,7 @@ async function executeRamp(req: NextRequest): Promise<NextResponse> {
       now: () => now,
       evaluationDate: date,
     });
-    return NextResponse.json({ ok: true, mode: config.executeMutations ? "execute" : "dry_run", action: decision.action, targetStage: decision.targetStage, reason: decision.reason });
+    return NextResponse.json({ ok: true, mode: config.executeMutations ? "execute" : "dry_run", reconciledDays: reconciled.length, action: decision.action, targetStage: decision.targetStage, reason: decision.reason });
   } catch (error) {
     const diagnostic = error instanceof Error ? error.message : "Unknown 100F failure";
     console.error("100F ramp controller failed:", diagnostic);

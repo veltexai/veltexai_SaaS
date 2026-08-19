@@ -27,6 +27,13 @@ export class InstantlyRampProvider implements RampProvider {
 }
 
 export class InstantlyMetricsProvider implements RampMetricsProvider {
+  private readonly campaignSnapshots = new Map<string, Promise<{
+    campaign: Record<string, unknown>;
+    emails: string[];
+    healthySendingAccounts: number;
+    minimumAccountHealth: number;
+  }>>();
+
   constructor(private readonly apiKey: string, private readonly fetchImpl: typeof fetch = fetch, private readonly timeoutMs = 10_000) {}
 
   private async json(path: string): Promise<unknown> {
@@ -44,26 +51,50 @@ export class InstantlyMetricsProvider implements RampMetricsProvider {
     }
   }
 
+  private campaignSnapshot(campaignId: string): Promise<{
+    campaign: Record<string, unknown>;
+    emails: string[];
+    healthySendingAccounts: number;
+    minimumAccountHealth: number;
+  }> {
+    const existing = this.campaignSnapshots.get(campaignId);
+    if (existing) return existing;
+    const snapshot = (async () => {
+      const id = encodeURIComponent(campaignId);
+      const [campaignRaw, accountsRaw] = await Promise.all([
+        this.json(`/campaigns/${id}`),
+        this.json("/accounts?limit=100"),
+      ]);
+      const campaign = objectValue(campaignRaw);
+      const emails = Array.isArray(campaign.email_list) ? campaign.email_list.filter((v): v is string => typeof v === "string" && Boolean(v)) : [];
+      if (emails.length === 0) throw new Error("Instantly campaign has no sending accounts");
+      const accountItems = Array.isArray(objectValue(accountsRaw).items) ? objectValue(accountsRaw).items as unknown[] : [];
+      const assigned = accountItems.map(objectValue).filter((account) => typeof account.email === "string" && emails.includes(account.email));
+      if (assigned.length !== emails.length) throw new Error("Instantly account inventory is incomplete");
+      const healthy = assigned.filter((account) => numberValue(account.status, -1) === 1);
+      return {
+        campaign,
+        emails,
+        healthySendingAccounts: healthy.length,
+        minimumAccountHealth: Math.min(...assigned.map((account) => numberValue(account.stat_warmup_score, 0))),
+      };
+    })();
+    this.campaignSnapshots.set(campaignId, snapshot);
+    return snapshot;
+  }
+
   async collect(campaignId: string, date: string): Promise<Omit<DailyRampMetrics, "spamComplaints" | "webhookFailures">> {
     const id = encodeURIComponent(campaignId);
-    const campaignRaw = await this.json(`/campaigns/${id}`);
-    const analyticsRaw = await this.json(`/campaigns/analytics?id=${id}&start_date=${date}&end_date=${date}&exclude_total_leads_count=true`);
-    const campaign = objectValue(campaignRaw);
+    const [{ campaign, emails, healthySendingAccounts, minimumAccountHealth }, analyticsRaw] = await Promise.all([
+      this.campaignSnapshot(campaignId),
+      this.json(`/campaigns/analytics?id=${id}&start_date=${date}&end_date=${date}&exclude_total_leads_count=true`),
+    ]);
     const analyticsItems = Array.isArray(analyticsRaw) ? analyticsRaw : [];
     const analytics = objectValue(analyticsItems[0]);
-    const emails = Array.isArray(campaign.email_list) ? campaign.email_list.filter((v): v is string => typeof v === "string" && Boolean(v)) : [];
-    if (emails.length === 0) throw new Error("Instantly campaign has no sending accounts");
     const query = new URLSearchParams({ start_date: date, end_date: date });
     for (const email of emails) query.append("emails", email);
     const accountAnalyticsRaw = await this.json(`/accounts/analytics/daily?${query.toString()}`);
     const accountAnalytics = Array.isArray(accountAnalyticsRaw) ? accountAnalyticsRaw.map(objectValue) : [];
-
-    const accountsRaw = await this.json(`/accounts?limit=100`);
-    const accountItems = Array.isArray(objectValue(accountsRaw).items) ? objectValue(accountsRaw).items as unknown[] : [];
-    const assigned = accountItems.map(objectValue).filter((account) => typeof account.email === "string" && emails.includes(account.email));
-    if (assigned.length !== emails.length) throw new Error("Instantly account inventory is incomplete");
-    const healthy = assigned.filter((account) => numberValue(account.status, -1) === 1);
-    const minimumHealth = Math.min(...assigned.map((account) => numberValue(account.stat_warmup_score, 0)));
 
     return {
       date, campaignId,
@@ -73,8 +104,8 @@ export class InstantlyMetricsProvider implements RampMetricsProvider {
       bounced: numberValue(analytics.bounced_count, accountAnalytics.reduce((sum, row) => sum + numberValue(row.bounced), 0)),
       replies: numberValue(analytics.reply_count, accountAnalytics.reduce((sum, row) => sum + numberValue(row.replies), 0)),
       unsubscribes: numberValue(analytics.unsubscribed_count),
-      healthySendingAccounts: healthy.length,
-      minimumAccountHealth: minimumHealth,
+      healthySendingAccounts,
+      minimumAccountHealth,
     };
   }
 }
