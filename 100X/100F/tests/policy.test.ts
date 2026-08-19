@@ -35,9 +35,10 @@ const metric = (overrides: Partial<DailyRampMetrics> = {}): DailyRampMetrics => 
   minimumAccountHealth: 100,
   ...overrides,
 });
+const supply = { queuedEligibleLeads: 100, minimumQueueDays: 3 };
 describe("100F ramp policy", () => {
   it("advances exactly one stage when all gates pass", () => {
-    expect(evaluateRamp(state, [metric()], policy, "2026-08-11")).toMatchObject({ action: "advance", targetStage: 25, gates: { metricsAvailable: true, dwellPassed: true, deliveredPassed: true, bouncePassed: true, capacityPassed: true } });
+    expect(evaluateRamp(state, [metric()], policy, "2026-08-11", supply)).toMatchObject({ action: "advance", targetStage: 25, gates: { metricsAvailable: true, dwellPassed: true, deliveredPassed: true, bouncePassed: true, capacityPassed: true, supplyPassed: true } });
   });
 
   it.each([
@@ -64,7 +65,16 @@ describe("100F ramp policy", () => {
   it("allows the one-per-day bootstrap stage to graduate after three clean deliveries", () => {
     const bootstrap = { ...state, currentStage: 1 as const };
     expect(evaluateRamp(bootstrap, [metric({ sent: 2 })], policy, "2026-08-11").reason).toContain("2/3");
-    expect(evaluateRamp(bootstrap, [metric({ sent: 3 })], policy, "2026-08-11")).toMatchObject({ action: "advance", targetStage: 3 });
+    expect(evaluateRamp(bootstrap, [metric({ sent: 3 })], policy, "2026-08-11", supply)).toMatchObject({ action: "advance", targetStage: 3 });
+  });
+
+  it("holds fail-closed when eligible supply is missing or below the next-stage runway", () => {
+    const bootstrap = { ...state, currentStage: 1 as const };
+    expect(evaluateRamp(bootstrap, [metric({ sent: 3 })], policy, "2026-08-11").reason).toContain("supply evidence");
+    expect(evaluateRamp(bootstrap, [metric({ sent: 3 })], policy, "2026-08-11", { queuedEligibleLeads: 8, minimumQueueDays: 3 })).toMatchObject({
+      action: "hold",
+      gates: { requiredQueuedLeads: 9, queuedEligibleLeads: 8, supplyPassed: false },
+    });
   });
 
   it("produces deterministic daily idempotency keys", () => {

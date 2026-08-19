@@ -43,6 +43,21 @@ async function executeRamp(req: NextRequest): Promise<NextResponse> {
   try {
     const client = createClient(url, anonKey, { global: { headers: { Authorization: `Bearer ${jwt}` } }, auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
     const repository = new SupabaseRampRepository(client);
+    const supplyUrl = process.env.VELTEX_100G_SUPABASE_URL;
+    const supplyAnonKey = process.env.VELTEX_100G_SUPABASE_ANON_KEY;
+    const supplyJwt = process.env.VELTEX_100G_ORCHESTRATOR_JWT;
+    let supply: { queuedEligibleLeads: number; minimumQueueDays: number } | undefined;
+    if (supplyUrl && supplyAnonKey && supplyJwt) {
+      const supplyClient = createClient(supplyUrl, supplyAnonKey, { global: { headers: { Authorization: `Bearer ${supplyJwt}` } }, auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+      const snapshot = await supplyClient.rpc("read_100g_supply_snapshot");
+      if (!snapshot.error && snapshot.data) {
+        const configuredQueueDays = Number(process.env.VELTEX_100G_MIN_QUEUE_DAYS_ALERT ?? 3);
+        supply = {
+          queuedEligibleLeads: Math.max(0, Number(snapshot.data.queued_eligible_leads ?? 0)),
+          minimumQueueDays: Number.isFinite(configuredQueueDays) && configuredQueueDays > 0 ? Math.floor(configuredQueueDays) : 3,
+        };
+      }
+    }
     const now = new Date();
     const date = completedObservationDate(
       now,
@@ -65,6 +80,7 @@ async function executeRamp(req: NextRequest): Promise<NextResponse> {
       provider: new InstantlyRampProvider(instantlyKey),
       now: () => now,
       evaluationDate: date,
+      supply,
     });
     return NextResponse.json({ ok: true, mode: config.executeMutations ? "execute" : "dry_run", reconciledDays: reconciled.length, action: decision.action, targetStage: decision.targetStage, reason: decision.reason });
   } catch (error) {

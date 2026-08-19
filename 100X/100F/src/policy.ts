@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { DailyRampMetrics, RampDecision, RampGateEvidence, RampPolicy, RampStage, RampState } from "./types";
+import type { DailyRampMetrics, RampDecision, RampGateEvidence, RampPolicy, RampStage, RampState, RampSupplyEvidence } from "./types";
 
 const DAY_MS = 86_400_000;
 
@@ -18,7 +18,7 @@ function makeDecision(state: RampState, date: string, action: RampDecision["acti
   };
 }
 
-export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], policy: RampPolicy, today: string): RampDecision {
+export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], policy: RampPolicy, today: string, supply?: RampSupplyEvidence): RampDecision {
   const current = metrics.find((m) => m.date === today) ?? metrics[0];
   if (!current) return makeDecision(state, today, "hold", state.currentStage, "no metrics available", { metricsAvailable: false });
 
@@ -30,6 +30,7 @@ export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], poli
   const requiredDelivered = Math.min(policy.minimumDeliveredAtStage, state.currentStage * policy.minimumDaysAtStage);
   const index = policy.stages.indexOf(state.currentStage);
   const next = policy.stages[index + 1];
+  const requiredQueuedLeads = next === undefined ? 0 : next * Math.max(1, supply?.minimumQueueDays ?? 0);
   const gates: RampGateEvidence = {
     metricsAvailable: true,
     campaignHealthy: current.campaignStatus >= 0,
@@ -48,6 +49,11 @@ export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], poli
     healthyCapacity: capacity,
     nextStage: next ?? null,
     capacityPassed: next === undefined || next <= capacity,
+    queuedEligibleLeads: supply?.queuedEligibleLeads,
+    requiredQueuedLeads,
+    queueDaysRequired: supply?.minimumQueueDays,
+    supplyEvidenceAvailable: supply !== undefined,
+    supplyPassed: next === undefined || (supply !== undefined && supply.queuedEligibleLeads >= requiredQueuedLeads),
   };
 
   const hardStop =
@@ -74,6 +80,10 @@ export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], poli
 
   if (!next) return makeDecision(state, today, "hold", state.currentStage, "maximum approved stage reached", gates);
   if (next > capacity) return makeDecision(state, today, "hold", state.currentStage, `next stage ${next} exceeds healthy capacity ${capacity}`, gates);
+  if (!supply) return makeDecision(state, today, "hold", state.currentStage, "eligible lead supply evidence is unavailable", gates);
+  if (supply.queuedEligibleLeads < requiredQueuedLeads) {
+    return makeDecision(state, today, "hold", state.currentStage, `eligible queue is ${supply.queuedEligibleLeads}/${requiredQueuedLeads} leads required for ${supply.minimumQueueDays} days at stage ${next}`, gates);
+  }
 
-  return makeDecision(state, today, "advance", next, `all safety gates passed; capacity=${capacity}`, gates);
+  return makeDecision(state, today, "advance", next, `all safety gates passed; capacity=${capacity}; queued=${supply.queuedEligibleLeads}`, gates);
 }

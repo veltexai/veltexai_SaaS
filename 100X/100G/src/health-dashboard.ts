@@ -5,6 +5,41 @@ const fail = (label: string, error: { message?: string } | null) => {
   if (error) throw new Error(`${label}: ${error.message ?? "database error"}`);
 };
 
+const ageHours = (timestamp: string | null | undefined, now: Date): number | null => {
+  if (!timestamp) return null;
+  const elapsed = now.getTime() - Date.parse(timestamp);
+  return Number.isFinite(elapsed) ? Number((Math.max(0, elapsed) / 3_600_000).toFixed(2)) : null;
+};
+
+export function assessDashboardHealth(input: {
+  now: Date;
+  latestRun: { status: string; createdAt: string; alerts?: Array<{ severity: string; code: string; message: string }> } | null;
+  latestMetric: { recorded_at?: string; metric_date?: string } | null;
+  supplyStatus: "healthy" | "low" | "empty";
+}) {
+  const orchestrationAgeHours = ageHours(input.latestRun?.createdAt, input.now);
+  const metricTimestamp = input.latestMetric?.recorded_at ?? (input.latestMetric?.metric_date ? `${input.latestMetric.metric_date}T23:59:59.000Z` : null);
+  const metricAgeHours = ageHours(metricTimestamp, input.now);
+  const blockers: string[] = [];
+  const warnings: string[] = [];
+  if (orchestrationAgeHours === null || orchestrationAgeHours > 36) blockers.push("orchestration evidence is missing or stale");
+  if (metricAgeHours === null || metricAgeHours > 48) blockers.push("ramp metrics are missing or stale");
+  if (input.latestRun?.status === "failed") blockers.push("latest orchestration run failed");
+  if (input.supplyStatus === "empty") blockers.push("eligible lead supply is empty");
+  if (input.supplyStatus === "low") warnings.push("eligible lead supply is low");
+  for (const alert of input.latestRun?.alerts ?? []) {
+    (alert.severity === "critical" ? blockers : warnings).push(`${alert.code}: ${alert.message}`);
+  }
+  return {
+    status: blockers.length > 0 ? "blocked" : warnings.length > 0 ? "warning" : "healthy",
+    readyForAutomatedProgression: blockers.length === 0,
+    orchestrationAgeHours,
+    metricAgeHours,
+    blockers,
+    warnings,
+  };
+}
+
 export async function read100XHealthDashboard(
   orchestrationDb: SupabaseClient,
   rampDb: SupabaseClient,
@@ -36,13 +71,21 @@ export async function read100XHealthDashboard(
   const latestMetric = metricsResult.data?.[0] ?? null;
   const stage = Number(stateResult.data?.current_stage ?? 1);
   const queued = Number(supplyResult.data?.queued_eligible_leads ?? 0);
+  const minimumAlertDays = 3;
+  const runwayDays = Number((queued / Math.max(1, stage)).toFixed(2));
+  const supplyStatus = queued === 0 ? "empty" : runwayDays < minimumAlertDays ? "low" : "healthy";
+  const latestRun = runs[0] ?? null;
+  const health = assessDashboardHealth({ now, latestRun, latestMetric, supplyStatus });
   return {
     generatedAt: now.toISOString(),
     mutationExecutionEnabled,
+    health,
+    activeAlerts: latestRun?.alerts ?? [],
     supply: {
       currentDailySendStage: stage,
       queuedEligibleLeads: queued,
-      runwayDays: Number((queued / Math.max(1, stage)).toFixed(2)),
+      runwayDays,
+      status: supplyStatus,
     },
     orchestration: { latest: runs[0] ?? null, recent: runs },
     ramp: {

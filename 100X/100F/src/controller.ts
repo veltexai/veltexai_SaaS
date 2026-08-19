@@ -1,5 +1,5 @@
 import { evaluateRamp } from "./policy";
-import type { RampDecision, RampPolicy, RampProvider, RampRepository } from "./types";
+import type { RampDecision, RampPolicy, RampProvider, RampRepository, RampSupplyEvidence } from "./types";
 
 export interface ControllerDependencies {
   enabled: boolean;
@@ -9,6 +9,7 @@ export interface ControllerDependencies {
   provider: RampProvider;
   now?: () => Date;
   evaluationDate?: string;
+  supply?: RampSupplyEvidence;
 }
 
 export async function runRampController(campaignId: string, deps: ControllerDependencies): Promise<RampDecision> {
@@ -16,7 +17,7 @@ export async function runRampController(campaignId: string, deps: ControllerDepe
   const today = deps.evaluationDate ?? now.toISOString().slice(0, 10);
   const state = await deps.repository.getState(campaignId);
   const metrics = await deps.repository.getMetrics(campaignId, Math.max(7, deps.policy.minimumDaysAtStage + 1));
-  const decision = evaluateRamp(state, metrics, deps.policy, today);
+  const decision = evaluateRamp(state, metrics, deps.policy, today, deps.supply);
 
   if (!deps.enabled) return { ...decision, action: "hold", targetStage: state.currentStage, reason: "100F is disabled" };
   const inserted = await deps.repository.recordDecision(campaignId, decision, metrics);

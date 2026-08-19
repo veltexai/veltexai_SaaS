@@ -66,6 +66,16 @@ export interface RampGateEvidence {
   healthyCapacity?: number;
   nextStage?: number | null;
   capacityPassed?: boolean;
+  queuedEligibleLeads?: number;
+  requiredQueuedLeads?: number;
+  queueDaysRequired?: number;
+  supplyEvidenceAvailable?: boolean;
+  supplyPassed?: boolean;
+}
+
+export interface RampSupplyEvidence {
+  queuedEligibleLeads: number;
+  minimumQueueDays: number;
 }
 
 export interface RampRepository {
