@@ -4,6 +4,11 @@
 synchronization. It calculates a seven-day eligible-lead queue from the active 100F sending stage,
 runs stages in order, stops downstream work after any failure, and records one idempotent run per day.
 
+Every run now records a PII-safe supply forecast, low/empty-queue alerts, and structured 100B
+yield evidence (targets, candidates, provider requests/errors, duplicates, verification outcomes,
+and caps). The protected `/api/internal/100x/health` endpoint combines the latest orchestration
+runs with the 100F state, daily metrics, and mutation-decision audit trail. It is read-only.
+
 It does not weaken the independent locks, caps, eligibility checks, suppression checks, or provider
 budgets owned by 100A–100C. `VELTEX_100G_ENABLED=true` enables evaluation; the separate
 `VELTEX_100G_EXECUTE_STAGES=true` gate authorizes stage execution. Both default to false.

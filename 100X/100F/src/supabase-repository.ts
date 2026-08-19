@@ -20,7 +20,7 @@ export class SupabaseRampRepository implements RampRepository {
     return (result.data ?? []).map((r) => ({ date: r.metric_date, campaignId: r.campaign_id, campaignStatus: r.campaign_status, configuredDailyLimit: r.configured_daily_limit, sent: r.sent, bounced: r.bounced, replies: r.replies, unsubscribes: r.unsubscribes, spamComplaints: r.spam_complaints, webhookFailures: r.webhook_failures, healthySendingAccounts: r.healthy_sending_accounts, minimumAccountHealth: Number(r.minimum_account_health) }));
   }
   async recordDecision(campaignId: string, decision: RampDecision, metrics: DailyRampMetrics[]): Promise<boolean> {
-    const result = await this.client.from("ramp_decisions").insert({ idempotency_key: decision.idempotencyKey, campaign_id: campaignId, action: decision.action, current_stage: decision.currentStage, target_stage: decision.targetStage, reason: decision.reason, observed_at: decision.observedAt, metrics });
+    const result = await this.client.from("ramp_decisions").insert({ idempotency_key: decision.idempotencyKey, campaign_id: campaignId, action: decision.action, current_stage: decision.currentStage, target_stage: decision.targetStage, reason: decision.reason, observed_at: decision.observedAt, metrics: { observations: metrics, gates: decision.gates ?? null } });
     if (!result.error) return true;
     if (result.error.code === "23505") return false;
     throw new Error(`100F decision write failed: ${result.error.message}`);

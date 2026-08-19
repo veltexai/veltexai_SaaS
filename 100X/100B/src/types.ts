@@ -163,8 +163,12 @@ export interface ContactRepository {
 
 export interface RunSummary {
   runId: string; companiesProcessed: number; providerRequests: number;
+  companiesWithCandidates: number; companiesWithoutCandidates: number; domainlessTargets: number;
+  searchRequests: number; enrichmentRequests: number; retryAttempts: number;
+  successfulEnrichments: number; providerReportedErrors: number; estimatedCreditConsumingMatches: number;
   candidates: number; contactsProcessed: number; contactsCreated: number; sourceRecordsCreated: number;
   existingSources: number; confidentMatches: number; readyForOutreach: number; heldOrSuppressed: number;
+  eligibilityCounts: Record<OutreachEligibility, number>;
   providerErrors: number; capped: boolean;
   capReason?: "companies" | "contacts" | "new_contacts" | "source_records" | "provider_requests" | "duration";
   cursorAdvanced: boolean; diagnosticFailures: number;

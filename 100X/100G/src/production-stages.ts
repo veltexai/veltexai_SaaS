@@ -29,7 +29,7 @@ const client = (url: string, anon: string, jwt: string): SupabaseClient => creat
   global: { headers: { Authorization: `Bearer ${jwt}` } },
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
-const result = (stage: StageResult["stage"], produced: number, reason: string): StageResult => ({ stage, status: "completed", produced, reason });
+const result = (stage: StageResult["stage"], produced: number, reason: string, evidence?: StageResult["evidence"]): StageResult => ({ stage, status: "completed", produced, reason, evidence });
 const positive = (value: string | undefined, fallback: number): number => {
   const parsed = value === undefined ? fallback : Number(value);
   if (!Number.isInteger(parsed) || parsed <= 0) throw new Error("100G database-build limits must be positive integers");
@@ -80,7 +80,26 @@ export function createProductionStages(env: Env, orchestrationClient: SupabaseCl
       const config = load100BConfig(env, "apollo");
       config.limits.maxCompaniesPerRun = Math.min(config.limits.maxCompaniesPerRun, ids.length);
       const summary = await run100B(config, { provider: new ApolloEnrichmentProvider(required(env, "VELTEX_100B_APOLLO_API_KEY")), suppression: new NullSuppressionResolver(), repository: new SupabaseContactRepository(db), diagnostics: new BDiagnostics(db), prospectIds: ids }, "100g");
-      return result("100B", summary.readyForOutreach, `verified ${summary.readyForOutreach} outreach-ready contacts`);
+      return result("100B", summary.readyForOutreach, `verified ${summary.readyForOutreach} outreach-ready contacts`, {
+        targetsSelected: ids.length,
+        companiesProcessed: summary.companiesProcessed,
+        companiesWithCandidates: summary.companiesWithCandidates,
+        companiesWithoutCandidates: summary.companiesWithoutCandidates,
+        domainlessTargets: summary.domainlessTargets,
+        providerRequests: summary.providerRequests,
+        searchRequests: summary.searchRequests,
+        enrichmentRequests: summary.enrichmentRequests,
+        successfulEnrichments: summary.successfulEnrichments,
+        providerErrors: summary.providerErrors + summary.providerReportedErrors,
+        candidates: summary.candidates,
+        contactsCreated: summary.contactsCreated,
+        existingSources: summary.existingSources,
+        confidentMatches: summary.confidentMatches,
+        heldOrSuppressed: summary.heldOrSuppressed,
+        eligibilityCounts: summary.eligibilityCounts,
+        capped: summary.capped,
+        capReason: summary.capReason ?? null,
+      });
     } },
     "100C": { run: async ({ runDate, requestedLeads, currentDailySendStage }) => {
       if (env.VELTEX_100C_ALLOW_100G !== "true" || env.VELTEX_100C_ALLOW_ACTIVE_CAMPAIGN !== "true") return disabled("100C");

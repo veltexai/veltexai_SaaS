@@ -51,8 +51,15 @@ export async function run100B(config: EnrichmentConfig, dependencies: Run100BDep
     let companiesFullyProcessed = 0;
     const summary: RunSummary = {
       runId, companiesProcessed: 0, providerRequests: 0, candidates: 0, contactsProcessed: 0,
+      companiesWithCandidates: 0, companiesWithoutCandidates: 0, domainlessTargets: 0,
+      searchRequests: 0, enrichmentRequests: 0, retryAttempts: 0, successfulEnrichments: 0,
+      providerReportedErrors: 0, estimatedCreditConsumingMatches: 0,
       contactsCreated: 0, sourceRecordsCreated: 0, existingSources: 0, confidentMatches: 0,
       readyForOutreach: 0, heldOrSuppressed: 0, providerErrors: 0, capped: false, cursorAdvanced: false, diagnosticFailures: 0,
+      eligibilityCounts: {
+        ready_for_outreach: 0, needs_enrichment: 0, unverified: 0, identity_conflict: 0,
+        suppressed: 0, already_contacted: 0, customer: 0, ineligible: 0, provider_error: 0,
+      },
     };
     const cap = async (reason: RunSummary["capReason"]) => { summary.capped = true; summary.capReason = reason; await safeEmit("warn", "run.capped", { reason }); };
     const durationExceeded = () => config.limits.maxRunDurationMs !== undefined && clock.now().getTime() - startedAt.getTime() >= config.limits.maxRunDurationMs;
@@ -62,6 +69,7 @@ export async function run100B(config: EnrichmentConfig, dependencies: Run100BDep
       if (durationExceeded()) { await cap("duration"); break; }
       if (summary.providerRequests >= config.limits.maxProviderRequestsPerRun) { await cap("provider_requests"); break; }
       await renew();
+      if (!company.websiteDomain?.trim()) summary.domainlessTargets += 1;
       let result;
       try {
         result = await dependencies.provider.enrichCompany(company, config.limits.maxProviderRequestsPerRun - summary.providerRequests);
@@ -73,6 +81,16 @@ export async function run100B(config: EnrichmentConfig, dependencies: Run100BDep
       }
       summary.providerRequests += result.requestsUsed;
       summary.candidates += result.candidates.length;
+      if (result.candidates.length > 0) summary.companiesWithCandidates += 1;
+      else summary.companiesWithoutCandidates += 1;
+      if (result.accounting) {
+        summary.searchRequests += result.accounting.searchRequests;
+        summary.enrichmentRequests += result.accounting.enrichmentRequests;
+        summary.retryAttempts += result.accounting.retryAttempts;
+        summary.successfulEnrichments += result.accounting.successfulEnrichments;
+        summary.providerReportedErrors += result.accounting.providerErrors;
+        summary.estimatedCreditConsumingMatches += result.accounting.estimatedCreditConsumingMatches;
+      }
       summary.companiesProcessed += 1;
       await safeEmit("info", "company.enriched", { prospectId: company.prospectId, candidates: result.candidates.length, requestsUsed: result.requestsUsed });
 
@@ -115,6 +133,7 @@ export async function run100B(config: EnrichmentConfig, dependencies: Run100BDep
           if (stored.contactCreated) summary.contactsCreated += 1;
           if (stored.sourceCreated) summary.sourceRecordsCreated += 1;
           if (identity.disposition === "confident_contact_match") summary.confidentMatches += 1;
+          summary.eligibilityCounts[decision.eligibility] += 1;
           if (decision.eligibility === "ready_for_outreach") summary.readyForOutreach += 1; else summary.heldOrSuppressed += 1;
           await safeEmit("info", "contact.stored", { providerRecordId: contact.providerRecordId, contactId: stored.contactId, eligibility: decision.eligibility, roleCategory: contact.roleCategory });
         } catch (error) {

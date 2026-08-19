@@ -23,7 +23,7 @@ function setup(overrides: Partial<{ stage: number; queued: number; fail: StageId
   return { repository, calls, stages: { "100A": runner("100A"), "100B": runner("100B"), "100C": runner("100C") } };
 }
 
-const live = { enabled: true, executeStages: true, queueDays: 7, maximumRequestedLeads: 500, databaseBuildTarget: 1 };
+const live = { enabled: true, executeStages: true, queueDays: 7, maximumRequestedLeads: 500, databaseBuildTarget: 1, minimumQueueDaysForAlert: 3 };
 
 describe("100G acquisition orchestrator", () => {
   it("calculates replenishment from the active send stage and runs in order", async () => {
@@ -31,6 +31,15 @@ describe("100G acquisition orchestrator", () => {
     const run = await run100G(live, { ...deps, now: () => new Date("2026-08-12T12:00:00Z") });
     expect(run.requestedLeads).toBe(65);
     expect(deps.calls).toEqual(["100A", "100B", "100C"]);
+    expect(run.supply).toMatchObject({ status: "low", runwayDays: 0.5, deficit: 65 });
+    expect(run.alerts?.[0]?.code).toBe("ELIGIBLE_SUPPLY_LOW");
+  });
+
+  it("persists an explicit alert when enrichment produces zero yield", async () => {
+    const deps = setup({ stage: 3, queued: 0 });
+    const stages = { ...deps.stages, "100B": { run: async () => ({ stage: "100B" as const, status: "completed" as const, produced: 0, reason: "none" }) } };
+    const run = await run100G(live, { ...deps, stages, now: () => new Date("2026-08-12T12:00:00Z") });
+    expect(run.alerts?.some(({ code }) => code === "ENRICHMENT_ZERO_YIELD")).toBe(true);
   });
 
   it("stops downstream stages after a failure", async () => {

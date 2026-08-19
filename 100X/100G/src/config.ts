@@ -4,6 +4,7 @@ export interface OrchestrationConfig {
   queueDays: number;
   maximumRequestedLeads: number;
   databaseBuildTarget: number;
+  minimumQueueDaysForAlert: number;
 }
 
 const positive = (raw: string | undefined, fallback: number, name: string): number => {
@@ -24,5 +25,6 @@ export function load100GConfig(env: Record<string, string | undefined>): Orchest
     queueDays: positive(env.VELTEX_100G_QUEUE_DAYS, 7, "queue days"),
     maximumRequestedLeads: positive(env.VELTEX_100G_MAX_REQUESTED_LEADS, 500, "maximum requested leads"),
     databaseBuildTarget: nonNegative(env.VELTEX_100G_DATABASE_BUILD_TARGET, 0, "database build target"),
+    minimumQueueDaysForAlert: positive(env.VELTEX_100G_MIN_QUEUE_DAYS_ALERT, 3, "minimum queue days for alert"),
   };
 }

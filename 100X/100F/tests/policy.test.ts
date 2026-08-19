@@ -37,7 +37,7 @@ const metric = (overrides: Partial<DailyRampMetrics> = {}): DailyRampMetrics => 
 });
 describe("100F ramp policy", () => {
   it("advances exactly one stage when all gates pass", () => {
-    expect(evaluateRamp(state, [metric()], policy, "2026-08-11")).toMatchObject({ action: "advance", targetStage: 25 });
+    expect(evaluateRamp(state, [metric()], policy, "2026-08-11")).toMatchObject({ action: "advance", targetStage: 25, gates: { metricsAvailable: true, dwellPassed: true, deliveredPassed: true, bouncePassed: true, capacityPassed: true } });
   });
 
   it.each([

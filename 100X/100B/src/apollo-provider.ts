@@ -122,7 +122,10 @@ export class ApolloEnrichmentProvider implements EnrichmentProvider {
     if (!Array.isArray(rawPeople)) {
       throw new ApolloError("malformed", "Apollo search response missing people[]", undefined, ctx.accounting.searchRequests);
     }
-    const found = rawPeople.filter(isObject).map((p) => this.parseSearchPerson(p)).filter((p): p is SearchPerson => p !== null);
+    const parsed = rawPeople.filter(isObject).map((p) => this.parseSearchPerson(p)).filter((p): p is SearchPerson => p !== null);
+    // Apollo can repeat the same person in search results. Deduplicate before the credit-bearing
+    // enrichment calls so one provider id can never consume multiple matches in a run.
+    const found = [...new Map(parsed.map((person) => [person.providerRecordId, person])).values()];
     if (found.length === 0) return this.result([], ctx); // no matches OR none had a usable id
 
     // Rank decision-makers locally, then cap the enrichment subset — BEFORE any credit call.

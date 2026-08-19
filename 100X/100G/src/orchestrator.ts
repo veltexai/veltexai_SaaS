@@ -1,5 +1,6 @@
 import type { OrchestrationDependencies, OrchestrationRun, StageId, StageResult } from "./types";
 import type { OrchestrationConfig } from "./config";
+import { forecastSupply, supplyAlerts } from "./supply-forecast";
 
 const ORDER: readonly StageId[] = ["100A", "100B", "100C"];
 
@@ -13,10 +14,11 @@ export async function run100G(config: OrchestrationConfig, deps: OrchestrationDe
   if (existing?.status === "completed") return existing;
 
   const supply = await deps.repository.getSupplySnapshot();
-  const desiredQueue = Math.min(config.maximumRequestedLeads, supply.currentDailySendStage * config.queueDays);
-  const requestedLeads = Math.max(0, desiredQueue - supply.queuedEligibleLeads);
+  const forecast = forecastSupply(supply, config.queueDays, config.maximumRequestedLeads, config.minimumQueueDaysForAlert);
+  const requestedLeads = forecast.deficit;
   const databaseBuildRequestedLeads = Math.max(requestedLeads, config.databaseBuildTarget);
   const results: StageResult[] = [];
+  const alerts = supplyAlerts(forecast);
 
   if (!config.enabled || !config.executeStages || databaseBuildRequestedLeads === 0) {
     const reason = !config.enabled ? "100G is disabled" : !config.executeStages ? "100G is in dry-run mode" : "eligible queue and database-build targets are satisfied";
@@ -31,9 +33,14 @@ export async function run100G(config: OrchestrationConfig, deps: OrchestrationDe
           currentDailySendStage: supply.currentDailySendStage,
         });
         results.push(result);
+        if (stage === "100B" && result.status === "completed" && result.produced === 0 && stageRequestedLeads > 0) {
+          alerts.push({ code: "ENRICHMENT_ZERO_YIELD", severity: "warning", message: "100B produced zero outreach-ready contacts; inspect aggregate enrichment evidence before increasing acquisition volume." });
+        }
         if (result.status === "failed") break;
       } catch (error) {
-        results.push({ stage, status: "failed", produced: 0, reason: error instanceof Error ? error.message : "unknown stage failure" });
+        const reason = error instanceof Error ? error.message : "unknown stage failure";
+        results.push({ stage, status: "failed", produced: 0, reason });
+        alerts.push({ code: "STAGE_FAILED", severity: "critical", message: `${stage} failed: ${reason}` });
         break;
       }
     }
@@ -44,6 +51,8 @@ export async function run100G(config: OrchestrationConfig, deps: OrchestrationDe
     mode,
     requestedLeads,
     results,
+    supply: forecast,
+    alerts,
     status: results.some((result) => result.status === "failed") ? "failed" : "completed",
   };
   const inserted = await deps.repository.recordRun(run);

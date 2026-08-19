@@ -12,6 +12,24 @@ export interface StageResult {
   status: StageStatus;
   produced: number;
   reason: string;
+  evidence?: Record<string, string | number | boolean | null | Record<string, number>>;
+}
+
+export type SupplyStatus = "healthy" | "low" | "empty";
+export interface SupplyForecast {
+  currentDailySendStage: number;
+  queuedEligibleLeads: number;
+  desiredQueue: number;
+  deficit: number;
+  runwayDays: number;
+  minimumAlertDays: number;
+  status: SupplyStatus;
+}
+
+export interface OrchestrationAlert {
+  code: "ELIGIBLE_SUPPLY_EMPTY" | "ELIGIBLE_SUPPLY_LOW" | "ENRICHMENT_ZERO_YIELD" | "STAGE_FAILED";
+  severity: "warning" | "critical";
+  message: string;
 }
 
 export interface OrchestrationRun {
@@ -19,6 +37,8 @@ export interface OrchestrationRun {
   mode: OrchestrationMode;
   requestedLeads: number;
   results: StageResult[];
+  supply?: SupplyForecast;
+  alerts?: OrchestrationAlert[];
   status: "completed" | "failed";
 }
 

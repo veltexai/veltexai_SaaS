@@ -69,6 +69,13 @@ describe("Apollo two-stage adapter — Stage 1 People Search", () => {
 });
 
 describe("Apollo two-stage adapter — decision-maker ranking", () => {
+  it("deduplicates repeated Apollo person ids before credit-bearing enrichment", async () => {
+    const r = router({ search: () => res({ people: [sp("same", "Owner"), sp("same", "Owner")] }), match: () => res({ person: { email: "owner@evergreen.example.com", email_status: "verified" } }) });
+    const out = await provider(r.fetchImpl).enrichCompany(company, 6);
+    expect(r.matchBodies).toHaveLength(1);
+    expect(out.candidates).toHaveLength(1);
+  });
+
   it("ranks decision-makers before enrichment and enriches the strongest first", async () => {
     const r = router({ search: () => res({ people: [sp("gen", "info"), sp("mgr", "Office Manager"), sp("own", "Owner")] }), match: (_b, i) => res({ person: { email: `e${i}@evergreen.example.com`, email_status: "verified" } }) });
     await provider(r.fetchImpl, { maxCandidatesEnrichedPerCompany: 1 }).enrichCompany(company, 6);

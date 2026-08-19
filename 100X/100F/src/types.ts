@@ -45,6 +45,27 @@ export interface RampDecision {
   reason: string;
   observedAt: string;
   idempotencyKey: string;
+  gates?: RampGateEvidence;
+}
+
+export interface RampGateEvidence {
+  metricsAvailable: boolean;
+  campaignHealthy?: boolean;
+  bounceRate?: number;
+  bouncePassed?: boolean;
+  complaintsPassed?: boolean;
+  accountHealthPassed?: boolean;
+  healthyAccountPassed?: boolean;
+  webhookPassed?: boolean;
+  stageAgeDays?: number;
+  requiredStageDays?: number;
+  dwellPassed?: boolean;
+  delivered?: number;
+  requiredDelivered?: number;
+  deliveredPassed?: boolean;
+  healthyCapacity?: number;
+  nextStage?: number | null;
+  capacityPassed?: boolean;
 }
 
 export interface RampRepository {
