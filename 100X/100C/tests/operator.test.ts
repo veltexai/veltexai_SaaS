@@ -24,7 +24,7 @@ const output = { info: (r: Record<string, unknown>) => records.push(r) };
 beforeEach(() => records.splice(0));
 
 function factories(): OperatorFactories & { fixture: jest.Mock; provider: jest.Mock; controlled: jest.Mock } {
-  const fixture = jest.fn((): LocalSyncContext => ({ provider: new FixtureOutboundProvider({ campaignState: "draft" }), repository: new InMemorySyncRepository([eligible], {}, clock), campaign }));
+  const fixture = jest.fn((): LocalSyncContext => ({ provider: new FixtureOutboundProvider({ campaignState: "draft" }), repository: new InMemorySyncRepository([eligible], {}, clock), campaign, clock: { now: clock } }));
   const provider = jest.fn((): ProviderInspectContext => ({ provider: new FixtureOutboundProvider({ campaignState: "draft" }), campaign }));
   const controlled = jest.fn((): LocalSyncContext => ({ provider: new FixtureOutboundProvider({ campaignState: "draft" }), repository: new InMemorySyncRepository([eligible], {}, clock), campaign }));
   return { createFixtureContext: fixture, createProviderContext: provider, createControlledContext: controlled, fixture, provider, controlled };

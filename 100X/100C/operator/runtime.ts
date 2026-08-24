@@ -1,11 +1,11 @@
 import { assertCampaignStateSafe } from "../src/campaign-allowlist";
 import { run100C } from "../src/run";
 import type {
-  ApprovedCampaign, DiagnosticEvent, DiagnosticSink, OutboundSyncProvider, SyncRepository, SyncSummary,
+  ApprovedCampaign, Clock, DiagnosticEvent, DiagnosticSink, OutboundSyncProvider, SyncRepository, SyncSummary,
 } from "../src/types";
 import { preflightOperator, type ApprovedEnvironment, type OperatorPreflight } from "./command";
 
-export interface LocalSyncContext { provider: OutboundSyncProvider; repository: SyncRepository; campaign: ApprovedCampaign }
+export interface LocalSyncContext { provider: OutboundSyncProvider; repository: SyncRepository; campaign: ApprovedCampaign; clock?: Clock }
 export interface ProviderInspectContext { provider: OutboundSyncProvider; campaign: ApprovedCampaign }
 export interface OperatorFactories {
   createFixtureContext(): LocalSyncContext;                                                                          // fixture-preview: mock adapter + in-memory + synthetic campaign
@@ -41,7 +41,7 @@ export async function executeOperator(
 
   if (preflight.request.mode === "fixture-preview") {
     const ctx = factories.createFixtureContext();
-    const summary = await run100C(preflight.config, { provider: ctx.provider, repository: ctx.repository, diagnostics: sink, campaign: ctx.campaign }, "manual");
+    const summary = await run100C(preflight.config, { provider: ctx.provider, repository: ctx.repository, diagnostics: sink, campaign: ctx.campaign, clock: ctx.clock }, "manual");
     output.info({ event: "operator.summary", mode: "fixture-preview", summary });
     return { plan, summary };
   }
@@ -59,7 +59,7 @@ export async function executeOperator(
 
   // controlled-write (disabled by default; reached only after every gate in preflight passed).
   const ctx = factories.createControlledContext(env, preflight.request.campaignConfigId!, preflight.environment.id);
-  const summary = await run100C(preflight.config, { provider: ctx.provider, repository: ctx.repository, diagnostics: sink, campaign: ctx.campaign }, "manual");
+  const summary = await run100C(preflight.config, { provider: ctx.provider, repository: ctx.repository, diagnostics: sink, campaign: ctx.campaign, clock: ctx.clock }, "manual");
   output.info({ event: "operator.summary", mode: "controlled-write", summary });
   return { plan, summary };
 }

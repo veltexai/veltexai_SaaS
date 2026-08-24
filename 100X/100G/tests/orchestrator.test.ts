@@ -66,13 +66,13 @@ describe("100G acquisition orchestrator", () => {
     expect(recovered.status).toBe("completed");
   });
 
-  it("does not call stages in dry-run mode or when inventory is sufficient", async () => {
+  it("does not call stages in dry-run mode and still feeds 100C when inventory is sufficient", async () => {
     const dry = setup();
     await run100G({ ...live, executeStages: false }, { ...dry, now: () => new Date("2026-08-12T12:00:00Z") });
     expect(dry.calls).toEqual([]);
     const full = setup({ queued: 70 });
     await run100G({ ...live, databaseBuildTarget: 0 }, { ...full, now: () => new Date("2026-08-12T12:00:00Z") });
-    expect(full.calls).toEqual([]);
+    expect(full.calls).toEqual(["100C"]);
   });
 
   it("allows an execute run after a successful dry run on the same day", async () => {
@@ -84,7 +84,7 @@ describe("100G acquisition orchestrator", () => {
     expect(deps.calls).toEqual(["100A", "100B", "100C"]);
   });
 
-  it("keeps database acquisition ahead of the sender warm-up without increasing 100C demand", async () => {
+  it("keeps database acquisition ahead of the sender warm-up while bounding 100C to the audited stage", async () => {
     const calls: Array<[StageId, number]> = [];
     const deps = setup({ stage: 1, queued: 0 });
     const runner = (stage: StageId): StageRunner => ({ run: async ({ requestedLeads }) => {
@@ -92,7 +92,20 @@ describe("100G acquisition orchestrator", () => {
     } });
     const stages = { "100A": runner("100A"), "100B": runner("100B"), "100C": runner("100C") };
     await run100G({ ...live, databaseBuildTarget: 25 }, { ...deps, stages, now: () => new Date("2026-08-13T12:00:00Z") });
-    expect(calls).toEqual([["100A", 25], ["100B", 25], ["100C", 7]]);
+    expect(calls).toEqual([["100A", 25], ["100B", 25], ["100C", 1]]);
+  });
+
+  it("requests the audited 100C stage even when a healthy queue has no acquisition deficit", async () => {
+    const calls: Array<[StageId, number]> = [];
+    const deps = setup({ stage: 1, queued: 56 });
+    const runner = (stage: StageId): StageRunner => ({ run: async ({ requestedLeads }) => {
+      calls.push([stage, requestedLeads]);
+      return { stage, status: "completed", produced: 0, reason: "ok" };
+    } });
+    const stages = { "100A": runner("100A"), "100B": runner("100B"), "100C": runner("100C") };
+    const run = await run100G({ ...live, databaseBuildTarget: 25 }, { ...deps, stages, now: () => new Date("2026-08-24T12:00:00Z") });
+    expect(run.requestedLeads).toBe(0);
+    expect(calls).toEqual([["100A", 25], ["100B", 25], ["100C", 1]]);
   });
 
   it("passes the audited daily send stage to every production stage", async () => {

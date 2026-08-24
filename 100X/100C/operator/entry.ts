@@ -13,7 +13,7 @@ import type { ApprovedEnvironment } from "./command";
 const readJson = <T>(name: string): T => JSON.parse(readFileSync(resolve(process.cwd(), `100X/100C/operator/${name}`), "utf8")) as T;
 const output = { info: (record: Record<string, unknown>) => console.info(JSON.stringify(record)) };
 
-interface FixtureFile { campaign: ApprovedCampaign; providerScript: FixtureSyncScript; candidates: SyncCandidate[]; suppression: Record<string, SuppressionEvent[]>; suppressionRegistry?: InMemorySuppressionRow[] }
+interface FixtureFile { fixtureNow: string; campaign: ApprovedCampaign; providerScript: FixtureSyncScript; candidates: SyncCandidate[]; suppression: Record<string, SuppressionEvent[]>; suppressionRegistry?: InMemorySuppressionRow[] }
 
 executeOperator(
   process.argv.slice(2), process.env, readJson<ApprovedEnvironment[]>("environments.json"),
@@ -21,7 +21,10 @@ executeOperator(
     // fixture-preview: synthetic campaign + mock adapter + in-memory repository. Offline.
     createFixtureContext: () => {
       const f = readJson<FixtureFile>("sync-fixtures.json");
-      return { provider: new FixtureOutboundProvider(f.providerScript), repository: new InMemorySyncRepository(f.candidates, f.suppression, () => new Date(), f.suppressionRegistry ?? []), campaign: f.campaign };
+      const fixtureDate = new Date(f.fixtureNow);
+      if (!Number.isFinite(fixtureDate.getTime())) throw new Error("100C fixtureNow must be a valid timestamp");
+      const clock = { now: () => new Date(fixtureDate) };
+      return { provider: new FixtureOutboundProvider(f.providerScript), repository: new InMemorySyncRepository(f.candidates, f.suppression, clock.now, f.suppressionRegistry ?? []), campaign: f.campaign, clock };
     },
     // provider-preview: read-only Instantly campaign inspection against an APPROVED allowlisted
     // campaign. Fails closed (in bindApprovedCampaign) before the Instantly client is constructed.

@@ -108,8 +108,16 @@ export function createProductionStages(env: Env, orchestrationClient: SupabaseCl
       const db = client(required(env, "VELTEX_100C_SUPABASE_URL"), required(env, "VELTEX_100C_SUPABASE_ANON_KEY"), required(env, "VELTEX_100C_WORKER_JWT"));
       // Replenish no faster than the controller's audited daily stage. This keeps queue writes
       // synchronized with the send cap while allowing conservative 1 -> 3 -> 5 progression.
-      const capacity = Math.min(requestedLeads, currentDailySendStage, await remainingCampaignCapacity(db, campaign, runDate));
-      if (capacity <= 0) return { stage: "100C", status: "skipped", produced: 0, reason: "approved campaign daily or total sync cap reached" };
+      const remainingCapacity = await remainingCampaignCapacity(db, campaign, runDate);
+      const capacity = Math.max(0, Math.min(requestedLeads, currentDailySendStage, remainingCapacity));
+      if (capacity <= 0) {
+        const reason = requestedLeads <= 0
+          ? "no outbound synchronization requested"
+          : currentDailySendStage <= 0
+            ? "audited daily send stage does not permit synchronization"
+            : "approved campaign daily or total sync cap reached";
+        return { stage: "100C", status: "skipped", produced: 0, reason };
+      }
       const config = load100CConfig(env, "instantly");
       config.limits.maxLeadsSubmitted = capacity;
       config.limits.maxInstantlyWriteRequests = capacity;

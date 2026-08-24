@@ -1,5 +1,6 @@
 {
   "_fixtureNotice": "SYNTHETIC TEST FIXTURE — NOT REAL CONTACTS OR A REAL CAMPAIGN. Every contact, email, and the campaign below is fabricated for offline 100C fixture-preview only. All emails use RFC-2606 reserved example.com domains. No live Instantly call, lead creation, email, or database write occurs when this file is used. Not authorization for outreach.",
+  "fixtureNow": "2026-08-09T00:00:00.000Z",
   "campaign": {
     "configId": "fixture-campaign",
     "instantlyCampaignId": "00000000-0000-4000-8000-000000000000",

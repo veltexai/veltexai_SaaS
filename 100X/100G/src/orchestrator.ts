@@ -17,16 +17,25 @@ export async function run100G(config: OrchestrationConfig, deps: OrchestrationDe
   const forecast = forecastSupply(supply, config.queueDays, config.maximumRequestedLeads, config.minimumQueueDaysForAlert);
   const requestedLeads = forecast.deficit;
   const databaseBuildRequestedLeads = Math.max(requestedLeads, config.databaseBuildTarget);
+  // Acquisition demand and campaign-sync demand answer different questions. A healthy
+  // database can have a zero replenishment deficit while the active campaign still needs
+  // its audited daily allotment. Keep 100C bounded by the controller stage and let its own
+  // eligibility, suppression, daily, total, and provider caps reduce the actual writes.
+  const outboundSyncRequestedLeads = forecast.currentDailySendStage;
   const results: StageResult[] = [];
   const alerts = supplyAlerts(forecast);
 
-  if (!config.enabled || !config.executeStages || databaseBuildRequestedLeads === 0) {
-    const reason = !config.enabled ? "100G is disabled" : !config.executeStages ? "100G is in dry-run mode" : "eligible queue and database-build targets are satisfied";
+  if (!config.enabled || !config.executeStages || (databaseBuildRequestedLeads === 0 && outboundSyncRequestedLeads === 0)) {
+    const reason = !config.enabled ? "100G is disabled" : !config.executeStages ? "100G is in dry-run mode" : "database-build and outbound-sync targets are satisfied";
     for (const stage of ORDER) results.push({ stage, status: "skipped", produced: 0, reason });
   } else {
     for (const stage of ORDER) {
       try {
-        const stageRequestedLeads = stage === "100C" ? requestedLeads : databaseBuildRequestedLeads;
+        const stageRequestedLeads = stage === "100C" ? outboundSyncRequestedLeads : databaseBuildRequestedLeads;
+        if (stage !== "100C" && stageRequestedLeads === 0) {
+          results.push({ stage, status: "skipped", produced: 0, reason: "eligible queue and database-build targets are satisfied" });
+          continue;
+        }
         const result = await deps.stages[stage].run({
           runDate,
           requestedLeads: stageRequestedLeads,
