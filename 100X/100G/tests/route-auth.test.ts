@@ -12,5 +12,6 @@ describe("100G scheduled-route authentication", () => {
     expect(route).toContain("authorized(presented, process.env.CRON_SECRET)");
     expect(route).toContain("!workflowAuthorized && !vercelCronAuthorized");
     expect(route).not.toContain("VELTEX_100G_CRON_SECRET ?? process.env.CRON_SECRET");
+    expect(route).toContain('req.nextUrl.searchParams.get("lane")');
   });
 });

@@ -13,6 +13,6 @@ describe("100G Supabase repository", () => {
       return query;
     } };
     const repo = new SupabaseOrchestrationRepository(client as any);
-    await expect(repo.recordRun({ runDate: "2026-08-12", mode: "execute", requestedLeads: 3, status: "completed", results: [] })).resolves.toBe(false);
+    await expect(repo.recordRun({ runDate: "2026-08-12", mode: "execute", lane: "outbound", requestedLeads: 3, status: "completed", results: [] })).resolves.toBe(false);
   });
 });

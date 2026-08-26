@@ -1,6 +1,7 @@
 export type StageId = "100A" | "100B" | "100C";
 export type StageStatus = "completed" | "skipped" | "failed";
 export type OrchestrationMode = "dry_run" | "execute";
+export type OrchestrationLane = "full" | "outbound" | "discovery" | "enrichment";
 
 export interface SupplySnapshot {
   currentDailySendStage: number;
@@ -35,6 +36,7 @@ export interface OrchestrationAlert {
 export interface OrchestrationRun {
   runDate: string;
   mode: OrchestrationMode;
+  lane: OrchestrationLane;
   requestedLeads: number;
   results: StageResult[];
   supply?: SupplyForecast;
@@ -43,12 +45,12 @@ export interface OrchestrationRun {
 }
 
 export interface StageRunner {
-  run(input: { runDate: string; requestedLeads: number; currentDailySendStage: number }): Promise<StageResult>;
+  run(input: { runDate: string; requestedLeads: number; currentDailySendStage: number; lane: OrchestrationLane }): Promise<StageResult>;
 }
 
 export interface OrchestrationRepository {
   getSupplySnapshot(): Promise<SupplySnapshot>;
-  findRun(runDate: string, mode: OrchestrationMode): Promise<OrchestrationRun | null>;
+  findRun(runDate: string, mode: OrchestrationMode, lane: OrchestrationLane): Promise<OrchestrationRun | null>;
   recordRun(run: OrchestrationRun): Promise<boolean>;
 }
 

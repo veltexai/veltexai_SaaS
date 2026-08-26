@@ -9,6 +9,12 @@ yield evidence (targets, candidates, provider requests/errors, duplicates, verif
 and caps). The protected `/api/internal/100x/health` endpoint combines the latest orchestration
 runs with the 100F state, daily metrics, and mutation-decision audit trail. It is read-only.
 
+Production scheduling uses independent daily lanes: outbound first, reconciliation 30 minutes
+later, bounded discovery after the send window, and enrichment after discovery. Each lane has its
+own idempotent audit record, so acquisition latency cannot delay daily campaign synchronization.
+The discovery lane defaults to at most three markets per run; override only with
+`VELTEX_100A_MAX_MARKETS_PER_DISCOVERY_RUN` after provider cost and runtime review.
+
 It does not weaken the independent locks, caps, eligibility checks, suppression checks, or provider
 budgets owned by 100A–100C. `VELTEX_100G_ENABLED=true` enables evaluation; the separate
 `VELTEX_100G_EXECUTE_STAGES=true` gate authorizes stage execution. Both default to false.

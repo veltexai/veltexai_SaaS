@@ -58,7 +58,7 @@ async function remainingCampaignCapacity(db: SupabaseClient, campaign: ApprovedC
 
 export function createProductionStages(env: Env, orchestrationClient: SupabaseClient): Record<"100A" | "100B" | "100C", StageRunner> {
   return {
-    "100A": { run: async ({ requestedLeads }) => {
+    "100A": { run: async ({ requestedLeads, lane }) => {
       if (env.VELTEX_100A_ALLOW_100G !== "true") return disabled("100A");
       const db = client(required(env, "VELTEX_100A_SUPABASE_URL"), required(env, "VELTEX_100A_SUPABASE_ANON_KEY"), required(env, "VELTEX_100A_WORKER_JWT"));
       const config = load100AConfig(env, discoveryGeographies(env.VELTEX_100A_GEOGRAPHY_MODE));
@@ -66,7 +66,10 @@ export function createProductionStages(env: Env, orchestrationClient: SupabaseCl
       // A nationwide database target can require many markets. Running all of them in one
       // serverless invocation starves 100B/100C and can exceed Vercel's five-minute limit.
       // Rotate through a small bounded cohort each day; the durable cursor preserves progress.
-      const marketLimit = discoveryMarketLimit(requestedLeads, perMarket, env.VELTEX_100A_MAX_MARKETS_PER_RUN);
+      const configuredMarketLimit = lane === "discovery"
+        ? env.VELTEX_100A_MAX_MARKETS_PER_DISCOVERY_RUN ?? "3"
+        : env.VELTEX_100A_MAX_MARKETS_PER_RUN;
+      const marketLimit = discoveryMarketLimit(requestedLeads, perMarket, configuredMarketLimit);
       let created = 0; let markets = 0;
       while (created < requestedLeads && markets < marketLimit) {
         const remaining = requestedLeads - created;

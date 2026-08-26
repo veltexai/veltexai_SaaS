@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { OrchestrationMode, OrchestrationRepository, OrchestrationRun, SupplySnapshot } from "./types";
+import type { OrchestrationLane, OrchestrationMode, OrchestrationRepository, OrchestrationRun, SupplySnapshot } from "./types";
 
 type StoredResults = OrchestrationRun["results"] | {
   stages: OrchestrationRun["results"];
@@ -33,11 +33,11 @@ export class SupabaseOrchestrationRepository implements OrchestrationRepository 
     };
   }
 
-  async findRun(runDate: string, mode: OrchestrationMode): Promise<OrchestrationRun | null> {
-    const { data, error } = await this.client.from("acquisition_orchestration_runs").select("run_date,mode,requested_leads,status,results").eq("run_date", runDate).eq("mode", mode).maybeSingle();
+  async findRun(runDate: string, mode: OrchestrationMode, lane: OrchestrationLane): Promise<OrchestrationRun | null> {
+    const { data, error } = await this.client.from("acquisition_orchestration_runs").select("run_date,mode,lane,requested_leads,status,results").eq("run_date", runDate).eq("mode", mode).eq("lane", lane).maybeSingle();
     assertNoError(error, "read 100G run");
     if (!data) return null;
-    return { runDate: data.run_date, mode: data.mode, requestedLeads: data.requested_leads, status: data.status, ...decodeStoredResults(data.results as StoredResults) } as OrchestrationRun;
+    return { runDate: data.run_date, mode: data.mode, lane: data.lane, requestedLeads: data.requested_leads, status: data.status, ...decodeStoredResults(data.results as StoredResults) } as OrchestrationRun;
   }
 
   async recordRun(run: OrchestrationRun): Promise<boolean> {
@@ -45,10 +45,10 @@ export class SupabaseOrchestrationRepository implements OrchestrationRepository 
     // orchestrator returns it before execution, and this conditional preserves that invariant.
     const replaced = await this.client.from("acquisition_orchestration_runs")
       .update({ requested_leads: run.requestedLeads, status: run.status, results: encodeResults(run) })
-      .eq("run_date", run.runDate).eq("mode", run.mode).eq("status", "failed").select("run_date");
+      .eq("run_date", run.runDate).eq("mode", run.mode).eq("lane", run.lane).eq("status", "failed").select("run_date");
     assertNoError(replaced.error, "replace failed 100G run");
     if ((replaced.data ?? []).length > 0) return true;
-    const { error } = await this.client.from("acquisition_orchestration_runs").insert({ run_date: run.runDate, mode: run.mode, requested_leads: run.requestedLeads, status: run.status, results: encodeResults(run) });
+    const { error } = await this.client.from("acquisition_orchestration_runs").insert({ run_date: run.runDate, mode: run.mode, lane: run.lane, requested_leads: run.requestedLeads, status: run.status, results: encodeResults(run) });
     if (!error) return true;
     if (error.code === "23505") return false;
     assertNoError(error, "record 100G run");

@@ -6,9 +6,9 @@ function setup(overrides: Partial<{ stage: number; queued: number; fail: StageId
   const calls: StageId[] = [];
   const repository: OrchestrationRepository = {
     getSupplySnapshot: async () => ({ currentDailySendStage: overrides.stage ?? 10, queuedEligibleLeads: overrides.queued ?? 5 }),
-    findRun: async (date, mode) => saved.get(`${date}:${mode}`) ?? null,
+    findRun: async (date, mode, lane) => saved.get(`${date}:${mode}:${lane}`) ?? null,
     recordRun: async (run) => {
-      const key = `${run.runDate}:${run.mode}`;
+      const key = `${run.runDate}:${run.mode}:${run.lane}`;
       const previous = saved.get(key);
       if (previous?.status === "completed") return false;
       saved.set(key, run);
@@ -118,5 +118,23 @@ describe("100G acquisition orchestrator", () => {
     const stages = { "100A": runner("100A"), "100B": runner("100B"), "100C": runner("100C") };
     await run100G(live, { ...deps, stages, now: () => new Date("2026-08-13T12:00:00Z") });
     expect(seen).toEqual([["100C", 3], ["100B", 3], ["100A", 3]]);
+  });
+
+  it("isolates outbound, discovery, and enrichment into independent daily runs", async () => {
+    const deps = setup({ stage: 3, queued: 0 });
+    const now = () => new Date("2026-08-13T12:00:00Z");
+    await run100G(live, { ...deps, now }, "outbound");
+    await run100G(live, { ...deps, now }, "discovery");
+    await run100G(live, { ...deps, now }, "enrichment");
+    expect(deps.calls).toEqual(["100C", "100A", "100B"]);
+  });
+
+  it("remains idempotent within each lane", async () => {
+    const deps = setup({ stage: 3, queued: 0 });
+    const now = () => new Date("2026-08-13T12:00:00Z");
+    const first = await run100G(live, { ...deps, now }, "discovery");
+    const second = await run100G(live, { ...deps, now }, "discovery");
+    expect(second).toEqual(first);
+    expect(deps.calls).toEqual(["100A"]);
   });
 });

@@ -49,7 +49,7 @@ export async function read100XHealthDashboard(
 ) {
   const [supplyResult, runResult, stateResult, metricsResult, decisionsResult] = await Promise.all([
     orchestrationDb.rpc("read_100g_supply_snapshot"),
-    orchestrationDb.from("acquisition_orchestration_runs").select("run_date,mode,requested_leads,status,results,created_at").eq("mode", "execute").order("run_date", { ascending: false }).limit(7),
+    orchestrationDb.from("acquisition_orchestration_runs").select("run_date,mode,lane,requested_leads,status,results,created_at").eq("mode", "execute").order("created_at", { ascending: false }).limit(21),
     rampDb.from("ramp_controller_state").select("campaign_id,current_stage,stage_started_at,last_decision_date,paused_by_controller,updated_at").eq("campaign_id", campaignId).maybeSingle(),
     rampDb.from("ramp_daily_metrics").select("metric_date,campaign_status,configured_daily_limit,sent,bounced,replies,unsubscribes,spam_complaints,webhook_failures,healthy_sending_accounts,minimum_account_health,recorded_at").eq("campaign_id", campaignId).order("metric_date", { ascending: false }).limit(7),
     rampDb.from("ramp_decisions").select("action,current_stage,target_stage,reason,observed_at,metrics,created_at").eq("campaign_id", campaignId).order("observed_at", { ascending: false }).limit(7),
@@ -63,6 +63,7 @@ export async function read100XHealthDashboard(
   const runs = (runResult.data ?? []).map((row) => ({
     runDate: row.run_date,
     mode: row.mode,
+    lane: row.lane,
     requestedLeads: row.requested_leads,
     status: row.status,
     createdAt: row.created_at,
@@ -74,20 +75,23 @@ export async function read100XHealthDashboard(
   const minimumAlertDays = 3;
   const runwayDays = Number((queued / Math.max(1, stage)).toFixed(2));
   const supplyStatus = queued === 0 ? "empty" : runwayDays < minimumAlertDays ? "low" : "healthy";
-  const latestRun = runs[0] ?? null;
+  // Sending readiness is anchored to the outbound lane. Slower discovery/enrichment
+  // results remain visible without making a healthy outbound run appear stale or failed.
+  const latestRun = runs.find((run) => run.lane === "outbound" || run.lane === "full") ?? null;
+  const latestByLane = Object.fromEntries(["outbound", "discovery", "enrichment"].map((lane) => [lane, runs.find((run) => run.lane === lane) ?? null]));
   const health = assessDashboardHealth({ now, latestRun, latestMetric, supplyStatus });
   return {
     generatedAt: now.toISOString(),
     mutationExecutionEnabled,
     health,
-    activeAlerts: latestRun?.alerts ?? [],
+    activeAlerts: Object.values(latestByLane).flatMap((run) => run?.alerts ?? []),
     supply: {
       currentDailySendStage: stage,
       queuedEligibleLeads: queued,
       runwayDays,
       status: supplyStatus,
     },
-    orchestration: { latest: runs[0] ?? null, recent: runs },
+    orchestration: { latest: latestRun, latestByLane, recent: runs },
     ramp: {
       state: stateResult.data ?? null,
       latestMetric,

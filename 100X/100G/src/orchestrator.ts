@@ -1,16 +1,21 @@
-import type { OrchestrationDependencies, OrchestrationRun, StageId, StageResult } from "./types";
+import type { OrchestrationDependencies, OrchestrationLane, OrchestrationRun, StageId, StageResult } from "./types";
 import type { OrchestrationConfig } from "./config";
 import { forecastSupply, supplyAlerts } from "./supply-forecast";
 
 // Protect the time-sensitive daily campaign allotment from slower acquisition work.
 // The eligible queue is already durable, so 100C can safely consume from it before
 // bounded enrichment and discovery replenish future supply.
-const ORDER: readonly StageId[] = ["100C", "100B", "100A"];
+const ORDERS: Record<OrchestrationLane, readonly StageId[]> = {
+  full: ["100C", "100B", "100A"],
+  outbound: ["100C"],
+  discovery: ["100A"],
+  enrichment: ["100B"],
+};
 
-export async function run100G(config: OrchestrationConfig, deps: OrchestrationDependencies): Promise<OrchestrationRun> {
+export async function run100G(config: OrchestrationConfig, deps: OrchestrationDependencies, lane: OrchestrationLane = "full"): Promise<OrchestrationRun> {
   const runDate = (deps.now?.() ?? new Date()).toISOString().slice(0, 10);
   const mode = config.executeStages ? "execute" : "dry_run";
-  const existing = await deps.repository.findRun(runDate, mode);
+  const existing = await deps.repository.findRun(runDate, mode, lane);
   // A completed run is terminal for its date and mode. A failed run is deliberately retriable:
   // provider/stage locks can outlive an interrupted serverless request, and retrying after the
   // lock expires is safe because each downstream workflow retains its own idempotency guards.
@@ -27,12 +32,18 @@ export async function run100G(config: OrchestrationConfig, deps: OrchestrationDe
   const outboundSyncRequestedLeads = forecast.currentDailySendStage;
   const results: StageResult[] = [];
   const alerts = supplyAlerts(forecast);
+  const order = ORDERS[lane];
+  const laneHasWork = lane === "outbound"
+    ? outboundSyncRequestedLeads > 0
+    : lane === "discovery" || lane === "enrichment"
+      ? databaseBuildRequestedLeads > 0
+      : databaseBuildRequestedLeads > 0 || outboundSyncRequestedLeads > 0;
 
-  if (!config.enabled || !config.executeStages || (databaseBuildRequestedLeads === 0 && outboundSyncRequestedLeads === 0)) {
+  if (!config.enabled || !config.executeStages || !laneHasWork) {
     const reason = !config.enabled ? "100G is disabled" : !config.executeStages ? "100G is in dry-run mode" : "database-build and outbound-sync targets are satisfied";
-    for (const stage of ORDER) results.push({ stage, status: "skipped", produced: 0, reason });
+    for (const stage of order) results.push({ stage, status: "skipped", produced: 0, reason });
   } else {
-    for (const stage of ORDER) {
+    for (const stage of order) {
       try {
         const stageRequestedLeads = stage === "100C" ? outboundSyncRequestedLeads : databaseBuildRequestedLeads;
         if (stage !== "100C" && stageRequestedLeads === 0) {
@@ -43,6 +54,7 @@ export async function run100G(config: OrchestrationConfig, deps: OrchestrationDe
           runDate,
           requestedLeads: stageRequestedLeads,
           currentDailySendStage: supply.currentDailySendStage,
+          lane,
         });
         results.push(result);
         if (stage === "100B" && result.status === "completed" && result.produced === 0 && stageRequestedLeads > 0) {
@@ -61,6 +73,7 @@ export async function run100G(config: OrchestrationConfig, deps: OrchestrationDe
   const run: OrchestrationRun = {
     runDate,
     mode,
+    lane,
     requestedLeads,
     results,
     supply: forecast,
@@ -68,5 +81,5 @@ export async function run100G(config: OrchestrationConfig, deps: OrchestrationDe
     status: results.some((result) => result.status === "failed") ? "failed" : "completed",
   };
   const inserted = await deps.repository.recordRun(run);
-  return inserted ? run : (await deps.repository.findRun(runDate, mode)) ?? run;
+  return inserted ? run : (await deps.repository.findRun(runDate, mode, lane)) ?? run;
 }

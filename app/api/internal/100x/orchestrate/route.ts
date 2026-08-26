@@ -6,7 +6,7 @@ import { run100G } from "@/100X/100G/src/orchestrator";
 import { SupabaseOrchestrationRepository } from "@/100X/100G/src/supabase-repository";
 import { createProductionStages } from "@/100X/100G/src/production-stages";
 import { readProductionStageReadiness } from "@/100X/100G/src/readiness";
-import type { StageId } from "@/100X/100G/src/types";
+import type { OrchestrationLane, StageId } from "@/100X/100G/src/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +20,11 @@ function authorized(header: string | null, secret: string | undefined): boolean 
 
 function rehearsalStage(value: string | null): StageId | null {
   return value === "100A" || value === "100B" || value === "100C" ? value : null;
+}
+
+function orchestrationLane(value: string | null): OrchestrationLane {
+  if (value === "outbound" || value === "discovery" || value === "enrichment" || value === "full") return value;
+  return "full";
 }
 
 async function execute(req: NextRequest): Promise<NextResponse> {
@@ -48,6 +53,7 @@ async function execute(req: NextRequest): Promise<NextResponse> {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
     const repository = new SupabaseOrchestrationRepository(client);
+    const lane = orchestrationLane(req.nextUrl.searchParams.get("lane"));
     const requestedRehearsal = rehearsalStage(req.nextUrl.searchParams.get("rehearse"));
     if (requestedRehearsal) {
       if (process.env.VELTEX_100G_ALLOW_REHEARSAL !== "true") return NextResponse.json({ ok: false }, { status: 403 });
@@ -55,10 +61,11 @@ async function execute(req: NextRequest): Promise<NextResponse> {
         runDate: new Date().toISOString().slice(0, 10),
         requestedLeads: 1,
         currentDailySendStage: 1,
+        lane,
       });
       return NextResponse.json({ ok: result.status !== "failed", mode: "rehearsal", providerCallsMade: true, result });
     }
-    const run = await run100G(config, { repository, stages: createProductionStages(process.env, client) });
+    const run = await run100G(config, { repository, stages: createProductionStages(process.env, client) }, lane);
     return NextResponse.json({ ok: run.status === "completed", mode: config.executeStages ? "execute" : "dry_run", run });
   } catch (error) {
     const diagnostic = error instanceof Error ? error.message : "Unknown 100G failure";
