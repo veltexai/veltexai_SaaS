@@ -9,9 +9,10 @@ yield evidence (targets, candidates, provider requests/errors, duplicates, verif
 and caps). The protected `/api/internal/100x/health` endpoint combines the latest orchestration
 runs with the 100F state, daily metrics, and mutation-decision audit trail. It is read-only.
 
-Production scheduling uses independent daily lanes: outbound first, reconciliation 30 minutes
-later, bounded discovery after the send window, and enrichment after discovery. Each lane has its
-own idempotent audit record, so acquisition latency cannot delay daily campaign synchronization.
+Production scheduling uses independent daily lanes: bounded discovery at 09:00 UTC, enrichment at
+11:00 UTC, outbound at 14:00 UTC, and reconciliation 30 minutes later. The acquisition lead time
+lets verified supply reach the durable queue before the time-sensitive campaign allotment. Each lane
+has its own idempotent audit record, so provider latency cannot consume another lane's execution.
 The discovery lane defaults to at most three markets per run; override only with
 `VELTEX_100A_MAX_MARKETS_PER_DISCOVERY_RUN` after provider cost and runtime review.
 
