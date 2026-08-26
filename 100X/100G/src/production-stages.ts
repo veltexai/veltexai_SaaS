@@ -35,6 +35,8 @@ const positive = (value: string | undefined, fallback: number): number => {
   if (!Number.isInteger(parsed) || parsed <= 0) throw new Error("100G database-build limits must be positive integers");
   return parsed;
 };
+export const discoveryMarketLimit = (requestedLeads: number, perMarket: number, configuredLimit?: string): number =>
+  Math.min(Math.ceil(requestedLeads / perMarket), positive(configuredLimit, 1));
 const disabled = (stage: StageResult["stage"]): StageResult => ({ stage, status: "skipped", produced: 0, reason: `${stage} is not enabled for 100G` });
 
 async function enrichmentTargets(orchestrationClient: SupabaseClient, limit: number): Promise<string[]> {
@@ -61,8 +63,12 @@ export function createProductionStages(env: Env, orchestrationClient: SupabaseCl
       const db = client(required(env, "VELTEX_100A_SUPABASE_URL"), required(env, "VELTEX_100A_SUPABASE_ANON_KEY"), required(env, "VELTEX_100A_WORKER_JWT"));
       const config = load100AConfig(env, discoveryGeographies(env.VELTEX_100A_GEOGRAPHY_MODE));
       const perMarket = positive(env.VELTEX_100A_MAX_NEW_PROSPECTS_PER_MARKET, 5);
+      // A nationwide database target can require many markets. Running all of them in one
+      // serverless invocation starves 100B/100C and can exceed Vercel's five-minute limit.
+      // Rotate through a small bounded cohort each day; the durable cursor preserves progress.
+      const marketLimit = discoveryMarketLimit(requestedLeads, perMarket, env.VELTEX_100A_MAX_MARKETS_PER_RUN);
       let created = 0; let markets = 0;
-      while (created < requestedLeads && markets < Math.ceil(requestedLeads / perMarket)) {
+      while (created < requestedLeads && markets < marketLimit) {
         const remaining = requestedLeads - created;
         config.limits.maxNewProspectsPerRun = Math.min(positive(env.VELTEX_100A_MAX_NEW_PROSPECTS, 5), perMarket, remaining);
         config.limits.maxSourceRecordsPerRun = Math.min(positive(env.VELTEX_100A_MAX_SOURCE_RECORDS, 5), perMarket, remaining);
@@ -70,7 +76,7 @@ export function createProductionStages(env: Env, orchestrationClient: SupabaseCl
         created += summary.canonicalProspectsCreated; markets += 1;
         if (summary.canonicalProspectsCreated === 0) continue;
       }
-      return result("100A", created, `discovered ${created} new prospects across ${markets} market${markets === 1 ? "" : "s"}`);
+      return result("100A", created, `discovered ${created} new prospects across ${markets} of ${marketLimit} scheduled market${marketLimit === 1 ? "" : "s"}`);
     } },
     "100B": { run: async ({ requestedLeads }) => {
       if (env.VELTEX_100B_ALLOW_100G !== "true") return disabled("100B");

@@ -30,7 +30,7 @@ describe("100G acquisition orchestrator", () => {
     const deps = setup();
     const run = await run100G(live, { ...deps, now: () => new Date("2026-08-12T12:00:00Z") });
     expect(run.requestedLeads).toBe(65);
-    expect(deps.calls).toEqual(["100A", "100B", "100C"]);
+    expect(deps.calls).toEqual(["100C", "100B", "100A"]);
     expect(run.supply).toMatchObject({ status: "low", runwayDays: 0.5, deficit: 65 });
     expect(run.alerts?.[0]?.code).toBe("ELIGIBLE_SUPPLY_LOW");
   });
@@ -46,7 +46,7 @@ describe("100G acquisition orchestrator", () => {
     const deps = setup({ fail: "100B" });
     const run = await run100G(live, { ...deps, now: () => new Date("2026-08-12T12:00:00Z") });
     expect(run.status).toBe("failed");
-    expect(deps.calls).toEqual(["100A", "100B"]);
+    expect(deps.calls).toEqual(["100C", "100B"]);
   });
 
   it("is idempotent per day", async () => {
@@ -81,10 +81,10 @@ describe("100G acquisition orchestrator", () => {
     await run100G({ ...live, executeStages: false }, { ...deps, now });
     const executed = await run100G(live, { ...deps, now });
     expect(executed.mode).toBe("execute");
-    expect(deps.calls).toEqual(["100A", "100B", "100C"]);
+    expect(deps.calls).toEqual(["100C", "100B", "100A"]);
   });
 
-  it("keeps database acquisition ahead of the sender warm-up while bounding 100C to the audited stage", async () => {
+  it("protects the audited campaign allotment before bounded database acquisition", async () => {
     const calls: Array<[StageId, number]> = [];
     const deps = setup({ stage: 1, queued: 0 });
     const runner = (stage: StageId): StageRunner => ({ run: async ({ requestedLeads }) => {
@@ -92,7 +92,7 @@ describe("100G acquisition orchestrator", () => {
     } });
     const stages = { "100A": runner("100A"), "100B": runner("100B"), "100C": runner("100C") };
     await run100G({ ...live, databaseBuildTarget: 25 }, { ...deps, stages, now: () => new Date("2026-08-13T12:00:00Z") });
-    expect(calls).toEqual([["100A", 25], ["100B", 25], ["100C", 1]]);
+    expect(calls).toEqual([["100C", 1], ["100B", 25], ["100A", 25]]);
   });
 
   it("requests the audited 100C stage even when a healthy queue has no acquisition deficit", async () => {
@@ -105,7 +105,7 @@ describe("100G acquisition orchestrator", () => {
     const stages = { "100A": runner("100A"), "100B": runner("100B"), "100C": runner("100C") };
     const run = await run100G({ ...live, databaseBuildTarget: 25 }, { ...deps, stages, now: () => new Date("2026-08-24T12:00:00Z") });
     expect(run.requestedLeads).toBe(0);
-    expect(calls).toEqual([["100A", 25], ["100B", 25], ["100C", 1]]);
+    expect(calls).toEqual([["100C", 1], ["100B", 25], ["100A", 25]]);
   });
 
   it("passes the audited daily send stage to every production stage", async () => {
@@ -117,6 +117,6 @@ describe("100G acquisition orchestrator", () => {
     } });
     const stages = { "100A": runner("100A"), "100B": runner("100B"), "100C": runner("100C") };
     await run100G(live, { ...deps, stages, now: () => new Date("2026-08-13T12:00:00Z") });
-    expect(seen).toEqual([["100A", 3], ["100B", 3], ["100C", 3]]);
+    expect(seen).toEqual([["100C", 3], ["100B", 3], ["100A", 3]]);
   });
 });

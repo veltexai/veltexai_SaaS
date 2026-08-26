@@ -2,7 +2,10 @@ import type { OrchestrationDependencies, OrchestrationRun, StageId, StageResult 
 import type { OrchestrationConfig } from "./config";
 import { forecastSupply, supplyAlerts } from "./supply-forecast";
 
-const ORDER: readonly StageId[] = ["100A", "100B", "100C"];
+// Protect the time-sensitive daily campaign allotment from slower acquisition work.
+// The eligible queue is already durable, so 100C can safely consume from it before
+// bounded enrichment and discovery replenish future supply.
+const ORDER: readonly StageId[] = ["100C", "100B", "100A"];
 
 export async function run100G(config: OrchestrationConfig, deps: OrchestrationDependencies): Promise<OrchestrationRun> {
   const runDate = (deps.now?.() ?? new Date()).toISOString().slice(0, 10);
