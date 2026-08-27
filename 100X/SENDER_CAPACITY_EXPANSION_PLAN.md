@@ -18,6 +18,52 @@ Capacity must be calculated from **healthy, authenticated, warmed, and assigned*
 Keep mailbox distribution conservative: use multiple dedicated sending domains, avoid the primary
 product domain, and never count an account until Instantly reports healthy status.
 
+## Verified pilot inventory — 2026-08-26
+
+The Veltex AI Instantly workspace currently has **four warmed mailboxes across two dedicated sending
+domains**. All four report 100% health and 70 warmup emails in the current account view.
+
+| Inventory class | Mailboxes | Campaign assignment | Safe role |
+| --- | ---: | --- | --- |
+| Current pilot senders | 2 | Assigned to the approved 100C pilot | Remain assigned while the 3/day observation window runs |
+| Warm reserve | 2 | No campaign assigned | First expansion cohort after the existing safety gates pass |
+
+The warm reserve means the next capacity step does **not** require a purchase. Do not assign those
+mailboxes merely because they are warm: assignment waits for the controlled 3/day campaign to satisfy
+the controller's delivered-volume, dwell-time, bounce, complaint, webhook, authentication,
+unsubscribe, and account-health gates.
+
+## Expansion cohorts
+
+| Cohort | Resulting inventory | Nominal backstop capacity | Activation condition |
+| --- | ---: | ---: | --- |
+| Pilot | 2 assigned + 2 reserve | 50/day assigned | Current controlled 3/day validation |
+| Reserve activation | 4 assigned | 100/day / 500 per 5-day week | Healthy pilot evidence and separate assignment approval |
+| Cohort 2 preparation | 4 existing + 8 new mailboxes on 2 additional dedicated domains | 300/day / 1,500 per week | Approved budget and identities; DNS verified; warmup completed before assignment |
+| Cohort 3 preparation | 12 existing + 8 new mailboxes on 2 additional dedicated domains | 500/day / 2,500 per week | Cohort 2 operating health remains inside every gate |
+
+Use no more than four mailboxes per dedicated sending domain in the initial expansion. A domain or
+mailbox does not contribute to usable capacity until it is authenticated, warmed, healthy, and
+explicitly assigned. Nominal capacity is an upper backstop, not a direction to jump campaign volume.
+
+## Pre-provisioning packet
+
+Complete and approve this packet before any purchase or account creation:
+
+- Weekly objective: 500, 1,500, or 2,500 emails over five send days.
+- Budget ceiling: domain acquisition/renewal, mailbox subscription, and Instantly account capacity.
+- Domain convention: dedicated outreach domains only; never the primary product domain.
+- Mailbox identities: named senders, recovery owner, and monitored reply destination.
+- Registrar/provider owner: renewal contact, emergency access, and documented recovery route.
+- DNS evidence: SPF uniqueness, DKIM validation, DMARC alignment/reporting, MX health, and tracking CNAME.
+- Warmup acceptance: at least the approved warmup period, sustained provider health, and no abnormal
+  spam-placement or authentication signal.
+- Assignment record: cohort, campaign, per-mailbox ceiling, approval date, and rollback owner.
+
+Purchasing, DNS mutation, mailbox creation, and campaign assignment remain separate consequential
+actions. Prepare their exact values in advance, then execute only after the founder approves the
+specific cohort and cost.
+
 ## Provisioning sequence
 
 1. Approve the target weekly volume, budget, domain naming convention, and mailbox identities.
