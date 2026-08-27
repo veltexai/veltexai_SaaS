@@ -39,10 +39,10 @@ unsubscribe, and account-health gates.
 | --- | ---: | ---: | --- |
 | Pilot | 2 assigned + 2 reserve | 50/day assigned | Current controlled 3/day validation |
 | Reserve activation | 4 assigned | 100/day / 500 per 5-day week | Healthy pilot evidence and separate assignment approval |
-| Cohort 2 preparation | 4 existing + 8 new mailboxes on 2 additional dedicated domains | 300/day / 1,500 per week | Approved budget and identities; DNS verified; warmup completed before assignment |
-| Cohort 3 preparation | 12 existing + 8 new mailboxes on 2 additional dedicated domains | 500/day / 2,500 per week | Cohort 2 operating health remains inside every gate |
+| Cohort 2 preparation | 4 existing + 10 new AirMail mailboxes on 2 additional dedicated domains | 300/day / 1,500 per week | Approved budget and identities; DNS verified; warmup completed before assignment |
+| Cohort 3 preparation | 4 existing + 25 new AirMail mailboxes on 5 additional dedicated domains | 600/day nominal with one-domain resilience / 2,500 per week target | Cohort 2 operating health remains inside every gate |
 
-Use no more than four mailboxes per dedicated sending domain in the initial expansion. A domain or
+Use no more than five mailboxes per dedicated sending domain in the AirMail expansion. A domain or
 mailbox does not contribute to usable capacity until it is authenticated, warmed, healthy, and
 explicitly assigned. Nominal capacity is an upper backstop, not a direction to jump campaign volume.
 
