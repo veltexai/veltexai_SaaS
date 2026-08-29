@@ -17,7 +17,7 @@
       "schedule": "0 11 * * *"
     },
     {
-      "path": "/api/internal/100x/orchestrate?lane=outbound&rehearse=100C",
+      "path": "/api/internal/100x/orchestrate?lane=outbound",
       "schedule": "0 14 * * *"
     },
     {
