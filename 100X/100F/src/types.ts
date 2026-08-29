@@ -50,6 +50,8 @@ export interface RampDecision {
 
 export interface RampGateEvidence {
   metricsAvailable: boolean;
+  metricDate?: string | null;
+  metricFresh?: boolean;
   campaignHealthy?: boolean;
   bounceRate?: number;
   bouncePassed?: boolean;
@@ -58,6 +60,7 @@ export interface RampGateEvidence {
   healthyAccountPassed?: boolean;
   webhookPassed?: boolean;
   stageAgeDays?: number;
+  stageStartValid?: boolean;
   requiredStageDays?: number;
   dwellPassed?: boolean;
   delivered?: number;

@@ -28,6 +28,11 @@ export function supplyAlerts(forecast: SupplyForecast): OrchestrationAlert[] {
     severity: "critical",
     message: `No eligible leads are queued; ${forecast.deficit} are required to restore the ${forecast.desiredQueue}-lead target.`,
   }];
+  if (forecast.queuedEligibleLeads < forecast.currentDailySendStage) return [{
+    code: "ELIGIBLE_SUPPLY_BELOW_DAILY_STAGE",
+    severity: "critical",
+    message: `Only ${forecast.queuedEligibleLeads} eligible leads are queued for the ${forecast.currentDailySendStage}-lead daily stage; acquisition and enrichment must replenish before outbound.`,
+  }];
   if (forecast.status === "low") return [{
     code: "ELIGIBLE_SUPPLY_LOW",
     severity: "warning",

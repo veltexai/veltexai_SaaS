@@ -32,7 +32,7 @@ describe("100G acquisition orchestrator", () => {
     expect(run.requestedLeads).toBe(65);
     expect(deps.calls).toEqual(["100C", "100B", "100A"]);
     expect(run.supply).toMatchObject({ status: "low", runwayDays: 0.5, deficit: 65 });
-    expect(run.alerts?.[0]?.code).toBe("ELIGIBLE_SUPPLY_LOW");
+    expect(run.alerts?.[0]?.code).toBe("ELIGIBLE_SUPPLY_BELOW_DAILY_STAGE");
   });
 
   it("persists an explicit alert when enrichment produces zero yield", async () => {

@@ -19,20 +19,34 @@ function makeDecision(state: RampState, date: string, action: RampDecision["acti
 }
 
 export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], policy: RampPolicy, today: string, supply?: RampSupplyEvidence): RampDecision {
-  const current = metrics.find((m) => m.date === today) ?? metrics[0];
-  if (!current) return makeDecision(state, today, "hold", state.currentStage, "no metrics available", { metricsAvailable: false });
+  const latestMetricDate = metrics[0]?.date ?? null;
+  const current = metrics.find((m) => m.date === today);
+  if (!current) {
+    return makeDecision(state, today, "hold", state.currentStage, `fresh metrics for ${today} are unavailable`, {
+      metricsAvailable: false,
+      metricDate: latestMetricDate,
+      metricFresh: false,
+    });
+  }
 
   const capacity = current.healthySendingAccounts * policy.perAccountDailyLimit;
-  const sent = metrics.reduce((sum, metric) => sum + metric.sent, 0);
-  const bounced = metrics.reduce((sum, metric) => sum + metric.bounced, 0);
+  const stageStartMs = Date.parse(state.stageStartedAt);
+  const stageStartValid = Number.isFinite(stageStartMs);
+  const stageStartDate = stageStartValid ? new Date(stageStartMs).toISOString().slice(0, 10) : today;
+  const stageMetrics = metrics.filter((metric) => metric.date >= stageStartDate && metric.date <= today);
+  const sent = stageMetrics.reduce((sum, metric) => sum + metric.sent, 0);
+  const bounced = stageMetrics.reduce((sum, metric) => sum + metric.bounced, 0);
+  const delivered = Math.max(0, sent - bounced);
   const bounceRate = sent > 0 ? bounced / sent : 0;
-  const stageAgeDays = Math.max(0, Math.floor((Date.parse(`${today}T00:00:00Z`) - Date.parse(state.stageStartedAt)) / DAY_MS));
+  const stageAgeDays = stageStartValid ? Math.max(0, Math.floor((Date.parse(`${today}T00:00:00Z`) - stageStartMs) / DAY_MS)) : 0;
   const requiredDelivered = Math.min(policy.minimumDeliveredAtStage, state.currentStage * policy.minimumDaysAtStage);
   const index = policy.stages.indexOf(state.currentStage);
   const next = policy.stages[index + 1];
   const requiredQueuedLeads = next === undefined ? 0 : next * Math.max(1, supply?.minimumQueueDays ?? 0);
   const gates: RampGateEvidence = {
     metricsAvailable: true,
+    metricDate: current.date,
+    metricFresh: true,
     campaignHealthy: current.campaignStatus >= 0,
     bounceRate,
     bouncePassed: bounceRate <= policy.maximumBounceRate,
@@ -41,11 +55,12 @@ export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], poli
     healthyAccountPassed: current.healthySendingAccounts >= 1,
     webhookPassed: !policy.requireZeroWebhookFailures || current.webhookFailures === 0,
     stageAgeDays,
+    stageStartValid,
     requiredStageDays: policy.minimumDaysAtStage,
     dwellPassed: stageAgeDays >= policy.minimumDaysAtStage,
-    delivered: sent,
+    delivered,
     requiredDelivered,
-    deliveredPassed: sent >= requiredDelivered,
+    deliveredPassed: delivered >= requiredDelivered,
     healthyCapacity: capacity,
     nextStage: next ?? null,
     capacityPassed: next === undefined || next <= capacity,
@@ -69,13 +84,20 @@ export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], poli
       `safety threshold failed (bounce=${bounceRate.toFixed(4)}, complaints=${current.spamComplaints}, health=${current.minimumAccountHealth}, webhook_failures=${current.webhookFailures})`, gates);
   }
 
+  if (!stageStartValid) {
+    return makeDecision(state, today, "hold", state.currentStage, "stage start timestamp is invalid", gates);
+  }
+  if (stageStartDate > today) {
+    return makeDecision(state, today, "hold", state.currentStage, `stage start ${stageStartDate} is after evaluation date ${today}`, gates);
+  }
+
   if (state.lastDecisionDate === today) return makeDecision(state, today, "hold", state.currentStage, "a decision was already recorded today", gates);
 
   if (stageAgeDays < policy.minimumDaysAtStage) {
     return makeDecision(state, today, "hold", state.currentStage, `stage dwell time is ${stageAgeDays}/${policy.minimumDaysAtStage} days`, gates);
   }
-  if (sent < requiredDelivered) {
-    return makeDecision(state, today, "hold", state.currentStage, `observed volume is ${sent}/${requiredDelivered}`, gates);
+  if (delivered < requiredDelivered) {
+    return makeDecision(state, today, "hold", state.currentStage, `observed delivered volume is ${delivered}/${requiredDelivered}`, gates);
   }
 
   if (!next) return makeDecision(state, today, "hold", state.currentStage, "maximum approved stage reached", gates);

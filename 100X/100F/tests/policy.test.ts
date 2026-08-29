@@ -59,7 +59,36 @@ describe("100F ramp policy", () => {
   it("holds until stage dwell time and evidence volume are sufficient", () => {
     expect(evaluateRamp({ ...state, stageStartedAt: "2026-08-10T00:00:00Z" }, [metric()], policy, "2026-08-11").reason).toContain("dwell");
     expect(evaluateRamp({ ...state, stageStartedAt: "2026-08-11T18:00:00Z" }, [metric()], policy, "2026-08-11").reason).toContain("0/3 days");
-    expect(evaluateRamp(state, [metric({ sent: 3 })], policy, "2026-08-11").reason).toContain("observed volume");
+    expect(evaluateRamp(state, [metric({ sent: 3 })], policy, "2026-08-11").reason).toContain("observed delivered volume");
+  });
+
+  it("fails closed when the requested observation date is missing", () => {
+    const stale = metric({ date: "2026-08-10" });
+    expect(evaluateRamp(state, [stale], policy, "2026-08-11", supply)).toMatchObject({
+      action: "hold",
+      reason: "fresh metrics for 2026-08-11 are unavailable",
+      gates: { metricsAvailable: false, metricDate: "2026-08-10", metricFresh: false },
+    });
+  });
+
+  it("counts only post-stage deliveries and subtracts bounces", () => {
+    const bootstrap = { ...state, currentStage: 1 as const, stageStartedAt: "2026-08-10T00:00:00Z" };
+    const beforeStage = metric({ date: "2026-08-09", sent: 50 });
+    const current = metric({ sent: 3, bounced: 1 });
+    const decision = evaluateRamp(bootstrap, [current, beforeStage], { ...policy, maximumBounceRate: 0.5 }, "2026-08-11", supply);
+    expect(decision).toMatchObject({ action: "hold", gates: { delivered: 2, requiredDelivered: 3 } });
+  });
+
+  it("never emits a negative dwell time for a future or invalid stage start", () => {
+    expect(evaluateRamp({ ...state, stageStartedAt: "2026-08-12T00:00:00Z" }, [metric()], policy, "2026-08-11", supply)).toMatchObject({
+      action: "hold",
+      gates: { stageAgeDays: 0 },
+    });
+    expect(evaluateRamp({ ...state, stageStartedAt: "not-a-date" }, [metric()], policy, "2026-08-11", supply)).toMatchObject({
+      action: "hold",
+      reason: "stage start timestamp is invalid",
+      gates: { stageAgeDays: 0, stageStartValid: false },
+    });
   });
 
   it("allows the one-per-day bootstrap stage to graduate after three clean deliveries", () => {

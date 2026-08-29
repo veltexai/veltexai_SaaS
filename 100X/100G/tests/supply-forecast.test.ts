@@ -13,4 +13,12 @@ describe("100G supply forecasting", () => {
     expect(healthy.status).toBe("healthy");
     expect(supplyAlerts(healthy)).toEqual([]);
   });
+
+  it("raises a critical alert when tomorrow's daily stage cannot be filled", () => {
+    const forecast = forecastSupply({ currentDailySendStage: 5, queuedEligibleLeads: 2 }, 7, 500, 3);
+    expect(supplyAlerts(forecast)[0]).toMatchObject({
+      code: "ELIGIBLE_SUPPLY_BELOW_DAILY_STAGE",
+      severity: "critical",
+    });
+  });
 });
