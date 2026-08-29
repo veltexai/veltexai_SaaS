@@ -34,6 +34,12 @@ export class SupabaseSyncRepository implements SyncRepository {
       .eq("outreach_eligibility", "ready_for_outreach")
       .eq("email_verification_status", "verified")
       .eq("suppression_status", "none")
+      // The runner intentionally considers only a small bounded window. Put the freshest
+      // verification snapshots first so old duplicate/stale rows cannot permanently starve newly
+      // enriched, otherwise-eligible contacts. All normal duplicate, suppression, customer and
+      // final pre-submit checks still run below this selection boundary.
+      .order("last_verified_at", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: true })
       .limit(limit);
     if (error) throw new Error(`100C candidate load failed: ${error.message}`);
     const out: SyncCandidate[] = [];
