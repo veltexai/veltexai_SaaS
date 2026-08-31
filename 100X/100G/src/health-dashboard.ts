@@ -29,6 +29,12 @@ export const DEFAULT_SENDER_EXPANSION_TARGET: SenderExpansionTarget = {
   targetQueueDays: 7,
 };
 
+export interface DashboardOperationalAlert {
+  code: string;
+  severity: "warning" | "critical";
+  message: string;
+}
+
 export function assessSenderExpansionReadiness(input: {
   healthySendingAccounts: number;
   queuedEligibleLeads: number;
@@ -67,7 +73,17 @@ export function assessSenderExpansionReadiness(input: {
 export function assessDashboardHealth(input: {
   now: Date;
   latestRun: { status: string; createdAt: string; alerts?: Array<{ severity: string; code: string; message: string }> } | null;
-  latestMetric: { recorded_at?: string; metric_date?: string; sent?: number } | null;
+  latestMetric: {
+    recorded_at?: string;
+    metric_date?: string;
+    campaign_status?: number;
+    sent?: number;
+    bounced?: number;
+    spam_complaints?: number;
+    webhook_failures?: number;
+    healthy_sending_accounts?: number;
+    minimum_account_health?: number;
+  } | null;
   latestDecision?: { observed_at?: string; created_at?: string } | null;
   auditEvidence: {
     available: boolean;
@@ -79,6 +95,8 @@ export function assessDashboardHealth(input: {
     heldUnmatchedCount?: number;
   };
   supplyStatus: "healthy" | "low" | "empty";
+  minimumAccountHealth?: number;
+  maximumBounceRate?: number;
 }) {
   const orchestrationAgeHours = ageHours(input.latestRun?.createdAt, input.now);
   const metricTimestamp = input.latestMetric?.recorded_at ?? (input.latestMetric?.metric_date ? `${input.latestMetric.metric_date}T23:59:59.000Z` : null);
@@ -86,20 +104,36 @@ export function assessDashboardHealth(input: {
   const decisionAgeHours = ageHours(input.latestDecision?.observed_at ?? input.latestDecision?.created_at, input.now);
   const blockers: string[] = [];
   const warnings: string[] = [];
-  if (orchestrationAgeHours === null || orchestrationAgeHours > 36) blockers.push("orchestration evidence is missing or stale");
-  if (metricAgeHours === null || metricAgeHours > 48) blockers.push("ramp metrics are missing or stale");
-  if (decisionAgeHours === null || decisionAgeHours > 48) blockers.push("mutation decision evidence is missing or stale");
-  if (!input.auditEvidence.available) blockers.push("receipt and suppression audit evidence is unavailable");
-  if (input.auditEvidence.available && !input.auditEvidence.migrationsComplete) blockers.push("required receipt and suppression migrations are incomplete");
-  if (input.auditEvidence.available && (input.auditEvidence.ingestionErrorCount ?? 0) > 0) blockers.push("outbound webhook ingestion errors are present");
-  if (input.auditEvidence.available && (input.latestMetric?.sent ?? 0) > 0 && (input.auditEvidence.receiptCount ?? 0) === 0) blockers.push("sent activity has no matching outbound event receipts");
-  if (input.auditEvidence.available && (input.auditEvidence.suppressingEventCount ?? 0) > (input.auditEvidence.matchedSuppressionCount ?? 0)) blockers.push("a suppressing event is missing its durable suppression record");
-  if (input.auditEvidence.available && (input.auditEvidence.heldUnmatchedCount ?? 0) > 0) warnings.push("unmatched outbound events require reconciliation");
-  if (input.latestRun?.status === "failed") blockers.push("latest orchestration run failed");
-  if (input.supplyStatus === "empty") blockers.push("eligible lead supply is empty");
-  if (input.supplyStatus === "low") warnings.push("eligible lead supply is low");
+  const alerts: DashboardOperationalAlert[] = [];
+  const critical = (code: string, message: string) => { alerts.push({ code, severity: "critical", message }); blockers.push(message); };
+  const warning = (code: string, message: string) => { alerts.push({ code, severity: "warning", message }); warnings.push(message); };
+  const minimumAccountHealth = input.minimumAccountHealth ?? 95;
+  const maximumBounceRate = input.maximumBounceRate ?? 0.02;
+  const sent = input.latestMetric?.sent ?? 0;
+  const bounced = input.latestMetric?.bounced ?? 0;
+  const bounceRate = sent > 0 ? bounced / sent : 0;
+
+  if (orchestrationAgeHours === null || orchestrationAgeHours > 36) critical("ORCHESTRATION_EVIDENCE_STALE", "orchestration evidence is missing or stale");
+  if (metricAgeHours === null || metricAgeHours > 48) critical("RAMP_METRICS_STALE", "ramp metrics are missing or stale");
+  if (decisionAgeHours === null || decisionAgeHours > 48) critical("MUTATION_DECISION_STALE", "mutation decision evidence is missing or stale");
+  if (!input.auditEvidence.available) critical("AUDIT_EVIDENCE_UNAVAILABLE", "receipt and suppression audit evidence is unavailable");
+  if (input.auditEvidence.available && !input.auditEvidence.migrationsComplete) critical("AUDIT_MIGRATIONS_INCOMPLETE", "required receipt and suppression migrations are incomplete");
+  if (input.auditEvidence.available && (input.auditEvidence.ingestionErrorCount ?? 0) > 0) critical("WEBHOOK_INGESTION_ERROR", "outbound webhook ingestion errors are present");
+  if (input.auditEvidence.available && sent > 0 && (input.auditEvidence.receiptCount ?? 0) === 0) critical("OUTBOUND_RECEIPT_MISSING", "sent activity has no matching outbound event receipts");
+  if (input.auditEvidence.available && (input.auditEvidence.suppressingEventCount ?? 0) > (input.auditEvidence.matchedSuppressionCount ?? 0)) critical("SUPPRESSION_PARITY_FAILURE", "a suppressing event is missing its durable suppression record");
+  if (input.auditEvidence.available && (input.auditEvidence.heldUnmatchedCount ?? 0) > 0) warning("UNMATCHED_EVENTS_HELD", "unmatched outbound events require reconciliation");
+  if (input.latestRun?.status === "failed") critical("ORCHESTRATION_RUN_FAILED", "latest orchestration run failed");
+  if ((input.latestMetric?.campaign_status ?? 0) < 0) critical("CAMPAIGN_UNHEALTHY", "campaign status is unhealthy");
+  if ((input.latestMetric?.spam_complaints ?? 0) > 0) critical("SPAM_COMPLAINT_DETECTED", "spam complaints are present");
+  if ((input.latestMetric?.webhook_failures ?? 0) > 0) critical("WEBHOOK_FAILURE_DETECTED", "ramp metrics report webhook failures");
+  if (sent > 0 && bounceRate > maximumBounceRate) critical("BOUNCE_RATE_EXCEEDED", `bounce rate ${(bounceRate * 100).toFixed(2)}% exceeds ${(maximumBounceRate * 100).toFixed(2)}%`);
+  if (input.latestMetric?.healthy_sending_accounts !== undefined && input.latestMetric.healthy_sending_accounts < 1) critical("NO_HEALTHY_SENDING_ACCOUNT", "no healthy sending account is available");
+  if (input.latestMetric?.minimum_account_health !== undefined && input.latestMetric.minimum_account_health < minimumAccountHealth) critical("MAILBOX_HEALTH_BELOW_THRESHOLD", `minimum mailbox health is below ${minimumAccountHealth}`);
+  if (input.supplyStatus === "empty") critical("ELIGIBLE_SUPPLY_EMPTY", "eligible lead supply is empty");
+  if (input.supplyStatus === "low") warning("ELIGIBLE_SUPPLY_LOW", "eligible lead supply is low");
   for (const alert of input.latestRun?.alerts ?? []) {
-    (alert.severity === "critical" ? blockers : warnings).push(`${alert.code}: ${alert.message}`);
+    const message = `${alert.code}: ${alert.message}`;
+    (alert.severity === "critical" ? critical : warning)(alert.code, message);
   }
   return {
     status: blockers.length > 0 ? "blocked" : warnings.length > 0 ? "warning" : "healthy",
@@ -109,6 +143,7 @@ export function assessDashboardHealth(input: {
     decisionAgeHours,
     blockers,
     warnings,
+    alerts,
   };
 }
 

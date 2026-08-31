@@ -38,7 +38,13 @@ export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], poli
   const bounced = stageMetrics.reduce((sum, metric) => sum + metric.bounced, 0);
   const delivered = Math.max(0, sent - bounced);
   const bounceRate = sent > 0 ? bounced / sent : 0;
-  const stageAgeDays = stageStartValid ? Math.max(0, Math.floor((Date.parse(`${today}T00:00:00Z`) - stageStartMs) / DAY_MS)) : 0;
+  // The controller evaluates completed campaign-local calendar dates. Compare those dates,
+  // rather than the time-of-day embedded in stage_started_at, so a noon audit timestamp does
+  // not erase an otherwise completed dwell day. This remains conservative: the start date is
+  // day zero and the gate still requires minimumDaysAtStage distinct date boundaries.
+  const stageAgeDays = stageStartValid
+    ? Math.max(0, Math.floor((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${stageStartDate}T00:00:00Z`)) / DAY_MS))
+    : 0;
   const requiredDelivered = Math.min(policy.minimumDeliveredAtStage, state.currentStage * policy.minimumDaysAtStage);
   const index = policy.stages.indexOf(state.currentStage);
   const next = policy.stages[index + 1];

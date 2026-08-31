@@ -11,6 +11,7 @@ describe("100X health dashboard assessment", () => {
       status: "healthy",
       readyForAutomatedProgression: true,
       blockers: [],
+      alerts: [],
     });
   });
 
@@ -26,6 +27,12 @@ describe("100X health dashboard assessment", () => {
       "latest orchestration run failed",
       "eligible lead supply is empty",
     ]));
+    expect(result.alerts).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "ORCHESTRATION_EVIDENCE_STALE", severity: "critical" }),
+      expect.objectContaining({ code: "RAMP_METRICS_STALE", severity: "critical" }),
+      expect.objectContaining({ code: "MUTATION_DECISION_STALE", severity: "critical" }),
+      expect.objectContaining({ code: "ELIGIBLE_SUPPLY_EMPTY", severity: "critical" }),
+    ]));
   });
 
   it("surfaces warning alerts without pretending they are absent", () => {
@@ -39,6 +46,10 @@ describe("100X health dashboard assessment", () => {
     });
     expect(result).toMatchObject({ status: "warning", readyForAutomatedProgression: true });
     expect(result.warnings).toHaveLength(2);
+    expect(result.alerts).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "ENRICHMENT_ZERO_YIELD", severity: "warning" }),
+      expect.objectContaining({ code: "ELIGIBLE_SUPPLY_LOW", severity: "warning" }),
+    ]));
   });
 
   it("blocks mutation when receipts, suppression parity, or ingestion health are unsafe", () => {
@@ -57,6 +68,34 @@ describe("100X health dashboard assessment", () => {
       "a suppressing event is missing its durable suppression record",
     ]));
     expect(result.warnings).toContain("unmatched outbound events require reconciliation");
+  });
+
+  it("emits critical machine-readable alerts for campaign and mailbox safety failures", () => {
+    const result = assessDashboardHealth({
+      now,
+      latestRun: { status: "completed", createdAt: "2026-08-18T14:00:00.000Z", alerts: [] },
+      latestMetric: {
+        ...metric,
+        campaign_status: -1,
+        bounced: 1,
+        spam_complaints: 1,
+        webhook_failures: 1,
+        healthy_sending_accounts: 0,
+        minimum_account_health: 80,
+      },
+      latestDecision: decision,
+      auditEvidence,
+      supplyStatus: "healthy",
+    });
+    expect(result.status).toBe("blocked");
+    expect(result.alerts.map(({ code }) => code)).toEqual(expect.arrayContaining([
+      "CAMPAIGN_UNHEALTHY",
+      "SPAM_COMPLAINT_DETECTED",
+      "WEBHOOK_FAILURE_DETECTED",
+      "BOUNCE_RATE_EXCEEDED",
+      "NO_HEALTHY_SENDING_ACCOUNT",
+      "MAILBOX_HEALTH_BELOW_THRESHOLD",
+    ]));
   });
 });
 

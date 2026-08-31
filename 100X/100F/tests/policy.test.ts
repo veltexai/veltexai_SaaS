@@ -62,6 +62,14 @@ describe("100F ramp policy", () => {
     expect(evaluateRamp(state, [metric({ sent: 3 })], policy, "2026-08-11").reason).toContain("observed delivered volume");
   });
 
+  it("counts completed calendar dwell days without losing a day to the audit timestamp", () => {
+    const stagedAtNoon = { ...state, stageStartedAt: "2026-08-08T12:00:00Z" };
+    expect(evaluateRamp(stagedAtNoon, [metric()], policy, "2026-08-11", supply)).toMatchObject({
+      action: "advance",
+      gates: { stageAgeDays: 3, dwellPassed: true },
+    });
+  });
+
   it("fails closed when the requested observation date is missing", () => {
     const stale = metric({ date: "2026-08-10" });
     expect(evaluateRamp(state, [stale], policy, "2026-08-11", supply)).toMatchObject({
