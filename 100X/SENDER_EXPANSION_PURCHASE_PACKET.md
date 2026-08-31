@@ -1,6 +1,6 @@
 # Veltex AI sender-expansion purchase packet
 
-Prepared: 2026-08-26
+Prepared: 2026-08-26; operational status refreshed 2026-08-30
 
 This packet is purchase-ready but does not authorize or execute an order, domain registration,
 mailbox creation, campaign assignment, cap change, or live mutation.
@@ -82,17 +82,19 @@ as the sole system of record.
 
 ## Readiness calendar
 
-Assuming order approval and payment on 2026-08-26:
+Run this calendar from the actual approved purchase date so a delayed order does not leave stale
+activation dates:
 
-1. **Aug 26:** place the exact approved order.
-2. **Aug 27–29:** provisioning and DNS propagation; verify MX, SPF, DKIM, DMARC, and forwarding.
-3. **By Aug 29:** enable recommended slow warmup on all 25 accounts; no campaign assignment.
-4. **Sep 19:** complete the preferred three-week AirMail warmup observation.
-5. **Sep 19–22:** first assignment review; require health above 90%, clean authentication, no errors,
+1. **Day 0:** place the exact approved order after rechecking availability and checkout total.
+2. **Days 1–3:** provisioning and DNS propagation; verify MX, SPF, DKIM, DMARC, and forwarding.
+3. **By Day 3:** enable recommended slow warmup on all 25 accounts; no campaign assignment.
+4. **Day 24:** complete the preferred three-week AirMail warmup observation.
+5. **Days 24–27:** first assignment review; require health above 90%, clean authentication, no errors,
    and healthy current-pilot evidence.
-6. **Late Sep onward:** assign one domain cohort at a time. Let 100F advance only one audited stage at
+6. **After acceptance:** assign one domain cohort at a time. Let 100F advance only one audited stage at
    a time and never jump directly to 500/day.
-7. **October:** realistic operating window for 2,500/week if supply and all safety gates remain healthy.
+7. **Following staged validation:** 2,500/week becomes feasible only when sender capacity and the
+   seven-day verified-lead runway both pass.
 
 ## Acceptance gates before campaign assignment
 
@@ -110,3 +112,7 @@ Assuming order approval and payment on 2026-08-26:
 Immediately before purchase, confirm the five domains are still available and the checkout total is
 $175 before taxes. Placing the order creates recurring subscriptions and requires a final action-time
 confirmation from the founder.
+
+The current four mailboxes are already assigned to the pilot. There is no remaining warm reserve;
+therefore the next capacity addition starts at this transaction boundary rather than campaign
+assignment.

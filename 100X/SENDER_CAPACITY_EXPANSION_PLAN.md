@@ -18,27 +18,27 @@ Capacity must be calculated from **healthy, authenticated, warmed, and assigned*
 Keep mailbox distribution conservative: use multiple dedicated sending domains, avoid the primary
 product domain, and never count an account until Instantly reports healthy status.
 
-## Verified pilot inventory — 2026-08-26
+## Verified pilot inventory — 2026-08-30
 
 The Veltex AI Instantly workspace currently has **four warmed mailboxes across two dedicated sending
-domains**. All four report 100% health and 70 warmup emails in the current account view.
+domains**. All four report 100% health and are assigned to the approved 100C pilot. The audited
+controller advanced the campaign to the 3/day stage after recording three clean sends on Aug 29.
 
 | Inventory class | Mailboxes | Campaign assignment | Safe role |
 | --- | ---: | --- | --- |
-| Current pilot senders | 2 | Assigned to the approved 100C pilot | Remain assigned while the 3/day observation window runs |
-| Warm reserve | 2 | No campaign assigned | First expansion cohort after the existing safety gates pass |
+| Current pilot senders | 4 | Assigned to the approved 100C pilot | Remain assigned while the 3/day observation window runs |
+| Warm reserve | 0 | None | Additional capacity now requires provisioning a new cohort |
 
-The warm reserve means the next capacity step does **not** require a purchase. Do not assign those
-mailboxes merely because they are warm: assignment waits for the controlled 3/day campaign to satisfy
-the controller's delivered-volume, dwell-time, bounce, complaint, webhook, authentication,
-unsubscribe, and account-health gates.
+All existing mailboxes are now in the pilot. The next sender-capacity step therefore requires a
+separately approved provisioning order. Do not assign new mailboxes merely because setup has
+completed: assignment waits for warmup and the controller's delivered-volume, dwell-time, bounce,
+complaint, webhook, authentication, unsubscribe, account-health, and eligible-supply gates.
 
 ## Expansion cohorts
 
 | Cohort | Resulting inventory | Nominal backstop capacity | Activation condition |
 | --- | ---: | ---: | --- |
-| Pilot | 2 assigned + 2 reserve | 50/day assigned | Current controlled 3/day validation |
-| Reserve activation | 4 assigned | 100/day / 500 per 5-day week | Healthy pilot evidence and separate assignment approval |
+| Pilot | 4 assigned | 100/day / 500 per 5-day week | Current controlled 3/day validation |
 | Cohort 2 preparation | 4 existing + 10 new AirMail mailboxes on 2 additional dedicated domains | 300/day / 1,500 per week | Approved budget and identities; DNS verified; warmup completed before assignment |
 | Cohort 3 preparation | 4 existing + 25 new AirMail mailboxes on 5 additional dedicated domains | 600/day nominal with one-domain resilience / 2,500 per week target | Cohort 2 operating health remains inside every gate |
 
@@ -88,6 +88,8 @@ specific cohort and cost.
 - Suppression and unsubscribe: tested and active; never bypassed.
 - Domain authentication: SPF, DKIM, and DMARC verified for every sending domain.
 - Mutation audit: every hold, pause, or advance is stored with the evidence used.
+- Scale-readiness forecast: the health dashboard must show both sender-capacity and eligible-lead
+  runway gaps before a cohort can be activated.
 
 ## Rollback
 

@@ -11,6 +11,59 @@ const ageHours = (timestamp: string | null | undefined, now: Date): number | nul
   return Number.isFinite(elapsed) ? Number((Math.max(0, elapsed) / 3_600_000).toFixed(2)) : null;
 };
 
+export interface SenderExpansionTarget {
+  weeklyTarget: number;
+  sendDaysPerWeek: number;
+  currentPerMailboxDailyLimit: number;
+  newPerMailboxDailyLimit: number;
+  resilienceBufferMailboxes: number;
+  targetQueueDays: number;
+}
+
+export const DEFAULT_SENDER_EXPANSION_TARGET: SenderExpansionTarget = {
+  weeklyTarget: 2_500,
+  sendDaysPerWeek: 5,
+  currentPerMailboxDailyLimit: 25,
+  newPerMailboxDailyLimit: 20,
+  resilienceBufferMailboxes: 5,
+  targetQueueDays: 7,
+};
+
+export function assessSenderExpansionReadiness(input: {
+  healthySendingAccounts: number;
+  queuedEligibleLeads: number;
+  target?: SenderExpansionTarget;
+}) {
+  const target = input.target ?? DEFAULT_SENDER_EXPANSION_TARGET;
+  const healthySendingAccounts = Math.max(0, Math.floor(input.healthySendingAccounts));
+  const queuedEligibleLeads = Math.max(0, Math.floor(input.queuedEligibleLeads));
+  const targetDailyVolume = Math.ceil(target.weeklyTarget / target.sendDaysPerWeek);
+  const currentDailyCapacity = healthySendingAccounts * target.currentPerMailboxDailyLimit;
+  const remainingDailyCapacity = Math.max(0, targetDailyVolume - currentDailyCapacity);
+  const minimumAdditionalMailboxes = Math.ceil(remainingDailyCapacity / target.newPerMailboxDailyLimit);
+  const recommendedAdditionalMailboxes = minimumAdditionalMailboxes === 0
+    ? 0
+    : minimumAdditionalMailboxes + target.resilienceBufferMailboxes;
+  const targetQueuedLeads = targetDailyVolume * target.targetQueueDays;
+  const eligibleLeadGap = Math.max(0, targetQueuedLeads - queuedEligibleLeads);
+  const blockers: string[] = [];
+  if (minimumAdditionalMailboxes > 0) blockers.push(`${minimumAdditionalMailboxes} additional healthy mailbox equivalents are required`);
+  if (eligibleLeadGap > 0) blockers.push(`${eligibleLeadGap} additional eligible leads are required for ${target.targetQueueDays} days of target runway`);
+  return {
+    weeklyTarget: target.weeklyTarget,
+    targetDailyVolume,
+    healthySendingAccounts,
+    currentDailyCapacity,
+    minimumAdditionalMailboxes,
+    recommendedAdditionalMailboxes,
+    queuedEligibleLeads,
+    targetQueuedLeads,
+    eligibleLeadGap,
+    readyForTargetVolume: blockers.length === 0,
+    blockers,
+  };
+}
+
 export function assessDashboardHealth(input: {
   now: Date;
   latestRun: { status: string; createdAt: string; alerts?: Array<{ severity: string; code: string; message: string }> } | null;
@@ -65,6 +118,7 @@ export async function read100XHealthDashboard(
   campaignId: string,
   mutationExecutionEnabled: boolean,
   now = new Date(),
+  senderExpansionTarget = DEFAULT_SENDER_EXPANSION_TARGET,
 ) {
   const auditSince = new Date(now.getTime() - 48 * 3_600_000).toISOString();
   const [supplyResult, runResult, stateResult, metricsResult, decisionsResult, auditResult] = await Promise.all([
@@ -114,6 +168,11 @@ export async function read100XHealthDashboard(
   };
   const healthRun = latestRun ? { ...latestRun, alerts: activeAlerts } : null;
   const health = assessDashboardHealth({ now, latestRun: healthRun, latestMetric, latestDecision, auditEvidence, supplyStatus });
+  const senderExpansion = assessSenderExpansionReadiness({
+    healthySendingAccounts: Number(latestMetric?.healthy_sending_accounts ?? 0),
+    queuedEligibleLeads: queued,
+    target: senderExpansionTarget,
+  });
   return {
     generatedAt: now.toISOString(),
     mutationExecutionEnabled,
@@ -129,6 +188,7 @@ export async function read100XHealthDashboard(
       runwayDays,
       status: supplyStatus,
     },
+    senderExpansion,
     orchestration: { latest: latestRun, latestByLane, recent: runs },
     ramp: {
       state: stateResult.data ?? null,

@@ -1,4 +1,4 @@
-import { assessDashboardHealth } from "../src/health-dashboard";
+import { assessDashboardHealth, assessSenderExpansionReadiness } from "../src/health-dashboard";
 
 describe("100X health dashboard assessment", () => {
   const now = new Date("2026-08-18T18:00:00.000Z");
@@ -57,5 +57,36 @@ describe("100X health dashboard assessment", () => {
       "a suppressing event is missing its durable suppression record",
     ]));
     expect(result.warnings).toContain("unmatched outbound events require reconciliation");
+  });
+});
+
+describe("100X sender expansion readiness", () => {
+  it("quantifies mailbox and lead runway needed for 2,500 weekly sends", () => {
+    expect(assessSenderExpansionReadiness({ healthySendingAccounts: 4, queuedEligibleLeads: 76 })).toEqual({
+      weeklyTarget: 2_500,
+      targetDailyVolume: 500,
+      healthySendingAccounts: 4,
+      currentDailyCapacity: 100,
+      minimumAdditionalMailboxes: 20,
+      recommendedAdditionalMailboxes: 25,
+      queuedEligibleLeads: 76,
+      targetQueuedLeads: 3_500,
+      eligibleLeadGap: 3_424,
+      readyForTargetVolume: false,
+      blockers: [
+        "20 additional healthy mailbox equivalents are required",
+        "3424 additional eligible leads are required for 7 days of target runway",
+      ],
+    });
+  });
+
+  it("reports ready only when both sender capacity and eligible runway exist", () => {
+    expect(assessSenderExpansionReadiness({ healthySendingAccounts: 20, queuedEligibleLeads: 3_500 })).toMatchObject({
+      minimumAdditionalMailboxes: 0,
+      recommendedAdditionalMailboxes: 0,
+      eligibleLeadGap: 0,
+      readyForTargetVolume: true,
+      blockers: [],
+    });
   });
 });
