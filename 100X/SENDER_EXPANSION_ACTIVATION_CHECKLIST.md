@@ -3,7 +3,7 @@
 Use this checklist for every new dedicated sending-domain cohort. It prepares activation but does
 not authorize a purchase, DNS change, mailbox creation, campaign assignment, or cap change.
 
-## Current scale gap — 2026-08-30
+## Current scale gap — 2026-09-01
 
 For the 2,500-per-week objective over five sending days:
 
@@ -11,11 +11,14 @@ For the 2,500-per-week objective over five sending days:
 - Current healthy inventory: **4 mailboxes**, with a 100/day aggregate safety backstop.
 - Minimum additional AirMail-equivalent capacity at 20/day: **20 mailboxes**.
 - Recommended order with one five-mailbox resilience cohort: **25 mailboxes on five domains**.
-- Current eligible queue: **76 contacts**.
+- Current eligible queue: **73 contacts**.
 - Seven-day target runway at 500/day: **3,500 contacts**.
-- Current lead-supply gap: **3,424 verified, deduplicated, suppression-cleared contacts**.
+- Current seven-day activation gap: **3,427 verified, deduplicated, suppression-cleared contacts**.
+- Preferred fourteen-day operating reserve: **7,000 contacts**.
+- Current fourteen-day reserve gap: **6,927 contacts**.
 
-The health dashboard calculates these gaps automatically. A purchase can begin warmup in parallel,
+The health dashboard calculates both the seven-day activation minimum and fourteen-day operating
+reserve automatically. A purchase can begin warmup in parallel,
 but campaign assignment must wait until both capacity and supply gates pass.
 
 ## Provisioning record

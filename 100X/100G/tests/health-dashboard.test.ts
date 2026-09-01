@@ -109,12 +109,14 @@ describe("100X sender expansion readiness", () => {
       minimumAdditionalMailboxes: 20,
       recommendedAdditionalMailboxes: 25,
       queuedEligibleLeads: 76,
-      targetQueuedLeads: 3_500,
+      minimumQueuedLeads: 3_500,
+      targetQueuedLeads: 7_000,
       eligibleLeadGap: 3_424,
+      reserveLeadGap: 6_924,
       readyForTargetVolume: false,
       blockers: [
         "20 additional healthy mailbox equivalents are required",
-        "3424 additional eligible leads are required for 7 days of target runway",
+        "3424 additional eligible leads are required for the 7-day activation minimum",
       ],
     });
   });
@@ -126,6 +128,7 @@ describe("100X sender expansion readiness", () => {
       eligibleLeadGap: 0,
       readyForTargetVolume: true,
       blockers: [],
+      reserveLeadGap: 3_500,
     });
   });
 });

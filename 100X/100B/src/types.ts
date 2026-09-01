@@ -5,8 +5,8 @@ export const WORKFLOW_ID = "100B" as const;
 export const ELIGIBILITY_VERSION = "enrichment-rules-v1" as const;
 
 // Providers are named generically so Apollo can be replaced or supplemented later.
-export type Provider = "apollo" | "data_axle" | "csv_import" | "referral" | "fixture";
-export const APPROVED_PROVIDERS: readonly Provider[] = ["apollo", "data_axle", "csv_import", "referral", "fixture"];
+export type Provider = "apollo" | "hunter" | "data_axle" | "csv_import" | "referral" | "fixture";
+export const APPROVED_PROVIDERS: readonly Provider[] = ["apollo", "hunter", "data_axle", "csv_import", "referral", "fixture"];
 
 // Cleaning company types 100A can produce (parent-company eligibility gate).
 export type CompanyType =

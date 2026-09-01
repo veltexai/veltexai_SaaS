@@ -1,6 +1,7 @@
 export * from "./config";
 export * from "./diagnostics";
 export * from "./apollo-provider";
+export * from "./hunter-provider";
 export * from "./fixture-provider";
 export * from "./suppression";
 export * from "./in-memory-repository";

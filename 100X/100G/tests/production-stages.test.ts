@@ -1,4 +1,4 @@
-import { discoveryMarketLimit } from "../src/production-stages";
+import { discoveryMarketLimit, hunterFallbackConfigured } from "../src/production-stages";
 
 describe("100G production-stage limits", () => {
   it("bounds nationwide discovery to one market per scheduled invocation by default", () => {
@@ -12,5 +12,11 @@ describe("100G production-stage limits", () => {
 
   it("rejects invalid configured limits", () => {
     expect(() => discoveryMarketLimit(25, 5, "0")).toThrow(/positive integers/);
+  });
+
+  it("enables the secondary provider only with both the explicit gate and credential", () => {
+    expect(hunterFallbackConfigured({ VELTEX_100B_HUNTER_FALLBACK_ENABLED: "true", VELTEX_100B_HUNTER_API_KEY: "key" })).toBe(true);
+    expect(hunterFallbackConfigured({ VELTEX_100B_HUNTER_FALLBACK_ENABLED: "true" })).toBe(false);
+    expect(hunterFallbackConfigured({ VELTEX_100B_HUNTER_API_KEY: "key" })).toBe(false);
   });
 });

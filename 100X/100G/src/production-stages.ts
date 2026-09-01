@@ -5,8 +5,10 @@ import { RulesCleaningQualifier } from "../../100A/src/qualifier";
 import { run100A } from "../../100A/src/run";
 import { SupabaseDiagnosticSink as ADiagnostics, SupabaseProspectRepository } from "../../100A/src/supabase-adapters";
 import { ApolloEnrichmentProvider } from "../../100B/src/apollo-provider";
+import { HunterEnrichmentProvider } from "../../100B/src/hunter-provider";
 import { load100BConfig } from "../../100B/src/config";
 import { run100B } from "../../100B/src/run";
+import type { RunSummary } from "../../100B/src/types";
 import { SupabaseContactRepository, SupabaseDiagnosticSink as BDiagnostics } from "../../100B/src/supabase-adapters";
 import { NullSuppressionResolver } from "../../100B/src/suppression";
 import { selectApprovedCampaign } from "../../100C/src/campaign-allowlist";
@@ -37,7 +39,47 @@ const positive = (value: string | undefined, fallback: number): number => {
 };
 export const discoveryMarketLimit = (requestedLeads: number, perMarket: number, configuredLimit?: string): number =>
   Math.min(Math.ceil(requestedLeads / perMarket), positive(configuredLimit, 1));
+export const hunterFallbackConfigured = (env: Env): boolean =>
+  env.VELTEX_100B_HUNTER_FALLBACK_ENABLED === "true" && Boolean(env.VELTEX_100B_HUNTER_API_KEY?.trim());
 const disabled = (stage: StageResult["stage"]): StageResult => ({ stage, status: "skipped", produced: 0, reason: `${stage} is not enabled for 100G` });
+
+function sumSummaries(primary: RunSummary, secondary?: RunSummary): RunSummary {
+  if (!secondary) return primary;
+  const eligibilityCounts = Object.fromEntries(Object.keys(primary.eligibilityCounts).map((key) => [
+    key,
+    primary.eligibilityCounts[key as keyof typeof primary.eligibilityCounts] + secondary.eligibilityCounts[key as keyof typeof secondary.eligibilityCounts],
+  ])) as RunSummary["eligibilityCounts"];
+  return {
+    ...primary,
+    runId: `${primary.runId}+${secondary.runId}`,
+    companiesProcessed: primary.companiesProcessed + secondary.companiesProcessed,
+    providerRequests: primary.providerRequests + secondary.providerRequests,
+    companiesWithCandidates: primary.companiesWithCandidates + secondary.companiesWithCandidates,
+    companiesWithoutCandidates: primary.companiesWithoutCandidates + secondary.companiesWithoutCandidates,
+    domainlessTargets: primary.domainlessTargets + secondary.domainlessTargets,
+    searchRequests: primary.searchRequests + secondary.searchRequests,
+    fallbackSearchRequests: primary.fallbackSearchRequests + secondary.fallbackSearchRequests,
+    enrichmentRequests: primary.enrichmentRequests + secondary.enrichmentRequests,
+    retryAttempts: primary.retryAttempts + secondary.retryAttempts,
+    successfulEnrichments: primary.successfulEnrichments + secondary.successfulEnrichments,
+    providerReportedErrors: primary.providerReportedErrors + secondary.providerReportedErrors,
+    estimatedCreditConsumingMatches: primary.estimatedCreditConsumingMatches + secondary.estimatedCreditConsumingMatches,
+    candidates: primary.candidates + secondary.candidates,
+    contactsProcessed: primary.contactsProcessed + secondary.contactsProcessed,
+    contactsCreated: primary.contactsCreated + secondary.contactsCreated,
+    sourceRecordsCreated: primary.sourceRecordsCreated + secondary.sourceRecordsCreated,
+    existingSources: primary.existingSources + secondary.existingSources,
+    confidentMatches: primary.confidentMatches + secondary.confidentMatches,
+    readyForOutreach: primary.readyForOutreach + secondary.readyForOutreach,
+    heldOrSuppressed: primary.heldOrSuppressed + secondary.heldOrSuppressed,
+    eligibilityCounts,
+    providerErrors: primary.providerErrors + secondary.providerErrors,
+    capped: primary.capped || secondary.capped,
+    capReason: secondary.capReason ?? primary.capReason,
+    cursorAdvanced: primary.cursorAdvanced || secondary.cursorAdvanced,
+    diagnosticFailures: primary.diagnosticFailures + secondary.diagnosticFailures,
+  };
+}
 
 async function enrichmentTargets(orchestrationClient: SupabaseClient, limit: number): Promise<string[]> {
   const { data, error } = await orchestrationClient.rpc("load_100g_enrichment_target_ids", { requested_limit: limit });
@@ -88,7 +130,17 @@ export function createProductionStages(env: Env, orchestrationClient: SupabaseCl
       const db = client(required(env, "VELTEX_100B_SUPABASE_URL"), required(env, "VELTEX_100B_SUPABASE_ANON_KEY"), required(env, "VELTEX_100B_WORKER_JWT"));
       const config = load100BConfig(env, "apollo");
       config.limits.maxCompaniesPerRun = Math.min(config.limits.maxCompaniesPerRun, ids.length);
-      const summary = await run100B(config, { provider: new ApolloEnrichmentProvider(required(env, "VELTEX_100B_APOLLO_API_KEY")), suppression: new NullSuppressionResolver(), repository: new SupabaseContactRepository(db), diagnostics: new BDiagnostics(db), prospectIds: ids }, "100g");
+      const primary = await run100B(config, { provider: new ApolloEnrichmentProvider(required(env, "VELTEX_100B_APOLLO_API_KEY")), suppression: new NullSuppressionResolver(), repository: new SupabaseContactRepository(db), diagnostics: new BDiagnostics(db), prospectIds: ids }, "100g");
+      const secondaryConfigured = hunterFallbackConfigured(env);
+      let secondary: RunSummary | undefined;
+      // Invoke the independent provider only after a clean zero-yield Apollo run. This avoids
+      // duplicate credit use on healthy days and retains the same verification/suppression gates.
+      if (primary.readyForOutreach === 0 && primary.providerErrors === 0 && secondaryConfigured) {
+        const hunterConfig = load100BConfig(env, "hunter");
+        hunterConfig.limits.maxCompaniesPerRun = Math.min(hunterConfig.limits.maxCompaniesPerRun, ids.length);
+        secondary = await run100B(hunterConfig, { provider: new HunterEnrichmentProvider(required(env, "VELTEX_100B_HUNTER_API_KEY")), suppression: new NullSuppressionResolver(), repository: new SupabaseContactRepository(db), diagnostics: new BDiagnostics(db), prospectIds: ids }, "100g");
+      }
+      const summary = sumSummaries(primary, secondary);
       return result("100B", summary.readyForOutreach, `verified ${summary.readyForOutreach} outreach-ready contacts`, {
         targetsSelected: ids.length,
         companiesProcessed: summary.companiesProcessed,
@@ -109,6 +161,9 @@ export function createProductionStages(env: Env, orchestrationClient: SupabaseCl
         eligibilityCounts: summary.eligibilityCounts,
         capped: summary.capped,
         capReason: summary.capReason ?? null,
+        secondaryProviderConfigured: secondaryConfigured,
+        secondaryProviderAttempted: Boolean(secondary),
+        secondaryProviderProduced: secondary?.readyForOutreach ?? 0,
       });
     } },
     "100C": { run: async ({ runDate, requestedLeads, currentDailySendStage }) => {

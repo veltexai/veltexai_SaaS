@@ -81,7 +81,8 @@ specific cohort and cost.
 
 ## Operating gates
 
-- Queue runway: keep at least seven days of eligible supply; alert below three days.
+- Queue runway: require at least seven days for activation, target fourteen days of operating reserve,
+  and alert below three days.
 - Bounce rate: at or below the configured 100F threshold.
 - Spam complaints: zero at the current policy gate.
 - Webhook failures: zero unless a separately reviewed policy explicitly changes it.

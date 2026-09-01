@@ -17,6 +17,7 @@ export interface SenderExpansionTarget {
   currentPerMailboxDailyLimit: number;
   newPerMailboxDailyLimit: number;
   resilienceBufferMailboxes: number;
+  minimumQueueDays: number;
   targetQueueDays: number;
 }
 
@@ -26,7 +27,8 @@ export const DEFAULT_SENDER_EXPANSION_TARGET: SenderExpansionTarget = {
   currentPerMailboxDailyLimit: 25,
   newPerMailboxDailyLimit: 20,
   resilienceBufferMailboxes: 5,
-  targetQueueDays: 7,
+  minimumQueueDays: 7,
+  targetQueueDays: 14,
 };
 
 export interface DashboardOperationalAlert {
@@ -50,11 +52,13 @@ export function assessSenderExpansionReadiness(input: {
   const recommendedAdditionalMailboxes = minimumAdditionalMailboxes === 0
     ? 0
     : minimumAdditionalMailboxes + target.resilienceBufferMailboxes;
+  const minimumQueuedLeads = targetDailyVolume * target.minimumQueueDays;
   const targetQueuedLeads = targetDailyVolume * target.targetQueueDays;
-  const eligibleLeadGap = Math.max(0, targetQueuedLeads - queuedEligibleLeads);
+  const eligibleLeadGap = Math.max(0, minimumQueuedLeads - queuedEligibleLeads);
+  const reserveLeadGap = Math.max(0, targetQueuedLeads - queuedEligibleLeads);
   const blockers: string[] = [];
   if (minimumAdditionalMailboxes > 0) blockers.push(`${minimumAdditionalMailboxes} additional healthy mailbox equivalents are required`);
-  if (eligibleLeadGap > 0) blockers.push(`${eligibleLeadGap} additional eligible leads are required for ${target.targetQueueDays} days of target runway`);
+  if (eligibleLeadGap > 0) blockers.push(`${eligibleLeadGap} additional eligible leads are required for the ${target.minimumQueueDays}-day activation minimum`);
   return {
     weeklyTarget: target.weeklyTarget,
     targetDailyVolume,
@@ -63,8 +67,10 @@ export function assessSenderExpansionReadiness(input: {
     minimumAdditionalMailboxes,
     recommendedAdditionalMailboxes,
     queuedEligibleLeads,
+    minimumQueuedLeads,
     targetQueuedLeads,
     eligibleLeadGap,
+    reserveLeadGap,
     readyForTargetVolume: blockers.length === 0,
     blockers,
   };

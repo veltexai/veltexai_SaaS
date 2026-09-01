@@ -9,6 +9,12 @@ yield evidence (targets, candidates, provider requests/errors, duplicates, verif
 and caps). The protected `/api/internal/100x/health` endpoint combines the latest orchestration
 runs with the 100F state, daily metrics, and mutation-decision audit trail. It is read-only.
 
+100B uses Apollo as its primary source. When Apollo completes cleanly with zero outreach-ready
+contacts, an optional Hunter Domain Search + Email Verifier fallback can run against the same bounded
+company targets. It is disabled unless both `VELTEX_100B_HUNTER_FALLBACK_ENABLED=true` and
+`VELTEX_100B_HUNTER_API_KEY` are configured. Hunter results still require a verified work email,
+approved decision-maker role, deduplication, customer exclusion, and every suppression gate.
+
 Production scheduling uses independent daily lanes: bounded discovery at 09:00 UTC, enrichment at
 11:00 UTC, outbound at 14:00 UTC, and reconciliation 30 minutes later. The acquisition lead time
 lets verified supply reach the durable queue before the time-sensitive campaign allotment. Each lane
