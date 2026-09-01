@@ -97,6 +97,7 @@ export function createProductionStages(env: Env, orchestrationClient: SupabaseCl
         domainlessTargets: summary.domainlessTargets,
         providerRequests: summary.providerRequests,
         searchRequests: summary.searchRequests,
+        fallbackSearchRequests: summary.fallbackSearchRequests,
         enrichmentRequests: summary.enrichmentRequests,
         successfulEnrichments: summary.successfulEnrichments,
         providerErrors: summary.providerErrors + summary.providerReportedErrors,

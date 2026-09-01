@@ -53,6 +53,45 @@ describe("Apollo two-stage adapter — Stage 1 People Search", () => {
     const out = await provider(r.fetchImpl).enrichCompany(company, 6);
     expect(out.candidates).toHaveLength(0);
     expect(r.matchBodies).toHaveLength(0);
+    expect(r.searchBodies).toHaveLength(2);
+    expect(out.accounting).toMatchObject({ searchRequests: 2, fallbackSearchRequests: 1 });
+  });
+
+  it("uses one bounded, domain-constrained related-title fallback after a strict zero result", async () => {
+    const r = router({
+      search: (body) => body.include_similar_titles
+        ? res({ people: [sp("principal", "Managing Principal")] })
+        : res({ people: [] }),
+      match: () => res({ person: { email: "principal@evergreen.example.com", email_status: "verified" } }),
+    });
+    const out = await provider(r.fetchImpl).enrichCompany(company, 6);
+    expect(r.searchBodies).toHaveLength(2);
+    expect(r.searchBodies[1]).toMatchObject({
+      q_organization_domains_list: ["evergreen.example.com"],
+      include_similar_titles: true,
+    });
+    expect(r.searchBodies[1].person_titles).toContain("Managing Member");
+    expect(out.accounting).toMatchObject({ searchRequests: 2, fallbackSearchRequests: 1, enrichmentRequests: 1 });
+    expect(out.candidates[0]?.email).toBe("principal@evergreen.example.com");
+  });
+
+  it("does not use fallback or enrichment after the shared one-request budget is exhausted", async () => {
+    const r = router({ search: () => res({ people: [] }) });
+    const out = await provider(r.fetchImpl).enrichCompany(company, 1);
+    expect(r.searchBodies).toHaveLength(1);
+    expect(r.matchBodies).toHaveLength(0);
+    expect(out.accounting).toMatchObject({ searchRequests: 1, fallbackSearchRequests: 0 });
+  });
+
+  it("does not spend enrichment requests on unrelated fallback titles", async () => {
+    const r = router({
+      search: (body) => body.include_similar_titles
+        ? res({ people: [sp("marketing", "Marketing Coordinator")] })
+        : res({ people: [] }),
+    });
+    const out = await provider(r.fetchImpl).enrichCompany(company, 6);
+    expect(out.candidates).toHaveLength(0);
+    expect(r.matchBodies).toHaveLength(0);
   });
 
   it("skips search results without a person id defensively", async () => {

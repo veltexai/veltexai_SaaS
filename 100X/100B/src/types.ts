@@ -62,6 +62,7 @@ export interface ProviderContactCandidate {
 // budget and credit exposure. The runner only needs `requestsUsed`; `accounting` is advisory.
 export interface ProviderRequestAccounting {
   searchRequests: number;              // physical search-endpoint calls (incl. retries)
+  fallbackSearchRequests: number;      // physical calls made by the bounded broad-title fallback
   enrichmentRequests: number;          // physical enrichment-endpoint calls (incl. retries)
   retryAttempts: number;               // physical calls that were retries (attempt > 1)
   successfulEnrichments: number;       // enrichment calls that returned a usable work email
@@ -164,7 +165,7 @@ export interface ContactRepository {
 export interface RunSummary {
   runId: string; companiesProcessed: number; providerRequests: number;
   companiesWithCandidates: number; companiesWithoutCandidates: number; domainlessTargets: number;
-  searchRequests: number; enrichmentRequests: number; retryAttempts: number;
+  searchRequests: number; fallbackSearchRequests: number; enrichmentRequests: number; retryAttempts: number;
   successfulEnrichments: number; providerReportedErrors: number; estimatedCreditConsumingMatches: number;
   candidates: number; contactsProcessed: number; contactsCreated: number; sourceRecordsCreated: number;
   existingSources: number; confidentMatches: number; readyForOutreach: number; heldOrSuppressed: number;

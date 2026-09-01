@@ -28,7 +28,7 @@ export interface SupplyForecast {
 }
 
 export interface OrchestrationAlert {
-  code: "ELIGIBLE_SUPPLY_EMPTY" | "ELIGIBLE_SUPPLY_BELOW_DAILY_STAGE" | "ELIGIBLE_SUPPLY_LOW" | "ENRICHMENT_ZERO_YIELD" | "STAGE_FAILED";
+  code: "ELIGIBLE_SUPPLY_EMPTY" | "ELIGIBLE_SUPPLY_BELOW_DAILY_STAGE" | "ELIGIBLE_SUPPLY_LOW" | "ENRICHMENT_ZERO_YIELD" | "ENRICHMENT_SEARCH_ZERO_CANDIDATES" | "STAGE_FAILED";
   severity: "warning" | "critical";
   message: string;
 }

@@ -27,12 +27,12 @@ export function isGenericMailbox(normalizedEmail: string | null): boolean {
 
 // Ordered strongest-first so the first match wins.
 const ROLE_PATTERNS: Array<[RoleCategory, RegExp]> = [
-  ["owner", /\bowner\b/i],
+  ["owner", /\b(?:owner|managing member|managing partner|partner|principal)\b/i],
   ["founder", /\b(?:co[-\s]?founder|founder)\b/i],
   ["chief_executive", /\b(?:chief executive|ceo)\b/i],
   ["president", /\bpresident\b/i],
-  ["general_manager", /\b(?:general manager|gm)\b/i],
-  ["operations", /\b(?:chief operating|coo|vp of operations|director of operations|head of operations|operations manager|operations)\b/i],
+  ["general_manager", /\b(?:general manager|managing director|branch manager|regional manager|gm)\b/i],
+  ["operations", /\b(?:chief operating|coo|vp of operations|vp operations|vice president of operations|director of operations|head of operations|operations manager|operations)\b/i],
   ["sales_bd", /\b(?:chief revenue|cro|business development|bus\.? dev|sales|revenue)\b/i],
   ["estimator", /\bestimator\b/i],
   ["office_manager", /\boffice manager\b/i],
@@ -41,7 +41,7 @@ export function classifyRole(title: string | null, genericMailbox: boolean, hasP
   const t = title ?? "";
   for (const [role, re] of ROLE_PATTERNS) {
     // "president" must not match "vice president" as a top-tier president.
-    if (role === "president" && /\bvice president|\bvp\b/i.test(t) && !/\bpresident\b(?!.*vice)/i.test(t)) continue;
+    if (role === "president" && /\b(?:vice president|vp)\b/i.test(t)) continue;
     if (re.test(t)) return role;
   }
   if (genericMailbox && !hasPersonName) return "generic_mailbox";

@@ -42,6 +42,25 @@ describe("100G acquisition orchestrator", () => {
     expect(run.alerts?.some(({ code }) => code === "ENRICHMENT_ZERO_YIELD")).toBe(true);
   });
 
+  it("distinguishes a provider-search mismatch from downstream verification zero yield", async () => {
+    const deps = setup({ stage: 3, queued: 10 });
+    const stages = {
+      ...deps.stages,
+      "100B": { run: async () => ({
+        stage: "100B" as const,
+        status: "completed" as const,
+        produced: 0,
+        reason: "none",
+        evidence: { companiesProcessed: 5, companiesWithoutCandidates: 5, candidates: 0, providerErrors: 0 },
+      }) },
+    };
+    const run = await run100G(live, { ...deps, stages, now: () => new Date("2026-08-12T12:00:00Z") });
+    expect(run.alerts).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "ENRICHMENT_SEARCH_ZERO_CANDIDATES", severity: "warning" }),
+    ]));
+    expect(run.alerts?.some(({ code }) => code === "ENRICHMENT_ZERO_YIELD")).toBe(false);
+  });
+
   it("stops downstream stages after a failure", async () => {
     const deps = setup({ fail: "100B" });
     const run = await run100G(live, { ...deps, now: () => new Date("2026-08-12T12:00:00Z") });

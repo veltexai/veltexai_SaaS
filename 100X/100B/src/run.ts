@@ -52,7 +52,7 @@ export async function run100B(config: EnrichmentConfig, dependencies: Run100BDep
     const summary: RunSummary = {
       runId, companiesProcessed: 0, providerRequests: 0, candidates: 0, contactsProcessed: 0,
       companiesWithCandidates: 0, companiesWithoutCandidates: 0, domainlessTargets: 0,
-      searchRequests: 0, enrichmentRequests: 0, retryAttempts: 0, successfulEnrichments: 0,
+      searchRequests: 0, fallbackSearchRequests: 0, enrichmentRequests: 0, retryAttempts: 0, successfulEnrichments: 0,
       providerReportedErrors: 0, estimatedCreditConsumingMatches: 0,
       contactsCreated: 0, sourceRecordsCreated: 0, existingSources: 0, confidentMatches: 0,
       readyForOutreach: 0, heldOrSuppressed: 0, providerErrors: 0, capped: false, cursorAdvanced: false, diagnosticFailures: 0,
@@ -85,6 +85,7 @@ export async function run100B(config: EnrichmentConfig, dependencies: Run100BDep
       else summary.companiesWithoutCandidates += 1;
       if (result.accounting) {
         summary.searchRequests += result.accounting.searchRequests;
+        summary.fallbackSearchRequests += result.accounting.fallbackSearchRequests;
         summary.enrichmentRequests += result.accounting.enrichmentRequests;
         summary.retryAttempts += result.accounting.retryAttempts;
         summary.successfulEnrichments += result.accounting.successfulEnrichments;
@@ -92,7 +93,14 @@ export async function run100B(config: EnrichmentConfig, dependencies: Run100BDep
         summary.estimatedCreditConsumingMatches += result.accounting.estimatedCreditConsumingMatches;
       }
       summary.companiesProcessed += 1;
-      await safeEmit("info", "company.enriched", { prospectId: company.prospectId, candidates: result.candidates.length, requestsUsed: result.requestsUsed });
+      await safeEmit("info", "company.enriched", {
+        prospectId: company.prospectId,
+        candidates: result.candidates.length,
+        requestsUsed: result.requestsUsed,
+        searchRequests: result.accounting?.searchRequests ?? 0,
+        fallbackSearchRequests: result.accounting?.fallbackSearchRequests ?? 0,
+        enrichmentRequests: result.accounting?.enrichmentRequests ?? 0,
+      });
 
       let perCompany = 0;
       for (const raw of result.candidates) {

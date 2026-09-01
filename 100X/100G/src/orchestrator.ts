@@ -58,7 +58,16 @@ export async function run100G(config: OrchestrationConfig, deps: OrchestrationDe
         });
         results.push(result);
         if (stage === "100B" && result.status === "completed" && result.produced === 0 && stageRequestedLeads > 0) {
-          alerts.push({ code: "ENRICHMENT_ZERO_YIELD", severity: "warning", message: "100B produced zero outreach-ready contacts; inspect aggregate enrichment evidence before increasing acquisition volume." });
+          const evidence = result.evidence ?? {};
+          const processed = Number(evidence.companiesProcessed ?? 0);
+          const withoutCandidates = Number(evidence.companiesWithoutCandidates ?? 0);
+          const candidates = Number(evidence.candidates ?? 0);
+          const providerErrors = Number(evidence.providerErrors ?? 0);
+          if (processed > 0 && withoutCandidates === processed && candidates === 0 && providerErrors === 0) {
+            alerts.push({ code: "ENRICHMENT_SEARCH_ZERO_CANDIDATES", severity: "warning", message: "100B searched every selected company without provider errors but found zero candidates; inspect target/source fit and fallback-search usage." });
+          } else {
+            alerts.push({ code: "ENRICHMENT_ZERO_YIELD", severity: "warning", message: "100B produced zero outreach-ready contacts; inspect aggregate enrichment evidence before increasing acquisition volume." });
+          }
         }
         if (result.status === "failed") break;
       } catch (error) {

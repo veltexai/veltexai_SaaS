@@ -17,6 +17,8 @@ describe("100B contact normalization", () => {
   it.each([
     ["Owner", "owner"], ["Co-Founder", "founder"], ["President", "president"], ["CEO", "chief_executive"],
     ["General Manager", "general_manager"], ["Director of Operations", "operations"], ["VP of Sales", "sales_bd"],
+    ["Managing Member", "owner"], ["Managing Partner", "owner"], ["Principal", "owner"],
+    ["Managing Director", "general_manager"], ["Regional Manager", "general_manager"], ["Vice President of Operations", "operations"],
     ["Estimator", "estimator"], ["Office Manager", "office_manager"],
   ])("maps title %s to role %s", (title, role) => {
     expect(classifyRole(title, false, true)).toBe(role);

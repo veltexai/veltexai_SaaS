@@ -1,5 +1,6 @@
 import {
-  APOLLO_DECISION_MAKER_SENIORITIES, APOLLO_DECISION_MAKER_TITLES, APOLLO_ENDPOINTS,
+  APOLLO_DECISION_MAKER_SENIORITIES, APOLLO_DECISION_MAKER_TITLES,
+  APOLLO_EXPANDED_DECISION_MAKER_TITLES, APOLLO_ENDPOINTS,
   APOLLO_PILOT_ENRICHMENT_FLAGS, APOLLO_PILOT_LIMITS, REQUIRED_APOLLO_CAPABILITIES,
 } from "./apollo-config";
 import { classifyRole } from "./normalize";
@@ -68,7 +69,7 @@ const clean = (value: unknown): string | null => {
 };
 const isObject = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === "object";
 const zeroAccounting = (): ProviderRequestAccounting => ({
-  searchRequests: 0, enrichmentRequests: 0, retryAttempts: 0,
+  searchRequests: 0, fallbackSearchRequests: 0, enrichmentRequests: 0, retryAttempts: 0,
   successfulEnrichments: 0, providerErrors: 0, estimatedCreditConsumingMatches: 0,
 });
 
@@ -117,19 +118,25 @@ export class ApolloEnrichmentProvider implements EnrichmentProvider {
     if (ctx.remaining <= 0) throw new ApolloError("request_cap", "Apollo request budget exhausted before search", undefined, 0);
 
     // Stage 1 — People Search (a search failure fails the company; the runner records it).
-    const searchJson = await this.logicalRequest(APOLLO_ENDPOINTS.peopleSearch, this.searchBody(domain), "search", ctx);
-    const rawPeople = searchJson.people;
-    if (!Array.isArray(rawPeople)) {
-      throw new ApolloError("malformed", "Apollo search response missing people[]", undefined, ctx.accounting.searchRequests);
+    const searchJson = await this.logicalRequest(APOLLO_ENDPOINTS.peopleSearch, this.searchBody(domain, false), "search", ctx);
+    let parsed = this.parseSearchResponse(searchJson, ctx);
+    // A strict exact-title query can miss legitimate small-business decision makers such as
+    // managing members and principals. Retry once with Apollo's related-title matching while
+    // retaining the employer-domain and seniority constraints. The shared physical-request cap
+    // is checked before the fallback, so this can never create an unbounded provider loop.
+    if (parsed.length === 0 && ctx.remaining > 0 && APOLLO_PILOT_LIMITS.maxSearchOperationsPerCompany > 1) {
+      const fallbackJson = await this.logicalRequest(APOLLO_ENDPOINTS.peopleSearch, this.searchBody(domain, true), "fallback_search", ctx);
+      parsed = this.parseSearchResponse(fallbackJson, ctx);
     }
-    const parsed = rawPeople.filter(isObject).map((p) => this.parseSearchPerson(p)).filter((p): p is SearchPerson => p !== null);
     // Apollo can repeat the same person in search results. Deduplicate before the credit-bearing
     // enrichment calls so one provider id can never consume multiple matches in a run.
     const found = [...new Map(parsed.map((person) => [person.providerRecordId, person])).values()];
     if (found.length === 0) return this.result([], ctx); // no matches OR none had a usable id
 
     // Rank decision-makers locally, then cap the enrichment subset — BEFORE any credit call.
-    const ranked = this.rankDecisionMakers(found);
+    const ranked = this.rankDecisionMakers(found).filter((person) =>
+      ROLE_RANK[classifyRole(person.title, false, Boolean(person.fullName))] < ROLE_RANK.generic_mailbox
+    );
     const selected = ranked.slice(0, this.maxCandidatesEnrichedPerCompany);
 
     // Stage 2 — People Enrichment for the ranked subset (work email only).
@@ -166,15 +173,23 @@ export class ApolloEnrichmentProvider implements EnrichmentProvider {
     return { "Content-Type": "application/json", "Cache-Control": "no-cache", "X-Api-Key": this.apiKey };
   }
 
-  private searchBody(domain: string): Record<string, unknown> {
+  private searchBody(domain: string, fallback: boolean): Record<string, unknown> {
     return {
       q_organization_domains_list: [domain],
-      person_titles: [...APOLLO_DECISION_MAKER_TITLES],
+      person_titles: [...(fallback ? APOLLO_EXPANDED_DECISION_MAKER_TITLES : APOLLO_DECISION_MAKER_TITLES)],
       person_seniorities: [...APOLLO_DECISION_MAKER_SENIORITIES],
-      include_similar_titles: false,
+      include_similar_titles: fallback,
       page: 1,
       per_page: APOLLO_PILOT_LIMITS.searchPerPage,
     };
+  }
+
+  private parseSearchResponse(payload: Record<string, unknown>, ctx: RunContext): SearchPerson[] {
+    const rawPeople = payload.people;
+    if (!Array.isArray(rawPeople)) {
+      throw new ApolloError("malformed", "Apollo search response missing people[]", undefined, ctx.accounting.searchRequests);
+    }
+    return rawPeople.filter(isObject).map((person) => this.parseSearchPerson(person)).filter((person): person is SearchPerson => person !== null);
   }
 
   private enrichmentBody(personId: string): Record<string, unknown> {
@@ -185,14 +200,18 @@ export class ApolloEnrichmentProvider implements EnrichmentProvider {
   // One logical request with bounded retries. Every physical attempt (including retries) counts
   // against the shared budget and the per-kind accounting.
   private async logicalRequest(
-    endpoint: string, body: Record<string, unknown>, kind: "search" | "enrichment", ctx: RunContext,
+    endpoint: string, body: Record<string, unknown>, kind: "search" | "fallback_search" | "enrichment", ctx: RunContext,
   ): Promise<Record<string, unknown>> {
     let lastError: ApolloError | undefined;
     for (let attempt = 1; attempt <= this.maxAttemptsPerRequest; attempt += 1) {
       if (ctx.remaining <= 0) throw lastError ?? new ApolloError("request_cap", "Apollo request budget exhausted", undefined, attempt - 1);
       ctx.remaining -= 1;
       ctx.requestsUsed += 1;
-      if (kind === "search") ctx.accounting.searchRequests += 1; else ctx.accounting.enrichmentRequests += 1;
+      if (kind === "enrichment") ctx.accounting.enrichmentRequests += 1;
+      else {
+        ctx.accounting.searchRequests += 1;
+        if (kind === "fallback_search") ctx.accounting.fallbackSearchRequests += 1;
+      }
       if (attempt > 1) ctx.accounting.retryAttempts += 1;
 
       const controller = new AbortController();

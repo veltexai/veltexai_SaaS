@@ -18,7 +18,7 @@ export const APOLLO_ENDPOINTS = Object.freeze({
 // additional per-company bounds enforced inside the Apollo adapter.
 export const APOLLO_PILOT_LIMITS = Object.freeze({
   maxCompaniesPerProviderPreview: 2,   // provider-preview processes at most two companies
-  maxSearchOperationsPerCompany: 1,    // one logical search per company
+  maxSearchOperationsPerCompany: 2,    // strict search plus one domain-constrained fallback
   maxCandidatesEnrichedPerCompany: 3,  // rank, then enrich at most three people
   maxEnrichmentOperationsPerCompany: 3,// at most three enrichment operations per company
   maxAttemptsPerRequest: 3,            // physical attempts (incl. retries) per logical request
@@ -42,6 +42,17 @@ export const APOLLO_DECISION_MAKER_TITLES: readonly string[] = [
   "Owner", "Founder", "Co-Founder", "President", "CEO", "Chief Executive Officer",
   "General Manager", "Director of Operations", "Head of Operations", "Operations Manager",
   "VP of Sales", "Business Development", "Estimator", "Office Manager",
+];
+
+// Used only when the strict search returns no people. Apollo documents that title arrays are
+// additive and that include_similar_titles expands related titles. The fallback remains bound to
+// the same employer domain and seniority allowlist; local role classification still rejects
+// unrelated people before any credit-bearing enrichment request.
+export const APOLLO_EXPANDED_DECISION_MAKER_TITLES: readonly string[] = [
+  ...APOLLO_DECISION_MAKER_TITLES,
+  "Managing Member", "Managing Partner", "Partner", "Principal", "Managing Director",
+  "Chief Operating Officer", "COO", "Vice President of Operations", "VP Operations",
+  "Branch Manager", "Regional Manager", "Director of Business Development",
 ];
 
 // Apollo seniority buckets that map onto the decision-maker priority.
