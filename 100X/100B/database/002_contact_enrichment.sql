@@ -123,7 +123,7 @@ begin
   if not exists (select 1 from public.enrichment_workflow_state where workflow_id='100B' and lock_run_id=requested_run_id and lock_expires_at > pg_catalog.now()) then
     raise exception using errcode='55000', message='persist requires the live run-owned 100B lock';
   end if;
-  if source_record->>'provider' not in ('apollo','data_axle','csv_import','referral','fixture') then
+  if source_record->>'provider' not in ('apollo','hunter','data_axle','csv_import','referral','fixture') then
     raise exception using errcode='22023', message='100B rejects unapproved contact provider';
   end if;
   contact := matched_contact_id;
