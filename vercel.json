@@ -17,10 +17,6 @@
       "schedule": "0 11 * * *"
     },
     {
-      "path": "/api/internal/100x/orchestrate?rehearse=100B&provider=hunter&lane=enrichment",
-      "schedule": "0 0 1 1 *"
-    },
-    {
       "path": "/api/internal/100x/orchestrate?lane=outbound",
       "schedule": "0 14 * * *"
     },
