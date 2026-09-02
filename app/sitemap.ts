@@ -11,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/demo-proposal", priority: 0.85, changeFrequency: "monthly" as const },
     { path: "/tools/cleaning-bid-calculator", priority: 0.95, changeFrequency: "monthly" as const },
     { path: "/resources", priority: 0.8, changeFrequency: "weekly" as const },
+    { path: "/resources/commercial-cleaning-benchmark-report", priority: 0.95, changeFrequency: "monthly" as const },
     { path: "/solutions", priority: 0.85, changeFrequency: "monthly" as const },
     { path: "/privacy", priority: 0.2, changeFrequency: "yearly" as const },
     { path: "/terms", priority: 0.2, changeFrequency: "yearly" as const },
