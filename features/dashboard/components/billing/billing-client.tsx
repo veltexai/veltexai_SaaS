@@ -35,6 +35,7 @@ import ChangePlanButton from "@/features/billing/components/change-plan";
 import CancelSubscriptionButton from "@/features/billing/components/cancel-subscription";
 import FreeTrialInfoBanner from "@/components/ui/free-trial-info-banner";
 import { trackStartTrial } from "@/lib/analytics/meta-pixel";
+import { trackGoogleEvent } from "@/lib/analytics/google-analytics";
 
 interface BillingClientProps {
   initialUsage: UsageData | null;
@@ -147,6 +148,7 @@ export function BillingClient({
   }, [searchParams, trialStarted, justSubscribed, refreshBillingData]);
 
   const trialTrackedRef = useRef(false);
+  const purchaseTrackedRef = useRef(false);
 
   useEffect(() => {
     const error = searchParams.get("error");
@@ -167,6 +169,12 @@ export function BillingClient({
         planName: plan?.name ?? "unknown",
         value: plan?.price_monthly ?? 0,
       });
+      trackGoogleEvent("start_trial");
+    }
+
+    if (justSubscribed && !purchaseTrackedRef.current) {
+      purchaseTrackedRef.current = true;
+      trackGoogleEvent("purchase");
     }
   }, [
     searchParams,
