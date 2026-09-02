@@ -2,6 +2,7 @@ export type StageId = "100A" | "100B" | "100C";
 export type StageStatus = "completed" | "skipped" | "failed";
 export type OrchestrationMode = "dry_run" | "execute";
 export type OrchestrationLane = "full" | "outbound" | "discovery" | "enrichment";
+export type EnrichmentExecutionMode = "default" | "hunter_validation";
 
 export interface SupplySnapshot {
   currentDailySendStage: number;
@@ -45,7 +46,13 @@ export interface OrchestrationRun {
 }
 
 export interface StageRunner {
-  run(input: { runDate: string; requestedLeads: number; currentDailySendStage: number; lane: OrchestrationLane }): Promise<StageResult>;
+  run(input: {
+    runDate: string;
+    requestedLeads: number;
+    currentDailySendStage: number;
+    lane: OrchestrationLane;
+    enrichmentMode?: EnrichmentExecutionMode;
+  }): Promise<StageResult>;
 }
 
 export interface OrchestrationRepository {

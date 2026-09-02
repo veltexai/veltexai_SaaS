@@ -57,13 +57,22 @@ async function execute(req: NextRequest): Promise<NextResponse> {
     const requestedRehearsal = rehearsalStage(req.nextUrl.searchParams.get("rehearse"));
     if (requestedRehearsal) {
       if (process.env.VELTEX_100G_ALLOW_REHEARSAL !== "true") return NextResponse.json({ ok: false }, { status: 403 });
+      const enrichmentMode = requestedRehearsal === "100B" && req.nextUrl.searchParams.get("provider") === "hunter"
+        ? "hunter_validation" as const
+        : undefined;
       const result = await createProductionStages(process.env, client)[requestedRehearsal].run({
         runDate: new Date().toISOString().slice(0, 10),
         requestedLeads: 1,
         currentDailySendStage: 1,
         lane,
+        enrichmentMode,
       });
-      return NextResponse.json({ ok: result.status !== "failed", mode: "rehearsal", providerCallsMade: true, result });
+      return NextResponse.json({
+        ok: result.status !== "failed",
+        mode: enrichmentMode ?? "rehearsal",
+        providerCallsMade: result.status === "completed",
+        result,
+      });
     }
     const run = await run100G(config, { repository, stages: createProductionStages(process.env, client) }, lane);
     return NextResponse.json({ ok: run.status === "completed", mode: config.executeStages ? "execute" : "dry_run", run });

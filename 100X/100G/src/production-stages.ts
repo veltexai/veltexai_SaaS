@@ -123,11 +123,49 @@ export function createProductionStages(env: Env, orchestrationClient: SupabaseCl
       }
       return result("100A", created, `discovered ${created} new prospects across ${markets} of ${marketLimit} scheduled market${marketLimit === 1 ? "" : "s"}`);
     } },
-    "100B": { run: async ({ requestedLeads }) => {
+    "100B": { run: async ({ requestedLeads, enrichmentMode }) => {
       if (env.VELTEX_100B_ALLOW_100G !== "true") return disabled("100B");
-      const ids = await enrichmentTargets(orchestrationClient, requestedLeads);
+      const hunterValidation = enrichmentMode === "hunter_validation";
+      const ids = await enrichmentTargets(orchestrationClient, hunterValidation ? 1 : requestedLeads);
       if (ids.length === 0) return { stage: "100B", status: "skipped", produced: 0, reason: "no discovered prospects require enrichment" };
       const db = client(required(env, "VELTEX_100B_SUPABASE_URL"), required(env, "VELTEX_100B_SUPABASE_ANON_KEY"), required(env, "VELTEX_100B_WORKER_JWT"));
+
+      if (hunterValidation) {
+        if (!hunterFallbackConfigured(env)) throw new Error("Hunter validation requires the explicit fallback gate and credential");
+        const hunterConfig = load100BConfig(env, "hunter");
+        hunterConfig.limits.maxCompaniesPerRun = 1;
+        hunterConfig.limits.maxContactsPerRun = Math.min(hunterConfig.limits.maxContactsPerRun, 3);
+        hunterConfig.limits.maxNewContactsPerRun = Math.min(hunterConfig.limits.maxNewContactsPerRun, 3);
+        hunterConfig.limits.maxSourceRecordsPerRun = Math.min(hunterConfig.limits.maxSourceRecordsPerRun, 3);
+        hunterConfig.limits.maxProviderRequestsPerRun = Math.min(hunterConfig.limits.maxProviderRequestsPerRun, 4);
+        hunterConfig.limits.maxContactsPerCompany = Math.min(hunterConfig.limits.maxContactsPerCompany, 3);
+        const summary = await run100B(hunterConfig, {
+          provider: new HunterEnrichmentProvider(required(env, "VELTEX_100B_HUNTER_API_KEY")),
+          suppression: new NullSuppressionResolver(),
+          repository: new SupabaseContactRepository(db),
+          diagnostics: new BDiagnostics(db),
+          prospectIds: ids,
+        }, "100g");
+        return result("100B", summary.readyForOutreach, `Hunter validation verified ${summary.readyForOutreach} outreach-ready contacts`, {
+          validationProvider: "hunter",
+          targetsSelected: ids.length,
+          companiesProcessed: summary.companiesProcessed,
+          providerRequests: summary.providerRequests,
+          searchRequests: summary.searchRequests,
+          enrichmentRequests: summary.enrichmentRequests,
+          successfulEnrichments: summary.successfulEnrichments,
+          providerErrors: summary.providerErrors + summary.providerReportedErrors,
+          candidates: summary.candidates,
+          contactsCreated: summary.contactsCreated,
+          existingSources: summary.existingSources,
+          readyForOutreach: summary.readyForOutreach,
+          heldOrSuppressed: summary.heldOrSuppressed,
+          eligibilityCounts: summary.eligibilityCounts,
+          capped: summary.capped,
+          capReason: summary.capReason ?? null,
+        });
+      }
+
       const config = load100BConfig(env, "apollo");
       config.limits.maxCompaniesPerRun = Math.min(config.limits.maxCompaniesPerRun, ids.length);
       const primary = await run100B(config, { provider: new ApolloEnrichmentProvider(required(env, "VELTEX_100B_APOLLO_API_KEY")), suppression: new NullSuppressionResolver(), repository: new SupabaseContactRepository(db), diagnostics: new BDiagnostics(db), prospectIds: ids }, "100g");
