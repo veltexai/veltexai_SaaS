@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   applicationName: SITE_NAME,
   category: "business",
   robots: { index: true, follow: true },
+  verification: {
+    google: "m3CVOzAy6wcnds92a8zxiIKLzS34yEM0XxnnYam5xPQ",
+  },
 };
 
 const geistSans = Geist({
