@@ -6,6 +6,8 @@ const policy: RampPolicy = {
   minimumDaysAtStage: 3,
   minimumDeliveredAtStage: 10,
   maximumBounceRate: 0.02,
+  maximumUnsubscribeRate: 0.05,
+  minimumUnsubscribeSampleSize: 20,
   maximumSpamComplaints: 0,
   minimumAccountHealth: 95,
   perAccountDailyLimit: 25,
@@ -49,6 +51,20 @@ describe("100F ramp policy", () => {
     ["provider", { campaignStatus: -2 }],
   ])("pauses on %s safety failure", (_name, overrides) => {
     expect(evaluateRamp(state, [metric(overrides)], policy, "2026-08-11").action).toBe("pause");
+  });
+
+  it("pauses on a sustained unsubscribe rate above the configured threshold", () => {
+    expect(evaluateRamp(state, [metric({ sent: 20, unsubscribes: 2 })], policy, "2026-08-11", supply)).toMatchObject({
+      action: "pause",
+      gates: { unsubscribeRate: 0.1, unsubscribePassed: false, unsubscribeSampleSize: 20 },
+    });
+  });
+
+  it("does not overreact to a single opt-out before the minimum sample size", () => {
+    expect(evaluateRamp(state, [metric({ sent: 10, unsubscribes: 1 })], policy, "2026-08-11", supply)).toMatchObject({
+      action: "advance",
+      gates: { unsubscribeRate: 0.1, unsubscribePassed: true, unsubscribeSampleSize: 10 },
+    });
   });
 
   it("holds when healthy account capacity cannot support the next stage", () => {

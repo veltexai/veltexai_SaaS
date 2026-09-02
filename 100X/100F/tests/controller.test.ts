@@ -1,7 +1,7 @@
 import { runRampController } from "../src/controller";
 import type { DailyRampMetrics, RampDecision, RampPolicy, RampProvider, RampRepository, RampState } from "../src/types";
 
-const policy: RampPolicy = { stages: [1, 3, 5, 10, 25, 50, 120, 250, 500], minimumDaysAtStage: 1, minimumDeliveredAtStage: 1, maximumBounceRate: 0.02, maximumSpamComplaints: 0, minimumAccountHealth: 95, perAccountDailyLimit: 25, requireZeroWebhookFailures: true };
+const policy: RampPolicy = { stages: [1, 3, 5, 10, 25, 50, 120, 250, 500], minimumDaysAtStage: 1, minimumDeliveredAtStage: 1, maximumBounceRate: 0.02, maximumUnsubscribeRate: 0.05, minimumUnsubscribeSampleSize: 20, maximumSpamComplaints: 0, minimumAccountHealth: 95, perAccountDailyLimit: 25, requireZeroWebhookFailures: true };
 const state: RampState = { campaignId: "pilot", currentStage: 1, stageStartedAt: "2026-08-01T00:00:00Z", lastDecisionDate: null, pausedByController: false };
 const metrics: DailyRampMetrics[] = [{ date: "2026-08-11", campaignId: "pilot", campaignStatus: 1, configuredDailyLimit: 1, sent: 1, bounced: 0, replies: 0, unsubscribes: 0, spamComplaints: 0, webhookFailures: 0, healthySendingAccounts: 4, minimumAccountHealth: 100 }];
 const supply = { queuedEligibleLeads: 20, minimumQueueDays: 3 };

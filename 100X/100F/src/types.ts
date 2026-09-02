@@ -32,6 +32,8 @@ export interface RampPolicy {
   minimumDaysAtStage: number;
   minimumDeliveredAtStage: number;
   maximumBounceRate: number;
+  maximumUnsubscribeRate: number;
+  minimumUnsubscribeSampleSize: number;
   maximumSpamComplaints: number;
   minimumAccountHealth: number;
   perAccountDailyLimit: number;
@@ -55,6 +57,9 @@ export interface RampGateEvidence {
   campaignHealthy?: boolean;
   bounceRate?: number;
   bouncePassed?: boolean;
+  unsubscribeRate?: number;
+  unsubscribePassed?: boolean;
+  unsubscribeSampleSize?: number;
   complaintsPassed?: boolean;
   accountHealthPassed?: boolean;
   healthyAccountPassed?: boolean;

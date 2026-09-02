@@ -36,8 +36,11 @@ export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], poli
   const stageMetrics = metrics.filter((metric) => metric.date >= stageStartDate && metric.date <= today);
   const sent = stageMetrics.reduce((sum, metric) => sum + metric.sent, 0);
   const bounced = stageMetrics.reduce((sum, metric) => sum + metric.bounced, 0);
+  const unsubscribes = stageMetrics.reduce((sum, metric) => sum + metric.unsubscribes, 0);
   const delivered = Math.max(0, sent - bounced);
   const bounceRate = sent > 0 ? bounced / sent : 0;
+  const unsubscribeRate = sent > 0 ? unsubscribes / sent : 0;
+  const unsubscribePassed = sent < policy.minimumUnsubscribeSampleSize || unsubscribeRate <= policy.maximumUnsubscribeRate;
   // The controller evaluates completed campaign-local calendar dates. Compare those dates,
   // rather than the time-of-day embedded in stage_started_at, so a noon audit timestamp does
   // not erase an otherwise completed dwell day. This remains conservative: the start date is
@@ -56,6 +59,9 @@ export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], poli
     campaignHealthy: current.campaignStatus >= 0,
     bounceRate,
     bouncePassed: bounceRate <= policy.maximumBounceRate,
+    unsubscribeRate,
+    unsubscribePassed,
+    unsubscribeSampleSize: sent,
     complaintsPassed: current.spamComplaints <= policy.maximumSpamComplaints,
     accountHealthPassed: current.minimumAccountHealth >= policy.minimumAccountHealth,
     healthyAccountPassed: current.healthySendingAccounts >= 1,
@@ -81,13 +87,14 @@ export function evaluateRamp(state: RampState, metrics: DailyRampMetrics[], poli
     current.campaignStatus < 0 ||
     current.spamComplaints > policy.maximumSpamComplaints ||
     bounceRate > policy.maximumBounceRate ||
+    !unsubscribePassed ||
     current.minimumAccountHealth < policy.minimumAccountHealth ||
     current.healthySendingAccounts < 1 ||
     (policy.requireZeroWebhookFailures && current.webhookFailures > 0);
 
   if (hardStop) {
     return makeDecision(state, today, "pause", state.currentStage,
-      `safety threshold failed (bounce=${bounceRate.toFixed(4)}, complaints=${current.spamComplaints}, health=${current.minimumAccountHealth}, webhook_failures=${current.webhookFailures})`, gates);
+      `safety threshold failed (bounce=${bounceRate.toFixed(4)}, unsubscribe=${unsubscribeRate.toFixed(4)}, complaints=${current.spamComplaints}, health=${current.minimumAccountHealth}, webhook_failures=${current.webhookFailures})`, gates);
   }
 
   if (!stageStartValid) {

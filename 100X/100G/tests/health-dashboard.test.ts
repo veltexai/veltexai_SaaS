@@ -97,6 +97,22 @@ describe("100X health dashboard assessment", () => {
       "MAILBOX_HEALTH_BELOW_THRESHOLD",
     ]));
   });
+
+  it("surfaces historical reconciliation backlog and gates sustained unsubscribe risk", () => {
+    const result = assessDashboardHealth({
+      now,
+      latestRun: { status: "completed", createdAt: "2026-08-18T14:00:00.000Z", alerts: [] },
+      latestMetric: { ...metric, sent: 20, unsubscribes: 2 },
+      latestDecision: decision,
+      auditEvidence: { ...auditEvidence, openUnmatchedCount: 9 },
+      supplyStatus: "healthy",
+    });
+    expect(result.status).toBe("blocked");
+    expect(result.alerts).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "UNMATCHED_EVENT_BACKLOG", severity: "warning" }),
+      expect.objectContaining({ code: "UNSUBSCRIBE_RATE_EXCEEDED", severity: "critical" }),
+    ]));
+  });
 });
 
 describe("100X sender expansion readiness", () => {

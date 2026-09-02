@@ -85,6 +85,7 @@ export function assessDashboardHealth(input: {
     campaign_status?: number;
     sent?: number;
     bounced?: number;
+    unsubscribes?: number;
     spam_complaints?: number;
     webhook_failures?: number;
     healthy_sending_accounts?: number;
@@ -99,10 +100,17 @@ export function assessDashboardHealth(input: {
     matchedSuppressionCount?: number;
     ingestionErrorCount?: number;
     heldUnmatchedCount?: number;
+    openUnmatchedCount?: number;
+    replyCount?: number;
+    interestedReplyCount?: number;
+    meetingEventCount?: number;
+    conversionEventCount?: number;
   };
   supplyStatus: "healthy" | "low" | "empty";
   minimumAccountHealth?: number;
   maximumBounceRate?: number;
+  maximumUnsubscribeRate?: number;
+  minimumUnsubscribeSampleSize?: number;
 }) {
   const orchestrationAgeHours = ageHours(input.latestRun?.createdAt, input.now);
   const metricTimestamp = input.latestMetric?.recorded_at ?? (input.latestMetric?.metric_date ? `${input.latestMetric.metric_date}T23:59:59.000Z` : null);
@@ -115,9 +123,13 @@ export function assessDashboardHealth(input: {
   const warning = (code: string, message: string) => { alerts.push({ code, severity: "warning", message }); warnings.push(message); };
   const minimumAccountHealth = input.minimumAccountHealth ?? 95;
   const maximumBounceRate = input.maximumBounceRate ?? 0.02;
+  const maximumUnsubscribeRate = input.maximumUnsubscribeRate ?? 0.05;
+  const minimumUnsubscribeSampleSize = input.minimumUnsubscribeSampleSize ?? 20;
   const sent = input.latestMetric?.sent ?? 0;
   const bounced = input.latestMetric?.bounced ?? 0;
+  const unsubscribes = input.latestMetric?.unsubscribes ?? 0;
   const bounceRate = sent > 0 ? bounced / sent : 0;
+  const unsubscribeRate = sent > 0 ? unsubscribes / sent : 0;
 
   if (orchestrationAgeHours === null || orchestrationAgeHours > 36) critical("ORCHESTRATION_EVIDENCE_STALE", "orchestration evidence is missing or stale");
   if (metricAgeHours === null || metricAgeHours > 48) critical("RAMP_METRICS_STALE", "ramp metrics are missing or stale");
@@ -128,11 +140,14 @@ export function assessDashboardHealth(input: {
   if (input.auditEvidence.available && sent > 0 && (input.auditEvidence.receiptCount ?? 0) === 0) critical("OUTBOUND_RECEIPT_MISSING", "sent activity has no matching outbound event receipts");
   if (input.auditEvidence.available && (input.auditEvidence.suppressingEventCount ?? 0) > (input.auditEvidence.matchedSuppressionCount ?? 0)) critical("SUPPRESSION_PARITY_FAILURE", "a suppressing event is missing its durable suppression record");
   if (input.auditEvidence.available && (input.auditEvidence.heldUnmatchedCount ?? 0) > 0) warning("UNMATCHED_EVENTS_HELD", "unmatched outbound events require reconciliation");
+  if (input.auditEvidence.available && (input.auditEvidence.openUnmatchedCount ?? 0) > 0) warning("UNMATCHED_EVENT_BACKLOG", `${input.auditEvidence.openUnmatchedCount} historical unmatched outbound events remain open`);
   if (input.latestRun?.status === "failed") critical("ORCHESTRATION_RUN_FAILED", "latest orchestration run failed");
   if ((input.latestMetric?.campaign_status ?? 0) < 0) critical("CAMPAIGN_UNHEALTHY", "campaign status is unhealthy");
   if ((input.latestMetric?.spam_complaints ?? 0) > 0) critical("SPAM_COMPLAINT_DETECTED", "spam complaints are present");
   if ((input.latestMetric?.webhook_failures ?? 0) > 0) critical("WEBHOOK_FAILURE_DETECTED", "ramp metrics report webhook failures");
   if (sent > 0 && bounceRate > maximumBounceRate) critical("BOUNCE_RATE_EXCEEDED", `bounce rate ${(bounceRate * 100).toFixed(2)}% exceeds ${(maximumBounceRate * 100).toFixed(2)}%`);
+  if (sent >= minimumUnsubscribeSampleSize && unsubscribeRate > maximumUnsubscribeRate) critical("UNSUBSCRIBE_RATE_EXCEEDED", `unsubscribe rate ${(unsubscribeRate * 100).toFixed(2)}% exceeds ${(maximumUnsubscribeRate * 100).toFixed(2)}%`);
+  else if (unsubscribes > 0) warning("UNSUBSCRIBE_OBSERVED", `${unsubscribes} unsubscribe event(s) observed in the latest metric`);
   if (input.latestMetric?.healthy_sending_accounts !== undefined && input.latestMetric.healthy_sending_accounts < 1) critical("NO_HEALTHY_SENDING_ACCOUNT", "no healthy sending account is available");
   if (input.latestMetric?.minimum_account_health !== undefined && input.latestMetric.minimum_account_health < minimumAccountHealth) critical("MAILBOX_HEALTH_BELOW_THRESHOLD", `minimum mailbox health is below ${minimumAccountHealth}`);
   if (input.supplyStatus === "empty") critical("ELIGIBLE_SUPPLY_EMPTY", "eligible lead supply is empty");
@@ -150,6 +165,7 @@ export function assessDashboardHealth(input: {
     blockers,
     warnings,
     alerts,
+    rates: { bounceRate, unsubscribeRate },
   };
 }
 
@@ -206,6 +222,11 @@ export async function read100XHealthDashboard(
     matchedSuppressionCount: Number(auditRow?.matched_suppression_count ?? 0),
     ingestionErrorCount: Number(auditRow?.ingestion_error_count ?? 0),
     heldUnmatchedCount: Number(auditRow?.held_unmatched_count ?? 0),
+    openUnmatchedCount: Number(auditRow?.open_unmatched_count ?? 0),
+    replyCount: Number(auditRow?.reply_count ?? 0),
+    interestedReplyCount: Number(auditRow?.interested_reply_count ?? 0),
+    meetingEventCount: Number(auditRow?.meeting_event_count ?? 0),
+    conversionEventCount: Number(auditRow?.conversion_event_count ?? 0),
   };
   const healthRun = latestRun ? { ...latestRun, alerts: activeAlerts } : null;
   const health = assessDashboardHealth({ now, latestRun: healthRun, latestMetric, latestDecision, auditEvidence, supplyStatus });
