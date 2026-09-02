@@ -7,6 +7,19 @@ import MetaPixel from "@/components/MetaPixel";
 import MetaPixelTracker from "@/components/MetaPixelTracker";
 import Script from "next/script";
 import { AnalyticsController } from "@/components/analytics-controller";
+import type { Metadata } from "next";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: { default: `${SITE_NAME} | Cleaning Proposal Software`, template: `%s | ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
+  applicationName: SITE_NAME,
+  category: "business",
+  robots: { index: true, follow: true },
+};
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,6 +57,7 @@ export default function RootLayout({
         <MetaPixel />
         <MetaPixelTracker />
         <AnalyticsController />
+        <GoogleAnalytics />
         <ConfirmationProvider>
           {children}
           <Toaster />

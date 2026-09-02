@@ -15,12 +15,17 @@ import {
   isOnDemandFrequency,
 } from "@/features/proposals/constants/area-frequency";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function POST(request: NextRequest) {
   try {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "OpenAI API key not configured" },
+        { status: 503 },
+      );
+    }
+    const openai = new OpenAI({ apiKey });
+
     // Check authentication
     const user = await getUser();
     if (!user) {

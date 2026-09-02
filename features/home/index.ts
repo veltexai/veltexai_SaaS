@@ -6,5 +6,6 @@ export { default as ValueProposition } from "./components/value-proposition";
 export { default as PricingSection } from "./components/pricing-section";
 export { default as TestimonialsSection } from "./components/testimonials-section";
 export { default as CTASection } from "./components/cta-section";
+export { default as ResourceDiscoverySection } from "./components/resource-discovery-section";
 export { default as FAQSection } from "./components/faq-section";
 export { default as FooterSection } from "./components/footer-section";

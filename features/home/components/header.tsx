@@ -39,16 +39,16 @@ const Header = () => {
                 Pricing
               </Link>
               <Link
-                href="#testimonials"
+                href="/solutions"
                 className="text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Reviews
+                Solutions
               </Link>
               <Link
-                href="#faq"
+                href="/resources"
                 className="text-gray-600 hover:text-gray-900 transition-colors"
               >
-                FAQ
+                Resources
               </Link>
             </div>
             <div className="hidden md:flex items-center gap-4">
@@ -96,11 +96,11 @@ const Header = () => {
               <Link href="#pricing" className="block text-gray-600">
                 Pricing
               </Link>
-              <Link href="#testimonials" className="block text-gray-600">
-                Reviews
+              <Link href="/solutions" className="block text-gray-600">
+                Solutions
               </Link>
-              <Link href="#faq" className="block text-gray-600">
-                FAQ
+              <Link href="/resources" className="block text-gray-600">
+                Resources
               </Link>
               <div className="flex flex-col gap-2">
                 <Link href="/auth/login">

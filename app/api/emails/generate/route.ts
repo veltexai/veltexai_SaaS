@@ -5,10 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { AITone } from "@/types/database";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 const emailGenerationSchema = z.object({
   email_type: z.enum([
     "proposal_send",
@@ -31,6 +27,15 @@ const emailGenerationSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "OpenAI API key not configured" },
+        { status: 503 },
+      );
+    }
+    const openai = new OpenAI({ apiKey });
+
     // Check authentication
     const { user } = await getUser();
     if (!user) {
