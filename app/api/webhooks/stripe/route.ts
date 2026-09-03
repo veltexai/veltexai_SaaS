@@ -11,6 +11,7 @@ import Stripe from "stripe";
 import { after } from "next/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { captureServerEvent } from "@/lib/analytics/server";
+import { sendGA4ServerEvent } from "@/lib/analytics/ga4-server";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -394,6 +395,7 @@ async function handleSubscriptionCreated(
           userId,
           planName,
           value: planData.price_monthly,
+          eventId: `start_trial:${subscription.id}`,
         });
       }
     }
@@ -743,8 +745,24 @@ async function handleInvoicePaymentSucceeded(
         planName: planName ?? "unknown",
         value: invoice.amount_paid / 100,
         currency: invoice.currency,
+        eventId: `purchase:${invoice.id ?? invoice.created}`,
       });
     }
+
+    const { data: attributionRow } = await supabase
+      .from("marketing_attribution")
+      .select("first_touch, last_touch, ga_client_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    await sendGA4ServerEvent({ clientId: attributionRow?.ga_client_id ?? null, userId, name: "purchase", eventId: `purchase:${invoice.id ?? invoice.created}`, params: { transaction_id: invoice.id ?? `invoice-${invoice.created}`, value: invoice.amount_paid / 100, currency: invoice.currency ?? "usd" } });
+    await supabase.from("marketing_funnel_events").upsert({
+      event_id: `purchase:${invoice.id ?? invoice.created}`,
+      user_id: userId,
+      event_name: "purchase",
+      attribution: attributionRow?.last_touch ?? attributionRow?.first_touch ?? null,
+      properties: { invoice_id: invoice.id, amount_cents: invoice.amount_paid, currency: invoice.currency, plan: planName ?? "unknown" },
+      occurred_at: new Date(invoice.created * 1000).toISOString(),
+    }, { onConflict: "event_id", ignoreDuplicates: true });
 
     // First, check if there are pending billing records to update (from trial)
     // Update ALL pending records for this user to 'paid' when first real payment comes in

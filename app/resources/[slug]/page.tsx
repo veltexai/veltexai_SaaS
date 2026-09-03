@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const resource = getResource(slug);
   if (!resource) return {};
-  return { title: resource.title, description: resource.description, alternates: { canonical: `/resources/${slug}` }, openGraph: { type: "article", title: resource.title, description: resource.description, url: `${SITE_URL}/resources/${slug}` } };
+  return { title: resource.title, description: resource.description, alternates: { canonical: `/resources/${slug}` }, openGraph: { type: "article", title: resource.title, description: resource.description, url: `${SITE_URL}/resources/${slug}`, images: [{ url: `${SITE_URL}/images/og-image.png`, width: 1200, height: 630, alt: `${resource.title} — Veltex AI` }] }, twitter: { card: "summary_large_image", title: resource.title, description: resource.description, images: [`${SITE_URL}/images/og-image.png`] } };
 }
 
 export default async function ResourcePage({ params }: { params: Promise<{ slug: string }> }) {
