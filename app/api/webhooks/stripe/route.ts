@@ -754,7 +754,7 @@ async function handleInvoicePaymentSucceeded(
       .select("first_touch, last_touch, ga_client_id")
       .eq("user_id", userId)
       .maybeSingle();
-    await sendGA4ServerEvent({ clientId: attributionRow?.ga_client_id ?? null, userId, name: "purchase", eventId: `purchase:${invoice.id}`, params: { transaction_id: invoice.id, value: invoice.amount_paid / 100, currency: invoice.currency } });
+    await sendGA4ServerEvent({ clientId: attributionRow?.ga_client_id ?? null, userId, name: "purchase", eventId: `purchase:${invoice.id}`, params: { transaction_id: invoice.id, value: invoice.amount_paid / 100, currency: invoice.currency ?? "usd" } });
     await supabase.from("marketing_funnel_events").upsert({
       event_id: `purchase:${invoice.id}`,
       user_id: userId,
