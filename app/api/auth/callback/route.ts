@@ -3,13 +3,16 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { getUser } from "@/features/auth/services/get-user";
 import { EmailService } from "@/lib/email/service";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { getSafeRedirectPath } from "@/features/auth/utils/redirect";
 import { after } from "next/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { captureServerEvent } from "@/lib/analytics/server";
+import { FIRST_TOUCH_COOKIE, LAST_TOUCH_COOKIE, parseAttribution } from "@/lib/analytics/attribution";
+import { gaClientIdFromCookie, sendGA4ServerEvent } from "@/lib/analytics/ga4-server";
+import { sendStartTrialEvent } from "@/lib/analytics/meta-capi";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const redirectTo = getSafeRedirectPath(
@@ -72,6 +75,36 @@ export async function GET(request: Request) {
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!,
         );
+
+        const firstTouch = parseAttribution(request.cookies.get(FIRST_TOUCH_COOKIE)?.value);
+        const lastTouch = parseAttribution(request.cookies.get(LAST_TOUCH_COOKIE)?.value);
+        if (firstTouch) {
+          const attribution = lastTouch ?? firstTouch;
+          const gaClientId = gaClientIdFromCookie(request.cookies.get("_ga")?.value);
+          const { error: attributionError } = await serviceClient.from("marketing_attribution").upsert({
+            user_id: user.id,
+            first_touch: firstTouch,
+            last_touch: attribution,
+            first_touch_captured_at: firstTouch.capturedAt,
+            last_touch_captured_at: attribution.capturedAt,
+            ga_client_id: gaClientId,
+          }, { onConflict: "user_id" });
+          if (attributionError) console.error("Unable to persist marketing attribution", attributionError.message);
+          const events = ["sign_up", "start_trial"].map((eventName) => ({
+            event_id: `${eventName}:${user.id}`,
+            user_id: user.id,
+            event_name: eventName,
+            attribution,
+            properties: { source: attribution.source, campaign: attribution.campaign, content: attribution.content },
+          }));
+          const { error: funnelError } = await serviceClient.from("marketing_funnel_events").upsert(events, { onConflict: "event_id", ignoreDuplicates: true });
+          if (funnelError) console.error("Unable to persist signup funnel events", funnelError.message);
+          await Promise.all([
+            sendGA4ServerEvent({ clientId: gaClientId, userId: user.id, name: "sign_up", eventId: `sign_up:${user.id}`, params: { method: user.app_metadata?.provider ?? "email" } }),
+            sendGA4ServerEvent({ clientId: gaClientId, userId: user.id, name: "start_trial", eventId: `start_trial:${user.id}`, params: { plan: "free_trial" } }),
+            sendStartTrialEvent({ email: user.email, userId: user.id, planName: "free_trial", value: 0, eventId: `start_trial:${user.id}` }),
+          ]);
+        }
 
         const { data: alreadySent } = await serviceClient
           .from("email_automation_log")

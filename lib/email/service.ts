@@ -118,6 +118,26 @@ export class EmailService {
     });
   }
 
+  static async sendCalculatorEstimateEmail(data: { userEmail: string; estimatePdf: Buffer }): Promise<boolean> {
+    try {
+      const config = await this.getEmailConfig();
+      if (!config?.enable_email_notifications) return false;
+      const transporter = await this.createTransporter();
+      await transporter.sendMail({
+        from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
+        to: data.userEmail,
+        subject: "Your commercial cleaning bid estimate — Veltex AI",
+        text: "Attached is the planning estimate you requested. Validate every input and inspect the facility before quoting a customer. This estimate is not a guarantee or professional advice.",
+        html: "<p>Attached is the planning estimate you requested.</p><p>Validate every input and inspect the facility before quoting a customer. This estimate is not a guarantee or professional advice.</p><p>— Veltex AI</p>",
+        attachments: [{ filename: "veltex-ai-cleaning-bid-estimate.pdf", content: data.estimatePdf, contentType: "application/pdf" }],
+      });
+      return true;
+    } catch (error) {
+      console.error("Failed to send requested calculator estimate", error);
+      return false;
+    }
+  }
+
   static async sendSubscriptionEmail(data: EmailData): Promise<boolean> {
     try {
       console.log("📧 EmailService: Getting email config...");

@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { buildAuthPathWithRedirect } from '@/features/auth/utils/redirect'
+import { ATTRIBUTION_MAX_AGE_SECONDS, FIRST_TOUCH_COOKIE, LAST_TOUCH_COOKIE, attributionFromUrl, serializeAttribution } from '@/lib/analytics/attribution'
 
 interface UsageInfo {
   can_create_proposal: boolean;
@@ -68,9 +69,9 @@ export async function middleware(request: NextRequest) {
           }),
           request.url,
         )
-        return NextResponse.redirect(redirectUrl)
+        return withAttribution(request, NextResponse.redirect(redirectUrl))
       }
-      return NextResponse.redirect(new URL('/auth/login', request.url))
+      return withAttribution(request, NextResponse.redirect(new URL('/auth/login', request.url)))
     }
 
     // Check if user can create proposals
@@ -84,11 +85,21 @@ export async function middleware(request: NextRequest) {
       // Redirect to billing page with error message
       const redirectUrl = new URL('/dashboard/billing', request.url)
       redirectUrl.searchParams.set('error', 'subscription_required')
-      return NextResponse.redirect(redirectUrl)
+      return withAttribution(request, NextResponse.redirect(redirectUrl))
     }
   }
 
-  return supabaseResponse
+  return withAttribution(request, supabaseResponse)
+}
+
+function withAttribution(request: NextRequest, response: NextResponse) {
+  const attribution = attributionFromUrl(request.nextUrl, request.headers.get('referer') ?? '')
+  if (!attribution) return response
+  const value = serializeAttribution(attribution)
+  const options = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' as const, path: '/', maxAge: ATTRIBUTION_MAX_AGE_SECONDS }
+  if (!request.cookies.has(FIRST_TOUCH_COOKIE)) response.cookies.set(FIRST_TOUCH_COOKIE, value, options)
+  response.cookies.set(LAST_TOUCH_COOKIE, value, options)
+  return response
 }
 
 export const config = {

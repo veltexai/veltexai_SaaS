@@ -1,0 +1,12 @@
+{
+  "accounts": [
+    { "id": "veltex-facebook", "platform": "facebook", "label": "Veltex AI Facebook Page", "handle": null, "providerAccountId": null, "owner": "Founder", "approver": "Founder", "active": false },
+    { "id": "veltex-instagram", "platform": "instagram", "label": "Veltex AI Instagram Professional Account", "handle": null, "providerAccountId": null, "owner": "Founder", "approver": "Founder", "active": false },
+    { "id": "veltex-linkedin", "platform": "linkedin", "label": "Veltex AI LinkedIn Page", "handle": null, "providerAccountId": null, "owner": "Founder", "approver": "Founder", "active": false },
+    { "id": "veltex-youtube", "platform": "youtube", "label": "Veltex AI YouTube Channel", "handle": null, "providerAccountId": null, "owner": "Founder", "approver": "Founder", "active": false }
+  ],
+  "publishingEnabled": false,
+  "commentReplyEnabled": false,
+  "approvalMode": "manual",
+  "notes": "Populate handles and provider account IDs only after ownership and least-privilege access are verified. Never store tokens here."
+}

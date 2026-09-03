@@ -9,7 +9,7 @@ import Script from "next/script";
 import { AnalyticsController } from "@/components/analytics-controller";
 import type { Metadata } from "next";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SOCIAL_PROFILE_URLS } from "@/lib/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -42,6 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", name: SITE_NAME, url: SITE_URL, sameAs: SOCIAL_PROFILE_URLS }) }} />
         {/* Preconnect to Typekit so the DNS + TLS handshake is done early */}
         <link rel="preconnect" href="https://use.typekit.net" crossOrigin="" />
         <link rel="dns-prefetch" href="https://use.typekit.net" />
