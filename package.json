@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "content:check": "node --no-warnings --experimental-strip-types quality/check-solution-content.mjs"
+    "content:check": "node --no-warnings --experimental-strip-types quality/check-solution-content.mjs && node --no-warnings --experimental-strip-types quality/check-resource-content.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
