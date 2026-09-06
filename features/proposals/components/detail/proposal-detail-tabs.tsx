@@ -49,7 +49,7 @@ export function ProposalDetailTabs({
 
       <TabsContent
         value="preview"
-        className="mt-4 sm:mt-6 xl:w-full lg:w-[85%] sm:w-full mx-auto"
+        className="mt-4 sm:mt-6 w-full max-w-[800px] mx-auto"
       >
         <div className="p-2 sm:p-4 md:p-6 overflow-x-auto">
           <TemplateRenderer proposal={proposal} />
