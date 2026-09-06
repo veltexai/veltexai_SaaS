@@ -90,7 +90,7 @@ const COMMERCIAL_PAGES: string[] = [
 \`\`\``,
 
   // [4] Add-ons
-  `The following services are available to complement your janitorial program based on seasonal needs or property requirements.
+  `Additional services to complement your janitorial program.
 - Carpet hot-water extraction – quarterly or on-demand
 - Interior window cleaning – full pane per floor
 - Day porter coverage – business hours, high-traffic zones

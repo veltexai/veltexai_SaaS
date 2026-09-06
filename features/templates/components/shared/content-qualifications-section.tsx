@@ -17,11 +17,31 @@ const QUALIFICATIONS: ReadonlyArray<{
   description: string;
   icon: LucideIcon;
 }> = [
-  { title: "Professional Standards", description: "Consistent service practices", icon: ShieldCheck },
-  { title: "Safety & Training", description: "Site-aware working procedures", icon: Shield },
-  { title: "Quality Control", description: "Routine service quality checks", icon: ClipboardCheck },
-  { title: "Client Communication", description: "Clear updates and responsive follow-up", icon: MessageCircle },
-  { title: "Responsible Chemical Handling", description: "Label-directed product use and handling", icon: Droplets },
+  {
+    title: "Professional Standards",
+    description: "Consistent service practices",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Safety & Training",
+    description: "Site-aware working procedures",
+    icon: Shield,
+  },
+  {
+    title: "Quality Control",
+    description: "Routine service quality checks",
+    icon: ClipboardCheck,
+  },
+  {
+    title: "Client Communication",
+    description: "Clear updates and responsive follow-up",
+    icon: MessageCircle,
+  },
+  {
+    title: "Chemical Handling",
+    description: "Safe, label-directed use",
+    icon: Droplets,
+  },
 ];
 
 const ContentQualificationsSection = ({
@@ -44,18 +64,26 @@ const ContentQualificationsSection = ({
         clear communication, and responsible product handling.
       </p>
 
-      <div className="grid grid-cols-2 gap-2 max-w-[90%] mt-3 sm:mt-0 pl-6 sm:pl-0 mb-10">
+      <div className="grid grid-cols-2 gap-2 max-w-[90%] mt-3 sm:mt-0 :pl-0 mb-10">
         {QUALIFICATIONS.map(({ title, description, icon: Icon }) => (
           <div
             key={title}
             className="bg-white flex col-span-2 min-h-9 sm:min-h-[62px] items-center justify-center p-2 sm:p-4 drop-shadow-lg rounded-3xl"
           >
             <div className="flex w-[150px] shrink-0 items-center justify-center border-r pr-6 text-[#001B7A]">
-              <Icon className="size-5 sm:size-8" strokeWidth={1.75} aria-hidden />
+              <Icon
+                className="size-5 sm:size-8"
+                strokeWidth={1.75}
+                aria-hidden
+              />
             </div>
-            <div className={`${montserrat.className} w-[300px] px-3 text-center`}>
+            <div
+              className={`${montserrat.className} w-[300px] px-3 text-center`}
+            >
               <p className="text-3xs font-semibold sm:text-xs">{title}</p>
-              <p className="text-[7px] text-slate-600 sm:text-[10px]">{description}</p>
+              <p className="text-[7px] text-slate-600 sm:text-[10px]">
+                {description}
+              </p>
             </div>
           </div>
         ))}

@@ -427,7 +427,7 @@ export function LuxuryEliteTemplate({
 
       <div
         id="page-ten"
-        className="relative sm:aspect-[1/1.4] aspect-[1/1.7] bg-white"
+        className="relative sm:aspect-[1/1.4] aspect-[1/1.7] overflow-hidden bg-white"
       >
         <ThankYouPage
           email={b.email}

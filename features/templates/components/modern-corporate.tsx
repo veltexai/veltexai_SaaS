@@ -152,7 +152,7 @@ export function ModernCorporateTemplate({
               <>
                 <div
                   id="page-three"
-                  className="relative aspect-[1/1.4] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
+                  className="relative aspect-[1/1.5] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
                 >
                   <div>
                     {content.about?.content ? (
@@ -235,7 +235,7 @@ export function ModernCorporateTemplate({
                 {/* Page five */}
                 <div
                   id="page-five"
-                  className="relative sm:aspect-[1/1.4] aspect-[1/1.74] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
+                  className="relative sm:aspect-[1/1.5] aspect-[1/1.74] bg-white sm:pt-16 pt-10 sm:pl-30 pl-16 sm:pb-0 pb-10"
                 >
                   <VerticalBar variant="gradientGray" />
                   <HorizontalBar variant="gradientGray" />
