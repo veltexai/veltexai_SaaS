@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { montserrat } from "@/lib/fonts";
+import { formatProposalDateShort } from "../utils/proposal-date";
 import {
   HeaderLogo,
   HeaderTemplate,
@@ -110,7 +111,7 @@ export function BasicTemplate({
         <div className="absolute bottom-16 sm:bottom-32 md:bottom-50 right-3 sm:right-6 md:right-10 max-w-[85%] sm:max-w-[75%] md:max-w-[70%]">
           <HeaderTemplate
             title={proposal.title}
-            date={proposal.created_at}
+            date={formatProposalDateShort(proposal)}
             preparedFor={preparedFor}
             address={proposal.service_location}
             serviceLocation={proposal.regional_location ?? ""}

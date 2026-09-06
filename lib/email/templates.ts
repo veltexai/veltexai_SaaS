@@ -1,3 +1,5 @@
+import { TRIAL_ALLOWANCE_COPY } from "@/config/trial";
+
 export interface EmailTemplate {
   subject: string;
   html: string;
@@ -806,7 +808,7 @@ export class EmailTemplates {
 
   static getWelcomeTrialEmail(data: WelcomeTrialEmailData): EmailTemplate {
     const subject = "Your Veltex AI trial is ready";
-    const text = `Hi,\n\nYour Veltex AI free trial is active.\n\nYou can create up to 3 proposals with no credit card required.\n\nMost users create their first proposal in under 5 minutes.\n\nLogin here:\n${data.loginUrl}\n\nIf you need help, reply to this email.\n\n– Veltex AI`;
+    const text = `Hi,\n\nYour Veltex AI free trial is active.\n\nYou can create up to ${TRIAL_ALLOWANCE_COPY} with no credit card required.\n\nMost users create their first proposal in under 5 minutes.\n\nLogin here:\n${data.loginUrl}\n\nIf you need help, reply to this email.\n\n– Veltex AI`;
 
     const html = `
       <!DOCTYPE html>
@@ -831,7 +833,7 @@ export class EmailTemplates {
           <div class="body">
             <p>Hi,</p>
             <p>Your Veltex AI free trial is active.</p>
-            <p>You can create up to <strong>3 proposals</strong> with no credit card required.</p>
+            <p>You can create up to <strong>${TRIAL_ALLOWANCE_COPY}</strong> with no credit card required.</p>
             <p>Most users create their first proposal in under 5 minutes.</p>
             <p><a href="${data.loginUrl}" class="cta">Login to Veltex AI</a></p>
             <p>If you need help, reply to this email.</p>
@@ -847,7 +849,7 @@ export class EmailTemplates {
 
   static getFirstProposalEmail(data: FirstProposalEmailData): EmailTemplate {
     const subject = "Your first proposal is ready";
-    const text = `Nice work!\n\nMost cleaning companies use Veltex AI to create multiple proposals per week.\n\nYour free trial includes 3 proposals. Upgrade anytime to keep using your templates and branding.\n\nUpgrade here:\n${data.upgradeUrl}\n\nLet me know if you need help.\n\n– Veltex AI`;
+    const text = `Nice work!\n\nMost cleaning companies use Veltex AI to create multiple proposals per week.\n\nYour free trial includes ${TRIAL_ALLOWANCE_COPY}. Upgrade anytime to keep using your templates and branding.\n\nUpgrade here:\n${data.upgradeUrl}\n\nLet me know if you need help.\n\n– Veltex AI`;
 
     const html = `
       <!DOCTYPE html>
@@ -874,7 +876,7 @@ export class EmailTemplates {
             <p>Nice work!</p>
             <p>Most cleaning companies use Veltex AI to create multiple proposals per week.</p>
             <div class="highlight">
-              <strong>Your free trial includes 3 proposals.</strong> Upgrade anytime to keep using your templates and branding.
+              <strong>Your free trial includes ${TRIAL_ALLOWANCE_COPY}.</strong> Upgrade anytime to keep using your templates and branding.
             </div>
             <p><a href="${data.upgradeUrl}" class="cta">Upgrade Now</a></p>
             <p>Let me know if you need help.</p>
@@ -998,7 +1000,7 @@ Once you do, you'll be able to:
 • Customize your scope, pricing, and branding
 • Save time on every future bid
 
-Your free trial includes up to 3 proposals, so this is the perfect time to try it out.
+Your free trial includes up to ${TRIAL_ALLOWANCE_COPY}, so this is the perfect time to try it out.
 
 Create your first proposal now: ${data.createProposalUrl}
 
@@ -1064,7 +1066,7 @@ If you have any questions or need help getting started, just reply to this email
                       </tbody>
                     </table>
                     <p style="font-size:16px;color:rgb(55,65,81);line-height:24px;margin:0;margin-bottom:24px">
-                      Your free trial includes up to <strong>3 proposals</strong>, so this is the perfect time to try it out.
+                      Your free trial includes up to <strong>${TRIAL_ALLOWANCE_COPY}</strong>, so this is the perfect time to try it out.
                     </p>
                     <p style="font-size:16px;color:rgb(55,65,81);line-height:24px;margin:0;margin-bottom:24px">
                       👉 Create your first proposal now:

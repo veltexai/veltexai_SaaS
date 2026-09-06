@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavButton } from "@/components/ui/nav-button";
+import { TRIAL_ALLOWANCE_COPY } from "@/config/trial";
 
 const DISMISS_STORAGE_KEY = "veltex:onboarding-banner:dismissed";
 
@@ -126,7 +127,7 @@ export function OnboardingBanner({
               Create First Proposal
             </NavButton>
             <span className="text-xs text-gray-500">
-              Your free trial includes up to 3 proposals.
+              Your free trial includes up to {TRIAL_ALLOWANCE_COPY}.
             </span>
           </div>
         </div>

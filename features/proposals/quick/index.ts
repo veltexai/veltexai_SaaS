@@ -16,6 +16,7 @@ export {
   DEMO_TYPE_TO_SCOPE_TEMPLATE_ID,
   getScopeTemplateForDemo,
   getScopeTemplateIdForDemo,
+  RESIDENTIAL_PACKAGE_TO_SCOPE_TEMPLATE_ID,
 } from "./constants/demo-template-map";
 export { buildQuickProposalPayload } from "./lib/build-quick-proposal-payload";
 export { buildQuickProposalGenerateRequest } from "./lib/build-quick-proposal-payload";

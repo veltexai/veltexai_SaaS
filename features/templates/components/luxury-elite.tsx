@@ -3,7 +3,6 @@
 import React from "react";
 import type { TemplateProps } from "@/features/templates/types/templates";
 import Image from "next/image";
-import { formatDateLong } from "@/lib/utils/date";
 import { arvo, montserrat } from "@/lib/fonts";
 import {
   PoweredBy,
@@ -31,6 +30,12 @@ import { LuxuryEliteBackgroundTitle } from "@/components/icons";
 import { type ScopeRow } from "../utils/split-scope-rows";
 import { useTemplateData } from "../hooks/use-template-data";
 import { resolvePaymentTerms } from "../utils/payment-terms";
+import { resolveAgreementTerms } from "../utils/agreement-terms";
+import { resolveServiceCategory } from "../utils/proposal-service-context";
+import {
+  formatProposalDateLong,
+  formatProposalDateShort,
+} from "../utils/proposal-date";
 
 export function LuxuryEliteTemplate({
   proposal,
@@ -48,6 +53,8 @@ export function LuxuryEliteTemplate({
   } = useTemplateData(proposal, branding, pages, print);
 
   const paymentTerms = resolvePaymentTerms(proposal);
+  const agreementTerms = resolveAgreementTerms(proposal);
+  const serviceCategory = resolveServiceCategory(proposal);
 
   // Resolve image overrides with safe defaults (stock art when unset)
   const coverBg = images?.coverBg ?? "/images/templates/bgLuxi.png";
@@ -68,7 +75,7 @@ export function LuxuryEliteTemplate({
         <p
           className={`absolute -right-[28px] sm:top-[88.5px] top-[58.5px] -rotate-90 z-30 text-white sm:text-sm text-xs ${montserrat.className}`}
         >
-          {formatDateLong(proposal.created_at)}
+          {formatProposalDateLong(proposal)}
         </p>
         {b.logoUrl ? (
           <HeaderLogo
@@ -91,7 +98,7 @@ export function LuxuryEliteTemplate({
         <div className="absolute sm:top-50 top-21 sm:left-20 left-10 max-w-[75%]">
           <HeaderTemplate
             title={proposal.title}
-            date={proposal.created_at}
+            date={formatProposalDateShort(proposal)}
             preparedFor={preparedFor}
             address={proposal.service_location}
             serviceLocation={proposal.regional_location ?? ""}
@@ -381,6 +388,7 @@ export function LuxuryEliteTemplate({
         <TitleDescriptionSection
           templateType="luxury_elite"
           paymentTerms={paymentTerms}
+          agreementTerms={agreementTerms}
         />
         <PoweredBy colorLogo="gray" isRight />
         <NavitationNumber
@@ -429,6 +437,7 @@ export function LuxuryEliteTemplate({
           companyName={b.companyName}
           templateType="luxury_elite"
           thankYouImage={images?.thankYouImage}
+          serviceCategory={serviceCategory}
         />
       </div>
     </section>

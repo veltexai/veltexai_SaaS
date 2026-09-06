@@ -169,6 +169,8 @@ export function getQuickProposalDefaults({
     getScopeTemplate(DEFAULT_SCOPE_TEMPLATE_ID)!;
   const demoDefaults = getDemoDefaults(demoType);
   const location = splitDemoLocation(demoDefaults?.location);
+  const useSelectedResidentialPackage =
+    demoType === "residential" && selectedTemplate.serviceType === "residential";
 
   return {
     clientName: demoDefaults?.clientName ?? "",
@@ -178,10 +180,14 @@ export function getQuickProposalDefaults({
     serviceLocation: demoDefaults?.location ?? "",
     city: location.city,
     state: location.state,
-    propertyType: demoDefaults?.propertyType ?? selectedTemplate.propertyType,
+    propertyType: useSelectedResidentialPackage
+      ? selectedTemplate.propertyType
+      : (demoDefaults?.propertyType ?? selectedTemplate.propertyType),
     squareFootage: demoDefaults?.squareFootage ?? 5000,
     serviceFrequency:
-      demoDefaults?.serviceFrequency ?? selectedTemplate.recommendedFrequency,
+      useSelectedResidentialPackage
+        ? selectedTemplate.recommendedFrequency
+        : (demoDefaults?.serviceFrequency ?? selectedTemplate.recommendedFrequency),
     scopeTemplateId: selectedTemplate.id,
     addOns: selectedTemplate.commonAddOns.slice(0, 2),
     notes: demoDefaults?.notes ?? "",

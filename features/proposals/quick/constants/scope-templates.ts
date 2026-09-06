@@ -8,7 +8,10 @@ export const SCOPE_TEMPLATE_IDS = [
   "gym_fitness",
   "school_daycare",
   "apartment_common_areas",
+  "residential_recurring",
+  "residential_deep_clean",
   "move_out_turnover",
+  "residential_premium_detail",
   "post_construction",
   "floor_care_add_on",
   "window_cleaning_add_on",
@@ -27,6 +30,7 @@ export interface ScopeTemplate {
   label: string;
   propertyType: string;
   recommendedFrequency: ServiceFrequency;
+  serviceType?: "commercial" | "residential" | "window" | "floor";
   scopeSections: ScopeSection[];
   commonAddOns: string[];
   assumptions: string[];
@@ -363,11 +367,45 @@ export const SCOPE_TEMPLATES: Record<ScopeTemplateId, ScopeTemplate> = {
       "High-rise or multi-building properties may need building-by-building pricing.",
     ],
   },
+  residential_recurring: {
+    id: "residential_recurring",
+    label: "Residential Recurring Cleaning",
+    propertyType: "Residential Home",
+    recommendedFrequency: "bi-weekly",
+    serviceType: "residential",
+    scopeSections: [
+      { title: "Kitchen", tasks: ["Clean counters, sink, appliance exteriors, backsplash, and floors."] },
+      { title: "Bathrooms", tasks: ["Clean and sanitize fixtures, mirrors, counters, tubs or showers, and floors."] },
+      { title: "Bedrooms", tasks: ["Dust reachable surfaces, vacuum floors, and straighten agreed areas."] },
+      { title: "Living and Dining Areas", tasks: ["Dust surfaces, vacuum or mop floors, and clean common touchpoints."] },
+      { title: "Rotational Detail", tasks: ["Rotate reachable fans, vents, ledges, and baseboard detailing across visits."] },
+    ],
+    commonAddOns: ["Inside oven cleaning", "Inside refrigerator cleaning", "Interior window cleaning", "Laundry room detail"],
+    assumptions: ["The home is occupied and accessible at the scheduled time.", "The recurring checklist and rotation are confirmed before service begins."],
+    redFlagsOrWarnings: ["Heavy buildup may require an initial deep cleaning before recurring maintenance begins."],
+  },
+  residential_deep_clean: {
+    id: "residential_deep_clean",
+    label: "Residential Deep Cleaning",
+    propertyType: "Residential Home",
+    recommendedFrequency: "one-time",
+    serviceType: "residential",
+    scopeSections: [
+      { title: "Kitchen Deep Clean", tasks: ["Degrease reachable surfaces and detail counters, backsplash, appliance exteriors, and floors."] },
+      { title: "Bathroom Deep Clean", tasks: ["Remove ordinary buildup and detail fixtures, tile, grout, mirrors, and floors."] },
+      { title: "Bedrooms and Living Areas", tasks: ["Detail dust surfaces, ledges, doors, baseboards, and window sills; vacuum or mop floors."] },
+      { title: "High and Edge Detailing", tasks: ["Dust reachable fans, vents, crown molding, door frames, and floor edges."] },
+    ],
+    commonAddOns: ["Inside oven cleaning", "Inside refrigerator cleaning", "Interior window cleaning", "Carpet spot treatment"],
+    assumptions: ["The quote covers one deep-cleaning visit.", "Personal belongings remain organized enough to access included surfaces."],
+    redFlagsOrWarnings: ["Mold, biohazards, hoarding, pest activity, and restoration work require separate review."],
+  },
   move_out_turnover: {
     id: "move_out_turnover",
     label: "Move-Out and Turnover Cleaning",
     propertyType: "Move-Out/Turnover",
     recommendedFrequency: "one-time",
+    serviceType: "residential",
     scopeSections: [
       {
         title: "Kitchen",
@@ -409,6 +447,22 @@ export const SCOPE_TEMPLATES: Record<ScopeTemplateId, ScopeTemplate> = {
       "Heavy grease, nicotine, pet urine, mold, or hoarding conditions require separate review.",
       "Construction dust after repairs may shift the scope to post-construction cleaning.",
     ],
+  },
+  residential_premium_detail: {
+    id: "residential_premium_detail",
+    label: "Residential Premium Detail",
+    propertyType: "Luxury Estate",
+    recommendedFrequency: "1x-month",
+    serviceType: "residential",
+    scopeSections: [
+      { title: "Kitchen Detail", tasks: ["Detail reachable cabinetry, appliance surfaces, hardware, counters, and specialty finishes using surface-appropriate methods."] },
+      { title: "Suites and Bathrooms", tasks: ["Provide detailed dusting, floor care, fixture polishing, and agreed linen presentation."] },
+      { title: "Living and Formal Areas", tasks: ["Carefully dust décor and reachable display surfaces; refresh upholstery and floors."] },
+      { title: "Specialty Surface Rotation", tasks: ["Rotate approved detailing for hardwood, stone, trim, vents, lighting, and high ledges."] },
+    ],
+    commonAddOns: ["Interior window cleaning", "Guest house service", "Pre-event preparation", "Closet organization"],
+    assumptions: ["Specialty surfaces and product restrictions are identified before service.", "Handling instructions are provided for delicate or high-value items."],
+    redFlagsOrWarnings: ["Artwork, antiques, and fragile objects are excluded unless handling instructions are agreed in writing."],
   },
   post_construction: {
     id: "post_construction",

@@ -2,15 +2,18 @@ import { arvo, dmSerifText, montserrat } from "@/lib/fonts";
 import { cn } from "@/lib/utils/cn";
 import { getDataTerms } from "@/features/templates/constants/content";
 import type { PaymentTerms } from "@/features/templates/utils/payment-terms";
+import type { AgreementTerms } from "@/features/templates/utils/agreement-terms";
 import { TemplateType } from "@/features/templates/types/templates";
 import React from "react";
 
 const TitleDescriptionSection = ({
   templateType,
   paymentTerms,
+  agreementTerms,
 }: {
   templateType: TemplateType;
   paymentTerms: PaymentTerms;
+  agreementTerms: AgreementTerms;
 }) => {
   const fontFamilyTitle =
     templateType === "luxury_elite" ? "tk-bely" : dmSerifText.className;
@@ -18,7 +21,7 @@ const TitleDescriptionSection = ({
     templateType === "luxury_elite" ? arvo.className : montserrat.className;
   return (
     <div className="sm:pl-14 pl-6 sm:pt-14 pt-6 sm:pr-6 pr-0 flex flex-col sm:gap-5 gap-2">
-      {getDataTerms(paymentTerms).map((term) => (
+      {getDataTerms(paymentTerms, agreementTerms).map((term) => (
         <div key={term.id} className="flex items-start gap-4">
           {React.isValidElement(term.icons) &&
             templateType !== "executive_premium" &&

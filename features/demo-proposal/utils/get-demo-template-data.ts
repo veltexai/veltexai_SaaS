@@ -7,6 +7,7 @@ import type {
 // scope-of-work derivation this file has no use for.
 import { resolveServicePhotos } from "@/features/templates/utils/service-photos";
 import type { DemoType, ResidentialPackageType } from "../types/demo-proposal";
+import { createLocalProposalDateMetadata } from "@/features/templates/utils/proposal-date";
 
 const DEMO_BRANDING: Branding = {
   name: "Veltex Demo Cleaning Co.",
@@ -20,6 +21,7 @@ function makeMockProposal(
   overrides: Partial<Proposal> & { title: string; client_name: string },
 ): Proposal {
   const now = new Date().toISOString();
+  const dateMetadata = createLocalProposalDateMetadata();
   return {
     id: "", // empty string → useSplitContent guard returns early, no fetch
     user_id: "demo",
@@ -29,7 +31,7 @@ function makeMockProposal(
     service_type: "commercial",
     service_frequency: "one-time",
     service_specific_data: {},
-    global_inputs: {},
+    global_inputs: { ...dateMetadata },
     pricing_enabled: false,
     pricing_data: {},
     generated_content: null,
@@ -60,9 +62,9 @@ function makeMockProposal(
 
 const COMMERCIAL_PAGES: string[] = [
   // [0] About Our Company
-  `Veltex Demo Cleaning Co. is a certified commercial janitorial provider with over a decade of service excellence in the Pacific Northwest. We design custom maintenance programs for professional office environments and multi-tenant buildings.
-- Fully bonded and insured – general liability and workers' compensation
-- Trained and background-verified cleaning staff
+  `Veltex Demo Cleaning Co. provides structured commercial janitorial services for professional office environments and multi-tenant buildings throughout the Pacific Northwest.
+- Clearly documented service procedures and site instructions
+- Consistent, respectful cleaning teams
 - Documented quality checklists delivered per service visit
 - Dedicated account manager assigned to every contract`,
 
@@ -120,7 +122,7 @@ const COMMERCIAL_PROPOSAL = makeMockProposal({
 
 const RECURRING_PAGES: string[] = [
   `Veltex Demo Cleaning Co. brings dedicated residential cleaning crews who understand the unique care your home deserves. Our recurring maintenance clients receive assigned teams, consistent routines, and a satisfaction guarantee on every visit.
-- Background-verified residential cleaning specialists
+- Residential cleaning teams following clear service checklists
 - Consistent crew assignment with your preferred team
 - Eco-friendly products available at no additional cost
 - Satisfaction guarantee – we re-clean any area within 48 hours`,
@@ -134,7 +136,7 @@ const RECURRING_PAGES: string[] = [
   `Homeowners choose our recurring cleaning service because we eliminate the inconsistency of switching cleaners. You get the same team, the same routine, and a home that stays ahead of the build-up.
 - No more reteaching your preferences to a new crew
 - Checklist-based service with optional client notes
-- Insurance coverage for all on-site crew members
+- Respectful onsite practices and clear service communication
 - Easy pause or cancel with 30-day written notice`,
 
   `Bi-weekly maintenance for Henderson Residence – 2,400 sq. ft. home with 3 bedrooms and 2 bathrooms, Bellevue, WA.
@@ -167,6 +169,7 @@ const RECURRING_PROPOSAL = makeMockProposal({
   service_type: "residential",
   service_frequency: "bi-weekly",
   property_type: "Residential Home",
+  service_specific_data: { scope_template_id: "residential_recurring" },
 });
 
 // ─── Residential: Deep Cleaning ───────────────────────────────────────────────
@@ -220,6 +223,7 @@ const DEEP_CLEAN_PROPOSAL = makeMockProposal({
   service_type: "residential",
   service_frequency: "one-time",
   property_type: "Residential Home",
+  service_specific_data: { scope_template_id: "residential_deep_clean" },
 });
 
 // ─── Residential: Move-In / Move-Out ─────────────────────────────────────────
@@ -272,13 +276,14 @@ const MOVE_IN_OUT_PROPOSAL = makeMockProposal({
   service_type: "residential",
   service_frequency: "one-time",
   property_type: "Residential Home",
+  service_specific_data: { scope_template_id: "move_out_turnover" },
 });
 
 // ─── Residential: Premium Detail Cleaning ────────────────────────────────────
 
 const PREMIUM_DETAIL_PAGES: string[] = [
-  `Veltex Demo Cleaning Co. premium detail service is designed for discerning homeowners who expect perfection. Our detail-certified crews combine luxury cleaning techniques, white-glove protocols, and top-tier professional products to care for high-value homes and estate properties.
-- White-glove trained, detail-certified residential crews
+  `Veltex Demo Cleaning Co. premium detail service is designed for homeowners seeking meticulous care. Our teams combine detailed checklists, careful surface handling, and professional products selected for the agreed scope.
+- Detail-focused residential service teams
 - Museum-quality care for artwork, antiques, and specialty surfaces
 - Premium fragrance-free and hypoallergenic products available
 - Dedicated client liaison for scheduling and special requests`,
@@ -325,6 +330,7 @@ const PREMIUM_DETAIL_PROPOSAL = makeMockProposal({
   service_type: "residential",
   service_frequency: "1x-month",
   property_type: "Luxury Estate",
+  service_specific_data: { scope_template_id: "residential_premium_detail" },
 });
 
 // ─── Demo images & accent color ───────────────────────────────────────────────

@@ -15,7 +15,7 @@ import {
   type DemoType,
   type ResidentialPackageType,
 } from "@/features/demo-proposal";
-import type { ScopeTemplateId } from "@/features/proposals/quick";
+import { getScopeTemplateIdForDemo } from "@/features/proposals/quick";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 
 /** Length of the generating choreography — keep in sync with DemoGeneratingOverlay. */
@@ -114,8 +114,10 @@ export default function DemoProposalPage() {
       : selectedType === "residential"
         ? "Residential Cleaning"
         : "";
-  const quickScopeTemplateId: ScopeTemplateId =
-    selectedType === "commercial" ? "commercial_office" : "move_out_turnover";
+  const quickScopeTemplateId = getScopeTemplateIdForDemo(
+    selectedType,
+    selectedType === "residential" ? selectedPackage : undefined,
+  );
 
   if (isGenerating) {
     return (

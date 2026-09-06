@@ -38,6 +38,7 @@ import { PropertyAssumptionsLite } from "./property-assumptions-lite";
 import { DesignTemplatePicker } from "./design-template-picker";
 import { useUserTier } from "@/features/proposals/hooks/use-user-tier";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
+import { createLocalProposalDateMetadata } from "@/features/templates/utils/proposal-date";
 
 interface QuickProposalFlowProps {
   demoType?: DemoType | string;
@@ -343,7 +344,13 @@ export function QuickProposalFlow({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(result.payload),
+        body: JSON.stringify({
+          ...result.payload,
+          global_inputs: {
+            ...result.payload.global_inputs,
+            ...createLocalProposalDateMetadata(),
+          },
+        }),
       });
       const data = (await response.json().catch(() => ({}))) as {
         id?: string;

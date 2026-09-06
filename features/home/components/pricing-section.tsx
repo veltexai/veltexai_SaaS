@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { PRICE_ITEMS } from "../constants/price";
 import Link from "next/link";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
+import { TRIAL_PROPOSAL_LIMIT, TRIAL_DURATION_DAYS } from "@/config/trial";
 
 const PricingSection = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
@@ -42,12 +43,12 @@ const PricingSection = () => {
           <div className="inline-flex flex-col sm:flex-row items-center gap-4 sm:gap-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl px-6 py-4 mb-8">
             <div className="flex items-center gap-2 text-blue-800">
               <Clock className="h-5 w-5 text-blue-600" />
-              <span className="font-medium">7-day free trial</span>
+              <span className="font-medium">{TRIAL_DURATION_DAYS}-day free trial</span>
             </div>
             <div className="hidden sm:block w-px h-6 bg-blue-300"></div>
             <div className="flex items-center gap-2 text-blue-800">
               <CreditCard className="h-5 w-5 text-blue-600" />
-              <span className="font-medium">3 free proposals</span>
+              <span className="font-medium">{TRIAL_PROPOSAL_LIMIT} free proposals</span>
             </div>
             <div className="hidden sm:block w-px h-6 bg-blue-300"></div>
             <div className="flex items-center gap-2 text-blue-800">

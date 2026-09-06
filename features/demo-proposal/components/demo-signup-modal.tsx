@@ -7,8 +7,9 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { AUTH_ROUTES } from "@/features/auth/constants";
 import { signInWithGoogle } from "@/features/auth/actions/oauth";
+import { TRIAL_ALLOWANCE_COPY } from "@/config/trial";
 
-const TRUST_POINTS = ["No credit card", "Unlimited drafts"];
+const TRUST_POINTS = ["No credit card", `Up to ${TRIAL_ALLOWANCE_COPY}`];
 
 interface DemoSignupModalProps {
   open: boolean;

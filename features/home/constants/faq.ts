@@ -2,6 +2,7 @@ type FAQItem = {
   question: string;
   answer: string;
 };
+import { TRIAL_ALLOWANCE_COPY, TRIAL_DURATION_DAYS } from "@/config/trial";
 
 export const FAQ_ITEMS: FAQItem[] = [
   {
@@ -22,12 +23,12 @@ export const FAQ_ITEMS: FAQItem[] = [
   {
     question: "Do I need a credit card to start?",
     answer:
-      "No. You can sign up with email only and create up to 3 proposals for free. A credit card is only required after the free limit.",
+      `No. You can sign up with email only and create up to ${TRIAL_ALLOWANCE_COPY} for free. A credit card is only required when you choose a paid plan.`,
   },
   {
     question: "How many proposals can I create for free?",
     answer:
-      "You can create up to 3 proposals for free, or use the free trial for 7 days, whichever comes first.",
+      `You can create up to ${TRIAL_ALLOWANCE_COPY} for free, or use the free trial for ${TRIAL_DURATION_DAYS} days, whichever comes first.`,
   },
   {
     question: "Can I download the proposal as a PDF?",

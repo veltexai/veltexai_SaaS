@@ -132,6 +132,8 @@ export const globalInputsSchema = z.object({
   // Enhanced fields
   regional_location: z.string().optional(),
   city: z.string().optional(),
+  proposal_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  proposal_timezone: z.string().optional(),
 });
 
 // Service-specific schemas

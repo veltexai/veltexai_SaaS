@@ -30,6 +30,9 @@ import {
 import { type ScopeRow } from "../utils/split-scope-rows";
 import { useTemplateData } from "../hooks/use-template-data";
 import { resolvePaymentTerms } from "../utils/payment-terms";
+import { resolveAgreementTerms } from "../utils/agreement-terms";
+import { resolveServiceCategory } from "../utils/proposal-service-context";
+import { formatProposalDateShort } from "../utils/proposal-date";
 
 export function ExecutivePremiumTemplate({
   proposal,
@@ -47,12 +50,14 @@ export function ExecutivePremiumTemplate({
   } = useTemplateData(proposal, branding, pages, print);
 
   const paymentTerms = resolvePaymentTerms(proposal);
+  const agreementTerms = resolveAgreementTerms(proposal);
+  const serviceCategory = resolveServiceCategory(proposal);
 
   return (
     <section className="space-y-8">
       {/* Page One */}
       <div id="page-one" className="relative aspect-[1/1.4] bg-white">
-        <div className="absolute w-[85%] h-[40%] sm:bottom-12 bottom-6 left-1/2 -translate-x-1/2">
+        <div className="absolute w-[90%] h-[40%] sm:bottom-12 bottom-6 left-1/2 -translate-x-1/2">
           <div className="absolute h-2.5 w-[200px] bg-[var(--color-primary)] -top-[5px]"></div>
           <Image
             src={
@@ -75,10 +80,10 @@ export function ExecutivePremiumTemplate({
             position="start"
           />
         ) : null}
-        <div className="absolute top-12 sm:top-28 right-10 max-w-[70%]">
+        <div className="absolute top-16 sm:top-27 right-10 max-w-[70%]">
           <HeaderTemplate
             title={proposal.title}
-            date={proposal.created_at}
+            date={formatProposalDateShort(proposal)}
             preparedFor={preparedFor}
             address={proposal.service_location}
             serviceLocation={proposal.regional_location ?? ""}
@@ -195,7 +200,7 @@ export function ExecutivePremiumTemplate({
                 {/* Page five */}
                 <div
                   id="page-five"
-                  className="relative sm:aspect-[1/1.4] aspect-[1/1.62] bg-white sm:pt-16 pt-6 pl-10 sm:pl-30"
+                  className="relative sm:aspect-[1/1.5] aspect-[1/1.62] bg-white sm:pt-16 pt-6 pl-10 sm:pl-30"
                 >
                   <VerticalBar variant="gradientGray" />
                   <HorizontalBar variant="gradientGray" />
@@ -389,6 +394,7 @@ export function ExecutivePremiumTemplate({
         <TitleDescriptionSection
           templateType="executive_premium"
           paymentTerms={paymentTerms}
+          agreementTerms={agreementTerms}
         />
         <PoweredBy colorLogo="gray" isRight />
         <NavitationNumber
@@ -442,6 +448,7 @@ export function ExecutivePremiumTemplate({
           companyName={b.companyName}
           templateType="executive_premium"
           thankYouImage={images?.thankYouImage}
+          serviceCategory={serviceCategory}
         />
       </div>
     </section>

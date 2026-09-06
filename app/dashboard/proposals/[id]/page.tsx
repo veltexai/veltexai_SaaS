@@ -39,7 +39,7 @@ export default async function ProposalViewPage({
     <div className="ph-no-capture space-y-6 relative">
       <ProposalHeader proposal={proposal} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <ProposalDetailTabs proposal={proposal} permissions={permissions} />
         </div>

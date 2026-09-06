@@ -101,7 +101,9 @@ function buildQuickServiceScope(
 
 function getServiceTypeFromQuickInputs(
   values: QuickProposalFormData,
+  template: ScopeTemplate | null,
 ): ServiceType {
+  if (template?.serviceType) return template.serviceType;
   if (values.scopeTemplateId === "window_cleaning_add_on") {
     return "window";
   }
@@ -166,7 +168,7 @@ export function buildQuickProposalPayload(
 
   const template = getScopeTemplate(values.scopeTemplateId);
   const assumptions = buildPropertyAssumptionsLite(values);
-  const serviceType = getServiceTypeFromQuickInputs(values);
+  const serviceType = getServiceTypeFromQuickInputs(values, template);
   const clientName = values.clientName.trim();
   const clientEmail = values.clientEmail.trim();
   const clientPhone = values.clientPhone?.trim() ?? "";
@@ -300,7 +302,7 @@ export function buildQuickProposalGenerateRequest(
   const clientName = values.clientName.trim();
   const clientEmail = values.clientEmail.trim();
   const clientPhone = values.clientPhone?.trim();
-  const serviceType = getServiceTypeFromQuickInputs(values);
+  const serviceType = getServiceTypeFromQuickInputs(values, template);
   const title = buildProposalTitle(values);
 
   return {

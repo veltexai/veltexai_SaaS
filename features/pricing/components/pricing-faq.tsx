@@ -1,3 +1,5 @@
+import { TRIAL_ALLOWANCE_COPY, TRIAL_DURATION_DAYS } from "@/config/trial";
+
 export function PricingFAQ() {
   return (
     <div className="mt-20">
@@ -21,10 +23,9 @@ export function PricingFAQ() {
             Is there a free trial?
           </h3>
           <p className="text-gray-600">
-            Yes! You get a <strong>7-day free trial</strong> with <strong>3 proposals</strong> included. 
-            Credit card is required upfront to start your trial, but you can cancel anytime before 
-            the trial ends and you won&apos;t be charged. Your trial ends when either 7 days pass 
-            or you&apos;ve used all 3 proposals - whichever comes first.
+            Yes! You get a <strong>{TRIAL_DURATION_DAYS}-day free trial</strong> with <strong>{TRIAL_ALLOWANCE_COPY}</strong> included.
+            No credit card is required to start. Your trial ends when either {TRIAL_DURATION_DAYS} days pass
+            or you&apos;ve used all {TRIAL_ALLOWANCE_COPY} - whichever comes first.
           </p>
         </div>
 

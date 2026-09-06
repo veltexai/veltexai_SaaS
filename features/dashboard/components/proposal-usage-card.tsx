@@ -15,6 +15,7 @@ import { TrendingUp, AlertCircle, Gift, CreditCard } from "lucide-react";
 import { useProposalPermissions } from "@/features/proposals/hooks/use-proposal-permissions";
 import Link from "next/link";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
+import { TRIAL_ALLOWANCE_COPY, TRIAL_DURATION_DAYS } from "@/config/trial";
 
 function trackUsageUpgrade(placement: string) {
   captureEvent(ANALYTICS_EVENTS.UPGRADE_CLICKED, {
@@ -85,7 +86,7 @@ export function ProposalUsageCard() {
           )}
           <div className="mt-2">
             <Badge variant={isTrial ? "secondary" : "default"}>
-              {isTrial ? "7-Day Free Trial" : subscriptionStatus}
+              {isTrial ? `${TRIAL_DURATION_DAYS}-Day Free Trial` : subscriptionStatus}
             </Badge>
           </div>
         </CardContent>
@@ -132,7 +133,7 @@ export function ProposalUsageCard() {
           <AlertCircle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800">
             {isTrial
-              ? "Your trial has ended. You've either used all 3 free proposals or your 7-day trial period has expired. Choose a plan to continue creating proposals."
+              ? `Your trial has ended. You've either used all ${TRIAL_ALLOWANCE_COPY} or your ${TRIAL_DURATION_DAYS}-day trial period has expired. Choose a plan to continue creating proposals.`
               : "You've reached your monthly proposal limit. Upgrade your plan or wait for next billing cycle."}
             <div className="mt-2">
               <Link

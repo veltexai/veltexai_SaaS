@@ -1,6 +1,5 @@
 import React from "react";
 import { arvo, dmSerifText, montserrat } from "@/lib/fonts";
-import { formatDateToMMDDYY } from "@/lib/utils/date";
 import { TemplateType } from "@/features/templates/types/templates";
 
 export const HeaderTemplate = ({
@@ -111,7 +110,7 @@ export const HeaderTemplate = ({
               <p className="flex-1 flex items-center justify-start sm:justify-center p-1.5 sm:p-2 pl-2 sm:pl-0">
                 Date:
                 <span className="font-bold pl-0.5 sm:pl-1">
-                  {formatDateToMMDDYY(date)}
+                  {date}
                 </span>
               </p>
             )}

@@ -2,22 +2,26 @@ import { EmailIcon, PhoneIcon, WebTrafficIcon } from "@/components/icons";
 import { arvo, dmSerifText, montserrat } from "@/lib/fonts";
 import { TemplateType } from "@/features/templates/types/templates";
 import React from "react";
+import type { ServiceCategory } from "../../utils/payment-terms";
 
 const ThankYouSection = ({
   templateType,
   email,
   phone,
   website,
+  serviceCategory,
 }: {
   templateType: TemplateType;
   email: string | null;
   phone: string | null;
   website: string | null;
+  serviceCategory: ServiceCategory;
 }) => {
   const fontWeight =
     templateType === "executive_premium" ? "font-bold" : "font-normal";
   const fontFamily =
     templateType === "luxury_elite" ? arvo.className : montserrat.className;
+  const site = serviceCategory === "residential" ? "home" : "facility";
 
   return (
     <>
@@ -34,7 +38,7 @@ const ThankYouSection = ({
         {templateType !== "executive_premium" ? (
           <>
             <p className="sm:text-base text-2xs">
-              We appreciate the opportunity to support your facility. Our team
+              We appreciate the opportunity to care for your {site}. Our team
               is committed to reliable service, clear communication, and
               measurable results.
             </p>
@@ -45,7 +49,7 @@ const ThankYouSection = ({
           </>
         ) : (
           <p className="sm:leading-[41px] sm:text-base text-2xs">
-            We appreciate the opportunity to support your facility. Our team is
+            We appreciate the opportunity to care for your {site}. Our team is
             committed to reliable service, clear communication, and measurable
             results.
           </p>

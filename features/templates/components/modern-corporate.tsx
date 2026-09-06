@@ -30,6 +30,9 @@ import {
 import { type ScopeRow } from "../utils/split-scope-rows";
 import { useTemplateData } from "../hooks/use-template-data";
 import { resolvePaymentTerms } from "../utils/payment-terms";
+import { resolveAgreementTerms } from "../utils/agreement-terms";
+import { resolveServiceCategory } from "../utils/proposal-service-context";
+import { formatProposalDateShort } from "../utils/proposal-date";
 
 export function ModernCorporateTemplate({
   proposal,
@@ -47,6 +50,8 @@ export function ModernCorporateTemplate({
   } = useTemplateData(proposal, branding, pages, print);
 
   const paymentTerms = resolvePaymentTerms(proposal);
+  const agreementTerms = resolveAgreementTerms(proposal);
+  const serviceCategory = resolveServiceCategory(proposal);
 
   return (
     <section className="space-y-6">
@@ -120,7 +125,7 @@ export function ModernCorporateTemplate({
         <div className="absolute sm:top-28 top-6 sm:right-10 right-5 max-w-[64%]">
           <HeaderTemplate
             title={proposal.title}
-            date={proposal.created_at}
+            date={formatProposalDateShort(proposal)}
             preparedFor={preparedFor}
             address={proposal.service_location}
             serviceLocation={proposal.regional_location ?? ""}
@@ -405,6 +410,7 @@ export function ModernCorporateTemplate({
         <TitleDescriptionSection
           templateType="modern_corporate"
           paymentTerms={paymentTerms}
+          agreementTerms={agreementTerms}
         />
         <PoweredBy colorLogo="gray" isRight />
         <NavitationNumber
@@ -454,6 +460,7 @@ export function ModernCorporateTemplate({
           companyName={b.companyName}
           templateType="modern_corporate"
           thankYouImage={images?.thankYouImage}
+          serviceCategory={serviceCategory}
         />
       </div>
     </section>

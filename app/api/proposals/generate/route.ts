@@ -14,6 +14,9 @@ import {
   getAreaFrequencyLabel,
   isOnDemandFrequency,
 } from "@/features/proposals/constants/area-frequency";
+import { getProposalWording } from "@/features/templates/utils/proposal-service-context";
+import { resolveAgreementTerms } from "@/features/templates/utils/agreement-terms";
+import { resolvePaymentTerms } from "@/features/templates/utils/payment-terms";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -101,6 +104,15 @@ export async function POST(request: NextRequest) {
       city: city,
       regionalLocation: regional_location,
     };
+    const proposalSource = {
+      service_type,
+      service_frequency,
+      service_specific_data,
+      facility_details,
+    };
+    const wording = getProposalWording(proposalSource);
+    const agreementTerms = resolveAgreementTerms(proposalSource);
+    const paymentTerms = resolvePaymentTerms(proposalSource);
 
     // Get service type label
     const getServiceTypeLabel = (type: string) => {
@@ -332,12 +344,12 @@ export async function POST(request: NextRequest) {
 
     // Semi-static Legal responsibility guidance
     const legalResponsibilityGuidance = `
-Use the following legal responsibility points verbatim or with light copy edits (do not change meaning):
-A. Contractor agrees to maintain required liability and accidental insurance and bonding.
-B. Contractor agrees to hold harmless customer from claims for injury, death or property damage due to negligence or accident on part of the contractor, its employees or agents.
-C. Contractor agrees to employ safe and professionally accepted cleaning procedures.
-D. Customer agrees not to hire any worker or person employed by the contractor during the term of this agreement and for ninety days after the expiration of this agreement.
-E. Contractor is an Independent Contractor with control over its procedures, employees and agents.
+Use the following general responsibility points without adding credential, insurance, bonding, certification, background-screening, or regulatory-compliance claims:
+A. Contractor will perform the agreed scope using reasonable care and documented work procedures.
+B. Customer will disclose known hazards, fragile surfaces, access limitations, and pre-existing damage before service.
+C. Both parties will promptly communicate service concerns and allow reasonable time for correction.
+D. Changes to scope, access, or scheduling must be agreed by both parties.
+E. Contractor remains responsible for directing its service procedures and personnel.
 `;
 
     // Quick pricing estimate for scope table (safe fallback when no proposal exists)
@@ -518,7 +530,10 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
     })();
     const pricingRows = [
       {
-        service: "Standard Janitorial Service",
+        service:
+          wording.category === "residential"
+            ? "Residential Cleaning Service"
+            : "Standard Janitorial Service",
         frequency: getServiceFrequencyLabel(service_frequency),
         pricePerMonth: toMoney(baseMonthlyNum),
       },
@@ -577,12 +592,12 @@ E. Contractor is an Independent Contractor with control over its procedures, emp
 ## Pricing
 A. Customer agrees to pay contractor ${formatCurrencySafe(
           tableMonthlyCost,
-        )} monthly cost.
+        )} ${service_frequency === "one-time" ? "for the one-time service." : "monthly cost."}
 
 ## Additional services to be invoiced (Optional)
 ${additionalServicesFenced}
 
-B. Accounts are considered delinquent after net 30 days. Can add late charge of $30.00 per day collection fees (payable by customer)
+B. ${paymentTerms.body}
 
 C. A new price may be negotiated if customer requests a change in frequency or coverage.
 
@@ -610,9 +625,9 @@ STRUCTURE:
 
  - Then include EXACTLY six bullet points. Each bullet MUST begin with the bold label below (for icon mapping) followed by Text of min three lines (max 5) in our layout, customized to the client:
   - **100% satisfaction** – commitment to service quality and responsive support.
-  - **Guaranteed professionalism and reliability** – trained staff, insured, punctual, consistent results.
+  - **Guaranteed professionalism and reliability** – dependable scheduling, respectful service, and consistent results without claiming unverified credentials.
   - **Attention to detail** – thorough processes and quality checks.
-  - **Total Service** – comprehensive scope aligned to your facility needs.
+  - **Total Service** – comprehensive scope aligned to your ${wording.site} needs.
   - **Prompt follow up** – quick response to requests or issues.
   - **Should a problem ever exist, you can be assured it will be promptly handled** – clear escalation and corrective procedures.
 
@@ -622,15 +637,15 @@ STRUCTURE:
   Sincerely, ${profile.company_name || "Your Company"}
 
 ## Scope of service
-A. Contractor will furnish all labor, supervision and equipment (except customer used supplies such as paper towels, tissue, hand soap and trash liners) to clean the listed areas.
+A. Contractor will furnish the labor and equipment described in the agreed scope to clean the listed areas. Any client-provided supplies will be identified before service.
 
 ${scopeTableFenced}
 
-B. Pricing shall remain in effect one year from the starting date with contract renewable annually.
+B. ${agreementTerms.description}
 
 C. Customer agrees to notify contractor of any complaints and allow time for prompt correction.
 
-D. Either party may terminate this agreement with 30 days notice.
+D. ${service_frequency === "one-time" && wording.category === "residential" ? "The service is complete after the agreed one-time visit and does not renew automatically." : "Either party may terminate this agreement with 30 days notice."}
 
 ## Legal responsibility
 ${legalResponsibilityGuidance}
@@ -651,7 +666,7 @@ Notes:
 
     // Calculate years in business from company_founded_date; minimum 1 year
     const yearsInBusiness = (() => {
-      if (!profile.company_founded_date) return "10+ years";
+      if (!profile.company_founded_date) return "Company profile available upon request";
       const founded = new Date(profile.company_founded_date);
       const now = new Date();
       const years =
@@ -662,33 +677,33 @@ Notes:
           ? 1
           : 0);
       const displayYears = Math.max(1, years);
-      return `${displayYears} year${displayYears === 1 ? "" : "s"}`;
+      return `${displayYears} year${displayYears === 1 ? "" : "s"} in business`;
     })();
 
     const industriesServed =
       profile.industries_served || "Education, offices, retail & healthcare";
     const satisfactionGuarantee =
-      profile.satisfaction_guarantee || "100% Satisfaction";
+      profile.satisfaction_guarantee || "Service plan tailored to the agreed scope";
 
     const executivePremiumStructure = `
 Return markdown with ONLY these top-level sections using exact headings:${!pricing_enabled ? '\nIMPORTANT: Do NOT include any "Service Quote & Pricing" section - the client has disabled pricing for this proposal.' : ""}
 Include the fenced JSON blocks exactly as shown; do not alter their content or formatting.
 
 ## About Our Company
-We specialize in supporting education, retail, office, and healthcare facilities with structured service programs designed for operational consistency. Our approach blends trained teams, **reliable scheduling**, and **quality assurance** aligned with your operating hours and compliance standards.
+${wording.category === "residential" ? "We provide thoughtful residential cleaning services designed around the needs, routines, and surfaces of each home. Our approach combines **reliable scheduling**, **careful service**, and clear communication." : "We support commercial properties with structured cleaning programs designed for operational consistency. Our approach combines **reliable scheduling**, **careful service**, and **quality control** aligned with the site’s operating needs."}
 
-- ${yearsInBusiness} in business
+- ${yearsInBusiness}
 - ${`${city}, ${globalInputs.regionalLocation}` || "Service Location To Be Confirmed"}
-- ${industriesServed}
+- ${wording.category === "residential" ? "Residential cleaning services" : industriesServed}
 - ${satisfactionGuarantee}
 
 ## Our Commitment
-We are committed to delivering **consistent quality**, **responsive communication**, and a **safe**, **healthy environment**. Every service plan includes supervision, documented inspections, and continuous improvement measures to ensure your facility looks its best.
+We are committed to **consistent quality**, **responsive communication**, and attentive care so your ${wording.site} looks its best.
 
-- At **${profile.company_name || "Our Company"}**, we are committed to delivering consistent, measurable service quality through structured supervision, documented inspections, and continuous performance improvement.
-- Our teams follow clearly defined Standard Operating Procedures (SOPs) and safety protocols to ensure reliability across every visit.
-- We maintain responsive communication with designated client contacts, providing prompt resolution of service requests, quality concerns, or operational changes.
-- Through proactive oversight, secure access management, and compliance-driven practices, we create and maintain safe, healthy, and professional environments that support your organization’s daily operations.
+- At **${profile.company_name || "Our Company"}**, we focus on consistent service through clear checklists, attentive review, and responsive follow-up.
+- Our teams follow defined work procedures to support reliable results across each visit.
+- We communicate promptly with the designated ${wording.client} about requests, concerns, or changes.
+- We respect access instructions, agreed boundaries, and the specific care needs of the ${wording.site}.
 
 ## Why Choose Us
 - Professional Teams: same meaning, similar length; use fresh wording.
@@ -763,7 +778,7 @@ ${executivePremiumPricingSection}`;
     // Create the prompt for OpenAI
     const prompt = `
 You are a proposal writing assistant. Create a polished, persuasive business proposal in markdown format based on the details below. 
-The proposal should feel personalized, professional, and structured for business clients.
+The proposal should feel personalized, professional, and appropriate for the selected client and service category.
 
 --- TONE INSTRUCTIONS ---
 ${getToneInstructions(ai_tone)}
@@ -800,7 +815,7 @@ Phone: ${globalInputs.clientPhone || ""}
 Service Location: ${globalInputs.serviceLocation || ""}
 ${globalInputs.city ? `City: ${globalInputs.city}` : ""}
 ${title ? `Project Title: ${title}` : ""}
-Facility Size: ${
+${wording.category === "residential" ? "Home Size" : "Facility Size"}: ${
       globalInputs.facilitySize ? `${globalInputs.facilitySize} sq ft` : ""
     }
 Service Frequency: ${globalInputs.serviceFrequency || ""}
@@ -848,7 +863,8 @@ ${getToneInstructions(
 )} Use clear markdown formatting (headings, subheadings, bullet points) to ensure readability.
 Focus on the specific ${getServiceTypeLabel(
       service_type,
-    )} service and tailor the content accordingly.
+)} service and tailor the content accordingly.
+Use ${wording.category}-specific language throughout. Refer to the service site as a ${wording.site}, not a ${wording.category === "residential" ? "facility or commercial account" : "home or household"}. Never invent or imply insurance, bonding, certifications, OSHA compliance, background screening, licenses, or other credentials that are not present in the supplied company data.
 
 ${
   is_regenerate

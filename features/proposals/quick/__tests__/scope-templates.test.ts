@@ -12,7 +12,10 @@ const REQUIRED_TEMPLATE_IDS: ScopeTemplateId[] = [
   "gym_fitness",
   "school_daycare",
   "apartment_common_areas",
+  "residential_recurring",
+  "residential_deep_clean",
   "move_out_turnover",
+  "residential_premium_detail",
   "post_construction",
   "floor_care_add_on",
   "window_cleaning_add_on",
@@ -35,5 +38,14 @@ describe("scope templates", () => {
         0,
       );
     }
+  });
+
+  it.each([
+    "residential_recurring",
+    "residential_deep_clean",
+    "move_out_turnover",
+    "residential_premium_detail",
+  ] as const)("marks %s as residential", (templateId) => {
+    expect(SCOPE_TEMPLATES[templateId].serviceType).toBe("residential");
   });
 });

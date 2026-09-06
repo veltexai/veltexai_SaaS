@@ -3,6 +3,7 @@ import Image from "next/image";
 import React from "react";
 import { ThankYouSection } from "../sections/thank-you-section";
 import LogoImage from "./logo-image";
+import type { ServiceCategory } from "../../utils/payment-terms";
 
 export const ThankYouPage = ({
   email,
@@ -12,6 +13,7 @@ export const ThankYouPage = ({
   companyName,
   templateType,
   thankYouImage,
+  serviceCategory,
 }: {
   email: string | null;
   phone: string | null;
@@ -20,6 +22,7 @@ export const ThankYouPage = ({
   companyName: string;
   templateType: TemplateType;
   thankYouImage?: string;
+  serviceCategory: ServiceCategory;
 }) => {
   const SrcImage =
     thankYouImage ??
@@ -71,6 +74,7 @@ export const ThankYouPage = ({
           email={email}
           phone={phone}
           website={website}
+          serviceCategory={serviceCategory}
         />
       </div>
     </>

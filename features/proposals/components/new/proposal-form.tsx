@@ -27,6 +27,7 @@ import { scrollToTopOnMobile } from "@/lib/utils/scroll";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 import { FormNavigation, TemplateSelectionSection } from "@/features/proposals";
 import { deriveScopeTemplateId } from "@/features/templates/utils/resolve-template-images";
+import { createLocalProposalDateMetadata } from "@/features/templates/utils/proposal-date";
 
 interface ProposalFormProps {
   userId: string;
@@ -328,6 +329,10 @@ export function ProposalForm({ userId }: ProposalFormProps) {
           service_specific_data: {
             ...validatedData.service_specific_data,
             scope_template_id: deriveScopeTemplateId(data),
+          },
+          global_inputs: {
+            ...validatedData.global_inputs,
+            ...createLocalProposalDateMetadata(),
           },
           selected_addons: Array.isArray(data?.selected_addons)
             ? data.selected_addons

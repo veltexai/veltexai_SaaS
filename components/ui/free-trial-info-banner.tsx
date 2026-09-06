@@ -1,6 +1,7 @@
 import { Clock, Shield, CheckCircle, Check, Gift, FileText } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import React from 'react'
+import { TRIAL_ALLOWANCE_COPY, TRIAL_DURATION_DAYS } from '@/config/trial';
 
 const FreeTrialInfoBanner = ({component}: {component: 'signup' | 'pricing'}) => {
   if (component === 'signup') {
@@ -9,7 +10,7 @@ const FreeTrialInfoBanner = ({component}: {component: 'signup' | 'pricing'}) => 
         <div className="space-y-1.5 text-sm text-emerald-800">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-emerald-600" />
-            <span><strong>7-day free trial</strong> OR <strong>3 proposals</strong></span>
+            <span><strong>{TRIAL_DURATION_DAYS}-day free trial</strong> OR <strong>{TRIAL_ALLOWANCE_COPY}</strong></span>
           </div>
           <div className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-emerald-600" />
@@ -57,11 +58,11 @@ const FreeTrialInfoBanner = ({component}: {component: 'signup' | 'pricing'}) => 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
           <div className="flex items-center gap-2 text-emerald-800">
             <Clock className="h-5 w-5 text-emerald-600" />
-            <span><strong>7-day</strong> free trial</span>
+            <span><strong>{TRIAL_DURATION_DAYS}-day</strong> free trial</span>
           </div>
           <div className="flex items-center gap-2 text-emerald-800">
             <Check className="h-5 w-5 text-emerald-600" />
-            <span><strong>3</strong> free proposals</span>
+            <span><strong>{TRIAL_ALLOWANCE_COPY}</strong></span>
           </div>
           <div className="flex items-center gap-2 text-emerald-800">
             <CheckCircle className="h-5 w-5 text-emerald-600" />

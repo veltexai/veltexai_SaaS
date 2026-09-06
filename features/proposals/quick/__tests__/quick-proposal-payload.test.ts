@@ -11,6 +11,29 @@ import {
 import { getScopeTemplate } from "../constants/scope-templates";
 
 describe("quick proposal payload adapter", () => {
+  it.each([
+    "residential_recurring",
+    "residential_deep_clean",
+    "move_out_turnover",
+    "residential_premium_detail",
+  ] as const)("builds %s as a residential proposal with its own scope", (templateId) => {
+    const template = getScopeTemplate(templateId)!;
+    const values = getQuickProposalDefaults({ demoType: "residential", template });
+    values.clientName = "Residential Client";
+    values.clientEmail = "client@example.com";
+    values.clientPhone = "(555) 123-4567";
+
+    const result = buildQuickProposalPayload(values);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    expect(result.payload.service_type).toBe("residential");
+    expect(result.payload.service_specific_data.scope_template_id).toBe(templateId);
+    expect(result.payload.service_scope.areas_included).toEqual(
+      template.scopeSections.map((section) => section.title),
+    );
+  });
+
   it("builds a draft payload that validates against proposalFormSchema", () => {
     const values = getQuickProposalDefaults({
       demoType: "commercial",

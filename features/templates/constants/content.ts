@@ -1,9 +1,9 @@
 import { type ReactNode, createElement } from "react";
 import type { PaymentTerms } from "../utils/payment-terms";
+import type { AgreementTerms } from "../utils/agreement-terms";
 import {
   DisputIcon,
   DocumentIcon,
-  InsuranceIcon,
   paymentcardIcon,
   secureIcon,
   SettingsIcon,
@@ -58,8 +58,7 @@ const BASE_TERMS: ReadonlyArray<TermItem> = [
     id: 1,
     icons: createElement(DocumentIcon),
     title: "Terms & Renewal",
-    description:
-      "This agreement shall commence on the service start date and remain in effect for an initial term of twelve (12) months. Thereafter, services will continue on a month-to-month basis unless terminated by either party with thirty (30) days written notice.",
+    description: "",
   },
   {
     id: 2,
@@ -73,7 +72,7 @@ const BASE_TERMS: ReadonlyArray<TermItem> = [
     icons: createElement(StartIcon),
     title: "Scope Modifications",
     description:
-      "Any changes to service scope, frequency, or facility conditions that materially affect labor or operational requirements may require written adjustment to pricing.",
+      "Any changes to service scope, frequency, or site conditions that materially affect labor or operational requirements may require written adjustment to pricing.",
   },
   {
     id: 4,
@@ -87,21 +86,21 @@ const BASE_TERMS: ReadonlyArray<TermItem> = [
     icons: createElement(secureIcon),
     title: "Access & Security",
     description:
-      "Client agrees to provide safe and reasonable access to the facility. Contractor will safeguard all keys, codes, and credentials and adhere to site-specific security protocols.",
+      "Client agrees to provide safe and reasonable access to the service location. Contractor will safeguard all keys, codes, and access details and follow site-specific instructions.",
   },
   {
     id: 6,
-    icons: createElement(InsuranceIcon),
-    title: "Insurance & Liability",
+    icons: createElement(DocumentIcon),
+    title: "Care & Site Responsibility",
     description:
-      "Contractor maintains general liability and workers’ compensation insurance in accordance with applicable regulations. Certificates of insurance are available upon request. Contractor shall not be liable for pre-existing damage, unsecured valuables, or conditions beyond its control. Coverage limits meet or exceed industry standards for commercial facilities.",
+      "The service team will use reasonable care while working onsite and follow the agreed service instructions. Pre-existing damage, unsecured valuables, and conditions outside the agreed scope should be documented before service begins.",
   },
   {
     id: 7,
     icons: createElement(staffIcon),
-    title: "Staffing & Non-Solicitation",
+    title: "Service Team & Conduct",
     description:
-      "All personnel are background-checked and trained. Client agrees not to directly solicit or hire Contractor employees during the agreement term and for twelve (12) months thereafter without written consent.",
+      "Service personnel are expected to follow documented work procedures, respect the property, and communicate access or service concerns to the designated contact.",
   },
   {
     id: 8,
@@ -120,9 +119,12 @@ const BASE_TERMS: ReadonlyArray<TermItem> = [
  */
 export function getDataTerms(
   paymentTerms: PaymentTerms,
+  agreementTerms: AgreementTerms,
 ): ReadonlyArray<TermItem> {
   return BASE_TERMS.map((term) =>
-    term.id === BILLING_TERMS_ID
+    term.id === 1
+      ? { ...term, ...agreementTerms }
+      : term.id === BILLING_TERMS_ID
       ? { ...term, description: paymentTerms.body }
       : term,
   );

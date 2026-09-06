@@ -6,13 +6,14 @@ import { AUTH_ROUTES } from "@/features/auth/constants";
 import type { DemoType } from "../types/demo-proposal";
 import type { ScopeTemplateId } from "@/features/proposals/quick";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
+import { TRIAL_ALLOWANCE_COPY } from "@/config/trial";
 
 const SIGNUP_HREF = AUTH_ROUTES.SIGNUP_FROM_DEMO;
 
 const TRUST_POINTS = [
   "No credit card",
   "Setup in under 3 minutes",
-  "Unlimited proposals",
+  `Up to ${TRIAL_ALLOWANCE_COPY}`,
 ];
 
 interface DemoCTAProps {
@@ -50,7 +51,7 @@ export function DemoCTA({ demoType, scopeTemplateId }: DemoCTAProps) {
             Ready to create your own proposal?
           </h2>
           <p className="mx-auto max-w-2xl text-demo-body-lg text-demo-primary-fixed-dim">
-            Generate unlimited AI proposals for your cleaning business.
+            Create up to {TRIAL_ALLOWANCE_COPY} during your free trial.
           </p>
         </div>
 

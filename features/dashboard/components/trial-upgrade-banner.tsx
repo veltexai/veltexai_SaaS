@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { NavButton } from "@/components/ui/nav-button";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
+import { TRIAL_ALLOWANCE_COPY, TRIAL_DURATION_DAYS } from "@/config/trial";
 
 const DISMISS_STORAGE_KEY = "veltex:trial-upgrade-banner:dismissed";
 
@@ -97,7 +98,7 @@ export function TrialUpgradeBanner({
               Upgrade to keep creating proposals
             </h2>
             <p className="mt-2 text-sm text-gray-600 sm:text-base">
-              You&apos;ve used all 3 free proposals or your 7-day trial has
+              You&apos;ve used all {TRIAL_ALLOWANCE_COPY} or your {TRIAL_DURATION_DAYS}-day trial has
               ended. Choose a plan to continue generating, sending, and
               downloading proposals.
             </p>
