@@ -44,6 +44,8 @@ import { EnhancedFacilitySection } from "@/features/proposals/components/new/enh
 import { validateProposalWithServiceData } from "@/features/proposals/schemas/proposal";
 import { syncServiceScopeIntoGeneratedContent } from "@/features/proposals/services/sync-service-scope-to-generated-content";
 import { getValidationMessage } from "@/features/proposals";
+import { isValidPricingData } from "@/features/proposals/utils/is-valid-pricing-data";
+import { cn } from "@/lib/utils/cn";
 import { CalculatedPricing } from "../types/pricing";
 import { ServiceType } from "../types/proposal";
 
@@ -69,6 +71,10 @@ export function ProposalEditDialog({
     "professional" | "friendly" | "formal" | "casual" | "technical"
   >("professional");
   const supabase = createClient();
+  const hasEditablePricing = isValidPricingData(proposal.pricing_data);
+  const availableTabs = hasEditablePricing
+    ? ["basic", "client", "service", "facility", "pricing"]
+    : ["basic", "client", "service", "facility"];
 
   const form = useForm({
     resolver: zodResolver(proposalFormSchema),
@@ -128,15 +134,11 @@ export function ProposalEditDialog({
   // Initialize form with proposal data
   useEffect(() => {
     if (proposal && open) {
-      // Set pricing enabled state - auto-enable if proposal has pricing data
-      const hasExistingPricing =
-        proposal.pricing_data &&
-        typeof proposal.pricing_data === "object" &&
-        proposal.pricing_data !== null &&
-        Object.keys(proposal.pricing_data).length > 0;
+      setActiveTab("basic");
 
+      // Set pricing enabled state - auto-enable if proposal has pricing data
       setPricingEnabled(
-        hasExistingPricing || proposal.pricing_enabled || false,
+        hasEditablePricing || proposal.pricing_enabled || false,
       );
 
       // Set AI tone from proposal data or default
@@ -252,7 +254,7 @@ export function ProposalEditDialog({
         ai_tone: proposalAiTone,
       });
     }
-  }, [proposal, open, form]);
+  }, [proposal, open, form, hasEditablePricing]);
 
   const onSubmit = async (data: any) => {
     console.log("Data submitted:", data);
@@ -467,7 +469,9 @@ export function ProposalEditDialog({
         <DialogHeader>
           <DialogTitle>Edit Proposal</DialogTitle>
           <DialogDescription>
-            Update the proposal details, service requirements, and pricing.
+            {hasEditablePricing
+              ? "Update the proposal details, service requirements, and pricing."
+              : "Update the proposal details and service requirements."}
           </DialogDescription>
         </DialogHeader>
 
@@ -503,7 +507,12 @@ export function ProposalEditDialog({
               onValueChange={setActiveTab}
               className="space-y-4"
             >
-              <TabsList className="flex w-full flex-nowrap overflow-x-auto gap-1 p-1 md:grid md:grid-cols-5 md:overflow-visible">
+              <TabsList
+                className={cn(
+                  "flex w-full flex-nowrap overflow-x-auto gap-1 p-1 md:grid md:overflow-visible",
+                  hasEditablePricing ? "md:grid-cols-5" : "md:grid-cols-4",
+                )}
+              >
                 <TabsTrigger
                   value="basic"
                   className="flex shrink-0 items-center gap-1.5 md:flex-1"
@@ -536,14 +545,16 @@ export function ProposalEditDialog({
                   <Building2 className="h-4 w-4 shrink-0" />
                   <span className="hidden md:inline">Facility Details</span>
                 </TabsTrigger>
-                <TabsTrigger
-                  value="pricing"
-                  className="flex shrink-0 items-center gap-1.5 md:flex-1"
-                  title="Pricing"
-                >
-                  <DollarSign className="h-4 w-4 shrink-0" />
-                  <span className="hidden md:inline">Pricing</span>
-                </TabsTrigger>
+                {hasEditablePricing && (
+                  <TabsTrigger
+                    value="pricing"
+                    className="flex shrink-0 items-center gap-1.5 md:flex-1"
+                    title="Pricing"
+                  >
+                    <DollarSign className="h-4 w-4 shrink-0" />
+                    <span className="hidden md:inline">Pricing</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="basic" className="space-y-4">
@@ -579,22 +590,24 @@ export function ProposalEditDialog({
                 />
               </TabsContent>
 
-              <TabsContent
-                value="pricing"
-                className="min-h-[calc(100vh-300px)]"
-              >
-                <PricingSection
-                  proposalId={proposal.id}
-                  serviceType={selectedServiceType}
-                  enabled={pricingEnabled}
-                  onEnabledChange={handlePricingEnabledChange}
-                  selectedTone={aiTone}
-                  onToneChange={handleAiToneChange}
-                  existingPricingData={
-                    proposal.pricing_data as CalculatedPricing | null
-                  }
-                />
-              </TabsContent>
+              {hasEditablePricing && (
+                <TabsContent
+                  value="pricing"
+                  className="min-h-[calc(100vh-300px)]"
+                >
+                  <PricingSection
+                    proposalId={proposal.id}
+                    serviceType={selectedServiceType}
+                    enabled={pricingEnabled}
+                    onEnabledChange={handlePricingEnabledChange}
+                    selectedTone={aiTone}
+                    onToneChange={handleAiToneChange}
+                    existingPricingData={
+                      proposal.pricing_data as unknown as CalculatedPricing
+                    }
+                  />
+                </TabsContent>
+              )}
             </Tabs>
 
             <DialogFooter className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -605,15 +618,8 @@ export function ProposalEditDialog({
                   className="flex-1 sm:flex-initial"
                   onClick={() => {
                     if (activeTab === "basic") return;
-                    const tabs = [
-                      "basic",
-                      "client",
-                      "service",
-                      "facility",
-                      "pricing",
-                    ];
-                    const currentIndex = tabs.indexOf(activeTab);
-                    setActiveTab(tabs[currentIndex - 1]);
+                    const currentIndex = availableTabs.indexOf(activeTab);
+                    setActiveTab(availableTabs[currentIndex - 1]);
                   }}
                   disabled={activeTab === "basic"}
                 >
@@ -624,18 +630,13 @@ export function ProposalEditDialog({
                   variant="outline"
                   className="flex-1 sm:flex-initial"
                   onClick={() => {
-                    if (activeTab === "pricing") return;
-                    const tabs = [
-                      "basic",
-                      "client",
-                      "service",
-                      "facility",
-                      "pricing",
-                    ];
-                    const currentIndex = tabs.indexOf(activeTab);
-                    setActiveTab(tabs[currentIndex + 1]);
+                    const currentIndex = availableTabs.indexOf(activeTab);
+                    if (currentIndex === availableTabs.length - 1) return;
+                    setActiveTab(availableTabs[currentIndex + 1]);
                   }}
-                  disabled={activeTab === "pricing"}
+                  disabled={
+                    activeTab === availableTabs[availableTabs.length - 1]
+                  }
                 >
                   Next
                 </Button>
