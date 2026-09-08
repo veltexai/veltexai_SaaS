@@ -1,7 +1,7 @@
-import { TemplateType, ProposalTemplateRow } from '../types/templates';
+import { TemplateType } from '../types/templates';
 
 export function detectTemplateType(
-  t?: ProposalTemplateRow | null
+  t?: { name?: string | null; template_type?: string | null } | null
 ): TemplateType {
   const name = t?.name?.toLowerCase() ?? '';
   if (name.includes('executive') || name.includes('premium'))
@@ -10,7 +10,8 @@ export function detectTemplateType(
     return 'modern_corporate';
   if (name.includes('luxury') || name.includes('elite')) return 'luxury_elite';
   if (t?.template_type === 'basic') return 'basic';
-  return 'executive_premium';
+  // Legacy proposals with no design must not implicitly unlock a paid design.
+  return 'basic';
 }
 
 export function splitTitleWithAmpersand(

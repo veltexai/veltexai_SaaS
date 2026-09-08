@@ -11,6 +11,7 @@ import { DemoActions } from "./demo-actions";
 import { DemoCTA } from "./demo-cta";
 import { DemoSignupModal } from "./demo-signup-modal";
 import { DemoViewerToolbar } from "./demo-viewer-toolbar";
+import { buildDemoHandoff } from "../utils/build-demo-handoff";
 
 const ZOOM_LEVELS = [0.5, 0.75, 1, 1.25, 1.5] as const;
 const DEFAULT_ZOOM_INDEX = 2;
@@ -250,7 +251,7 @@ export function DemoResultLayout({
         <DemoCTA demoType={demoType} scopeTemplateId={scopeTemplateId} />
       </section>
 
-      <DemoSignupModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <DemoSignupModal open={modalOpen} onClose={() => setModalOpen(false)} redirectTo={buildDemoHandoff(demoType, scopeTemplateId)} />
     </main>
   );
 }

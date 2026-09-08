@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { captureProposalFailure } from "@/lib/monitoring";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -73,9 +74,10 @@ const STEPS = [
 ];
 
 const STEP_VALIDATION_FIELDS: Record<number, string[]> = {
-  1: ["service_type", "title"],
+  1: ["service_type"],
   2: [],
   3: [
+    "title",
     "global_inputs.client_name",
     "global_inputs.client_email",
     "global_inputs.contact_phone",
@@ -162,7 +164,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
   const [selectedServiceType, setSelectedServiceType] =
     useState<ServiceType | null>(null);
   const [pricingEnabled, setPricingEnabled] = useState(false);
-  const userTier = useUserTier(userId);
+  const { tier: userTier, isLoading: isTierLoading } = useUserTier(userId);
 
   const form = useForm({
     resolver: zodResolver(proposalFormSchema),
@@ -341,6 +343,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
       });
 
       if (!response.ok) {
+        captureProposalFailure("advanced", "save", response.status);
         failureCaptured = true;
         captureEvent(ANALYTICS_EVENTS.PROPOSAL_SAVE_FAILED, {
           flow: "advanced",
@@ -359,6 +362,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
     } catch (error) {
       console.error("Error creating proposal:", error);
       if (requestStarted && !failureCaptured) {
+        captureProposalFailure("advanced", "save");
         captureEvent(ANALYTICS_EVENTS.PROPOSAL_SAVE_FAILED, {
           flow: "advanced",
           failure_type: "network",
@@ -374,9 +378,9 @@ export function ProposalForm({ userId }: ProposalFormProps) {
   const resolvedServiceType: ServiceType = selectedServiceType ?? "residential";
 
   const STEP_COMPONENTS: Record<number, React.ReactNode> = {
-    1: <ServiceTypeSelector />,
-    2: <TemplateSelectionSection userTier={userTier} />,
-    3: <GlobalInputsSection />,
+    1: <ServiceTypeSelector showTitle={false} onSelect={() => setCurrentStep(2)} />,
+    2: <TemplateSelectionSection userTier={userTier} isTierLoading={isTierLoading} />,
+    3: <GlobalInputsSection showTitle />,
     4: <ServiceSpecificSection serviceType={resolvedServiceType} />,
     5: <EnhancedFacilitySection serviceType={resolvedServiceType} />,
     6: (

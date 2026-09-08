@@ -45,6 +45,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Plan not found" }, { status: 404 });
     }
 
+    // Never trust a requested plan label independently of its billed price.
+    if (!newPriceId || newPriceId !== newPlanData.stripe_price_id_monthly) {
+      return NextResponse.json({ error: "Price does not match the requested plan" }, { status: 400 });
+    }
+
     // Determine if upgrade or downgrade
     const isUpgrade = newPlanData.price_monthly > currentPlanData.price_monthly;
     const isDowngrade =
@@ -183,7 +188,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Update subscription in database
-    await supabase
+    const serviceSupabase = createServiceClient();
+    await serviceSupabase
       .from("subscriptions")
       .update({
         plan: newPlan,
@@ -192,7 +198,7 @@ export async function POST(request: NextRequest) {
       .eq("id", subscription.id);
 
     // Update user profile
-    await supabase
+    await serviceSupabase
       .from("profiles")
       .update({
         subscription_plan: newPlan,
@@ -228,7 +234,6 @@ export async function POST(request: NextRequest) {
     };
 
     // Use service client for billing history insertion to bypass RLS (like initial subscriptions)
-    const serviceSupabase = await createServiceClient();
     const { data: billingHistoryResult, error: billingHistoryError } =
       await serviceSupabase.from("billing_history").insert(billingHistoryData);
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe/stripe";
 import { createServerSupabaseClient } from "@/lib/auth/auth-helpers";
+import { createServiceClient } from "@/lib/supabase/server";
 
 /**
  * Syncs subscription data from Stripe checkout session to the database.
@@ -110,11 +111,11 @@ export async function POST(req: NextRequest) {
 
     // Verify the subscription belongs to this user
     if (session.metadata?.userId !== user.id) {
-      console.warn("User ID mismatch:", {
-        sessionUserId: session.metadata?.userId,
-        currentUserId: user.id,
-      });
-      // Continue anyway if the checkout customer matches user's stripe customer
+      return NextResponse.json({ error: "Checkout session does not belong to this user" }, { status: 403 });
+    }
+
+    if (session.status !== "complete" || !["active", "trialing"].includes(subscription.status)) {
+      return NextResponse.json({ error: "Checkout subscription is not active" }, { status: 400 });
     }
 
     // Get plan name from metadata or price ID
@@ -189,7 +190,9 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
-    const { error: subscriptionError } = await supabase
+    // These writes follow Stripe verification; browsers cannot write entitlements.
+    const serviceClient = createServiceClient();
+    const { error: subscriptionError } = await serviceClient
       .from("subscriptions")
       .insert(subscriptionData);
 
@@ -219,7 +222,7 @@ export async function POST(req: NextRequest) {
       profileUpdateData.trial_end_at = trialEnd.toISOString();
     }
 
-    await supabase.from("profiles").update(profileUpdateData).eq("id", user.id);
+    await serviceClient.from("profiles").update(profileUpdateData).eq("id", user.id);
 
     console.log("✅ Profile updated");
 

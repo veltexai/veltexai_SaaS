@@ -2,7 +2,14 @@ import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Explicitly inline the same environment in browser and server bundles.
+  env: {
+    NEXT_PUBLIC_SENTRY_ENVIRONMENT:
+      process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ??
+      process.env.VERCEL_ENV ??
+      process.env.NODE_ENV ??
+      'development',
+  },
   eslint: {
     // .eslintrc.json was added for editor/CI linting, but the repo carries
     // pre-existing lint debt in legacy areas; don't let it fail `next build`.

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { resolveDesignTier } from '@/features/proposals/utils/can-access-template';
 import type { 
   ProposalTemplate, 
   UserTemplatePreferences 
@@ -40,30 +41,13 @@ export function useTemplates(): UseTemplatesReturn {
         throw new Error('User not authenticated');
       }
 
-      // First try to get from subscriptions table (more reliable during trial)
-      let userTier = 'starter';
-      
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('plan')
-        .eq('user_id', user.id)
-        .in('status', ['active', 'trialing'])
-        .order('created_at', { ascending: false })
-        .limit(1)
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('subscription_plan, subscription_status')
+        .eq('id', user.id)
         .single();
-
-      if (subscription?.plan) {
-        userTier = subscription.plan;
-      } else {
-        // Fallback to profiles table
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('subscription_plan')
-          .eq('id', user.id)
-          .single();
-        
-        userTier = profile?.subscription_plan || 'starter';
-      }
+      if (profileError || !profile) throw new Error('Unable to resolve design access');
+      const userTier = resolveDesignTier(profile.subscription_plan, profile.subscription_status);
 
       // Get all active templates with their tier access
       const { data: templatesData, error: templatesError } = await supabase

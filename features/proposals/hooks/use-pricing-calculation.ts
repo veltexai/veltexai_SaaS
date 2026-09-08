@@ -2,7 +2,7 @@ import { useFormContext } from "react-hook-form";
 import { CalculatedPricing } from "../types/pricing";
 import { ProposalFormData } from "@/features/proposals/schemas/proposal";
 import { usePricingSettings } from "@/hooks/use-pricing-settings";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   AREA_FREQUENCY_COST_FACTORS,
@@ -34,7 +34,7 @@ export function usePricingCalculation({
     });
 
   const [isCalculating, setIsCalculating] = useState(false);
-  const [lastCalculationTrigger, setLastCalculationTrigger] = useState("");
+  const lastCalculationTrigger = useRef<string | null>(null);
 
   // Sync if existingPricingData arrives after mount (e.g. async load)
   useEffect(() => {
@@ -194,6 +194,10 @@ export function usePricingCalculation({
     "service_scope.frequency_details",
   ]);
 
+  const currentTrigger = JSON.stringify([serviceType, ...watchedValues]);
+  const calculateRef = useRef(calculatePricing);
+  calculateRef.current = calculatePricing;
+
   useEffect(() => {
     const [
       facilitySize,
@@ -201,9 +205,19 @@ export function usePricingCalculation({
       serviceSpecificData,
       areasIncluded,
       frequencyDetails,
-    ] = watchedValues;
+    ] = form.getValues([
+      "global_inputs.facility_size",
+      "global_inputs.service_frequency",
+      "service_specific_data",
+      "service_scope.areas_included",
+      "service_scope.frequency_details",
+    ]);
 
-    const currentTrigger = `${facilitySize ?? 0}-${frequency ?? "one-time"}-${JSON.stringify(serviceSpecificData ?? {})}-${JSON.stringify(areasIncluded ?? [])}-${JSON.stringify(frequencyDetails ?? {})}`;
+    if (lastCalculationTrigger.current === null && (existingPricingData || form.getValues("pricing_data"))) {
+      // Hydration is not a pricing edit. Keep the saved quote on opening Edit.
+      lastCalculationTrigger.current = currentTrigger;
+      return;
+    }
 
     const hasFrequencyInput =
       frequency ||
@@ -219,20 +233,22 @@ export function usePricingCalculation({
       serviceType &&
       parsedSize > 0 &&
       hasFrequencyInput &&
-      currentTrigger !== lastCalculationTrigger &&
+      currentTrigger !== lastCalculationTrigger.current &&
       !isCalculating
     ) {
-      setLastCalculationTrigger(currentTrigger);
-      const timer = setTimeout(calculatePricing, 1000);
+      const timer = setTimeout(() => {
+        lastCalculationTrigger.current = currentTrigger;
+        void calculateRef.current();
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [
-    watchedValues,
+    currentTrigger,
     enabled,
     serviceType,
-    lastCalculationTrigger,
     isCalculating,
-    calculatePricing,
+    form,
+    existingPricingData,
   ]);
 
   const clearPricing = useCallback(() => {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { detectTemplateType } from '@/features/templates/utils/utils';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -189,20 +190,6 @@ function assembleBasicPages(sections: Section[]): string[] {
   return pages;
 }
 
-function detectTemplateType(
-  name?: string | null,
-  templateType?: string | null
-): 'basic' | 'executive_premium' | 'modern_corporate' | 'luxury_elite' {
-  const n = (name ?? '').toLowerCase();
-  if (n.includes('executive') || n.includes('premium'))
-    return 'executive_premium';
-  if (n.includes('modern') || n.includes('corporate'))
-    return 'modern_corporate';
-  if (n.includes('luxury') || n.includes('elite')) return 'luxury_elite';
-  if ((templateType ?? '') === 'basic') return 'basic';
-  return 'executive_premium';
-}
-
 export async function GET(request: NextRequest, context: RouteParams) {
   try {
     const { id } = await context.params;
@@ -255,10 +242,7 @@ export async function GET(request: NextRequest, context: RouteParams) {
       if (!tErr) templateRow = t as any;
     }
 
-    const templateType = detectTemplateType(
-      templateRow?.name ?? null,
-      templateRow?.template_type ?? null
-    );
+    const templateType = detectTemplateType(templateRow);
 
     // Split into pages based on selected template
     const sections = splitMarkdownIntoSections(proposal.generated_content);

@@ -1,6 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server';
 import { shouldShowPoweredBy } from '@/features/billing/utils/watermark';
 import { formatCurrencySafe } from "@/lib/utils/format";
+import { detectTemplateType } from '@/features/templates/utils/utils';
 import {
   normalizeTitle,
   splitMarkdownIntoSections,
@@ -103,10 +104,7 @@ function getPages(proposal: any) {
     return undefined;
   };
 
-  const name = (proposal?.template?.name || '').toLowerCase();
-  const isBasic =
-    name.includes('basic') ||
-    (proposal?.template?.template_type ?? '') === 'basic';
+  const isBasic = detectTemplateType(proposal?.template) === 'basic';
 
   if (isBasic) {
     const cover = get('Cover letter');

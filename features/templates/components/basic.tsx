@@ -160,6 +160,7 @@ export function BasicTemplate({
                     acceptanceClientName={preparedFor}
                     acceptanceCompanyName={companyName}
                     proposalId={proposal.id}
+                    serviceFrequency={proposal.service_frequency}
                     additionalServicesRows={extrasRows}
                   />
                 ) : (
@@ -194,6 +195,7 @@ export function BasicTemplate({
                 <MarkdownRenderer
                   content={proposal.generated_content}
                   proposalId={proposal.id}
+                  serviceFrequency={proposal.service_frequency}
                 />
               </div>
             ) : (

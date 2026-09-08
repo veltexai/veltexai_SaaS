@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServiceClientRaw } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getUser } from "@/features/auth/services/get-user";
 import { proposalFormSchema } from "@/features/proposals/schemas/proposal";
+import {
+  DESIGN_NOT_ENTITLED_MESSAGE,
+  userCanAccessTemplate,
+} from "@/lib/templates/design-entitlement";
 import { stripe } from "@/lib/stripe/stripe";
 import { EmailService } from "@/lib/email/service";
 import config from "@/config/config";
@@ -61,6 +65,19 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const validatedData = proposalFormSchema.parse(body);
+
+    // The design is client-supplied, so entitlement is enforced here rather
+    // than trusting the picker. Checked before the insert so a locked design
+    // never reaches the proposals table.
+    if (
+      validatedData.template_id &&
+      !(await userCanAccessTemplate(user.id, validatedData.template_id))
+    ) {
+      return NextResponse.json(
+        { error: DESIGN_NOT_ENTITLED_MESSAGE },
+        { status: 403 },
+      );
+    }
 
     // Transform the data to match database schema
     const proposalData = {
@@ -316,7 +333,8 @@ export async function POST(request: NextRequest) {
                 period_end: periodEnd,
               });
 
-              await supabase
+              const billingClient = createServiceClient();
+              await billingClient
                 .from("subscriptions")
                 .update({
                   status: "active",
@@ -329,7 +347,7 @@ export async function POST(request: NextRequest) {
                   subscription.stripe_subscription_id,
                 );
 
-              await supabase
+              await billingClient
                 .from("profiles")
                 .update({
                   subscription_status: "active",

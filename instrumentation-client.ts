@@ -3,6 +3,15 @@ import * as Sentry from "@sentry/nextjs";
 import { isPostHogEnabled, postHogConfig } from "@/lib/analytics/config";
 import { isSentryEnabled, sentryConfig } from "@/lib/monitoring/config";
 
+// Initialize error monitoring before analytics so analytics cannot block it.
+if (isSentryEnabled) {
+  Sentry.init({
+    ...sentryConfig,
+    sendDefaultPii: false,
+    debug: false,
+  });
+}
+
 if (isPostHogEnabled && postHogConfig.key && postHogConfig.host) {
   posthog.init(postHogConfig.key, {
     api_host: postHogConfig.host,
@@ -26,19 +35,6 @@ if (isPostHogEnabled && postHogConfig.key && postHogConfig.host) {
         return request;
       },
     },
-  });
-}
-
-if (isSentryEnabled) {
-  Sentry.init({
-    dsn: sentryConfig.dsn,
-    environment: sentryConfig.environment,
-    tracesSampleRate: sentryConfig.tracesSampleRate,
-
-    // No replayIntegration on purpose: PostHog already records sessions above.
-    sendDefaultPii: false,
-
-    debug: false,
   });
 }
 

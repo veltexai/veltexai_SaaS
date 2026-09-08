@@ -1,13 +1,13 @@
-import Link from 'next/link';
+import Link from "next/link";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { FileText, Plus, Eye } from 'lucide-react';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileText, Plus, Eye } from "lucide-react";
 
 interface RecentProposal {
   id: string;
@@ -30,33 +30,33 @@ interface RecentProposalsProps {
 
 function getStatusColor(status: string) {
   switch (status) {
-    case 'draft':
-      return 'text-gray-600 bg-gray-100';
-    case 'sent':
-      return 'text-blue-600 bg-blue-100';
-    case 'viewed':
-      return 'text-yellow-600 bg-yellow-100';
-    case 'accepted':
-      return 'text-green-600 bg-green-100';
-    case 'rejected':
-      return 'text-red-600 bg-red-100';
+    case "draft":
+      return "text-gray-600 bg-gray-100";
+    case "sent":
+      return "text-blue-600 bg-blue-100";
+    case "viewed":
+      return "text-yellow-600 bg-yellow-100";
+    case "accepted":
+      return "text-green-600 bg-green-100";
+    case "rejected":
+      return "text-red-600 bg-red-100";
     default:
-      return 'text-gray-600 bg-gray-100';
+      return "text-gray-600 bg-gray-100";
   }
 }
 
 function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
   }).format(amount);
 }
 
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+  return new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 }
 
@@ -87,7 +87,7 @@ export function RecentProposals({ proposals }: RecentProposalsProps) {
               Get started by creating your first proposal.
             </p>
             <div className="mt-6">
-              <Link href="/dashboard/proposals/new">
+              <Link href="/dashboard/proposals/quick">
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
                   New Proposal
@@ -109,7 +109,7 @@ export function RecentProposals({ proposals }: RecentProposalsProps) {
                         {proposal.title}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {proposal.client_name} •{' '}
+                        {proposal.client_name} •{" "}
                         {formatDate(proposal.created_at)}
                       </p>
                     </div>
@@ -118,7 +118,7 @@ export function RecentProposals({ proposals }: RecentProposalsProps) {
                 <div className="flex items-center space-x-3">
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                      proposal.status
+                      proposal.status,
                     )}`}
                   >
                     {proposal.status.charAt(0).toUpperCase() +
@@ -128,7 +128,7 @@ export function RecentProposals({ proposals }: RecentProposalsProps) {
                     {formatCurrency(
                       proposal.pricing_data?.price_range?.high ||
                         proposal.pricing_data?.total ||
-                        0
+                        0,
                     )}
                   </span>
                   <Link href={`/dashboard/proposals/${proposal.id}`}>

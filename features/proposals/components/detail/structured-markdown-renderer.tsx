@@ -13,11 +13,17 @@ type TemplateType =
 interface StructuredMarkdownRendererProps {
   proposalId: string;
   content: string;
+  /**
+   * The proposal's service frequency, forwarded to MarkdownRenderer so the
+   * pricing table drops its monthly labels on a one-time job.
+   */
+  serviceFrequency?: string | null;
 }
 
 export default function StructuredMarkdownRenderer({
   proposalId,
   content,
+  serviceFrequency,
 }: StructuredMarkdownRendererProps) {
   const [templateType, setTemplateType] = React.useState<TemplateType>('basic');
   const [ready, setReady] = React.useState(false);
@@ -48,7 +54,13 @@ export default function StructuredMarkdownRenderer({
   }
 
   if (templateType === 'basic') {
-    return <MarkdownRenderer content={content} proposalId={proposalId} />;
+    return (
+      <MarkdownRenderer
+        content={content}
+        proposalId={proposalId}
+        serviceFrequency={serviceFrequency}
+      />
+    );
   }
 
   const sections = splitMarkdownIntoSections(content);
@@ -58,7 +70,11 @@ export default function StructuredMarkdownRenderer({
     <div className="space-y-12">
       {pages.map((page, i) => (
         <div key={`page-${i}`} className="prose max-w-none">
-          <MarkdownRenderer content={page} proposalId={proposalId} />
+          <MarkdownRenderer
+            content={page}
+            proposalId={proposalId}
+            serviceFrequency={serviceFrequency}
+          />
         </div>
       ))}
     </div>

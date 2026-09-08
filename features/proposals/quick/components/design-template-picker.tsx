@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,6 +11,7 @@ import { detectTemplateType } from "@/features/templates/utils/utils";
 import type { TemplateType } from "@/features/templates/types/templates";
 import type { SubscriptionTier } from "@/types/subscription";
 import { DesignTemplateCard } from "./design-template-card";
+import { pickQuickDesignTemplate } from "../lib/select-design-template";
 
 /** Local art per template family, used until preview_image_url is populated. */
 const PREVIEW_BY_TYPE: Record<TemplateType, string> = {
@@ -22,12 +23,15 @@ const PREVIEW_BY_TYPE: Record<TemplateType, string> = {
 
 interface DesignTemplatePickerProps {
   userTier: SubscriptionTier;
+  /** While true the tier is still resolving; every design stays locked. */
+  isTierLoading?: boolean;
   selectedTemplateId?: string;
   onSelectTemplate: (templateId: string, displayName: string) => void;
 }
 
 export function DesignTemplatePicker({
   userTier,
+  isTierLoading = false,
   selectedTemplateId,
   onSelectTemplate,
 }: DesignTemplatePickerProps) {
@@ -45,13 +49,27 @@ export function DesignTemplatePicker({
       return {
         template,
         fallbackImage: PREVIEW_BY_TYPE[type],
-        canAccess: canAccessTemplate(template.tiers, userTier),
+        // Locked until the tier is known, so an unresolved tier can never
+        // briefly present a premium design as selectable.
+        canAccess:
+          !isTierLoading && canAccessTemplate(template.tiers, userTier),
         isRecommended,
       };
     });
-  }, [templates, userTier]);
+  }, [templates, userTier, isTierLoading]);
 
-  const lockedCount = cards.filter((card) => !card.canAccess).length;
+  const isResolving = isLoading || isTierLoading;
+  useEffect(() => {
+    if (isResolving || error) return;
+    if (cards.some((card) => card.template.id === selectedTemplateId && card.canAccess)) return;
+    const fallback = pickQuickDesignTemplate(cards.map((card) => ({ ...card.template, hasAccess: card.canAccess })));
+    if (fallback) onSelectTemplate(fallback.id, fallback.display_name);
+  }, [cards, selectedTemplateId, isResolving, error, onSelectTemplate]);
+  // Suppressed while resolving: every card reads as locked in that window, and
+  // "4 locked" would be alarming and wrong.
+  const lockedCount = isResolving
+    ? 0
+    : cards.filter((card) => !card.canAccess).length;
 
   return (
     <section className="space-y-3">
@@ -78,7 +96,7 @@ export function DesignTemplatePicker({
         </Alert>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {isLoading
+          {isResolving
             ? [0, 1, 2, 3].map((key) => (
                 <div key={key} className="space-y-2">
                   <Skeleton className="aspect-[1/1.4] w-full rounded-xl" />

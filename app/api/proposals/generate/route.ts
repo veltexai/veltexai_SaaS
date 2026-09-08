@@ -7,6 +7,8 @@ import { z } from "zod";
 import {
   serviceTypeSchema,
   serviceFrequencySchema,
+  pricingDataSchema,
+  type PricingData,
 } from "@/features/proposals/schemas/proposal";
 import { AITone } from "@/types/database";
 import { formatCurrencySafe } from "@/lib/utils/format";
@@ -17,6 +19,11 @@ import {
 import { getProposalWording } from "@/features/templates/utils/proposal-service-context";
 import { resolveAgreementTerms } from "@/features/templates/utils/agreement-terms";
 import { resolvePaymentTerms } from "@/features/templates/utils/payment-terms";
+import { isOneTimeFrequency } from "@/lib/utils/frequency";
+import {
+  DESIGN_NOT_ENTITLED_MESSAGE,
+  userCanAccessTemplate,
+} from "@/lib/templates/design-entitlement";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -80,6 +87,16 @@ export async function POST(request: NextRequest) {
     // Fetch template data if template_id is provided
     let templateData = null;
     if (template_id) {
+      // Entitlement is enforced here, before the OpenAI call, so a request
+      // naming a locked design is never generated or billed. The picker's
+      // lock states are presentation only — template_id is client-supplied.
+      if (!(await userCanAccessTemplate(user.id, template_id))) {
+        return NextResponse.json(
+          { error: DESIGN_NOT_ENTITLED_MESSAGE },
+          { status: 403 },
+        );
+      }
+
       const { data: template, error: templateError } = await supabase
         .from("proposal_templates")
         .select("*")
@@ -113,6 +130,9 @@ export async function POST(request: NextRequest) {
     const wording = getProposalWording(proposalSource);
     const agreementTerms = resolveAgreementTerms(proposalSource);
     const paymentTerms = resolvePaymentTerms(proposalSource);
+    // A one-time job is never quoted a monthly figure or a monthly instalment
+    // plan; see `resolvePricingLabels` for the matching render-side labels.
+    const isOneTimeProposal = isOneTimeFrequency(service_frequency ?? "");
 
     // Get service type label
     const getServiceTypeLabel = (type: string) => {
@@ -328,6 +348,7 @@ export async function POST(request: NextRequest) {
 
     // Detect Basic Professional template style
     const isBasicProfessional = (() => {
+      if (!templateData) return true;
       const name = (
         templateData?.name ||
         templateData?.display_name ||
@@ -355,6 +376,10 @@ E. Contractor remains responsible for directing its service procedures and perso
     // Quick pricing estimate for scope table (safe fallback when no proposal exists)
     let tableCostPerVisit = "—";
     let tableMonthlyCost = "—";
+    // Return the same quote used in the document through the existing JSON column.
+    let quotedPricing: PricingData | undefined;
+    const suppliedPricing = pricingDataSchema.safeParse(pricing_data);
+    if (suppliedPricing.success) quotedPricing = suppliedPricing.data;
 
     try {
       // Priority 1: Use saved pricing_data if available (from Pricing Calculation UI)
@@ -422,11 +447,32 @@ E. Contractor remains responsible for directing its service procedures and perso
         if (perVisitTotal > 0 && visits > 0) {
           tableCostPerVisit = formatMoney(perVisitTotal);
           tableMonthlyCost = formatMoney(perVisitTotal * visits * discount);
+          const total = Number((perVisitTotal * visits * discount).toFixed(2));
+          const hours = perVisitResult.labor_hours * visits;
+          const productionRate = perVisitResult.labor_hours > 0
+            ? perVisitResult.calculation_details.units / perVisitResult.labor_hours
+            : 0;
+          quotedPricing = {
+            price_range: { low: total, high: total },
+            hours_estimate: { min: hours, max: hours },
+            assumptions: {
+              labor_rate: perVisitResult.labor_rate,
+              overhead_percentage: perVisitResult.overhead_percentage,
+              margin_percentage: perVisitResult.margin_percentage,
+              production_rate: { min: productionRate, max: productionRate },
+            },
+          };
         }
       }
     } catch (error) {
       console.error("❌ Error calculating pricing for scope table:", error);
-      // keep placeholders '—' on error
+      if (pricing_enabled) {
+        return NextResponse.json({ error: "Unable to calculate pricing. Please check pricing settings and try again." }, { status: 500 });
+      }
+    }
+
+    if (pricing_enabled && tableMonthlyCost === "—") {
+      return NextResponse.json({ error: "Unable to calculate a valid quote. Please review the pricing inputs." }, { status: 422 });
     }
 
     // Deterministic fenced JSON blocks to embed in-place within structure
@@ -548,7 +594,9 @@ E. Contractor remains responsible for directing its service procedures and perso
         const freq = String(a.frequency || "").toLowerCase();
         let monthlyAmount = 0;
 
-        if (typeof a.monthly_amount === "number" && a.monthly_amount > 0) {
+        if (isOneTimeProposal && freq === "one_time") {
+          monthlyAmount = subtotal;
+        } else if (typeof a.monthly_amount === "number" && a.monthly_amount > 0) {
           // Use provided monthly_amount if available
           monthlyAmount = a.monthly_amount;
         } else if (freq === "monthly") {
@@ -558,8 +606,10 @@ E. Contractor remains responsible for directing its service procedures and perso
         } else if (freq === "annual") {
           monthlyAmount = subtotal / 12;
         } else if (freq === "one_time") {
-          // One-time services don't have a monthly equivalent
-          monthlyAmount = subtotal / 12;
+          // On a one-time proposal the column is a one-time price, so the
+          // add-on bills in full. On a recurring proposal it still amortizes
+          // into the monthly figure.
+          monthlyAmount = isOneTimeProposal ? subtotal : subtotal / 12;
         }
 
         return {
@@ -660,7 +710,7 @@ ${pricingTableFenced}
 Notes:
 - Adjustments require written approval.
 - Quote valid for 30 days. Pricing reflects scope and frequency above.
-- Add-on services are prorated based on selected frequency and distributed into equal monthly installments.
+- ${isOneTimeProposal ? "Add-on services are quoted as one-time charges and are included in the total above." : "Add-on services are prorated based on selected frequency and distributed into equal monthly installments."}
 `
       : "";
 
@@ -922,8 +972,16 @@ Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estima
       );
     }
 
+    if (pricing_enabled && !isBasicProfessional && !/```veliz_pricing_table\s*[\s\S]*?```/.test(generatedContent)) {
+      return NextResponse.json({ error: "The generated quote is incomplete. Please generate again." }, { status: 502 });
+    }
+
     return NextResponse.json({
-      content: generatedContent,
+      // Prices are calculated by the server, never invented or changed by AI.
+      content: pricing_enabled
+        ? generatedContent.replace(/```veliz_pricing_table\s*[\s\S]*?```/g, () => pricingTableFenced.trim())
+        : generatedContent,
+      pricing_data: pricing_enabled ? quotedPricing : undefined,
       tone: ai_tone,
       is_regenerate,
     });

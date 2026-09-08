@@ -32,7 +32,7 @@ interface OnboardingBannerProps {
  */
 export function OnboardingBanner({
   totalProposals,
-  createHref = "/dashboard/proposals/new",
+  createHref = "/dashboard/proposals/quick",
   firstName,
 }: OnboardingBannerProps) {
   const [dismissed, setDismissed] = useState(false);

@@ -1,7 +1,7 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { FileText, Plus } from 'lucide-react';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { FileText, Plus } from "lucide-react";
 
 export function EmptyProposals() {
   return (
@@ -14,7 +14,7 @@ export function EmptyProposals() {
         <p className="text-sm text-gray-600 text-center mb-6">
           Create your first proposal to get started with winning new clients.
         </p>
-        <Link href="/dashboard/proposals/new">
+        <Link href="/dashboard/proposals/quick">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Create Your First Proposal

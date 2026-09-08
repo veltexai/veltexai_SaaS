@@ -719,6 +719,7 @@ export default function ProposalDetailPage({
                         <MarkdownRenderer
                           content={proposal.generated_content}
                           proposalId={proposal.id}
+                          serviceFrequency={proposal.service_frequency}
                         />
                       </div>
                     </div>

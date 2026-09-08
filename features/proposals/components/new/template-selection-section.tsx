@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Layout, AlertCircle, Sparkles } from "lucide-react";
 import { ProposalFormData } from "@/features/proposals/schemas/proposal";
 import { SubscriptionTier } from "@/types/subscription";
+import { pickQuickDesignTemplate } from "@/features/proposals/quick";
 import {
   handleSelectTemplate,
   useProposalTemplates,
@@ -18,28 +19,29 @@ import {
 
 interface TemplateSelectionSectionProps {
   userTier: SubscriptionTier;
+  isTierLoading?: boolean;
 }
 
 export function TemplateSelectionSection({
   userTier,
+  isTierLoading = false,
 }: TemplateSelectionSectionProps) {
   const { setValue, watch } = useFormContext<ProposalFormData>();
   const selectedTemplateId = watch("template_id");
   const { templates, isLoading, error, refetch } = useProposalTemplates();
 
-  // Default to first accessible template (basic) when none selected
+  // Share the Quick builder's accessible Executive Premium default.
   useEffect(() => {
-    if (templates.length === 0 || selectedTemplateId) return;
-    const firstAccessible = templates.find((t) =>
-      canAccessTemplate(t.tiers, userTier),
-    );
-    const defaultId = firstAccessible?.id ?? templates[0]?.id;
-    if (defaultId) {
-      setValue("template_id", defaultId, { shouldValidate: true });
-    }
-  }, [templates, selectedTemplateId, setValue, userTier]);
+    if (isLoading || isTierLoading || templates.length === 0) return;
+    const candidates = templates.map((t) => ({
+      ...t,
+      hasAccess: canAccessTemplate(t.tiers, userTier),
+    }));
+    if (candidates.some((t) => t.id === selectedTemplateId && t.hasAccess)) return;
+    setValue("template_id", pickQuickDesignTemplate(candidates)?.id, { shouldValidate: true });
+  }, [templates, selectedTemplateId, setValue, userTier, isLoading, isTierLoading]);
 
-  if (isLoading) {
+  if (isLoading || isTierLoading) {
     return (
       <Card>
         <CardHeader>

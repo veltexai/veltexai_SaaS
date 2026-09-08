@@ -4,19 +4,21 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Check, Loader2, PartyPopper } from "lucide-react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AUTH_ROUTES } from "@/features/auth/constants";
 import { signInWithGoogle } from "@/features/auth/actions/oauth";
 import { TRIAL_ALLOWANCE_COPY } from "@/config/trial";
+import { buildAuthPathWithRedirect } from "@/features/auth/utils/redirect";
 
 const TRUST_POINTS = ["No credit card", `Up to ${TRIAL_ALLOWANCE_COPY}`];
 
 interface DemoSignupModalProps {
   open: boolean;
   onClose: () => void;
+  redirectTo?: string;
 }
 
-export function DemoSignupModal({ open, onClose }: DemoSignupModalProps) {
+export function DemoSignupModal({ open, onClose, redirectTo = AUTH_ROUTES.QUICK_PROPOSAL }: DemoSignupModalProps) {
   const [isPending, startTransition] = useTransition();
   const [redirecting, setRedirecting] = useState(false);
 
@@ -24,7 +26,7 @@ export function DemoSignupModal({ open, onClose }: DemoSignupModalProps) {
     startTransition(async () => {
       const result = await signInWithGoogle(
         undefined,
-        AUTH_ROUTES.QUICK_PROPOSAL,
+        redirectTo,
         "signup",
       );
 
@@ -52,10 +54,10 @@ export function DemoSignupModal({ open, onClose }: DemoSignupModalProps) {
         <DialogTitle className="mb-2 text-demo-display-sm text-demo-on-surface">
           Your proposal is ready 🎉
         </DialogTitle>
-        <p className="mb-8 text-demo-body-md text-demo-on-surface-variant">
+        <DialogDescription className="mb-8 text-demo-body-md text-demo-on-surface-variant">
           Create a free account to unlock saving, sending and high-quality PDF
           downloads with your own branding.
-        </p>
+        </DialogDescription>
 
         <div className="mb-8 space-y-4">
           <button
@@ -73,7 +75,7 @@ export function DemoSignupModal({ open, onClose }: DemoSignupModalProps) {
           </button>
 
           <Link
-            href={AUTH_ROUTES.SIGNUP_FROM_DEMO}
+            href={buildAuthPathWithRedirect({ pathname: AUTH_ROUTES.SIGNUP_FROM_DEMO, redirectTo })}
             onClick={onClose}
             className="block w-full rounded-xl bg-demo-on-surface py-4 font-bold text-demo-surface transition-all hover:opacity-90"
           >
@@ -81,7 +83,7 @@ export function DemoSignupModal({ open, onClose }: DemoSignupModalProps) {
           </Link>
 
           <Link
-            href={AUTH_ROUTES.LOGIN}
+            href={buildAuthPathWithRedirect({ pathname: AUTH_ROUTES.LOGIN, redirectTo })}
             onClick={onClose}
             className="block text-demo-body-sm text-demo-on-surface-variant underline-offset-4 hover:underline"
           >

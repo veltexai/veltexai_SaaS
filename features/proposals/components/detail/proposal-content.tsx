@@ -64,6 +64,7 @@ export function ProposalContent({
                 <StructuredMarkdownRenderer
                   content={proposal.generated_content}
                   proposalId={proposal.id}
+                  serviceFrequency={proposal.service_frequency}
                 />
               </div>
             ) : (

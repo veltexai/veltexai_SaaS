@@ -18,6 +18,7 @@ import { isValidPricingData } from "../../utils/is-valid-pricing-data";
 import { PricingBreakdownCard } from "./pricing-breakdown-card";
 import { EmptyPricingState } from "./empty-pricing-state";
 import { FinalPricingCard } from "./final-pricing-card";
+import { isOneTimeFrequency } from "@/lib/utils/frequency";
 
 interface PricingSectionProps {
   proposalId?: string;
@@ -43,6 +44,8 @@ export function PricingSection({
   existingPricingData = null,
 }: PricingSectionProps) {
   const form = useFormContext<ProposalFormData>();
+  const serviceFrequency = form.watch("global_inputs.service_frequency");
+  const isOneTime = Boolean(serviceFrequency && isOneTimeFrequency(serviceFrequency));
   const { loading: isLoadingPricingSettings } = usePricingSettings();
 
   const { calculatedPricing, isCalculating, calculatePricing, clearPricing } =
@@ -69,6 +72,9 @@ export function PricingSection({
 
   const monthlyAddonsTotal = useMemo(() => {
     return sourceAddons.reduce((sum, addon) => {
+      if (isOneTime && addon.frequency === "one_time") {
+        return sum + (Number(addon.subtotal) || (Number(addon.rate) || 0) * (Number(addon.qty) || 0));
+      }
       if (
         addon.monthly_amount !== null &&
         Number.isFinite(Number(addon.monthly_amount))
@@ -86,7 +92,7 @@ export function PricingSection({
       if (freq === "one_time") return sum + subtotal / 12;
       return sum;
     }, 0);
-  }, [sourceAddons]);
+  }, [sourceAddons, isOneTime]);
 
   const oneTimeAddons = useMemo(() => {
     return sourceAddons.filter((addon) => {
@@ -204,7 +210,8 @@ export function PricingSection({
           </Card>
 
           {/* Final Pricing */}
-          <FinalPricingCard
+            <FinalPricingCard
+              serviceFrequency={serviceFrequency}
             basePrice={basePrice}
             monthlyAddonsTotal={monthlyAddonsTotal}
             oneTimeAddons={oneTimeAddons}

@@ -7,12 +7,14 @@ import { DollarSign, Info } from "lucide-react";
 import { PricingRow } from "./pricing-row";
 import { Separator } from "@/components/ui/separator";
 import { AddonItem, CalculatedPricing } from "../../types/pricing";
+import { isOneTimeFrequency } from "@/lib/utils/frequency";
 
 interface FinalPricingCardProps {
   basePrice: number;
   monthlyAddonsTotal: number;
   oneTimeAddons: AddonItem[];
   pricing: CalculatedPricing | null;
+  serviceFrequency?: string;
 }
 
 export function FinalPricingCard({
@@ -20,10 +22,14 @@ export function FinalPricingCard({
   monthlyAddonsTotal,
   oneTimeAddons,
   pricing,
+  serviceFrequency,
 }: FinalPricingCardProps) {
+  const isOneTime = Boolean(serviceFrequency && isOneTimeFrequency(serviceFrequency));
   const tooltipText = pricing?.price_range
     ? `The base price is calculated as the midpoint of the estimated range (${formatCurrency(pricing.price_range.low)} – ${formatCurrency(pricing.price_range.high)}).`
-    : "This is the estimated monthly price including base service and monthly add-ons.";
+    : isOneTime
+      ? "This is the estimated one-time price including base service and add-ons."
+      : "This is the estimated monthly price including base service and monthly add-ons.";
 
   return (
     <Card>
@@ -37,7 +43,7 @@ export function FinalPricingCard({
         <div className="flex justify-between items-center p-4 bg-primary/5 rounded-lg">
           <div className="flex items-center gap-2">
             <span className="text-lg font-semibold">
-              Monthly Total (Base + Add-ons)
+              {isOneTime ? "One-Time Total (Base + Add-ons)" : "Monthly Total (Base + Add-ons)"}
             </span>
             <TooltipProvider>
               <Tooltip>
@@ -58,11 +64,11 @@ export function FinalPricingCard({
         {monthlyAddonsTotal > 0 && (
           <div className="space-y-2 text-sm text-muted-foreground">
             <PricingRow
-              label="Base Service (Monthly)"
+              label={isOneTime ? "Base Service (One-Time)" : "Base Service (Monthly)"}
               value={formatCurrency(basePrice)}
             />
             <PricingRow
-              label="Monthly Add-ons"
+              label={isOneTime ? "One-Time Add-ons" : "Monthly Add-ons"}
               value={formatCurrency(monthlyAddonsTotal)}
             />
             <Separator />

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe/stripe";
 import { createServerSupabaseClient } from "@/lib/auth/auth-helpers";
+import { createServiceClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
       customerId = customer.id;
 
       // Update profile with Stripe customer ID
-      await supabase
+      await createServiceClient()
         .from("profiles")
         .update({ stripe_customer_id: customerId })
         .eq("id", user.id);

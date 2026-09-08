@@ -235,7 +235,8 @@ export const pricingDataSchema = z.object({
 export const proposalFormSchema = z.object({
   title: z.string().min(1, 'Proposal title is required'),
   service_type: serviceTypeSchema,
-  template_id: z.string().optional(),
+  // A real proposal_templates UUID. Never a scope-template slug.
+  template_id: z.string().uuid().optional(),
   global_inputs: globalInputsSchema,
   service_specific_data: z.record(z.any()).default({}),
   pricing_enabled: z.boolean().default(false),

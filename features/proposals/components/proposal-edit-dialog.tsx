@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createClient } from "@/lib/supabase/client";
@@ -131,10 +131,13 @@ export function ProposalEditDialog({
     },
   });
 
+  const previousServiceType = useRef(proposal.service_type);
+
   // Initialize form with proposal data
   useEffect(() => {
     if (proposal && open) {
       setActiveTab("basic");
+      previousServiceType.current = proposal.service_type;
 
       // Set pricing enabled state - auto-enable if proposal has pricing data
       setPricingEnabled(
@@ -440,7 +443,12 @@ export function ProposalEditDialog({
 
   // Reset service-specific data when service type changes
   useEffect(() => {
-    form.setValue("service_specific_data", {});
+    // Opening/resetting the dialog must not erase the saved scope/package.
+    const currentType = form.getValues("service_type");
+    if (previousServiceType.current !== currentType) {
+      previousServiceType.current = currentType;
+      form.setValue("service_specific_data", {});
+    }
   }, [selectedServiceType, form]);
 
   const handlePricingEnabledChange = (enabled: boolean) => {

@@ -56,7 +56,13 @@ const serviceTypes = [
   },
 ];
 
-export function ServiceTypeSelector() {
+export function ServiceTypeSelector({
+  showTitle = true,
+  onSelect,
+}: {
+  showTitle?: boolean;
+  onSelect?: (serviceType: ServiceType) => void;
+}) {
   const form = useFormContext<ProposalFormData>();
 
   return (
@@ -89,6 +95,10 @@ export function ServiceTypeSelector() {
                           value={serviceType.value}
                           id={serviceType.value}
                           className="sr-only"
+                          onClick={() => {
+                            field.onChange(serviceType.value);
+                            onSelect?.(serviceType.value);
+                          }}
                         />
                       </FormControl>
                       <FormLabel
@@ -125,7 +135,7 @@ export function ServiceTypeSelector() {
         )}
       />
 
-      <FormField
+      {showTitle && <FormField
         control={form.control}
         name="title"
         render={({ field }) => (
@@ -140,7 +150,7 @@ export function ServiceTypeSelector() {
             <FormMessage />
           </FormItem>
         )}
-      />
+      />}
     </div>
   );
 }

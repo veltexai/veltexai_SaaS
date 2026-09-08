@@ -152,6 +152,7 @@ export function buildQuickProposalPayload(
   values: QuickProposalFormData,
   generatedContent = "",
   designTemplateId?: string,
+  pricingData?: ProposalFormData["pricing_data"],
 ): QuickProposalPayloadResult {
   const fieldErrors = getQuickProposalFieldErrors(values);
 
@@ -212,9 +213,10 @@ export function buildQuickProposalPayload(
     },
     // Pricing is enabled so the generated proposal includes the standard
     // "Service Quote & Pricing" section (which also anchors the Notes block).
-    // pricing_data stays undefined: the API prices via PricingEngine.
+    // Undefined before generation: the server's PricingEngine prices the quote.
+    // On save retain that exact returned snapshot in the existing JSON column.
     pricing_enabled: true,
-    pricing_data: undefined,
+    pricing_data: pricingData,
     generated_content: generatedContent,
     status: "draft",
     facility_details: {
@@ -269,6 +271,7 @@ export function buildQuickProposalSavePayload(
   values: QuickProposalFormData,
   generatedContent: string,
   designTemplateId?: string,
+  pricingData?: ProposalFormData["pricing_data"],
 ): QuickProposalSavePayloadResult {
   if (!generatedContent.trim()) {
     return {
@@ -277,7 +280,7 @@ export function buildQuickProposalSavePayload(
     };
   }
 
-  return buildQuickProposalPayload(values, generatedContent, designTemplateId);
+  return buildQuickProposalPayload(values, generatedContent, designTemplateId, pricingData);
 }
 
 export function buildQuickProposalGenerateRequest(

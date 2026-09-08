@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/features/auth/services/get-user";
 import { createClient } from "@/lib/supabase/server";
 import { proposalSchema } from "@/features/proposals/schemas/proposal";
+import {
+  DESIGN_NOT_ENTITLED_MESSAGE,
+  userCanAccessTemplate,
+} from "@/lib/templates/design-entitlement";
 import { Database } from "@/types/database";
 
 type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
@@ -78,6 +82,18 @@ export async function PUT(
     }
 
     const updateData = validationResult.data;
+
+    // Without this, the create-route guard is bypassable in two steps: save
+    // with an entitled design, then PUT the locked one.
+    if (
+      updateData.template_id &&
+      !(await userCanAccessTemplate(user.id, updateData.template_id))
+    ) {
+      return NextResponse.json(
+        { error: DESIGN_NOT_ENTITLED_MESSAGE },
+        { status: 403 },
+      );
+    }
 
     const supabase = await createClient();
 

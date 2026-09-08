@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { captureProposalFailure } from "@/lib/monitoring";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -134,6 +135,7 @@ export function AIContentGenerator({
       });
 
       if (!response.ok) {
+        captureProposalFailure("advanced", "generate", response.status);
         failureCaptured = true;
         captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATION_FAILED, {
           flow: "advanced",
@@ -145,6 +147,7 @@ export function AIContentGenerator({
 
       const data = (await response.json()) as { content?: string };
       if (!data.content) {
+        captureProposalFailure("advanced", "generate", 200);
         failureCaptured = true;
         captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATION_FAILED, {
           flow: "advanced",
@@ -161,6 +164,7 @@ export function AIContentGenerator({
     } catch (error) {
       console.error("Error generating content:", error);
       if (!failureCaptured) {
+        captureProposalFailure("advanced", "generate");
         captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATION_FAILED, {
           flow: "advanced",
           failure_type: "network",
@@ -318,7 +322,10 @@ export function AIContentGenerator({
               </div>
             ) : (
               <div className="p-4 border rounded-md bg-gray-50 max-h-60 overflow-y-auto">
-                <MarkdownRenderer content={generatedContent} />
+                <MarkdownRenderer
+                  content={generatedContent}
+                  serviceFrequency={form.global_inputs.service_frequency}
+                />
               </div>
             )}
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { TemplateType } from "@/features/templates/types/templates";
 import type { PaymentTerms } from "@/features/templates/utils/payment-terms";
+import { resolvePricingLabels } from "@/features/templates/utils/pricing-labels";
 import { dmSerifText } from "@/lib/fonts";
 import { ProposalTitle } from "../shared";
 import { cn } from "@/lib/utils/cn";
@@ -16,6 +17,11 @@ interface ServiceQuotePricingProps {
   description?: string | null;
   templateType: TemplateType;
   paymentTerms: PaymentTerms;
+  /**
+   * The proposal's service frequency. Drives the one-time vs recurring pricing
+   * labels; omitting it keeps the recurring labels.
+   */
+  serviceFrequency?: string | null;
   className?: string;
 }
 
@@ -40,8 +46,10 @@ export default function ServiceQuotePricing({
   description,
   templateType,
   paymentTerms,
+  serviceFrequency,
   className = "",
 }: ServiceQuotePricingProps) {
+  const labels = resolvePricingLabels(serviceFrequency);
   const lines = (content ?? "")
     .split("\n")
     .map((l) => l.trim())
@@ -100,7 +108,7 @@ export default function ServiceQuotePricing({
             <div className="sm:text-base text-xs text-center grid grid-cols-4 text-[var(--color-primary)] gap-4 sm:px-5 px-2 mb-2">
               <div className="font-semibold col-span-2">Service</div>
               <div className="font-semibold">Frequency</div>
-              <div className="font-semibold">Price/month</div>
+              <div className="font-semibold">{labels.priceColumn}</div>
             </div>
             {data.rows.map((row, i) => (
               <div
@@ -135,7 +143,7 @@ export default function ServiceQuotePricing({
                       <FrequencyLabel frequency={row.frequency} />
                     ) : row.frequency === "annual" ? (
                       "Annual Service"
-                    ) : row.frequency === "one_time" ? (
+                    ) : isOneTimeFrequency(row.frequency) ? (
                       "One time"
                     ) : (
                       row.frequency
@@ -184,7 +192,7 @@ export default function ServiceQuotePricing({
                 <div className="grid grid-cols-3 mt-1 items-center">
                   {/* <div></div> */}
                   <div className="col-span-2 text-right font-semibold text-[var(--color-primary)] sm:pr-4 pr-2">
-                    Total Monthly Investment:
+                    {labels.totalLabel}
                   </div>
                   <div
                     className={`${
@@ -195,8 +203,8 @@ export default function ServiceQuotePricing({
                   </div>
                 </div>
                 <p className="text-xs mt-10">
-                  <span className="font-semibold">Agreement Term: </span>12
-                  Months
+                  <span className="font-semibold">Agreement Term: </span>
+                  {labels.agreementTerm}
                 </p>
                 <p className="text-xs">
                   <span className="font-semibold">Billing Terms: </span>

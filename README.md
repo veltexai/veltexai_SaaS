@@ -38,7 +38,7 @@ Sentry is fully disabled unless `NEXT_PUBLIC_SENTRY_DSN` is set — leave it uns
 for normal local development and the app behaves exactly as before.
 
 ```bash
-# Runtime (set in Vercel for every environment)
+# Build-time public value (set in Vercel for every environment, then rebuild)
 NEXT_PUBLIC_SENTRY_DSN=https://<key>@<org>.ingest.sentry.io/<project-id>
 
 # Build-time only, needed for readable stack traces (Vercel env vars)
@@ -53,13 +53,18 @@ upload, so production stack traces stay minified.
 Notes:
 
 - Environment separation uses Vercel's automatic `VERCEL_ENV`, so no extra
-  variable is needed to keep production and preview events apart.
+  variable is needed to keep production and preview events apart. The resolved
+  value is explicitly included in the client bundle. Optionally set
+  `NEXT_PUBLIC_SENTRY_ENVIRONMENT=develop` on the develop deployment; localhost
+  defaults to `development`. Changing public configuration requires a rebuild.
 - Traces are sampled at 10% in production and 100% elsewhere.
 - `sendDefaultPii` is off and only the Supabase user id is attached to events —
   no emails, IPs, cookies, or request bodies are sent.
 - Session Replay is deliberately not enabled; PostHog already records sessions.
 - Browser events tunnel through `/monitoring` on this domain so ad blockers
   don't drop them. That path is excluded from the middleware matcher.
+- Handled unexpected generate/save failures are captured with flow, action and
+  status only; expected 4xx rejections are not reported as application errors.
 - Cron check-ins for `vercel.json` crons register automatically via
   `_experimental.vercelCronsMonitoring`. This only activates on a Vercel build
   (the SDK gates it on `process.env.VERCEL`), so it is inert locally.

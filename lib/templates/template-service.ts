@@ -2,6 +2,11 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/features/auth/services/get-user";
+import {
+  canAccessTemplate,
+  resolveDesignTier,
+} from "@/features/proposals/utils/can-access-template";
+import { userCanAccessTemplate } from "@/lib/templates/design-entitlement";
 import type {
   ProposalTemplate,
   TemplateTierAccess,
@@ -27,14 +32,19 @@ export async function getUserAccessibleTemplates(): Promise<
     throw new Error("User not authenticated");
   }
 
-  // Get user's subscription plan
-  const { data: profile } = await supabase
+  // Design access is evaluated on the same rule the client pickers use, so the
+  // pre-seeded default and the rendered lock states cannot disagree. The
+  // status column matters: a trial user's plan reads 'starter'.
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("subscription_plan")
+    .select("subscription_plan, subscription_status")
     .eq("id", user.id)
     .single();
 
-  const userTier = profile?.subscription_plan || "starter";
+  const userTier = resolveDesignTier(
+    profile?.subscription_plan,
+    profile?.subscription_status,
+  );
 
   // Get all active templates with their tier access
   const { data: templates, error } = await supabase
@@ -58,8 +68,9 @@ export async function getUserAccessibleTemplates(): Promise<
   const templatesWithAccess: TemplateWithAccess[] = templates.map(
     (template) => {
       const tierAccess = template.template_tier_access as TemplateTierAccess[];
-      const hasAccess = tierAccess.some(
-        (access) => access.subscription_tier === userTier,
+      const hasAccess = Boolean(profile && !profileError) && canAccessTemplate(
+        tierAccess.map((access) => access.subscription_tier),
+        userTier,
       );
 
       return {
@@ -74,39 +85,26 @@ export async function getUserAccessibleTemplates(): Promise<
 }
 
 /**
- * Check if user can access a specific template
+ * Whether the signed-in user may use a specific design template.
+ *
+ * Checked in TypeScript rather than via the `can_user_access_template` RPC:
+ * that function resolves a trial user to 'starter' (it reads plan columns, not
+ * `subscription_status`), which would deny Executive Premium to every trial.
+ * Sharing `canAccessTemplate` also keeps this identical to the picker UI.
+ *
+ * Fails closed — an unknown template, a missing profile, or a query error all
+ * return false.
  */
 export async function canUserAccessTemplate(
   templateId: string,
 ): Promise<boolean> {
-  const supabase = await createClient();
   const { user } = await getUser();
 
   if (!user) {
     return false;
   }
 
-  // Get user's subscription plan
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("subscription_plan")
-    .eq("id", user.id)
-    .single();
-
-  const userTier = profile?.subscription_plan || "starter";
-
-  // Use the database function to check access
-  const { data, error } = await supabase.rpc("can_user_access_template", {
-    p_user_id: user.id,
-    p_template_id: templateId,
-  });
-
-  if (error) {
-    console.error("Error checking template access:", error);
-    return false;
-  }
-
-  return data;
+  return userCanAccessTemplate(user.id, templateId);
 }
 
 /**

@@ -33,7 +33,7 @@ const serviceFrequencyOptions = [
   { value: "daily", label: "Daily" },
 ];
 
-export function GlobalInputsSection() {
+export function GlobalInputsSection({ showTitle = false }: { showTitle?: boolean }) {
   const form = useFormContext<ProposalFormData>();
 
   return (
@@ -44,6 +44,22 @@ export function GlobalInputsSection() {
           Enter the client's contact details and basic service requirements.
         </p>
       </div>
+
+      {showTitle && (
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Proposal Title *</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter a descriptive title for this proposal" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <Card>
         <CardHeader>

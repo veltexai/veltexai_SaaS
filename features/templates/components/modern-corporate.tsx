@@ -363,6 +363,7 @@ export function ModernCorporateTemplate({
                     {content.pricing?.content ? (
                       <ServiceQuotePricing
                         paymentTerms={paymentTerms}
+                        serviceFrequency={proposal.service_frequency}
                         title={
                           content.pricing.title ?? "Service Quote & Pricing"
                         }

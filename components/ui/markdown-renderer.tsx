@@ -16,6 +16,7 @@ import {
   isOneTimeFrequency,
   isStandardJanitorialService,
 } from "@/lib/utils/frequency";
+import { resolvePricingLabels } from "@/features/templates/utils/pricing-labels";
 import { FrequencyLabel } from "@/features/templates/components";
 
 interface MarkdownRendererProps {
@@ -26,6 +27,11 @@ interface MarkdownRendererProps {
   acceptanceClientName?: string;
   acceptanceCompanyName?: string;
   proposalId?: string;
+  /**
+   * The proposal's service frequency. Drives the one-time vs recurring price
+   * column label; omitting it keeps the recurring label.
+   */
+  serviceFrequency?: string | null;
   additionalServicesRows?: Array<{
     service: string;
     frequency?: string | null;
@@ -74,6 +80,7 @@ export function MarkdownRenderer({
   acceptanceClientName,
   acceptanceCompanyName,
   proposalId,
+  serviceFrequency,
   additionalServicesRows,
 }: MarkdownRendererProps) {
   let extrasIncluded = false;
@@ -332,7 +339,11 @@ export function MarkdownRenderer({
         try {
           const data: PricingTableData = JSON.parse(jsonText);
           elements.push(
-            <PricingTable key={`pricing-${elementCounter++}`} data={data} />,
+            <PricingTable
+              key={`pricing-${elementCounter++}`}
+              data={data}
+              serviceFrequency={serviceFrequency}
+            />,
           );
         } catch {
           elements.push(
@@ -362,6 +373,7 @@ export function MarkdownRenderer({
             <AdditionalServicesTable
               key={`extras-${elementCounter++}`}
               proposalId={proposalId}
+              serviceFrequency={serviceFrequency}
               data={{
                 rows: additionalServicesRows ?? extrasDataFromJson?.rows ?? [],
               }}
@@ -388,6 +400,7 @@ export function MarkdownRenderer({
             <AdditionalServicesTable
               key={`extras-${elementCounter++}`}
               proposalId={proposalId}
+              serviceFrequency={serviceFrequency}
               data={{
                 rows: additionalServicesRows ?? extrasDataFromJson?.rows ?? [],
               }}
@@ -414,6 +427,7 @@ export function MarkdownRenderer({
             <AdditionalServicesTable
               key={`extras-${elementCounter++}`}
               proposalId={proposalId}
+              serviceFrequency={serviceFrequency}
               data={{
                 rows: additionalServicesRows ?? extrasDataFromJson?.rows ?? [],
               }}
@@ -778,10 +792,13 @@ function ScopeTable({ data }: { data: ScopeTableData }) {
 function AdditionalServicesTable({
   data,
   proposalId,
+  serviceFrequency,
 }: {
   data?: AdditionalServicesData;
   proposalId?: string;
+  serviceFrequency?: string | null;
 }) {
+  const labels = resolvePricingLabels(serviceFrequency);
   const [rows, setRows] = React.useState<
     Array<{
       service: string;
@@ -872,7 +889,7 @@ function AdditionalServicesTable({
             Frequency
           </div>
           <div className="text-[var(--color-primary)] font-bold text-xs sm:text-sm">
-            Price/month
+            {labels.priceColumn}
           </div>
         </div>
         {rows.map((r, i) => (
@@ -891,7 +908,7 @@ function AdditionalServicesTable({
                       <FrequencyLabel frequency={r.frequency} />
                     ) : r.frequency === "annual" ? (
                       "Annual Service"
-                    ) : r.frequency === "one_time" ? (
+                    ) : isOneTimeFrequency(r.frequency) ? (
                       "One time"
                     ) : (
                       r.frequency
@@ -902,7 +919,7 @@ function AdditionalServicesTable({
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/70">Price/month:</span>
+                <span className="text-white/70">{labels.priceColumn}:</span>
                 <span className="text-white font-bold">
                   {r.pricePerMonth ?? "N/A"}
                 </span>
@@ -917,7 +934,7 @@ function AdditionalServicesTable({
                     <FrequencyLabel frequency={r.frequency} />
                   ) : r.frequency === "annual" ? (
                     "Annual Service"
-                  ) : r.frequency === "one_time" ? (
+                  ) : isOneTimeFrequency(r.frequency) ? (
                     "One time"
                   ) : (
                     r.frequency
@@ -935,7 +952,14 @@ function AdditionalServicesTable({
   );
 }
 
-function PricingTable({ data }: { data: PricingTableData }) {
+function PricingTable({
+  data,
+  serviceFrequency,
+}: {
+  data: PricingTableData;
+  serviceFrequency?: string | null;
+}) {
+  const labels = resolvePricingLabels(serviceFrequency);
   const rows = data?.rows ?? [];
   const summary = data?.summary;
   if (!rows.length) return null;
@@ -951,7 +975,7 @@ function PricingTable({ data }: { data: PricingTableData }) {
             Frequency
           </div>
           <div className="text-[var(--color-primary)] font-bold text-xs sm:text-sm">
-            Price/month
+            {labels.priceColumn}
           </div>
         </div>
         {rows.map((r, i) => (
@@ -969,7 +993,7 @@ function PricingTable({ data }: { data: PricingTableData }) {
                     <FrequencyLabel frequency={r.frequency} />
                   ) : r.frequency === "annual" ? (
                     "Annual Service"
-                  ) : r.frequency === "one_time" ? (
+                  ) : isOneTimeFrequency(r.frequency) ? (
                     "One time"
                   ) : (
                     r.frequency
@@ -977,7 +1001,7 @@ function PricingTable({ data }: { data: PricingTableData }) {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/70">Price/month:</span>
+                <span className="text-white/70">{labels.priceColumn}:</span>
                 <span className="text-white font-bold">{r.pricePerMonth}</span>
               </div>
             </div>
@@ -989,7 +1013,7 @@ function PricingTable({ data }: { data: PricingTableData }) {
                   <FrequencyLabel frequency={r.frequency} />
                 ) : r.frequency === "annual" ? (
                   "Annual Service"
-                ) : r.frequency === "one_time" ? (
+                ) : isOneTimeFrequency(r.frequency) ? (
                   "One time"
                 ) : (
                   r.frequency

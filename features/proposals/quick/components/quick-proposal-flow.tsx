@@ -39,6 +39,8 @@ import { DesignTemplatePicker } from "./design-template-picker";
 import { useUserTier } from "@/features/proposals/hooks/use-user-tier";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 import { createLocalProposalDateMetadata } from "@/features/templates/utils/proposal-date";
+import { pricingDataSchema, type PricingData } from "@/features/proposals/schemas/proposal";
+import { captureProposalFailure } from "@/lib/monitoring";
 
 interface QuickProposalFlowProps {
   demoType?: DemoType | string;
@@ -50,6 +52,12 @@ interface QuickProposalFlowProps {
   /** Initial proposal_templates UUID; the step 2 picker can change it. */
   designTemplateId?: string;
   designTemplateName?: string;
+}
+
+function quoteContent(content: string): string {
+  // Keep edits to proposal prose, but never save a different rendered quote
+  // alongside the structured pricing snapshot returned by generation.
+  return (content.match(/```veliz_pricing_table\s*[\s\S]*?```|^## Pricing\s*\n[\s\S]*?(?=^## |$(?![\s\S]))/gm) ?? []).join("\n");
 }
 
 const STEP_LABELS = [
@@ -104,7 +112,7 @@ export function QuickProposalFlow({
   designTemplateName,
 }: QuickProposalFlowProps) {
   const router = useRouter();
-  const userTier = useUserTier(userId);
+  const { tier: userTier, isLoading: isTierLoading } = useUserTier(userId);
   const [selectedDesignTemplate, setSelectedDesignTemplate] = useState<{
     id?: string;
     name?: string;
@@ -116,6 +124,9 @@ export function QuickProposalFlow({
   const [saveError, setSaveError] = useState("");
   const [stepOneError, setStepOneError] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
+  const [generatedPricing, setGeneratedPricing] = useState<PricingData>();
+  const [generatedQuoteContent, setGeneratedQuoteContent] = useState("");
+  const inputRevision = useRef(0);
   const [isPreviewStale, setIsPreviewStale] = useState(false);
   const generateInFlightRef = useRef(false);
   const saveInFlightRef = useRef(false);
@@ -156,6 +167,7 @@ export function QuickProposalFlow({
     field: K,
     value: QuickProposalFormData[K],
   ) => {
+    inputRevision.current += 1;
     markQuickProposalStarted();
     setGenerationError("");
     setSaveError("");
@@ -205,6 +217,7 @@ export function QuickProposalFlow({
     if (templateId === selectedDesignTemplate.id) {
       return;
     }
+    inputRevision.current += 1;
 
     markQuickProposalStarted();
     // Same contract as the scope-template select: keep the draft, flag it stale.
@@ -222,6 +235,7 @@ export function QuickProposalFlow({
     if (!recommendedTemplate) {
       return;
     }
+    inputRevision.current += 1;
 
     markQuickProposalStarted();
 
@@ -238,13 +252,15 @@ export function QuickProposalFlow({
   };
 
   const generateProposalPreview = async () => {
-    if (generateInFlightRef.current) {
+    if (generateInFlightRef.current || saveInFlightRef.current) {
       return;
     }
 
     setGenerationError("");
     setSaveError("");
     setGeneratedContent("");
+    setGeneratedPricing(undefined);
+    const revisionAtGeneration = inputRevision.current;
     setIsPreviewStale(false);
     setFieldErrors({});
 
@@ -277,9 +293,12 @@ export function QuickProposalFlow({
       const data = (await response.json().catch(() => ({}))) as {
         content?: string;
         error?: string;
+        pricing_data?: unknown;
       };
+      const pricing = pricingDataSchema.safeParse(data.pricing_data);
 
-      if (!response.ok || !data.content) {
+      if (!response.ok || !data.content || !pricing.success || !pricing.data.price_range) {
+        captureProposalFailure("quick", "generate", response.status);
         captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATION_FAILED, {
           flow: "quick",
           failure_type: response.ok ? "invalid_response" : "http",
@@ -293,12 +312,15 @@ export function QuickProposalFlow({
       }
 
       setGeneratedContent(data.content);
-      setIsPreviewStale(false);
+      setGeneratedQuoteContent(quoteContent(data.content));
+      setGeneratedPricing(pricing.data);
+      setIsPreviewStale(inputRevision.current !== revisionAtGeneration);
       captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATED, {
         flow: "quick",
         is_regenerate: Boolean(generatedContent),
       });
     } catch {
+      captureProposalFailure("quick", "generate");
       captureEvent(ANALYTICS_EVENTS.PROPOSAL_GENERATION_FAILED, {
         flow: "quick",
         failure_type: "network",
@@ -313,7 +335,17 @@ export function QuickProposalFlow({
   };
 
   const saveGeneratedProposal = async () => {
-    if (saveInFlightRef.current) {
+    if (saveInFlightRef.current || generateInFlightRef.current) {
+      return;
+    }
+
+    if (isPreviewStale || !generatedPricing) {
+      setSaveError("Generate an up-to-date quote before saving.");
+      return;
+    }
+
+    if (quoteContent(generatedContent) !== generatedQuoteContent) {
+      setSaveError("The pricing section was edited. Generate again so the saved quote matches the preview.");
       return;
     }
 
@@ -324,6 +356,7 @@ export function QuickProposalFlow({
       formData,
       generatedContent,
       selectedDesignTemplate.id,
+      generatedPricing,
     );
 
     if (!result.success) {
@@ -358,6 +391,7 @@ export function QuickProposalFlow({
       };
 
       if (!response.ok || !data.id) {
+        captureProposalFailure("quick", "save", response.status);
         captureEvent(ANALYTICS_EVENTS.PROPOSAL_SAVE_FAILED, {
           flow: "quick",
           failure_type: response.ok ? "invalid_response" : "http",
@@ -382,6 +416,7 @@ export function QuickProposalFlow({
       });
       router.push(`/dashboard/proposals/${data.id}`);
     } catch {
+      captureProposalFailure("quick", "save");
       captureEvent(ANALYTICS_EVENTS.PROPOSAL_SAVE_FAILED, {
         flow: "quick",
         failure_type: "network",
@@ -640,6 +675,7 @@ export function QuickProposalFlow({
               <div className="space-y-5">
                 <DesignTemplatePicker
                   userTier={userTier}
+                  isTierLoading={isTierLoading}
                   selectedTemplateId={selectedDesignTemplate.id}
                   onSelectTemplate={selectDesignTemplate}
                 />
@@ -655,6 +691,7 @@ export function QuickProposalFlow({
                       className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                       value={formData.scopeTemplateId}
                       onChange={(event) => {
+                        inputRevision.current += 1;
                         markQuickProposalStarted();
                         const nextTemplateId = event.target
                           .value as ScopeTemplateId;
@@ -915,8 +952,8 @@ export function QuickProposalFlow({
                 {isPreviewStale && (
                   <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                     Form inputs changed after this preview was generated. You
-                    can still edit and save it, or generate again to refresh it
-                    with the new inputs.
+                    must generate again before saving so the quote matches the
+                    new inputs.
                   </div>
                 )}
                 <Textarea
@@ -930,7 +967,7 @@ export function QuickProposalFlow({
                 <Button
                   type="button"
                   onClick={saveGeneratedProposal}
-                  disabled={isSaving}
+                  disabled={isSaving || isGenerating || isPreviewStale || !generatedPricing}
                 >
                   {isSaving ? "Saving Proposal..." : "Save Proposal"}
                 </Button>

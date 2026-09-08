@@ -1,13 +1,13 @@
-import Link from 'next/link';
+import Link from "next/link";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { FileText, TrendingUp, Plus } from 'lucide-react';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileText, TrendingUp, Plus } from "lucide-react";
 
 export function QuickActions() {
   return (
@@ -20,7 +20,7 @@ export function QuickActions() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Link href="/dashboard/proposals/new">
+          <Link href="/dashboard/proposals/quick">
             <Button className="w-full">
               <Plus className="mr-2 h-4 w-4" />
               Get Started

@@ -7,6 +7,8 @@ import type { DemoType } from "../types/demo-proposal";
 import type { ScopeTemplateId } from "@/features/proposals/quick";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 import { TRIAL_ALLOWANCE_COPY } from "@/config/trial";
+import { buildAuthPathWithRedirect } from "@/features/auth/utils/redirect";
+import { buildDemoHandoff } from "../utils/build-demo-handoff";
 
 const SIGNUP_HREF = AUTH_ROUTES.SIGNUP_FROM_DEMO;
 
@@ -21,21 +23,8 @@ interface DemoCTAProps {
   scopeTemplateId: ScopeTemplateId;
 }
 
-function buildQuickProposalHref(
-  demoType: DemoType,
-  scopeTemplateId: ScopeTemplateId,
-) {
-  const params = new URLSearchParams({
-    source: "demo",
-    demoType,
-    scopeTemplateId,
-  });
-
-  return `${AUTH_ROUTES.QUICK_PROPOSAL}?${params.toString()}`;
-}
-
 export function DemoCTA({ demoType, scopeTemplateId }: DemoCTAProps) {
-  const quickProposalHref = buildQuickProposalHref(demoType, scopeTemplateId);
+  const quickProposalHref = buildDemoHandoff(demoType, scopeTemplateId);
 
   return (
     <div className="relative mx-auto max-w-[1280px] overflow-hidden rounded-3xl">
@@ -69,7 +58,7 @@ export function DemoCTA({ demoType, scopeTemplateId }: DemoCTAProps) {
             Create My Real Proposal
           </Link>
           <Link
-            href={SIGNUP_HREF}
+            href={buildAuthPathWithRedirect({ pathname: SIGNUP_HREF, redirectTo: quickProposalHref })}
             className="w-full rounded-2xl border-2 border-white/30 px-8 py-4 text-demo-body-md font-bold text-white transition-all hover:bg-white/10 active:scale-95 sm:w-auto"
           >
             Start Free Trial
