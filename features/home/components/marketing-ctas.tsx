@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AUTH_ROUTES } from "@/features/auth/constants";
 import { cn } from "@/lib/utils/cn";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
+import { trackGoogleEvent } from "@/lib/analytics/google-analytics";
 
 type MarketingCTAsVariant = "hero" | "gradient";
 
@@ -29,7 +30,7 @@ export function MarketingCTAs({ variant, className }: MarketingCTAsProps) {
         className,
       )}
     >
-      <Link href={TRIAL_HREF[variant]}>
+      <Link href={TRIAL_HREF[variant]} onClick={() => trackGoogleEvent("select_cta", { cta: "start_free_trial", placement: variant })}>
         <Button
           onClick={() =>
             captureEvent(ANALYTICS_EVENTS.LANDING_CTA_CLICKED, {
@@ -49,7 +50,7 @@ export function MarketingCTAs({ variant, className }: MarketingCTAsProps) {
           <ArrowRight className="ml-2 h-5 w-5" />
         </Button>
       </Link>
-      <Link href="/demo-proposal">
+      <Link href="/demo-proposal" onClick={() => trackGoogleEvent("view_demo", { placement: variant })}>
         <Button
           onClick={() =>
             captureEvent(ANALYTICS_EVENTS.LANDING_CTA_CLICKED, {

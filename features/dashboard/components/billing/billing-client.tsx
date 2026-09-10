@@ -36,6 +36,7 @@ import CancelSubscriptionButton from "@/features/billing/components/cancel-subsc
 import FreeTrialInfoBanner from "@/components/ui/free-trial-info-banner";
 import { trackStartTrial } from "@/lib/analytics/meta-pixel";
 import { TRIAL_PROPOSAL_LIMIT, TRIAL_DURATION_DAYS } from "@/config/trial";
+import { trackGoogleEvent } from "@/lib/analytics/google-analytics";
 
 interface BillingClientProps {
   initialUsage: UsageData | null;
@@ -148,6 +149,7 @@ export function BillingClient({
   }, [searchParams, trialStarted, justSubscribed, refreshBillingData]);
 
   const trialTrackedRef = useRef(false);
+  const purchaseTrackedRef = useRef(false);
 
   useEffect(() => {
     const error = searchParams.get("error");
@@ -168,6 +170,12 @@ export function BillingClient({
         planName: plan?.name ?? "unknown",
         value: plan?.price_monthly ?? 0,
       });
+      trackGoogleEvent("start_trial");
+    }
+
+    if (justSubscribed && !purchaseTrackedRef.current) {
+      purchaseTrackedRef.current = true;
+      trackGoogleEvent("purchase");
     }
   }, [
     searchParams,
@@ -208,8 +216,8 @@ export function BillingClient({
           <Gift className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
             <strong>You&apos;re on a free trial!</strong> You have{" "}
-            <strong>{usage?.remainingProposals}</strong> of {TRIAL_PROPOSAL_LIMIT} free proposals
-            remaining
+            <strong>{usage?.remainingProposals}</strong> of{" "}
+            {TRIAL_PROPOSAL_LIMIT} free proposals remaining
             {trialDaysRemaining > 0 && (
               <>
                 {" "}
@@ -236,8 +244,9 @@ export function BillingClient({
           <AlertCircle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800">
             <strong>Your free trial has ended.</strong> You&apos;ve either used
-            all {TRIAL_PROPOSAL_LIMIT} free proposals or your {TRIAL_DURATION_DAYS}-day trial period has expired. Choose
-            a subscription plan below to continue creating proposals.
+            all {TRIAL_PROPOSAL_LIMIT} free proposals or your{" "}
+            {TRIAL_DURATION_DAYS}-day trial period has expired. Choose a
+            subscription plan below to continue creating proposals.
           </AlertDescription>
         </Alert>
       )}
@@ -251,8 +260,8 @@ export function BillingClient({
           <Gift className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
             <strong>You&apos;re on a trial!</strong> You have{" "}
-            <strong>{usage?.remainingProposals}</strong> of {TRIAL_PROPOSAL_LIMIT} proposals
-            remaining
+            <strong>{usage?.remainingProposals}</strong> of{" "}
+            {TRIAL_PROPOSAL_LIMIT} proposals remaining
             {trialDaysRemaining > 0 && (
               <>
                 {" "}

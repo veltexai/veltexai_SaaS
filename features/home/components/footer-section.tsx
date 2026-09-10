@@ -22,14 +22,7 @@ const FooterSection = () => {
               AI Operating System for Janitorial Companies. Scope → Labor →
               Pricing → Proposal. Trusted since 1986.
             </p>
-            <div className="flex space-x-4">
-              <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 cursor-pointer">
-                <span className="text-sm font-bold">Li</span>
-              </div>
-              <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 cursor-pointer">
-                <span className="text-sm font-bold">Tw</span>
-              </div>
-            </div>
+            <Link href="/tools/cleaning-bid-calculator" className="font-semibold text-blue-300 hover:text-white">Try the free cleaning bid calculator →</Link>
           </div>
 
           <div>
@@ -52,13 +45,18 @@ const FooterSection = () => {
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
-                  Documentation
+                <Link href="/solutions" className="hover:text-white transition-colors">
+                  Solutions
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
-                  API
+                <Link href="/demo-proposal" className="hover:text-white transition-colors">
+                  Demo Proposal
+                </Link>
+              </li>
+              <li>
+                <Link href="/tools/cleaning-bid-calculator" className="hover:text-white transition-colors">
+                  Bid Calculator
                 </Link>
               </li>
             </ul>
@@ -68,22 +66,22 @@ const FooterSection = () => {
             <h4 className="font-semibold mb-4">Company</h4>
             <ul className="space-y-2 text-gray-400">
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
-                  About
+                <Link href="/resources" className="hover:text-white transition-colors">
+                  Resources
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
+                <a href="mailto:support@veltexservices.com" className="hover:text-white transition-colors">
                   Contact
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
+                <Link href="/privacy" className="hover:text-white transition-colors">
                   Privacy
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
+                <Link href="/terms" className="hover:text-white transition-colors">
                   Terms
                 </Link>
               </li>
@@ -92,7 +90,7 @@ const FooterSection = () => {
         </div>
 
         <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-          <p>&copy; 2024 Veltex AI. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Veltex AI. All rights reserved.</p>
         </div>
       </div>
     </footer>

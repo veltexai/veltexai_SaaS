@@ -7,6 +7,22 @@ import MetaPixel from "@/components/MetaPixel";
 import MetaPixelTracker from "@/components/MetaPixelTracker";
 import Script from "next/script";
 import { AnalyticsController } from "@/components/analytics-controller";
+import type { Metadata } from "next";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SOCIAL_PROFILE_URLS } from "@/lib/site";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: { default: `${SITE_NAME} | Cleaning Proposal Software`, template: `%s | ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
+  applicationName: SITE_NAME,
+  category: "business",
+  robots: { index: true, follow: true },
+  verification: {
+    google: "m3CVOzAy6wcnds92a8zxiIKLzS34yEM0XxnnYam5xPQ",
+  },
+};
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", name: SITE_NAME, url: SITE_URL, sameAs: SOCIAL_PROFILE_URLS }) }} />
         {/* Preconnect to Typekit so the DNS + TLS handshake is done early */}
         <link rel="preconnect" href="https://use.typekit.net" crossOrigin="" />
         <link rel="dns-prefetch" href="https://use.typekit.net" />
@@ -44,6 +61,7 @@ export default function RootLayout({
         <MetaPixel />
         <MetaPixelTracker />
         <AnalyticsController />
+        <GoogleAnalytics />
         <ConfirmationProvider>
           {children}
           <Toaster />

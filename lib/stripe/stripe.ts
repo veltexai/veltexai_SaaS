@@ -2,13 +2,20 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import type { Database, SubscriptionPlan } from '@/types/database';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Stripe validates the key while this module is imported. A non-secret build
+// placeholder lets Next.js collect route metadata in environments where
+// runtime secrets are intentionally unavailable. Production requests still
+// require STRIPE_SECRET_KEY to be configured by the deployment platform.
+export const stripe = new Stripe(
+  process.env.STRIPE_SECRET_KEY || 'sk_test_build_placeholder',
+  {
   apiVersion: '2025-07-30.basil',
-});
+  },
+);
 
 const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://build-placeholder.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 'build-placeholder-key'
 );
 
 let cachedPlans: SubscriptionPlan[] | null = null;

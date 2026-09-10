@@ -4,6 +4,11 @@ import { DashboardClientLayout } from "@/components/layout/dashboard-client-layo
 import { getUserBrandingSettings } from "@/features/settings";
 import { applyTheme } from "@/lib/theme";
 import { ProfileUserBrandingProvider } from "@/providers/profile-user-branding-provider";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function DashboardLayout({
   children,

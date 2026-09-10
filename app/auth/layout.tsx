@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Authentication - Veltex',
   description: 'Sign in to your Veltex account or create a new one.',
+  robots: { index: false, follow: false },
 };
 
 export default function AuthLayout({

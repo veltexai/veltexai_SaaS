@@ -9,22 +9,22 @@ import {
   CTASection,
   FAQSection,
   FooterSection,
+  ResourceDiscoverySection,
 } from "@/features/home";
 import LenisProvider from "@/providers/lenis-provider";
 import type { Metadata } from "next";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.veltexai.com";
-const defaultTitle = "Generate Professional Cleaning Proposals in Minutes";
-const defaultDescription =
-  "Price jobs correctly and win more contracts with Veltex AI";
+const defaultTitle = "Cleaning Proposal Software for Janitorial Companies";
+const defaultDescription = SITE_DESCRIPTION;
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
   title: defaultTitle,
   description: defaultDescription,
+  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
-    url: siteUrl,
+    url: SITE_URL,
     title: defaultTitle,
     description: defaultDescription,
     images: [
@@ -44,8 +44,41 @@ export const metadata: Metadata = {
 };
 
 export default function LandingPage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${SITE_URL}/#organization`,
+        name: SITE_NAME,
+        url: SITE_URL,
+        logo: `${SITE_URL}/images/IMG_3800.webp`,
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        name: SITE_NAME,
+        url: SITE_URL,
+        publisher: { "@id": `${SITE_URL}/#organization` },
+      },
+      {
+        "@type": "SoftwareApplication",
+        name: SITE_NAME,
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web",
+        url: SITE_URL,
+        description: SITE_DESCRIPTION,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      },
+    ],
+  };
+
   return (
     <LenisProvider>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         {/* Header Section */}
         <Header />
@@ -67,6 +100,8 @@ export default function LandingPage() {
 
         {/* Testimonials Section */}
         <TestimonialsSection />
+
+        <ResourceDiscoverySection />
 
         {/* CTA Section */}
         <CTASection />
