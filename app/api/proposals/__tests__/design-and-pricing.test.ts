@@ -10,6 +10,7 @@ import { getScopeTemplate } from '@/features/proposals/quick/constants/scope-tem
 const completion = jest.fn();
 const insert = jest.fn();
 const templateId = '11111111-1111-4111-8111-111111111111';
+let originalOpenAiApiKey: string | undefined;
 let settingsAvailable = true;
 jest.mock('openai', () => ({ __esModule: true, default: jest.fn(() => ({ chat: { completions: { create: (...args: unknown[]) => completion(...args) } } })) }));
 jest.mock('@/lib/auth/auth-helpers', () => ({ getUser: async () => ({ id: 'user' }) }));
@@ -39,9 +40,30 @@ function values(frequency: 'one-time' | 'weekly' = 'one-time') {
   return { ...getQuickProposalDefaults({ demoType: 'residential', template: getScopeTemplate('residential_deep_clean')! }), clientEmail: 'qa@example.com', clientPhone: '(555) 123-4567', serviceFrequency: frequency };
 }
 beforeEach(() => {
+  originalOpenAiApiKey = process.env.OPENAI_API_KEY;
+  // The route checks configuration even though the OpenAI client is mocked.
+  process.env.OPENAI_API_KEY = 'unit-test-placeholder';
   jest.clearAllMocks(); settingsAvailable = true;
   jest.mocked(userCanAccessTemplate).mockResolvedValue(true);
   completion.mockResolvedValue({ choices: [{ message: { content: '## Service Quote & Pricing\n```veliz_pricing_table\n{"summary":{"total":"$999999.00"}}\n```' } }] });
+});
+
+afterEach(() => {
+  if (originalOpenAiApiKey === undefined) {
+    delete process.env.OPENAI_API_KEY;
+  } else {
+    process.env.OPENAI_API_KEY = originalOpenAiApiKey;
+  }
+});
+
+it('returns 503 without calling OpenAI when the API key is missing', async () => {
+  delete process.env.OPENAI_API_KEY;
+  const built = buildQuickProposalGenerateRequest(values(), templateId);
+  if (!built.success) throw new Error(built.error);
+  const result = await generate(request(built.payload));
+  expect(result.status).toBe(503);
+  expect(await result.json()).toEqual({ error: 'OpenAI API key not configured' });
+  expect(completion).not.toHaveBeenCalled();
 });
 
 it.each(['one-time', 'weekly'] as const)('returns the exact %s quote used by the generated pricing block', async frequency => {
