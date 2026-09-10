@@ -23,7 +23,7 @@ import { EmailService } from "@/lib/email/service";
 import config from "@/config/config";
 
 const UPGRADE_URL = `${config.domainName}/dashboard/billing`;
-const CREATE_PROPOSAL_URL = `${config.domainName}/dashboard/proposals/new`;
+const CREATE_PROPOSAL_URL = `${config.domainName}/dashboard/proposals/quick`;
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const REMINDER_MIN_AGE_MS = 24 * 60 * 60 * 1000; // signed up ≥ 24h ago
@@ -197,10 +197,7 @@ export async function GET(request: NextRequest) {
     .lte("trial_end_at", in24hIso);
 
   if (endingTodayError) {
-    console.error(
-      "❌ Cron: error querying final-day users:",
-      endingTodayError,
-    );
+    console.error("❌ Cron: error querying final-day users:", endingTodayError);
   } else if (endingToday) {
     for (const profile of endingToday) {
       try {
