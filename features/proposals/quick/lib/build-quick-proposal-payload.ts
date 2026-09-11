@@ -48,6 +48,8 @@ export type QuickProposalSavePayloadResult =
     };
 
 export interface QuickProposalGenerateRequest {
+  /** Generation-only discriminator; never persisted on the proposal. */
+  proposal_flow: "quick";
   client_name: string;
   client_email: string;
   client_company?: string;
@@ -311,6 +313,7 @@ export function buildQuickProposalGenerateRequest(
   return {
     success: true,
     payload: {
+      proposal_flow: "quick",
       client_name: clientName || "Client",
       client_email: clientEmail,
       client_company: values.companyName?.trim() || undefined,

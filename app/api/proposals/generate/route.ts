@@ -138,6 +138,11 @@ export async function POST(request: NextRequest) {
     // A one-time job is never quoted a monthly figure or a monthly instalment
     // plan; see `resolvePricingLabels` for the matching render-side labels.
     const isOneTimeProposal = isOneTimeFrequency(service_frequency ?? "");
+    const isQuickCommercialRecurring =
+      body.proposal_flow === "quick" &&
+      service_type === "commercial" &&
+      serviceFrequencySchema.safeParse(service_frequency).success &&
+      !isOneTimeProposal;
 
     // Get service type label
     const getServiceTypeLabel = (type: string) => {
@@ -189,7 +194,10 @@ export async function POST(request: NextRequest) {
       return multipliers[base] ?? 1.0;
     };
 
-    const formatMoney = (n: number) => `$${(n ?? 0).toFixed(2)}`;
+    const formatMoney = (n: number) =>
+      isQuickCommercialRecurring
+        ? formatCurrencySafe(n ?? 0)
+        : `$${(n ?? 0).toFixed(2)}`;
 
     // Get service frequency label
     const getServiceFrequencyLabel = (freq: string) => {
@@ -434,7 +442,7 @@ E. Contractor remains responsible for directing its service procedures and perso
           : settingsRows;
 
         const engine = new PricingEngine(settings || null);
-        const perVisitResult = engine.calculatePricing({
+        const pricingResult = engine.calculatePricing({
           serviceType: service_type,
           facilitySize: Number(facility_size) || 0,
           serviceFrequency: "one-time",
@@ -442,28 +450,35 @@ E. Contractor remains responsible for directing its service procedures and perso
           globalInputs,
           pricingSettings: settings || undefined,
         });
-        const perVisitTotal = perVisitResult.total || 0;
+        const serviceTotal = pricingResult.total || 0;
         const visits = getVisitsPerMonth(service_frequency);
         const discount = getFrequencyDiscount(
           service_frequency,
           engine.getSettings(),
         );
 
-        if (perVisitTotal > 0 && visits > 0) {
-          tableCostPerVisit = formatMoney(perVisitTotal);
-          tableMonthlyCost = formatMoney(perVisitTotal * visits * discount);
-          const total = Number((perVisitTotal * visits * discount).toFixed(2));
-          const hours = perVisitResult.labor_hours * visits;
-          const productionRate = perVisitResult.labor_hours > 0
-            ? perVisitResult.calculation_details.units / perVisitResult.labor_hours
+        if (serviceTotal > 0 && visits > 0) {
+          // Commercial $/sq-ft is a MONTHLY recurring base rate. Quick must
+          // retain existing adjustments without expanding that price by visits.
+          // Unmarked (Advanced) requests and other services keep their behavior.
+          const total = Number((
+            serviceTotal * (isQuickCommercialRecurring ? 1 : visits) * discount
+          ).toFixed(2));
+          tableCostPerVisit = formatMoney(
+            isQuickCommercialRecurring ? total / visits : serviceTotal,
+          );
+          tableMonthlyCost = formatMoney(total);
+          const hours = pricingResult.labor_hours * visits;
+          const productionRate = pricingResult.labor_hours > 0
+            ? pricingResult.calculation_details.units / pricingResult.labor_hours
             : 0;
           quotedPricing = {
             price_range: { low: total, high: total },
             hours_estimate: { min: hours, max: hours },
             assumptions: {
-              labor_rate: perVisitResult.labor_rate,
-              overhead_percentage: perVisitResult.overhead_percentage,
-              margin_percentage: perVisitResult.margin_percentage,
+              labor_rate: pricingResult.labor_rate,
+              overhead_percentage: pricingResult.overhead_percentage,
+              margin_percentage: pricingResult.margin_percentage,
               production_rate: { min: productionRate, max: productionRate },
             },
           };
@@ -573,7 +588,7 @@ E. Contractor remains responsible for directing its service procedures and perso
         ? selectedAddons.map((a) => `- ${a.label}`).join("\n") + "\n"
         : "";
 
-    const toMoney = (n: number) => `$${(n || 0).toFixed(2)}`;
+    const toMoney = (n: number) => formatMoney(n || 0);
     const baseMonthlyNum = (() => {
       const s = String(tableMonthlyCost);
       const n = Number(s.replace(/[^0-9.]/g, ""));

@@ -5,6 +5,7 @@ import "@testing-library/jest-dom";
 import { render } from "@testing-library/react";
 import ServiceQuotePricing from "../components/sections/service-quote-pricing";
 import { resolvePaymentTerms } from "../utils/payment-terms";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 
 // The pricing block the generate route emits for a residential proposal:
 // note `frequency: "One-time"` (hyphen, title case) — the label produced by
@@ -89,5 +90,27 @@ describe("ServiceQuotePricing — one-time proposals", () => {
     expect(text).toContain("Price/month");
     expect(text).toContain("Total Monthly Investment:");
     expect(text).toContain("12 Months");
+  });
+
+  it("preserves the corrected commercial amount and monthly labels in dashboard and branded rendering", () => {
+    const content = [
+      "```veliz_pricing_table",
+      JSON.stringify({
+        rows: [{ service: "Standard Janitorial Service", frequency: "5x weekly", pricePerMonth: "$2,138.40" }],
+        summary: { subtotal: "$2,138.40", tax: "$0.00", total: "$2,138.40" },
+      }),
+      "```",
+    ].join("\n");
+    const branded = render(<ServiceQuotePricing title="Service Quote & Pricing" content={content}
+      templateType="modern_corporate" paymentTerms={COMMERCIAL_TERMS} serviceFrequency="5x-week" />).container.textContent ?? "";
+    const dashboard = render(<MarkdownRenderer content={content} serviceFrequency="5x-week" />).container.textContent ?? "";
+    for (const text of [branded, dashboard]) {
+      expect(text).toContain("$2,138.40");
+      expect(text).not.toContain("$2138.40");
+      expect(text).toContain("Price/month");
+    }
+    expect(branded).toContain("Total Monthly Investment:");
+    expect(branded).toContain("12 Months");
+    expect(branded).toContain("Net 30");
   });
 });

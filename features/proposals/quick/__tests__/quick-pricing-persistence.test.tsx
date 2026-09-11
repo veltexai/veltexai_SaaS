@@ -17,9 +17,9 @@ const quote = {
 };
 const fetchMock = jest.fn();
 const response = (data: unknown) => ({ ok: true, status: 200, json: async () => data });
-beforeEach(() => { jest.clearAllMocks(); global.fetch = fetchMock; });
-function openReview() {
-  render(<QuickProposalFlow demoType="residential" userId="user" template={getScopeTemplate('residential_deep_clean')!} usedFallback={false} designTemplateId="11111111-1111-4111-8111-111111111111" />);
+beforeEach(() => { jest.clearAllMocks(); fetchMock.mockReset(); global.fetch = fetchMock; });
+function openReview(demoType: 'residential' | 'commercial' = 'residential') {
+  render(<QuickProposalFlow demoType={demoType} userId="user" template={getScopeTemplate(demoType === 'commercial' ? 'commercial_office' : 'residential_deep_clean')!} usedFallback={false} designTemplateId="11111111-1111-4111-8111-111111111111" />);
   fireEvent.change(screen.getByPlaceholderText('client@example.com'), { target: { value: 'qa@example.com' } });
   fireEvent.change(screen.getByPlaceholderText('Required before save'), { target: { value: '(555) 123-4567' } });
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
@@ -36,6 +36,24 @@ it('saves the exact structured quote and one-time context returned by generation
   expect(saved.pricing_data).toEqual(quote);
   expect(saved.global_inputs.service_frequency).toBe('one-time');
   expect(saved.service_specific_data.scope_template_id).toBe('residential_deep_clean');
+});
+it('sends the Quick marker and retains the corrected commercial monthly quote on save', async () => {
+  const monthlyQuote = { ...quote, price_range: { low: 2138.40, high: 2138.40 } };
+  const content = '## Service Quote & Pricing\n```veliz_pricing_table\n{"rows":[{"service":"Standard Janitorial Service","frequency":"5x weekly","pricePerMonth":"$2,138.40"}],"summary":{"total":"$2,138.40"}}\n```';
+  fetchMock.mockResolvedValueOnce(response({ content, pricing_data: monthlyQuote }))
+    .mockResolvedValueOnce(response({ id: 'saved' }));
+  openReview('commercial');
+  fireEvent.click(screen.getByRole('button', { name: 'Continue to Generate Proposal' }));
+  expect(await screen.findByDisplayValue(/veliz_pricing_table/)).toHaveValue(content);
+  fireEvent.click(await screen.findByRole('button', { name: 'Save Proposal' }));
+  await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard/proposals/saved'));
+  const generated = JSON.parse(fetchMock.mock.calls[0][1].body);
+  expect(generated).toMatchObject({ proposal_flow: 'quick', service_type: 'commercial', facility_size: 12000, service_frequency: '5x-week' });
+  const saved = JSON.parse(fetchMock.mock.calls[1][1].body);
+  expect(saved).not.toHaveProperty('proposal_flow');
+  expect(saved.pricing_data).toEqual(monthlyQuote);
+  expect(saved.generated_content).toBe(content);
+  expect(saved.global_inputs.service_frequency).toBe('5x-week');
 });
 it('cannot save an in-flight quote after its inputs changed', async () => {
   let finish!: (value: ReturnType<typeof response>) => void;

@@ -95,6 +95,8 @@ describe("quick proposal payload adapter", () => {
     if (!generate.success || !saved.success) return;
 
     expect(saved.payload.title).toBe(generate.payload.title);
+    expect(generate.payload.proposal_flow).toBe("quick");
+    expect(saved.payload).not.toHaveProperty("proposal_flow");
   });
 
   it("sends per-area frequencies and scope-template task notes", () => {
@@ -329,6 +331,7 @@ describe("quick proposal payload adapter", () => {
     expect(result.payload.client_name).toBe("Evergreen Professional Offices");
     expect(result.payload.client_email).toBe("client@example.com");
     expect(result.payload.pricing_enabled).toBe(true);
+    expect(result.payload.proposal_flow).toBe("quick");
     expect(result.payload).not.toHaveProperty("generated_content");
     expect(result.payload).not.toHaveProperty("status");
     // Quick add-ons have no catalog sku/rate/qty, so they must stay out of the

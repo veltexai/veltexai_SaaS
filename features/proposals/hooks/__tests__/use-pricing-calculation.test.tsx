@@ -39,3 +39,21 @@ it('still recalculates when the user changes a pricing input', async () => {
   expect(result.current.calculatedPricing).not.toEqual(quote);
   expect(form.getValues('pricing_data')).toEqual(result.current.calculatedPricing);
 });
+
+it('preserves the corrected commercial monthly quote when reopening Edit', async () => {
+  const monthlyQuote = { ...quote, price_range: { low: 2138.40, high: 2138.40 } };
+  function CommercialWrapper({ children }: { children: ReactNode }) {
+    form = useForm<ProposalFormData>({ defaultValues: {
+      service_type: 'commercial', global_inputs: { facility_size: 12000, service_frequency: '5x-week' },
+      service_specific_data: { scope_template_id: 'commercial_office' }, pricing_data: monthlyQuote,
+      service_scope: { areas_included: ['Office'], frequency_details: { Office: '5x_weekly' } },
+    } });
+    return <FormProvider {...form}>{children}</FormProvider>;
+  }
+  const { result, rerender } = renderHook(() => usePricingCalculation({ serviceType: 'commercial', enabled: true,
+    proposalId: 'saved', existingPricingData: monthlyQuote, onEnabledChange: jest.fn() }), { wrapper: CommercialWrapper });
+  rerender();
+  await act(async () => { jest.advanceTimersByTime(3000); });
+  expect(result.current.calculatedPricing).toEqual(monthlyQuote);
+  expect(form.getValues('pricing_data')).toEqual(monthlyQuote);
+});
