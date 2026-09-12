@@ -1,6 +1,18 @@
 import { APPROVED_PROVIDERS, ELIGIBILITY_VERSION, VERIFIED_ALLOWLIST } from "./types";
 import type { EligibilityDecision, EligibilityInput } from "./types";
 
+function normalizedDomain(value: string | null): string | null {
+  const raw = value?.trim().toLowerCase().replace(/^https?:\/\//, "").split(/[\/?#]/, 1)[0]?.replace(/^www\./, "").replace(/\.$/, "");
+  return raw || null;
+}
+
+function emailMatchesCompanyDomain(email: string, companyDomain: string | null): boolean {
+  const emailDomain = normalizedDomain(email.split("@")[1] ?? null);
+  const expected = normalizedDomain(companyDomain);
+  if (!emailDomain || !expected) return false;
+  return emailDomain === expected || emailDomain.endsWith(`.${expected}`);
+}
+
 // Deterministic, auditable outreach-readiness. Fails closed: any missing, conflicting,
 // uncertain, or unsafe signal produces an explicit non-ready state with a reason.
 // Precedence is fixed so the same input always yields the same decision + reason.
@@ -22,6 +34,11 @@ export function evaluateEligibility(input: EligibilityInput): EligibilityDecisio
   if (identityConflict) return { eligibility: "identity_conflict", suppressionStatus: "none", reason: "multiple contacts resolve to the same email", ...base };
   if (!contact.email || !contact.normalizedEmail) return { eligibility: "needs_enrichment", suppressionStatus: "none", reason: "no email address discovered", ...base };
   if (!contact.emailValid) return { eligibility: "unverified", suppressionStatus: "none", reason: "email is syntactically invalid", ...base };
+  // A provider may return a previously-held role or an email from a different employer. A
+  // deliverable address is not safe for this campaign unless it belongs to the cleaning company
+  // that 100A qualified. Fail closed instead of contacting an unrelated organization.
+  if (!emailMatchesCompanyDomain(contact.normalizedEmail, company.websiteDomain))
+    return { eligibility: "unverified", suppressionStatus: "none", reason: "verified email domain does not match the qualified company domain", ...base };
   if (!APPROVED_PROVIDERS.includes(contact.provider)) return { eligibility: "unverified", suppressionStatus: "none", reason: "email not confirmed by an approved provider", ...base };
   if (!VERIFIED_ALLOWLIST.includes(contact.verificationStatus))
     return { eligibility: "unverified", suppressionStatus: "none", reason: `verification status '${contact.verificationStatus}' not on the outreach allowlist`, ...base };

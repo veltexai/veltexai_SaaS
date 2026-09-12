@@ -24,6 +24,19 @@ describe("100B deterministic outreach eligibility", () => {
     expect(evaluateEligibility(input({ contact: { ...verifiedContact, verificationStatus: "unknown" } })).eligibility).toBe("unverified");
     expect(evaluateEligibility(input({ contact: { ...verifiedContact, verificationStatus: "accept_all" } })).eligibility).toBe("unverified");
   });
+  it("fails closed when a provider returns an email from a different employer domain", () => {
+    const d = evaluateEligibility(input({
+      contact: { ...verifiedContact, email: "dana@unrelated.example", normalizedEmail: "dana@unrelated.example" },
+    }));
+    expect(d).toMatchObject({ eligibility: "unverified", reason: "verified email domain does not match the qualified company domain" });
+  });
+  it("accepts a company-domain subdomain and normalizes a website URL", () => {
+    const d = evaluateEligibility(input({
+      company: { ...company, websiteDomain: "https://www.evergreen.example/" },
+      contact: { ...verifiedContact, email: "dana@mail.evergreen.example", normalizedEmail: "dana@mail.evergreen.example" },
+    }));
+    expect(d.eligibility).toBe("ready_for_outreach");
+  });
   it.each([
     ["unsubscribed", { unsubscribed: true }, "unsubscribed"],
     ["hard bounce", { hardBounced: true }, "hard_bounce"],

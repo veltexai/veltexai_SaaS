@@ -10,7 +10,10 @@ const instant = new Date("2026-08-09T12:00:00.000Z");
 const clock = { now: () => instant };
 const base = load100BConfig({ VELTEX_100B_ENABLED: "true" }, "fixture");
 const company = (id: string, over: Partial<CompanyContext> = {}): CompanyContext => ({ prospectId: id, companyName: `Co ${id}`, companyType: "commercial_cleaning", websiteDomain: `${id}.example`, eligibleCleaningCompany: true, isCustomer: false, isGloballySuppressed: false, ...over });
-const cand = (rid: string, over: Partial<ProviderContactCandidate> = {}): ProviderContactCandidate => ({ providerRecordId: rid, firstName: "Dana", lastName: "Rivera", title: "Owner", email: `${rid}@x.example`, providerVerificationStatus: "verified", ...over });
+const cand = (rid: string, over: Partial<ProviderContactCandidate> = {}): ProviderContactCandidate => {
+  const companyNumber = Math.max(1, rid.toLowerCase().charCodeAt(0) - 96);
+  return { providerRecordId: rid, firstName: "Dana", lastName: "Rivera", title: "Owner", email: `${rid}@p${companyNumber}.example`, providerVerificationStatus: "verified", ...over };
+};
 
 function deps(companies: CompanyContext[], byProspect: Record<string, ProviderContactCandidate[]>, opts: { suppression?: SuppressionResolver; diagnostics?: DiagnosticSink; errors?: Record<string, "throw" | "rate_limit">; repo?: InMemoryContactRepository } = {}) {
   const repository = opts.repo ?? new InMemoryContactRepository(companies, clock.now);
@@ -47,7 +50,7 @@ describe("100B controlled enrichment", () => {
   });
 
   it("holds unverified emails and suppressed contacts closed with reasons", async () => {
-    const d = deps([company("p1")], { p1: [cand("a1", { providerVerificationStatus: "unknown" }), cand("a2", { email: "info@x.example", providerVerificationStatus: "verified" })] },
+    const d = deps([company("p1")], { p1: [cand("a1", { providerVerificationStatus: "unknown" }), cand("a2", { email: "info@p1.example", providerVerificationStatus: "verified" })] },
       { suppression: new InMemorySuppressionResolver({ unsubscribed: ["a2@x.example"] }) });
     const summary = await run100B(base, d, "manual");
     expect(summary.readyForOutreach).toBe(1); // a2 generic mailbox is verified & not suppressed by that email; a1 unverified held
