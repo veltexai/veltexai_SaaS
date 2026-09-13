@@ -10,6 +10,7 @@ import {
 import { stripe } from "@/lib/stripe/stripe";
 import { EmailService } from "@/lib/email/service";
 import config from "@/config/config";
+import { sendFirstProposalEvent } from "@/lib/analytics/meta-capi";
 import { after } from "next/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { captureServerEvent } from "@/lib/analytics/server";
@@ -196,6 +197,15 @@ export async function POST(request: NextRequest) {
 
       // First proposal: send congratulatory email (fire-and-forget)
       if (newUsageAfterIncrement === 1) {
+        if (user.email) {
+          await sendFirstProposalEvent({
+            email: user.email,
+            userId: user.id,
+            proposalId: proposal.id,
+            eventId: `first_proposal:${proposal.id}`,
+          });
+        }
+
         const serviceClient = createServiceClientRaw(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!,

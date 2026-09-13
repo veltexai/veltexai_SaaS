@@ -15,6 +15,7 @@ import { CheckCircle, Clock, CreditCard, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PRICE_ITEMS } from "../constants/price";
 import Link from "next/link";
+import { AUTH_ROUTES } from "@/features/auth/constants";
 import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 import { TRIAL_PROPOSAL_LIMIT, TRIAL_DURATION_DAYS } from "@/config/trial";
 
@@ -147,7 +148,7 @@ const PricingSection = () => {
                         </li>
                       ))}
                     </ul>
-                    <Link href="/auth/login">
+                    <Link href={AUTH_ROUTES.SIGNUP}>
                       <Button
                         onClick={() =>
                           captureEvent(

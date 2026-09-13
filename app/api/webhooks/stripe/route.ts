@@ -760,7 +760,7 @@ async function handleInvoicePaymentSucceeded(
       user_id: userId,
       event_name: "purchase",
       attribution: attributionRow?.last_touch ?? attributionRow?.first_touch ?? null,
-      properties: { invoice_id: invoice.id, amount_cents: invoice.amount_paid, currency: invoice.currency, plan: planName ?? "unknown" },
+      properties: { invoice_id: invoice.id, amount_cents: invoice.amount_paid, value: invoice.amount_paid / 100, currency: invoice.currency, plan: planName ?? "unknown" },
       occurred_at: new Date(invoice.created * 1000).toISOString(),
     }, { onConflict: "event_id", ignoreDuplicates: true });
 

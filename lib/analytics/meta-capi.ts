@@ -121,6 +121,37 @@ export async function sendStartTrialEvent(data: {
   });
 }
 
+export async function sendCompleteRegistrationEvent(data: {
+  email: string;
+  userId: string;
+  eventId: string;
+}) {
+  return sendCAPIEvent({
+    eventName: 'CompleteRegistration',
+    eventId: data.eventId,
+    userData: { email: data.email, externalId: data.userId },
+    customData: { currency: 'USD', value: 0, status: 'completed' },
+  });
+}
+
+export async function sendFirstProposalEvent(data: {
+  email: string;
+  userId: string;
+  proposalId: string;
+  eventId: string;
+}) {
+  return sendCAPIEvent({
+    eventName: 'FirstProposal',
+    eventId: data.eventId,
+    userData: { email: data.email, externalId: data.userId },
+    customData: {
+      content_name: 'first_proposal_saved',
+      proposal_id: data.proposalId,
+      activation: true,
+    },
+  });
+}
+
 export async function sendPurchaseEvent(data: {
   email: string;
   userId: string;

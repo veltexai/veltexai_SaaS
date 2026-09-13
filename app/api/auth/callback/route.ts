@@ -10,7 +10,7 @@ import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { captureServerEvent } from "@/lib/analytics/server";
 import { FIRST_TOUCH_COOKIE, LAST_TOUCH_COOKIE, parseAttribution } from "@/lib/analytics/attribution";
 import { gaClientIdFromCookie, sendGA4ServerEvent } from "@/lib/analytics/ga4-server";
-import { sendStartTrialEvent } from "@/lib/analytics/meta-capi";
+import { sendCompleteRegistrationEvent, sendStartTrialEvent } from "@/lib/analytics/meta-capi";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -81,15 +81,21 @@ export async function GET(request: NextRequest) {
         if (firstTouch) {
           const attribution = lastTouch ?? firstTouch;
           const gaClientId = gaClientIdFromCookie(request.cookies.get("_ga")?.value);
-          const { error: attributionError } = await serviceClient.from("marketing_attribution").upsert({
+          const { error: firstTouchError } = await serviceClient.from("marketing_attribution").upsert({
             user_id: user.id,
             first_touch: firstTouch,
             last_touch: attribution,
             first_touch_captured_at: firstTouch.capturedAt,
             last_touch_captured_at: attribution.capturedAt,
             ga_client_id: gaClientId,
-          }, { onConflict: "user_id" });
-          if (attributionError) console.error("Unable to persist marketing attribution", attributionError.message);
+          }, { onConflict: "user_id", ignoreDuplicates: true });
+          if (firstTouchError) console.error("Unable to persist first-touch attribution", firstTouchError.message);
+          const { error: lastTouchError } = await serviceClient.from("marketing_attribution").update({
+            last_touch: attribution,
+            last_touch_captured_at: attribution.capturedAt,
+            ga_client_id: gaClientId,
+          }).eq("user_id", user.id);
+          if (lastTouchError) console.error("Unable to persist last-touch attribution", lastTouchError.message);
           const events = ["sign_up", "start_trial"].map((eventName) => ({
             event_id: `${eventName}:${user.id}`,
             user_id: user.id,
@@ -102,6 +108,7 @@ export async function GET(request: NextRequest) {
           await Promise.all([
             sendGA4ServerEvent({ clientId: gaClientId, userId: user.id, name: "sign_up", eventId: `sign_up:${user.id}`, params: { method: user.app_metadata?.provider ?? "email" } }),
             sendGA4ServerEvent({ clientId: gaClientId, userId: user.id, name: "start_trial", eventId: `start_trial:${user.id}`, params: { plan: "free_trial" } }),
+            sendCompleteRegistrationEvent({ email: user.email, userId: user.id, eventId: `complete_registration:${user.id}` }),
             sendStartTrialEvent({ email: user.email, userId: user.id, planName: "free_trial", value: 0, eventId: `start_trial:${user.id}` }),
           ]);
         }

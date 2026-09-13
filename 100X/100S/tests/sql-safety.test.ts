@@ -4,6 +4,7 @@ import { join } from "node:path";
 const root = process.cwd();
 const socialSql = readFileSync(join(root, "100X/100S/database/100s_001_social_growth_engine.sql"), "utf8");
 const attributionSql = readFileSync(join(root, "supabase/migrations/037_marketing_attribution.sql"), "utf8");
+const acquisitionFunnelSql = readFileSync(join(root, "supabase/migrations/039_acquisition_attribution_funnel.sql"), "utf8");
 const provider = readFileSync(join(root, "100X/100S/src/provider.ts"), "utf8");
 
 describe("100S database and provider safety", () => {
@@ -28,6 +29,15 @@ describe("100S database and provider safety", () => {
   it("records first-proposal activation idempotently", () => {
     expect(attributionSql).toContain("'first_proposal:' || new.user_id::text");
     expect(attributionSql).toContain("on conflict (event_id) do nothing");
+  });
+
+  it("attributes repeat proposals and exposes the conversion funnel safely", () => {
+    expect(acquisitionFunnelSql).toContain("'repeat_proposal'");
+    expect(acquisitionFunnelSql).toContain("proposals_acquisition_funnel_event");
+    expect(acquisitionFunnelSql).toContain("on conflict (event_id) do nothing");
+    expect(acquisitionFunnelSql).toContain("public.acquisition_conversion_funnel");
+    expect(acquisitionFunnelSql).toContain("with (security_invoker = true)");
+    expect(acquisitionFunnelSql).toContain("a.first_touch ->> 'content' as creative");
   });
 
   it("exposes no publishing method in the provider contract", () => {

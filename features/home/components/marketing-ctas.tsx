@@ -17,7 +17,7 @@ interface MarketingCTAsProps {
 
 const TRIAL_HREF: Record<MarketingCTAsVariant, string> = {
   hero: "#pricing",
-  gradient: AUTH_ROUTES.LOGIN,
+  gradient: AUTH_ROUTES.SIGNUP,
 };
 
 export function MarketingCTAs({ variant, className }: MarketingCTAsProps) {

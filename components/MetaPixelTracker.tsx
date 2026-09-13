@@ -13,12 +13,13 @@ const MetaPixelTracker = () => {
       } = await supabase.auth.getUser();
 
       if (user?.user_metadata?.signup_completed) {
+        const eventId = `complete_registration:${user.id}`;
         trackGoogleEvent('sign_up', { method: 'website' });
         if (typeof window !== 'undefined' && window.fbq) {
           window.fbq('track', 'CompleteRegistration', {
             value: 0.0,
             currency: 'USD',
-          });
+          }, { eventID: eventId });
 
           console.log('✅ Meta Pixel: CompleteRegistration tracked');
         }
