@@ -1,4 +1,4 @@
-import { proposalFormSchema } from "@/features/proposals/schemas/proposal";
+import { proposalFormSchema, advancedProposalFormSchema } from "@/features/proposals/schemas/proposal";
 import {
   buildQuickProposalGenerateRequest,
   buildQuickProposalPayload,
@@ -6,6 +6,7 @@ import {
 } from "../lib/build-quick-proposal-payload";
 import {
   QUICK_SERVICE_FREQUENCY_OPTIONS,
+  getQuickServiceFrequencyOptions,
   getQuickProposalDefaults,
 } from "../schemas/quick-proposal";
 import { getScopeTemplate } from "../constants/scope-templates";
@@ -342,11 +343,25 @@ describe("quick proposal payload adapter", () => {
     );
   });
 
-  it("does not expose unsupported quick frequency values", () => {
-    expect(
-      QUICK_SERVICE_FREQUENCY_OPTIONS.some(
-        (frequency) => (frequency as string) === "6x-week",
-      ),
-    ).toBe(false);
+  it.each(['4x-week', '6x-week'] as const)('supports %s only for Commercial Quick with matching scope and persistence', frequency => {
+    const values = { ...getQuickProposalDefaults({ demoType: 'commercial', template: getScopeTemplate('commercial_office')! }),
+      clientEmail: 'client@example.com', clientPhone: '(555) 123-4567', serviceFrequency: frequency };
+    expect(QUICK_SERVICE_FREQUENCY_OPTIONS).toContain(frequency);
+    expect(getQuickServiceFrequencyOptions('commercial')).toContain(frequency);
+    expect(getQuickServiceFrequencyOptions('residential')).not.toContain(frequency);
+    const generated = buildQuickProposalGenerateRequest(values);
+    const saved = buildQuickProposalSavePayload(values, 'Content');
+    if (!generated.success || !saved.success) throw new Error('Expected supported commercial frequency');
+    expect(generated.payload.service_frequency).toBe(frequency);
+    expect(Object.values(generated.payload.service_scope.frequency_details)).toEqual(
+      expect.arrayContaining([frequency.replace('-week', '_weekly')]),
+    );
+    expect(saved.payload.global_inputs.service_frequency).toBe(frequency);
+    expect(proposalFormSchema.safeParse(saved.payload).success).toBe(true);
+    expect(advancedProposalFormSchema.safeParse(saved.payload).success).toBe(false);
+    expect(proposalFormSchema.safeParse({ ...saved.payload, service_type: 'residential' }).success).toBe(false);
+    const residential = { ...values, scopeTemplateId: 'residential_recurring' as const };
+    expect(buildQuickProposalGenerateRequest(residential).success).toBe(false);
+    expect(buildQuickProposalSavePayload(residential, 'Content').success).toBe(false);
   });
 });

@@ -107,7 +107,9 @@ export interface Database {
             | 'weekly'
             | '2x-week'
             | '3x-week'
+            | '4x-week'
             | '5x-week'
+            | '6x-week'
             | 'daily';
           service_specific_data: Json;
           global_inputs: Json;
@@ -163,7 +165,9 @@ export interface Database {
             | 'weekly'
             | '2x-week'
             | '3x-week'
+            | '4x-week'
             | '5x-week'
+            | '6x-week'
             | 'daily';
           service_specific_data?: Json;
           global_inputs?: Json;
@@ -219,7 +223,9 @@ export interface Database {
             | 'weekly'
             | '2x-week'
             | '3x-week'
+            | '4x-week'
             | '5x-week'
+            | '6x-week'
             | 'daily';
           service_specific_data?: Json;
           global_inputs?: Json;

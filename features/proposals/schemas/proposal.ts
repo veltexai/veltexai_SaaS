@@ -9,7 +9,7 @@ export const serviceTypeSchema = z.enum([
   'floor',
 ]);
 
-// Service frequency enum
+// Preserve the accepted Advanced Builder frequencies.
 export const serviceFrequencySchema = z.enum([
   'one-time',
   '1x-month',
@@ -19,6 +19,13 @@ export const serviceFrequencySchema = z.enum([
   '3x-week',
   '5x-week',
   'daily',
+]);
+
+// Persisted Commercial Quick proposals additionally support 4x and 6x weekly.
+export const persistedServiceFrequencySchema = z.enum([
+  ...serviceFrequencySchema.options,
+  '4x-week',
+  '6x-week',
 ]);
 
 // AI tone enum
@@ -128,7 +135,7 @@ export const globalInputsSchema = z.object({
   contact_phone: z.string().min(1, 'Contact phone is required'),
   service_location: z.string().min(1, 'Service location is required'),
   facility_size: z.number().min(1, 'Facility size must be greater than 0'),
-  service_frequency: serviceFrequencySchema,
+  service_frequency: persistedServiceFrequencySchema,
   // Enhanced fields
   regional_location: z.string().optional(),
   city: z.string().optional(),
@@ -232,7 +239,7 @@ export const pricingDataSchema = z.object({
 });
 
 // Main proposal form schema
-export const proposalFormSchema = z.object({
+const proposalObjectSchema = z.object({
   title: z.string().min(1, 'Proposal title is required'),
   service_type: serviceTypeSchema,
   // A real proposal_templates UUID. Never a scope-template slug.
@@ -252,6 +259,18 @@ export const proposalFormSchema = z.object({
   // AI enhancement fields
   ai_tone: aiToneSchema.default('professional'),
 });
+
+export const proposalFormSchema = proposalObjectSchema.refine(
+  (data) => data.service_type === 'commercial' ||
+    serviceFrequencySchema.safeParse(data.global_inputs.service_frequency).success,
+  { path: ['global_inputs', 'service_frequency'], message: 'This frequency is only supported for commercial proposals' },
+);
+
+// Broad persistence support must not change Advanced Builder validation/pricing.
+export const advancedProposalFormSchema = proposalFormSchema.refine(
+  (data) => serviceFrequencySchema.safeParse(data.global_inputs.service_frequency).success,
+  { path: ['global_inputs', 'service_frequency'], message: 'Unsupported Advanced Builder frequency' },
+);
 
 // Dynamic validation based on service type
 export const getServiceSpecificSchema = (serviceType: string) => {
@@ -321,11 +340,12 @@ export const pricingSettingsSchema = z.object({
 });
 
 // Schema exports
-export const proposalSchema = proposalFormSchema;
+export const proposalSchema = proposalObjectSchema;
 
 // Type exports
 export type ServiceType = z.infer<typeof serviceTypeSchema>;
 export type ServiceFrequency = z.infer<typeof serviceFrequencySchema>;
+export type PersistedServiceFrequency = z.infer<typeof persistedServiceFrequencySchema>;
 export type GlobalInputs = z.infer<typeof globalInputsSchema>;
 export type ResidentialService = z.infer<typeof residentialServiceSchema>;
 export type CommercialService = z.infer<typeof commercialServiceSchema>;

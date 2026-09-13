@@ -173,7 +173,9 @@ export function ProposalEditDialog({
               | "weekly"
               | "2x-week"
               | "3x-week"
+              | "4x-week"
               | "5x-week"
+              | "6x-week"
               | "daily") || "one-time",
           regional_location: proposal.regional_location || "",
           city: proposal.city || "",

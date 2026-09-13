@@ -2,10 +2,10 @@ import { globalServiceFrequencyToAreaFrequency } from "@/features/proposals/cons
 import {
   proposalFormSchema,
   type ProposalFormData,
-  type ServiceType,
 } from "@/features/proposals/schemas/proposal";
 import {
   getScopeTemplate,
+  getScopeTemplateServiceType,
   type ScopeTemplate,
 } from "../constants/scope-templates";
 import {
@@ -101,26 +101,6 @@ function buildQuickServiceScope(
   };
 }
 
-function getServiceTypeFromQuickInputs(
-  values: QuickProposalFormData,
-  template: ScopeTemplate | null,
-): ServiceType {
-  if (template?.serviceType) return template.serviceType;
-  if (values.scopeTemplateId === "window_cleaning_add_on") {
-    return "window";
-  }
-
-  if (values.scopeTemplateId === "floor_care_add_on") {
-    return "floor";
-  }
-
-  if (values.scopeTemplateId === "move_out_turnover") {
-    return "residential";
-  }
-
-  return "commercial";
-}
-
 /**
  * Deliberately excludes the client name: the title is a document heading, not a
  * record label. Shared by the save payload and the generate request so the
@@ -171,7 +151,7 @@ export function buildQuickProposalPayload(
 
   const template = getScopeTemplate(values.scopeTemplateId);
   const assumptions = buildPropertyAssumptionsLite(values);
-  const serviceType = getServiceTypeFromQuickInputs(values, template);
+  const serviceType = getScopeTemplateServiceType(template);
   const clientName = values.clientName.trim();
   const clientEmail = values.clientEmail.trim();
   const clientPhone = values.clientPhone?.trim() ?? "";
@@ -307,7 +287,7 @@ export function buildQuickProposalGenerateRequest(
   const clientName = values.clientName.trim();
   const clientEmail = values.clientEmail.trim();
   const clientPhone = values.clientPhone?.trim();
-  const serviceType = getServiceTypeFromQuickInputs(values, template);
+  const serviceType = getScopeTemplateServiceType(template);
   const title = buildProposalTitle(values);
 
   return {

@@ -8,7 +8,7 @@ import { buildQuickProposalGenerateRequest, buildQuickProposalPayload, buildQuic
 import { getScopeTemplate } from '@/features/proposals/quick/constants/scope-templates';
 import { PricingEngine } from '@/features/proposals/services/pricing-engine';
 import type { Database } from '@/types/database';
-import type { ServiceFrequency } from '@/features/proposals/schemas/proposal';
+import type { PersistedServiceFrequency } from '@/features/proposals/schemas/proposal';
 
 type PricingSettings = Database['public']['Tables']['pricing_settings']['Row'];
 type QuoteSettings = Pick<PricingSettings, 'labor_rate' | 'overhead_percentage' | 'margin_percentage' | 'service_type_rates' | 'production_rates' | 'frequency_multipliers'>;
@@ -127,12 +127,12 @@ describe('Quick commercial monthly pricing basis', () => {
       service_type_rates: { commercial: 0.15 }, production_rates: {}, frequency_multipliers: null };
   });
 
-  function commercialValues(size = 12000, frequency: ServiceFrequency = '5x-week') {
+  function commercialValues(size = 12000, frequency: PersistedServiceFrequency = '5x-week') {
     return { ...getQuickProposalDefaults({ demoType: 'commercial', template: getScopeTemplate('commercial_office')! }),
       clientEmail: 'qa@example.com', clientPhone: '(555) 123-4567', squareFootage: size, serviceFrequency: frequency };
   }
 
-  function commercialRequest(size = 12000, frequency: ServiceFrequency = '5x-week') {
+  function commercialRequest(size = 12000, frequency: PersistedServiceFrequency = '5x-week') {
     const built = buildQuickProposalGenerateRequest(commercialValues(size, frequency), templateId);
     if (!built.success) throw new Error(built.error);
     return built.payload;
@@ -144,7 +144,7 @@ describe('Quick commercial monthly pricing basis', () => {
     return JSON.parse(match[1]);
   }
 
-  it.each([[12000, 2138.40, '$2,138.40'], [9000, 1603.80, '$1,603.80']] as const)(
+  it.each([[12000, 4490.64, '$4,490.64'], [9000, 3367.98, '$3,367.98']] as const)(
     'commercial $/sq-ft is a monthly recurring basis and must never be multiplied by monthly visit count (%i sq ft)',
     async (size, expected, formatted) => {
       const result = await generate(request(commercialRequest(size)));
@@ -162,11 +162,32 @@ describe('Quick commercial monthly pricing basis', () => {
 
   it.each([
     ['1x-month', 2376], ['bi-weekly', 2257.20], ['weekly', 2138.40],
-    ['2x-week', 2138.40], ['3x-week', 2138.40], ['5x-week', 2138.40], ['daily', 2138.40],
-  ] as const)('preserves existing frequency adjustments for %s', async (frequency, expected) => {
+    ['2x-week', 2886.84], ['3x-week', 3421.44], ['4x-week', 3956.04],
+    ['5x-week', 4490.64], ['6x-week', 4918.32], ['daily', 5346.00],
+  ] as const)('applies the approved monthly frequency factor once for %s', async (frequency, expected) => {
     const result = await generate(request(commercialRequest(12000, frequency)));
     expect(result.status).toBe(200);
     expect((await result.json()).pricing_data.price_range).toEqual({ low: expected, high: expected });
+  });
+
+  it('strictly increases from 1x through 7x without any monetary visit expansion', async () => {
+    const frequencies = ['weekly', '2x-week', '3x-week', '4x-week', '5x-week', '6x-week', 'daily'] as const;
+    const prices: number[] = [];
+    for (const frequency of frequencies) {
+      const result = await generate(request(commercialRequest(12000, frequency)));
+      prices.push((await result.json()).pricing_data.price_range.low);
+    }
+    expect(prices).toEqual([2138.40, 2886.84, 3421.44, 3956.04, 4490.64, 4918.32, 5346.00]);
+    prices.slice(1).forEach((price, index) => expect(price).toBeGreaterThan(prices[index]));
+    expect(prices[4]).toBeCloseTo(prices[0] * 2.10, 2);
+    expect(prices[4]).not.toBeCloseTo(46339.13, 2);
+    expect(prices[4]).not.toBeCloseTo(prices[0] * 21.67 * 2.10, 2);
+  });
+
+  it('uses the weekly baseline, not a second frequency-specific settings multiplier', async () => {
+    settings.frequency_multipliers = { 'one-time': 1, weekly: 0.9, '5x-week': 8, '4x-week': 9, '6x-week': 10 };
+    const result = await generate(request(commercialRequest()));
+    expect((await result.json()).pricing_data.price_range.low).toBe(4490.64);
   });
 
   it('preserves the engine input and its non-unit multiplier plus the route discount', async () => {
@@ -175,8 +196,8 @@ describe('Quick commercial monthly pricing basis', () => {
     try {
       const result = await generate(request(commercialRequest()));
       expect(calculate).toHaveBeenCalledWith(expect.objectContaining({ serviceFrequency: 'one-time' }));
-      // 1800 × 1.1 × 1.32 × 0.8, with no monthly visits expansion.
-      expect((await result.json()).pricing_data.price_range.low).toBe(2090.88);
+      // 1800 × 1.1 × 1.32 × 0.8 × 2.1, with no monthly visits expansion.
+      expect((await result.json()).pricing_data.price_range.low).toBe(4390.85);
     } finally { calculate.mockRestore(); }
   });
 
@@ -218,10 +239,10 @@ describe('Quick commercial monthly pricing basis', () => {
     ];
     const result = await generate(request({ ...commercialRequest(), selected_addons }));
     const body = await result.json();
-    expect(body.pricing_data.price_range.low).toBe(2138.40);
+    expect(body.pricing_data.price_range.low).toBe(4490.64);
     const table = pricingTable(body.content);
-    expect(table.rows.map(row => row.pricePerMonth)).toEqual(['$2,138.40', '$100.00', '$100.00', '$100.00', '$100.00', '$25.00']);
-    expect(table.summary.total).toBe('$2,563.40');
+    expect(table.rows.map(row => row.pricePerMonth)).toEqual(['$4,490.64', '$100.00', '$100.00', '$100.00', '$100.00', '$25.00']);
+    expect(table.summary.total).toBe('$4,915.64');
   });
 
   it('keeps one-time residential add-ons payable in full', async () => {
@@ -240,15 +261,19 @@ describe('Quick commercial monthly pricing basis', () => {
     const result = await generate(request(payload));
     expect(result.status).toBe(200);
     const prompt = completion.mock.calls[0][0].messages[1].content as string;
-    expect(prompt).toContain('"costPerVisit":"$98.68"');
-    expect(prompt).toContain('"monthlyCost":"$2,138.40"');
-    expect(prompt).toContain('$2,138.40 monthly cost.');
+    expect(prompt).toContain('"costPerVisit":"$207.23"');
+    expect(prompt).toContain('"monthlyCost":"$4,490.64"');
+    expect(prompt).toContain('$4,490.64 monthly cost.');
   });
 
-  it('retains the corrected quote through generate, create, and reopen', async () => {
-    const generated = await generate(request(commercialRequest()));
+  it.each([
+    ['weekly', 2138.40], ['2x-week', 2886.84], ['3x-week', 3421.44],
+    ['4x-week', 3956.04], ['5x-week', 4490.64], ['6x-week', 4918.32], ['daily', 5346.00],
+  ] as const)('retains the %s quote through generate, create, and reopen without recalculation', async (frequency, expected) => {
+    const calculate = jest.spyOn(PricingEngine.prototype, 'calculatePricing');
+    const generated = await generate(request(commercialRequest(12000, frequency)));
     const body = await generated.json();
-    const built = buildQuickProposalSavePayload(commercialValues(), body.content, templateId, body.pricing_data);
+    const built = buildQuickProposalSavePayload(commercialValues(12000, frequency), body.content, templateId, body.pricing_data);
     if (!built.success) throw new Error(built.error);
     expect(built.payload).not.toHaveProperty('proposal_flow');
     const created = await create(request(built.payload));
@@ -257,9 +282,14 @@ describe('Quick commercial monthly pricing basis', () => {
     expect(insert).toHaveBeenCalledTimes(1);
     const reopened = await reopen(request({}, 'GET'), { params: Promise.resolve({ id: 'saved' }) });
     const { proposal } = await reopened.json();
-    expect(proposal.pricing_data.price_range).toEqual({ low: 2138.40, high: 2138.40 });
+    expect(proposal.pricing_data).toEqual(body.pricing_data);
+    expect(proposal.pricing_data.price_range).toEqual({ low: expected, high: expected });
     expect(proposal.generated_content).toBe(body.content);
-    expect(pricingTable(proposal.generated_content).summary.total).toBe('$2,138.40');
-    expect(proposal.service_frequency).toBe('5x-week');
+    expect(pricingTable(proposal.generated_content).summary.total).toBe(
+      expected.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+    );
+    expect(proposal.service_frequency).toBe(frequency);
+    expect(calculate).toHaveBeenCalledTimes(1);
+    calculate.mockRestore();
   });
 });

@@ -96,8 +96,8 @@ describe("ServiceQuotePricing — one-time proposals", () => {
     const content = [
       "```veliz_pricing_table",
       JSON.stringify({
-        rows: [{ service: "Standard Janitorial Service", frequency: "5x weekly", pricePerMonth: "$2,138.40" }],
-        summary: { subtotal: "$2,138.40", tax: "$0.00", total: "$2,138.40" },
+        rows: [{ service: "Standard Janitorial Service", frequency: "5x weekly", pricePerMonth: "$4,490.64" }],
+        summary: { subtotal: "$4,490.64", tax: "$0.00", total: "$4,490.64" },
       }),
       "```",
     ].join("\n");
@@ -105,8 +105,8 @@ describe("ServiceQuotePricing — one-time proposals", () => {
       templateType="modern_corporate" paymentTerms={COMMERCIAL_TERMS} serviceFrequency="5x-week" />).container.textContent ?? "";
     const dashboard = render(<MarkdownRenderer content={content} serviceFrequency="5x-week" />).container.textContent ?? "";
     for (const text of [branded, dashboard]) {
-      expect(text).toContain("$2,138.40");
-      expect(text).not.toContain("$2138.40");
+      expect(text).toContain("$4,490.64");
+      expect(text).not.toContain("$4490.64");
       expect(text).toContain("Price/month");
     }
     expect(branded).toContain("Total Monthly Investment:");

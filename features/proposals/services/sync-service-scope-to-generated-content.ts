@@ -15,7 +15,9 @@ function getServiceFrequencyLabel(freq: string): string {
     weekly: "Weekly",
     "2x-week": "2x weekly",
     "3x-week": "3x weekly",
+    "4x-week": "4x weekly",
     "5x-week": "5x weekly",
+    "6x-week": "6x weekly",
     daily: "Daily",
   };
   return labels[freq] || freq;
@@ -29,7 +31,9 @@ function getVisitsPerMonth(freq: string): number {
     weekly: 4.33,
     "2x-week": 8.66,
     "3x-week": 13.0,
+    "4x-week": 17.33,
     "5x-week": 21.67,
+    "6x-week": 26,
     daily: 30,
   };
   return map[freq] ?? 1;

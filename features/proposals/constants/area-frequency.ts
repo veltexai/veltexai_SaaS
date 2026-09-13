@@ -15,7 +15,7 @@ export const AREA_FREQUENCY_OPTIONS = [
 export type AreaFrequencyValue =
   (typeof AREA_FREQUENCY_OPTIONS)[number]["value"];
 
-/** Aligns with `global_inputs.service_frequency` / `serviceFrequencySchema` (+ UI-only `6x-week`). */
+/** Aligns with `global_inputs.service_frequency` / `serviceFrequencySchema`. */
 const GLOBAL_SERVICE_TO_AREA_FREQUENCY = {
   "one-time": "on_demand",
   "1x-month": "monthly",
@@ -23,6 +23,7 @@ const GLOBAL_SERVICE_TO_AREA_FREQUENCY = {
   weekly: "1x_weekly",
   "2x-week": "2x_weekly",
   "3x-week": "3x_weekly",
+  "4x-week": "4x_weekly",
   "5x-week": "5x_weekly",
   "6x-week": "6x_weekly",
   daily: "daily",

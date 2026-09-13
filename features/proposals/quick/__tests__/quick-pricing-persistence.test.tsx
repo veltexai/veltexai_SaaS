@@ -18,10 +18,11 @@ const quote = {
 const fetchMock = jest.fn();
 const response = (data: unknown) => ({ ok: true, status: 200, json: async () => data });
 beforeEach(() => { jest.clearAllMocks(); fetchMock.mockReset(); global.fetch = fetchMock; });
-function openReview(demoType: 'residential' | 'commercial' = 'residential') {
+function openReview(demoType: 'residential' | 'commercial' = 'residential', frequency?: string) {
   render(<QuickProposalFlow demoType={demoType} userId="user" template={getScopeTemplate(demoType === 'commercial' ? 'commercial_office' : 'residential_deep_clean')!} usedFallback={false} designTemplateId="11111111-1111-4111-8111-111111111111" />);
   fireEvent.change(screen.getByPlaceholderText('client@example.com'), { target: { value: 'qa@example.com' } });
   fireEvent.change(screen.getByPlaceholderText('Required before save'), { target: { value: '(555) 123-4567' } });
+  if (frequency) fireEvent.change(screen.getByRole('combobox', { name: 'Service frequency*' }), { target: { value: frequency } });
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 }
@@ -38,8 +39,8 @@ it('saves the exact structured quote and one-time context returned by generation
   expect(saved.service_specific_data.scope_template_id).toBe('residential_deep_clean');
 });
 it('sends the Quick marker and retains the corrected commercial monthly quote on save', async () => {
-  const monthlyQuote = { ...quote, price_range: { low: 2138.40, high: 2138.40 } };
-  const content = '## Service Quote & Pricing\n```veliz_pricing_table\n{"rows":[{"service":"Standard Janitorial Service","frequency":"5x weekly","pricePerMonth":"$2,138.40"}],"summary":{"total":"$2,138.40"}}\n```';
+  const monthlyQuote = { ...quote, price_range: { low: 4490.64, high: 4490.64 } };
+  const content = '## Service Quote & Pricing\n```veliz_pricing_table\n{"rows":[{"service":"Standard Janitorial Service","frequency":"5x weekly","pricePerMonth":"$4,490.64"}],"summary":{"total":"$4,490.64"}}\n```';
   fetchMock.mockResolvedValueOnce(response({ content, pricing_data: monthlyQuote }))
     .mockResolvedValueOnce(response({ id: 'saved' }));
   openReview('commercial');
@@ -84,4 +85,27 @@ it('does not save manually edited pricing that disagrees with the structured quo
   fireEvent.click(screen.getByRole('button', { name: 'Save Proposal' }));
   expect(screen.getByText(/The pricing section was edited/)).toBeInTheDocument();
   expect(fetchMock).toHaveBeenCalledTimes(1);
+});
+
+it.each([['4x-week', 3956.04], ['6x-week', 4918.32]] as const)(
+  'selects %s in Commercial Quick and saves the returned snapshot unchanged', async (frequency, expected) => {
+    const monthlyQuote = { ...quote, price_range: { low: expected, high: expected } };
+    fetchMock.mockResolvedValueOnce(response({ content: '## Service Quote & Pricing\nQuote', pricing_data: monthlyQuote }))
+      .mockResolvedValueOnce(response({ id: 'saved' }));
+    openReview('commercial', frequency);
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to Generate Proposal' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Save Proposal' }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard/proposals/saved'));
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).service_frequency).toBe(frequency);
+    const saved = JSON.parse(fetchMock.mock.calls[1][1].body);
+    expect(saved.global_inputs.service_frequency).toBe(frequency);
+    expect(saved.pricing_data).toEqual(monthlyQuote);
+  },
+);
+
+it('does not offer 4x or 6x weekly for Residential Quick', () => {
+  render(<QuickProposalFlow demoType="residential" userId="user" template={getScopeTemplate('residential_recurring')!}
+    usedFallback={false} />);
+  expect(screen.queryByRole('option', { name: '4x per week' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('option', { name: '6x per week' })).not.toBeInTheDocument();
 });

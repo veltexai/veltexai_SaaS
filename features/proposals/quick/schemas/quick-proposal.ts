@@ -1,12 +1,13 @@
 import { z } from "zod";
 import type { DemoType } from "@/features/demo-proposal/types/demo-proposal";
 import {
-  serviceFrequencySchema,
-  type ServiceFrequency,
+  persistedServiceFrequencySchema,
+  type PersistedServiceFrequency,
 } from "@/features/proposals/schemas/proposal";
 import {
   DEFAULT_SCOPE_TEMPLATE_ID,
   getScopeTemplate,
+  getScopeTemplateServiceType,
   isScopeTemplateId,
   type ScopeTemplate,
   type ScopeTemplateId,
@@ -19,9 +20,18 @@ export const QUICK_SERVICE_FREQUENCY_OPTIONS = [
   "weekly",
   "2x-week",
   "3x-week",
+  "4x-week",
   "5x-week",
+  "6x-week",
   "daily",
-] as const satisfies readonly ServiceFrequency[];
+] as const satisfies readonly PersistedServiceFrequency[];
+
+/** Extra frequencies are offered only for commercial scope templates. */
+export function getQuickServiceFrequencyOptions(serviceType?: string) {
+  return QUICK_SERVICE_FREQUENCY_OPTIONS.filter((frequency) =>
+    serviceType === "commercial" || (frequency !== "4x-week" && frequency !== "6x-week"),
+  );
+}
 
 export const quickProposalSchema = z.object({
   clientName: z.string().min(1, "Client name is required"),
@@ -33,7 +43,7 @@ export const quickProposalSchema = z.object({
   state: z.string().min(2, "State is required").max(2, "Use 2 letters"),
   propertyType: z.string().min(1, "Property type is required"),
   squareFootage: z.coerce.number().min(1, "Square footage is required"),
-  serviceFrequency: serviceFrequencySchema,
+  serviceFrequency: persistedServiceFrequencySchema,
   scopeTemplateId: z.custom<ScopeTemplateId>((value) =>
     typeof value === "string" ? isScopeTemplateId(value) : false,
   ),
@@ -43,7 +53,11 @@ export const quickProposalSchema = z.object({
   restroomCount: z.coerce.number().min(0).optional(),
   breakroomCount: z.coerce.number().min(0).optional(),
   cleaningGoals: z.string().optional(),
-});
+}).refine(
+  (values) => getQuickServiceFrequencyOptions(getScopeTemplateServiceType(getScopeTemplate(values.scopeTemplateId)))
+    .includes(values.serviceFrequency),
+  { path: ["serviceFrequency"], message: "This frequency is only supported for Commercial Quick Proposals" },
+);
 
 export type QuickProposalFormData = z.infer<typeof quickProposalSchema>;
 
@@ -99,7 +113,7 @@ interface QuickDemoDefault {
   companyName?: string;
   propertyType: string;
   squareFootage: number;
-  serviceFrequency: ServiceFrequency;
+  serviceFrequency: PersistedServiceFrequency;
   location: string;
   restroomCount?: number;
   breakroomCount?: number;

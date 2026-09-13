@@ -215,6 +215,8 @@ export function GlobalInputsSection({ showTitle = false }: { showTitle?: boolean
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      {/* Display a persisted Quick frequency without adding it to Advanced creation. */}
+                      {field.value === "4x-week" && <SelectItem value="4x-week">4x Week</SelectItem>}
                       {serviceFrequencyOptions.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}

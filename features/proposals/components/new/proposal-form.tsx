@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import {
-  proposalFormSchema,
+  advancedProposalFormSchema,
   type ProposalFormData,
   type ServiceType,
   validateProposalWithServiceData,
@@ -167,7 +167,7 @@ export function ProposalForm({ userId }: ProposalFormProps) {
   const { tier: userTier, isLoading: isTierLoading } = useUserTier(userId);
 
   const form = useForm({
-    resolver: zodResolver(proposalFormSchema),
+    resolver: zodResolver(advancedProposalFormSchema),
     defaultValues: {
       title: "",
       service_type: "residential" as const,

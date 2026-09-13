@@ -6,12 +6,13 @@ import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import {
   serviceTypeSchema,
-  serviceFrequencySchema,
+  persistedServiceFrequencySchema,
   pricingDataSchema,
   type PricingData,
 } from "@/features/proposals/schemas/proposal";
 import { AITone } from "@/types/database";
 import { formatCurrencySafe } from "@/lib/utils/format";
+import { getQuickCommercialFrequencyFactor } from "@/lib/utils/commercial-frequency-pricing";
 import {
   getAreaFrequencyLabel,
   isOnDemandFrequency,
@@ -141,7 +142,7 @@ export async function POST(request: NextRequest) {
     const isQuickCommercialRecurring =
       body.proposal_flow === "quick" &&
       service_type === "commercial" &&
-      serviceFrequencySchema.safeParse(service_frequency).success &&
+      persistedServiceFrequencySchema.safeParse(service_frequency).success &&
       !isOneTimeProposal;
 
     // Get service type label
@@ -167,6 +168,7 @@ export async function POST(request: NextRequest) {
         "3x-week": 13.0,
         "5x-week": 21.67,
         daily: 30,
+        ...(isQuickCommercialRecurring ? { "4x-week": 17.33, "6x-week": 26 } : {}),
       };
       return map[freq] ?? 1;
     };
@@ -208,7 +210,9 @@ export async function POST(request: NextRequest) {
         weekly: "Weekly",
         "2x-week": "2x weekly",
         "3x-week": "3x weekly",
+        "4x-week": "4x weekly",
         "5x-week": "5x weekly",
+        "6x-week": "6x weekly",
         daily: "Daily",
       };
       return labels[freq] || freq;
@@ -452,17 +456,23 @@ E. Contractor remains responsible for directing its service procedures and perso
         });
         const serviceTotal = pricingResult.total || 0;
         const visits = getVisitsPerMonth(service_frequency);
+        const frequencyFactor = isQuickCommercialRecurring
+          ? getQuickCommercialFrequencyFactor(service_frequency)
+          : undefined;
         const discount = getFrequencyDiscount(
-          service_frequency,
+          frequencyFactor !== undefined ? "weekly" : service_frequency,
           engine.getSettings(),
         );
 
         if (serviceTotal > 0 && visits > 0) {
           // Commercial $/sq-ft is a MONTHLY recurring base rate. Quick must
-          // retain existing adjustments without expanding that price by visits.
+          // retain the weekly baseline adjustment, then apply the approved
+          // factor exactly once. Never expand a monthly monetary base by visits.
           // Unmarked (Advanced) requests and other services keep their behavior.
           const total = Number((
-            serviceTotal * (isQuickCommercialRecurring ? 1 : visits) * discount
+            isQuickCommercialRecurring
+              ? serviceTotal * discount * (frequencyFactor ?? 1)
+              : serviceTotal * visits * discount
           ).toFixed(2));
           tableCostPerVisit = formatMoney(
             isQuickCommercialRecurring ? total / visits : serviceTotal,

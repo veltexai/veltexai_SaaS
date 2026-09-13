@@ -642,3 +642,12 @@ export function getScopeTemplate(
 }
 
 export const DEFAULT_SCOPE_TEMPLATE_ID: ScopeTemplateId = "commercial_office";
+
+/** Shared service classification for Quick payloads and available frequencies. */
+export function getScopeTemplateServiceType(template: ScopeTemplate | null) {
+  if (template?.serviceType) return template.serviceType;
+  if (template?.id === "window_cleaning_add_on") return "window";
+  if (template?.id === "floor_care_add_on") return "floor";
+  if (template?.id === "move_out_turnover") return "residential";
+  return "commercial";
+}

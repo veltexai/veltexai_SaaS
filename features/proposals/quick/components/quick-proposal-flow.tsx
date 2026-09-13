@@ -19,6 +19,7 @@ import type { DemoType } from "@/features/demo-proposal/types/demo-proposal";
 import {
   SCOPE_TEMPLATE_IDS,
   getScopeTemplate,
+  getScopeTemplateServiceType,
   type ScopeTemplate,
   type ScopeTemplateId,
 } from "../constants/scope-templates";
@@ -30,6 +31,7 @@ import { buildPropertyAssumptionsLite } from "../lib/property-assumptions-lite";
 import {
   QUICK_SERVICE_FREQUENCY_OPTIONS,
   QUICK_STEP_ONE_FIELDS,
+  getQuickServiceFrequencyOptions,
   getQuickProposalDefaults,
   getQuickProposalFieldErrors,
   type QuickProposalFormData,
@@ -76,7 +78,9 @@ const FREQUENCY_LABELS: Record<
   weekly: "Weekly",
   "2x-week": "2x per week",
   "3x-week": "3x per week",
+  "4x-week": "4x per week",
   "5x-week": "5x per week",
+  "6x-week": "6x per week",
   daily: "Daily",
 };
 
@@ -660,7 +664,7 @@ export function QuickProposalFlow({
                         )
                       }
                     >
-                      {QUICK_SERVICE_FREQUENCY_OPTIONS.map((frequency) => (
+                      {getQuickServiceFrequencyOptions(getScopeTemplateServiceType(selectedTemplate)).map((frequency) => (
                         <option key={frequency} value={frequency}>
                           {FREQUENCY_LABELS[frequency]}
                         </option>
