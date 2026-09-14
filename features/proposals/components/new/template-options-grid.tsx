@@ -46,7 +46,15 @@ export function TemplateOptionsGrid({
           key={template.id}
           template={template}
           isSelected={selectedTemplateId === template.id}
-          canAccess={canAccessTemplate(template.tiers, userTier)}
+          canAccess={canAccessTemplate(
+            template.tiers,
+            userTier,
+            template.display_name,
+          )}
+          includedDuringTrial={
+            userTier === "free_trial" &&
+            template.display_name === "Executive Premium"
+          }
           onSelect={onSelectTemplate}
           onPreview={openPreview}
         />

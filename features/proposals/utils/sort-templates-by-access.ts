@@ -6,8 +6,8 @@ export function sortTemplatesByAccess(
   userTier: SubscriptionTier,
 ): TemplateItem[] {
   return [...templates].sort((a, b) => {
-    const aHasAccess = canAccessTemplate(a.tiers, userTier);
-    const bHasAccess = canAccessTemplate(b.tiers, userTier);
+    const aHasAccess = canAccessTemplate(a.tiers, userTier, a.display_name);
+    const bHasAccess = canAccessTemplate(b.tiers, userTier, b.display_name);
 
     if (aHasAccess !== bHasAccess) return aHasAccess ? -1 : 1;
 

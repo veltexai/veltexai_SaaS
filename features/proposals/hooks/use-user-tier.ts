@@ -34,7 +34,7 @@ export function useUserTier(userId: string): UseUserTierResult {
         // Use the same billing-maintained source as the server entitlement guard.
         const { data: profile, error } = await supabase
           .from("profiles")
-          .select("subscription_plan, subscription_status")
+          .select("subscription_plan, subscription_status, trial_end_at")
           .eq("id", userId)
           .single();
 
@@ -44,6 +44,7 @@ export function useUserTier(userId: string): UseUserTierResult {
           resolveDesignTier(
             profile?.subscription_plan,
             profile?.subscription_status,
+            profile?.trial_end_at,
           ),
         );
       } catch (err) {

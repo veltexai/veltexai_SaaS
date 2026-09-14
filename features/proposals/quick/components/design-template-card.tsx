@@ -33,6 +33,7 @@ interface DesignTemplateCardProps {
   isSelected: boolean;
   canAccess: boolean;
   isRecommended: boolean;
+  includedDuringTrial?: boolean;
   onSelect: (templateId: string) => void;
   onLockedClick: () => void;
 }
@@ -43,6 +44,7 @@ export function DesignTemplateCard({
   isSelected,
   canAccess,
   isRecommended,
+  includedDuringTrial = false,
   onSelect,
   onLockedClick,
 }: DesignTemplateCardProps) {
@@ -144,6 +146,16 @@ export function DesignTemplateCard({
             </span>
           )}
         </div>
+        {includedDuringTrial && (
+          <div className="border-t border-blue-100 bg-blue-50 px-3 py-2">
+            <p className="text-[11px] font-semibold text-blue-900">
+              Professional Plan
+            </p>
+            <p className="text-[11px] text-blue-700">
+              Included during your free trial
+            </p>
+          </div>
+        )}
       </button>
     </div>
   );

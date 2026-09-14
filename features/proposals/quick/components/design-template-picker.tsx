@@ -52,7 +52,8 @@ export function DesignTemplatePicker({
         // Locked until the tier is known, so an unresolved tier can never
         // briefly present a premium design as selectable.
         canAccess:
-          !isTierLoading && canAccessTemplate(template.tiers, userTier),
+          !isTierLoading &&
+          canAccessTemplate(template.tiers, userTier, template.display_name),
         isRecommended,
       };
     });
@@ -112,6 +113,10 @@ export function DesignTemplatePicker({
                     isSelected={selectedTemplateId === template.id}
                     canAccess={canAccess}
                     isRecommended={isRecommended}
+                    includedDuringTrial={
+                      userTier === "free_trial" &&
+                      template.display_name === "Executive Premium"
+                    }
                     onSelect={(id) =>
                       onSelectTemplate(id, template.display_name)
                     }

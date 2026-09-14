@@ -4,6 +4,7 @@ interface TemplateCardProps {
     template: TemplateItem;
     isSelected: boolean;
     canAccess: boolean;
+    includedDuringTrial?: boolean;
     onSelect: (id: string) => void;
     onPreview: (template: TemplateItem) => void;
   }
@@ -12,6 +13,7 @@ interface TemplateCardProps {
     template,
     isSelected,
     canAccess,
+    includedDuringTrial = false,
     onSelect,
     onPreview,
   }: TemplateCardProps) {
@@ -40,6 +42,7 @@ interface TemplateCardProps {
           template={template}
           isSelected={isSelected}
           canAccess={canAccess}
+          includedDuringTrial={includedDuringTrial}
           onSelect={onSelect}
           onPreview={onPreview}
         />

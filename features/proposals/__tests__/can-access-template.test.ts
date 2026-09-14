@@ -12,11 +12,14 @@ const MODERN_CORPORATE: SubscriptionTier[] = ["enterprise"];
 const LUXURY_ELITE: SubscriptionTier[] = ["enterprise"];
 
 describe("resolveDesignTier", () => {
-  it("treats a free trial as professional for design access", () => {
-    // A trial user has no subscriptions row, and their subscription_plan
-    // column defaults to 'starter' — the status is the only trial signal.
-    expect(resolveDesignTier("starter", "free_trial")).toBe("professional");
-    expect(resolveDesignTier(null, "free_trial")).toBe("professional");
+  it("preserves an active, unexpired free trial as a narrow tier", () => {
+    expect(resolveDesignTier("starter", "free_trial", "2999-01-01T00:00:00Z")).toBe("free_trial");
+    expect(resolveDesignTier(null, "free_trial", "2999-01-01T00:00:00Z")).toBe("free_trial");
+  });
+
+  it("returns to the paid plan or starter after trial expiration", () => {
+    expect(resolveDesignTier("starter", "free_trial", "2000-01-01T00:00:00Z")).toBe("starter");
+    expect(resolveDesignTier("professional", "free_trial", "2000-01-01T00:00:00Z")).toBe("professional");
   });
 
   it("uses the plan verbatim for every non-trial status", () => {
@@ -34,13 +37,13 @@ describe("resolveDesignTier", () => {
 
 describe("canAccessTemplate", () => {
   it("gives a free trial exactly Basic + Executive Premium", () => {
-    const trial = resolveDesignTier("starter", "free_trial");
+    const trial = resolveDesignTier("starter", "free_trial", "2999-01-01T00:00:00Z");
 
-    expect(canAccessTemplate(BASIC, trial)).toBe(true);
-    expect(canAccessTemplate(EXECUTIVE_PREMIUM, trial)).toBe(true);
+    expect(canAccessTemplate(BASIC, trial, "Basic")).toBe(true);
+    expect(canAccessTemplate(EXECUTIVE_PREMIUM, trial, "Executive Premium")).toBe(true);
     // The trial must NOT inherit the rest of the professional-and-above set.
-    expect(canAccessTemplate(MODERN_CORPORATE, trial)).toBe(false);
-    expect(canAccessTemplate(LUXURY_ELITE, trial)).toBe(false);
+    expect(canAccessTemplate(MODERN_CORPORATE, trial, "Modern Corporate")).toBe(false);
+    expect(canAccessTemplate(LUXURY_ELITE, trial, "Luxury Elite")).toBe(false);
   });
 
   it("gives starter only Basic", () => {
@@ -69,8 +72,9 @@ describe("canAccessTemplate", () => {
   });
 
   it("accepts the free_trial tier value directly", () => {
-    expect(canAccessTemplate(EXECUTIVE_PREMIUM, "free_trial")).toBe(true);
-    expect(canAccessTemplate(LUXURY_ELITE, "free_trial")).toBe(false);
+    expect(canAccessTemplate(EXECUTIVE_PREMIUM, "free_trial", "Executive Premium")).toBe(true);
+    expect(canAccessTemplate(EXECUTIVE_PREMIUM, "free_trial", "Another Professional Template")).toBe(false);
+    expect(canAccessTemplate(LUXURY_ELITE, "free_trial", "Luxury Elite")).toBe(false);
   });
 
   it("fails closed for a template with no tiers assigned", () => {

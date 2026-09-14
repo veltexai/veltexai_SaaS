@@ -1,4 +1,4 @@
-// Single source of truth for PROPOSAL DESIGN entitlement.
+// Single source of truth for client-side PROPOSAL DESIGN presentation.
 //
 // Scope warning: `resolveDesignTier` maps a free trial onto the `professional`
 // tier *for design access only*, because the trial design set (Basic +
@@ -13,8 +13,13 @@
 
 import { SubscriptionTier } from "@/types/subscription";
 
-/** Design-access tier for a free trial. Deliberately not exported. */
-const FREE_TRIAL_DESIGN_TIER: SubscriptionTier = "professional";
+export const EXECUTIVE_PREMIUM_DISPLAY_NAME = "Executive Premium";
+
+export function isExecutivePremiumTrialTemplate(
+  templateDisplayName?: string | null,
+): boolean {
+  return templateDisplayName === EXECUTIVE_PREMIUM_DISPLAY_NAME;
+}
 
 /**
  * The tier a user's *design* access is evaluated against.
@@ -27,8 +32,15 @@ const FREE_TRIAL_DESIGN_TIER: SubscriptionTier = "professional";
 export function resolveDesignTier(
   subscriptionPlan?: string | null,
   subscriptionStatus?: string | null,
+  trialEndAt?: string | null,
 ): SubscriptionTier {
-  if (subscriptionStatus === "free_trial") return FREE_TRIAL_DESIGN_TIER;
+  if (
+    subscriptionStatus === "free_trial" &&
+    trialEndAt &&
+    new Date(trialEndAt).getTime() > Date.now()
+  ) {
+    return "free_trial";
+  }
   return (subscriptionPlan as SubscriptionTier) || "starter";
 }
 
@@ -41,9 +53,14 @@ export function resolveDesignTier(
 export function canAccessTemplate(
   templateTiers: SubscriptionTier[],
   userTier: SubscriptionTier,
+  templateDisplayName?: string | null,
 ): boolean {
   if (templateTiers.length === 0) return false;
-  const effectiveTier =
-    userTier === "free_trial" ? FREE_TRIAL_DESIGN_TIER : userTier;
-  return templateTiers.includes(effectiveTier);
+  if (userTier === "free_trial") {
+    return (
+      templateTiers.includes("starter") ||
+      isExecutivePremiumTrialTemplate(templateDisplayName)
+    );
+  }
+  return templateTiers.includes(userTier);
 }

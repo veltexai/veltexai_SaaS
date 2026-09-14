@@ -11,7 +11,10 @@ export { TemplateCardInfo } from "./components/new/template-card-info";
 export { getDeliveryMethodDescription } from "./utils/get-delivery-method-description";
 export { getValidationMessage } from "./utils/get-validation-message";
 export { handleSelectTemplate } from "./utils/handle-select-template";
-export { canAccessTemplate } from "./utils/can-access-template";
+export {
+  canAccessTemplate,
+  isExecutivePremiumTrialTemplate,
+} from "./utils/can-access-template";
 export { sortTemplatesByAccess } from "./utils/sort-templates-by-access";
 
 // Hooks

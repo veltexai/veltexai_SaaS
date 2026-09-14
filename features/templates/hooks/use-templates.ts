@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { resolveDesignTier } from '@/features/proposals/utils/can-access-template';
+import { canAccessTemplate, resolveDesignTier } from '@/features/proposals/utils/can-access-template';
+import type { SubscriptionTier } from '@/types/subscription';
 import type { 
   ProposalTemplate, 
   UserTemplatePreferences 
@@ -43,11 +44,15 @@ export function useTemplates(): UseTemplatesReturn {
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('subscription_plan, subscription_status')
+        .select('subscription_plan, subscription_status, trial_end_at')
         .eq('id', user.id)
         .single();
       if (profileError || !profile) throw new Error('Unable to resolve design access');
-      const userTier = resolveDesignTier(profile.subscription_plan, profile.subscription_status);
+      const userTier = resolveDesignTier(
+        profile.subscription_plan,
+        profile.subscription_status,
+        profile.trial_end_at,
+      );
 
       // Get all active templates with their tier access
       const { data: templatesData, error: templatesError } = await supabase
@@ -68,7 +73,11 @@ export function useTemplates(): UseTemplatesReturn {
       // Check access for each template
       const templatesWithAccess: TemplateWithAccess[] = templatesData.map(template => {
         const tierAccess = template.template_tier_access as Array<{ subscription_tier: string }>;
-        const hasAccess = tierAccess.some(access => access.subscription_tier === userTier);
+        const hasAccess = canAccessTemplate(
+          tierAccess.map(access => access.subscription_tier as SubscriptionTier),
+          userTier,
+          template.display_name,
+        );
         
         return {
           ...template,

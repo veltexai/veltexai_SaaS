@@ -11,6 +11,7 @@ interface TemplateCardInfoProps {
   template: TemplateItem;
   isSelected: boolean;
   canAccess: boolean;
+  includedDuringTrial?: boolean;
   onSelect: (id: string) => void;
   onPreview: (template: TemplateItem) => void;
 }
@@ -19,6 +20,7 @@ export function TemplateCardInfo({
   template,
   isSelected,
   canAccess,
+  includedDuringTrial = false,
   onSelect,
   onPreview,
 }: TemplateCardInfoProps) {
@@ -43,6 +45,15 @@ export function TemplateCardInfo({
 
       {template.description && (
         <p className="text-xs text-muted-foreground">{template.description}</p>
+      )}
+
+      {includedDuringTrial && (
+        <div className="space-y-1">
+          <Badge variant="secondary">Professional Plan</Badge>
+          <p className="text-xs font-medium text-blue-700">
+            Included during your free trial
+          </p>
+        </div>
       )}
 
       {/* Action Buttons */}

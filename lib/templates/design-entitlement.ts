@@ -10,11 +10,6 @@
 // can import it directly without every export becoming a server action.
 
 import { createClient } from "@/lib/supabase/server";
-import {
-  canAccessTemplate,
-  resolveDesignTier,
-} from "@/features/proposals/utils/can-access-template";
-import type { SubscriptionTier } from "@/types/subscription";
 
 /** Message returned to the client on a 403. Deliberately non-specific. */
 export const DESIGN_NOT_ENTITLED_MESSAGE =
@@ -35,35 +30,12 @@ export async function userCanAccessTemplate(
   try {
     const supabase = await createClient();
 
-    // A trial user has no `subscriptions` row and their `subscription_plan`
-    // reads 'starter', so the status column is what identifies them.
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("subscription_plan, subscription_status")
-      .eq("id", userId)
-      .single();
-
-    if (profileError || !profile) return false;
-
-    const { data: template, error: templateError } = await supabase
-      .from("proposal_templates")
-      .select("id, template_tier_access ( subscription_tier )")
-      .eq("id", templateId)
-      .eq("is_active", true)
-      .single();
-
-    if (templateError || !template) return false;
-
-    const tiers = (
-      (template.template_tier_access ?? []) as Array<{
-        subscription_tier: SubscriptionTier;
-      }>
-    ).map((access) => access.subscription_tier);
-
-    return canAccessTemplate(
-      tiers,
-      resolveDesignTier(profile.subscription_plan, profile.subscription_status),
-    );
+    const { data, error } = await supabase.rpc("can_user_access_template", {
+      user_uuid: userId,
+      template_uuid: templateId,
+    });
+    if (error) return false;
+    return data === true;
   } catch (error) {
     console.error("Error checking design entitlement:", error);
     return false;

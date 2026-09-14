@@ -37,13 +37,14 @@ export async function getUserAccessibleTemplates(): Promise<
   // status column matters: a trial user's plan reads 'starter'.
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("subscription_plan, subscription_status")
+    .select("subscription_plan, subscription_status, trial_end_at")
     .eq("id", user.id)
     .single();
 
   const userTier = resolveDesignTier(
     profile?.subscription_plan,
     profile?.subscription_status,
+    profile?.trial_end_at,
   );
 
   // Get all active templates with their tier access
@@ -71,6 +72,7 @@ export async function getUserAccessibleTemplates(): Promise<
       const hasAccess = Boolean(profile && !profileError) && canAccessTemplate(
         tierAccess.map((access) => access.subscription_tier),
         userTier,
+        template.display_name,
       );
 
       return {

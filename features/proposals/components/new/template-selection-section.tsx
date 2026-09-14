@@ -35,7 +35,7 @@ export function TemplateSelectionSection({
     if (isLoading || isTierLoading || templates.length === 0) return;
     const candidates = templates.map((t) => ({
       ...t,
-      hasAccess: canAccessTemplate(t.tiers, userTier),
+      hasAccess: canAccessTemplate(t.tiers, userTier, t.display_name),
     }));
     if (candidates.some((t) => t.id === selectedTemplateId && t.hasAccess)) return;
     setValue("template_id", pickQuickDesignTemplate(candidates)?.id, { shouldValidate: true });
@@ -106,7 +106,9 @@ export function TemplateSelectionSection({
           />
 
           {/* Upgrade Notice */}
-          {templates.some((t) => !canAccessTemplate(t.tiers, userTier)) && (
+          {templates.some(
+            (t) => !canAccessTemplate(t.tiers, userTier, t.display_name),
+          ) && (
             <Alert>
               <Sparkles className="h-4 w-4" />
               <AlertDescription>
