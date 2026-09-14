@@ -76,7 +76,7 @@ export function useTemplates(): UseTemplatesReturn {
         const hasAccess = canAccessTemplate(
           tierAccess.map(access => access.subscription_tier as SubscriptionTier),
           userTier,
-          template.display_name,
+          template.name,
         );
         
         return {

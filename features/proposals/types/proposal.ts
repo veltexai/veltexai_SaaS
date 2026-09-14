@@ -51,7 +51,8 @@ export interface TemplateWithTiers extends ProposalTemplate {
 
 export interface TemplateItem {
   id: string;
-  display_name: string;
+  name?: string | null;
+  display_name?: string | null;
   description?: string | null;
   preview_image_url?: string | null;
   preview_pdf_url?: string | null;

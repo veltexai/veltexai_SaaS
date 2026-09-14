@@ -6,8 +6,10 @@ export function sortTemplatesByAccess(
   userTier: SubscriptionTier,
 ): TemplateItem[] {
   return [...templates].sort((a, b) => {
-    const aHasAccess = canAccessTemplate(a.tiers, userTier, a.display_name);
-    const bHasAccess = canAccessTemplate(b.tiers, userTier, b.display_name);
+    const aName = a.name ?? a.display_name;
+    const bName = b.name ?? b.display_name;
+    const aHasAccess = canAccessTemplate(a.tiers, userTier, aName);
+    const bHasAccess = canAccessTemplate(b.tiers, userTier, bName);
 
     if (aHasAccess !== bHasAccess) return aHasAccess ? -1 : 1;
 
@@ -15,6 +17,6 @@ export function sortTemplatesByAccess(
     const bOrder = b.sort_order ?? 0;
     if (aOrder !== bOrder) return aOrder - bOrder;
 
-    return a.display_name.localeCompare(b.display_name);
+    return (aName ?? "").localeCompare(bName ?? "");
   });
 }

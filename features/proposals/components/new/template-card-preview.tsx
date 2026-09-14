@@ -16,7 +16,7 @@ export function TemplateCardPreview({ template, canAccess, isSelected }: Templat
                 {template.preview_image_url ? (
                   <Image
                     src={template.preview_image_url}
-                    alt={template.display_name || 'Template Preview'}
+                    alt={template.name ?? template.display_name ?? 'Template Preview'}
                     className={cn(
                       'w-full h-full object-cover',
                       !canAccess && 'blur-[1px]'

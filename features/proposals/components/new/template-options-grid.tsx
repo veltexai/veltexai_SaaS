@@ -49,11 +49,11 @@ export function TemplateOptionsGrid({
           canAccess={canAccessTemplate(
             template.tiers,
             userTier,
-            template.display_name,
+            template.name ?? template.display_name,
           )}
           includedDuringTrial={
             userTier === "free_trial" &&
-            template.display_name === "Executive Premium"
+            (template.name ?? template.display_name) === "Executive Premium"
           }
           onSelect={onSelectTemplate}
           onPreview={openPreview}
@@ -71,7 +71,8 @@ export function TemplateOptionsGrid({
           }}
           template={{
             id: previewTemplate.id,
-            display_name: previewTemplate.display_name,
+            display_name:
+              previewTemplate.name ?? previewTemplate.display_name ?? "Template",
             description: previewTemplate.description ?? null,
             preview_image_url: previewTemplate.preview_image_url ?? null,
             preview_pdf_url: previewTemplate.preview_pdf_url ?? null,

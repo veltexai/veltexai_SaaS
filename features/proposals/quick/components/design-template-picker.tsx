@@ -53,7 +53,11 @@ export function DesignTemplatePicker({
         // briefly present a premium design as selectable.
         canAccess:
           !isTierLoading &&
-          canAccessTemplate(template.tiers, userTier, template.display_name),
+          canAccessTemplate(
+            template.tiers,
+            userTier,
+            template.name ?? template.display_name,
+          ),
         isRecommended,
       };
     });
@@ -64,7 +68,11 @@ export function DesignTemplatePicker({
     if (isResolving || error) return;
     if (cards.some((card) => card.template.id === selectedTemplateId && card.canAccess)) return;
     const fallback = pickQuickDesignTemplate(cards.map((card) => ({ ...card.template, hasAccess: card.canAccess })));
-    if (fallback) onSelectTemplate(fallback.id, fallback.display_name);
+      if (fallback)
+        onSelectTemplate(
+          fallback.id,
+          fallback.name ?? fallback.display_name ?? "Basic Professional",
+        );
   }, [cards, selectedTemplateId, isResolving, error, onSelectTemplate]);
   // Suppressed while resolving: every card reads as locked in that window, and
   // "4 locked" would be alarming and wrong.
@@ -115,10 +123,16 @@ export function DesignTemplatePicker({
                     isRecommended={isRecommended}
                     includedDuringTrial={
                       userTier === "free_trial" &&
-                      template.display_name === "Executive Premium"
+                      (template.name ?? template.display_name) ===
+                        "Executive Premium"
                     }
                     onSelect={(id) =>
-                      onSelectTemplate(id, template.display_name)
+                      onSelectTemplate(
+                        id,
+                        template.name ??
+                          template.display_name ??
+                          "Basic Professional",
+                      )
                     }
                     onLockedClick={() => setIsUpgradeOpen(true)}
                   />

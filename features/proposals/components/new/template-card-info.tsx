@@ -27,7 +27,9 @@ export function TemplateCardInfo({
   return (
     <div className="p-4 flex flex-col justify-between gap-2">
       <div className="flex items-start justify-between">
-        <h3 className="font-medium text-sm">{template.display_name}</h3>
+        <h3 className="font-medium text-sm">
+          {template.name ?? template.display_name}
+        </h3>
         {template.tiers.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {template.tiers.map((tier) => (

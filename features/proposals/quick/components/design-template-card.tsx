@@ -138,7 +138,7 @@ export function DesignTemplateCard({
               canAccess ? "text-gray-900" : "text-gray-500",
             )}
           >
-            {template.display_name}
+            {template.name ?? template.display_name}
           </span>
           {canAccess && !isSelected && (
             <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">

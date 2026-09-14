@@ -72,7 +72,7 @@ export async function getUserAccessibleTemplates(): Promise<
       const hasAccess = Boolean(profile && !profileError) && canAccessTemplate(
         tierAccess.map((access) => access.subscription_tier),
         userTier,
-        template.display_name,
+        template.name,
       );
 
       return {
