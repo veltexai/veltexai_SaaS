@@ -20,6 +20,20 @@ export interface RecheckInput {
 const BLOCKING_ASSIGNMENT_STATES = new Set(["reserved", "submitting", "submitted", "reconciliation_required", "skipped_duplicate", "failed_terminal", "suppressed", "cancelled"]);
 const SUPPRESSING_EVENTS = new Set(["hard_bounce", "unsubscribe", "do_not_contact", "spam_complaint", "global_suppression"]);
 
+function normalizedDomain(value: string | null): string | null {
+  if (!value) return null;
+  const raw = value.trim().toLowerCase().replace(/^https?:\/\//, "").split(/[\/?#]/, 1)[0]?.replace(/^www\./, "").replace(/\.$/, "");
+  return raw || null;
+}
+
+function emailMatchesCompanyDomain(email: string | null, companyDomain: string | null): boolean {
+  if (!email || !email.includes("@")) return false;
+  const emailDomain = normalizedDomain(email.split("@")[1] ?? null);
+  const websiteDomain = normalizedDomain(companyDomain);
+  if (!emailDomain || !websiteDomain) return false;
+  return emailDomain === websiteDomain || emailDomain.endsWith(`.${websiteDomain}`);
+}
+
 export function recheckSyncEligibility(input: RecheckInput): RecheckDecision {
   const { candidate: c, suppressionEvents = [], registry = [], existingAssignment, now, maxEligibilityAgeMs, registryUnavailable } = input;
   const decide = (outcome: RecheckDecision["outcome"], reason: string): RecheckDecision => ({ outcome, reason, version: SYNC_RULES_VERSION });
@@ -44,6 +58,7 @@ export function recheckSyncEligibility(input: RecheckInput): RecheckDecision {
   // 100B readiness must still hold now.
   if (c.outreachEligibility !== "ready_for_outreach") return decide("ineligible", `outreach_eligibility is '${c.outreachEligibility}', not ready_for_outreach`);
   if (!c.normalizedEmail || !c.workEmail) return decide("ineligible", "no normalized work email");
+  if (!emailMatchesCompanyDomain(c.normalizedEmail, c.websiteDomain)) return decide("ineligible", "verified email domain does not match the qualified company website domain");
   if (c.emailVerificationStatus !== "verified") return decide("ineligible", `email_verification_status is '${c.emailVerificationStatus}', not verified`);
 
   // Stored status or a newer per-send suppression event.

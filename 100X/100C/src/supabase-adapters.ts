@@ -53,6 +53,7 @@ export class SupabaseSyncRepository implements SyncRepository {
         canonicalContactId: r.id, canonicalProspectId: r.prospect_id, workEmail: r.email, normalizedEmail: r.normalized_email,
         firstName: r.first_name, lastName: r.last_name, fullName: r.full_name, title: r.title,
         companyName: r.internal_prospects?.company_name ?? "", website: r.internal_prospects?.website ?? null,
+        websiteDomain: r.internal_prospects?.website_domain ?? null,
         outreachEligibility: r.outreach_eligibility, emailVerificationStatus: r.email_verification_status,
         suppressionStatus: r.suppression_status, isCurrentContact: Boolean(r.is_current_contact),
         provider: authoritative.provider, providerRecordId: authoritative.providerRecordId, lastVerifiedAt: r.last_verified_at,

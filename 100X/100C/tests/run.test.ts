@@ -13,7 +13,7 @@ const campaign: ApprovedCampaign = { configId: "cfg1", instantlyCampaignId: "c-i
 const clock = { now: () => new Date("2026-08-09T00:00:00Z") };
 const cand = (id: string, over: Partial<SyncCandidate> = {}): SyncCandidate => ({
   canonicalContactId: id, canonicalProspectId: "p-" + id, workEmail: `${id}@biz.example.com`, normalizedEmail: `${id}@biz.example.com`,
-  firstName: "A", lastName: "B", fullName: "A B", title: "Owner", companyName: "Biz", website: "https://biz.example.com",
+  firstName: "A", lastName: "B", fullName: "A B", title: "Owner", companyName: "Biz", website: "https://biz.example.com", websiteDomain: "biz.example.com",
   outreachEligibility: "ready_for_outreach", emailVerificationStatus: "verified", suppressionStatus: "none", isCurrentContact: true,
   provider: "apollo", providerRecordId: "r-" + id, lastVerifiedAt: "2026-08-08T00:00:00Z", eligibleCleaningCompany: true, isCustomer: false, ...over,
 });

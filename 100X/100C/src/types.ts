@@ -42,6 +42,7 @@ export interface SyncCandidate {
   title: string | null;
   companyName: string;
   website: string | null;
+  websiteDomain: string | null;         // qualified 100A company domain, never inferred from the contact email
   outreachEligibility: string;        // must be 'ready_for_outreach'
   emailVerificationStatus: string;    // must be 'verified'
   suppressionStatus: string;          // must be 'none'

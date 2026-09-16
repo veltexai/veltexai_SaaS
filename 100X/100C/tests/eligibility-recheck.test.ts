@@ -7,7 +7,7 @@ const NOW = new Date("2026-08-09T00:00:00Z");
 const AGE = 14 * 24 * 60 * 60 * 1000;
 const base: SyncCandidate = {
   canonicalContactId: "c1", canonicalProspectId: "p1", workEmail: "dir@biz.example.com", normalizedEmail: "dir@biz.example.com",
-  firstName: "Dana", lastName: "Director", fullName: "Dana Director", title: "Director of Operations", companyName: "Biz", website: "https://biz.example.com",
+  firstName: "Dana", lastName: "Director", fullName: "Dana Director", title: "Director of Operations", companyName: "Biz", website: "https://biz.example.com", websiteDomain: "biz.example.com",
   outreachEligibility: "ready_for_outreach", emailVerificationStatus: "verified", suppressionStatus: "none", isCurrentContact: true,
   provider: "apollo", providerRecordId: "r1", lastVerifiedAt: "2026-08-08T00:00:00Z", eligibleCleaningCompany: true, isCustomer: false,
 };
@@ -27,6 +27,17 @@ describe("100C fresh eligibility + suppression recheck (fail closed)", () => {
   });
   it("fails closed on a missing normalized email", () => {
     expect(recheck({ normalizedEmail: null, workEmail: null }).outcome).toBe("ineligible");
+  });
+  it("rejects a cross-company email even when old 100B readiness still says ready", () => {
+    expect(recheck({ normalizedEmail: "dir@different.example.com", workEmail: "dir@different.example.com" })).toMatchObject({
+      outcome: "ineligible", reason: "verified email domain does not match the qualified company website domain",
+    });
+  });
+  it("fails closed without a qualified company website domain", () => {
+    expect(recheck({ websiteDomain: null }).outcome).toBe("ineligible");
+  });
+  it("allows a verified company-domain subdomain", () => {
+    expect(recheck({ normalizedEmail: "dir@team.biz.example.com", workEmail: "dir@team.biz.example.com" }).outcome).toBe("eligible");
   });
   it("rechecks stored suppression and fails closed", () => {
     expect(recheck({ suppressionStatus: "unsubscribed" }).outcome).toBe("suppressed");
