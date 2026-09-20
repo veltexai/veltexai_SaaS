@@ -22,10 +22,6 @@ const FreeTrialInfoBanner = ({component}: {component: 'signup' | 'pricing'}) => 
             <FileText className="h-4 w-4 text-emerald-600" />
             <span>Generate and review proposals during your trial</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-emerald-600" />
-            <span>Upgrade anytime to send &amp; download</span>
-          </div>
         </div>
       </div>
     )
