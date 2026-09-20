@@ -25,6 +25,7 @@ import {
   DESIGN_NOT_ENTITLED_MESSAGE,
   userCanAccessTemplate,
 } from "@/lib/templates/design-entitlement";
+import { recordFunnelEvents } from "@/lib/analytics/funnel-server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -1005,6 +1006,16 @@ Estimated Hours: ${pricing_data.hours_estimate?.min}-${pricing_data.hours_estima
     if (pricing_enabled && !isBasicProfessional && !/```veliz_pricing_table\s*[\s\S]*?```/.test(generatedContent)) {
       return NextResponse.json({ error: "The generated quote is incomplete. Please generate again." }, { status: 502 });
     }
+
+    await recordFunnelEvents([{
+      eventId: `proposal_generate_succeeded:${user.id}:${crypto.randomUUID()}`,
+      userId: user.id,
+      eventName: "proposal_generate_succeeded",
+      properties: {
+        flow: body.proposal_flow === "quick" ? "quick" : "advanced",
+        is_regenerate: Boolean(is_regenerate),
+      },
+    }]);
 
     return NextResponse.json({
       // Prices are calculated by the server, never invented or changed by AI.

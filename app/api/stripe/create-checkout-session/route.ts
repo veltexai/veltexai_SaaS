@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe/stripe";
 import { createServerSupabaseClient } from "@/lib/auth/auth-helpers";
 import { createServiceClient } from "@/lib/supabase/server";
+import { recordFunnelEvents } from "@/lib/analytics/funnel-server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -104,6 +105,13 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    await recordFunnelEvents([{
+      eventId: `checkout_started:${session.id}`,
+      userId: user.id,
+      eventName: "checkout_started",
+      properties: { plan },
+    }]);
 
     return NextResponse.json({ sessionId: session.id });
   } catch (error) {

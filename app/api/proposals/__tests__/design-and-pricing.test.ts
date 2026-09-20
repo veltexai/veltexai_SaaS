@@ -9,6 +9,7 @@ import { getScopeTemplate } from '@/features/proposals/quick/constants/scope-tem
 import { PricingEngine } from '@/features/proposals/services/pricing-engine';
 import type { Database } from '@/types/database';
 import type { PersistedServiceFrequency } from '@/features/proposals/schemas/proposal';
+import { recordFunnelEvents } from '@/lib/analytics/funnel-server';
 
 type PricingSettings = Database['public']['Tables']['pricing_settings']['Row'];
 type QuoteSettings = Pick<PricingSettings, 'labor_rate' | 'overhead_percentage' | 'margin_percentage' | 'service_type_rates' | 'production_rates' | 'frequency_multipliers'>;
@@ -27,6 +28,7 @@ jest.mock('@/lib/templates/design-entitlement', () => ({ userCanAccessTemplate: 
 jest.mock('@/lib/stripe/stripe', () => ({ stripe: {} }));
 jest.mock('@/lib/email/service', () => ({ EmailService: {} }));
 jest.mock('@/lib/analytics/server', () => ({ captureServerEvent: jest.fn() }));
+jest.mock('@/lib/analytics/funnel-server', () => ({ recordFunnelEvents: jest.fn() }));
 jest.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     rpc: () => ({ data: true, single: async () => ({ data: { can_create_proposal: true, current_usage: 1 } }) }),
@@ -92,6 +94,9 @@ it.each(['one-time', 'weekly'] as const)('returns the exact %s quote used by the
   expect(body.pricing_data.price_range.low).toBe(body.pricing_data.price_range.high);
   expect(body.pricing_data.hours_estimate.min).toBeGreaterThan(0);
   expect(body.content).not.toContain('999999');
+  expect(recordFunnelEvents).toHaveBeenCalledWith([
+    expect.objectContaining({ userId: 'user', eventName: 'proposal_generate_succeeded' }),
+  ]);
 });
 it('fails without pricing settings instead of saving a zero/placeholder quote', async () => {
   settingsAvailable = false;
@@ -279,6 +284,10 @@ describe('Quick commercial monthly pricing basis', () => {
     const created = await create(request(built.payload));
     expect(created.status).toBe(200);
     expect((await created.json()).id).toBe('saved');
+    expect(recordFunnelEvents).toHaveBeenCalledWith(expect.arrayContaining([
+      expect.objectContaining({ eventId: 'proposal_saved:saved', eventName: 'proposal_saved' }),
+      expect.objectContaining({ eventId: 'repeat_proposal:saved', eventName: 'repeat_proposal' }),
+    ]));
     expect(insert).toHaveBeenCalledTimes(1);
     const reopened = await reopen(request({}, 'GET'), { params: Promise.resolve({ id: 'saved' }) });
     const { proposal } = await reopened.json();

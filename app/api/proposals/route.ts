@@ -14,6 +14,7 @@ import { sendFirstProposalEvent } from "@/lib/analytics/meta-capi";
 import { after } from "next/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { captureServerEvent } from "@/lib/analytics/server";
+import { recordFunnelEvents } from "@/lib/analytics/funnel-server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -374,6 +375,22 @@ export async function POST(request: NextRequest) {
         }
       }
     }
+
+    const previousProposalCount = usage?.current_usage || 0;
+    await recordFunnelEvents([
+      {
+        eventId: `proposal_saved:${proposal.id}`,
+        userId: user.id,
+        eventName: "proposal_saved",
+        properties: { proposal_number: previousProposalCount + 1 },
+      },
+      {
+        eventId: `${previousProposalCount === 0 ? "first_proposal" : "repeat_proposal"}:${proposal.id}`,
+        userId: user.id,
+        eventName: previousProposalCount === 0 ? "first_proposal" : "repeat_proposal",
+        properties: { proposal_number: previousProposalCount + 1 },
+      },
+    ]);
 
     return NextResponse.json(proposal);
   } catch (error) {
