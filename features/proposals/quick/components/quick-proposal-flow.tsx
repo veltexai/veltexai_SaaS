@@ -43,6 +43,7 @@ import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 import { createLocalProposalDateMetadata } from "@/features/templates/utils/proposal-date";
 import { pricingDataSchema, type PricingData } from "@/features/proposals/schemas/proposal";
 import { captureProposalFailure } from "@/lib/monitoring";
+import { QualificationCard } from "./qualification-card";
 
 interface QuickProposalFlowProps {
   demoType?: DemoType | string;
@@ -456,6 +457,8 @@ export function QuickProposalFlow({
           </Link>
         </Button>
       </div>
+
+      <QualificationCard />
 
       {usedFallback && requestedScopeTemplateId && (
         <Card className="border-yellow-200 bg-yellow-50">
