@@ -4,7 +4,7 @@ import { getUser } from "@/features/auth/services/get-user";
 import LoginForm from "@/features/auth/components/login-form";
 import { getSafeRedirectPath } from "@/features/auth/utils/redirect";
 interface LoginPageProps {
-  searchParams: Promise<{ method?: string; redirect?: string }>;
+  searchParams: Promise<{ method?: string; redirect?: string; notice?: string }>;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -16,13 +16,21 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   }
 
   const authMethod = params.method === "magic" ? "magic" : "email";
+  const notice =
+    params.notice === "verification_failed"
+      ? "We could not complete verification in this browser. Log in or resend the verification email to continue."
+      : undefined;
 
   return (
     <div className="flex items-center justify-center min-h-screen py-12 px-4">
       {authMethod === "magic" ? (
         <MagicLinkLoginForm className="w-4xl" redirectTo={redirectTo} />
       ) : (
-        <LoginForm className="w-4xl" redirectTo={redirectTo} />
+        <LoginForm
+          className="w-4xl"
+          redirectTo={redirectTo}
+          notice={notice}
+        />
       )}
     </div>
   );

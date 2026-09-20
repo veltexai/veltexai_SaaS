@@ -10,7 +10,9 @@ const FreeTrialInfoBanner = ({component}: {component: 'signup' | 'pricing'}) => 
         <div className="space-y-1.5 text-sm text-emerald-800">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-emerald-600" />
-            <span><strong>{TRIAL_DURATION_DAYS}-day free trial</strong> OR <strong>{TRIAL_ALLOWANCE_COPY}</strong></span>
+            <span>
+              <strong>Free until {TRIAL_DURATION_DAYS} days or {TRIAL_ALLOWANCE_COPY}</strong>, whichever comes first
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-emerald-600" />
@@ -18,7 +20,7 @@ const FreeTrialInfoBanner = ({component}: {component: 'signup' | 'pricing'}) => 
           </div>
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-emerald-600" />
-            <span>Generate and view proposals <strong>instantly</strong></span>
+            <span>Generate and review proposals during your trial</span>
           </div>
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-emerald-600" />

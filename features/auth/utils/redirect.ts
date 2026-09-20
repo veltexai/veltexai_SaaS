@@ -3,18 +3,36 @@ import { AUTH_ROUTES } from "@/features/auth/constants";
 const DUMMY_ORIGIN = "https://veltex.local";
 
 export function getSafeRedirectPath(redirectTo?: string | null) {
+  let decodedRedirect: string;
+  try {
+    decodedRedirect = decodeURIComponent(redirectTo ?? "");
+  } catch {
+    return AUTH_ROUTES.DASHBOARD;
+  }
+
   if (
     !redirectTo ||
-    !redirectTo.startsWith("/") ||
-    redirectTo.startsWith("//") ||
-    // Browsers treat "\" as "/" when resolving redirects, so "/\evil.com"
-    // resolves to https://evil.com — reject backslashes entirely.
-    redirectTo.includes("\\")
+    !decodedRedirect.startsWith("/") ||
+    decodedRedirect.startsWith("//") ||
+    /[\\\u0000-\u001f\u007f]/.test(redirectTo) ||
+    /[\\\u0000-\u001f\u007f]/.test(decodedRedirect)
   ) {
     return AUTH_ROUTES.DASHBOARD;
   }
 
-  return redirectTo;
+  try {
+    const resolved = new URL(redirectTo, DUMMY_ORIGIN);
+    if (
+      resolved.origin !== DUMMY_ORIGIN ||
+      !resolved.pathname.startsWith("/") ||
+      resolved.pathname.startsWith("//")
+    ) {
+      return AUTH_ROUTES.DASHBOARD;
+    }
+    return `${resolved.pathname}${resolved.search}${resolved.hash}`;
+  } catch {
+    return AUTH_ROUTES.DASHBOARD;
+  }
 }
 
 export function buildAuthCallbackUrl({

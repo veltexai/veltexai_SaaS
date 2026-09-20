@@ -31,6 +31,12 @@ export const signIn = validatedAction(signInSchema, async (data) => {
   });
 
   if (error) {
+    if (error.message.toLowerCase().includes("email not confirmed")) {
+      return {
+        error:
+          "Your email is not verified yet. Check your inbox or use the resend button below.",
+      };
+    }
     return { error: AUTH_ERRORS.INVALID_CREDENTIALS };
   }
 
@@ -105,6 +111,31 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
 
   return { error: "Failed to create user." };
 });
+
+const resendSignupSchema = z.object({
+  email: z.string().email(),
+  redirectTo: z.string().optional(),
+});
+
+export const resendSignupVerification = validatedAction(
+  resendSignupSchema,
+  async ({ email, redirectTo }) => {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: buildAuthCallbackUrl({
+          baseUrl: config.domainName,
+          redirectTo,
+        }),
+      },
+    });
+
+    if (error) return { error: error.message };
+    return { success: "Verification email sent." };
+  },
+);
 
 export const signOut = async (): Promise<AuthResponse> => {
   const supabase = await createClient();

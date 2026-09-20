@@ -31,13 +31,11 @@ describe("auth redirect helpers", () => {
       baseUrl: "https://app.veltex.test",
       redirectTo: QUICK_REDIRECT,
       priceId: "price_demo",
-      authIntent: "signup",
     });
 
     const parsedCallbackUrl = new URL(callbackUrl);
     expect(parsedCallbackUrl.pathname).toBe("/api/auth/callback");
     expect(parsedCallbackUrl.searchParams.get("priceId")).toBe("price_demo");
-    expect(parsedCallbackUrl.searchParams.get("auth_intent")).toBe("signup");
     expect(parsedCallbackUrl.searchParams.get("redirect")).toBe(
       QUICK_REDIRECT,
     );
@@ -52,15 +50,16 @@ describe("auth redirect helpers", () => {
       "/dashboard",
     );
     expect(getSafeRedirectPath("//evil.example/dashboard")).toBe("/dashboard");
-  });
-
-  it("rejects backslash paths that browsers resolve as external hosts", () => {
     expect(getSafeRedirectPath("/\\evil.example")).toBe("/dashboard");
-    expect(getSafeRedirectPath("/\\/evil.example")).toBe("/dashboard");
-    expect(getSafeRedirectPath("/dashboard\\..\\evil")).toBe("/dashboard");
-    // Sanity check the attack this guards against
-    expect(new URL("/\\evil.example", "https://app.veltex.test").host).toBe(
-      "evil.example",
+    expect(getSafeRedirectPath("/%5Cevil.example")).toBe("/dashboard");
+    expect(getSafeRedirectPath("/\tevil.example")).toBe("/dashboard");
+    expect(getSafeRedirectPath("/%09/evil.example")).toBe("/dashboard");
+    expect(getSafeRedirectPath("/..//evil.example")).toBe("/dashboard");
+    expect(getSafeRedirectPath("/.//evil.example")).toBe("/dashboard");
+    expect(getSafeRedirectPath("/a/..//evil.example")).toBe("/dashboard");
+    expect(getSafeRedirectPath("/%2e%2e//evil.example")).toBe("/dashboard");
+    expect(getSafeRedirectPath("https://veltex.local//evil.example")).toBe(
+      "/dashboard",
     );
   });
 });

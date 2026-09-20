@@ -23,6 +23,12 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createClient();
   const baseUrl = config.domainName || requestUrl.origin;
+  const loginWithNotice = () => {
+    const loginUrl = new URL("/auth/login", baseUrl);
+    loginUrl.searchParams.set("notice", "verification_failed");
+    loginUrl.searchParams.set("redirect", redirectTo);
+    return NextResponse.redirect(loginUrl);
+  };
 
   console.log("Before code check");
   if (code) {
@@ -31,6 +37,9 @@ export async function GET(request: NextRequest) {
     console.log("After exchange code for session");
     console.log("data", data);
     console.log("error", error);
+    if (error || !data?.user) {
+      return loginWithNotice();
+    }
     if (data?.user && !error) {
       console.log("After user check");
       const user = data.user;
@@ -52,17 +61,6 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Mark signup as completed on every new session exchange so downstream
-      // code can rely on this flag.
-      console.log("Before update user");
-      await supabase.auth.updateUser({
-        data: {
-          signup_completed: true,
-          signup_timestamp:
-            user.user_metadata?.signup_timestamp ?? new Date().toISOString(),
-        },
-      });
-
       // ── Welcome email ──────────────────────────────────────────────────────
       // Use email_automation_log as the source of truth instead of a time
       // window. Email confirmation clicks happen minutes/hours after signup, so
@@ -78,36 +76,71 @@ export async function GET(request: NextRequest) {
 
         const firstTouch = parseAttribution(request.cookies.get(FIRST_TOUCH_COOKIE)?.value);
         const lastTouch = parseAttribution(request.cookies.get(LAST_TOUCH_COOKIE)?.value);
+        const { data: existingSignup, error: existingSignupError } =
+          await serviceClient
+            .from("marketing_funnel_events")
+            .select("event_id")
+            .eq("event_id", `sign_up:${user.id}`)
+            .maybeSingle();
+        const isFirstSignup =
+          isSignupCallback && !existingSignupError && !existingSignup;
+
+        if (existingSignupError) {
+          console.error(
+            "Unable to determine whether this is the first signup; conversion events suppressed",
+            existingSignupError.message,
+          );
+        }
+
+        if (isFirstSignup) {
+          await supabase.auth.updateUser({
+            data: {
+              signup_completed: true,
+              signup_timestamp:
+                user.user_metadata?.signup_timestamp ?? new Date().toISOString(),
+            },
+          });
+        }
+
         if (firstTouch) {
           const attribution = lastTouch ?? firstTouch;
-          const gaClientId = gaClientIdFromCookie(request.cookies.get("_ga")?.value);
           const { error: firstTouchError } = await serviceClient.from("marketing_attribution").upsert({
             user_id: user.id,
             first_touch: firstTouch,
             last_touch: attribution,
             first_touch_captured_at: firstTouch.capturedAt,
             last_touch_captured_at: attribution.capturedAt,
-            ga_client_id: gaClientId,
+            ga_client_id: gaClientIdFromCookie(request.cookies.get("_ga")?.value),
           }, { onConflict: "user_id", ignoreDuplicates: true });
           if (firstTouchError) console.error("Unable to persist first-touch attribution", firstTouchError.message);
           const { error: lastTouchError } = await serviceClient.from("marketing_attribution").update({
             last_touch: attribution,
             last_touch_captured_at: attribution.capturedAt,
-            ga_client_id: gaClientId,
+            ga_client_id: gaClientIdFromCookie(request.cookies.get("_ga")?.value),
           }).eq("user_id", user.id);
           if (lastTouchError) console.error("Unable to persist last-touch attribution", lastTouchError.message);
+        }
+
+        if (isFirstSignup) {
+          const attribution = lastTouch ?? firstTouch;
+          const source = attribution?.source ?? "direct";
+          const gaClientId = gaClientIdFromCookie(request.cookies.get("_ga")?.value);
           const events = ["sign_up", "start_trial"].map((eventName) => ({
             event_id: `${eventName}:${user.id}`,
             user_id: user.id,
             event_name: eventName,
             attribution,
-            properties: { source: attribution.source, campaign: attribution.campaign, content: attribution.content },
+            properties: {
+              source,
+              campaign: attribution?.campaign ?? "",
+              content: attribution?.content ?? "",
+            },
           }));
           const { error: funnelError } = await serviceClient.from("marketing_funnel_events").upsert(events, { onConflict: "event_id", ignoreDuplicates: true });
           if (funnelError) console.error("Unable to persist signup funnel events", funnelError.message);
           await Promise.all([
-            sendGA4ServerEvent({ clientId: gaClientId, userId: user.id, name: "sign_up", eventId: `sign_up:${user.id}`, params: { method: user.app_metadata?.provider ?? "email" } }),
-            sendGA4ServerEvent({ clientId: gaClientId, userId: user.id, name: "start_trial", eventId: `start_trial:${user.id}`, params: { plan: "free_trial" } }),
+            sendGA4ServerEvent({ clientId: gaClientId, userId: user.id, name: "sign_up", eventId: `sign_up:${user.id}`, params: { method: user.app_metadata?.provider ?? "email", source } }),
+            sendGA4ServerEvent({ clientId: gaClientId, userId: user.id, name: "start_trial", eventId: `start_trial:${user.id}`, params: { plan: "free_trial", source } }),
             sendCompleteRegistrationEvent({ email: user.email, userId: user.id, eventId: `complete_registration:${user.id}` }),
             sendStartTrialEvent({ email: user.email, userId: user.id, planName: "free_trial", value: 0, eventId: `start_trial:${user.id}` }),
           ]);

@@ -65,6 +65,7 @@ export default function PasswordStength({ field }: Props) {
             className="pe-9"
             placeholder="Password"
             type={isVisible ? 'text' : 'password'}
+            autoComplete="new-password"
             value={password}
             onChange={(e) => field.onChange(e.target.value)}
             name={field.name}

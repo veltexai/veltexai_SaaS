@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/form";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useRef, useState } from "react";
+import { FieldErrors, useForm } from "react-hook-form";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils/cn";
@@ -23,9 +23,13 @@ import { Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { PasswordInput } from "@/components/ui/password-input";
 import Photo from "../../../public/images/pexels-tima-miroshnichenko-6196692.jpg";
-import { signIn } from "@/features/auth/actions/password";
+import {
+  resendSignupVerification,
+  signIn,
+} from "@/features/auth/actions/password";
 import { signInWithGoogle } from "@/features/auth/actions/oauth";
 import { buildAuthPathWithRedirect } from "@/features/auth/utils/redirect";
+import { trackGoogleEvent } from "@/lib/analytics/google-analytics";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -34,11 +38,16 @@ const formSchema = z.object({
 
 interface LoginFormProps extends React.ComponentProps<"form"> {
   redirectTo?: string;
+  notice?: string;
 }
 
-const LoginForm = ({ className, redirectTo, ...props }: LoginFormProps) => {
+const LoginForm = ({ className, redirectTo, notice, ...props }: LoginFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [lastLoginMethod, setLastLoginMethod] = useState<"google" | "password" | null>(null);
+  const interactedFields = useRef(new Set<string>());
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -49,8 +58,42 @@ const LoginForm = ({ className, redirectTo, ...props }: LoginFormProps) => {
     },
   });
 
+  useEffect(() => {
+    const storedMethod = window.localStorage.getItem("veltex_last_login_method");
+    if (storedMethod === "google" || storedMethod === "password") {
+      setLastLoginMethod(storedMethod);
+    }
+    trackGoogleEvent("login_form_view", {
+      form_name: "account_login",
+      page_path: "/auth/login",
+    });
+  }, []);
+
+  const trackFirstInteraction = (fieldName: keyof z.infer<typeof formSchema>) => {
+    if (interactedFields.current.has(fieldName)) return;
+    interactedFields.current.add(fieldName);
+    trackGoogleEvent("login_form_interaction", {
+      form_name: "account_login",
+      field_name: fieldName,
+    });
+  };
+
+  const onInvalid = (errors: FieldErrors<z.infer<typeof formSchema>>) => {
+    setLoginError("Please check the highlighted fields and try again.");
+    trackGoogleEvent("login_validation_error", {
+      form_name: "account_login",
+      error_fields: Object.keys(errors).sort().join(","),
+      error_count: Object.keys(errors).length,
+    });
+  };
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
+    setLoginError("");
+    trackGoogleEvent("login_submit", {
+      form_name: "account_login",
+      method: "password",
+    });
     const formData = new FormData();
     formData.append("email", values.email);
     formData.append("password", values.password);
@@ -60,8 +103,19 @@ const LoginForm = ({ className, redirectTo, ...props }: LoginFormProps) => {
     const { error } = await signIn({}, formData);
 
     if (error) {
+      setLoginError(error);
+      trackGoogleEvent("login_submit_error", {
+        form_name: "account_login",
+        method: "password",
+        error_category: "authentication_error",
+      });
       toast.error(error);
     } else {
+      window.localStorage.setItem("veltex_last_login_method", "password");
+      trackGoogleEvent("login_success", {
+        form_name: "account_login",
+        method: "password",
+      });
       toast.success("Login successful");
       router.push(redirectTo || "/dashboard");
     }
@@ -71,23 +125,64 @@ const LoginForm = ({ className, redirectTo, ...props }: LoginFormProps) => {
 
   const handleGoogleSignIn = async () => {
     setIsLoadingGoogle(true);
+    setLoginError("");
+    trackGoogleEvent("login_submit", {
+      form_name: "account_login",
+      method: "google",
+    });
     try {
       const result = await signInWithGoogle(undefined, redirectTo);
 
       if (result.error) {
+        setLoginError(result.error?.message || "Google login could not be started.");
+        trackGoogleEvent("login_submit_error", {
+          form_name: "account_login",
+          method: "google",
+          error_category: "oauth_start_error",
+        });
         toast.error(result.error?.message || "Failed to sign in with Google");
         setIsLoadingGoogle(false);
       } else if (result.data?.url) {
+        window.localStorage.setItem("veltex_last_login_method", "google");
         // Redirect to Google OAuth URL
         window.location.href = result.data.url;
         // Don't set loading to false since we're redirecting
       } else {
+        setLoginError("Google login could not be started. Please try another method.");
         toast.error("Failed to get Google sign-in URL");
         setIsLoadingGoogle(false);
       }
     } catch {
+      setLoginError("Google login could not be started. Please try another method.");
       toast.error("An error occurred. Please try again.");
       setIsLoadingGoogle(false);
+    }
+  };
+
+  const resendVerification = async () => {
+    const email = form.getValues("email");
+    if (!z.string().email().safeParse(email).success) {
+      setLoginError("Enter your email address first, then resend verification.");
+      form.setFocus("email");
+      return;
+    }
+
+    setIsResending(true);
+    const formData = new FormData();
+    formData.append("email", email);
+    if (redirectTo) formData.append("redirectTo", redirectTo);
+    try {
+      const result = await resendSignupVerification({}, formData);
+      if (result?.error) {
+        setLoginError(result.error);
+      } else {
+        setLoginError("");
+        toast.success("Verification email sent. Please check your inbox.");
+      }
+    } catch {
+      setLoginError("We could not resend verification. Please try again.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -96,7 +191,10 @@ const LoginForm = ({ className, redirectTo, ...props }: LoginFormProps) => {
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2 h-full">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
+            <form
+              onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+              className="p-5 sm:p-6 md:p-8"
+            >
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col items-center text-center">
                   <Image
@@ -106,66 +204,20 @@ const LoginForm = ({ className, redirectTo, ...props }: LoginFormProps) => {
                     alt="Image"
                     className="mx-auto"
                   />
-                  <p className="text-muted-foreground text-balance mt-3.5">
-                    AI Operating System for Janitorial Companies — <br />
-                    Scope → Labor → Pricing → Proposal
+                  <h1 className="mt-4 text-2xl font-semibold">Welcome back</h1>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Continue where you left off.
                   </p>
                 </div>
-                <div className="grid gap-3">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="m@example.com"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid gap-3">
-                  <div className="flex flex-col items-center">
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem className="w-full">
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <PasswordInput {...field} placeholder="********" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Link
-                      href="/auth/forgot-password"
-                      className="ml-auto text-sm underline-offset-4 hover:underline"
+                <div className="grid gap-2">
+                  {notice && (
+                    <p
+                      role="status"
+                      className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
                     >
-                      Forgot your password?
-                    </Link>
-                  </div>
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    "Login"
+                      {notice}
+                    </p>
                   )}
-                </Button>
-                <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                  <span className="bg-card text-muted-foreground relative z-10 px-2">
-                    Or continue with
-                  </span>
-                </div>
-                <div className="grid gap-4">
                   <Button
                     variant="outline"
                     type="button"
@@ -188,8 +240,98 @@ const LoginForm = ({ className, redirectTo, ...props }: LoginFormProps) => {
                         />
                       </svg>
                     )}
-                    Login with Google
+                    Continue with Google
                   </Button>
+                  {lastLoginMethod === "google" && (
+                    <p className="text-muted-foreground text-center text-xs">Previously used on this device</p>
+                  )}
+                </div>
+                <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+                  <span className="bg-card text-muted-foreground relative z-10 px-2">
+                    or continue with email
+                  </span>
+                </div>
+                <div className="grid gap-3">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="m@example.com"
+                            autoComplete="email"
+                            inputMode="email"
+                            onFocus={() => trackFirstInteraction("email")}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid gap-3">
+                  <div className="flex flex-col items-center">
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem className="w-full">
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <PasswordInput
+                              {...field}
+                              autoComplete="current-password"
+                              placeholder="Enter your password"
+                              onFocus={() => trackFirstInteraction("password")}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Link
+                      href="/auth/forgot-password"
+                      className="ml-auto text-sm underline-offset-4 hover:underline"
+                    >
+                      Forgot your password?
+                    </Link>
+                  </div>
+                </div>
+                {loginError && (
+                  <div className="space-y-2">
+                    <p role="alert" className="text-destructive text-sm" aria-live="polite">
+                      {loginError}
+                    </p>
+                    {loginError.toLowerCase().includes("not verified") && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={resendVerification}
+                        disabled={isResending}
+                      >
+                        {isResending ? <Loader2 className="size-4 animate-spin" /> : "Resend verification email"}
+                      </Button>
+                    )}
+                  </div>
+                )}
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    "Log in"
+                  )}
+                </Button>
+                {lastLoginMethod === "password" && (
+                  <p className="text-muted-foreground -mt-4 text-center text-xs">
+                    Previously used on this device
+                  </p>
+                )}
+                <div className="grid gap-4">
                   <Link
                     href={buildAuthPathWithRedirect({
                       pathname: "/auth/login",
@@ -203,12 +345,12 @@ const LoginForm = ({ className, redirectTo, ...props }: LoginFormProps) => {
                       className="w-full flex items-center gap-2"
                     >
                       <Mail className="size-4" />
-                      Login With Magic Link
+                      Email me a secure login link
                     </Button>
                   </Link>
                 </div>
                 <div className="text-center text-sm">
-                  Don&apos;t have an account?{" "}
+                  New to Veltex AI?{" "}
                   <Link
                     href={buildAuthPathWithRedirect({
                       pathname: "/auth/signup",
@@ -216,7 +358,7 @@ const LoginForm = ({ className, redirectTo, ...props }: LoginFormProps) => {
                     })}
                     className="underline underline-offset-4"
                   >
-                    Sign up
+                    Start your free trial
                   </Link>
                 </div>
               </div>

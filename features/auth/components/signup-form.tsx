@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import z from "zod";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { FieldErrors, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Form,
@@ -25,15 +24,20 @@ import Photo from "../../../public/images/pexels-tima-miroshnichenko-6195879.jpg
 import {
   AlertDialog,
   AlertDialogContent,
+  AlertDialogCancel,
   AlertDialogDescription,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import PasswordStength from "@/components/ui/password-stength";
 import { signInWithGoogle } from "@/features/auth/actions/oauth";
-import { signUp } from "@/features/auth/actions/password";
+import {
+  resendSignupVerification,
+  signUp,
+} from "@/features/auth/actions/password";
 import FreeTrialInfoBanner from "@/components/ui/free-trial-info-banner";
 import { buildAuthPathWithRedirect } from "@/features/auth/utils/redirect";
+import { trackGoogleEvent } from "@/lib/analytics/google-analytics";
 
 const formSchema = z.object({
   fullName: z.string().min(3),
@@ -50,9 +54,10 @@ export default function SignupForm({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [accountAlreadyExists, setAccountAlreadyExists] = useState(false);
   const [userInfo, setUserInfo] = useState({ name: "", email: "" });
-
-  const router = useRouter();
+  const interactedFields = useRef(new Set<string>());
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -63,6 +68,30 @@ export default function SignupForm({
       companyName: "",
     },
   });
+
+  useEffect(() => {
+    trackGoogleEvent("signup_form_view", {
+      form_name: "email_signup",
+      page_path: "/auth/signup",
+    });
+  }, []);
+
+  const trackFirstInteraction = (fieldName: keyof z.infer<typeof formSchema>) => {
+    if (interactedFields.current.has(fieldName)) return;
+    interactedFields.current.add(fieldName);
+    trackGoogleEvent("signup_form_interaction", {
+      form_name: "email_signup",
+      field_name: fieldName,
+    });
+  };
+
+  const onInvalid = (errors: FieldErrors<z.infer<typeof formSchema>>) => {
+    trackGoogleEvent("signup_validation_error", {
+      form_name: "email_signup",
+      error_fields: Object.keys(errors).sort().join(","),
+      error_count: Object.keys(errors).length,
+    });
+  };
 
   const signUpWithGoogle = async () => {
     setIsLoadingGoogle(true);
@@ -88,6 +117,10 @@ export default function SignupForm({
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
+    trackGoogleEvent("signup_submit", {
+      form_name: "email_signup",
+      method: "email_password",
+    });
 
     try {
       const formData = new FormData();
@@ -101,22 +134,35 @@ export default function SignupForm({
       const result = await signUp({}, formData);
 
       if (result?.error) {
+        const normalizedError = result.error.toLowerCase();
+        const errorCategory =
+          normalizedError.includes("already exists") ||
+          normalizedError.includes("email already")
+            ? "account_exists"
+            : "submission_error";
+        trackGoogleEvent("signup_submit_error", {
+          form_name: "email_signup",
+          method: "email_password",
+          error_category: errorCategory,
+        });
         toast.error(result.error);
         if (
           result.error.toLowerCase().includes("already exists") ||
           result.error.toLowerCase().includes("email already")
         ) {
-          router.push(
-            buildAuthPathWithRedirect({
-              pathname: "/auth/login",
-              redirectTo,
-            }),
-          );
+          setUserInfo({ name: values.fullName, email: values.email });
+          setAccountAlreadyExists(true);
+          setShowVerificationDialog(true);
         }
       } else {
+        trackGoogleEvent("signup_verification_prompt", {
+          form_name: "email_signup",
+          method: "email_password",
+        });
         // Show verification toast and modal
         toast.success("Please check your email to verify your account.");
         setUserInfo({ name: values.fullName, email: values.email });
+        setAccountAlreadyExists(false);
         setShowVerificationDialog(true);
       }
     } catch (error) {
@@ -128,13 +174,22 @@ export default function SignupForm({
   }
 
   const resendVerificationEmail = async () => {
+    setIsResending(true);
     try {
-      // Supabase automatically sends verification email on signup
-      // You can implement a resend function if needed
-      toast.success("Please check your email for the verification link");
+      const formData = new FormData();
+      formData.append("email", userInfo.email);
+      if (redirectTo) formData.append("redirectTo", redirectTo);
+      const result = await resendSignupVerification({}, formData);
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Verification email sent. Please check your inbox.");
     } catch (error) {
       console.error("Resend verification error:", error);
       toast.error("Failed to resend verification email. Please try again.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -143,7 +198,10 @@ export default function SignupForm({
       <Card className="overflow-hidden p-0 ">
         <CardContent className="grid p-0 md:grid-cols-2">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
+            <form
+              onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+              className="p-5 sm:p-6 md:p-8"
+            >
               <div className="flex flex-col gap-5">
                 <div className="flex flex-col items-center text-center">
                   <Image
@@ -161,7 +219,7 @@ export default function SignupForm({
 
                 {/* Free Trial Info Banner */}
                 <FreeTrialInfoBanner component="signup" />
-                <div className="flex items-center gap-3">
+                <div className="grid gap-4 sm:grid-cols-2 sm:gap-3">
                   <FormField
                     control={form.control}
                     name="fullName"
@@ -174,6 +232,8 @@ export default function SignupForm({
                           <Input
                             type="text"
                             placeholder="Your Full Name"
+                            autoComplete="name"
+                            onFocus={() => trackFirstInteraction("fullName")}
                             {...field}
                           />
                         </FormControl>
@@ -186,11 +246,15 @@ export default function SignupForm({
                     name="companyName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Company Name</FormLabel>
+                        <FormLabel>
+                          Company Name <span className="text-muted-foreground text-xs">(optional)</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="text"
                             placeholder="Your Company Name"
+                            autoComplete="organization"
+                            onFocus={() => trackFirstInteraction("companyName")}
                             {...field}
                           />
                         </FormControl>
@@ -213,6 +277,9 @@ export default function SignupForm({
                           <Input
                             type="email"
                             placeholder="m@example.com"
+                            autoComplete="email"
+                            inputMode="email"
+                            onFocus={() => trackFirstInteraction("email")}
                             {...field}
                           />
                         </FormControl>
@@ -233,7 +300,12 @@ export default function SignupForm({
                             Password <span className="text-red-500">*</span>
                           </FormLabel>
                           <FormControl>
-                            <PasswordStength field={field} />
+                            <div
+                              onFocus={() => trackFirstInteraction("password")}
+                              className="scroll-mb-40"
+                            >
+                              <PasswordStength field={field} />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -242,13 +314,24 @@ export default function SignupForm({
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    "Sign Up"
-                  )}
-                </Button>
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-center text-xs leading-5">
+                    Next: verify your email, then create your first proposal. No credit card required.
+                  </p>
+                  <div className="sticky bottom-3 z-20 sm:static">
+                    <Button
+                      type="submit"
+                      className="w-full shadow-lg sm:shadow-none"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        "Start free trial"
+                      )}
+                    </Button>
+                  </div>
+                </div>
 
                 <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
                   <span className="bg-card text-muted-foreground relative z-10 px-2">
@@ -332,11 +415,22 @@ export default function SignupForm({
               height={38}
               priority
             />
-            <AlertDialogTitle>Verify your email</AlertDialogTitle>
+            <AlertDialogTitle>
+              {accountAlreadyExists ? "You already have an account" : "Verify your email"}
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-center">
-              Hi <strong>{userInfo.name}</strong>, you need to verify your email
-              address to continue. Please click the confirmation link sent to{" "}
-              <strong>{userInfo.email}</strong> to access your dashboard.
+              {accountAlreadyExists ? (
+                <>
+                  An account already exists for <strong>{userInfo.email}</strong>.
+                  If it is verified, log in. If not, resend the verification email.
+                </>
+              ) : (
+                <>
+                  Hi <strong>{userInfo.name}</strong>, you need to verify your email
+                  address to continue. Please click the confirmation link sent to{" "}
+                  <strong>{userInfo.email}</strong> to access your dashboard.
+                </>
+              )}
               <br />
               <br />
               <span className="text-sm text-muted-foreground">
@@ -344,10 +438,31 @@ export default function SignupForm({
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="flex justify-center">
-            <Button onClick={resendVerificationEmail} className="w-full">
-              Resend verification email
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button
+              onClick={resendVerificationEmail}
+              className="w-full"
+              disabled={isResending}
+            >
+              {isResending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                "Resend verification email"
+              )}
             </Button>
+            <Button asChild variant="secondary">
+              <Link
+                href={buildAuthPathWithRedirect({
+                  pathname: "/auth/login",
+                  redirectTo,
+                })}
+              >
+                Log in instead
+              </Link>
+            </Button>
+            <AlertDialogCancel className="sm:col-span-2">
+              Close
+            </AlertDialogCancel>
           </div>
         </AlertDialogContent>
       </AlertDialog>
