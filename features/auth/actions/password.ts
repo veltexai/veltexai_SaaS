@@ -10,10 +10,15 @@ import {
 } from "@/features/auth/constants";
 import type { AuthResponse } from "@/features/auth/types";
 import config from "@/config/config";
+import { cookies } from "next/headers";
 import {
   buildAuthCallbackUrl,
   getSafeRedirectPath,
 } from "@/features/auth/utils/redirect";
+import {
+  FIRST_TOUCH_COOKIE,
+  LAST_TOUCH_COOKIE,
+} from "@/lib/analytics/attribution";
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
@@ -72,6 +77,9 @@ const signUpSchema = z.object({
 export const signUp = validatedAction(signUpSchema, async (data) => {
   const supabase = await createClient();
   const { email, password, fullName, companyName, redirectTo } = data;
+  const cookieStore = await cookies();
+  const firstTouch = cookieStore.get(FIRST_TOUCH_COOKIE)?.value ?? "";
+  const lastTouch = cookieStore.get(LAST_TOUCH_COOKIE)?.value ?? "";
 
   // Check if user already exists first
   const { data: existingProfile } = await supabase
@@ -91,6 +99,10 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
       data: {
         full_name: fullName,
         company_name: companyName || "",
+        // Preserve acquisition context with the account so an email opened in
+        // a different browser can still complete attribution after verification.
+        marketing_first_touch: firstTouch,
+        marketing_last_touch: lastTouch,
       },
       emailRedirectTo: buildAuthCallbackUrl({
         baseUrl: config.domainName,

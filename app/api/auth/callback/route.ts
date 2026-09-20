@@ -74,8 +74,20 @@ export async function GET(request: NextRequest) {
           process.env.SUPABASE_SERVICE_ROLE_KEY!,
         );
 
-        const firstTouch = parseAttribution(request.cookies.get(FIRST_TOUCH_COOKIE)?.value);
-        const lastTouch = parseAttribution(request.cookies.get(LAST_TOUCH_COOKIE)?.value);
+        const metadataFirstTouch =
+          typeof user.user_metadata?.marketing_first_touch === "string"
+            ? user.user_metadata.marketing_first_touch
+            : undefined;
+        const metadataLastTouch =
+          typeof user.user_metadata?.marketing_last_touch === "string"
+            ? user.user_metadata.marketing_last_touch
+            : undefined;
+        const firstTouch =
+          parseAttribution(request.cookies.get(FIRST_TOUCH_COOKIE)?.value) ??
+          parseAttribution(metadataFirstTouch);
+        const lastTouch =
+          parseAttribution(request.cookies.get(LAST_TOUCH_COOKIE)?.value) ??
+          parseAttribution(metadataLastTouch);
         const { data: existingSignup, error: existingSignupError } =
           await serviceClient
             .from("marketing_funnel_events")
