@@ -26,12 +26,12 @@ const ValueProposition = () => {
                 subtitle: 'Industry-specific, not generic',
               },
               {
-                title: 'Save Hours',
-                subtitle: 'Eliminate manual proposal work',
+                title: 'Reviewable Workflow',
+                subtitle: 'Inspect the inputs before presenting the proposal',
               },
               {
-                title: 'Scale Fast',
-                subtitle: 'Reliable Operational Intelligence Engine',
+                title: 'Consistent Output',
+                subtitle: 'Use one repeatable process across cleaning bids',
               },
             ].map((item, index) => (
               <motion.div

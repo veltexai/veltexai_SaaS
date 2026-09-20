@@ -97,10 +97,7 @@ const HeroSection = () => {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60 motion-reduce:animate-none" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                 </span>
-                <span>
-                  Quick demo · ~ See How Veltex AI Creates Proposals in Under 60
-                  Seconds
-                </span>
+                <span>Quick demo · See the proposal workflow</span>
               </div>
             </div>
           </div>
