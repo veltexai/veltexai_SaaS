@@ -46,8 +46,8 @@ const HeroSection = () => {
             className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed"
             variants={fadeInUp}
           >
-            Create accurate, professional cleaning proposals in minutes using
-            real janitorial pricing logic.
+            Build professional cleaning proposals from job details, service
+            scope, labor assumptions, and pricing inputs you can review.
           </motion.p>
 
           <motion.div variants={fadeInUp}>

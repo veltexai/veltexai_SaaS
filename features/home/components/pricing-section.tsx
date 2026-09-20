@@ -99,8 +99,7 @@ const PricingSection = () => {
         </motion.div>
 
         <p className="text-center text-lg text-gray-700 max-w-2xl mx-auto mb-10 px-2">
-          Most cleaning companies recover their subscription with just one new
-          contract
+          Choose the plan that matches your proposal volume and workflow.
         </p>
 
         <motion.div

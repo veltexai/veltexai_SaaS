@@ -8,12 +8,12 @@ export const FAQ_ITEMS: FAQItem[] = [
   {
     question: "What is Veltex AI?",
     answer:
-      "Veltex AI is a proposal generator built specifically for cleaning companies designed by a real business owner with over 40 years of experience in the field. It helps you create professional janitorial proposals, scopes of work, and pricing in minutes instead of hours.",
+      "Veltex AI is a proposal generator built specifically for cleaning companies. It helps you organize job details, draft scopes of work, review pricing assumptions, and prepare professional proposals.",
   },
   {
     question: "How fast can I create a proposal?",
     answer:
-      "Most teams complete a polished proposal in minutes. You enter job details, Veltex AI drafts scope and pricing, and you refine before you send—without starting from a blank page.",
+      "Enter the job details, let Veltex AI draft the scope and pricing, then review and refine the proposal before you rely on or send it.",
   },
   {
     question: "Will this help me win more bids?",

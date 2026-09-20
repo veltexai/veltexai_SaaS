@@ -177,7 +177,7 @@ export default function DemoProposalPage() {
           </h1>
           <p className="mx-auto max-w-2xl text-demo-body-lg text-demo-on-surface-variant">
             Experience the precision of AI-engineered bidding. Select a service
-            below to generate a high-fidelity document in seconds.
+            below to preview the proposal workflow and review its output.
           </p>
         </section>
 

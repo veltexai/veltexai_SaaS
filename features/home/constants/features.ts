@@ -15,9 +15,9 @@ export const FEATURES = [
     icon: Zap,
   },
   {
-    title: "Instant PDF Export",
+    title: "Professional PDF Export",
     description:
-      "Professional, branded PDFs ready to send to clients immediately.",
+      "Paid plans can export reviewed, branded proposals as professional PDFs.",
     icon: FileText,
   },
   {

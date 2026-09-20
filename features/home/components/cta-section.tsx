@@ -19,7 +19,7 @@ const CTASection = () => {
             Ready to Win More Cleaning Contracts?
           </h2>
           <p className="text-lg sm:text-xl mb-8 text-blue-100 max-w-2xl mx-auto text-pretty">
-            Start your free trial and create your first proposal in minutes.
+            Start your free trial and build a proposal from a real cleaning job.
           </p>
           <MarketingCTAs variant="gradient" />
           <p className="text-sm text-blue-100/80 mt-4">

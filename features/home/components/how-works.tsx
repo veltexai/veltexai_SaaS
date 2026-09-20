@@ -21,8 +21,8 @@ const HowItWorksSection = () => {
             How It Works
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Create and send professional cleaning proposals in minutes <br />
-            no spreadsheets, no guesswork.
+            Move from job details to a professional proposal with a clear,
+            reviewable workflow.
           </p>
         </motion.div>
 

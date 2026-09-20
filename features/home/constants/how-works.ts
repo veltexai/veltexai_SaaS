@@ -9,14 +9,14 @@ export const HOW_WORKS_ITEMS = [
   },
   {
     step: "02",
-    title: "AI Calculates Pricing Instantly",
-    description: "Labor, margins, and scope handled automatically",
+    title: "Review Scope and Pricing",
+    description: "Inspect labor, margin, frequency, and scope assumptions",
     icon: Zap,
   },
   {
     step: "03",
-    title: "Send a Professional Proposal",
-    description: "Download or email in seconds",
+    title: "Present a Professional Proposal",
+    description: "Paid plans can download or email the reviewed proposal",
     icon: CheckCircle,
   },
 ];
