@@ -18,7 +18,9 @@ import {
 import {
   FIRST_TOUCH_COOKIE,
   LAST_TOUCH_COOKIE,
+  parseAttribution,
 } from "@/lib/analytics/attribution";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
@@ -118,6 +120,36 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
 
   // Success case - user was created
   if (signUpData.user) {
+    // Store acquisition context at account creation, before email verification.
+    // Verification links are often opened in another browser/device where the
+    // original attribution cookies and PKCE session are unavailable.
+    const parsedFirstTouch = parseAttribution(firstTouch);
+    const parsedLastTouch = parseAttribution(lastTouch) ?? parsedFirstTouch;
+    if (parsedFirstTouch) {
+      const serviceClient = createServiceClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      );
+      const { error: attributionError } = await serviceClient
+        .from("marketing_attribution")
+        .upsert(
+          {
+            user_id: signUpData.user.id,
+            first_touch: parsedFirstTouch,
+            last_touch: parsedLastTouch,
+            first_touch_captured_at: parsedFirstTouch.capturedAt,
+            last_touch_captured_at: parsedLastTouch?.capturedAt ?? parsedFirstTouch.capturedAt,
+          },
+          { onConflict: "user_id" },
+        );
+
+      if (attributionError) {
+        console.error(
+          "Unable to persist signup attribution",
+          attributionError.message,
+        );
+      }
+    }
     return { success: "Please check your email to verify your account." };
   }
 
