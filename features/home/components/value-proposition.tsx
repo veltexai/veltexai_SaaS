@@ -20,7 +20,7 @@ const ValueProposition = () => {
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
             {[
-              { title: 'Since 1986', subtitle: 'Trusted industry experience' },
+              { title: 'Operator-Informed', subtitle: 'Built around real cleaning workflows' },
               {
                 title: 'Built for Cleaning',
                 subtitle: 'Industry-specific, not generic',

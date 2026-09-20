@@ -3,6 +3,7 @@ import { getUser } from "@/features/auth/services/get-user";
 import { createClient } from "@/lib/supabase/server";
 import { exportProposalToPDF } from "@/features/proposals/services/pdf/export-jspdf";
 import { Database } from "@/types/database";
+import { canUsePaidProposalActions } from "@/lib/billing/proposal-entitlements";
 
 export async function POST(
   request: NextRequest,
@@ -18,6 +19,9 @@ export async function POST(
     }
 
     const supabase = await createClient();
+    if (!(await canUsePaidProposalActions(supabase, user.id))) {
+      return NextResponse.json({ error: "A paid plan is required to export proposals", code: "PAID_PLAN_REQUIRED" }, { status: 403 });
+    }
 
     // Get the proposal
     const { data: proposal, error: proposalError } = await supabase

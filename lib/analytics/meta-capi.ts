@@ -37,6 +37,23 @@ interface CAPIEvent {
   actionSource?: 'website' | 'server';
 }
 
+export interface CAPIRequestContext {
+  clientIpAddress?: string;
+  clientUserAgent?: string;
+  fbc?: string;
+  fbp?: string;
+  eventSourceUrl?: string;
+}
+
+function requestUserData(context?: CAPIRequestContext): UserData {
+  return {
+    clientIpAddress: context?.clientIpAddress,
+    clientUserAgent: context?.clientUserAgent,
+    fbc: context?.fbc,
+    fbp: context?.fbp,
+  };
+}
+
 function buildUserDataPayload(user: UserData) {
   const payload: Record<string, string | string[]> = {};
 
@@ -104,6 +121,7 @@ export async function sendStartTrialEvent(data: {
   value: number;
   currency?: string;
   eventId?: string;
+  requestContext?: CAPIRequestContext;
 }) {
   return sendCAPIEvent({
     eventName: 'StartTrial',
@@ -111,7 +129,9 @@ export async function sendStartTrialEvent(data: {
     userData: {
       email: data.email,
       externalId: data.userId,
+      ...requestUserData(data.requestContext),
     },
+    eventSourceUrl: data.requestContext?.eventSourceUrl,
     customData: {
       content_name: data.planName,
       value: data.value,
@@ -125,11 +145,17 @@ export async function sendCompleteRegistrationEvent(data: {
   email: string;
   userId: string;
   eventId: string;
+  requestContext?: CAPIRequestContext;
 }) {
   return sendCAPIEvent({
     eventName: 'CompleteRegistration',
     eventId: data.eventId,
-    userData: { email: data.email, externalId: data.userId },
+    userData: {
+      email: data.email,
+      externalId: data.userId,
+      ...requestUserData(data.requestContext),
+    },
+    eventSourceUrl: data.requestContext?.eventSourceUrl,
     customData: { currency: 'USD', value: 0, status: 'completed' },
   });
 }

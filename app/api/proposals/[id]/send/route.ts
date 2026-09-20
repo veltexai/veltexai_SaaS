@@ -5,6 +5,7 @@ import { EmailService } from "@/lib/email/service";
 import { generateProposalPDFWithPlaywright } from "@/features/proposals/services/pdf/playwright-generator";
 import { Database } from "@/types/database";
 import { z } from "zod";
+import { canUsePaidProposalActions } from "@/lib/billing/proposal-entitlements";
 
 export const maxDuration = 60; // Allow up to 60 seconds for PDF generation
 export const runtime = "nodejs";
@@ -43,6 +44,9 @@ export async function POST(
     }
 
     const supabase = await createClient();
+    if (!(await canUsePaidProposalActions(supabase, user.id))) {
+      return NextResponse.json({ error: "A paid plan is required to send proposals", code: "PAID_PLAN_REQUIRED" }, { status: 403 });
+    }
 
     // Get the proposal
     const { data: proposal, error: proposalError } = await supabase

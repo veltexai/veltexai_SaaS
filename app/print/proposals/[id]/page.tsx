@@ -1,5 +1,7 @@
 import { getPrintPageData } from '@/features/templates/services/print-data-service';
 import { PrintTemplateSwitcher } from '@/features/templates/components/print-template-switcher';
+import { createClient } from '@/lib/supabase/server';
+import { canUsePaidProposalActions } from '@/lib/billing/proposal-entitlements';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -10,10 +12,15 @@ export default async function PrintProposalPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !(await canUsePaidProposalActions(supabase, user.id))) {
+    return <div>Not authorized</div>;
+  }
   const { proposal, branding, colors, pages, extrasRows, showPoweredBy } =
     await getPrintPageData(id);
 
-  if (!proposal) {
+  if (!proposal || proposal.user_id !== user.id) {
     return <div>Proposal not found</div>;
   }
 

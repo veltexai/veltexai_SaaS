@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { generateProposalPDF } from "@/features/proposals/services/pdf/generator";
 import { headers } from "next/headers";
+import { getUser } from "@/features/auth/services/get-user";
+import { canUsePaidProposalActions } from "@/lib/billing/proposal-entitlements";
 
 export async function GET(
   request: NextRequest,
@@ -12,11 +14,23 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const trackingId = searchParams.get("tracking");
 
-    const supabase = await createClient();
+    const sessionClient = await createClient();
+    const { user } = await getUser();
+    let supabase = sessionClient;
+    if (trackingId) {
+      const serviceClient = createServiceClient();
+      const { data: trackingRecord } = await serviceClient
+        .from("proposal_tracking").select("proposal_id")
+        .eq("tracking_id", trackingId).eq("proposal_id", id).maybeSingle();
+      if (!trackingRecord) return NextResponse.json({ error: "Invalid or expired download link" }, { status: 404 });
+      supabase = serviceClient;
+    } else if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const headersList = await headers();
 
     // Fetch proposal data
-    const { data: proposal, error: proposalError } = await supabase
+    let proposalQuery = supabase
       .from("proposals")
       .select(
         `
@@ -29,14 +43,19 @@ export async function GET(
         )
       `,
       )
-      .eq("id", id)
-      .single();
+      .eq("id", id);
+    if (!trackingId && user) proposalQuery = proposalQuery.eq("user_id", user.id);
+    const { data: proposal, error: proposalError } = await proposalQuery.single();
 
     if (proposalError || !proposal) {
       return NextResponse.json(
         { error: "Proposal not found" },
         { status: 404 },
       );
+    }
+
+    if (!(await canUsePaidProposalActions(supabase, proposal.user_id))) {
+      return NextResponse.json({ error: "A paid plan is required to download proposals", code: "PAID_PLAN_REQUIRED" }, { status: 403 });
     }
 
     // Generate PDF

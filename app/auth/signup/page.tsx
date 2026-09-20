@@ -3,6 +3,7 @@ import SignupForm from "@/features/auth/components/signup-form";
 import { getUser } from "@/features/auth/services/get-user";
 import { redirect } from "next/navigation";
 import { getSafeRedirectPath } from "@/features/auth/utils/redirect";
+import { AUTH_ROUTES } from "@/features/auth/constants";
 
 interface SignupPageProps {
   searchParams: Promise<{ method?: string; redirect?: string }>;
@@ -10,7 +11,9 @@ interface SignupPageProps {
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
   const params = await searchParams;
-  const redirectTo = getSafeRedirectPath(params.redirect);
+  const redirectTo = getSafeRedirectPath(
+    params.redirect ?? `${AUTH_ROUTES.QUICK_PROPOSAL}?source=signup`,
+  );
   const { user } = await getUser();
   if (user) {
     return redirect(redirectTo);

@@ -20,7 +20,7 @@ const FooterSection = () => {
             </div>
             <p className="text-gray-400 mb-6 max-w-md">
               AI Operating System for Janitorial Companies. Scope → Labor →
-              Pricing → Proposal. Trusted since 1986.
+              Pricing → Proposal. Built around real cleaning workflows.
             </p>
             <Link href="/tools/cleaning-bid-calculator" className="font-semibold text-blue-300 hover:text-white">Try the free cleaning bid calculator →</Link>
           </div>

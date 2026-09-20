@@ -1,116 +1,36 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import React from 'react';
+import { Calculator, ClipboardCheck, FileText } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Star } from 'lucide-react';
+const steps = [
+  { title: 'Capture the scope', description: 'Record the facility, service areas, frequency, conditions, and special requirements that shape the work.', icon: ClipboardCheck },
+  { title: 'Review the assumptions', description: 'See the labor, production, service, and margin inputs behind the recommendation before relying on it.', icon: Calculator },
+  { title: 'Present the proposal', description: 'Turn the reviewed job details into a consistent, branded proposal for your customer.', icon: FileText },
+];
 
-const TestimonialsSection = () => {
+export default function TestimonialsSection() {
   return (
-    <section id="testimonials" className="py-20 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          className="text-center mb-16"
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true }}
-          variants={fadeInUp}
-        >
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            Trusted by Cleaning Professionals
-          </h2>
-          <div className="flex justify-center items-center space-x-1 mb-4">
-            {/* {[...Array(5)].map((_, i) => (
-              <Star key={i} className="h-6 w-6 text-yellow-400 fill-current" />
-            ))} */}
-            <span className="ml-2 text-gray-600">Verified Cleaning Business Owner</span>
-          </div>
+    <section className="bg-gray-50 py-20">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div className="mb-12 text-center" initial="initial" whileInView="animate" viewport={{ once: true }} variants={fadeInUp}>
+          <h2 className="mb-4 text-3xl font-bold text-gray-900 sm:text-4xl">Built Around a Real Cleaning Bid</h2>
+          <p className="mx-auto max-w-3xl text-gray-600">Veltex AI connects the operational details of a cleaning job to a proposal you can inspect, edit, and present professionally.</p>
         </motion.div>
-
-        <motion.div
-          className="grid md:grid-cols-3 gap-8"
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true }}
-          variants={staggerContainer}
-        >
-          {[
-            {
-              quote:
-                'Veltex AI has transformed how we create proposals. What used to take hours now takes minutes, and our clients love the professional look.',
-              author: 'Sarah Johnson',
-              title: 'Owner, CleanPro Services',
-              rating: 5,
-            },
-            {
-              quote:
-                'The AI understands our industry perfectly. Every proposal feels custom-made for our cleaning services. Our close rate has increased by 40%.',
-              author: 'Mike Rodriguez',
-              title: 'Manager, Spotless Solutions',
-              rating: 5,
-            },
-            {
-              quote:
-                'Finally, an operating system built for janitorial companies by people who understand our business. The time savings alone pays for itself.',
-              author: 'Lisa Chen',
-              title: 'Director, Elite Janitorial',
-              rating: 5,
-            },
-          ].map((testimonial, index) => (
-            <motion.div key={index} variants={fadeInUp}>
-              <Card className="p-6 h-full border-0 shadow-lg">
-                <CardContent className="pt-6">
-                  <div className="flex mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="h-5 w-5 text-yellow-400 fill-current"
-                      />
-                    ))}
-                  </div>
-                  <blockquote className="text-gray-600 mb-6 italic">
-                    "{testimonial.quote}"
-                  </blockquote>
-                  <div>
-                    <div className="font-semibold text-gray-900">
-                      {testimonial.author}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {testimonial.title}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+        <motion.div className="grid gap-8 md:grid-cols-3" initial="initial" whileInView="animate" viewport={{ once: true }} variants={staggerContainer}>
+          {steps.map((item) => (
+            <motion.div key={item.title} variants={fadeInUp}>
+              <Card className="h-full border-0 p-6 shadow-lg"><CardContent className="pt-6">
+                <item.icon className="mb-5 h-8 w-8 text-blue-600" />
+                <h3 className="mb-3 text-xl font-semibold text-gray-900">{item.title}</h3>
+                <p className="text-gray-600">{item.description}</p>
+              </CardContent></Card>
             </motion.div>
           ))}
         </motion.div>
-
-        {/* Client Logos */}
-        {/* <motion.div
-          className="mt-16 text-center"
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true }}
-          variants={fadeInUp}
-        >
-          <p className="text-gray-500 mb-8">
-            Trusted by leading cleaning companies
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center opacity-60">
-            {['CleanPro', 'Spotless', 'Elite Clean', 'Pure Services'].map(
-              (company, index) => (
-                <div key={index} className="text-xl font-bold text-gray-400">
-                  {company}
-                </div>
-              )
-            )}
-          </div>
-        </motion.div> */}
       </div>
     </section>
   );
-};
-
-export default TestimonialsSection;
+}
