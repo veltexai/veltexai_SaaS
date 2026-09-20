@@ -13,7 +13,7 @@ export function EmptyPricingState({
   return (
     <div className="text-center py-8 text-muted-foreground">
       <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
-      <p>Complete the service details to calculate pricing</p>
+      <p>Complete the service details to build a suggested pricing range</p>
       <Button
         type="button"
         onClick={onCalculate}
@@ -23,10 +23,10 @@ export function EmptyPricingState({
         {isCalculating ? (
           <>
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Calculating...
+            Building guidance...
           </>
         ) : (
-          "Calculate Pricing"
+          "Build Suggested Range"
         )}
       </Button>
     </div>

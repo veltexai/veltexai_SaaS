@@ -13,11 +13,11 @@ export function PricingBreakdownCard({ pricing }: PricingBreakdownCardProps) {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <PricingRow
-            label="Price Range (Low)"
+            label="Suggested Range (Low)"
             value={formatCurrency(pricing.price_range.low)}
           />
           <PricingRow
-            label="Price Range (High)"
+            label="Suggested Range (High)"
             value={formatCurrency(pricing.price_range.high)}
           />
         </div>
@@ -36,7 +36,7 @@ export function PricingBreakdownCard({ pricing }: PricingBreakdownCardProps) {
       <Separator />
 
       <div className="space-y-2">
-        <h4 className="font-medium text-sm">Pricing Assumptions:</h4>
+        <h4 className="font-medium text-sm">Editable Planning Assumptions</h4>
         <div className="grid grid-cols-2 gap-4">
           <PricingRow
             label="Labor Rate"
@@ -60,12 +60,18 @@ export function PricingBreakdownCard({ pricing }: PricingBreakdownCardProps) {
       <Separator />
 
       <div className="flex justify-between items-center p-4 bg-primary/5 rounded-lg">
-        <span className="text-lg font-semibold">Estimated Price Range:</span>
+        <span className="text-lg font-semibold">Suggested Price Range</span>
         <span className="text-2xl font-bold text-primary">
           {formatCurrency(pricing.price_range.low)} –{" "}
           {formatCurrency(pricing.price_range.high)}
         </span>
       </div>
+
+      <p className="text-sm leading-6 text-muted-foreground">
+        This is planning guidance, not a guaranteed or universally correct
+        price. Review the scope, local labor costs, production assumptions,
+        overhead, risk, and target margin before presenting a bid.
+      </p>
     </div>
   );
 }

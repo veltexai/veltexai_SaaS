@@ -176,10 +176,10 @@ export function usePricingCalculation({
 
       setCalculatedPricing(pricing);
       setFormPricing(pricing);
-      toast.success("Pricing calculated successfully");
+      toast.success("Suggested pricing range updated");
     } catch (err) {
       console.error("Error calculating pricing:", err);
-      toast.error("Failed to calculate pricing");
+      toast.error("Unable to build suggested pricing range");
     } finally {
       setIsCalculating(false);
     }

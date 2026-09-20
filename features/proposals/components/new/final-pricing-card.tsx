@@ -26,7 +26,7 @@ export function FinalPricingCard({
 }: FinalPricingCardProps) {
   const isOneTime = Boolean(serviceFrequency && isOneTimeFrequency(serviceFrequency));
   const tooltipText = pricing?.price_range
-    ? `The base price is calculated as the midpoint of the estimated range (${formatCurrency(pricing.price_range.low)} – ${formatCurrency(pricing.price_range.high)}).`
+    ? `The working price uses the midpoint of the suggested range (${formatCurrency(pricing.price_range.low)} – ${formatCurrency(pricing.price_range.high)}). Change it after reviewing your assumptions and job conditions.`
     : isOneTime
       ? "This is the estimated one-time price including base service and add-ons."
       : "This is the estimated monthly price including base service and monthly add-ons.";
@@ -36,14 +36,16 @@ export function FinalPricingCard({
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <DollarSign className="h-5 w-5" />
-          <span>Final Pricing</span>
+          <span>Working Bid Guidance</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex justify-between items-center p-4 bg-primary/5 rounded-lg">
           <div className="flex items-center gap-2">
             <span className="text-lg font-semibold">
-              {isOneTime ? "One-Time Total (Base + Add-ons)" : "Monthly Total (Base + Add-ons)"}
+              {isOneTime
+                ? "Suggested One-Time Price (Base + Add-ons)"
+                : "Suggested Monthly Price (Base + Add-ons)"}
             </span>
             <TooltipProvider>
               <Tooltip>
@@ -60,6 +62,12 @@ export function FinalPricingCard({
             {formatCurrency(basePrice + monthlyAddonsTotal)}
           </span>
         </div>
+
+        <p className="text-sm leading-6 text-muted-foreground">
+          Review and adjust this working figure before presenting it. Veltex AI
+          organizes the estimate; your company remains responsible for the
+          final scope, assumptions, and price.
+        </p>
 
         {monthlyAddonsTotal > 0 && (
           <div className="space-y-2 text-sm text-muted-foreground">
