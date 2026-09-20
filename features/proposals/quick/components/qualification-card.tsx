@@ -16,11 +16,17 @@ export function QualificationCard() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/onboarding/qualification").then(async (response) => response.ok ? response.json() : null).then((data) => {
-      if (!active || !data || data.complete) return;
-      setAnswers({ buyerRole: data.buyerRole ?? "", businessType: data.businessType ?? "", bidsPerMonth: data.bidsPerMonth ?? "" });
-      setVisible(true);
-    }).catch(() => undefined);
+    void (async () => {
+      try {
+        const response = await fetch("/api/onboarding/qualification");
+        const data = response?.ok ? await response.json() : null;
+        if (!active || !data || data.complete) return;
+        setAnswers({ buyerRole: data.buyerRole ?? "", businessType: data.businessType ?? "", bidsPerMonth: data.bidsPerMonth ?? "" });
+        setVisible(true);
+      } catch {
+        // Qualification is optional and must never block proposal creation.
+      }
+    })();
     return () => { active = false; };
   }, []);
 

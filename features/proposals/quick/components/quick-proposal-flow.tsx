@@ -458,7 +458,7 @@ export function QuickProposalFlow({
         </Button>
       </div>
 
-      <QualificationCard />
+      {source === "signup" && <QualificationCard />}
 
       {usedFallback && requestedScopeTemplateId && (
         <Card className="border-yellow-200 bg-yellow-50">
