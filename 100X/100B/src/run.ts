@@ -112,7 +112,16 @@ export async function run100B(config: EnrichmentConfig, dependencies: Run100BDep
         const signals = await dependencies.repository.inspectContactIdentity(company.prospectId, contact);
         const identity = decideContactIdentity(signals);
         if (identity.disposition === "existing_source_record") {
-          await dependencies.repository.touchContactSource(runId, identity.sourceRecordId!, clock.now().toISOString());
+          const timestamp = clock.now().toISOString();
+          const suppression = await dependencies.suppression.resolve(company, contact.normalizedEmail);
+          const decision = evaluateEligibility({ company, contact, suppression, identityConflict: hasIdentityConflict(signals), providerError: false });
+          const safelyVerified = contact.verificationStatus === "verified" && contact.normalizedEmail
+            && decision.eligibility === "ready_for_outreach";
+          if (safelyVerified) {
+            await dependencies.repository.refreshVerifiedSource(runId, identity.sourceRecordId!, contact.normalizedEmail!, timestamp);
+          } else {
+            await dependencies.repository.touchContactSource(runId, identity.sourceRecordId!, timestamp);
+          }
           summary.existingSources += 1; await safeEmit("info", "source.rediscovered", { providerRecordId: contact.providerRecordId, contactId: identity.contactId }); continue;
         }
         const suppression = await dependencies.suppression.resolve(company, contact.normalizedEmail);

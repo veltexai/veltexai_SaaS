@@ -159,6 +159,7 @@ export interface ContactRepository {
   loadTargets(prospectIds: string[]): Promise<CompanyContext[]>;
   inspectContactIdentity(prospectId: string, contact: NormalizedContact): Promise<ContactIdentitySignals>;
   touchContactSource(runId: string, sourceRecordId: string, observedAt: string): Promise<void>;
+  refreshVerifiedSource(runId: string, sourceRecordId: string, normalizedEmail: string, verifiedAt: string): Promise<boolean>;
   persistContact(runId: string, input: PersistContactInput): Promise<PersistContactResult>;
 }
 

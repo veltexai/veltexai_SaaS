@@ -58,6 +58,14 @@ export class SupabaseContactRepository implements ContactRepository {
     const { data, error } = await this.client.rpc("touch_100b_source", { requested_run_id: runId, requested_source_id: sourceRecordId, requested_observed_at: observedAt });
     assertNoError(error, "touch contact source"); if (data !== true) throw new Error("touch contact source: run-owned lock required");
   }
+  async refreshVerifiedSource(runId: string, sourceRecordId: string, normalizedEmail: string, verifiedAt: string): Promise<boolean> {
+    const { data, error } = await this.client.rpc("refresh_100b_verified_source", {
+      requested_run_id: runId, requested_source_id: sourceRecordId,
+      requested_normalized_email: normalizedEmail, requested_verified_at: verifiedAt,
+    });
+    assertNoError(error, "refresh verified source");
+    return data === true;
+  }
   async persistContact(runId: string, input: PersistContactInput): Promise<PersistContactResult> {
     const c = input.canonical;
     const contact = {

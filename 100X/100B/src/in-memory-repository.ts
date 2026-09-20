@@ -46,6 +46,18 @@ export class InMemoryContactRepository implements ContactRepository {
     if (!source) throw new Error("contact source not found");
     source.lastObservedAt = observedAt; this.writeLog.push("source.touch");
   }
+  async refreshVerifiedSource(runId: string, sourceRecordId: string, normalizedEmail: string, verifiedAt: string): Promise<boolean> {
+    if (this.lock?.runId !== runId) throw new Error("verified source refresh requires the run-owned lock");
+    const source = this.contactSources.find(({ id }) => id === sourceRecordId);
+    const contact = source && this.contacts.find(({ id }) => id === source.contactId);
+    if (!source || !contact || contact.normalizedEmail !== normalizedEmail || contact.outreachEligibility !== "ready_for_outreach"
+      || contact.suppressionStatus !== "none" || !contact.isCurrentContact) return false;
+    source.lastObservedAt = verifiedAt;
+    contact.emailVerificationStatus = "verified";
+    contact.lastVerifiedAt = verifiedAt;
+    this.writeLog.push("source.verified_refresh");
+    return true;
+  }
   async persistContact(runId: string, input: PersistContactInput): Promise<PersistContactResult> {
     if (this.lock?.runId !== runId) throw new Error("contact persistence requires the run-owned lock");
     if (this.contactSources.some((s) => s.provider === input.source.provider && s.providerRecordId === input.source.providerRecordId)) throw new DuplicateContactSourceError();

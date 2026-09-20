@@ -40,6 +40,8 @@ describe("100B controlled enrichment", () => {
     const second = await run100B(base, deps([company("p1")], { p1: [cand("a1")] }, { repo }), "manual");
     expect(second).toMatchObject({ contactsCreated: 0, sourceRecordsCreated: 0, existingSources: 1 });
     expect(repo.contacts).toHaveLength(1); expect(repo.contactSources).toHaveLength(1);
+    expect(repo.writeLog).toContain("source.verified_refresh");
+    expect(repo.contacts[0].lastVerifiedAt).toBe(instant.toISOString());
   });
 
   it("deduplicates one person across providers into a single contact with two sources", async () => {
