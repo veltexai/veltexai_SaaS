@@ -1,3 +1,5 @@
+import { normalizeCatalogProposal, catalogAnalytics } from '@/features/service-catalog/proposal';
+import { ZodError } from 'zod';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServiceClientRaw } from "@supabase/supabase-js";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
@@ -66,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const validatedData = proposalFormSchema.parse(body);
+    const validatedData = normalizeCatalogProposal(proposalFormSchema.parse(body));
 
     // The design is client-supplied, so entitlement is enforced here rather
     // than trusting the picker. Checked before the insert so a locked design
@@ -382,18 +384,19 @@ export async function POST(request: NextRequest) {
         eventId: `proposal_saved:${proposal.id}`,
         userId: user.id,
         eventName: "proposal_saved",
-        properties: { proposal_number: previousProposalCount + 1 },
+        properties: { proposal_number: previousProposalCount + 1, ...catalogAnalytics(validatedData) },
       },
       {
         eventId: `${previousProposalCount === 0 ? "first_proposal" : "repeat_proposal"}:${proposal.id}`,
         userId: user.id,
         eventName: previousProposalCount === 0 ? "first_proposal" : "repeat_proposal",
-        properties: { proposal_number: previousProposalCount + 1 },
+        properties: { proposal_number: previousProposalCount + 1, ...catalogAnalytics(validatedData) },
       },
     ]);
 
     return NextResponse.json(proposal);
   } catch (error) {
+    if (error instanceof ZodError) return NextResponse.json({ error: "Invalid catalog or proposal inputs", details: error.issues }, { status: 422 });
     console.error("Error in proposal creation:", error);
     return NextResponse.json(
       { error: "Failed to create proposal" },

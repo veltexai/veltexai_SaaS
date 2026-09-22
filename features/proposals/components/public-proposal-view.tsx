@@ -1,5 +1,6 @@
 'use client';
 
+import { CatalogDocument } from '@/features/service-catalog/components/catalog-document';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 import { formatDate } from "@/lib/utils/date";
 interface ProposalData {
+  catalog_document?: boolean;
   id: string;
   title: string;
   client_name: string;
@@ -208,16 +210,16 @@ export function PublicProposalView({ proposal, tracking }: PublicProposalViewPro
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div 
+            {proposal.catalog_document ? <CatalogDocument content={proposal.generated_content} /> : <div
               className="prose max-w-none"
               dangerouslySetInnerHTML={{ __html: proposal.generated_content }}
-            />
+            />}
           </CardContent>
         </Card>
       )}
 
       {/* Pricing Information */}
-      {proposal.pricing_enabled && proposal.pricing_data && (
+      {!proposal.catalog_document && proposal.pricing_enabled && proposal.pricing_data && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

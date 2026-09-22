@@ -1,3 +1,4 @@
+import { BusinessServiceProfile } from '@/features/service-catalog/components/business-profile';
 import { redirect } from "next/navigation";
 import { getUser } from "@/features/auth/services/get-user";
 import { ProfileSettings } from "@/features/settings/components/profile-settings";
@@ -37,7 +38,7 @@ export default async function SettingsPage() {
           <SubscriptionBilling userId={user.id} />
         </div>
 
-        {/* <CompanyProfileSettings /> */}
+        <div id="business-services"><BusinessServiceProfile /></div>
 
         {/* Branding Settings - Full width */}
         <BrandingSettingsCard userId={user.id} />

@@ -1,5 +1,6 @@
 "use client";
 
+import { isCatalogProposal } from '@/features/service-catalog/proposal';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -100,7 +101,7 @@ export function ProposalActions({
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
-                onClick={onEditStart}
+                onClick={isCatalogProposal(proposal) ? () => router.push(`/dashboard/proposals/category?id=${proposal.id}`) : onEditStart}
                 size="sm"
                 className="flex-1 sm:flex-none"
               >
@@ -110,7 +111,7 @@ export function ProposalActions({
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setShowEditDialog(true)}
+                onClick={() => isCatalogProposal(proposal) ? router.push(`/dashboard/proposals/category?id=${proposal.id}`) : setShowEditDialog(true)}
                 size="sm"
                 className="flex-1 sm:flex-none"
               >

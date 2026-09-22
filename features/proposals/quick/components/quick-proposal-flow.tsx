@@ -458,6 +458,15 @@ export function QuickProposalFlow({
         </Button>
       </div>
 
+      <Card><CardContent className="space-y-2 pt-6 text-sm">
+        <p className="font-medium">What does this job need?</p>
+        <div className="flex flex-wrap gap-4 underline">
+          <Link href="/dashboard/proposals/category">Residential or Airbnb / turnover</Link>
+          <Link href="/dashboard/proposals/category?job=recurring_standard&demo=1">Residential example</Link>
+          <Link href="/dashboard/proposals/category?job=airbnb_turnover&demo=1">Turnover example</Link>
+          <Link href="/dashboard/settings#business-services">Set business markets and costs (optional)</Link>
+        </div>
+      </CardContent></Card>
       {source === "signup" && <QualificationCard />}
 
       {usedFallback && requestedScopeTemplateId && (

@@ -1,3 +1,4 @@
+import { isCatalogProposal } from '@/features/service-catalog/proposal';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PublicProposalView } from '@/features/proposals/components/public-proposal-view';
@@ -75,7 +76,13 @@ async function getProposalByTracking(trackingId: string): Promise<{
   }
 
   return {
-    proposal: proposal as ProposalData,
+    proposal: (isCatalogProposal(proposal) ? {
+      ...proposal,
+      catalog_document: true,
+      // Internal wages, cost scenarios and override reasons stay with the operator.
+      service_specific_data: undefined,
+      pricing_data: { price_range: proposal.pricing_data?.price_range },
+    } : proposal) as ProposalData,
     tracking: tracking as TrackingData,
   };
 }

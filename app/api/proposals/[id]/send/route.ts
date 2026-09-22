@@ -101,7 +101,7 @@ export async function POST(
       validatedData.delivery_method === "both"
     ) {
       try {
-        pdfBuffer = await generateProposalPDFWithPlaywright(proposal.id);
+        pdfBuffer = await generateProposalPDFWithPlaywright(proposal.id, request.cookies.getAll());
       } catch (pdfError) {
         console.error("Error generating PDF:", pdfError);
         const pdfErrorMessage =

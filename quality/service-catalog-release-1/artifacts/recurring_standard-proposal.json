@@ -1,0 +1,253 @@
+{
+  "title": "Recurring standard home cleaning proposal",
+  "service_type": "residential",
+  "global_inputs": {
+    "client_name": "Sample customer",
+    "client_email": "sample@example.com",
+    "contact_phone": "555-0100",
+    "service_location": "Example property",
+    "facility_size": 1500,
+    "service_frequency": "bi-weekly"
+  },
+  "service_specific_data": {
+    "catalogJob": {
+      "catalogVersion": "2026-09-22.1",
+      "segment": "residential",
+      "jobType": "recurring_standard",
+      "frequency": "bi-weekly",
+      "propertyType": "house",
+      "squareFeet": 1500,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "occupancy": "occupied",
+      "condition": "normal",
+      "pets": false,
+      "applianceInteriors": 0,
+      "access": "Safe lockbox access; parking beside entrance.",
+      "suppliesProvided": false,
+      "regulatedHazards": false,
+      "costs": {
+        "crewSize": 2,
+        "wage": 25,
+        "burdenPercent": 25,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "minimumCharge": 120,
+        "overheadPercent": 15,
+        "marginPercent": 25,
+        "uncertaintyPercent": 20
+      },
+      "operatorNotes": ""
+    },
+    "catalogSnapshot": {
+      "version": "2026-09-22.1",
+      "id": "recurring_standard",
+      "segment": "residential",
+      "family": "home_cleaning",
+      "label": "Recurring standard home cleaning",
+      "legacyServiceType": "residential",
+      "propertyTypes": [
+        "house",
+        "apartment",
+        "condo",
+        "townhouse"
+      ],
+      "unit": "square_feet",
+      "quantityGuidance": "Use cleanable interior area; verify room counts and walkthrough condition. Hours are person-hours, not elapsed crew time.",
+      "frequencies": [
+        "weekly",
+        "bi-weekly",
+        "1x-month"
+      ],
+      "production": {
+        "min": 350,
+        "base": 500,
+        "max": 650
+      },
+      "defaultCosts": {
+        "crewSize": 2,
+        "wage": 25,
+        "burdenPercent": 25,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "minimumCharge": 120,
+        "overheadPercent": 15,
+        "marginPercent": 25,
+        "uncertaintyPercent": 20
+      },
+      "questionKeys": [
+        "squareFeet",
+        "bedrooms",
+        "bathrooms",
+        "occupancy",
+        "condition",
+        "pets",
+        "applianceInteriors",
+        "access",
+        "suppliesProvided"
+      ],
+      "strategy": "residential_labor_v1",
+      "inclusions": [
+        "Dust reachable surfaces",
+        "Vacuum and mop accessible floors",
+        "Clean kitchen counters, sink and appliance exteriors",
+        "Clean bathrooms, fixtures and mirrors",
+        "Empty ordinary household trash"
+      ],
+      "exclusions": [
+        "Regulated, biohazard and mold remediation",
+        "Construction debris and pest remediation",
+        "Exterior or high-access work",
+        "Heavy furniture moving",
+        "Appliance interiors unless selected"
+      ],
+      "options": [
+        "Appliance interiors (count each appliance)",
+        "Additional labor after walkthrough review"
+      ],
+      "responsibilities": [
+        "Provide safe access, running water and electricity",
+        "Secure pets and valuables",
+        "Identify delicate surfaces and existing damage",
+        "Approve scope or price changes before work"
+      ],
+      "terms": "Suggested price requires operator review and customer acceptance. Confirm service dates, payment timing and cancellation terms in writing before work. Scope changes require a revised agreement. No automatic renewal for one-time jobs.",
+      "compliance": {
+        "regulatedPricing": false,
+        "capabilityReview": "Confirm access, insurance and ordinary cleaning capability. Stop for sharps, bodily fluids, mold remediation or other hazardous material."
+      },
+      "approval": "operator_review_required",
+      "effectiveDate": "2026-09-22"
+    },
+    "estimateSnapshot": {
+      "version": "2026-09-22.1",
+      "strategy": "residential_labor_v1",
+      "unit": "per_visit",
+      "low": {
+        "laborHours": 2.52,
+        "elapsedCrewHours": 1.26,
+        "labor": 78.75,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "directCost": 115.75,
+        "overhead": 17.36,
+        "cost": 133.11,
+        "marginAmount": 44.37,
+        "minimumAdjustment": 0,
+        "suggestedPrice": 177.48
+      },
+      "base": {
+        "laborHours": 3.15,
+        "elapsedCrewHours": 1.58,
+        "labor": 98.44,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "directCost": 135.44,
+        "overhead": 20.32,
+        "cost": 155.76,
+        "marginAmount": 51.92,
+        "minimumAdjustment": 0,
+        "suggestedPrice": 207.68
+      },
+      "high": {
+        "laborHours": 3.78,
+        "elapsedCrewHours": 1.89,
+        "labor": 118.13,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "directCost": 155.13,
+        "overhead": 23.27,
+        "cost": 178.4,
+        "marginAmount": 59.47,
+        "minimumAdjustment": 0,
+        "suggestedPrice": 237.87
+      },
+      "selectedPrice": 207.68,
+      "drivers": {
+        "squareFeetPerPersonHour": 500,
+        "roomMinimumHours": 1.95,
+        "conditionMultiplier": 1,
+        "recurrenceMultiplier": 1.05,
+        "additionalHours": 0
+      },
+      "modeledHours": 3.15,
+      "visitsPerMonth": 2.1666666666666665,
+      "periodPrice": 449.97,
+      "effectiveMarginPercent": 25,
+      "warnings": [
+        "Planning assumptions have not been validated by a cleaning operator. Confirm after a walkthrough."
+      ]
+    },
+    "home_type": "house",
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "pets": false,
+    "cleaning_supplies_provided": false
+  },
+  "pricing_enabled": true,
+  "pricing_data": {
+    "price_range": {
+      "low": 449.97,
+      "high": 449.97
+    },
+    "hours_estimate": {
+      "min": 5.46,
+      "max": 8.19
+    },
+    "assumptions": {
+      "labor_rate": 31.25,
+      "overhead_percentage": 15,
+      "margin_percentage": 25,
+      "production_rate": {
+        "min": 350,
+        "max": 650
+      }
+    }
+  },
+  "generated_content": "## Cover letter\nWe propose recurring standard home cleaning for Sample customer at Example property. This scope and suggested price are subject to operator review and customer acceptance.\n\n## Scope of service\n```veliz_scope_table\n{\"rows\":[{\"area\":\"Dust reachable surfaces\",\"frequency\":\"Every two weeks\",\"notes\":\"\"},{\"area\":\"Vacuum and mop accessible floors\",\"frequency\":\"Every two weeks\",\"notes\":\"\"},{\"area\":\"Clean kitchen counters, sink and appliance exteriors\",\"frequency\":\"Every two weeks\",\"notes\":\"\"},{\"area\":\"Clean bathrooms, fixtures and mirrors\",\"frequency\":\"Every two weeks\",\"notes\":\"\"},{\"area\":\"Empty ordinary household trash\",\"frequency\":\"Every two weeks\",\"notes\":\"\"}]}\n```\n\nProperty: house; 1500 cleanable square feet, 3 bedrooms, 2 bathrooms; occupied, normal condition.\nAccess: Safe lockbox access; parking beside entrance..\n\nOrdinary cleaning supplies are included.\n\n### Exclusions\n- Regulated, biohazard and mold remediation\n- Construction debris and pest remediation\n- Exterior or high-access work\n- Heavy furniture moving\n- Appliance interiors unless selected\n\n### Optional services\n- Appliance interiors (count each appliance); agree scope and price before adding work.\n- Additional labor after walkthrough review; agree scope and price before adding work.\n\n### Customer responsibilities\n- Provide safe access, running water and electricity\n- Secure pets and valuables\n- Identify delicate surfaces and existing damage\n- Approve scope or price changes before work\n\n## Service Quote & Pricing\n```veliz_pricing_table\n{\"rows\":[{\"service\":\"Recurring standard home cleaning\",\"frequency\":\"Every two weeks; monthly planning total\",\"pricePerMonth\":\"$449.97\"}],\"summary\":{\"subtotal\":\"$449.97\",\"tax\":\"Not assessed\",\"total\":\"$449.97\"}}\n```\n\nSuggested price: $207.68 per visit. Monthly planning amount: $449.97, based on 2.167 average visits per month. Confirm actual billing schedule in writing.\nTaxes are not assessed in this estimate; confirm applicability before acceptance. No price is guaranteed by Veltex AI.\n\n## Terms & Conditions\nSuggested price requires operator review and customer acceptance. Confirm service dates, payment timing and cancellation terms in writing before work. Scope changes require a revised agreement. No automatic renewal for one-time jobs.\nOperator notes: No additional terms specified.\n\n## Acceptance\nCustomer signature: ____________________ Date: __________\n\nOperator signature: ____________________ Date: __________\nConfirm the scope, scheduling, taxes and payment terms before signing.",
+  "status": "draft",
+  "facility_details": {
+    "building_type": "house",
+    "accessibility_requirements": [],
+    "special_areas": [],
+    "equipment_present": [],
+    "environmental_concerns": []
+  },
+  "traffic_analysis": {
+    "peak_hours": [],
+    "special_events": false
+  },
+  "service_scope": {
+    "areas_included": [
+      "Dust reachable surfaces",
+      "Vacuum and mop accessible floors",
+      "Clean kitchen counters, sink and appliance exteriors",
+      "Clean bathrooms, fixtures and mirrors",
+      "Empty ordinary household trash"
+    ],
+    "areas_excluded": [
+      "Regulated, biohazard and mold remediation",
+      "Construction debris and pest remediation",
+      "Exterior or high-access work",
+      "Heavy furniture moving",
+      "Appliance interiors unless selected"
+    ],
+    "special_services": [],
+    "frequency_details": {},
+    "area_notes": {},
+    "special_notes": ""
+  },
+  "special_requirements": {
+    "security_clearance": false,
+    "after_hours_access": false,
+    "special_equipment": [],
+    "certifications_required": [],
+    "insurance_requirements": []
+  },
+  "ai_tone": "professional"
+}

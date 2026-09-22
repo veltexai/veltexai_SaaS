@@ -29,6 +29,10 @@ import { recordFunnelEvents } from "@/lib/analytics/funnel-server";
 
 export async function POST(request: NextRequest) {
   try {
+    const body = await request.json();
+    if (body.service_specific_data?.catalogJob) {
+      return NextResponse.json({ error: 'Use the category workbench to regenerate this versioned proposal.' }, { status: 422 });
+    }
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
@@ -56,7 +60,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    const body = await request.json();
     const {
       client_name,
       client_company,

@@ -1,3 +1,5 @@
+import { composeCatalogProposal } from '@/features/service-catalog/proposal';
+import { defaultJob } from '@/features/service-catalog/catalog';
 import { NextRequest } from 'next/server';
 import { POST as generate } from '../generate/route';
 import { POST as create } from '../route';
@@ -38,7 +40,7 @@ jest.mock('@/lib/supabase/server', () => ({
         : table === 'proposals' ? savedProposal
         : settingsAvailable ? [settings] : [];
       const chain = { select: () => chain, eq: () => chain, order: () => chain,
-        limit: async () => ({ data }), single: async () => ({ data }), insert };
+        limit: async () => ({ data }), single: async () => ({ data: table === "proposals" ? savedProposal : data }), insert, update: (row: Record<string, unknown>) => { savedProposal = { ...savedProposal, ...row }; return chain; } };
       return chain;
     },
   }),
@@ -301,4 +303,21 @@ describe('Quick commercial monthly pricing basis', () => {
     expect(calculate).toHaveBeenCalledTimes(1);
     calculate.mockRestore();
   });
+});
+
+
+it('catalog create, reopen and edit keep canonical price and denormalized columns aligned', async () => {
+  const job = { ...defaultJob('standard'), access: 'Confirmed access' };
+  const original = composeCatalogProposal({ job, client: { client_name: 'Sample', client_email: 'sample@example.com', contact_phone: '555', service_location: 'Test property', facility_size: 1500, service_frequency: 'one-time' } });
+  expect((await create(request({ ...original, generated_content: 'forged', pricing_data: { price_range: { low: 1, high: 1 } } }))).status).toBe(200);
+  expect(savedProposal?.generated_content).toBe(original.generated_content);
+  const revised = composeCatalogProposal({ job: { ...job, squareFeet: 2200, override: { pricePerVisit: 399, reason: 'Operator walkthrough' } }, client: { ...original.global_inputs, client_name: 'Revised customer' } });
+  const result = await update(request(revised, 'PUT'), { params: Promise.resolve({ id: 'saved' }) });
+  expect(result.status).toBe(200);
+  const { proposal } = await (await reopen(request({}, 'GET'), { params: Promise.resolve({ id: 'saved' }) })).json();
+  expect(proposal.client_name).toBe('Revised customer');
+  expect(proposal.facility_size).toBe(2200);
+  expect(proposal.pricing_data.price_range).toEqual({ low: 399, high: 399 });
+  expect(proposal.service_specific_data.catalogJob.override.reason).toBe('Operator walkthrough');
+  expect((await update(request({ service_specific_data: {} }, 'PUT'), { params: Promise.resolve({ id: 'saved' }) })).status).toBe(422);
 });

@@ -1,3 +1,6 @@
+import { isCatalogProposal, normalizeCatalogProposal } from '@/features/service-catalog/proposal';
+import { proposalFormSchema } from '@/features/proposals/schemas/proposal';
+import { ZodError } from 'zod';
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/features/auth/services/get-user";
 import { createClient } from "@/lib/supabase/server";
@@ -81,7 +84,7 @@ export async function PUT(
       );
     }
 
-    const updateData = validationResult.data;
+    let updateData = validationResult.data;
 
     // Without this, the create-route guard is bypassable in two steps: save
     // with an entitled design, then PUT the locked one.
@@ -100,7 +103,7 @@ export async function PUT(
     // First check if the proposal exists and belongs to the user
     const { data: existingProposal, error: fetchError } = await supabase
       .from("proposals")
-      .select("id")
+      .select("*")
       .eq("id", id)
       .eq("user_id", user.id)
       .single();
@@ -119,9 +122,25 @@ export async function PUT(
       );
     }
 
+    if (isCatalogProposal(existingProposal) || isCatalogProposal(updateData)) {
+      if (updateData.service_specific_data && !isCatalogProposal(updateData))
+        return NextResponse.json({ error: 'Catalog metadata cannot be removed.' }, { status: 422 });
+      const merged = proposalFormSchema.parse({ ...existingProposal, ...updateData, template_id: updateData.template_id ?? existingProposal.template_id ?? undefined });
+      updateData = normalizeCatalogProposal(merged);
+    }
+
     // Update the proposal
     const proposalUpdate: ProposalUpdate = {
       ...updateData,
+      ...(isCatalogProposal(updateData) && updateData.global_inputs ? {
+        client_name: updateData.global_inputs.client_name,
+        client_email: updateData.global_inputs.client_email,
+        client_company: updateData.global_inputs.client_company,
+        contact_phone: updateData.global_inputs.contact_phone,
+        service_location: updateData.global_inputs.service_location,
+        facility_size: updateData.global_inputs.facility_size,
+        service_frequency: updateData.global_inputs.service_frequency,
+      } : {}),
       updated_at: new Date().toISOString(),
     };
 
@@ -143,6 +162,7 @@ export async function PUT(
 
     return NextResponse.json({ proposal });
   } catch (error) {
+    if (error instanceof ZodError) return NextResponse.json({ error: "Invalid catalog inputs", details: error.issues }, { status: 422 });
     console.error("Error in PUT /api/proposals/[id]:", error);
     return NextResponse.json(
       { error: "Internal server error" },

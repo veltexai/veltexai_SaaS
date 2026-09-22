@@ -1,3 +1,5 @@
+import { CatalogDocument } from '@/features/service-catalog/components/catalog-document';
+import { isCatalogProposal } from '@/features/service-catalog/proposal';
 import { detectTemplateType } from './utils/utils';
 import { resolveTemplateImages } from './utils/resolve-template-images';
 import { loadTemplateData } from './services/template-service';
@@ -26,6 +28,7 @@ export async function TemplateRenderer({ proposal }: { proposal: Proposal }) {
   try {
     const { templateRow, branding, showPoweredBy } =
       await loadTemplateData(proposal);
+    if (isCatalogProposal(proposal)) return <CatalogDocument content={proposal.generated_content ?? ''} companyName={branding?.name} showPoweredBy={showPoweredBy} />;
     const type = detectTemplateType(templateRow);
     const Component = COMPONENTS[type] ?? BasicTemplate;
     return (

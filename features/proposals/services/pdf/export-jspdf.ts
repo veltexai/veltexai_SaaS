@@ -1,3 +1,5 @@
+import { catalogDocumentText } from '@/features/service-catalog/document';
+import { isCatalogProposal } from '@/features/service-catalog/proposal';
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
 import { type Database } from "@/types/database";
@@ -105,7 +107,7 @@ export class PDFExporter {
 
     // Add generated content with better formatting
     if (proposal.generated_content) {
-      this.addEnhancedContent(proposal.generated_content, template);
+      this.addEnhancedContent(isCatalogProposal(proposal) ? catalogDocumentText(proposal.generated_content) : proposal.generated_content, template);
     }
 
     // Add service references if available and requested

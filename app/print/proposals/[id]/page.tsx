@@ -1,3 +1,5 @@
+import { CatalogDocument } from '@/features/service-catalog/components/catalog-document';
+import { isCatalogProposal } from '@/features/service-catalog/proposal';
 import { getPrintPageData } from '@/features/templates/services/print-data-service';
 import { PrintTemplateSwitcher } from '@/features/templates/components/print-template-switcher';
 import { createClient } from '@/lib/supabase/server';
@@ -23,6 +25,11 @@ export default async function PrintProposalPage({
   if (!proposal || proposal.user_id !== user.id) {
     return <div>Proposal not found</div>;
   }
+
+  if (isCatalogProposal(proposal)) return <div className="bg-white">
+    <style>{`@page { size: A4; margin: 16mm; } html, body { margin: 0; }`}</style>
+    <CatalogDocument content={proposal.generated_content ?? ''} companyName={branding?.name} showPoweredBy={showPoweredBy} />
+  </div>;
 
   return (
     <div className="bg-white print-root">

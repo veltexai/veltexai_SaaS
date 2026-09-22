@@ -1,3 +1,5 @@
+import { CatalogDocument } from '@/features/service-catalog/components/catalog-document';
+import { isCatalogProposal } from '@/features/service-catalog/proposal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -61,11 +63,11 @@ export function ProposalContent({
           <>
             {proposal.generated_content ? (
               <div className="prose prose-sm sm:prose max-w-none overflow-x-auto">
-                <StructuredMarkdownRenderer
+                {isCatalogProposal(proposal) ? <CatalogDocument content={proposal.generated_content} /> : <StructuredMarkdownRenderer
                   content={proposal.generated_content}
                   proposalId={proposal.id}
                   serviceFrequency={proposal.service_frequency}
-                />
+                />}
               </div>
             ) : (
               <div className="text-center py-6 sm:py-8 text-gray-500">

@@ -1,5 +1,6 @@
 export async function generateProposalPDFWithPlaywright(
-  id: string
+  id: string,
+  sessionCookies: Array<{ name: string; value: string }> = [],
 ): Promise<Buffer> {
   const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const url = `${base}/print/proposals/${id}`;
@@ -23,7 +24,14 @@ export async function generateProposalPDFWithPlaywright(
     }
 
     const page = await browser.newPage();
+    const target = new URL(base);
+    if (sessionCookies.length) await page.context().addCookies(sessionCookies.map(cookie => ({
+      ...cookie, domain: target.hostname, path: '/', secure: target.protocol === 'https:', httpOnly: true, sameSite: 'Lax' as const,
+    })));
     await page.goto(url, { waitUntil: 'networkidle' });
+    if (await page.getByText('Not authorized', { exact: true }).count() || await page.getByText('Proposal not found', { exact: true }).count()) {
+      throw new Error('Print session could not access the proposal');
+    }
 
     await page.emulateMedia({ media: 'print' });
     // Skip waiting for optional extras marker to avoid unnecessary delays
