@@ -1,4 +1,3 @@
-import { isCatalogProposal } from '@/features/service-catalog/proposal';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PublicProposalView } from '@/features/proposals/components/public-proposal-view';
@@ -45,112 +44,9 @@ async function getProposalByTracking(trackingId: string): Promise<{
 } | null> {
   const supabase = await createClient();
 
-  // First get the tracking record
-  const { data: tracking, error: trackingError } = await supabase
-    .from('proposal_tracking')
-    .select('*')
-    .eq('tracking_id', trackingId)
-    .single();
-
-  if (trackingError || !tracking) {
-    return null;
-  }
-
-  // Then get the proposal with company info
-  const { data: proposal, error: proposalError } = await supabase
-    .from('proposals')
-    .select(`
-      *,
-      company_profiles!inner(
-        company_name,
-        logo_url,
-        primary_color,
-        secondary_color
-      )
-    `)
-    .eq('id', tracking.proposal_id)
-    .single();
-
-  if (proposalError || !proposal) {
-    return null;
-  }
-
-  return {
-    proposal: (isCatalogProposal(proposal) ? {
-      ...proposal,
-      catalog_document: true,
-      // Internal wages, cost scenarios and override reasons stay with the operator.
-      service_specific_data: undefined,
-      pricing_data: { price_range: proposal.pricing_data?.price_range },
-    } : proposal) as ProposalData,
-    tracking: tracking as TrackingData,
-  };
-}
-
-async function recordProposalView(trackingId: string, userAgent?: string, ipAddress?: string) {
-  const supabase = await createClient();
-
-  try {
-    // Get current tracking record
-    const { data: currentTracking } = await supabase
-      .from('proposal_tracking')
-      .select('view_count, proposal_id')
-      .eq('tracking_id', trackingId)
-      .single();
-
-    if (currentTracking) {
-      // Update tracking record with incremented view count
-      const { error: trackingError } = await supabase
-        .from('proposal_tracking')
-        .update({
-          viewed: true,
-          viewed_at: new Date().toISOString(),
-          view_count: (currentTracking.view_count || 0) + 1,
-          user_agent: userAgent,
-          ip_address: ipAddress,
-        })
-        .eq('tracking_id', trackingId);
-
-      if (trackingError) {
-        console.error('Error updating tracking:', trackingError);
-      }
-
-      // Get current proposal view count
-      const { data: currentProposal } = await supabase
-        .from('proposals')
-        .select('view_count')
-        .eq('id', currentTracking.proposal_id)
-        .single();
-
-      if (currentProposal) {
-        // Update proposal view count
-        const { error: proposalError } = await supabase
-          .from('proposals')
-          .update({
-            view_count: (currentProposal.view_count || 0) + 1,
-            last_viewed_at: new Date().toISOString(),
-          })
-          .eq('id', currentTracking.proposal_id);
-
-        if (proposalError) {
-          console.error('Error updating proposal views:', proposalError);
-        }
-      }
-
-      // Record in proposal_views table
-      await supabase
-        .from('proposal_views')
-        .insert({
-          proposal_id: currentTracking.proposal_id,
-          tracking_id: trackingId,
-          viewer_ip: ipAddress,
-          user_agent: userAgent,
-          viewed_at: new Date().toISOString(),
-        });
-    }
-  } catch (error) {
-    console.error('Error recording proposal view:', error);
-  }
+  const { data, error } = await supabase.rpc('read_tracked_proposal', { token: trackingId });
+  if (error || !data) return null;
+  return data as { proposal: ProposalData; tracking: TrackingData };
 }
 
 interface PublicProposalPageProps {

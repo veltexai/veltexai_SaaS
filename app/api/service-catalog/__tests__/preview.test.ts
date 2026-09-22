@@ -53,3 +53,10 @@ it('profile writes are scoped to session owner and reject invalid service/market
   expect((await saveProfile(req({ markets: ['short_term_rental'], services: ['airbnb_turnover'], costs: defaultJob().costs, equipment: [] }))).status).toBe(200);
   expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ user_id: 'owner' }));
 });
+it('demo previews do not emit activation events; regeneration has a distinct name', async () => {
+  const body = input(); body.job = { ...body.job, demo: true } as typeof body.job;
+  expect((await POST(req(body))).status).toBe(200);
+  expect(recordFunnelEvents).not.toHaveBeenCalled();
+  expect((await POST(req({ ...input(), proposalId: '11111111-1111-4111-8111-111111111111' }))).status).toBe(200);
+  expect(recordFunnelEvents).toHaveBeenCalledWith([expect.objectContaining({ eventName: 'proposal_regenerated' })]);
+});

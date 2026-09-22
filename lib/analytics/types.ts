@@ -3,7 +3,11 @@ import type { AnalyticsEventName } from "./events";
 export type ProposalFlow = "quick" | "advanced";
 export type AnalyticsFailureType = "http" | "network" | "invalid_response";
 
+type CatalogProperties = { job_type: string; catalog_version: string; business_segment: string; demo: boolean };
 export interface AnalyticsEventProperties {
+  catalog_workbench_viewed: CatalogProperties;
+  catalog_estimate_visible: CatalogProperties;
+  catalog_validation_failed: CatalogProperties;
   landing_cta_clicked: {
     placement: "hero" | "gradient" | "header" | "pricing";
     destination: "demo" | "signup" | "login" | "pricing";

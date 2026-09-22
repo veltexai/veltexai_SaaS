@@ -1,4 +1,7 @@
 export const ANALYTICS_EVENTS = {
+  CATALOG_WORKBENCH_VIEWED: "catalog_workbench_viewed",
+  CATALOG_ESTIMATE_VISIBLE: "catalog_estimate_visible",
+  CATALOG_VALIDATION_FAILED: "catalog_validation_failed",
   LANDING_CTA_CLICKED: "landing_cta_clicked",
   DEMO_STARTED: "demo_started",
   CREATE_MY_REAL_PROPOSAL_CLICKED: "create_my_real_proposal_clicked",

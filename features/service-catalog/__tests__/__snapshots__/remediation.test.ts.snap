@@ -1,0 +1,289 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`customer copy and privacy snapshot: airbnb_turnover 1`] = `
+"## Cover letter
+We propose vacation rental turnover service agreement for Customer at Test home. Please review the scope and service agreement below.
+
+## Scope of service
+Service schedule: Per turn.
+- Dust reachable surfaces
+- Vacuum and mop accessible floors
+- Clean kitchen counters, sink and appliance exteriors
+- Clean bathrooms, fixtures and mirrors
+- Empty ordinary household trash
+- Reset beds with available clean linens
+- Complete departure inspection checklist
+- Document visible damage for the host; no warranty of hidden-damage detection
+
+Property: house; 1500 cleanable square feet, 3 bedrooms, 2 bathrooms; vacant.
+
+
+Turnover window: 11:00 checkout to 16:00 check-in, same day. Expected turns per month: 4. Beds: 3; linen par: 2. Visible damage and photo report within 24 hours after service. 
+Ordinary cleaning supplies are included.
+
+### Exclusions
+- Regulated, biohazard and mold remediation
+- Construction debris and pest remediation
+- Exterior or high-access work
+- Heavy furniture moving
+- Appliance interiors unless selected
+- Laundry; host supplies clean linens
+
+### Optional services
+- Appliance interiors (count each appliance); agree scope and price before adding work.
+- Additional labor after walkthrough review; agree scope and price before adding work.
+
+### Customer responsibilities
+- Provide safe access, running water and electricity
+- Secure pets and valuables
+- Identify delicate surfaces and existing damage
+- Approve scope or price changes before work
+
+## Service Quote & Pricing
+Vacation rental turnover service agreement (Per turn): **$280.00**
+
+**Total before any applicable tax: $280.00**
+
+Your price: $280.00 per turn. Estimated monthly budget: $1120.00; actual billing depends on visits completed. Confirm actual billing schedule in writing.
+
+Taxes are not assessed in this estimate; confirm applicability before acceptance.
+
+## Terms & Conditions
+This is a per-turn service agreement. Each turn must be booked and confirmed; same-day capacity is subject to the agreed window and linen availability. Host supplies consumables and spare linens. Report lost property and visible damage promptly; no hidden-damage inspection is included.
+
+
+## Acceptance
+Customer signature: ____________________ Date: __________
+
+Cleaning company signature: ____________________ Date: __________
+
+Confirm the scope, scheduling, taxes and payment terms before signing."
+`;
+
+exports[`customer copy and privacy snapshot: first_deep 1`] = `
+"## Cover letter
+We propose first visit / deep clean for Customer at Test home. Please review the scope and service agreement below.
+
+## Scope of service
+Service schedule: One-time service.
+- Dust reachable surfaces
+- Vacuum and mop accessible floors
+- Clean kitchen counters, sink and appliance exteriors
+- Clean bathrooms, fixtures and mirrors
+- Empty ordinary household trash
+- Hand-wipe reachable baseboards, cabinet fronts, doors and light switches
+- Clean reachable window sills, tracks, blinds and vent covers
+
+Property: house; 1500 cleanable square feet, 3 bedrooms, 2 bathrooms; occupied.
+
+
+
+Ordinary cleaning supplies are included.
+
+### Exclusions
+- Regulated, biohazard and mold remediation
+- Construction debris and pest remediation
+- Exterior or high-access work
+- Heavy furniture moving
+- Appliance interiors unless selected
+
+### Optional services
+- Appliance interiors (count each appliance); agree scope and price before adding work.
+- Additional labor after walkthrough review; agree scope and price before adding work.
+
+### Customer responsibilities
+- Provide safe access, running water and electricity
+- Secure pets and valuables
+- Identify delicate surfaces and existing damage
+- Approve scope or price changes before work
+
+## Service Quote & Pricing
+First visit / deep clean (One-time service): **$310.00**
+
+**Total before any applicable tax: $310.00**
+
+Your price: $310.00 per visit. This is a one-time job total.
+
+Taxes are not assessed in this estimate; confirm applicability before acceptance.
+
+## Terms & Conditions
+Service dates and payment timing must be agreed before work. Scope changes require a revised agreement. No automatic renewal for one-time jobs.
+
+
+## Acceptance
+Customer signature: ____________________ Date: __________
+
+Cleaning company signature: ____________________ Date: __________
+
+Confirm the scope, scheduling, taxes and payment terms before signing."
+`;
+
+exports[`customer copy and privacy snapshot: move_in_out 1`] = `
+"## Cover letter
+We propose move-in / move-out for Customer at Test home. Please review the scope and service agreement below.
+
+## Scope of service
+Service schedule: One-time service.
+- Dust reachable surfaces
+- Vacuum and mop accessible floors
+- Clean kitchen counters, sink and appliance exteriors
+- Clean bathrooms, fixtures and mirrors
+- Empty ordinary household trash
+- Clean empty cabinet and drawer interiors
+- Detail vacant rooms and reachable baseboards
+
+Property: house; 1500 cleanable square feet, 3 bedrooms, 2 bathrooms; vacant.
+
+
+
+Ordinary cleaning supplies are included.
+
+### Exclusions
+- Regulated, biohazard and mold remediation
+- Construction debris and pest remediation
+- Exterior or high-access work
+- Heavy furniture moving
+- Appliance interiors unless selected
+
+### Optional services
+- Appliance interiors (count each appliance); agree scope and price before adding work.
+- Additional labor after walkthrough review; agree scope and price before adding work.
+
+### Customer responsibilities
+- Provide safe access, running water and electricity
+- Secure pets and valuables
+- Identify delicate surfaces and existing damage
+- Approve scope or price changes before work
+
+## Service Quote & Pricing
+Move-in / move-out (One-time service): **$300.00**
+
+**Total before any applicable tax: $300.00**
+
+Your price: $300.00 per visit. This is a one-time job total.
+
+Taxes are not assessed in this estimate; confirm applicability before acceptance.
+
+## Terms & Conditions
+Service dates and payment timing must be agreed before work. Scope changes require a revised agreement. No automatic renewal for one-time jobs.
+
+
+## Acceptance
+Customer signature: ____________________ Date: __________
+
+Cleaning company signature: ____________________ Date: __________
+
+Confirm the scope, scheduling, taxes and payment terms before signing."
+`;
+
+exports[`customer copy and privacy snapshot: recurring_standard 1`] = `
+"## Cover letter
+We propose recurring standard home cleaning for Customer at Test home. Please review the scope and service agreement below.
+
+## Scope of service
+Service schedule: Every two weeks.
+- Dust reachable surfaces
+- Vacuum and mop accessible floors
+- Clean kitchen counters, sink and appliance exteriors
+- Clean bathrooms, fixtures and mirrors
+- Empty ordinary household trash
+
+Property: house; 1500 cleanable square feet, 3 bedrooms, 2 bathrooms; occupied.
+
+
+
+Ordinary cleaning supplies are included.
+
+### Exclusions
+- Regulated, biohazard and mold remediation
+- Construction debris and pest remediation
+- Exterior or high-access work
+- Heavy furniture moving
+- Appliance interiors unless selected
+
+### Optional services
+- Appliance interiors (count each appliance); agree scope and price before adding work.
+- Additional labor after walkthrough review; agree scope and price before adding work.
+
+### Customer responsibilities
+- Provide safe access, running water and electricity
+- Secure pets and valuables
+- Identify delicate surfaces and existing damage
+- Approve scope or price changes before work
+
+## Service Quote & Pricing
+Recurring standard home cleaning (Every two weeks): **$245.00**
+
+**Total before any applicable tax: $245.00**
+
+Your price: $245.00 per visit. Estimated monthly budget: $530.83; actual billing depends on visits completed. Confirm actual billing schedule in writing.
+Initial detailed clean: $310.00 once, before the ongoing recurring visits. Includes reachable baseboards, cabinet fronts, doors, switches, sills, tracks, blinds and vent covers. Initial clean replaces the first standard visit; monthly estimates cover ongoing visits only.
+Taxes are not assessed in this estimate; confirm applicability before acceptance.
+
+## Terms & Conditions
+Service continues on the agreed recurring schedule until cancelled. Please give at least 48 hours notice to cancel, skip or reschedule a visit. If safe access is unavailable, contact us to reschedule. Any cancellation or lockout fee must be agreed in writing before the first visit.
+
+
+## Acceptance
+Customer signature: ____________________ Date: __________
+
+Cleaning company signature: ____________________ Date: __________
+
+Confirm the scope, scheduling, taxes and payment terms before signing."
+`;
+
+exports[`customer copy and privacy snapshot: standard 1`] = `
+"## Cover letter
+We propose one-time standard home cleaning for Customer at Test home. Please review the scope and service agreement below.
+
+## Scope of service
+Service schedule: One-time service.
+- Dust reachable surfaces
+- Vacuum and mop accessible floors
+- Clean kitchen counters, sink and appliance exteriors
+- Clean bathrooms, fixtures and mirrors
+- Empty ordinary household trash
+
+Property: house; 1500 cleanable square feet, 3 bedrooms, 2 bathrooms; occupied.
+
+
+
+Ordinary cleaning supplies are included.
+
+### Exclusions
+- Regulated, biohazard and mold remediation
+- Construction debris and pest remediation
+- Exterior or high-access work
+- Heavy furniture moving
+- Appliance interiors unless selected
+
+### Optional services
+- Appliance interiors (count each appliance); agree scope and price before adding work.
+- Additional labor after walkthrough review; agree scope and price before adding work.
+
+### Customer responsibilities
+- Provide safe access, running water and electricity
+- Secure pets and valuables
+- Identify delicate surfaces and existing damage
+- Approve scope or price changes before work
+
+## Service Quote & Pricing
+One-time standard home cleaning (One-time service): **$245.00**
+
+**Total before any applicable tax: $245.00**
+
+Your price: $245.00 per visit. This is a one-time job total.
+
+Taxes are not assessed in this estimate; confirm applicability before acceptance.
+
+## Terms & Conditions
+Service dates and payment timing must be agreed before work. Scope changes require a revised agreement. No automatic renewal for one-time jobs.
+
+
+## Acceptance
+Customer signature: ____________________ Date: __________
+
+Cleaning company signature: ____________________ Date: __________
+
+Confirm the scope, scheduling, taxes and payment terms before signing."
+`;

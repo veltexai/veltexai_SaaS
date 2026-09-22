@@ -87,9 +87,7 @@ export async function POST(
       .single();
 
     // Generate tracking ID
-    const trackingId = `track_${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+    const trackingId = crypto.randomUUID();
 
     let pdfBuffer: Buffer | undefined;
     let proposalViewUrl: string | undefined;

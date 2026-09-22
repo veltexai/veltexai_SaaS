@@ -1,3 +1,5 @@
+import { adaptLegacy } from '@/features/service-catalog/catalog';
+import { getScopeTemplateServiceType } from '@/features/proposals/quick/constants/scope-templates';
 import type { DemoType } from "@/features/demo-proposal/types/demo-proposal";
 import {
   DEFAULT_SCOPE_TEMPLATE_ID,
@@ -58,6 +60,8 @@ export default async function QuickProposalPage({
   const template =
     getScopeTemplate(requestedTemplateId) ??
     getScopeTemplate(DEFAULT_SCOPE_TEMPLATE_ID)!;
+  const mapped = adaptLegacy(getScopeTemplateServiceType(template), template.id);
+  if (mapped.jobType) redirect(`/dashboard/proposals/category?job=${mapped.jobType}`);
   const designTemplate = await getDefaultDesignTemplate(params.designTemplateType);
 
   return (

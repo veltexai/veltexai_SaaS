@@ -5,6 +5,9 @@ type FunnelEvent = {
   userId: string;
   eventName:
     | "proposal_generate_succeeded"
+    | "proposal_regenerated"
+    | "catalog_previewed"
+    | "catalog_profile_saved"
     | "proposal_saved"
     | "first_proposal"
     | "repeat_proposal"

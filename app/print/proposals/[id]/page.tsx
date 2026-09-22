@@ -28,7 +28,7 @@ export default async function PrintProposalPage({
 
   if (isCatalogProposal(proposal)) return <div className="bg-white">
     <style>{`@page { size: A4; margin: 16mm; } html, body { margin: 0; }`}</style>
-    <CatalogDocument content={proposal.generated_content ?? ''} companyName={branding?.name} showPoweredBy={showPoweredBy} />
+    <CatalogDocument content={proposal.generated_content ?? ''} companyName={branding?.name} branding={branding} showPoweredBy={showPoweredBy} />
   </div>;
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { adaptLegacy } from '@/features/service-catalog/catalog';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -459,7 +460,7 @@ export function QuickProposalFlow({
       </div>
 
       <Card><CardContent className="space-y-2 pt-6 text-sm">
-        <p className="font-medium">What does this job need?</p>
+        <p className="font-medium">Residential jobs now use the price workbench</p>
         <div className="flex flex-wrap gap-4 underline">
           <Link href="/dashboard/proposals/category">Residential or Airbnb / turnover</Link>
           <Link href="/dashboard/proposals/category?job=recurring_standard&demo=1">Residential example</Link>
@@ -712,6 +713,8 @@ export function QuickProposalFlow({
                         const nextTemplateId = event.target
                           .value as ScopeTemplateId;
                         const nextTemplate = getScopeTemplate(nextTemplateId);
+                        const mapped = nextTemplate && adaptLegacy(getScopeTemplateServiceType(nextTemplate), nextTemplateId);
+                        if (mapped?.jobType) { router.push(`/dashboard/proposals/category?job=${mapped.jobType}`); return; }
 
                         if (generatedContent) {
                           setIsPreviewStale(true);

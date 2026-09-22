@@ -9,57 +9,7 @@ export async function GET(
     const supabase = await createClient();
     const { trackingId } = await params;
 
-    // Get user agent and IP address for tracking
-    const userAgent = request.headers.get('user-agent') || null;
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    const realIp = request.headers.get('x-real-ip');
-    const ipAddress = forwardedFor?.split(',')[0] || realIp || null;
-
-    // Find the tracking record
-    const { data: tracking, error: trackingError } = await supabase
-      .from('proposal_tracking')
-      .select('*')
-      .eq('tracking_id', trackingId)
-      .single();
-
-    if (trackingError || !tracking) {
-      console.log('Tracking record not found for ID:', trackingId);
-      // Return a 1x1 transparent pixel even if tracking fails
-      return new NextResponse(
-        Buffer.from(
-          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-          'base64'
-        ),
-        {
-          status: 200,
-          headers: {
-            'Content-Type': 'image/png',
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-          },
-        }
-      );
-    }
-
-    // Update tracking record with email open information
-    const now = new Date().toISOString();
-    const { error: updateError } = await supabase
-      .from('proposal_tracking')
-      .update({
-        opened: true,
-        opened_at: tracking.opened_at || now, // Only set if not already opened
-        user_agent: userAgent,
-        ip_address: ipAddress,
-        updated_at: now,
-      })
-      .eq('id', tracking.id);
-
-    if (updateError) {
-      console.error('Error updating tracking record:', updateError);
-    } else {
-      console.log('Email open tracked for:', trackingId);
-    }
+    await supabase.rpc('record_tracking_metric', { token: trackingId, metric: 'open', value: 0 });
 
     // Return a 1x1 transparent pixel
     return new NextResponse(

@@ -37,3 +37,19 @@ If records exist, retain the additive tables and snapshots. Export/version them 
 ## Bounded Mohamed handoff (after Claude findings resolved)
 
 Report READY / NOT READY with exact evidence for production ancestry, migration/RLS execution, old and new proposal workflows, unchanged Stripe entitlements, required env/grants, build/tests, staging smoke and rollback readiness. No new environment variable is required by this release. Anthony separately authorizes deployment; this checklist grants no release permission.
+
+## Remediation addendum (September 22, 2026; NOT EXECUTED)
+
+The remediation candidate adds `20260922010000_catalog_remediation.sql` after the original migration. Read `REMEDIATION_EVIDENCE.md` before using this checklist; it supersedes the original claims about first-load access requirements, recurring headlines and STR one-time customer language.
+
+- New catalog ID: `2026-09-22.2`; retain `2026-09-22.1`. Keep both application implementations and registry rows.
+- Use `quality/service-catalog-remediation/staging-check.sh` only against a disposable loopback clone with synthetic users and the prior migrations already installed. It deliberately refuses hosted URLs. Neither psql nor Docker was available during remediation, so no execution is claimed.
+- Inventory existing table/column grants, RLS policies and SECURITY DEFINER functions first. The candidate revokes anonymous raw proposal/tracking privileges and introduces narrow token functions. Verify no other view/function bypass exposes private columns.
+- As anon, direct PostgREST `select=service_specific_data` and raw writes must fail. A valid synthetic token must return only the customer allowlist; an unknown token must return nothing. Search the complete response for wages, access sentinel, override reason and client email.
+- Exercise catalog and legacy counters as anon, owner, other user and service_role. Run concurrent increments and check none are lost. Test view/open/time/scroll functions, tracking disabled flags, invalid metrics and unknown tokens. Confirm the trigger does not reject legitimate counter changes.
+- Check historical v1 status-only PUT leaves stored content/price/snapshots unchanged. Explicit edits use its v1 strategy. Version replacement in-place fails; new proposals use v2.
+- Verify STR's persisted legacy discriminator does not leak “one-time” into the agreement: same-day and next-day (including equal-clock next-day), per-turn price, expected-turn budget, linen/restock/report policy. Recurring initial clean is separately priced and replaces the first standard visit.
+- Use synthetic test transport for email. No real recipients or paid calls. Confirm all PDF/export/public download paths, raw payload privacy, branding/footer entitlement, and hosted Chromium availability.
+- Run authenticated 390/1440 and real-device offline/403/422 checks. The local static screenshots and component tests do not satisfy this gate.
+
+Next gate is Claude re-review. Database execution, operator validation and founder acceptance remain required; this addendum grants no deployment permission.

@@ -1,0 +1,279 @@
+{
+  "title": "Vacation rental turnover service agreement proposal",
+  "service_type": "residential",
+  "global_inputs": {
+    "client_name": "Sample customer",
+    "client_email": "sample@example.com",
+    "contact_phone": "555-0100",
+    "service_location": "Example property",
+    "facility_size": 1500,
+    "service_frequency": "one-time"
+  },
+  "service_specific_data": {
+    "catalogJob": {
+      "catalogVersion": "2026-09-22.2",
+      "segment": "short_term_rental",
+      "jobType": "airbnb_turnover",
+      "frequency": "one-time",
+      "propertyType": "house",
+      "squareFeet": 1500,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "occupancy": "vacant",
+      "condition": "normal",
+      "pets": false,
+      "applianceInteriors": 0,
+      "access": "Safe lockbox access; parking beside entrance.",
+      "initialClean": false,
+      "levels": 1,
+      "hardFloorPercent": 50,
+      "clutter": "normal",
+      "monthsSinceClean": 1,
+      "occupants": 2,
+      "suppliesProvided": false,
+      "regulatedHazards": false,
+      "turnover": {
+        "nextDay": false,
+        "expectedTurns": 4,
+        "beds": 3,
+        "linenPar": 2,
+        "restockList": "",
+        "reportWithinHours": 24,
+        "checkout": "11:00",
+        "checkin": "16:00",
+        "laundryLoads": 0,
+        "restocking": false,
+        "inspection": true,
+        "damageDocumentation": true
+      },
+      "costs": {
+        "roundingIncrement": 5,
+        "crewSize": 2,
+        "wage": 25,
+        "burdenPercent": 25,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "minimumCharge": 120,
+        "overheadPercent": 15,
+        "marginPercent": 25,
+        "uncertaintyPercent": 20
+      },
+      "operatorNotes": ""
+    },
+    "catalogSnapshot": {
+      "version": "2026-09-22.2",
+      "id": "airbnb_turnover",
+      "segment": "short_term_rental",
+      "family": "rental_turnover",
+      "label": "Vacation rental turnover service agreement",
+      "legacyServiceType": "residential",
+      "propertyTypes": [
+        "house",
+        "apartment",
+        "condo",
+        "townhouse"
+      ],
+      "unit": "square_feet",
+      "quantityGuidance": "Use cleanable interior area; verify room counts and walkthrough condition. Hours are person-hours, not elapsed crew time.",
+      "frequencies": [
+        "one-time"
+      ],
+      "production": {
+        "min": 250,
+        "base": 400,
+        "max": 550
+      },
+      "defaultCosts": {
+        "roundingIncrement": 5,
+        "crewSize": 2,
+        "wage": 25,
+        "burdenPercent": 25,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "minimumCharge": 120,
+        "overheadPercent": 15,
+        "marginPercent": 25,
+        "uncertaintyPercent": 20
+      },
+      "questionKeys": [
+        "squareFeet",
+        "bedrooms",
+        "bathrooms",
+        "occupancy",
+        "condition",
+        "pets",
+        "applianceInteriors",
+        "access",
+        "suppliesProvided",
+        "turnover"
+      ],
+      "strategy": "residential_labor_v2",
+      "inclusions": [
+        "Dust reachable surfaces",
+        "Vacuum and mop accessible floors",
+        "Clean kitchen counters, sink and appliance exteriors",
+        "Clean bathrooms, fixtures and mirrors",
+        "Empty ordinary household trash",
+        "Reset beds with available clean linens"
+      ],
+      "exclusions": [
+        "Regulated, biohazard and mold remediation",
+        "Construction debris and pest remediation",
+        "Exterior or high-access work",
+        "Heavy furniture moving",
+        "Appliance interiors unless selected"
+      ],
+      "options": [
+        "Appliance interiors (count each appliance)",
+        "Additional labor after walkthrough review"
+      ],
+      "responsibilities": [
+        "Provide safe access, running water and electricity",
+        "Secure pets and valuables",
+        "Identify delicate surfaces and existing damage",
+        "Approve scope or price changes before work"
+      ],
+      "terms": "Service dates and payment timing must be agreed before work. Scope changes require a revised agreement. No automatic renewal for one-time jobs.",
+      "compliance": {
+        "regulatedPricing": false,
+        "capabilityReview": "Confirm access, insurance and ordinary cleaning capability. Stop for sharps, bodily fluids, mold remediation or other hazardous material."
+      },
+      "approval": "operator_review_required",
+      "effectiveDate": "2026-09-22"
+    },
+    "estimateSnapshot": {
+      "version": "2026-09-22.2",
+      "strategy": "residential_labor_v2",
+      "unit": "per_visit",
+      "low": {
+        "laborHours": 3.66,
+        "elapsedCrewHours": 1.83,
+        "labor": 114.38,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "directCost": 151.38,
+        "overhead": 22.71,
+        "cost": 174.09,
+        "marginAmount": 60.91,
+        "minimumAdjustment": 2.88,
+        "suggestedPrice": 235
+      },
+      "base": {
+        "laborHours": 4.58,
+        "elapsedCrewHours": 2.29,
+        "labor": 143.13,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "directCost": 180.13,
+        "overhead": 27.02,
+        "cost": 207.15,
+        "marginAmount": 72.85,
+        "minimumAdjustment": 3.8,
+        "suggestedPrice": 280
+      },
+      "high": {
+        "laborHours": 5.49,
+        "elapsedCrewHours": 2.75,
+        "labor": 171.56,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "directCost": 208.56,
+        "overhead": 31.28,
+        "cost": 239.84,
+        "marginAmount": 80.16,
+        "minimumAdjustment": 0.21,
+        "suggestedPrice": 320
+      },
+      "selectedPrice": 280,
+      "drivers": {
+        "squareFeetPerPersonHour": 400,
+        "roomMinimumHours": 1.6,
+        "conditionMultiplier": 1,
+        "recurrenceMultiplier": 1,
+        "additionalHours": 0.4
+      },
+      "modeledHours": 4.58,
+      "visitsPerMonth": 4,
+      "periodPrice": 1120,
+      "effectiveMarginPercent": 26.02,
+      "warnings": [
+        "Planning assumptions have not been validated by a cleaning operator. Confirm after a walkthrough."
+      ]
+    },
+    "home_type": "house",
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "pets": false,
+    "cleaning_supplies_provided": false
+  },
+  "pricing_enabled": true,
+  "pricing_data": {
+    "price_range": {
+      "low": 280,
+      "high": 280
+    },
+    "hours_estimate": {
+      "min": 14.64,
+      "max": 21.96
+    },
+    "assumptions": {
+      "labor_rate": 31.25,
+      "overhead_percentage": 15,
+      "margin_percentage": 25,
+      "production_rate": {
+        "min": 250,
+        "max": 550
+      }
+    }
+  },
+  "generated_content": "## Cover letter\nWe propose vacation rental turnover service agreement for Sample customer at Example property. Please review the scope and service agreement below.\n\n## Scope of service\nService schedule: Per turn.\n```veliz_scope_table\n{\"rows\":[{\"area\":\"Dust reachable surfaces\",\"frequency\":\"Per turn\",\"notes\":\"\"},{\"area\":\"Vacuum and mop accessible floors\",\"frequency\":\"Per turn\",\"notes\":\"\"},{\"area\":\"Clean kitchen counters, sink and appliance exteriors\",\"frequency\":\"Per turn\",\"notes\":\"\"},{\"area\":\"Clean bathrooms, fixtures and mirrors\",\"frequency\":\"Per turn\",\"notes\":\"\"},{\"area\":\"Empty ordinary household trash\",\"frequency\":\"Per turn\",\"notes\":\"\"},{\"area\":\"Reset beds with available clean linens\",\"frequency\":\"Per turn\",\"notes\":\"\"},{\"area\":\"Complete departure inspection checklist\",\"frequency\":\"Per turn\",\"notes\":\"\"},{\"area\":\"Document visible damage for the host; no warranty of hidden-damage detection\",\"frequency\":\"Per turn\",\"notes\":\"\"}]}\n```\n\nProperty: house; 1500 cleanable square feet, 3 bedrooms, 2 bathrooms; vacant.\n\n\nTurnover window: 11:00 checkout to 16:00 check-in, same day. Expected turns per month: 4. Beds: 3; linen par: 2. Visible damage and photo report within 24 hours after service. \nOrdinary cleaning supplies are included.\n\n### Exclusions\n- Regulated, biohazard and mold remediation\n- Construction debris and pest remediation\n- Exterior or high-access work\n- Heavy furniture moving\n- Appliance interiors unless selected\n- Laundry; host supplies clean linens\n\n### Optional services\n- Appliance interiors (count each appliance); agree scope and price before adding work.\n- Additional labor after walkthrough review; agree scope and price before adding work.\n\n### Customer responsibilities\n- Provide safe access, running water and electricity\n- Secure pets and valuables\n- Identify delicate surfaces and existing damage\n- Approve scope or price changes before work\n\n## Service Quote & Pricing\n```veliz_pricing_table\n{\"rows\":[{\"service\":\"Vacation rental turnover service agreement\",\"frequency\":\"Per turn\",\"pricePerMonth\":\"$280.00\"}],\"summary\":{\"subtotal\":\"$280.00\",\"tax\":\"Not assessed\",\"total\":\"$280.00\"}}\n```\n\nYour price: $280.00 per turn. Estimated monthly budget: $1120.00; actual billing depends on visits completed. Confirm actual billing schedule in writing.\n\nTaxes are not assessed in this estimate; confirm applicability before acceptance.\n\n## Terms & Conditions\nThis is a per-turn service agreement. Each turn must be booked and confirmed; same-day capacity is subject to the agreed window and linen availability. Host supplies consumables and spare linens. Report lost property and visible damage promptly; no hidden-damage inspection is included.\n\n\n## Acceptance\nCustomer signature: ____________________ Date: __________\n\nCleaning company signature: ____________________ Date: __________\n\nConfirm the scope, scheduling, taxes and payment terms before signing.",
+  "status": "draft",
+  "facility_details": {
+    "building_type": "house",
+    "accessibility_requirements": [],
+    "special_areas": [],
+    "equipment_present": [],
+    "environmental_concerns": []
+  },
+  "traffic_analysis": {
+    "peak_hours": [],
+    "special_events": false
+  },
+  "service_scope": {
+    "areas_included": [
+      "Dust reachable surfaces",
+      "Vacuum and mop accessible floors",
+      "Clean kitchen counters, sink and appliance exteriors",
+      "Clean bathrooms, fixtures and mirrors",
+      "Empty ordinary household trash",
+      "Reset beds with available clean linens",
+      "Complete departure inspection checklist",
+      "Document visible damage for the host; no warranty of hidden-damage detection"
+    ],
+    "areas_excluded": [
+      "Regulated, biohazard and mold remediation",
+      "Construction debris and pest remediation",
+      "Exterior or high-access work",
+      "Heavy furniture moving",
+      "Appliance interiors unless selected",
+      "Laundry; host supplies clean linens"
+    ],
+    "special_services": [],
+    "frequency_details": {},
+    "area_notes": {},
+    "special_notes": ""
+  },
+  "special_requirements": {
+    "security_clearance": false,
+    "after_hours_access": false,
+    "special_equipment": [],
+    "certifications_required": [],
+    "insurance_requirements": []
+  },
+  "ai_tone": "professional"
+}

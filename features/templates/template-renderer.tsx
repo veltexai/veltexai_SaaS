@@ -28,7 +28,7 @@ export async function TemplateRenderer({ proposal }: { proposal: Proposal }) {
   try {
     const { templateRow, branding, showPoweredBy } =
       await loadTemplateData(proposal);
-    if (isCatalogProposal(proposal)) return <CatalogDocument content={proposal.generated_content ?? ''} companyName={branding?.name} showPoweredBy={showPoweredBy} />;
+    if (isCatalogProposal(proposal)) return <CatalogDocument content={proposal.generated_content ?? ''} companyName={branding?.name} branding={branding} showPoweredBy={showPoweredBy} />;
     const type = detectTemplateType(templateRow);
     const Component = COMPONENTS[type] ?? BasicTemplate;
     return (

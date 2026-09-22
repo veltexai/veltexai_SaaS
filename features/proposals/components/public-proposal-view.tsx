@@ -210,7 +210,7 @@ export function PublicProposalView({ proposal, tracking }: PublicProposalViewPro
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {proposal.catalog_document ? <CatalogDocument content={proposal.generated_content} /> : <div
+            {proposal.catalog_document ? <CatalogDocument content={proposal.generated_content} companyName={proposal.company_profiles.company_name} branding={proposal.company_profiles} /> : <div
               className="prose max-w-none"
               dangerouslySetInnerHTML={{ __html: proposal.generated_content }}
             />}

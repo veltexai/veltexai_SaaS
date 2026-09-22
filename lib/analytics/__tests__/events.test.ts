@@ -3,6 +3,9 @@ import { ANALYTICS_EVENTS } from "../events";
 describe("PostHog event contract", () => {
   it("uses the complete snake_case C7 event set", () => {
     expect(Object.values(ANALYTICS_EVENTS)).toEqual([
+      "catalog_workbench_viewed",
+      "catalog_estimate_visible",
+      "catalog_validation_failed",
       "landing_cta_clicked",
       "demo_started",
       "create_my_real_proposal_clicked",

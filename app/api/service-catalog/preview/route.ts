@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
     const proposal = composeCatalogProposal(input);
     if (proposal.template_id && !(await userCanAccessTemplate(user.id, proposal.template_id)))
       return NextResponse.json({ error: 'Design not available on your plan.' }, { status: 403 });
-    await recordFunnelEvents([{ eventId: `catalog_generated:${crypto.randomUUID()}`, userId: user.id,
-      eventName: 'proposal_generate_succeeded', properties: catalogAnalytics(proposal) }]);
+    if (!input.job.demo) await recordFunnelEvents([{ eventId: `catalog_generated:${crypto.randomUUID()}`, userId: user.id,
+      eventName: input.proposalId ? 'proposal_regenerated' : 'catalog_previewed', properties: catalogAnalytics(proposal) }]);
     return NextResponse.json(proposal);
   } catch (error) {
     return NextResponse.json({ error: error instanceof ZodError ? error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ') : 'Unable to prepare proposal.' }, { status: error instanceof ZodError ? 422 : 500 });

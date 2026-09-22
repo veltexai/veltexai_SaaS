@@ -321,3 +321,10 @@ it('catalog create, reopen and edit keep canonical price and denormalized column
   expect(proposal.service_specific_data.catalogJob.override.reason).toBe('Operator walkthrough');
   expect((await update(request({ service_specific_data: {} }, 'PUT'), { params: Promise.resolve({ id: 'saved' }) })).status).toBe(422);
 });
+it('status-only catalog PUT preserves historical content and price despite current pricing changes', async () => {
+  const p = composeCatalogProposal({ job: defaultJob('standard'), client: { client_name: 'History', client_email: 'history@example.com', contact_phone: '555', service_location: 'Test', facility_size: 1500, service_frequency: 'one-time' } });
+  savedProposal = { ...p, id: 'saved', user_id: 'user', generated_content: 'Frozen accepted proposal', pricing_data: { price_range: { low: 173.21, high: 173.21 } } };
+  const result = await update(request({ status: 'sent' }, 'PUT'), { params: Promise.resolve({ id: 'saved' }) });
+  expect(result.status).toBe(200);
+  expect(savedProposal).toMatchObject({ status: 'sent', generated_content: 'Frozen accepted proposal', pricing_data: { price_range: { low: 173.21, high: 173.21 } } });
+});

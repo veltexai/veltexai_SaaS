@@ -126,7 +126,7 @@ export async function PUT(
       if (updateData.service_specific_data && !isCatalogProposal(updateData))
         return NextResponse.json({ error: 'Catalog metadata cannot be removed.' }, { status: 422 });
       const merged = proposalFormSchema.parse({ ...existingProposal, ...updateData, template_id: updateData.template_id ?? existingProposal.template_id ?? undefined });
-      updateData = normalizeCatalogProposal(merged);
+      updateData = normalizeCatalogProposal(merged, proposalFormSchema.parse({ ...existingProposal, template_id: existingProposal.template_id ?? undefined }));
     }
 
     // Update the proposal

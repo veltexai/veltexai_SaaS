@@ -15,7 +15,7 @@ it.each(CATALOG.map(s => s.id))('round trips %s with version, selected price and
   expect(content).toContain('Customer responsibilities');
   expect(content).toContain('Acceptance');
   expect(content).not.toContain('```');
-  expect(p.pricing_data!.price_range!.low).toBe(p.service_specific_data.estimateSnapshot.periodPrice);
+  expect(p.pricing_data!.price_range!.low).toBe(p.service_specific_data.estimateSnapshot.selectedPrice);
   expect(p.service_specific_data.catalogSnapshot.version).toBe(p.service_specific_data.catalogJob.catalogVersion);
 });
 it.each(['light', 'normal', 'heavy'] as const)('produces ordered finite scenarios for %s', condition => {
