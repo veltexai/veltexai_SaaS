@@ -94,7 +94,9 @@ describe("100C shipped config is pinned to the approved pilot", () => {
     expect(c.active).toBe(true);
     expect(c.approvalReference).toBe("FOUNDER-LIVE-SEND-APPROVED-2026-08-11");
     expect(c.expectedWorkspaceId).toBe("698b2090-f4d5-484b-a0b1-44016fee7515");
-    expect(c.allowedStates).toEqual(["active", "completed"]);
+    // A paused campaign may be safely replenished without sending. Active and
+    // completed remain separately gated by the live-sync/continuity controls.
+    expect(c.allowedStates).toEqual(["paused", "active", "completed"]);
     expect(c.dailySyncCap).toBe(500);
     expect(c.totalPilotCap).toBe(50000);
   });
