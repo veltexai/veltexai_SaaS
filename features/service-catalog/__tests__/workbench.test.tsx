@@ -104,3 +104,13 @@ it('ongoing hours overrides leave the separately modeled initial-clean amount vi
  expect(screen.getByText(/Initial detailed clean: \$310.00 once/)).toBeInTheDocument();
  expect(screen.getByText(/Suggested price: \$205.00/)).toBeInTheDocument();
 });
+
+it('warns when an ongoing override exceeds the separately modeled initial clean', () => {
+ render(<CatalogWorkbench demo />);
+ fireEvent.change(screen.getByLabelText('Override person-hours (optional)'), { target: { value: '12' } });
+ expect(screen.getByText(/Suggested price: \$635.00/)).toBeInTheDocument();
+ expect(screen.getByText(/Initial detailed clean: \$310.00 once/)).toBeInTheDocument();
+ expect(screen.getByRole('alert')).toHaveTextContent('Initial clean is priced below the ongoing visit. Review its scope and price');
+ fireEvent.change(screen.getByLabelText('Override person-hours (optional)'), { target: { value: '3' } });
+ expect(screen.queryByText(/Initial clean is priced below/)).not.toBeInTheDocument();
+});

@@ -5,6 +5,6 @@ case "$HARNESS_PGDATA" in /tmp/veltex-catalog-*) ;; *) echo 'Refusing non-harnes
 export PGHOST="$HARNESS_PGDATA" PGPORT="${PGPORT:-55432}" PGUSER="${PGUSER:-$(id -un)}"
 unset PGHOSTADDR PGSERVICE PGSERVICEFILE
 export PGDATABASE=postgres
-test -f "$HARNESS_PGDATA/.veltex-disposable"
-actual_data=$(psql -X -q -At -v ON_ERROR_STOP=1 -d postgres -c 'show data_directory')
+[ -f "$HARNESS_PGDATA/.veltex-disposable" ] || { echo 'Missing disposable-cluster marker; refusing database access' >&2; exit 2; }
+actual_data=$(psql -X -q -At -v ON_ERROR_STOP=1 -d postgres -c 'show data_directory') || { echo 'Unable to verify disposable server data directory' >&2; exit 2; }
 [ "$actual_data" = "$HARNESS_PGDATA/data" ] || { echo 'Connected server is not the disposable harness' >&2; exit 2; }

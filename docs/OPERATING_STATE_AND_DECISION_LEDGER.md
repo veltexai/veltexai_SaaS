@@ -187,3 +187,15 @@ After any material action, append or revise the relevant section with:
 - Round 4 also separates initial-clean labor overrides, makes unchanged proposal comparison independent of JSON key order, gates the legacy tracking-stats RPC by caller RLS, and marks identity-free unique-view/duration statistics unavailable. Small advisory, metadata and profile-notice issues corrected.
 - Downloaded and reviewed Claude's database harness; checked in a safer derivative with dedicated socket-only cluster verification, actual candidate migrations, negative policy/dirty-event/repeat tests, complete role/token/privacy assertions, concurrency and mandatory privileged-function gate. No workflow pushed or run by Codex. Local: 505 tests/57 suites/5 snapshots, tsc and build pass; harness shell syntax passes.
 - R3-3 legacy usage/admin/template definer exposures remain an explicit release-blocking infrastructure audit with no waiver. Tracking stats fixed; a broad blind revoke was not applied. No hosted mutation, deployment, publication, spend or human external handoff.
+
+### Round 4 handoff receipt — 2026-09-23 Pacific
+
+- SENT and verified RUNNING in **Veltex AI Release 1 independent review**, https://claude.ai/cowork/cse_015J3LbDmLeVEV7Qt2Bkcoz9.
+- Exact candidate `dde3c0c`; `/private/tmp/veltex-release1-round4-dde3c0c.zip`; 148 hashed committed files including all repository migrations and derived isolated database harness. Archive SHA256 `ed8b6d4b94d263e509fc88d12431678b30ce7dbd82df293d74e64e8a74e90600`.
+- Asked Claude to execute the actual unpatched migration chain, role/stats/privacy matrix and concurrency; produce CLAUDE_ROUND4_REVIEW_RESULT.md. R3-3 broad privileged-function gate remains expected to fail and is explicitly NOT waived. No new folder permissions, hosted actions or deployment authorization.
+
+### Round 4 independent PASS and final local follow-up
+
+- Downloaded CLAUDE_ROUND4_REVIEW_RESULT.md. Claude verified 148 hashes and all 45 migrations without scratch patches; derived harness and original cross-check pass the role/privacy/stats/service-role matrix, dirty-history, policy injection, repeatability and 40-way concurrency. Verdict: LOCAL PASS; RELEASE FAIL. Broader definer gate fails on 10 legacy functions; no waiver.
+- Addressed its nonblocking medium R4-1 with an operator warning for initial-clean prices below an ongoing override, and low R4-2 with explicit self-contained guard refusals. 506 tests/57 suites/5 snapshots, typecheck and build pass; unmarked-directory guard checked without caller errexit. No database SQL changed after the verified candidate.
+- Real-target inventory, broad privileged-function audit/hardening, isolated Supabase/staging/email/hosted PDF, operators and founder acceptance remain open. Nothing deployed, published or spent; no external-human handoff sent.
