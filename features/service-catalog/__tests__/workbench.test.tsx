@@ -97,3 +97,10 @@ it('seeds the signature from the company profile even without cost defaults', as
  await waitFor(() => expect(screen.getByLabelText('Cleaning company name / signature')).toHaveValue('Keystone Cleaning'));
  expect(screen.getByText(/Suggested price: \$/)).toBeInTheDocument();
 });
+
+it('ongoing hours overrides leave the separately modeled initial-clean amount visible', () => {
+ render(<CatalogWorkbench demo />);
+ fireEvent.change(screen.getByLabelText('Override person-hours (optional)'), { target: { value: '3' } });
+ expect(screen.getByText(/Initial detailed clean: \$310.00 once/)).toBeInTheDocument();
+ expect(screen.getByText(/Suggested price: \$205.00/)).toBeInTheDocument();
+});

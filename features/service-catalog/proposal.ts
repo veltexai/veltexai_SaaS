@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { globalInputsSchema, proposalFormSchema, type ProposalFormData } from '@/features/proposals/schemas/proposal';
 import { getService } from './catalog';
-import { estimateJob, money } from './pricing';
+import { estimateJob, estimateInitialClean, money } from './pricing';
 import { jobSchema } from './schema';
 
 export const catalogRequestSchema = z.object({
@@ -17,7 +17,7 @@ export function composeCatalogProposal(input: unknown): ProposalFormData {
   const estimate = estimateJob(job);
   const perTurn = job.catalogVersion !== '2026-09-22.1' && Boolean(job.turnover);
   const storedAmount = job.catalogVersion === '2026-09-22.1' ? estimate.periodPrice : estimate.selectedPrice;
-  const initialPrice = job.jobType === 'recurring_standard' && job.initialClean ? estimateJob({ ...job, jobType: 'first_deep', frequency: 'one-time', initialClean: false, override: undefined }).selectedPrice : undefined;
+  const initialPrice = estimateInitialClean(job)?.selectedPrice;
   if (job.scopeOmissions?.some(line => !service.inclusions.includes(line))) throw new z.ZodError([{ code: 'custom', path: ['scopeOmissions'], message: 'Choose scope items from this catalog version.' }]);
   const inclusions = service.inclusions.filter(line => !job.scopeOmissions?.includes(line));
   if (job.applianceInteriors) inclusions.push(`${job.applianceInteriors} appliance interiors`);
@@ -100,12 +100,17 @@ export function isCatalogProposal(data: { service_specific_data?: unknown }) {
   return Boolean(value && typeof value === 'object' && 'catalogJob' in value);
 }
 
+/** JSONB object key order is not a user edit; array order remains meaningful. */
+const canonicalJson = (value: unknown) => JSON.stringify(value, (_key, item) =>
+  item && typeof item === 'object' && !Array.isArray(item)
+    ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b))) : item);
+
 /** Called at both save boundaries: never trust a client quote or snapshot. */
 export function normalizeCatalogProposal(data: ProposalFormData, existing?: ProposalFormData): ProposalFormData {
   if (!isCatalogProposal(data)) return data;
   if (existing && isCatalogProposal(existing)) {
     if (data.service_specific_data.catalogJob.catalogVersion !== existing.service_specific_data.catalogJob.catalogVersion) throw new z.ZodError([{ code: 'custom', path: ['service_specific_data', 'catalogJob', 'catalogVersion'], message: 'Create a new proposal to change catalog version.' }]);
-    if (JSON.stringify(data.service_specific_data.catalogJob) === JSON.stringify(existing.service_specific_data.catalogJob) && JSON.stringify(data.global_inputs) === JSON.stringify(existing.global_inputs) && data.template_id === existing.template_id) return { ...existing, status: data.status };
+    if (canonicalJson(data.service_specific_data.catalogJob) === canonicalJson(existing.service_specific_data.catalogJob) && canonicalJson(data.global_inputs) === canonicalJson(existing.global_inputs) && data.template_id === existing.template_id) return { ...existing, status: data.status };
   }
   if (data.service_specific_data.catalogJob.demo) throw new z.ZodError([{ code: 'custom', path: ['service_specific_data', 'catalogJob', 'demo'], message: 'Sample jobs cannot be saved. Start a real job.' }]);
   const composed = composeCatalogProposal({ job: data.service_specific_data.catalogJob, client: data.global_inputs, templateId: data.template_id });

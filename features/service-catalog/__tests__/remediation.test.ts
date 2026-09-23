@@ -124,3 +124,24 @@ it('persists initial clean separately without adding it to ongoing dashboard val
   expect(p.service_specific_data.priceBasis).toBe('per_visit');
   expect(catalogDocumentText(p.generated_content!)).toContain('Initial detailed clean (replaces first visit) (Once): **$310.00**');
 });
+
+it('JSONB key reordering alone preserves stored proposal bytes and historical prices', () => {
+ const original = composeCatalogProposal({ job: { ...defaultV1(), operatorNotes: 'Close the door after mopping.' }, client });
+ original.generated_content = 'Accepted historical content';
+ original.pricing_data = { price_range: { low: 449.97, high: 449.97 } };
+ const reorder = (value: any): any => Array.isArray(value) ? value.map(reorder) : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).reverse().map(([key, item]) => [key, reorder(item)])) : value;
+ const result = normalizeCatalogProposal({ ...original, status: 'sent', service_specific_data: { ...original.service_specific_data, catalogJob: reorder(original.service_specific_data.catalogJob) }, global_inputs: reorder(original.global_inputs), generated_content: 'Untrusted replacement', pricing_data: { price_range: { low: 1, high: 1 } } }, original);
+ expect(result).toEqual({ ...original, status: 'sent' });
+});
+
+it('initial clean ignores ongoing labor-hours and price overrides even under heavy condition', () => {
+ for (const condition of ['normal', 'heavy'] as const) {
+   const base = { ...defaultJob(), condition };
+   const overridden = { ...base, costs: { ...base.costs, laborHours: 3 }, override: { pricePerVisit: 150, reason: 'Ongoing service agreement' } };
+   const p = composeCatalogProposal({ job: overridden, client });
+   const initial = p.service_specific_data.pricingLineItems[1];
+   expect(initial.amount).toBe(composeCatalogProposal({ job: base, client }).service_specific_data.pricingLineItems[1].amount);
+   expect(initial.amount).toBeGreaterThan(150);
+   expect(p.service_specific_data.estimateSnapshot.periodPrice).toBe(325);
+ }
+});

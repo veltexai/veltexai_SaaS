@@ -24,8 +24,10 @@ drop policy if exists "Allow anonymous tracking updates" on public.proposal_trac
 -- production drift must be reviewed, never silently accepted or deleted.
 alter table public.proposals enable row level security;
 alter table public.proposal_tracking enable row level security;
+drop policy if exists catalog_owner_guard on public.proposals;
 create policy catalog_owner_guard on public.proposals as restrictive for all to public
  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists catalog_owner_guard on public.proposal_tracking;
 create policy catalog_owner_guard on public.proposal_tracking as restrictive for all to public
  using (proposal_id in (select id from public.proposals where user_id = auth.uid()))
  with check (proposal_id in (select id from public.proposals where user_id = auth.uid()));
@@ -50,9 +52,24 @@ revoke all on public.proposal_views from anon, public;
 revoke insert, update, delete on public.proposal_views from authenticated;
 drop policy if exists "Allow anonymous proposal view tracking" on public.proposal_views;
 alter table public.proposal_views enable row level security;
+drop policy if exists catalog_owner_guard on public.proposal_views;
 create policy catalog_owner_guard on public.proposal_views as restrictive for all to public
  using (exists (select 1 from public.proposals p where p.id=proposal_id and p.user_id=auth.uid()))
  with check (exists (select 1 from public.proposals p where p.id=proposal_id and p.user_id=auth.uid()));
+
+-- Legacy aggregate helper must obey caller RLS rather than bypass ownership.
+create or replace function public.get_proposal_tracking_stats(proposal_uuid uuid)
+returns table(total_views bigint, unique_viewers bigint, last_viewed timestamptz, average_duration integer)
+language sql security invoker set search_path = pg_catalog, public as $$
+ select count(*),
+   case when count(*) filter (where viewer_ip is null)>0 then null::bigint else count(distinct viewer_ip) end,
+   max(viewed_at),
+   case when count(*) filter (where viewer_ip is null)>0 then null::integer else coalesce(avg(view_duration)::integer,0) end
+ from public.proposal_views where proposal_id=proposal_uuid;
+$$;
+comment on function public.get_proposal_tracking_stats(uuid) is 'Owner/RLS-scoped view count. Unique viewers and average duration are NULL when identity-free view events make those metrics unavailable.';
+revoke all on function public.get_proposal_tracking_stats(uuid) from public, anon;
+grant execute on function public.get_proposal_tracking_stats(uuid) to authenticated, service_role;
 
 -- Possession of an unguessable tracking token is the only public capability.
 -- Explicit allowlist: never return service_specific_data, client email or costs.
@@ -66,7 +83,7 @@ language sql stable security definer set search_path = pg_catalog, public as $$
    'pricing_data',jsonb_build_object('price_range',p.pricing_data->'price_range'),
    'status',p.status,'created_at',p.created_at,
    'catalog_document',coalesce(p.service_specific_data ? 'catalogJob',false),
-   'company_profiles',jsonb_build_object('company_name',coalesce(c.company_name,'Cleaning company'),'logo_url',c.logo_url,'primary_color',c.primary_color,'secondary_color',c.secondary_color)),
+   'company_profiles',jsonb_build_object('company_name',coalesce(c.company_name,'Cleaning company'),'logo_url',c.logo_url)),
    'tracking',jsonb_build_object('id',t.id,'tracking_id',t.tracking_id,'proposal_id',t.proposal_id,
    'delivery_method',t.delivery_method,'track_opens',t.track_opens,'track_downloads',t.track_downloads))
  from public.proposal_tracking t join public.proposals p on p.id=t.proposal_id

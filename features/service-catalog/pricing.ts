@@ -9,3 +9,11 @@ export function estimateJob(input: unknown) {
   const { scheduling, scopeOmissions, scopeAdditions, coverLetter, companyName, demo, ...legacy } = job;
   return legacyEstimate(legacySchema.parse(legacy));
 }
+
+/** Ongoing visit overrides never replace the separately modeled first clean. */
+export function estimateInitialClean(input: unknown) {
+  const job = jobSchema.parse(input);
+  if (job.catalogVersion === '2026-09-22.1' || job.jobType !== 'recurring_standard' || !job.initialClean) return undefined;
+  return estimateJob({ ...job, jobType: 'first_deep', frequency: 'one-time', initialClean: false,
+    override: undefined, costs: { ...job.costs, laborHours: undefined } });
+}

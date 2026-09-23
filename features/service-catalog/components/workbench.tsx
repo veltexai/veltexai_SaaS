@@ -14,7 +14,7 @@ import { defaultJob as defaultLegacyJob } from '../versions/v1/catalog';
 import { CATALOG, defaultJob, getService } from '../catalog';
 import { ZodError } from 'zod';
 import { businessProfileSchema, CatalogJob, JobType } from '../schema';
-import { estimateJob } from '../pricing';
+import { estimateJob, estimateInitialClean } from '../pricing';
 import { catalogRequestSchema } from '../proposal';
 import { CostFields } from './cost-fields';
 
@@ -38,7 +38,7 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
     fetch('/api/service-catalog/profile').then(async r => { if (!r.ok) throw new Error(); return r.json(); }).then(data => {
       if (!active) return;
       const p = businessProfileSchema.safeParse(data.profile);
-      if (started === revision.current) { setJob(current => ({ ...current, ...(p.success ? { costs: { ...p.data.costs } } : {}), ...(typeof data.companyName === 'string' ? { companyName: data.companyName } : {}) })); setProfileNotice('Loaded your business cost assumptions.'); }
+      if (started === revision.current) { setJob(current => ({ ...current, ...(p.success ? { costs: { ...p.data.costs } } : {}), ...(typeof data.companyName === 'string' ? { companyName: data.companyName } : {}) })); setProfileNotice(p.success ? 'Loaded your business cost assumptions.' : typeof data.companyName === 'string' ? 'Loaded your company name. Review the example costs below.' : 'Review the example costs below.'); }
     }).catch(() => { if (active) setProfileNotice('Business defaults unavailable. Review the example costs below.'); });
     return () => { active = false; };
   }, [initialProposal, demo]);
@@ -48,10 +48,7 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
   let validation = '';
   const fieldLabels: Record<string, string> = { squareFeet: 'Cleanable square feet', wage: 'Hourly wage', bedrooms: 'Bedrooms', bathrooms: 'Bathrooms', reason: 'Override reason', checkin: 'Check-in', roundingIncrement: 'Rounding increment', expectedTurns: 'Expected turns per month', beds: 'Beds to reset', linenPar: 'Linen sets per bed', reportWithinHours: 'Report within hours', laundryLoads: 'Laundry loads' };
   try { estimate = estimateJob(job); } catch (e) { validation = e instanceof ZodError ? e.issues.map(i => `${fieldLabels[String(i.path[i.path.length - 1])] ?? 'Job details'}: ${i.message.includes('nan') ? 'Enter a number to calculate your price.' : i.message}`).join('; ') : 'Review the job quantities and costs to calculate your price.'; }
-  let initialPrice: number | undefined;
-  if (estimate && isCurrent && job.initialClean && job.jobType === 'recurring_standard') {
-    initialPrice = estimateJob({ ...job, jobType: 'first_deep', frequency: 'one-time', initialClean: false, override: undefined }).selectedPrice;
-  }
+  const initialPrice = estimate ? estimateInitialClean(job)?.selectedPrice : undefined;
   const viewed = useRef(false), seenEstimates = useRef(new Set<string>());
   const telemetry = { job_type: job.jobType, catalog_version: job.catalogVersion, business_segment: job.segment, source: source || 'direct', demo_type: demoType || 'none', demo: Boolean(demo || job.demo) };
   useEffect(() => {
@@ -109,7 +106,7 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
 
         <label className="block text-sm">Property type<select className="mt-1 w-full rounded border p-2" value={job.propertyType} onChange={e => changeJob({ ...job, propertyType: e.target.value as CatalogJob['propertyType'] })}>{['house', 'apartment', 'condo', 'townhouse'].map(p => <option key={p}>{p}</option>)}</select></label>
         <div className="grid gap-3 sm:grid-cols-2">{numberField('squareFeet', 'Cleanable square feet')}{numberField('bedrooms', 'Bedrooms')}{numberField('bathrooms', 'Bathrooms')}{numberField('applianceInteriors', 'Appliance interiors')}</div>
-        {isCurrent && job.jobType === 'recurring_standard' && <label className="block text-sm"><input type="checkbox" checked={job.initialClean ?? false} onChange={e => changeJob({ ...job, initialClean: e.target.checked })} /> Include a separately priced initial detailed clean (uses deep-clean labor model and current costs)</label>}
+        {isCurrent && job.jobType === 'recurring_standard' && <label className="block text-sm"><input type="checkbox" checked={job.initialClean ?? false} onChange={e => changeJob({ ...job, initialClean: e.target.checked })} /> Include a separately priced initial detailed clean (uses deep-clean model and current costs; ongoing hours and price overrides do not apply)</label>}
         <label className="block text-sm">Frequency<select className="mt-1 w-full rounded border p-2" value={job.frequency} onChange={e => changeJob({ ...job, frequency: e.target.value as CatalogJob['frequency'] })}>{service.frequencies.map(f => <option key={f} value={f}>{{ 'one-time': perTurn ? 'Per turn agreement' : 'One-time visit', weekly: 'Weekly', 'bi-weekly': 'Every two weeks', '1x-month': 'Monthly' }[f]}</option>)}</select></label>
         <div className="grid gap-3 sm:grid-cols-2"><label className="text-sm">Occupancy<select className="mt-1 w-full rounded border p-2" value={job.occupancy} onChange={e => changeJob({ ...job, occupancy: e.target.value as CatalogJob['occupancy'] })}><option value="occupied">Occupied</option><option value="vacant">Vacant</option></select></label>
         <label className="text-sm">Condition<select className="mt-1 w-full rounded border p-2" value={job.condition} onChange={e => changeJob({ ...job, condition: e.target.value as CatalogJob['condition'] })}>{['light', 'normal', 'heavy'].map(c => <option key={c}>{c}</option>)}</select></label></div>

@@ -64,7 +64,7 @@ create trigger proposal_catalog_version_guard before insert or update on public.
   for each row execute function public.guard_proposal_catalog_version();
 -- Keep taxonomy on the historical event; profile changes must not relabel old jobs.
 create or replace view public.service_catalog_funnel_daily with (security_invoker = true) as
-select date_trunc('day', e.created_at at time zone 'America/Los_Angeles') as day_pacific,
+select date_trunc('day', e.occurred_at at time zone 'America/Los_Angeles') as day_pacific,
   coalesce(e.properties->>'business_segment', 'legacy_unspecified') as business_segment,
   e.properties->>'service_family' as service_family,
   e.properties->>'job_type' as job_type,

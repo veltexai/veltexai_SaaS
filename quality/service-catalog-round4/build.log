@@ -1,0 +1,135 @@
+   ▲ Next.js 15.4.8
+   - Experiments (use with caution):
+     · clientTraceMetadata
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 17.0s
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/79) ...
+   Generating static pages (19/79) 
+   Generating static pages (39/79) 
+   Generating static pages (59/79) 
+ ✓ Generating static pages (79/79)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                    Size  First Load JS
+┌ ○ /                                                       11.5 kB         328 kB
+├ ○ /_not-found                                             1.16 kB         261 kB
+├ ƒ /admin                                                  8.74 kB         323 kB
+├ ƒ /admin/addons                                           12.9 kB         359 kB
+├ ƒ /admin/logs                                              9.5 kB         360 kB
+├ ƒ /admin/pricing-settings                                 8.66 kB         345 kB
+├ ƒ /admin/prompts                                          13.3 kB         374 kB
+├ ƒ /admin/proposals                                        9.01 kB         370 kB
+├ ƒ /admin/subscriptions                                    8.42 kB         307 kB
+├ ƒ /admin/system-settings                                  43.3 kB         470 kB
+├ ○ /admin/templates                                        8.22 kB         348 kB
+├ ƒ /admin/users                                            5.86 kB         363 kB
+├ ƒ /api/admin/addons                                         487 B         260 kB
+├ ƒ /api/admin/addons/[id]                                    486 B         260 kB
+├ ƒ /api/admin/analytics                                      487 B         260 kB
+├ ƒ /api/admin/billing-history                                486 B         260 kB
+├ ƒ /api/admin/pricing-settings                               485 B         260 kB
+├ ƒ /api/admin/prompts                                        487 B         260 kB
+├ ƒ /api/admin/proposals                                      486 B         260 kB
+├ ƒ /api/admin/subscription-metrics                           486 B         260 kB
+├ ƒ /api/admin/subscriptions                                  487 B         260 kB
+├ ƒ /api/admin/system-settings                                487 B         260 kB
+├ ƒ /api/admin/test-email                                     486 B         260 kB
+├ ƒ /api/admin/users                                          486 B         260 kB
+├ ƒ /api/auth/callback                                        487 B         260 kB
+├ ƒ /api/auth/confirm                                         487 B         260 kB
+├ ƒ /api/billing/history                                      487 B         260 kB
+├ ƒ /api/billing/subscription                                 487 B         260 kB
+├ ƒ /api/company-profile                                      487 B         260 kB
+├ ƒ /api/cron/trial-automation                                487 B         260 kB
+├ ƒ /api/emails/generate                                      486 B         260 kB
+├ ƒ /api/marketing/calculator-estimate                        487 B         260 kB
+├ ƒ /api/onboarding/qualification                             486 B         260 kB
+├ ƒ /api/pricing-settings                                     486 B         260 kB
+├ ƒ /api/pricing/calculate                                    486 B         260 kB
+├ ƒ /api/profile                                              487 B         260 kB
+├ ƒ /api/proposals                                            486 B         260 kB
+├ ƒ /api/proposals/[id]                                       486 B         260 kB
+├ ƒ /api/proposals/[id]/analytics                             486 B         260 kB
+├ ƒ /api/proposals/[id]/download                              486 B         260 kB
+├ ƒ /api/proposals/[id]/export                                486 B         260 kB
+├ ƒ /api/proposals/[id]/print                                 488 B         260 kB
+├ ƒ /api/proposals/[id]/send                                  486 B         260 kB
+├ ƒ /api/proposals/[id]/send-email                            488 B         260 kB
+├ ƒ /api/proposals/[id]/split                                 487 B         260 kB
+├ ƒ /api/proposals/[id]/status-history                        485 B         260 kB
+├ ƒ /api/proposals/analytics                                  486 B         260 kB
+├ ƒ /api/proposals/generate                                   487 B         260 kB
+├ ƒ /api/service-catalog/preview                              487 B         260 kB
+├ ƒ /api/service-catalog/profile                              485 B         260 kB
+├ ƒ /api/stripe/cancel-subscription                           486 B         260 kB
+├ ƒ /api/stripe/create-checkout-session                       487 B         260 kB
+├ ƒ /api/stripe/create-portal-session                         486 B         260 kB
+├ ƒ /api/stripe/sync-subscription                             486 B         260 kB
+├ ƒ /api/stripe/upgrade-subscription                          486 B         260 kB
+├ ƒ /api/templates                                            486 B         260 kB
+├ ƒ /api/templates/[id]                                       486 B         260 kB
+├ ƒ /api/templates/[id]/tier-access                           485 B         260 kB
+├ ƒ /api/tracking/click                                       486 B         260 kB
+├ ƒ /api/tracking/email-open/[trackingId]                     487 B         260 kB
+├ ƒ /api/tracking/proposal-view/[trackingId]                  487 B         260 kB
+├ ƒ /api/tracking/scroll                                      486 B         260 kB
+├ ƒ /api/tracking/time-spent                                  487 B         260 kB
+├ ƒ /api/tracking/view/[trackingId]                           486 B         260 kB
+├ ƒ /api/usage/check                                          487 B         260 kB
+├ ƒ /api/usage/increment                                      487 B         260 kB
+├ ƒ /api/user/template-preferences                            486 B         260 kB
+├ ƒ /api/webhooks/stripe                                      487 B         260 kB
+├ ○ /auth/forgot-password                                   4.06 kB         306 kB
+├ ƒ /auth/login                                             9.21 kB         320 kB
+├ ○ /auth/reset-password                                    4.65 kB         353 kB
+├ ƒ /auth/signup                                            11.7 kB         335 kB
+├ ƒ /dashboard                                              5.09 kB         319 kB
+├ ƒ /dashboard/billing                                      16.3 kB         353 kB
+├ ƒ /dashboard/proposals                                    7.68 kB         381 kB
+├ ƒ /dashboard/proposals/[id]                               18.6 kB         559 kB
+├ ƒ /dashboard/proposals/category                             17 kB         451 kB
+├ ƒ /dashboard/proposals/new                                2.54 kB         498 kB
+├ ƒ /dashboard/proposals/quick                              6.84 kB         407 kB
+├ ƒ /dashboard/settings                                      2.5 kB         435 kB
+├ ○ /demo-proposal                                          28.4 kB         473 kB
+├ ○ /pricing                                                1.79 kB         356 kB
+├ ƒ /print/proposals/[id]                                   2.86 kB         373 kB
+├ ○ /privacy                                                  374 B         262 kB
+├ ƒ /proposals/[id]                                         7.08 kB         512 kB
+├ ○ /resources                                                373 B         262 kB
+├ ● /resources/[slug]                                         374 B         262 kB
+├   ├ /resources/how-to-write-commercial-cleaning-proposal
+├   ├ /resources/how-to-bid-commercial-cleaning-jobs
+├   ├ /resources/commercial-cleaning-pricing-guide
+├   └ [+7 more paths]
+├ ○ /resources/commercial-cleaning-benchmark-report         3.41 kB         265 kB
+├ ○ /robots.txt                                               486 B         260 kB
+├ ○ /settings/pricing                                       9.68 kB         351 kB
+├ ○ /sitemap.xml                                              486 B         260 kB
+├ ○ /solutions                                                374 B         262 kB
+├ ● /solutions/[slug]                                         374 B         262 kB
+├   ├ /solutions/commercial-cleaning-proposal-software
+├   ├ /solutions/janitorial-bidding-software
+├   ├ /solutions/office-cleaning-proposals
+├   └ [+3 more paths]
+├ ○ /terms                                                    374 B         262 kB
+├ ○ /tools/cleaning-bid-calculator                          2.67 kB         264 kB
+└ ƒ /view/[trackingId]                                       6.3 kB         309 kB
++ First Load JS shared by all                                260 kB
+  ├ chunks/88e80a83-d18604a39061b6de.js                     73.2 kB
+  ├ chunks/9368-4832636a52338024.js                          128 kB
+  ├ chunks/ad461123-5d995ce539d35063.js                     54.3 kB
+  └ other shared chunks (total)                             3.94 kB
+
+
+ƒ Middleware                                                 136 kB
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

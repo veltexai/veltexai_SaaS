@@ -173,3 +173,17 @@ After any material action, append or revise the relevant section with:
 - Validation: 500 tests / 57 suites / 5 snapshots, typecheck, production build; eight 390/1440 static layouts with no overflow and two local PDFs. V1 catalog/pricing bytes unchanged from 4b7310c original files.
 - Release remains FAIL/not ready: disposable DB/RLS, authenticated staging/email/hosted PDFs, operator validation and founder acceptance outstanding. All accepted deferrals preserved. No deployment, publication, hosted mutation or spend.
 - Coordination message to differently titled Codex task was auto-review rejected; not sent. Established independent Claude review destination verified separately; round-3 curated ZIP handoff pending at candidate commit.
+
+### Round 3 handoff receipt
+
+- SENT and verified RUNNING in **Veltex AI Release 1 independent review**, https://claude.ai/cowork/cse_015J3LbDmLeVEV7Qt2Bkcoz9.
+- Candidate `9df4073`; ZIP `/private/tmp/veltex-release1-round3-9df4073.zip` contains 93 hashed committed files plus packaging metadata; SHA256 `ffbaf055f8388c4c372a85caf5bb83ec51251ca885334b5a2fae2ddb44e63d50`.
+- Asked for independent probes and downloadable CLAUDE_ROUND3_REVIEW_RESULT.md; no repository writes or additional folder permission. UI showed seven commands run after acceptance.
+- A separate monitor currently targets the older “Veltex AI Release 1 remediation review” candidate 5d9fa9d under another Codex task. It was inspected but not repurposed or expanded. Do not mistake that older review for the round-3 result.
+
+### Round 3 verdict and round 4 continuation
+
+- Collected Claude's CLAUDE_ROUND3_REVIEW_RESULT.md: local CONDITIONAL PASS, release FAIL. Claude independently confirmed the R2 application fixes and executed a scratch-patched Postgres 16 chain with role matrices and 40 concurrent views. Its real execution exposed absent occurred_at/company-colour column references; corrected in the next candidate. This was approximate sandbox Postgres, not Supabase/staging.
+- Round 4 also separates initial-clean labor overrides, makes unchanged proposal comparison independent of JSON key order, gates the legacy tracking-stats RPC by caller RLS, and marks identity-free unique-view/duration statistics unavailable. Small advisory, metadata and profile-notice issues corrected.
+- Downloaded and reviewed Claude's database harness; checked in a safer derivative with dedicated socket-only cluster verification, actual candidate migrations, negative policy/dirty-event/repeat tests, complete role/token/privacy assertions, concurrency and mandatory privileged-function gate. No workflow pushed or run by Codex. Local: 505 tests/57 suites/5 snapshots, tsc and build pass; harness shell syntax passes.
+- R3-3 legacy usage/admin/template definer exposures remain an explicit release-blocking infrastructure audit with no waiver. Tracking stats fixed; a broad blind revoke was not applied. No hosted mutation, deployment, publication, spend or human external handoff.

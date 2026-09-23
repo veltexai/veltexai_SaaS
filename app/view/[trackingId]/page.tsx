@@ -4,10 +4,11 @@ import { PublicProposalView } from '@/features/proposals/components/public-propo
 import { ProposalViewTracker } from '@/features/proposals/components/proposal-view-tracker';
 
 interface ProposalData {
+  catalog_document?: boolean;
   id: string;
   title: string;
   client_name: string;
-  client_email: string;
+  client_email?: string;
   client_company: string;
   service_location: string;
   service_type: string;
@@ -111,7 +112,7 @@ export async function generateMetadata({
 
   return {
     title: `${proposal.title} - ${proposal.company_profiles.company_name}`,
-    description: `View proposal for ${proposal.service_type} services at ${proposal.service_location}`,
+    description: proposal.catalog_document ? 'Review your cleaning service proposal and agreement.' : `View proposal for ${proposal.service_type} services at ${proposal.service_location}`,
     robots: 'noindex, nofollow', // Prevent search engine indexing for privacy
   };
 }

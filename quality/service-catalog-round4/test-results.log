@@ -1,0 +1,287 @@
+PASS features/proposals/quick/__tests__/quick-pricing-persistence.test.tsx
+PASS features/service-catalog/__tests__/workbench.test.tsx
+PASS features/proposals/components/__tests__/proposal-edit-dialog.test.tsx
+PASS features/proposals/components/new/__tests__/service-type-selector.test.tsx
+PASS features/templates/__tests__/service-quote-pricing.test.tsx
+  ● Console
+
+    console.log
+      🚀 : false
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      🚀 : false
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      🚀 : false
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      🚀 : false
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      🚀 : false
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      🚀 : true
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      🚀 : true
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      🚀 : true
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+PASS features/demo-proposal/__tests__/demo-handoff.test.tsx
+PASS app/api/proposals/__tests__/design-and-pricing.test.ts
+  ● Console
+
+    console.log
+      🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+    console.log
+      🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+    console.log
+      🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+    console.log
+      🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+    console.log
+      🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+    console.log
+      🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+    console.log
+      🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+    console.log
+      🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+    console.log
+      🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+PASS features/proposals/components/new/__tests__/final-pricing-card.test.tsx
+PASS features/proposals/quick/__tests__/design-template-card.test.tsx
+PASS features/service-catalog/__tests__/public-view.test.tsx
+PASS features/templates/__tests__/markdown-renderer-pricing.test.tsx
+  ● Console
+
+    console.log
+      🚀 : false
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      🚀 : false
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      🚀 : false
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      🚀 : false
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      🚀 : false
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      🚀 : false
+
+      at log (lib/utils/frequency.ts:9:13)
+          at Array.map (<anonymous>)
+
+PASS features/service-catalog/__tests__/remediation.test.ts
+PASS features/service-catalog/__tests__/catalog.test.ts
+PASS 100X/100S/tests/social-engine.test.ts
+PASS features/proposals/hooks/__tests__/use-pricing-calculation.test.tsx
+PASS app/api/service-catalog/__tests__/preview.test.ts
+PASS features/proposals/quick/__tests__/quick-proposal-payload.test.ts
+PASS app/api/stripe/__tests__/entitlement-writes.test.ts
+  ● Console
+
+    console.log
+      ✅ Billing history inserted successfully: undefined
+
+      at log (app/api/stripe/upgrade-subscription/route.ts:243:15)
+
+    console.log
+      🔄 Syncing subscription from Stripe: { subscriptionId: 'stripe-sub', status: 'active', plan: 'enterprise' }
+
+      at log (app/api/stripe/sync-subscription/route.ts:153:13)
+
+    console.log
+      ✅ Subscription record created
+
+      at log (app/api/stripe/sync-subscription/route.ts:207:13)
+
+    console.log
+      ✅ Profile updated
+
+      at log (app/api/stripe/sync-subscription/route.ts:227:13)
+
+PASS features/service-catalog/__tests__/access-warning.test.ts
+PASS features/templates/__tests__/resolve-template-images.test.ts
+PASS features/demo-proposal/__tests__/get-demo-template-data.test.ts
+PASS features/admin/addons/__tests__/formatters.test.ts
+PASS features/admin/addons/__tests__/validation.test.ts
+PASS lib/monitoring/__tests__/client-initialization.test.ts
+PASS features/service-catalog/__tests__/legacy-golden.test.ts
+PASS features/proposals/quick/__tests__/quick-proposal-defaults.test.ts
+PASS features/admin/addons/__tests__/addonsService.test.ts
+PASS features/templates/__tests__/payment-terms.test.ts
+PASS features/service-catalog/__tests__/print-session.test.ts
+  ● Console
+
+    console.log
+      Generating PDF...
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:40:13)
+
+    console.log
+      PDF Generated
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:48:13)
+
+PASS features/proposals/utils/__tests__/is-valid-pricing-data.test.ts
+PASS features/proposals/quick/__tests__/scope-templates.test.ts
+PASS features/proposals/quick/__tests__/commercial-frequency-pricing.test.ts
+PASS lib/templates/__tests__/design-entitlement.test.ts
+PASS lib/monitoring/__tests__/proposal-errors.test.ts
+PASS features/templates/__tests__/pricing-labels.test.ts
+PASS features/proposals/__tests__/can-access-template.test.ts
+PASS features/proposals/quick/__tests__/select-design-template.test.ts
+PASS features/proposals/quick/__tests__/demo-template-map.test.ts
+PASS lib/monitoring/__tests__/config.test.ts
+PASS lib/analytics/__tests__/events.test.ts
+PASS features/templates/__tests__/proposal-date.test.ts
+PASS features/service-catalog/__tests__/tracking-boundary.test.ts
+PASS features/proposals/constants/service-expansion-catalog.test.ts
+PASS 100X/100S/tests/meta-acquisition-readiness.test.ts
+PASS 100X/100S/tests/attribution.test.ts
+PASS features/proposals/quick/__tests__/quick-flow-safety.test.ts
+PASS features/proposals/quick/__tests__/property-assumptions-lite.test.ts
+PASS features/auth/utils/__tests__/redirect.test.ts
+PASS lib/analytics/__tests__/privacy.test.ts
+PASS features/templates/__tests__/template-fallback.test.ts
+PASS features/templates/__tests__/proposal-service-context.test.ts
+PASS features/templates/__tests__/luxury-thank-you-layout.test.ts
+PASS features/templates/__tests__/agreement-terms.test.ts
+PASS 100X/100S/tests/sql-safety.test.ts
+PASS 100X/100S/tests/ga4-server.test.ts
+PASS config/__tests__/trial.test.ts
+PASS features/service-catalog/__tests__/routing.test.ts
+
+Test Suites: 57 passed, 57 total
+Tests:       505 passed, 505 total
+Snapshots:   5 passed, 5 total
+Time:        4.114 s
+Ran all test suites.

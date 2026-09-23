@@ -1,0 +1,35 @@
+name: Catalog migrations and release security gate
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'quality/service-catalog-round4/db-harness/**'
+      - '.github/workflows/catalog-migrations.yml'
+permissions:
+  contents: read
+jobs:
+  postgres:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      HARNESS_PGDATA: /tmp/veltex-catalog-ci
+      PG_BIN: /usr/lib/postgresql/16/bin
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install local Postgres tooling
+        run: sudo apt-get update && sudo apt-get install -y postgresql-16 postgresql-client-16
+      - name: Start an isolated socket-only cluster
+        run: quality/service-catalog-round4/db-harness/start_cluster.sh
+      - name: Apply actual migrations and run ownership, leak and concurrency assertions
+        env:
+          MIGRATIONS_DIR: ${{ github.workspace }}/supabase/migrations
+        run: quality/service-catalog-round4/db-harness/run_all.sh
+      - name: Mandatory privileged-function release gate (known R3-3 blocker)
+        env:
+          MIGRATIONS_DIR: ${{ github.workspace }}/supabase/migrations
+          CHECK_DEFINERS: '1'
+        run: quality/service-catalog-round4/db-harness/run_all.sh
+      - name: Stop the isolated cluster
+        if: always()
+        run: quality/service-catalog-round4/db-harness/start_cluster.sh stop

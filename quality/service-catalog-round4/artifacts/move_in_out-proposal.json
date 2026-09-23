@@ -1,0 +1,272 @@
+{
+  "title": "Move-in / move-out proposal",
+  "service_type": "residential",
+  "global_inputs": {
+    "client_name": "Sample customer",
+    "client_email": "sample@example.com",
+    "contact_phone": "555-0100",
+    "service_location": "Example property",
+    "facility_size": 1500,
+    "service_frequency": "one-time"
+  },
+  "service_specific_data": {
+    "catalogJob": {
+      "catalogVersion": "2026-09-22.2",
+      "segment": "residential",
+      "jobType": "move_in_out",
+      "frequency": "one-time",
+      "propertyType": "house",
+      "squareFeet": 1500,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "occupancy": "vacant",
+      "condition": "normal",
+      "pets": false,
+      "applianceInteriors": 0,
+      "access": "Safe lockbox access; parking beside entrance.",
+      "initialClean": false,
+      "companyName": "Example Cleaning Company",
+      "levels": 1,
+      "hardFloorPercent": 50,
+      "clutter": "normal",
+      "monthsSinceClean": 1,
+      "occupants": 2,
+      "suppliesProvided": false,
+      "regulatedHazards": false,
+      "costs": {
+        "roundingIncrement": 5,
+        "crewSize": 2,
+        "wage": 25,
+        "burdenPercent": 25,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "minimumCharge": 120,
+        "overheadPercent": 15,
+        "marginPercent": 25,
+        "uncertaintyPercent": 20
+      },
+      "operatorNotes": ""
+    },
+    "catalogSnapshot": {
+      "version": "2026-09-22.2",
+      "id": "move_in_out",
+      "segment": "residential",
+      "family": "home_cleaning",
+      "label": "Move-in / move-out",
+      "legacyServiceType": "residential",
+      "propertyTypes": [
+        "house",
+        "apartment",
+        "condo",
+        "townhouse"
+      ],
+      "unit": "square_feet",
+      "quantityGuidance": "Use cleanable interior area; verify room counts and walkthrough condition. Hours are person-hours, not elapsed crew time.",
+      "frequencies": [
+        "one-time"
+      ],
+      "production": {
+        "min": 180,
+        "base": 300,
+        "max": 420
+      },
+      "defaultCosts": {
+        "roundingIncrement": 5,
+        "crewSize": 2,
+        "wage": 25,
+        "burdenPercent": 25,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "minimumCharge": 120,
+        "overheadPercent": 15,
+        "marginPercent": 25,
+        "uncertaintyPercent": 20
+      },
+      "questionKeys": [
+        "squareFeet",
+        "bedrooms",
+        "bathrooms",
+        "occupancy",
+        "condition",
+        "pets",
+        "applianceInteriors",
+        "access",
+        "suppliesProvided"
+      ],
+      "strategy": "residential_labor_v2",
+      "inclusions": [
+        "Dust reachable surfaces",
+        "Vacuum and mop accessible floors",
+        "Clean kitchen counters, sink and appliance exteriors",
+        "Clean bathrooms, fixtures and mirrors",
+        "Empty ordinary household trash",
+        "Clean empty cabinet and drawer interiors",
+        "Detail vacant rooms and reachable baseboards"
+      ],
+      "exclusions": [
+        "Regulated, biohazard and mold remediation",
+        "Construction debris and pest remediation",
+        "Exterior or high-access work",
+        "Heavy furniture moving",
+        "Appliance interiors unless selected"
+      ],
+      "options": [
+        "Appliance interiors (count each appliance)",
+        "Additional labor after walkthrough review"
+      ],
+      "responsibilities": [
+        "Provide safe access, running water and electricity",
+        "Secure pets and valuables",
+        "Identify delicate surfaces and existing damage",
+        "Approve scope or price changes before work"
+      ],
+      "terms": "Service dates and payment timing must be agreed before work. Scope changes require a revised agreement. No automatic renewal for one-time jobs.",
+      "compliance": {
+        "regulatedPricing": false,
+        "capabilityReview": "Confirm access, insurance and ordinary cleaning capability. Stop for sharps, bodily fluids, mold remediation or other hazardous material."
+      },
+      "approval": "operator_review_required",
+      "effectiveDate": "2026-09-22"
+    },
+    "estimateSnapshot": {
+      "version": "2026-09-22.2",
+      "strategy": "residential_labor_v2",
+      "unit": "per_visit",
+      "low": {
+        "laborHours": 3.99,
+        "elapsedCrewHours": 2,
+        "labor": 124.69,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "directCost": 161.69,
+        "overhead": 24.25,
+        "cost": 185.94,
+        "marginAmount": 64.06,
+        "minimumAdjustment": 2.08,
+        "suggestedPrice": 250
+      },
+      "base": {
+        "laborHours": 4.99,
+        "elapsedCrewHours": 2.5,
+        "labor": 155.94,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "directCost": 192.94,
+        "overhead": 28.94,
+        "cost": 221.88,
+        "marginAmount": 78.12,
+        "minimumAdjustment": 4.16,
+        "suggestedPrice": 300
+      },
+      "high": {
+        "laborHours": 5.99,
+        "elapsedCrewHours": 3,
+        "labor": 187.19,
+        "supplies": 12,
+        "equipment": 5,
+        "travel": 20,
+        "directCost": 224.19,
+        "overhead": 33.63,
+        "cost": 257.82,
+        "marginAmount": 87.18,
+        "minimumAdjustment": 1.24,
+        "suggestedPrice": 345
+      },
+      "selectedPrice": 300,
+      "drivers": {
+        "squareFeetPerPersonHour": 300,
+        "roomMinimumHours": 1.6,
+        "conditionMultiplier": 1,
+        "recurrenceMultiplier": 1,
+        "additionalHours": 0
+      },
+      "modeledHours": 4.99,
+      "visitsPerMonth": 1,
+      "periodPrice": 300,
+      "effectiveMarginPercent": 26.04,
+      "warnings": [
+        "Planning assumptions have not been validated by a cleaning operator. Confirm after a walkthrough."
+      ]
+    },
+    "pricingLineItems": [
+      {
+        "kind": "service",
+        "amount": 300,
+        "basis": "one_time"
+      }
+    ],
+    "priceBasis": "one_time",
+    "home_type": "house",
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "pets": false,
+    "cleaning_supplies_provided": false
+  },
+  "pricing_enabled": true,
+  "pricing_data": {
+    "price_range": {
+      "low": 300,
+      "high": 300
+    },
+    "hours_estimate": {
+      "min": 3.99,
+      "max": 5.99
+    },
+    "assumptions": {
+      "labor_rate": 31.25,
+      "overhead_percentage": 15,
+      "margin_percentage": 25,
+      "production_rate": {
+        "min": 180,
+        "max": 420
+      }
+    }
+  },
+  "generated_content": "## Cover letter\nWe propose the following service: move-in / move-out for Sample customer at Example property. Please review the scope and service agreement below.\n\n## Scope of service\nService schedule: One-time service.\n```veliz_scope_table\n{\"rows\":[{\"area\":\"Dust reachable surfaces\",\"frequency\":\"One-time service\",\"notes\":\"\"},{\"area\":\"Vacuum and mop accessible floors\",\"frequency\":\"One-time service\",\"notes\":\"\"},{\"area\":\"Clean kitchen counters, sink and appliance exteriors\",\"frequency\":\"One-time service\",\"notes\":\"\"},{\"area\":\"Clean bathrooms, fixtures and mirrors\",\"frequency\":\"One-time service\",\"notes\":\"\"},{\"area\":\"Empty ordinary household trash\",\"frequency\":\"One-time service\",\"notes\":\"\"},{\"area\":\"Clean empty cabinet and drawer interiors\",\"frequency\":\"One-time service\",\"notes\":\"\"},{\"area\":\"Detail vacant rooms and reachable baseboards\",\"frequency\":\"One-time service\",\"notes\":\"\"}]}\n```\n\nProperty: house; 1500 cleanable square feet, 3 bedrooms, 2 bathrooms; vacant.\n\n\n\nOrdinary cleaning supplies are included.\n\n### Exclusions\n- Regulated, biohazard and mold remediation\n- Construction debris and pest remediation\n- Exterior or high-access work\n- Heavy furniture moving\n- Appliance interiors unless selected\n\n### Optional services\n- Appliance interiors (count each appliance); agree scope and price before adding work.\n- Additional labor after walkthrough review; agree scope and price before adding work.\n\n### Customer responsibilities\n- Provide safe access, running water and electricity\n- Secure pets and valuables\n- Identify delicate surfaces and existing damage\n- Approve scope or price changes before work\n\n## Service Quote & Pricing\n```veliz_pricing_table\n{\"rows\":[{\"service\":\"Move-in / move-out\",\"frequency\":\"One-time service\",\"pricePerMonth\":\"$300.00\"}],\"summary\":{\"label\":\"Service price before any applicable tax\",\"subtotal\":\"$300.00\",\"tax\":\"Not assessed\",\"total\":\"$300.00\"}}\n```\n\nYour price: $300.00 per visit. This is a one-time job total.\n\nTaxes are not assessed in this estimate; confirm applicability before acceptance.\n\n## Terms & Conditions\nService dates and payment timing must be agreed before work. Scope changes require a revised agreement. No automatic renewal for one-time jobs.\n\n\n## Acceptance\nCustomer signature: ____________________ Date: __________\n\nExample Cleaning Company signature: ____________________ Date: __________\n\nConfirm the scope, scheduling, taxes and payment terms before signing.",
+  "status": "draft",
+  "facility_details": {
+    "building_type": "house",
+    "accessibility_requirements": [],
+    "special_areas": [],
+    "equipment_present": [],
+    "environmental_concerns": []
+  },
+  "traffic_analysis": {
+    "peak_hours": [],
+    "special_events": false
+  },
+  "service_scope": {
+    "areas_included": [
+      "Dust reachable surfaces",
+      "Vacuum and mop accessible floors",
+      "Clean kitchen counters, sink and appliance exteriors",
+      "Clean bathrooms, fixtures and mirrors",
+      "Empty ordinary household trash",
+      "Clean empty cabinet and drawer interiors",
+      "Detail vacant rooms and reachable baseboards"
+    ],
+    "areas_excluded": [
+      "Regulated, biohazard and mold remediation",
+      "Construction debris and pest remediation",
+      "Exterior or high-access work",
+      "Heavy furniture moving",
+      "Appliance interiors unless selected"
+    ],
+    "special_services": [],
+    "frequency_details": {},
+    "area_notes": {},
+    "special_notes": ""
+  },
+  "special_requirements": {
+    "security_clearance": false,
+    "after_hours_access": false,
+    "special_equipment": [],
+    "certifications_required": [],
+    "insurance_requirements": []
+  },
+  "ai_tone": "professional"
+}
