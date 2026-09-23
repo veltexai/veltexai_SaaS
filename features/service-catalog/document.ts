@@ -13,6 +13,6 @@ export function catalogDocumentText(content: string): string {
     return (Array.isArray(data.rows) ? data.rows : []).map((r: { area: string; frequency: string }) => `- ${r.area}`).join('\n');
   }).replace(/```veliz_pricing_table\s*([\s\S]*?)```/g, (_, json) => {
     const data = safeParse(json) ?? {};
-    return (Array.isArray(data.rows) ? data.rows : []).map((r: { service: string; frequency: string; pricePerMonth: string }) => `${r.service} (${r.frequency}): **${r.pricePerMonth}**`).join('\n\n') + `\n\n**Total before any applicable tax: ${data.summary?.total ?? 'See agreed price'}**`;
+    return (Array.isArray(data.rows) ? data.rows : []).map((r: { service: string; frequency: string; pricePerMonth: string }) => `${r.service} (${r.frequency}): **${r.pricePerMonth}**`).join('\n\n') + `\n\n**${data.summary?.label ?? 'Total before any applicable tax'}: ${data.summary?.total ?? 'See agreed price'}**`;
   });
 }

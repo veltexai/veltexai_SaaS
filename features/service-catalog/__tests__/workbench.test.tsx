@@ -78,3 +78,22 @@ it.each([403, 422])('keeps a readable %s error next to preparation and retains i
   expect(await screen.findByRole('alert')).toHaveTextContent(status === 403 ? 'Proposal limit reached' : 'Review the service location');
   expect(screen.getByLabelText('Client name')).toHaveValue('Sample customer');
 });
+
+it('ordinary names and prose preserve the visible price; codes produce advisory only', () => {
+ render(<CatalogWorkbench demo />);
+ for (const value of ['Keystone Cleaning', 'Pinnacle Maids', 'Door to Door Cleaning']) {
+   fireEvent.change(screen.getByLabelText('Cleaning company name / signature'), { target: { value } });
+   expect(screen.getByText(/Suggested price: \$/)).toBeInTheDocument();
+ }
+ fireEvent.change(screen.getByLabelText('Customer-facing scope notes and agreed terms'), { target: { value: 'sweeping and mopping interior doors' } });
+ expect(screen.getByText(/Suggested price: \$/)).toBeInTheDocument();
+ fireEvent.change(screen.getByLabelText('Customer-facing scope notes and agreed terms'), { target: { value: 'Garage opener 7391' } });
+ expect(screen.getByText(/Possible entry code in customer-facing text/)).toBeInTheDocument();
+ expect(screen.getByText(/Suggested price: \$/)).toBeInTheDocument();
+});
+it('seeds the signature from the company profile even without cost defaults', async () => {
+ global.fetch = jest.fn(async () => ({ ok: true, json: async () => ({ profile: null, companyName: 'Keystone Cleaning' }) } as Response));
+ render(<CatalogWorkbench />);
+ await waitFor(() => expect(screen.getByLabelText('Cleaning company name / signature')).toHaveValue('Keystone Cleaning'));
+ expect(screen.getByText(/Suggested price: \$/)).toBeInTheDocument();
+});

@@ -2,7 +2,7 @@
 
 exports[`customer copy and privacy snapshot: airbnb_turnover 1`] = `
 "## Cover letter
-We propose vacation rental turnover service agreement for Customer at Test home. Please review the scope and service agreement below.
+We propose the following service: vacation rental turnover service agreement for Customer at Test home. Please review the scope and service agreement below.
 
 ## Scope of service
 Service schedule: Per turn.
@@ -42,9 +42,9 @@ Ordinary cleaning supplies are included.
 ## Service Quote & Pricing
 Vacation rental turnover service agreement (Per turn): **$280.00**
 
-**Total before any applicable tax: $280.00**
+**Service price before any applicable tax: $280.00**
 
-Your price: $280.00 per turn. Estimated monthly budget: $1120.00; actual billing depends on visits completed. Confirm actual billing schedule in writing.
+Your price: $280.00 per turn. Estimated monthly budget: $1,120.00; actual billing depends on visits completed. Confirm actual billing schedule in writing.
 
 Taxes are not assessed in this estimate; confirm applicability before acceptance.
 
@@ -62,7 +62,7 @@ Confirm the scope, scheduling, taxes and payment terms before signing."
 
 exports[`customer copy and privacy snapshot: first_deep 1`] = `
 "## Cover letter
-We propose first visit / deep clean for Customer at Test home. Please review the scope and service agreement below.
+We propose the following service: first visit / deep clean for Customer at Test home. Please review the scope and service agreement below.
 
 ## Scope of service
 Service schedule: One-time service.
@@ -100,7 +100,7 @@ Ordinary cleaning supplies are included.
 ## Service Quote & Pricing
 First visit / deep clean (One-time service): **$310.00**
 
-**Total before any applicable tax: $310.00**
+**Service price before any applicable tax: $310.00**
 
 Your price: $310.00 per visit. This is a one-time job total.
 
@@ -120,7 +120,7 @@ Confirm the scope, scheduling, taxes and payment terms before signing."
 
 exports[`customer copy and privacy snapshot: move_in_out 1`] = `
 "## Cover letter
-We propose move-in / move-out for Customer at Test home. Please review the scope and service agreement below.
+We propose the following service: move-in / move-out for Customer at Test home. Please review the scope and service agreement below.
 
 ## Scope of service
 Service schedule: One-time service.
@@ -158,7 +158,7 @@ Ordinary cleaning supplies are included.
 ## Service Quote & Pricing
 Move-in / move-out (One-time service): **$300.00**
 
-**Total before any applicable tax: $300.00**
+**Service price before any applicable tax: $300.00**
 
 Your price: $300.00 per visit. This is a one-time job total.
 
@@ -178,7 +178,7 @@ Confirm the scope, scheduling, taxes and payment terms before signing."
 
 exports[`customer copy and privacy snapshot: recurring_standard 1`] = `
 "## Cover letter
-We propose recurring standard home cleaning for Customer at Test home. Please review the scope and service agreement below.
+We propose the following service: recurring standard home cleaning for Customer at Test home. Please review the scope and service agreement below.
 
 ## Scope of service
 Service schedule: Every two weeks.
@@ -214,7 +214,9 @@ Ordinary cleaning supplies are included.
 ## Service Quote & Pricing
 Recurring standard home cleaning (Every two weeks): **$245.00**
 
-**Total before any applicable tax: $245.00**
+Initial detailed clean (replaces first visit) (Once): **$310.00**
+
+**Ongoing visit price (initial clean shown separately): $245.00**
 
 Your price: $245.00 per visit. Estimated monthly budget: $530.83; actual billing depends on visits completed. Confirm actual billing schedule in writing.
 Initial detailed clean: $310.00 once, before the ongoing recurring visits. Includes reachable baseboards, cabinet fronts, doors, switches, sills, tracks, blinds and vent covers. Initial clean replaces the first standard visit; monthly estimates cover ongoing visits only.
@@ -234,7 +236,7 @@ Confirm the scope, scheduling, taxes and payment terms before signing."
 
 exports[`customer copy and privacy snapshot: standard 1`] = `
 "## Cover letter
-We propose one-time standard home cleaning for Customer at Test home. Please review the scope and service agreement below.
+We propose the following service: one-time standard home cleaning for Customer at Test home. Please review the scope and service agreement below.
 
 ## Scope of service
 Service schedule: One-time service.
@@ -270,7 +272,7 @@ Ordinary cleaning supplies are included.
 ## Service Quote & Pricing
 One-time standard home cleaning (One-time service): **$245.00**
 
-**Total before any applicable tax: $245.00**
+**Service price before any applicable tax: $245.00**
 
 Your price: $245.00 per visit. This is a one-time job total.
 

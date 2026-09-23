@@ -157,3 +157,19 @@ After any material action, append or revise the relevant section with:
 - **FAILED ATTEMPTS:** shared Git metadata sandbox write, font-fetch DNS, sandbox Chrome launch, baseline harness missing synthetic settings; each diagnosed and corrected locally. No credential or integration recreation.
 - **NO LIVE ACTIONS:** no deployment, publication, spend, external message, hosted database connection or live-system changes. Existing media priorities/holds are unchanged.
 - **NEXT PRODUCT ACTION:** Claude re-review of the committed remediation candidate, then address remaining findings before infrastructure/founder gates. Not deployment.
+
+## Release 1 Claude round-2 handoff — 2026-09-22 Pacific
+
+- **SENT / RUNNING:** prompt and curated remediation ZIP for `5d9fa9d498fd28f88f4701fbb5910398a7a4890e` sent in the existing Claude Cowork chat **Veltex AI Release 1 independent review**, `https://claude.ai/cowork/cse_015J3LbDmLeVEV7Qt2Bkcoz9`. UI showed Running / Working on it after submission.
+- **REVIEW PAYLOAD:** `/private/tmp/veltex-release1-claude-review-5d9fa9d.zip`; 65 selected committed code/test/document/migration/synthetic-artifact files plus START_HERE and manifest. No credentials, dependencies, Git metadata, raw logs or unrelated ledger/media. Requested a downloadable `CLAUDE_RE_REVIEW_RESULT.md`; no shared-folder permission granted.
+- **APPROVAL HISTORY:** automatic review rejected a stale-index click, full-worktree attachment and read/write shared-folder access. Refreshed controls, cancelled both folder attempts, and successfully used a narrowly scoped ZIP attachment instead.
+- **MONITOR ACTIVE:** existing `claude-commercial-package-review` heartbeat retains its 15-minute cadence and parent task. Updated only its status/monitoring instructions to acknowledge the already-sent review and avoid duplication. It will collect/evaluate the verdict and report it.
+- **PENDING EXPLICIT CONFIRMATION:** expanding the monitor into recurring local code fixes, commits and subsequent Claude submissions was rejected by automatic approval review as requiring explicit recurring authorization. Anthony was asked for that exact scope. No new deployment, hosted-system, spend or external-human-contact authority is inferred.
+
+### 2026-09-22 — Round 3 local candidate after Claude conditional pass
+
+- Read user-provided CLAUDE_RE_REVIEW_RESULT.md; copied into release-1 docs as review evidence.
+- Fixed local prose blocking, schema dispatch and v1 composition semantics, catalog public metadata, structured initial clean, profile signature seeding, readable validation errors and routing context. Database candidate adds restrictive ownership gates plus fail-closed policy checks, history restoration, bounded time metric and growth continuity. No DB execution claimed.
+- Validation: 500 tests / 57 suites / 5 snapshots, typecheck, production build; eight 390/1440 static layouts with no overflow and two local PDFs. V1 catalog/pricing bytes unchanged from 4b7310c original files.
+- Release remains FAIL/not ready: disposable DB/RLS, authenticated staging/email/hosted PDFs, operator validation and founder acceptance outstanding. All accepted deferrals preserved. No deployment, publication, hosted mutation or spend.
+- Coordination message to differently titled Codex task was auto-review rejected; not sent. Established independent Claude review destination verified separately; round-3 curated ZIP handoff pending at candidate commit.

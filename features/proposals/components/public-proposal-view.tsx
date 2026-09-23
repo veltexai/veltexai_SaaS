@@ -24,7 +24,7 @@ interface ProposalData {
   id: string;
   title: string;
   client_name: string;
-  client_email: string;
+  client_email?: string;
   client_company: string;
   service_location: string;
   service_type: string;
@@ -152,10 +152,10 @@ export function PublicProposalView({ proposal, tracking }: PublicProposalViewPro
               <Users className="h-4 w-4 text-muted-foreground" />
               <span>{proposal.client_name}</span>
             </div>
-            <div className="flex items-center gap-2">
+            {proposal.client_email && <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
               <span>{proposal.client_email}</span>
-            </div>
+            </div>}
           </div>
           <div className="space-y-3">
             <div className="flex items-center gap-2">
@@ -170,8 +170,8 @@ export function PublicProposalView({ proposal, tracking }: PublicProposalViewPro
         </CardContent>
       </Card>
 
-      {/* Service Details */}
-      <Card>
+      {/* Catalog documents already contain their version-specific service schedule. */}
+      {!proposal.catalog_document && <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -198,7 +198,7 @@ export function PublicProposalView({ proposal, tracking }: PublicProposalViewPro
             <div className="text-sm text-muted-foreground">Frequency</div>
           </div>
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* Proposal Content */}
       {proposal.generated_content && (

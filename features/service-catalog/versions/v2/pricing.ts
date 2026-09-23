@@ -1,4 +1,3 @@
-import { estimateJob as estimateV1 } from '../v1/pricing';
 import { getService } from './catalog';
 import { jobSchema } from './schema';
 import { ZodError } from 'zod';
@@ -6,13 +5,6 @@ import { ZodError } from 'zod';
 export const money = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 export function estimateJob(input: unknown) {
   const job = jobSchema.parse(input);
-  if (job.catalogVersion === '2026-09-22.1') {
-    // Project only the frozen v1 input contract; later presentation fields do not reprice v1.
-    const { scopeOmissions, initialClean, scheduling, scopeAdditions, coverLetter, companyName, demo, levels, hardFloorPercent, clutter, monthsSinceClean, occupants, ...legacy } = job;
-    const { roundingIncrement, ...costs } = legacy.costs;
-    const turnover = legacy.turnover ? { checkout: legacy.turnover.checkout, checkin: legacy.turnover.checkin, laundryLoads: legacy.turnover.laundryLoads, restocking: legacy.turnover.restocking, inspection: legacy.turnover.inspection, damageDocumentation: legacy.turnover.damageDocumentation } : undefined;
-    return estimateV1({ ...legacy, costs, turnover });
-  }
   const service = getService(job.jobType, job.catalogVersion);
   const c = job.costs;
   const condition = { light: 0.85, normal: 1, heavy: 1.5 }[job.condition];

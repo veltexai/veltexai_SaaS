@@ -1,0 +1,42 @@
+[
+  {
+    "name": "recurring_standard-workbench",
+    "width": 390,
+    "horizontalOverflow": false
+  },
+  {
+    "name": "recurring_standard-workbench",
+    "width": 1440,
+    "horizontalOverflow": false
+  },
+  {
+    "name": "airbnb_turnover-workbench",
+    "width": 390,
+    "horizontalOverflow": false
+  },
+  {
+    "name": "airbnb_turnover-workbench",
+    "width": 1440,
+    "horizontalOverflow": false
+  },
+  {
+    "name": "recurring_standard-proposal",
+    "width": 390,
+    "horizontalOverflow": false
+  },
+  {
+    "name": "recurring_standard-proposal",
+    "width": 1440,
+    "horizontalOverflow": false
+  },
+  {
+    "name": "airbnb_turnover-proposal",
+    "width": 390,
+    "horizontalOverflow": false
+  },
+  {
+    "name": "airbnb_turnover-proposal",
+    "width": 1440,
+    "horizontalOverflow": false
+  }
+]

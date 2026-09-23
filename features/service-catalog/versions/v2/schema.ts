@@ -35,8 +35,8 @@ export const businessProfileSchema = z.object({
   if (p.services.includes('airbnb_turnover') && !p.markets.includes('short_term_rental'))
     ctx.addIssue({ code: 'custom', path: ['services'], message: 'Turnover requires the short-term-rental market.' });
 });
-export const jobSchema = z.object({
-  catalogVersion: z.enum(['2026-09-22.1', CATALOG_VERSION]),
+export const jobInputSchema = z.object({
+  catalogVersion: z.literal(CATALOG_VERSION),
   segment: segmentSchema,
   jobType: jobTypeSchema,
   frequency: frequencySchema,
@@ -80,14 +80,10 @@ export const jobSchema = z.object({
   costs: costAssumptionsSchema,
   override: z.object({ pricePerVisit: amount.positive(), reason: z.string().trim().min(5).max(1000) }).strict().optional(),
   operatorNotes: z.string().max(4000),
-}).strict().superRefine((job, ctx) => {
+}).strict();
+export const jobSchema = jobInputSchema.superRefine((job, ctx) => {
   if (job.costs.wage === 0 && (job.suppliesProvided || job.costs.supplies === 0) && job.costs.equipment === 0 && job.costs.travel === 0 && job.costs.minimumCharge === 0)
     ctx.addIssue({ code: 'custom', path: ['costs'], message: 'Enter a positive labor cost, visit cost or minimum charge before pricing.' });
-  for (const key of ['scheduling', 'operatorNotes', 'scopeAdditions', 'coverLetter', 'companyName'] as const) {
-    if (job[key] && /(?:lockbox|gate|alarm|entry|door|access|key|pin|code)/i.test(job[key]!))
-      ctx.addIssue({ code: 'custom', path: [key], message: 'Keep access and entry details in internal access notes only.' });
-  }
-  if (job.turnover?.restockList && /lockbox|gate|alarm|entry|access|code/i.test(job.turnover.restockList)) ctx.addIssue({ code: 'custom', path: ['turnover', 'restockList'], message: 'Keep entry details in internal access notes only.' });
   const turnover = job.jobType === 'airbnb_turnover';
   if (job.segment !== (turnover ? 'short_term_rental' : 'residential'))
     ctx.addIssue({ code: 'custom', path: ['segment'], message: 'Choose a job type supported by this market.' });

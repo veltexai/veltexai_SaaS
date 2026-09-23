@@ -9,10 +9,10 @@ import { isCatalogProposal } from '@/features/service-catalog/proposal';
 import { proposalFormSchema } from '@/features/proposals/schemas/proposal';
 
 export const dynamic = 'force-dynamic';
-export default async function CategoryProposalPage({ searchParams }: { searchParams: Promise<{ id?: string; job?: string; demo?: string }> }) {
+export default async function CategoryProposalPage({ searchParams }: { searchParams: Promise<{ id?: string; job?: string; demo?: string; source?: string; demoType?: string; designTemplateType?: string; templateId?: string }> }) {
   const params = await searchParams;
   const { user } = await getUser();
-  if (!user) redirect(`/auth/login?redirectTo=${encodeURIComponent('/dashboard/proposals/category')}`);
+  if (!user) redirect(`/auth/login?redirectTo=${encodeURIComponent('/dashboard/proposals/category?' + new URLSearchParams(Object.entries(params).filter((entry): entry is [string, string] => typeof entry[1] === 'string')).toString())}`);
   if (params.id) {
     const db = await createClient();
     const { data, error } = await db.from('proposals').select('*').eq('id', params.id).eq('user_id', user.id).single();
@@ -21,7 +21,7 @@ export default async function CategoryProposalPage({ searchParams }: { searchPar
     return <CatalogWorkbench initialProposal={proposal} proposalId={params.id} />;
   }
   const templates = await getUserAccessibleTemplates();
-  const template = pickQuickDesignTemplate(templates);
+  const template = templates.find(t => t.id === params.templateId) ?? pickQuickDesignTemplate(templates, params.designTemplateType);
   const job = jobTypeSchema.safeParse(params.job);
-  return <CatalogWorkbench templateId={template?.id} initialJobType={job.success ? job.data : undefined} demo={params.demo === '1'} />;
+  return <CatalogWorkbench source={params.source} demoType={params.demoType} templateId={template?.id} initialJobType={job.success ? job.data : undefined} demo={params.demo === '1'} />;
 }

@@ -44,6 +44,7 @@ import { ANALYTICS_EVENTS, captureEvent } from "@/lib/analytics";
 import { createLocalProposalDateMetadata } from "@/features/templates/utils/proposal-date";
 import { pricingDataSchema, type PricingData } from "@/features/proposals/schemas/proposal";
 import { captureProposalFailure } from "@/lib/monitoring";
+import { catalogPath } from '@/features/service-catalog/routing';
 import { QualificationCard } from "./qualification-card";
 
 interface QuickProposalFlowProps {
@@ -714,7 +715,7 @@ export function QuickProposalFlow({
                           .value as ScopeTemplateId;
                         const nextTemplate = getScopeTemplate(nextTemplateId);
                         const mapped = nextTemplate && adaptLegacy(getScopeTemplateServiceType(nextTemplate), nextTemplateId);
-                        if (mapped?.jobType) { router.push(`/dashboard/proposals/category?job=${mapped.jobType}`); return; }
+                        if (mapped?.jobType) { router.push(catalogPath(mapped.jobType, { source, demoType, templateId: selectedDesignTemplate.id })); return; }
 
                         if (generatedContent) {
                           setIsPreviewStale(true);

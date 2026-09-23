@@ -1,0 +1,10 @@
+{
+  "catalog.ts": {
+    "byte_identical": true,
+    "sha256": "1ed936f88d3945f3335be06dfff979d68c691d17ab493874ce14e49d942160d4"
+  },
+  "pricing.ts": {
+    "byte_identical": true,
+    "sha256": "c8519ca3d72f6f04d6e1d98fba0a85fcb9774573e775b4ffcde721ebf27dfc36"
+  }
+}

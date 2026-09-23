@@ -18,3 +18,14 @@ it('view counters resolve their target from the token and increment atomically',
   expect(route).not.toContain('request.json');
   expect(route).toContain("rpc('record_tracked_view'");
 });
+it('candidate refuses unreviewed owner-policy expressions and installs restrictive PUBLIC gates', () => {
+  expect(migration).toContain('as restrictive for all to public');
+  expect(migration).toContain('pg_get_expr(pol.polqual,pol.polrelid)');
+  expect(migration).toContain("raise exception 'Unreviewed policy");
+  expect(migration).toContain("rolname in ('anon','authenticated')");
+});
+it('restores token-resolved history and counts catalog previews without validating unknown historical events', () => {
+  expect(migration).toContain('insert into public.proposal_views (proposal_id,tracking_token) values (target,gen_random_uuid()::text)');
+  expect(migration).toContain(')) not valid;');
+  expect(migration).toContain("e.event_name in ('proposal_generate_succeeded','catalog_previewed')");
+});

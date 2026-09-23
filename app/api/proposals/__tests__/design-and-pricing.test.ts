@@ -1,3 +1,4 @@
+import { defaultJob as defaultV1 } from '@/features/service-catalog/versions/v1/catalog';
 import { composeCatalogProposal } from '@/features/service-catalog/proposal';
 import { defaultJob } from '@/features/service-catalog/catalog';
 import { NextRequest } from 'next/server';
@@ -327,4 +328,18 @@ it('status-only catalog PUT preserves historical content and price despite curre
   const result = await update(request({ status: 'sent' }, 'PUT'), { params: Promise.resolve({ id: 'saved' }) });
   expect(result.status).toBe(200);
   expect(savedProposal).toMatchObject({ status: 'sent', generated_content: 'Frozen accepted proposal', pricing_data: { price_range: { low: 173.21, high: 173.21 } } });
+});
+
+it('returns 422 for demo saves and attempted catalog version changes', async () => {
+ const client = { client_name: 'Sample', client_email: 'sample@example.com', contact_phone: '555', service_location: 'Test property', facility_size: 1500, service_frequency: 'one-time' };
+ const sample = composeCatalogProposal({ job: { ...defaultJob('standard'), demo: true }, client });
+ const denied = await create(request(sample));
+ expect(denied.status).toBe(422);
+ expect(JSON.stringify(await denied.json())).toContain('Sample jobs');
+ const original = composeCatalogProposal({ job: defaultV1('standard'), client });
+ expect((await create(request(original))).status).toBe(200);
+ const current = composeCatalogProposal({ job: defaultJob('standard'), client });
+ const changed = await update(request(current, 'PUT'), { params: Promise.resolve({ id: 'saved' }) });
+ expect(changed.status).toBe(422);
+ expect(JSON.stringify(await changed.json())).toContain('catalog version');
 });

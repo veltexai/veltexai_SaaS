@@ -10,7 +10,8 @@ export async function GET() {
   const db = await createClient();
   const { data, error } = await db.from('business_service_profiles').select('profile').eq('user_id', user.id).maybeSingle();
   if (error) return NextResponse.json({ error: 'Business profile unavailable. Please retry.' }, { status: 503 });
-  return NextResponse.json({ profile: data?.profile ?? null });
+  const { data: company } = await db.from('company_profiles').select('company_name').eq('user_id', user.id).maybeSingle();
+  return NextResponse.json({ profile: data?.profile ?? null, companyName: company?.company_name ?? null });
 }
 export async function PUT(request: NextRequest) {
   const { user } = await getUser();

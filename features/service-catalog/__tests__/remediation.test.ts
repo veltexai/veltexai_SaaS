@@ -2,7 +2,7 @@ import { CATALOG, defaultJob } from '../catalog';
 import { defaultJob as defaultV1 } from '../versions/v1/catalog';
 import { estimateJob as estimateV1 } from '../versions/v1/pricing';
 import { estimateJob } from '../pricing';
-import { composeCatalogProposal, normalizeCatalogProposal } from '../proposal';
+import { composeCatalogProposal, normalizeCatalogProposal, catalogAnalytics } from '../proposal';
 import { catalogDocumentText } from '../document';
 import { jobSchema } from '../schema';
 const client = { client_name: 'Customer', client_email: 'test@example.com', contact_phone: '555-0100', service_location: 'Test home', facility_size: 1500, service_frequency: 'one-time' };
@@ -16,8 +16,10 @@ it.each(CATALOG.map(s => s.id))('customer copy and privacy snapshot: %s', id => 
   expect(text).toContain('Your price:');
   expect(text).toMatchSnapshot();
 });
-it.each(['scheduling', 'operatorNotes', 'scopeAdditions', 'coverLetter'])('blocks entry details in %s', key => {
-  expect(jobSchema.safeParse({ ...defaultJob(), [key]: 'Gate code 4821' }).success).toBe(false);
+it.each(['Keystone Cleaning', 'Pinnacle Maids', 'Gateway', 'Door to Door Cleaning', 'Turnkey', 'sweeping and mopping', 'wiping interior doors', 'outdoor accessible keypad keys'])('ordinary wording never blocks pricing: %s', text => {
+  const job = { ...defaultJob(), companyName: text, operatorNotes: text, scheduling: text, scopeAdditions: text, coverLetter: text };
+  expect(jobSchema.safeParse(job).success).toBe(true);
+  expect(estimateJob(job)).toEqual(estimateJob(defaultJob()));
 });
 it('supports next-day and equal-clock turnover, vacant default and per-turn terms', () => {
   const job = defaultJob('airbnb_turnover');
@@ -91,4 +93,34 @@ it('scope edits are controlled by the saved catalog and cannot forge the quote',
   expect(p.generated_content).toContain('Thank you for inviting our team.');
   expect(p.pricing_data?.price_range?.high).toBe(estimateJob(defaultJob('standard')).selectedPrice);
   expect(() => composeCatalogProposal({ job: { ...job, scopeOmissions: ['Unknown catalog item'] }, client })).toThrow('catalog version');
+});
+
+it.each(['recurring_standard', 'airbnb_turnover'] as const)('reopens and edits realistic v1 %s without changing its monetary basis', type => {
+  const job = { ...defaultV1(type), operatorNotes: 'Please close the door on exit. Mopping included.' };
+  const original = composeCatalogProposal({ job, client });
+  expect(catalogAnalytics(original)).toMatchObject({ catalog_version: '2026-09-22.1' });
+  expect(estimateJob(job)).toEqual(estimateV1(job));
+  const changedJob = { ...job, squareFeet: 1800, companyName: 'Keystone Cleaning' };
+  const revised = normalizeCatalogProposal({ ...original, service_specific_data: { ...original.service_specific_data, catalogJob: changedJob } }, original);
+  expect(revised.pricing_data?.price_range).toEqual({ low: estimateV1({ ...job, squareFeet: 1800 }).periodPrice, high: estimateV1({ ...job, squareFeet: 1800 }).periodPrice });
+  expect(revised.generated_content).toContain('close the door');
+  if (type === 'airbnb_turnover') {
+    expect(revised.generated_content).not.toMatch(/Expected turns per month|monthly budget|per-turn service agreement/);
+    expect(revised.generated_content).toContain('one-time job total');
+  }
+});
+it('v1 validation remains same-day and does not accept v2 pricing drivers', () => {
+  const job = defaultV1('airbnb_turnover');
+  expect(jobSchema.safeParse({ ...job, turnover: { ...job.turnover, nextDay: true } }).success).toBe(false);
+  expect(jobSchema.safeParse({ ...job, levels: 2 }).success).toBe(false);
+});
+it('persists initial clean separately without adding it to ongoing dashboard value', () => {
+  const job = defaultJob();
+  const p = composeCatalogProposal({ job, client });
+  expect(p.service_specific_data.pricingLineItems).toEqual([
+    { kind: 'service', amount: estimateJob(job).selectedPrice, basis: 'per_visit' },
+    { kind: 'initial_clean', amount: 310, basis: 'one_time_replaces_first_visit' },
+  ]);
+  expect(p.service_specific_data.priceBasis).toBe('per_visit');
+  expect(catalogDocumentText(p.generated_content!)).toContain('Initial detailed clean (replaces first visit) (Once): **$310.00**');
 });
