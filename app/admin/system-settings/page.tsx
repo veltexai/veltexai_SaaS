@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import SystemSettingsForm from '@/features/admin/components/system-settings-form';
 import { SystemSettings } from '@/types/database';
+import { mapStoredSystemSettingsToForm } from '@/lib/admin/system-settings';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -83,7 +84,9 @@ async function fetchSystemSettings(): Promise<SystemSettings> {
       return defaultSettings;
     }
 
-    return data ? { ...defaultSettings, ...data, smtp_password: null } : defaultSettings;
+    return data
+      ? mapStoredSystemSettingsToForm(data as unknown as Record<string, unknown>, defaultSettings)
+      : defaultSettings;
   } catch (error) {
     console.error('Error fetching system settings:', error);
     return defaultSettings;

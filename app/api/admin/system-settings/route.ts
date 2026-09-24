@@ -2,6 +2,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { buildSystemSettingsUpdate } from '@/lib/admin/system-settings';
 
 // Helper function to check admin access
 async function checkAdminAccess(supabase: any) {
@@ -143,42 +144,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'System settings record not found' }, { status: 404 });
     }
 
-    const submitted = settings as Record<string, unknown>;
-    const nextSettings: Record<string, unknown> = {};
-    const editableColumns = [
-      'company_name', 'company_logo_url', 'company_tagline',
-      'primary_color', 'secondary_color', 'accent_color',
-      'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password',
-      'smtp_from_email', 'smtp_from_name',
-      'session_timeout', 'password_min_length', 'require_2fa', 'max_login_attempts',
-      'enable_ai_suggestions', 'enable_auto_backup',
-      'enable_email_notifications', 'enable_sms_notifications',
-      'default_currency', 'default_timezone',
-      'business_hours_start', 'business_hours_end',
-      'maintenance_mode', 'maintenance_message',
-      'theme_applied_to_pdfs', 'ai_attribution_enabled', 'proposal_tracking_enabled',
-    ];
-    for (const key of editableColumns) {
-      if (Object.prototype.hasOwnProperty.call(submitted, key)) nextSettings[key] = submitted[key];
-    }
-    const aliases: Record<string, string> = {
-      email_from_name: 'smtp_from_name',
-      email_from_address: 'smtp_from_email',
-      ai_enabled: 'enable_ai_suggestions',
-      email_notifications_enabled: 'enable_email_notifications',
-      business_timezone: 'default_timezone',
-    };
-    for (const [input, column] of Object.entries(aliases)) {
-      if (Object.prototype.hasOwnProperty.call(submitted, input)) nextSettings[column] = submitted[input];
-    }
+    const nextSettings = buildSystemSettingsUpdate(
+      settings as Record<string, unknown>,
+      preserveSmtp,
+    );
     nextSettings.updated_at = new Date().toISOString();
-    if (preserveSmtp) {
-      for (const key of ['smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_from_email', 'smtp_from_name']) {
-        delete nextSettings[key];
-      }
-    } else if (typeof settings.smtp_password !== 'string' || settings.smtp_password.trim() === '') {
-      delete nextSettings.smtp_password;
-    }
 
     const { error: writeError } = await service
       .from('system_settings')

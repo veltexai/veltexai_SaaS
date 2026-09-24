@@ -1,4 +1,8 @@
 import fs from 'node:fs';
+import {
+  buildSystemSettingsUpdate,
+  mapStoredSystemSettingsToForm,
+} from '@/lib/admin/system-settings';
 
 const migration = fs.readFileSync(
   'supabase/migrations/20260924000000_r0_privilege_hardening.sql',
@@ -59,8 +63,46 @@ describe('R0 privilege hardening', () => {
     expect(form).not.toContain("from('system_settings')");
     expect(branding).not.toContain('from("system_settings")');
     expect(api).toContain('createServiceClient()');
-    expect(api).toContain("delete nextSettings.smtp_password");
-    expect(api).toContain("const editableColumns = [");
+    expect(api).toContain('buildSystemSettingsUpdate');
     expect(api).not.toContain('changes: data');
+  });
+
+  it('preserves stored operational values when an admin edits an unrelated field', () => {
+    const defaults = {
+      email_from_name: 'Veltex Services',
+      email_from_address: 'noreply@veltexservices.com',
+      ai_enabled: true,
+      email_notifications_enabled: true,
+      business_timezone: 'America/New_York',
+      smtp_password: null,
+    } as any;
+    const form = mapStoredSystemSettingsToForm({
+      smtp_from_name: 'Veltex AI',
+      smtp_from_email: 'noreply@send.veltexai.com',
+      enable_ai_suggestions: false,
+      enable_email_notifications: false,
+      default_timezone: 'America/Los_Angeles',
+      smtp_password: 'must-not-reach-browser',
+    }, defaults);
+
+    expect(form).toMatchObject({
+      email_from_name: 'Veltex AI',
+      email_from_address: 'noreply@send.veltexai.com',
+      ai_enabled: false,
+      email_notifications_enabled: false,
+      business_timezone: 'America/Los_Angeles',
+      smtp_password: null,
+    });
+
+    const update = buildSystemSettingsUpdate({ ...form, company_name: 'New name' });
+    expect(update).toMatchObject({
+      company_name: 'New name',
+      smtp_from_name: 'Veltex AI',
+      smtp_from_email: 'noreply@send.veltexai.com',
+      enable_ai_suggestions: false,
+      enable_email_notifications: false,
+      default_timezone: 'America/Los_Angeles',
+    });
+    expect(update).not.toHaveProperty('smtp_password');
   });
 });
