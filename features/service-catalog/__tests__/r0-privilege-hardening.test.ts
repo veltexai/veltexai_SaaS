@@ -42,6 +42,7 @@ describe('R0 privilege hardening', () => {
   });
 
   it('keeps lifecycle mutation service-only and fixes search paths', () => {
+    expect(migration).toContain("if to_regprocedure('public.start_user_trial(uuid,text)') is not null then");
     expect(migration).toContain('revoke all on function public.start_user_trial(uuid,text) from public, anon, authenticated');
     expect(migration).toContain('grant execute on function public.start_user_trial(uuid,text) to service_role');
     expect(migration).toContain('set search_path = pg_catalog, public');

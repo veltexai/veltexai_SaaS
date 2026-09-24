@@ -157,10 +157,17 @@ alter function public.handle_subscription_expiration() set search_path = pg_cata
 revoke all on function public.handle_subscription_expiration() from public, anon, authenticated;
 grant execute on function public.handle_subscription_expiration() to service_role;
 
--- Stripe/server lifecycle mutation is never client callable.
-alter function public.start_user_trial(uuid,text) set search_path = pg_catalog, public;
-revoke all on function public.start_user_trial(uuid,text) from public, anon, authenticated;
-grant execute on function public.start_user_trial(uuid,text) to service_role;
+-- Stripe/server lifecycle mutation is never client callable. Some current
+-- production targets no longer contain this obsolete card-backed-trial RPC,
+-- so harden it only when it exists; absence is already fail-closed.
+do $$
+begin
+  if to_regprocedure('public.start_user_trial(uuid,text)') is not null then
+    alter function public.start_user_trial(uuid,text) set search_path = pg_catalog, public;
+    revoke all on function public.start_user_trial(uuid,text) from public, anon, authenticated;
+    grant execute on function public.start_user_trial(uuid,text) to service_role;
+  end if;
+end $$;
 
 -- Trigger routines need fixed resolution and no direct execution grant.
 alter function public.handle_new_user() set search_path = pg_catalog, public;
