@@ -1,12 +1,12 @@
 # Release 1 migration and staging checklist
 
-Status: NOT EXECUTED. This is a reviewable procedure, not authorization to deploy.
+Status: local 46-migration chain independently verified; real Supabase preview verification IN PROGRESS as of 2026-09-24. This procedure does not authorize production deployment. See M1_PREVIEW_VERIFICATION.md for current evidence.
 
 ## Before applying
 
 1. Verify the deployment target is an isolated staging project and take a restorable backup. Confirm current production still descends from `a4deb7c` and compare any newer changes before release.
-2. Confirm prior migrations supply `profiles`, `proposals.service_specific_data` (jsonb), `marketing_funnel_events.properties/created_at`, and `profiles.is_internal`. Review actual grants and RLS in the target rather than assuming local migrations match production.
-3. Apply `20260922000000_service_catalog_release_1.sql` transactionally with the usual migration runner. It does not modify legacy proposal rows, service-type checks, Stripe state or frequency constraints. Re-running its statements recreates named policies/trigger and upserts the version row without changing approval.
+2. Confirm prior migrations supply `profiles`, `proposals.service_specific_data` (jsonb), `marketing_funnel_events.properties/occurred_at`, and `profiles.is_internal`. Review actual grants and RLS in the target rather than assuming local migrations match production.
+3. Run `quality/service-catalog-round4/target-prerequisites.sql` first. Resolve any missing prerequisite using the reviewed target-specific plan in `M1_PREVIEW_VERIFICATION.md`; do not blindly replay historical migrations. Apply `20260922000000_service_catalog_release_1.sql` transactionally with the usual migration runner. It does not modify legacy proposal rows, service-type checks, Stripe state or frequency constraints. Re-running its statements recreates named policies/trigger and upserts the version row without changing approval.
 4. Verify profile reads/writes as two separate authenticated users. A cannot select, update or insert B's row; anonymous cannot read either table. Authenticated users can read registry metadata but cannot approve/publish versions.
 5. Verify version guard: catalog job insertion requires a registered matching snapshot version and residential legacy type; deleting catalog metadata or changing a saved version fails. Every old service type still inserts and edits normally.
 6. Verify service-role reporting returns only non-internal profiles and historical event taxonomy. End-user sessions cannot select the reporting view.

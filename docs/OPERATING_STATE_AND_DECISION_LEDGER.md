@@ -212,3 +212,38 @@ After any material action, append or revise the relevant section with:
 - **CX-1 FINAL DATABASE/SECURITY REVIEW — LOCAL PASS:** Claude verified ZIP SHA-256 `2996755c12b6c15c6dcffc18e81beb3321c9e4c89b41b6bfa2ef8a6f256c20c1`, all 46 migrations, the unmodified `CHECK_DEFINERS=1` gate, all seven wrappers across own-user/cross-user/forged-claim/anonymous/PostgREST-service/direct-maintenance roles, migration repeatability, rollback and forward reapply. R3-3 is closed at repository level. Release remains FAIL pending the external gates below.
 - **M1 ADMIN SETTINGS DEFECT CORRECTED LOCALLY:** stored `smtp_from_name`, `smtp_from_email`, `enable_ai_suggestions`, `enable_email_notifications` and `default_timezone` are now normalized into the legacy form fields before rendering. The server write allowlist is centralized and a regression test proves that changing an unrelated setting preserves those operational values and never returns or rewrites a blank SMTP password. Local validation: 58 suites / 513 tests / 5 snapshots, TypeScript and production build pass (build used non-secret local placeholder Supabase variables).
 - **NEXT UNFINISHED GATES:** independent focused review of the M1 correction; Gmail app-password rotation after founder passkey authentication; isolated Supabase-copy role and migration verification; authenticated staging/admin-settings/email/PDF flows; operator validation and founder acceptance. No production deployment is authorized.
+
+### M-1 continuation — 2026-09-24 Pacific
+
+- Latest Claude response independently consumed: `07624c4` M1 PASS / LOCAL PASS, no new review requested. R3-3 remains closed at repository level; hosted verification is separate.
+- Authoritative main-checkout ledger confirms Gmail rotation and 2:47 PM delivery COMPLETE / VERIFIED; earlier pending-rotation entries are superseded. Credential not read or changed.
+- Existing preview `wcnfhriosemgchmtwgof` metadata confirms marketing prerequisites and catalog registry present; catalog-remediation/R0 functions absent. Added a fail-closed, read-only structural preflight and target-specific drift/deployment-order record in `M1_PREVIEW_VERIFICATION.md`; corrected the stale created_at prerequisite to occurred_at.
+- Catalog migration prepared, but automatic approval review rejected execution of grant/RLS changes. Asked for explicit named-preview authorization for both migrations and synthetic role assertions. No migration ran during this continuation. $1 cap, no promotion/deletion, production/staging/operator/founder gates preserved.
+
+### Conditional deployment/deletion authorization — 2026-09-24 Pacific
+
+- Anthony authorized deploying the verified Release 1 candidate and deleting preview `m1-r0-verification-20260924` / `wcnfhriosemgchmtwgof` after required M-1 evidence is captured and the preview is no longer needed. Authorization does not waive unresolved blockers.
+- Exact current code candidate: `07624c47163ab50ebde87d6fda88e882884e7753`. Claude latest: M1 PASS / LOCAL PASS / RELEASE FAIL. Existing local 513-test/typecheck/build evidence is retained; new edits are documentation and read-only structural preflight only.
+- NOT DEPLOYED: required hosted catalog/R0 migration and cross-user assertions remain incomplete; authenticated staging and operator validation are not verified. Automatic approval review still blocks the preview grant/RLS execution pending the exact authorization requested. No workaround attempted.
+- PREVIEW NOT DELETED: required evidence is incomplete and the preview is still needed. No production rollback, credential action, campaign mutation or Mohamed contact. Next action: resolve the preview execution block, capture M-1/staging evidence and operator validation, then reassess deployment readiness.
+
+### M-1 execution milestone and real blocker — 2026-09-24 Pacific
+
+- Renewed proceed authorization resolved the earlier auto-review execution block. Catalog remediation succeeded on preview `wcnfhriosemgchmtwgof`.
+- Synthetic rollback-only SQL tests PASS: owner read; cross-user proposal/tracking read/update denial; anonymous raw-read denial; token allowlist/private-sentinel scan; exactly one view-count increment. Not authenticated PostgREST/app staging evidence.
+- R0 migration FAILED 42883 on missing `_r0_can_user_access_template_impl(uuid,uuid)`; metadata verifies rollback (original usage function present, renamed implementation/R0 helper absent).
+- Production metadata-only comparison proves preview lacks production's `proposal_templates`, `can_user_access_template(uuid,uuid)` and `get_user_accessible_templates(uuid)`. Preview is NOT a faithful current-production schema; earlier complete-copy assumptions superseded. `start_user_trial(uuid,text)` is absent in BOTH targets and is an unconditional R0 dependency needing reconciliation. No production data/credential was selected or changed.
+- Exact candidate stays `07624c47163ab50ebde87d6fda88e882884e7753`; no migration/app source changes. Added fail-closed R0 preflight and `quality/service-catalog-round4/m1-preview-results.json`. Release BLOCKED by schema fidelity/R0 compatibility, full hosted role matrix, authenticated staging and operator validation. No deployment or preview deletion; their evidence conditions remain unmet.
+
+### Sequential Cleaning Business OS direction — 2026-09-24 Pacific
+
+- Founder directed continuation after verified Release 1 production deployment, smoke verification and preview cleanup. These conditions remain unmet: current Release 1 schema-fidelity/R0 compatibility blockers are still open. No R2 implementation started.
+- Next bounded release: R2 organization/tenancy foundation only — organizations, memberships, owner/admin/estimator/viewer roles, tenant isolation, audit trail, event outbox/inbox foundations, migrations, rollback, tests and evidence. Begin from the exact verified production commit recorded at Release 1 handoff, using approved Prompt 2/3/14 decisions and founder strategy; preserve existing work and avoid concurrent release edits.
+- R2 requires Claude independent review and its specified release gates before production. Later R3 through stage 7 remain sequential objectives, each separately implemented and independently reviewed; no combined migration or premature completion claim.
+- Conditional production authorization does not waive release gates. New spending, legal acceptance, regulated/high-hazard content, payment-provider account changes and destructive actions beyond the named preview deletion retain their applicable approval requirements.
+
+### b341e50 M-1 continuation — browser access blocked
+
+- Candidate confirmed `b341e50`; obsolete start_user_trial is optional, required template routines remain mandatory. Updated local read-only R0 preflight accordingly; preserved all prior M-1 evidence.
+- Prepared `quality/service-catalog-round4/template-prerequisite-inventory.sql` to compare only production template schema/ACLs/functions before restoring the missing preview prerequisites. No data/credential queries or blanket migration replay.
+- Browser state, tab inventory and direct preview selection timed out repeatedly after documented recovery. No hosted changes executed this turn; preview restoration/R0 role verification is blocked on browser access. Production unchanged, preview not deleted, R2 not started. Prior catalog hosted SQL tests remain PASS; full M-1/app staging/operator gates remain incomplete.

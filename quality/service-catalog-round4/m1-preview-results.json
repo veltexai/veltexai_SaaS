@@ -1,0 +1,72 @@
+{
+  "date": "2026-09-24",
+  "candidate": "07624c47163ab50ebde87d6fda88e882884e7753",
+  "preview": "wcnfhriosemgchmtwgof",
+  "production_metadata_only": "iwoaaljitifloolszxlu",
+  "catalog_migration": "SUCCESS (same SQL statements, comments/formatting condensed in SQL editor)",
+  "r0_migration": "FAILED 42883: public._r0_can_user_access_template_impl(uuid,uuid) does not exist",
+  "r0_rollback_evidence": {
+    "original_get_user_current_usage_present": true,
+    "renamed_impl_present": false,
+    "r0_assert_self_or_service_present": false
+  },
+  "catalog_tests": {
+    "owner_read": "PASS",
+    "cross_user_proposal_read_update_denied": "PASS",
+    "cross_user_tracking_read_update_denied": "PASS",
+    "anonymous_raw_reads_denied": "PASS",
+    "token_resolution": "PASS",
+    "private_sentinels_absent": "PASS",
+    "view_counter_once": "PASS",
+    "fixtures": "transaction rolled back"
+  },
+  "limitations": [
+    "SQL SET ROLE tests, not PostgREST authenticated sessions",
+    "No R0 hosted role-matrix pass",
+    "No production migration or deployment",
+    "No preview deletion"
+  ],
+  "schema_comparison": [
+    {
+      "object": "can_user_access_template(uuid,uuid)",
+      "preview": false,
+      "production": true
+    },
+    {
+      "object": "get_user_accessible_templates(uuid)",
+      "preview": false,
+      "production": true
+    },
+    {
+      "object": "proposal_templates",
+      "preview": false,
+      "production": true
+    },
+    {
+      "object": "start_user_trial(uuid,text)",
+      "preview": false,
+      "production": false
+    },
+    {
+      "object": "can_user_create_proposal(uuid)",
+      "preview": true,
+      "production": true
+    },
+    {
+      "object": "is_admin()",
+      "preview": true,
+      "production": true
+    },
+    {
+      "object": "handle_new_user()",
+      "preview": true,
+      "production": true
+    },
+    {
+      "object": "subscriptions",
+      "preview": true,
+      "production": true
+    }
+  ],
+  "verdict": "M-1 incomplete / release blocked: preview does not match production schema; R0 assumes a trial routine absent in production"
+}
