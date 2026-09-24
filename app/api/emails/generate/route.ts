@@ -153,8 +153,6 @@ Return the response as a JSON object with the following structure:
 The email body should be formatted with line breaks for readability but without HTML tags.
 `;
 
-    console.log("🚀 ~ POST ~ email generation prompt:", prompt);
-
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [

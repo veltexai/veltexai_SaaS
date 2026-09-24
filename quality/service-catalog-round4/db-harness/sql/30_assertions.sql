@@ -42,6 +42,12 @@ do $$ begin
   if not exists (select 1 from public.service_catalog_versions where version='2026-09-22.1')
      or not exists (select 1 from public.service_catalog_versions where version='2026-09-22.2')
     then raise exception 'A7 catalog registry incomplete'; end if;
+  if has_table_privilege('anon','public.system_settings','select')
+     or has_table_privilege('authenticated','public.system_settings','select')
+    then raise exception 'A8 client role can read system settings'; end if;
+  if exists (select 1 from pg_policy where polrelid='public.system_settings'::regclass
+             and pg_get_expr(polqual,polrelid) in ('true','(true)'))
+    then raise exception 'A9 broad system settings read policy remains'; end if;
 end $$;
 
 -- B. Anonymous role: raw access denied
@@ -182,8 +188,12 @@ do $$ declare bad text; begin
   from pg_proc p join pg_namespace n on n.oid=p.pronamespace
   where n.nspname='public' and p.prosecdef and p.prorettype <> 'trigger'::regtype
     and (has_function_privilege('anon',p.oid,'execute') or has_function_privilege('authenticated',p.oid,'execute'))
-    and p.proname not in ('read_tracked_proposal','record_tracked_view','record_tracking_metric'
-      -- add reviewed, auth.uid()-bound functions here with a comment justifying each
+    and p.proname not in ('read_tracked_proposal','record_tracked_view','record_tracking_metric',
+      -- These wrappers call r0_assert_self_or_service before reaching the
+      -- ungranted legacy implementations.
+      'get_user_current_usage','can_user_create_proposal','get_user_usage_info',
+      'increment_user_usage','can_user_access_template','user_has_active_access',
+      'get_user_accessible_templates','is_admin'
     );
   if bad is not null then raise exception 'H1 client-executable definer functions not on allowlist: %', bad; end if;
 end $$;
@@ -193,6 +203,23 @@ do $$ begin
   exception when insufficient_privilege then null; end;
   begin perform * from public.get_proposal_tracking_stats(current_setting('h.proposal')::uuid); raise exception 'H3 anon can read cross-owner tracking stats';
   exception when insufficient_privilege then null; end;
+end $$;
+rollback;
+begin; set local role authenticated;
+select set_config('request.jwt.claim.sub', current_setting('h.other'), true);
+do $$ begin
+  begin perform public.get_user_current_usage(current_setting('h.owner')::uuid);
+    raise exception 'H4 authenticated caller read another user usage';
+  exception when insufficient_privilege then null; end;
+  begin perform public.increment_user_usage(current_setting('h.owner')::uuid);
+    raise exception 'H5 authenticated caller incremented another user usage';
+  exception when insufficient_privilege then null; end;
+  perform public.get_user_current_usage(current_setting('h.other')::uuid);
+end $$;
+rollback;
+begin; set local role service_role;
+do $$ begin
+  perform public.get_user_current_usage(current_setting('h.owner')::uuid);
 end $$;
 rollback;
 \endif

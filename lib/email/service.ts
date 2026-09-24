@@ -70,13 +70,11 @@ interface EnhancedProposalEmailData {
 
 export class EmailService {
   private static async getEmailConfig(): Promise<EmailConfig | null> {
-    console.log("📧 EmailService: Initializing Supabase client...");
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
-    console.log("📧 EmailService: Querying system_settings table...");
     const { data: settings, error } = await supabase
       .from("system_settings")
       .select(
@@ -87,14 +85,14 @@ export class EmailService {
       .single();
 
     if (error) {
-      console.error("❌ EmailService: Database error:", error);
-      console.error("❌ EmailService: Error code:", error.code);
-      console.error("❌ EmailService: Error message:", error.message);
+      console.error("❌ EmailService: Email configuration lookup failed", {
+        code: error.code,
+      });
       return null;
     }
 
     if (error || !settings) {
-      console.error("Failed to get email settings:", error);
+      console.error("Failed to get email settings");
       return null;
     }
 
