@@ -14,7 +14,9 @@ describe('R0 privilege hardening', () => {
 
   it('binds identity-parameter RPCs to the current caller', () => {
     expect(migration).toContain("auth.uid() is distinct from target_user");
-    expect(migration).toContain("current_user not in ('service_role','postgres','supabase_admin')");
+    expect(migration).toContain("current_setting('role', true) = 'service_role'");
+    expect(migration).toContain("session_user in ('service_role','postgres','supabase_admin')");
+    expect(migration).not.toContain("current_user not in ('service_role','postgres','supabase_admin')");
     expect(migration).not.toContain("auth.role(),'') <> 'service_role'");
     for (const name of [
       'get_user_current_usage',
@@ -57,6 +59,8 @@ describe('R0 privilege hardening', () => {
     expect(form).not.toContain("from('system_settings')");
     expect(branding).not.toContain('from("system_settings")');
     expect(api).toContain('createServiceClient()');
-    expect(api).toContain('nextSettings.smtp_password = existing.smtp_password');
+    expect(api).toContain("delete nextSettings.smtp_password");
+    expect(api).toContain("const editableColumns = [");
+    expect(api).not.toContain('changes: data');
   });
 });

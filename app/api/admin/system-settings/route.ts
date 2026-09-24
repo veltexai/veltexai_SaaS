@@ -143,24 +143,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'System settings record not found' }, { status: 404 });
     }
 
-    const nextSettings: Record<string, unknown> = {
-      ...existing,
-      ...settings,
-      id: existing.id,
-      created_at: existing.created_at,
-      updated_at: new Date().toISOString(),
+    const submitted = settings as Record<string, unknown>;
+    const nextSettings: Record<string, unknown> = {};
+    const editableColumns = [
+      'company_name', 'company_logo_url', 'company_tagline',
+      'primary_color', 'secondary_color', 'accent_color',
+      'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password',
+      'smtp_from_email', 'smtp_from_name',
+      'session_timeout', 'password_min_length', 'require_2fa', 'max_login_attempts',
+      'enable_ai_suggestions', 'enable_auto_backup',
+      'enable_email_notifications', 'enable_sms_notifications',
+      'default_currency', 'default_timezone',
+      'business_hours_start', 'business_hours_end',
+      'maintenance_mode', 'maintenance_message',
+      'theme_applied_to_pdfs', 'ai_attribution_enabled', 'proposal_tracking_enabled',
+    ];
+    for (const key of editableColumns) {
+      if (Object.prototype.hasOwnProperty.call(submitted, key)) nextSettings[key] = submitted[key];
+    }
+    const aliases: Record<string, string> = {
+      email_from_name: 'smtp_from_name',
+      email_from_address: 'smtp_from_email',
+      ai_enabled: 'enable_ai_suggestions',
+      email_notifications_enabled: 'enable_email_notifications',
+      business_timezone: 'default_timezone',
     };
+    for (const [input, column] of Object.entries(aliases)) {
+      if (Object.prototype.hasOwnProperty.call(submitted, input)) nextSettings[column] = submitted[input];
+    }
+    nextSettings.updated_at = new Date().toISOString();
     if (preserveSmtp) {
       for (const key of ['smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_from_email', 'smtp_from_name']) {
-        nextSettings[key] = existing[key];
+        delete nextSettings[key];
       }
     } else if (typeof settings.smtp_password !== 'string' || settings.smtp_password.trim() === '') {
-      nextSettings.smtp_password = existing.smtp_password;
+      delete nextSettings.smtp_password;
     }
 
     const { error: writeError } = await service
       .from('system_settings')
-      .upsert(nextSettings, { onConflict: 'id' });
+      .update(nextSettings)
+      .eq('id', existing.id);
     if (writeError) throw writeError;
 
     // Log the action
@@ -180,7 +203,9 @@ export async function POST(request: NextRequest) {
       message: 'System settings updated successfully',
     });
   } catch (error) {
-    console.error('Error updating system settings:', error);
+    console.error('Error updating system settings', {
+      name: error instanceof Error ? error.name : 'UnknownError',
+    });
     return NextResponse.json(
       { error: 'Failed to update system settings' },
       { status: 500 }
@@ -189,99 +214,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const user = await checkAdminAccess(supabase);
-    const body = await request.json();
-    const { section, data } = body;
-
-    if (!section || !data) {
-      return NextResponse.json(
-        { error: 'Section and data are required' },
-        { status: 400 }
-      );
-    }
-
-    // Validate section exists
-    if (!defaultSettings[section as keyof typeof defaultSettings]) {
-      return NextResponse.json(
-        { error: 'Invalid settings section' },
-        { status: 400 }
-      );
-    }
-
-    // In a real implementation, you would update the specific section in the database
-    // For now, we'll merge with defaults and return
-    const updatedSection = {
-      ...defaultSettings[section as keyof typeof defaultSettings],
-      ...data,
-    };
-
-    // Log the action
-    await logAdminAction(
-      supabase,
-      user.id,
-      'system_settings_updated',
-      undefined,
-      {
-        section,
-        changes: data,
-        timestamp: new Date().toISOString(),
-      },
-      request
-    );
-
-    return NextResponse.json({
-      message: `${section} settings updated successfully`,
-      section: updatedSection,
-    });
-  } catch (error) {
-    console.error('Error updating settings section:', error);
-    return NextResponse.json(
-      { error: 'Failed to update settings section' },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({ error: 'Use POST for settings updates' }, { status: 405 });
 }
 
 export async function DELETE(request: NextRequest) {
-  try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const user = await checkAdminAccess(supabase);
-    const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action');
-
-    if (action === 'reset') {
-      // Reset all settings to defaults
-      // In a real implementation, you would reset the database values
-      
-      // Log the action
-      await logAdminAction(
-        supabase,
-        user.id,
-        'system_settings_reset',
-        undefined,
-        {
-          timestamp: new Date().toISOString(),
-        },
-        request
-      );
-
-      return NextResponse.json({
-        message: 'System settings reset to defaults successfully',
-        settings: defaultSettings,
-      });
-    }
-
-    return NextResponse.json(
-      { error: 'Invalid action' },
-      { status: 400 }
-    );
-  } catch (error) {
-    console.error('Error resetting system settings:', error);
-    return NextResponse.json(
-      { error: 'Failed to reset system settings' },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({ error: 'Use POST with preserveSmtp for reset' }, { status: 405 });
 }

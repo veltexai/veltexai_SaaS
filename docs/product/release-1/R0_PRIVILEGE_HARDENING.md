@@ -30,7 +30,9 @@ closes only the residual R3-3 and P11-1 paths plus sensitive prompt logging.
   deliberately does not restore the unsafe `system_settings` grants.
 - Routes admin settings/branding writes through an authenticated admin server
   endpoint backed by `service_role`; the page never serializes the stored SMTP
-  password into the browser. Reset preserves the active SMTP transport.
+  password into the browser. An explicit database-column allowlist prevents
+  arbitrary/unknown-field writes, reset preserves the active SMTP transport,
+  and the email test uses the stored server-side configuration.
 
 ## Caller map
 

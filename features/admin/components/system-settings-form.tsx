@@ -133,12 +133,7 @@ export default function SystemSettingsForm({
       const response = await fetch('/api/admin/test-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          smtp_host: settings.smtp_host,
-          smtp_port: settings.smtp_port,
-          smtp_username: settings.smtp_username,
-          smtp_password: settings.smtp_password,
-        }),
+        body: JSON.stringify({}),
       });
 
       if (response.ok) {
