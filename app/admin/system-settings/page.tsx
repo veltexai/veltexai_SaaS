@@ -83,7 +83,7 @@ async function fetchSystemSettings(): Promise<SystemSettings> {
       return defaultSettings;
     }
 
-    return data ? { ...defaultSettings, ...data } : defaultSettings;
+    return data ? { ...defaultSettings, ...data, smtp_password: null } : defaultSettings;
   } catch (error) {
     console.error('Error fetching system settings:', error);
     return defaultSettings;

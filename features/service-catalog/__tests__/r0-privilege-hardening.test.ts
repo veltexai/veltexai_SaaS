@@ -14,7 +14,8 @@ describe('R0 privilege hardening', () => {
 
   it('binds identity-parameter RPCs to the current caller', () => {
     expect(migration).toContain("auth.uid() is distinct from target_user");
-    expect(migration).toContain("coalesce(auth.role(),'') <> 'service_role'");
+    expect(migration).toContain("current_user not in ('service_role','postgres','supabase_admin')");
+    expect(migration).not.toContain("auth.role(),'') <> 'service_role'");
     for (const name of [
       'get_user_current_usage',
       'can_user_create_proposal',
@@ -43,5 +44,19 @@ describe('R0 privilege hardening', () => {
   it('does not log the generated email prompt', () => {
     const route = fs.readFileSync('app/api/emails/generate/route.ts', 'utf8');
     expect(route).not.toContain('email generation prompt');
+    const service = fs.readFileSync('lib/email/service.ts', 'utf8');
+    expect(service).not.toContain('EmailService: Data:');
+  });
+
+  it('keeps system settings and the stored SMTP password server-side', () => {
+    const page = fs.readFileSync('app/admin/system-settings/page.tsx', 'utf8');
+    const form = fs.readFileSync('features/admin/components/system-settings-form.tsx', 'utf8');
+    const branding = fs.readFileSync('features/admin/components/enhanced-branding-settings.tsx', 'utf8');
+    const api = fs.readFileSync('app/api/admin/system-settings/route.ts', 'utf8');
+    expect(page).toContain('smtp_password: null');
+    expect(form).not.toContain("from('system_settings')");
+    expect(branding).not.toContain('from("system_settings")');
+    expect(api).toContain('createServiceClient()');
+    expect(api).toContain('nextSettings.smtp_password = existing.smtp_password');
   });
 });

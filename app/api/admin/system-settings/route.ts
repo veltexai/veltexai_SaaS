@@ -1,6 +1,7 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { createServiceClient } from '@/lib/supabase/server';
 
 // Helper function to check admin access
 async function checkAdminAccess(supabase: any) {
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
     const supabase = createRouteHandlerClient({ cookies });
     const user = await checkAdminAccess(supabase);
     const body = await request.json();
-    const { settings } = body;
+    const { settings, preserveSmtp = false } = body;
 
     if (!settings) {
       return NextResponse.json(
@@ -131,25 +132,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // In a real implementation, you would save these settings to a database
-    // For now, we'll just validate and return them
-    
-    // Validate required fields
-    const requiredFields = {
-      'branding.companyName': settings.branding?.companyName,
-      'email.fromEmail': settings.email?.fromEmail,
-      'business.currency': settings.business?.currency,
-      'business.timezone': settings.business?.timezone,
-    };
-
-    for (const [field, value] of Object.entries(requiredFields)) {
-      if (!value) {
-        return NextResponse.json(
-          { error: `${field} is required` },
-          { status: 400 }
-        );
-      }
+    const service = createServiceClient();
+    const { data: existing, error: readError } = await service
+      .from('system_settings')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .single();
+    if (readError || !existing) {
+      return NextResponse.json({ error: 'System settings record not found' }, { status: 404 });
     }
+
+    const nextSettings: Record<string, unknown> = {
+      ...existing,
+      ...settings,
+      id: existing.id,
+      created_at: existing.created_at,
+      updated_at: new Date().toISOString(),
+    };
+    if (preserveSmtp) {
+      for (const key of ['smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_from_email', 'smtp_from_name']) {
+        nextSettings[key] = existing[key];
+      }
+    } else if (typeof settings.smtp_password !== 'string' || settings.smtp_password.trim() === '') {
+      nextSettings.smtp_password = existing.smtp_password;
+    }
+
+    const { error: writeError } = await service
+      .from('system_settings')
+      .upsert(nextSettings, { onConflict: 'id' });
+    if (writeError) throw writeError;
 
     // Log the action
     await logAdminAction(
@@ -166,7 +178,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: 'System settings updated successfully',
-      settings,
     });
   } catch (error) {
     console.error('Error updating system settings:', error);

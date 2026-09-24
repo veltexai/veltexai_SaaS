@@ -54,7 +54,8 @@ returns void language plpgsql stable security invoker
 set search_path = pg_catalog, public as $$
 begin
   if target_user is null then raise exception 'user id is required' using errcode='22023'; end if;
-  if coalesce(auth.role(),'') <> 'service_role' and auth.uid() is distinct from target_user then
+  if current_user not in ('service_role','postgres','supabase_admin')
+     and auth.uid() is distinct from target_user then
     raise exception 'not authorized for requested user' using errcode='42501';
   end if;
 end $$;

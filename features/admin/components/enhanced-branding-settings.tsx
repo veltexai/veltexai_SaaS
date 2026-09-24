@@ -228,7 +228,10 @@ export default function EnhancedBrandingSettings({
     try {
       setSaving(true);
 
-      const { error } = await supabase.from("system_settings").upsert({
+      const response = await fetch("/api/admin/system-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: {
         company_name: settings.company_name,
         company_logo_url: settings.company_logo_url,
         company_tagline: settings.company_tagline,
@@ -239,9 +242,10 @@ export default function EnhancedBrandingSettings({
         ai_attribution_enabled: settings.ai_attribution_enabled,
         proposal_tracking_enabled: settings.proposal_tracking_enabled,
         updated_at: new Date().toISOString(),
+        }}),
       });
 
-      if (error) throw error;
+      if (!response.ok) throw new Error("Branding settings update failed");
 
       // Log admin action
       await supabase.from("audit_logs").insert({

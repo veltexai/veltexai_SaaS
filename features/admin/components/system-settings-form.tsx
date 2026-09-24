@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,8 +78,6 @@ export default function SystemSettingsForm({
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const supabase = createClient();
-
   useEffect(() => {
     setSettings(initialSettings);
   }, [initialSettings]);
@@ -94,18 +91,12 @@ export default function SystemSettingsForm({
     try {
       setSaving(true);
 
-      // In a real implementation, you would save to a system_settings table
-      const { error } = await supabase.from('system_settings').upsert(settings);
-
-      if (error) throw error;
-
-      // Log admin action
-      await supabase.from('audit_logs').insert({
-        user_id: currentUserId,
-        action: 'update_system_settings',
-        resource_type: 'system_settings',
-        details: { updated_at: new Date().toISOString() },
+      const response = await fetch('/api/admin/system-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings }),
       });
+      if (!response.ok) throw new Error('Settings update failed');
 
       toast.success('System settings saved successfully');
       setHasChanges(false);
@@ -121,20 +112,12 @@ export default function SystemSettingsForm({
     try {
       setSettings(defaultSettings);
 
-      // In a real implementation, you would reset in the database
-      const { error } = await supabase
-        .from('system_settings')
-        .upsert(defaultSettings);
-
-      if (error) throw error;
-
-      // Log admin action
-      await supabase.from('audit_logs').insert({
-        user_id: currentUserId,
-        action: 'reset_system_settings',
-        resource_type: 'system_settings',
-        details: { reset_at: new Date().toISOString() },
+      const response = await fetch('/api/admin/system-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: defaultSettings, preserveSmtp: true }),
       });
+      if (!response.ok) throw new Error('Settings reset failed');
 
       toast.success('Settings reset to defaults');
       setHasChanges(false);
@@ -145,7 +128,6 @@ export default function SystemSettingsForm({
   };
 
   const testEmailSettings = async () => {
-    console.log('🚀 ~ testEmailSettings ~ settings:', settings);
     try {
       // In a real implementation, you would test the SMTP connection
       const response = await fetch('/api/admin/test-email', {

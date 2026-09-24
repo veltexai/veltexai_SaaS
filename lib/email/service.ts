@@ -668,7 +668,6 @@ export class EmailService {
       console.log(
         "📧 EmailService: Sending enhanced proposal email (Resend)...",
       );
-      console.log("📧 EmailService: Data:", data);
 
       const apiKey = process.env.RESEND_API_KEY;
       const fromName = process.env.EMAIL_SENDER_NAME;

@@ -1,6 +1,8 @@
 -- Emergency rollback for the R0 wrapper migration. Run only after an explicit
--- deployment rollback decision. It restores names/ACLs but intentionally does
--- not restore client readability of system_settings.
+-- deployment rollback decision. WARNING: this restores authenticated EXECUTE
+-- on identity-parameter functions and therefore reopens the cross-user access
+-- R0 closes. It intentionally does not restore client readability of
+-- system_settings. Prefer a forward fix whenever possible.
 begin;
 drop function if exists public.get_user_current_usage(uuid);
 drop function if exists public.can_user_create_proposal(uuid);

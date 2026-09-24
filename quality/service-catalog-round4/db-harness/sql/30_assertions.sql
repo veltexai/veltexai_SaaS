@@ -188,12 +188,14 @@ do $$ declare bad text; begin
   from pg_proc p join pg_namespace n on n.oid=p.pronamespace
   where n.nspname='public' and p.prosecdef and p.prorettype <> 'trigger'::regtype
     and (has_function_privilege('anon',p.oid,'execute') or has_function_privilege('authenticated',p.oid,'execute'))
-    and p.proname not in ('read_tracked_proposal','record_tracked_view','record_tracking_metric',
+    and p.oid::regprocedure::text not in ('read_tracked_proposal(text)',
+      'record_tracked_view(text)','record_tracking_metric(text,text,integer)',
       -- These wrappers call r0_assert_self_or_service before reaching the
       -- ungranted legacy implementations.
-      'get_user_current_usage','can_user_create_proposal','get_user_usage_info',
-      'increment_user_usage','can_user_access_template','user_has_active_access',
-      'get_user_accessible_templates','is_admin'
+      'get_user_current_usage(uuid)','can_user_create_proposal(uuid)',
+      'get_user_usage_info(uuid)','increment_user_usage(uuid)',
+      'can_user_access_template(uuid,uuid)','user_has_active_access(uuid)',
+      'get_user_accessible_templates(uuid)','is_admin()'
     );
   if bad is not null then raise exception 'H1 client-executable definer functions not on allowlist: %', bad; end if;
 end $$;
@@ -220,6 +222,15 @@ rollback;
 begin; set local role service_role;
 do $$ begin
   perform public.get_user_current_usage(current_setting('h.owner')::uuid);
+end $$;
+rollback;
+begin; set local role authenticated;
+select set_config('request.jwt.claim.role','service_role',true);
+select set_config('request.jwt.claim.sub', current_setting('h.other'), true);
+do $$ begin
+  begin perform public.get_user_current_usage(current_setting('h.owner')::uuid);
+    raise exception 'H6 forged service-role claim bypassed actual session role';
+  exception when insufficient_privilege then null; end;
 end $$;
 rollback;
 \endif
