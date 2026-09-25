@@ -1,12 +1,18 @@
 import { getService } from './catalog';
 import { jobSchema } from './schema';
 import { ZodError } from 'zod';
+import { applyLocationPricing } from '@/features/location-pricing/apply';
+import { isLocationPricingRolloutEnabled } from '@/features/location-pricing/rollout';
 
 export const money = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 export function estimateJob(input: unknown) {
   const job = jobSchema.parse(input);
   const service = getService(job.jobType, job.catalogVersion);
-  const c = job.costs;
+  const location = applyLocationPricing(
+    job.costs,
+    isLocationPricingRolloutEnabled() ? job.locationPricing : undefined,
+  );
+  const c = location.costs;
   const condition = { light: 0.85, normal: 1, heavy: 1.5 }[job.condition];
   const recurrence = job.frequency === '1x-month' ? 1.15 : job.frequency === 'bi-weekly' ? 1.05 : 1;
   const extraHours = job.applianceInteriors * 0.5 + (job.pets ? 0.25 : 0) +
@@ -43,6 +49,7 @@ export function estimateJob(input: unknown) {
     if (job.turnover.restocking) warnings.push('Restocking assumes customer inventory; purchased inventory is excluded.');
   }
   return { version: job.catalogVersion, strategy: service.strategy, unit: 'per_visit' as const, low, base, high, selectedPrice,
+    locationPricing: location.explanation,
     drivers: { squareFeetPerPersonHour: service.production.base, roomMinimumHours: money(job.bedrooms * 0.2 + job.bathrooms * 0.5), conditionMultiplier: condition, recurrenceMultiplier: recurrence, additionalHours: money(extraHours) },
     modeledHours: money(modeledHours), visitsPerMonth, periodPrice: money(selectedPrice * visitsPerMonth),
     effectiveMarginPercent: selectedPrice > 0 ? money((selectedPrice - base.cost) / selectedPrice * 100) : 0, warnings };

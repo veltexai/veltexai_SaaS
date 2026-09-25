@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { locationPricingSnapshotSchema } from '@/features/location-pricing/schema';
 
 export const CATALOG_VERSION = '2026-09-22.2' as const;
 export const segmentSchema = z.enum(['commercial', 'residential', 'short_term_rental', 'specialty']);
@@ -78,6 +79,7 @@ export const jobInputSchema = z.object({
     damageDocumentation: z.boolean(),
   }).strict().optional(),
   costs: costAssumptionsSchema,
+  locationPricing: locationPricingSnapshotSchema.optional(),
   override: z.object({ pricePerVisit: amount.positive(), reason: z.string().trim().min(5).max(1000) }).strict().optional(),
   operatorNotes: z.string().max(4000),
 }).strict();
