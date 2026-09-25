@@ -2,7 +2,7 @@
 
 Status: **PREPARED — HUMAN/HOSTED EXECUTION REQUIRED**
 
-Record the isolated preview URL, candidate commit `74899c3`, timestamp and
+Record the isolated preview URL, exact second-remediation commit, timestamp and
 redacted evidence for every item. A database SQL pass does not satisfy these.
 
 - [ ] New preview signup creates exactly one profile, one organization, one
@@ -12,8 +12,8 @@ redacted evidence for every item. A database SQL pass does not satisfy these.
       non-idempotent DDL. Record pre/post row counts and content digest.
 - [ ] Existing owner can create, reopen and edit a legacy-shaped proposal while
       omitting `organization_id`; the server assigns the active editable tenant.
-- [ ] Owner and estimator can generate a PDF; viewer and non-member are denied.
-- [ ] Paid owner can send a proposal; free-trial, viewer and non-member behavior
+- [ ] Owner can generate a PDF; every uninvited/non-member identity is denied.
+- [ ] Paid owner can send a proposal; free-trial and non-member behavior
       matches the final paid-entitlement acceptance record.
 - [ ] Random tracked link renders the customer-safe projection responsively.
 - [ ] Valid paid tracked link downloads; invalid, disabled and unauthorized

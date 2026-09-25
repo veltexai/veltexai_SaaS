@@ -21,19 +21,22 @@ cleanup() {
 }
 trap cleanup EXIT
 
+org=$(psql "$DB" -X -qAt -v ON_ERROR_STOP=1 -c \
+  "select active_organization_id from public.profiles where id='92000000-0000-4000-8000-000000000011';")
+
 set +e
 psql "$DB" -X -q -v ON_ERROR_STOP=1 -c \
-  "delete from public.organization_memberships where organization_id='92000000-0000-4000-8000-000000000001' and user_id='92000000-0000-4000-8000-000000000011';" >/tmp/r2-owner-a.log 2>&1 &
+  "delete from public.organization_memberships where organization_id='$org' and user_id='92000000-0000-4000-8000-000000000011';" >/tmp/r2-owner-a.log 2>&1 &
 a=$!
 psql "$DB" -X -q -v ON_ERROR_STOP=1 -c \
-  "delete from public.organization_memberships where organization_id='92000000-0000-4000-8000-000000000001' and user_id='92000000-0000-4000-8000-000000000012';" >/tmp/r2-owner-b.log 2>&1 &
+  "delete from public.organization_memberships where organization_id='$org' and user_id='92000000-0000-4000-8000-000000000011';" >/tmp/r2-owner-b.log 2>&1 &
 b=$!
 wait "$a"; sa=$?
 wait "$b"; sb=$?
 set -e
 
 owners=$(psql "$DB" -X -qAt -v ON_ERROR_STOP=1 -c \
-  "select count(*) from public.organization_memberships where organization_id='92000000-0000-4000-8000-000000000001' and role='owner';")
+  "select count(*) from public.organization_memberships where organization_id='$org' and role='owner';")
 if [ "$owners" -lt 1 ]; then
   echo "FAIL: concurrent deletes removed every owner (statuses $sa/$sb)" >&2
   exit 1

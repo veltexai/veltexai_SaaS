@@ -2,7 +2,7 @@
 
 Status: **PREPARED — NOT EXECUTED**
 
-Candidate: `74899c3`
+Candidate: second-remediation commit produced from `1e3c541`
 
 This directory is the bounded hosted-verification plan for R2 organization and
 tenancy. It does not apply migrations, discover credentials, send email, deploy,
@@ -25,7 +25,8 @@ after the exact candidate migration has been applied.
 ## Matrix covered by SQL
 
 - two organizations;
-- owner, admin, estimator, viewer, non-member, anonymous and service-role paths;
+- owner, uninvited-role candidates, non-member, anonymous and service-role paths;
+- fail-closed denial of arbitrary service-role membership creation;
 - same-tenant permissions and cross-tenant read/write denials;
 - hostile `active_organization_id` input;
 - immutable organization and creator attribution;
@@ -51,4 +52,3 @@ export R2_EXPECTED_PROJECT_REF='the-isolated-preview-ref'
 The runners reject the production project reference
 `iwoaaljitifloolszxlu`, require an expected preview reference, and refuse a URL
 that does not contain that reference. They never apply the migration.
-

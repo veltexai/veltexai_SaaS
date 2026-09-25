@@ -103,6 +103,10 @@ do $$ declare n int; begin
   update public.proposals set status='sent' where id=current_setting('h.proposal')::uuid; get diagnostics n=row_count;
   if n<>1 then raise exception 'E1 owner status update failed'; end if;
   if not exists (select 1 from public.proposal_tracking where proposal_id=current_setting('h.proposal')::uuid) then raise exception 'E2 owner cannot read own tracking'; end if;
+  insert into public.proposal_tracking(proposal_id,tracking_id,delivery_method,recipient_email,subject,message)
+    values (current_setting('h.proposal')::uuid,'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','online','owner-send@example.test','s','m');
+  if not exists (select 1 from public.proposal_tracking where tracking_id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee')
+    then raise exception 'E2a owner send tracking insert failed'; end if;
   begin
     update public.proposals set service_specific_data=jsonb_set(service_specific_data,'{catalogJob,catalogVersion}','"2026-09-22.1"') where id=current_setting('h.proposal')::uuid;
     raise exception 'E3 catalog version change allowed';

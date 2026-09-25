@@ -53,7 +53,6 @@ export async function POST(
       .from("proposals")
       .select("*")
       .eq("id", id)
-      .eq("user_id", user.id)
       .single();
 
     if (proposalError || !proposal) {
@@ -83,8 +82,8 @@ export async function POST(
     const { data: companyProfile } = await supabase
       .from("company_profiles")
       .select("*")
-      .eq("user_id", user.id)
-      .single();
+      .eq("organization_id", proposal.organization_id)
+      .maybeSingle();
 
     // Generate tracking ID
     const trackingId = crypto.randomUUID();

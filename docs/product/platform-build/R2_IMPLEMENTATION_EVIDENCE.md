@@ -53,6 +53,21 @@ Migration `20260925003000_r2_claude_security_remediation.sql` addresses the acce
 
 These are local source and static-contract claims only until the exact migration chain and hostile matrix run in an isolated database and Claude reviews the remediation range.
 
+## Second Claude remediation candidate
+
+Migration `20260925004000_r2_second_security_remediation.sql` and the send-route correction address the follow-up FAIL on `1e3c541`:
+
+- the authenticated send path now relies on tenant RLS rather than creator-only filtering, and tracking INSERT is restored only for an editable parent proposal;
+- tracking UPDATE/DELETE/TRUNCATE stays unavailable to browser roles;
+- empty private-account deletion suppresses nested cleanup audit recreation, while the cleanup exception requires trigger nesting and cannot be opened by a caller-set configuration value alone;
+- the committed Release 1 fixtures supply explicit organization ownership, and the hosted harness no longer creates arbitrary memberships through `service_role`;
+- public tracked-link branding resolves the proposal organization profile/name;
+- raw business-service wage/cost/overhead rows remain unavailable to viewers;
+- direct organization INSERT/DELETE/TRUNCATE is revoked; and
+- outbox records receive a monotonic event sequence for deterministic delivery order.
+
+Focused source gates and harness static validation pass. Disposable PostgreSQL execution, the privileged-function gate over the exact chain, and hosted application/Auth evidence remain pending and must not be inferred from static tests.
+
 ## Known boundary
 
 Subscriptions, usage, billing history and user template preferences remain user-scoped in R2. They represent personal/legacy entitlement state and require an explicit seat-billing decision before organization migration. They must not be silently reclassified as company-owned financial records.

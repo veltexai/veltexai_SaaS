@@ -15,6 +15,17 @@ const remediation = fs.readFileSync(
   ),
   'utf8',
 );
+const secondRemediation = fs.readFileSync(
+  path.join(
+    process.cwd(),
+    'supabase/migrations/20260925004000_r2_second_security_remediation.sql',
+  ),
+  'utf8',
+);
+const sendRoute = fs.readFileSync(
+  path.join(process.cwd(), 'app/api/proposals/[id]/send/route.ts'),
+  'utf8',
+);
 
 describe('R2 tenancy migration contract', () => {
   it('binds authorization helpers to auth.uid instead of a user parameter', () => {
@@ -118,5 +129,51 @@ describe('R2 Claude security remediation contract', () => {
     expect(remediation).toContain(
       'revoke insert, update, delete, truncate on public.organization_audit_log',
     );
+  });
+});
+
+describe('R2 second security remediation contract', () => {
+  it('restores tenant-safe tracking inserts while retaining destructive denial', () => {
+    expect(secondRemediation).toContain(
+      'create policy proposal_tracking_organization_insert',
+    );
+    expect(secondRemediation).toContain(
+      'where p.id = proposal_id and public.can_edit_organization_work',
+    );
+    expect(secondRemediation).toContain(
+      'revoke update, delete, truncate on public.proposal_tracking',
+    );
+    expect(sendRoute).not.toContain('.eq("user_id", user.id)');
+    expect(sendRoute).toContain('.eq("organization_id", proposal.organization_id)');
+  });
+
+  it('binds cleanup exceptions to nested triggers rather than a spoofable setting alone', () => {
+    expect(secondRemediation).toContain('pg_trigger_depth() >= 2');
+    expect(secondRemediation).toContain("current_setting('r2.private_cleanup', true)");
+  });
+
+  it('uses organization identity for public tracked-link branding', () => {
+    expect(secondRemediation).toContain(
+      'left join public.company_profiles c on c.organization_id=p.organization_id',
+    );
+    expect(secondRemediation).not.toContain(
+      'left join public.company_profiles c on c.user_id=p.user_id',
+    );
+  });
+
+  it('denies viewer access to raw service costs and direct tenant lifecycle writes', () => {
+    expect(secondRemediation).toContain(
+      'using (public.can_edit_organization_work(organization_id))',
+    );
+    expect(secondRemediation).toContain(
+      'revoke insert, delete, truncate on public.organizations',
+    );
+  });
+
+  it('gives outbox events a monotonic delivery sequence', () => {
+    expect(secondRemediation).toContain(
+      'event_sequence bigint generated always as identity',
+    );
+    expect(secondRemediation).toContain('(available_at, event_sequence)');
   });
 });

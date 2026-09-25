@@ -46,11 +46,16 @@ select active_organization_id as org_b from public.profiles where id='91000000-0
 select set_config('r2.test.org_a', :'org_a', true),
        set_config('r2.test.org_b', :'org_b', true);
 
+-- Team invitations are intentionally not implemented. Even service_role may
+-- not manufacture memberships; each synthetic signup remains in its own org.
 set local role service_role;
-insert into public.organization_memberships(organization_id,user_id,role) values
- (:'org_a','91000000-0000-4000-8000-000000000012','admin'),
- (:'org_a','91000000-0000-4000-8000-000000000013','estimator'),
- (:'org_a','91000000-0000-4000-8000-000000000014','viewer');
+do $$ begin
+  begin
+    insert into public.organization_memberships(organization_id,user_id,role)
+    values (current_setting('r2.test.org_a')::uuid,'91000000-0000-4000-8000-000000000012','admin');
+    raise exception 'service role manufactured an unconsented membership';
+  exception when insufficient_privilege then null; end;
+end $$;
 insert into public.proposals(
   id,organization_id,user_id,title,client_name,client_email,contact_phone,
   service_location,facility_size,service_type,service_frequency,generated_content
@@ -75,25 +80,23 @@ do $$ begin
   begin update public.proposals set user_id='91000000-0000-4000-8000-000000000012' where id='91000000-0000-4000-8000-000000000101'; raise exception 'proposal creator mutation allowed'; exception when insufficient_privilege then null; end;
 end $$;
 
--- Admin can manage ordinary members but cannot grant ownership.
+-- Uninvited users cannot inherit admin/estimator/viewer access merely because a
+-- service process names them. Role-specific positive paths remain blocked until
+-- the consent-bound invitation release supplies legitimate fixtures.
 select set_config('request.jwt.claim.sub','91000000-0000-4000-8000-000000000012',true);
 do $$ begin
-  if not public.can_manage_organization(current_setting('r2.test.org_a')::uuid) then raise exception 'admin manage denied'; end if;
-  begin update public.organization_memberships set role='owner' where organization_id=current_setting('r2.test.org_a')::uuid and user_id='91000000-0000-4000-8000-000000000014'; raise exception 'admin granted owner'; exception when insufficient_privilege then null; end;
-  update public.proposals set title='R2 A admin edit' where id='91000000-0000-4000-8000-000000000101';
+  if public.can_manage_organization(current_setting('r2.test.org_a')::uuid) then raise exception 'uninvited admin access'; end if;
+  if exists(select 1 from public.proposals where id='91000000-0000-4000-8000-000000000101') then raise exception 'uninvited admin proposal read'; end if;
 end $$;
 
--- Estimator can edit work but cannot manage tenant; viewer is read-only.
 select set_config('request.jwt.claim.sub','91000000-0000-4000-8000-000000000013',true);
 do $$ begin
-  if not public.can_edit_organization_work(current_setting('r2.test.org_a')::uuid) then raise exception 'estimator edit denied'; end if;
-  if public.can_manage_organization(current_setting('r2.test.org_a')::uuid) then raise exception 'estimator manage allowed'; end if;
-  update public.proposals set title='R2 A estimator edit' where id='91000000-0000-4000-8000-000000000101';
+  if public.can_edit_organization_work(current_setting('r2.test.org_a')::uuid) then raise exception 'uninvited estimator access'; end if;
 end $$;
 select set_config('request.jwt.claim.sub','91000000-0000-4000-8000-000000000014',true);
 do $$ declare changed integer; begin
   if public.can_edit_organization_work(current_setting('r2.test.org_a')::uuid) then raise exception 'viewer edit allowed'; end if;
-  if not public.is_organization_member(current_setting('r2.test.org_a')::uuid) then raise exception 'viewer read denied'; end if;
+  if public.is_organization_member(current_setting('r2.test.org_a')::uuid) then raise exception 'uninvited viewer membership'; end if;
   update public.proposals set title='UNAUTHORIZED VIEWER EDIT' where id='91000000-0000-4000-8000-000000000101';
   get diagnostics changed = row_count;
   if changed <> 0 then raise exception 'viewer changed proposal'; end if;
@@ -144,7 +147,7 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','91000000-0000-4000-8000-000000000011',true);
 do $$ begin
-  begin delete from public.organization_memberships where organization_id=current_setting('r2.test.org_a')::uuid and user_id=auth.uid(); raise exception 'last owner removed'; exception when check_violation then null; end;
+  begin delete from public.organization_memberships where organization_id=current_setting('r2.test.org_a')::uuid and user_id=auth.uid(); raise exception 'last owner removed'; exception when insufficient_privilege then null; end;
   begin update public.organization_audit_log set action='tampered' where organization_id=current_setting('r2.test.org_a')::uuid; raise exception 'audit update allowed'; exception when insufficient_privilege then null; end;
   if not exists(select 1 from public.organization_audit_log where organization_id=current_setting('r2.test.org_a')::uuid) then raise exception 'audit trigger absent'; end if;
 end $$;
