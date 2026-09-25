@@ -9,22 +9,27 @@ export interface UseOrganizationsResult {
   status: OrganizationsLoadStatus;
   organizations: Organization[];
   error: string | null;
+  switchError: string | null;
   activeOrganizationId: string | null;
   setActiveOrganizationId: (organizationId: string) => void;
   reload: () => void;
+  retryFailedSwitch: () => void;
 }
 
 /**
  * Loads the switchable organization list and the adapter's active
  * organization. Switching calls `setActiveOrganizationId` and only updates
- * local UI state after that write resolves — a rejected write leaves the
- * previous selection intact. No backend/network of its own: it only talks
- * to the injected `TeamReadAdapter` seam.
+ * local UI state after that write resolves. A rejected write leaves the
+ * previous selection intact and surfaces `switchError` for a visible retry.
  */
 export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
   const [status, setStatus] = useState<OrganizationsLoadStatus>("loading");
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [switchError, setSwitchError] = useState<string | null>(null);
+  const [failedSwitchOrganizationId, setFailedSwitchOrganizationId] = useState<
+    string | null
+  >(null);
   const [activeOrganizationId, setActiveOrganizationIdState] = useState<
     string | null
   >(null);
@@ -35,6 +40,8 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
 
     setStatus("loading");
     setError(null);
+    setSwitchError(null);
+    setFailedSwitchOrganizationId(null);
 
     Promise.all([
       adapter.listOrganizations(),
@@ -72,20 +79,31 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adapter, reloadToken]);
 
-  const setActiveOrganizationId = useCallback(
+  const persistActiveOrganizationId = useCallback(
     (organizationId: string) => {
+      setSwitchError(null);
       adapter
         .setActiveOrganizationId(organizationId)
         .then(() => {
           setActiveOrganizationIdState(organizationId);
+          setFailedSwitchOrganizationId(null);
         })
-        .catch(() => {
-          // Fail closed: a rejected write must not corrupt the displayed
-          // selection. The previous active organization stays in place.
+        .catch((err: unknown) => {
+          setFailedSwitchOrganizationId(organizationId);
+          setSwitchError(
+            err instanceof Error
+              ? err.message
+              : "Could not switch organizations. Please try again.",
+          );
         });
     },
     [adapter],
   );
+
+  const retryFailedSwitch = useCallback(() => {
+    if (!failedSwitchOrganizationId) return;
+    persistActiveOrganizationId(failedSwitchOrganizationId);
+  }, [failedSwitchOrganizationId, persistActiveOrganizationId]);
 
   const reload = useCallback(() => {
     setReloadToken((token) => token + 1);
@@ -95,8 +113,10 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
     status,
     organizations,
     error,
+    switchError,
     activeOrganizationId,
-    setActiveOrganizationId,
+    setActiveOrganizationId: persistActiveOrganizationId,
     reload,
+    retryFailedSwitch,
   };
 }

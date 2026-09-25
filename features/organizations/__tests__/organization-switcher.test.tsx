@@ -7,8 +7,8 @@ import { OrganizationSwitcher } from "../components/organization-switcher";
 import type { Organization } from "../types/organization";
 
 const organizations: Organization[] = [
-  { id: "org-1", name: "Veltex Cleaning Co.", slug: "veltex-cleaning-co" },
-  { id: "org-2", name: "Summit Facilities Group", slug: "summit-facilities-group" },
+  { id: "org-1", name: "Example Cleaning Co.", slug: "example-cleaning-co" },
+  { id: "org-2", name: "Sample Facilities Group", slug: "sample-facilities-group" },
 ];
 
 describe("OrganizationSwitcher", () => {
@@ -48,19 +48,27 @@ describe("OrganizationSwitcher", () => {
     expect(placeholder.className).toMatch(/w-full/);
   });
 
-  it("shows a disabled control when organizations fail to load", () => {
+  it("shows a keyboard-accessible retry when organizations fail to load", () => {
+    const onRetry = jest.fn();
     render(
       <OrganizationSwitcher
         organizations={[]}
         activeOrganizationId={null}
         onChange={jest.fn()}
         status="error"
+        error="Network unreachable"
+        onRetry={onRetry}
       />,
     );
 
-    expect(
-      screen.getByRole("button", { name: /organizations unavailable/i }),
-    ).toBeDisabled();
+    expect(screen.getByText("Couldn't load organizations")).toBeInTheDocument();
+    expect(screen.getByText("Network unreachable")).toBeInTheDocument();
+    const retry = screen.getByRole("button", { name: /retry/i });
+    expect(retry).toBeEnabled();
+    retry.focus();
+    expect(retry).toHaveFocus();
+    fireEvent.click(retry);
+    expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
   it("shows a disabled control when there are no organizations", () => {
@@ -90,7 +98,7 @@ describe("OrganizationSwitcher", () => {
 
     expect(
       screen.getByRole("button", {
-        name: /current organization: veltex cleaning co\./i,
+        name: /current organization: example cleaning co\./i,
       }),
     ).toBeInTheDocument();
   });
@@ -112,7 +120,7 @@ describe("OrganizationSwitcher", () => {
     );
 
     const option = await screen.findByRole("menuitemradio", {
-      name: "Summit Facilities Group",
+      name: "Sample Facilities Group",
     });
     fireEvent.click(option);
 
@@ -121,7 +129,7 @@ describe("OrganizationSwitcher", () => {
 
   it("truncates a very long organization name but preserves it via title", () => {
     const longName =
-      "Summit Facilities Group of Greater Metropolitan Downtown Commercial Properties LLC";
+      "Sample Facilities Group of Greater Metropolitan Downtown Commercial Properties LLC";
     render(
       <OrganizationSwitcher
         organizations={[{ id: "org-1", name: longName, slug: "long" }]}
@@ -153,7 +161,7 @@ describe("OrganizationSwitcher", () => {
     fireEvent.keyDown(trigger, { key: "Enter" });
 
     const option = await screen.findByRole("menuitemradio", {
-      name: "Summit Facilities Group",
+      name: "Sample Facilities Group",
     });
     fireEvent.keyDown(option, { key: "Escape" });
 
@@ -176,10 +184,10 @@ describe("OrganizationSwitcher", () => {
     );
 
     const activeOption = await screen.findByRole("menuitemradio", {
-      name: "Summit Facilities Group",
+      name: "Sample Facilities Group",
     });
     const inactiveOption = screen.getByRole("menuitemradio", {
-      name: "Veltex Cleaning Co.",
+      name: "Example Cleaning Co.",
     });
 
     expect(activeOption).toHaveAttribute("aria-checked", "true");

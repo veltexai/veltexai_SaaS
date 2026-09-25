@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/cn";
 import { getRoleBadgeVariant, ROLE_LABELS } from "../constants/roles";
-import type { OrganizationRole } from "../types/organization";
+import type { OrganizationRole } from "../domain";
 
 interface RoleBadgeProps {
   role: OrganizationRole;

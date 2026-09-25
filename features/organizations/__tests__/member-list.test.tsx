@@ -11,8 +11,8 @@ const members: OrganizationMember[] = [
     id: "m1",
     organizationId: "org-1",
     userId: "u1",
-    name: "Anthony Veliz",
-    email: "anthony@veltexclean.com",
+    name: "Ada Example",
+    email: "ada.owner@example.test",
     role: "owner",
     status: "active",
     joinedAt: "2026-01-14T09:00:00.000Z",
@@ -21,8 +21,8 @@ const members: OrganizationMember[] = [
     id: "m2",
     organizationId: "org-1",
     userId: null,
-    name: "Morgan Blake",
-    email: "morgan@veltexclean.com",
+    name: "Drew Example",
+    email: "drew.estimator@example.test",
     role: "estimator",
     status: "invited",
     invitedAt: "2026-09-20T16:00:00.000Z",
@@ -90,8 +90,8 @@ describe("MemberList", () => {
     const mobileList = screen.getByRole("list", { name: "Team members" });
 
     for (const container of [table, mobileList]) {
-      expect(within(container).getByText("Anthony Veliz")).toBeInTheDocument();
-      expect(within(container).getByText("Morgan Blake")).toBeInTheDocument();
+      expect(within(container).getByText("Ada Example")).toBeInTheDocument();
+      expect(within(container).getByText("Drew Example")).toBeInTheDocument();
       expect(within(container).getByText("Owner")).toBeInTheDocument();
       expect(within(container).getByText("Estimator")).toBeInTheDocument();
       expect(within(container).getByText("Invited")).toBeInTheDocument();
@@ -103,6 +103,7 @@ describe("MemberList", () => {
     const longEmail = "bartholomew.alexander.montgomery-fitzgerald@example-enterprise-domain.com";
 
     renderList({
+      showContactDetails: true,
       members: [
         {
           id: "m-long",
@@ -142,5 +143,35 @@ describe("MemberList", () => {
     expect(table.closest("div.hidden")).toHaveClass("sm:block");
     // Mobile list is visible by default and hidden at `sm:`+.
     expect(mobileList).toHaveClass("sm:hidden");
+  });
+
+  it("does not render emails unless an authorized contact-detail projection is enabled", () => {
+    renderList();
+    expect(screen.queryByText("ada.owner@example.test")).not.toBeInTheDocument();
+    expect(screen.queryByText("drew.estimator@example.test")).not.toBeInTheDocument();
+  });
+
+  it("renders emails only when showContactDetails is true and a value is supplied", () => {
+    renderList({ showContactDetails: true });
+    expect(screen.getAllByText("ada.owner@example.test").length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("still hides missing emails even when contact details are enabled", () => {
+    renderList({
+      showContactDetails: true,
+      members: [
+        {
+          id: "m-redacted",
+          organizationId: "org-1",
+          userId: "u-redacted",
+          name: "Redacted Example",
+          role: "viewer",
+          status: "active",
+        },
+      ],
+    });
+
+    expect(screen.getAllByText("Redacted Example").length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByText(/@/)).not.toBeInTheDocument();
   });
 });

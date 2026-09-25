@@ -1,4 +1,4 @@
-import type { OrganizationRole } from "../types/organization";
+import type { OrganizationRole } from "../domain";
 
 export const ROLE_LABELS: Record<OrganizationRole, string> = {
   owner: "Owner",
@@ -7,21 +7,27 @@ export const ROLE_LABELS: Record<OrganizationRole, string> = {
   viewer: "Viewer",
 };
 
+/**
+ * Neutral descriptions of behavior actually enforced at backend `d12743a`.
+ * Team mutation is disabled for every runtime role. These must not claim
+ * organization deletion, ownership transfer, teammate administration,
+ * proposal sending, or reports.
+ */
 export const ROLE_DESCRIPTIONS: Record<OrganizationRole, string> = {
   owner:
-    "Full access, including billing, organization deletion, and transferring ownership.",
-  admin: "Manage teammates, roles, and organization-wide settings.",
-  estimator: "Create, edit, and send proposals and pricing.",
-  viewer: "View proposals and reports without editing.",
+    "Can view this organization, manage its settings, and edit operational work. Cannot invite teammates or transfer ownership.",
+  admin:
+    "Can view this organization, manage its settings, and edit operational work. Cannot invite teammates or change ownership.",
+  estimator:
+    "Can view this organization and edit operational work. Cannot manage organization settings or membership.",
+  viewer:
+    "Can view this organization's identity. Cannot view proposal pricing or cost details.",
 };
 
 /**
- * Roles selectable from the invite dialog. Ownership is a single, sensitive
- * seat that is transferred rather than granted at invite time, so it is
- * intentionally excluded here. This exclusion is called out again as an open
- * question in the Codex contract request. Kept as an explicit literal tuple
- * (rather than derived by filtering) so it type-checks cleanly against zod's
- * `z.enum` and so adding a new role never silently becomes invitable.
+ * Roles selectable from the invite dialog. Owner is excluded because
+ * ownership transfer is not implemented. Invitations themselves are also
+ * disabled until a later accepted contract.
  */
 export const INVITABLE_ROLES = [
   "admin",

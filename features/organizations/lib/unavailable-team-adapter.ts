@@ -1,4 +1,5 @@
 import type {
+  InviteMemberInput,
   InviteMemberResult,
   Organization,
   OrganizationMember,
@@ -54,11 +55,8 @@ export class UnavailableTeamAdapter implements TeamAdapter {
     throw new Error(TEAM_ADAPTER_UNAVAILABLE_MESSAGE);
   }
 
-  async inviteMember(): Promise<InviteMemberResult> {
-    // Invitation creation has no accepted server contract at all — this
-    // must keep throwing even after a real read-only adapter ships for the
-    // other four methods above. See CURSOR_R2_CONTRACT_REQUEST.md: no
-    // invitation endpoint, seat billing, or ownership transfer exists.
+  async inviteMember(input: InviteMemberInput): Promise<InviteMemberResult> {
+    void input;
     throw new Error(TEAM_ADAPTER_INVITATIONS_UNAVAILABLE_MESSAGE);
   }
 }

@@ -29,15 +29,41 @@ question is now explicitly tagged `BLOCKED`, `DEFERRED`, or
 Cross-reference: Codex's own current backend evidence
 (`docs/product/platform-build/R2_ROLE_AND_RLS_MATRIX.md`,
 `docs/product/platform-build/R2_IMPLEMENTATION_EVIDENCE.md`, exact reviewed
-candidate commit `dcf56ce` in `/private/tmp/veltex-r0-privilege-hardening`,
-superseding both the previously cited range `764abc7..1e3c541` and the
-previously cited single commit `0452823`) states team/membership mutation is
-**disabled for every runtime role** until a consent-bound invitation flow and
-a seat-billing decision ship, and that "invitation email flows are not
-implemented." That is independent confirmation — not an assumption on this
-branch's part — that the UI's invitation experience must not present as
-functional yet. This is exactly what the capability gate below enforces on
-the client.
+candidate commit `d12743a` in `/private/tmp/veltex-r0-privilege-hardening`,
+superseding `dcf56ce`, `0452823`, and the earlier range `764abc7..1e3c541`)
+states team/membership mutation is **disabled for every runtime role** until
+a consent-bound invitation flow and a seat-billing decision ship, and that
+"invitation email flows are not implemented." Production UI stays on
+`UnavailableTeamAdapter` until Codex implements authenticated caller
+organization reads, persisted active-organization read/write, guarded
+switching, a privacy-minimized roster projection, and server-owned
+capabilities. This UI does **not** implement that server adapter.
+
+## Update — backend candidate `d12743a`
+
+Read (did not modify) `/private/tmp/veltex-r0-privilege-hardening` at
+`d12743ad8ba00d3d54d883c72c771db399c6d560`
+(`fix: correct R2 cleanup guard ordering`). It adds
+`supabase/migrations/20260925006000_r2_cleanup_guard_ordering.sql`.
+
+No status in the existing mapping table changes: organization/membership
+reads remain **AVAILABLE** at the table/RLS layer; invitations,
+`getCapabilities`, contact-detail projections, and any membership mutation
+remain **NOT IMPLEMENTED**. The new migration only removes a stale
+organization-row lookup from the authorized membership-cascade exception
+during empty-account cleanup. Every non-bootstrap insert/update/delete
+still raises the fail-closed invitation/seat-billing exception. No
+service-role membership bypass was added.
+
+**Production remains unavailable** on this branch until Codex ships all of:
+
+1. Authenticated, caller-bound organization listing
+2. Persisted active-organization read (`profiles.active_organization_id`)
+3. Guarded active-organization switching (trigger-rejected writes must
+   surface, never be swallowed)
+4. A privacy-minimized roster projection (see RPC requirements below)
+5. Server-owned capabilities, including `invitationsEnabled: false` and
+   `contactDetailsEnabled: false` by default
 
 ## Update — read-only backend mapping (superseded revision, kept for history)
 
@@ -121,13 +147,14 @@ be reflected:
    not assumption — that this branch's `invitationsEnabled: false` default
    remains correct with zero changes required.
 
-### Read-only backend mapping — candidate `dcf56ce`
+### Read-only backend mapping — candidate `d12743a` (table statuses unchanged from `dcf56ce`)
 
 Read directly from
 `/private/tmp/veltex-r0-privilege-hardening/supabase/migrations/20260925002000_r2_organization_tenancy.sql`,
 `..._003000_r2_claude_security_remediation.sql`,
 `..._004000_r2_second_security_remediation.sql`, and
-`..._005000_r2_third_security_remediation.sql` at commit `dcf56ce`. No
+`..._005000_r2_third_security_remediation.sql`, and
+`..._006000_r2_cleanup_guard_ordering.sql` at commit `d12743a`. No
 migration, RLS policy, or backend file was modified to produce this table.
 
 | UI adapter operation | Backend table / helper / policy | Status | Evidence |
@@ -138,7 +165,7 @@ migration, RLS policy, or backend file was modified to produce this table.
 | `listMembers(organizationId)` — raw membership rows | `public.organization_memberships`, policy `memberships_member_read` (`select` using `is_organization_member(organization_id)`); returns `organization_id, user_id, role, created_at, updated_at` only — no `id`, `status`, `invited_at`, or `joined_at` | **AVAILABLE**, but shape mismatch vs. `OrganizationMember` | `20260925002000...sql` lines ~14-22, ~380-382 |
 | `listMembers(organizationId)` — name/email/avatar enrichment | Would require joining `public.profiles`, but `profiles` has **no** cross-member read policy — only `"Users can view own profile"` (self) and admin-only view-all policies exist | **NOT IMPLEMENTED** | Confirmed via `grep` of every `profiles` policy across `001_initial_schema.sql`, `003_fix_admin_policies.sql`, `020_fix_profiles_rls_recursion.sql`, `20250901194222_add_user_roles.sql` — none grant member-to-member profile reads |
 | `inviteMember()` / any membership `insert`/`update`/`delete` | `public.organization_memberships`: `revoke insert, update, delete, truncate ... from public, anon, authenticated` (both remediation migrations); trigger `guard_organization_membership()` raises `'team memberships are disabled until invitation consent and seat billing ship'` (errcode `42501`) for every case except a trigger-internal bootstrap (`pg_trigger_depth() >= 2` in the current candidate) | **NOT IMPLEMENTED** (by design) | `20260925003000...sql` lines ~44-84; `20260925004000...sql` lines ~10-47 |
-| `getCapabilities()` (incl. `invitationsEnabled`) | No table column, RPC, or endpoint of any kind exists for this today | **NOT IMPLEMENTED** | Confirmed via `grep` for `capabilit` across all three R2 migrations — zero matches |
+| `getCapabilities()` (incl. `invitationsEnabled` and `contactDetailsEnabled`) | No table column, RPC, or endpoint of any kind exists for this today | **NOT IMPLEMENTED** | Confirmed via `grep` for `capabilit` across the R2 migrations through `d12743a` — zero matches |
 | `InviteMemberInput.role` accepting `"owner"` | `organization_memberships.role` check constraint allows `'owner'|'admin'|'estimator'|'viewer'` at the column level; no server rule specifically rejects an "invite" naming `owner` because no invite path exists at all yet | **NOT IMPLEMENTED** (moot until an invite endpoint exists; the UI already excludes `owner` from `INVITABLE_ROLES` client-side, which is necessary but not itself an authorization boundary) | `20260925002000...sql` line ~18 |
 | Organization-scoped role-based UI gating (`can_manage_organization`, `can_edit_organization_work` semantics assumed by `OrganizationRole`) | `public.can_manage_organization(uuid)` → `role in ('owner','admin')`; `public.can_edit_organization_work(uuid)` → `role in ('owner','admin','estimator')`; `viewer` is read-only everywhere, matching this UI's `ROLE_META`/`INVITABLE_ROLES` assumptions | **AVAILABLE** (already consistent with this UI's role model) | `20260925002000...sql` lines ~46-56 |
 
@@ -170,14 +197,14 @@ export type MemberStatus = "active" | "invited";
 export interface OrganizationMember {
   id: string;
   organizationId: string;
-  userId: string | null; // null while an invited email has no linked account yet
+  userId: string | null;
   name: string;
-  email: string;
+  email?: string | null; // render only when contactDetailsEnabled is true
   role: OrganizationRole;
   status: MemberStatus;
   avatarUrl?: string | null;
-  invitedAt?: string;   // ISO 8601
-  joinedAt?: string;    // ISO 8601
+  invitedAt?: string;
+  joinedAt?: string;
 }
 
 export interface InviteMemberInput {
@@ -193,6 +220,7 @@ export interface InviteMemberResult {
 // New in this revision — see "UI capability requirement" below.
 export interface TeamCapabilities {
   invitationsEnabled: boolean;
+  contactDetailsEnabled: boolean;
 }
 
 export interface TeamAdapter {
@@ -505,6 +533,13 @@ returns table (
 )
 ```
 
+`email` and `avatar_url` are **role-minimized**, not always populated.
+At `d12743a`, viewers and estimators have no approved contact-detail
+projection. Until one exists, those columns must be `null` for
+`viewer`/`estimator` callers (and for any caller when
+`contactDetailsEnabled` is false). Owner/admin contact-detail access is
+also **NOT IMPLEMENTED** today — do not infer it from `organization:manage`.
+
 No `id`, `status`, `invited_at`, or `joined_at` — those don't exist in
 `organization_memberships` today and should not be invented server-side
 just to satisfy this UI's current (mock-derived) type. `(organization_id,
@@ -517,6 +552,16 @@ primary key.
   `authenticated` only (never `anon`).
 - Must internally verify `public.is_organization_member(p_organization_id)`
   for `auth.uid()`.
+- Identity binds only to `auth.uid()`. Never accept a caller-supplied
+  user id.
+- **PII minimization by role is mandatory.** A viewer or estimator must
+  not receive another member's email, even if they can read the membership
+  row. Name may be a display label only if a later reviewed projection
+  allows it; email requires an explicit `contactDetailsEnabled` grant.
+- **Privileged-function allowlist review is required** before this RPC
+  can ship. It must be added to the R2 SECURITY DEFINER allowlist and
+  independently reviewed; an unreviewed definer function is not an
+  accepted contract.
 - **Recommendation:** on failed membership, return an **empty result set**,
   not a raised exception — consistent with how every existing R2 RLS policy
   already behaves (`is_organization_member` used in a `using` clause simply
@@ -552,25 +597,36 @@ primary key.
    truncate; if Codex wants a hard cap, it must be an explicit, documented
    `limit`/`offset` pair on the function signature, not a silent server-side
    truncation the client can't detect.
+8. **Tenant isolation:** a member of tenant A never receives tenant B's
+   roster, names, or emails.
+9. **Role PII minimization:** a `viewer` or `estimator` caller of tenant A
+   receives `email`/`avatar_url` as null for every row, including owners
+   and admins. An `owner`/`admin` caller still receives emails only when
+   the server-owned `contactDetailsEnabled` capability is true.
+10. A caller cannot escalate by passing another user's id or by calling
+    the function with `service_role` from the browser. Direct
+    `service_role` use remains a privileged-function allowlist item, not a
+    client path.
 
 ### RPC/column — capability read
 
 Two options, in order of recommendation:
 
 **Option A (recommended today):** no backend change at all. The client
-adapter hardcodes `{ invitationsEnabled: false }`. This matches Codex's own
-preflight recommendation and requires zero new SQL, zero new grants, and
-zero new abuse surface. Revisit only once a real seat-billing/consent
-decision exists to flip against.
+adapter hardcodes `{ invitationsEnabled: false, contactDetailsEnabled: false }`.
+This matches Codex's own preflight recommendation and requires zero new
+SQL, zero new grants, and zero new abuse surface. Revisit only once a real
+seat-billing/consent decision and a reviewed contact-detail projection
+exist to flip against.
 
 **Option B (only if Codex wants a server-owned kill switch without a client
 release):** `public.get_team_capabilities(p_organization_id uuid) returns
-table (invitations_enabled boolean)`.
+table (invitations_enabled boolean, contact_details_enabled boolean)`.
 
 - **Input:** organization id (kept for future per-organization entitlement
   even though today's implementation ignores it and always returns
   `false`).
-- **Output:** a single row, `invitations_enabled boolean`.
+- **Output:** a single row, both flags boolean, both default `false`.
 - **Authorization:** `security definer`, granted to `authenticated` only;
   since the value is currently a constant with no per-tenant secret, a
   membership check is not strictly required for confidentiality, but should
@@ -579,10 +635,12 @@ table (invitations_enabled boolean)`.
   organization id exist" ping endpoint for non-members. Same
   empty-result/false-default convention as RPC 1: a non-member gets `false`
   (a safe default), not an error.
-- **Abuse tests:** (1) always returns `false` while unimplemented, for
-  members and non-members alike; (2) a non-existent organization id also
-  returns `false`, not an error, not `true`; (3) once real seat billing
-  ships and this function's body changes to something conditional, the
-  same non-member-gets-`false` default must still hold — a non-member must
-  never learn a real organization's entitlement state through this
-  function.
+- **Abuse tests:** (1) always returns both flags `false` while
+  unimplemented, for members and non-members alike; (2) a non-existent
+  organization id also returns `false`/`false`, not an error, not `true`;
+  (3) a `viewer` or `estimator` never receives `contact_details_enabled:
+  true`; (4) once real seat billing ships and this function's body changes
+  to something conditional, the same non-member-gets-`false` default must
+  still hold — a non-member must never learn a real organization's
+  entitlement state through this function.
+  Privileged-function allowlist review is required before Option B ships.

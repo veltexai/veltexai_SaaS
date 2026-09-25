@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-function getInitials(name: string, email: string) {
-  const source = name.trim() || email.trim();
+function getInitials(name: string, email?: string | null) {
+  const source = name.trim() || email?.trim() || "";
   if (!source) return "?";
 
   const parts = source.split(/\s+/).filter(Boolean);
@@ -13,7 +13,7 @@ function getInitials(name: string, email: string) {
 
 interface MemberAvatarProps {
   name: string;
-  email: string;
+  email?: string | null;
   avatarUrl?: string | null;
   className?: string;
 }

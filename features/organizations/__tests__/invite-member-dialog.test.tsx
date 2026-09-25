@@ -59,7 +59,9 @@ describe("InviteMemberDialog", () => {
 
     // Default role is estimator.
     expect(
-      screen.getByText("Create, edit, and send proposals and pricing."),
+      screen.getByText(
+        "Can view this organization and edit operational work. Cannot manage organization settings or membership.",
+      ),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("combobox"));
@@ -67,7 +69,9 @@ describe("InviteMemberDialog", () => {
 
     expect(screen.getByRole("combobox")).toHaveTextContent("Viewer");
     expect(
-      screen.getByText("View proposals and reports without editing."),
+      screen.getByText(
+        "Can view this organization's identity. Cannot view proposal pricing or cost details.",
+      ),
     ).toBeInTheDocument();
   });
 
@@ -100,7 +104,7 @@ describe("InviteMemberDialog", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /send invite/i }));
 
-    expect(await screen.findByText(/email/i)).toBeInTheDocument();
+    expect(await screen.findByText("Email is required")).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
@@ -261,6 +265,7 @@ describe("InviteMemberDialog", () => {
         screen.getByText("Team invitations aren't enabled yet"),
       ).toBeInTheDocument();
       expect(screen.queryByLabelText("Email address")).not.toBeInTheDocument();
+      expect(screen.queryByText(/codex/i)).not.toBeInTheDocument();
     });
   });
 });

@@ -24,6 +24,12 @@ interface MemberListProps {
   error: string | null;
   onReload: () => void;
   onInviteClick: (event: MouseEvent<HTMLButtonElement>) => void;
+  /**
+   * Fail-closed. Emails render only when this is true *and* the member
+   * row actually includes an email. Viewers/estimators must not assume
+   * contact details are available.
+   */
+  showContactDetails?: boolean;
 }
 
 const SKELETON_ROW_COUNT = 3;
@@ -142,12 +148,21 @@ function formatDate(value?: string) {
   }
 }
 
+function visibleEmail(
+  member: OrganizationMember,
+  showContactDetails: boolean,
+): string | null {
+  if (!showContactDetails) return null;
+  return member.email?.trim() ? member.email : null;
+}
+
 export function MemberList({
   members,
   status,
   error,
   onReload,
   onInviteClick,
+  showContactDetails = false,
 }: MemberListProps) {
   if (status === "idle") {
     return <MemberListIdle />;
@@ -179,13 +194,15 @@ export function MemberList({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {members.map((member) => (
+            {members.map((member) => {
+              const email = visibleEmail(member, showContactDetails);
+              return (
               <TableRow key={member.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <MemberAvatar
                       name={member.name}
-                      email={member.email}
+                      email={email}
                       avatarUrl={member.avatarUrl}
                     />
                     <div className="min-w-0">
@@ -195,12 +212,14 @@ export function MemberList({
                       >
                         {member.name}
                       </p>
-                      <p
-                        className="truncate text-sm text-muted-foreground"
-                        title={member.email}
-                      >
-                        {member.email}
-                      </p>
+                      {email ? (
+                        <p
+                          className="truncate text-sm text-muted-foreground"
+                          title={email}
+                        >
+                          {email}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 </TableCell>
@@ -214,19 +233,22 @@ export function MemberList({
                   {formatDate(member.joinedAt ?? member.invitedAt)}
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </div>
 
       {/* Mobile: stacked cards */}
       <ul className="sm:hidden space-y-3" aria-label="Team members">
-        {members.map((member) => (
+        {members.map((member) => {
+          const email = visibleEmail(member, showContactDetails);
+          return (
           <li key={member.id} className="rounded-lg border p-3">
             <div className="flex items-start gap-3">
               <MemberAvatar
                 name={member.name}
-                email={member.email}
+                email={email}
                 avatarUrl={member.avatarUrl}
               />
               <div className="min-w-0 flex-1">
@@ -236,12 +258,14 @@ export function MemberList({
                 >
                   {member.name}
                 </p>
-                <p
-                  className="truncate text-sm text-muted-foreground"
-                  title={member.email}
-                >
-                  {member.email}
-                </p>
+                {email ? (
+                  <p
+                    className="truncate text-sm text-muted-foreground"
+                    title={email}
+                  >
+                    {email}
+                  </p>
+                ) : null}
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <RoleBadge role={member.role} />
                   <StatusPill status={member.status} />
@@ -249,7 +273,8 @@ export function MemberList({
               </div>
             </div>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );

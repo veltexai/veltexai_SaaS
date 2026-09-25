@@ -1,3 +1,4 @@
+export * from "./domain";
 export * from "./types/organization";
 export * from "./constants/roles";
 export * from "./schemas/invite-member";

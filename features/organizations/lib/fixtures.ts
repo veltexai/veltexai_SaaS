@@ -1,64 +1,73 @@
 import type { Organization, OrganizationMember } from "../types/organization";
 
+export const EXAMPLE_CLEANING_ORG_ID = "org-example-cleaning";
+export const SAMPLE_FACILITIES_ORG_ID = "org-sample-facilities";
+
 export const FIXTURE_ORGANIZATIONS: Organization[] = [
-  { id: "org-veltex-cleaning", name: "Veltex Cleaning Co.", slug: "veltex-cleaning-co" },
-  { id: "org-summit-facilities", name: "Summit Facilities Group", slug: "summit-facilities-group" },
+  {
+    id: EXAMPLE_CLEANING_ORG_ID,
+    name: "Example Cleaning Co.",
+    slug: "example-cleaning-co",
+  },
+  {
+    id: SAMPLE_FACILITIES_ORG_ID,
+    name: "Sample Facilities Group",
+    slug: "sample-facilities-group",
+  },
 ];
 
 export const FIXTURE_MEMBERS_BY_ORG: Record<string, OrganizationMember[]> = {
-  "org-veltex-cleaning": [
+  [EXAMPLE_CLEANING_ORG_ID]: [
     {
       id: "member-1",
-      organizationId: "org-veltex-cleaning",
+      organizationId: EXAMPLE_CLEANING_ORG_ID,
       userId: "user-1",
-      name: "Anthony Veliz",
-      email: "anthony@veltexclean.com",
+      name: "Ada Example",
+      email: "ada.owner@example.test",
       role: "owner",
       status: "active",
       joinedAt: "2026-01-14T09:00:00.000Z",
     },
     {
       id: "member-2",
-      organizationId: "org-veltex-cleaning",
+      organizationId: EXAMPLE_CLEANING_ORG_ID,
       userId: "user-2",
-      name: "Jordan Rivera",
-      email: "jordan@veltexclean.com",
+      name: "Blake Example",
+      email: "blake.admin@example.test",
       role: "admin",
       status: "active",
       joinedAt: "2026-02-02T14:30:00.000Z",
     },
     {
       id: "member-3",
-      organizationId: "org-veltex-cleaning",
+      organizationId: EXAMPLE_CLEANING_ORG_ID,
       userId: "user-3",
-      name: "Casey Tran",
-      email: "casey@veltexclean.com",
+      name: "Casey Example",
+      email: "casey.estimator@example.test",
       role: "estimator",
       status: "active",
       joinedAt: "2026-03-11T18:15:00.000Z",
     },
     {
       id: "member-4",
-      organizationId: "org-veltex-cleaning",
+      organizationId: EXAMPLE_CLEANING_ORG_ID,
       userId: null,
-      name: "Morgan Blake",
-      email: "morgan@veltexclean.com",
+      name: "Drew Example",
+      email: "drew.estimator@example.test",
       role: "estimator",
       status: "invited",
       invitedAt: "2026-09-20T16:00:00.000Z",
     },
     {
       id: "member-5",
-      organizationId: "org-veltex-cleaning",
+      organizationId: EXAMPLE_CLEANING_ORG_ID,
       userId: "user-5",
-      name: "Sam Ortiz",
-      email: "sam@veltexclean.com",
+      name: "Ellis Example",
+      email: "ellis.viewer@example.test",
       role: "viewer",
       status: "active",
       joinedAt: "2026-04-05T12:45:00.000Z",
     },
   ],
-  // A freshly created organization with no teammates yet — demonstrates the
-  // empty state without simulating a defensive/error data gap.
-  "org-summit-facilities": [],
+  [SAMPLE_FACILITIES_ORG_ID]: [],
 };

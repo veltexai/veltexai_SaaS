@@ -20,6 +20,7 @@ export type MockTeamScenario = "default" | "empty" | "error";
  */
 const DEFAULT_CAPABILITIES: TeamCapabilities = {
   invitationsEnabled: false,
+  contactDetailsEnabled: false,
 };
 
 export interface MockTeamAdapterOptions {
@@ -170,7 +171,7 @@ export class MockTeamAdapter implements TeamAdapter {
     const existingMembers = this.membersByOrg[input.organizationId] ?? [];
     const alreadyInvited =
       existingMembers.some(
-        (member) => member.email.toLowerCase() === normalizedEmail,
+        (member) => member.email?.toLowerCase() === normalizedEmail,
       ) || this.invitedEmailsByOrg.get(input.organizationId)?.has(normalizedEmail);
 
     if (alreadyInvited) {

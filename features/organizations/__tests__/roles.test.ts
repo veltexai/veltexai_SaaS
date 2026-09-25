@@ -1,4 +1,4 @@
-import { ORGANIZATION_ROLES } from "../types/organization";
+import { ORGANIZATION_ROLES } from "../domain";
 import {
   getRoleBadgeVariant,
   INVITABLE_ROLES,

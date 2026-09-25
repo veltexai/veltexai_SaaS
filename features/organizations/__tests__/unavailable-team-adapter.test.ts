@@ -29,13 +29,13 @@ describe("UnavailableTeamAdapter", () => {
   it("rejects setActiveOrganizationId, even with a plausible-looking id", async () => {
     const adapter = createUnavailableTeamAdapter();
     await expect(
-      adapter.setActiveOrganizationId("org-veltex-cleaning"),
+      adapter.setActiveOrganizationId("org-example-cleaning"),
     ).rejects.toThrow(TEAM_ADAPTER_UNAVAILABLE_MESSAGE);
   });
 
   it("rejects listMembers for any organization id, including a plausible fixture-shaped one", async () => {
     const adapter = createUnavailableTeamAdapter();
-    await expect(adapter.listMembers("org-veltex-cleaning")).rejects.toThrow(
+    await expect(adapter.listMembers("org-example-cleaning")).rejects.toThrow(
       TEAM_ADAPTER_UNAVAILABLE_MESSAGE,
     );
   });
@@ -51,7 +51,7 @@ describe("UnavailableTeamAdapter", () => {
     const adapter = createUnavailableTeamAdapter();
     await expect(
       adapter.inviteMember({
-        organizationId: "org-veltex-cleaning",
+        organizationId: "org-example-cleaning",
         email: "someone@example.com",
         role: "viewer",
       }),
@@ -62,7 +62,7 @@ describe("UnavailableTeamAdapter", () => {
     const adapter = new UnavailableTeamAdapter();
     await expect(
       adapter.inviteMember({
-        organizationId: "org-veltex-cleaning",
+        organizationId: "org-example-cleaning",
         email: "someone@example.com",
         role: "viewer",
       }),
@@ -74,11 +74,11 @@ describe("UnavailableTeamAdapter", () => {
     const results = await Promise.allSettled([
       adapter.listOrganizations(),
       adapter.getActiveOrganizationId(),
-      adapter.setActiveOrganizationId("org-veltex-cleaning"),
-      adapter.listMembers("org-veltex-cleaning"),
+      adapter.setActiveOrganizationId("org-example-cleaning"),
+      adapter.listMembers("org-example-cleaning"),
       adapter.getCapabilities(),
       adapter.inviteMember({
-        organizationId: "org-veltex-cleaning",
+        organizationId: "org-example-cleaning",
         email: "someone@example.com",
         role: "viewer",
       }),

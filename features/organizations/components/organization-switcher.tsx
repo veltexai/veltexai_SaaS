@@ -1,6 +1,7 @@
 "use client";
 
-import { Building2, ChevronsUpDown } from "lucide-react";
+import { Building2, ChevronsUpDown, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,6 +20,8 @@ interface OrganizationSwitcherProps {
   activeOrganizationId: string | null;
   onChange: (organizationId: string) => void;
   status: "loading" | "error" | "success";
+  error?: string | null;
+  onRetry?: () => void;
   className?: string;
 }
 
@@ -33,6 +36,8 @@ export function OrganizationSwitcher({
   activeOrganizationId,
   onChange,
   status,
+  error,
+  onRetry,
   className,
 }: OrganizationSwitcherProps) {
   if (status === "loading") {
@@ -50,10 +55,20 @@ export function OrganizationSwitcher({
 
   if (status === "error") {
     return (
-      <Button variant="outline" disabled className={className}>
-        <Building2 />
-        Organizations unavailable
-      </Button>
+      <Alert variant="destructive" className={className}>
+        <AlertTitle>Couldn&apos;t load organizations</AlertTitle>
+        <AlertDescription>
+          <p className="mb-3">
+            {error ?? "Something went wrong while loading your organizations."}
+          </p>
+          {onRetry ? (
+            <Button type="button" onClick={onRetry} variant="outline" size="sm">
+              <RefreshCw className="mr-2" />
+              Retry
+            </Button>
+          ) : null}
+        </AlertDescription>
+      </Alert>
     );
   }
 

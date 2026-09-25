@@ -4,7 +4,7 @@
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import { RoleBadge } from "../components/role-badge";
-import { ORGANIZATION_ROLES } from "../types/organization";
+import { ORGANIZATION_ROLES } from "../domain";
 import { ROLE_LABELS } from "../constants/roles";
 
 describe("RoleBadge", () => {

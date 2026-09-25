@@ -118,9 +118,7 @@ export function InviteMemberDialog({
             </DialogDescription>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This capability is being built out with Codex&apos;s
-            organization service. Check back once it&apos;s enabled for your
-            account.
+            Check back once team invitations are available for your workspace.
           </p>
           <DialogFooter>
             <Button type="button" onClick={() => onOpenChange(false)}>
@@ -151,8 +149,8 @@ export function InviteMemberDialog({
         <DialogHeader>
           <DialogTitle>Invite a teammate</DialogTitle>
           <DialogDescription>
-            They&apos;ll get access based on the role you choose. You can
-            change or remove their access later.
+            This is a local preview only. No invitation email is sent and no
+            live membership is created.
           </DialogDescription>
         </DialogHeader>
 

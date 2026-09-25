@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useRef, useState, type MouseEvent } from "react";
-import { UserPlus } from "lucide-react";
+import { RefreshCw, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { createUnavailableTeamAdapter } from "../lib/unavailable-team-adapter";
 import { useOrganizations } from "../hooks/use-organizations";
@@ -34,7 +35,7 @@ export interface TeamSettingsShellProps {
  * fabricates data itself. It renders whatever `adapter` it is given and
  * fails closed by default. See
  * docs/product/platform-build/CURSOR_R2_CONTRACT_REQUEST.md for the exact
- * server contract this shell expects once Codex's R2 API is available, and
+ * server contract this shell expects once an accepted adapter exists, and
  * `resolve-team-adapter.ts` for how the mock stays development/test-only.
  */
 export function TeamSettingsShell({ adapter: adapterProp }: TeamSettingsShellProps) {
@@ -48,8 +49,12 @@ export function TeamSettingsShell({ adapter: adapterProp }: TeamSettingsShellPro
   const {
     status: orgStatus,
     organizations,
+    error: orgError,
+    switchError,
     activeOrganizationId,
     setActiveOrganizationId,
+    reload: reloadOrganizations,
+    retryFailedSwitch,
   } = useOrganizations(adapter);
 
   const {
@@ -75,6 +80,9 @@ export function TeamSettingsShell({ adapter: adapterProp }: TeamSettingsShellPro
   // the invite form is never shown before the capability is confirmed.
   const invitationsEnabled =
     capabilitiesStatus === "success" && capabilities?.invitationsEnabled === true;
+  const contactDetailsEnabled =
+    capabilitiesStatus === "success" &&
+    capabilities?.contactDetailsEnabled === true;
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [announcement, setAnnouncement] = useState("");
@@ -113,7 +121,8 @@ export function TeamSettingsShell({ adapter: adapterProp }: TeamSettingsShellPro
 
     if (result) {
       addMember(result.member);
-      const message = `Invite sent to ${result.member.email}`;
+      const message =
+        "Local preview only. No invitation email was sent.";
       toast.success(message);
       setAnnouncement(message);
       return true;
@@ -176,9 +185,29 @@ export function TeamSettingsShell({ adapter: adapterProp }: TeamSettingsShellPro
           activeOrganizationId={activeOrganizationId}
           onChange={setActiveOrganizationId}
           status={orgStatus}
+          error={orgError}
+          onRetry={reloadOrganizations}
           className="w-full sm:w-auto"
         />
       </div>
+
+      {switchError ? (
+        <Alert variant="destructive">
+          <AlertTitle>Couldn&apos;t switch organizations</AlertTitle>
+          <AlertDescription>
+            <p className="mb-3">{switchError}</p>
+            <Button
+              type="button"
+              onClick={retryFailedSwitch}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCw className="mr-2" />
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       <MemberList
         members={members}
@@ -186,6 +215,7 @@ export function TeamSettingsShell({ adapter: adapterProp }: TeamSettingsShellPro
         error={membersError}
         onReload={reloadMembers}
         onInviteClick={openInviteDialog}
+        showContactDetails={contactDetailsEnabled}
       />
 
       <InviteMemberDialog

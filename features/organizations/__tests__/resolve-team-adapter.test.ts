@@ -31,7 +31,7 @@ describe("resolveTeamAdapter", () => {
     await expect(adapter.listOrganizations()).rejects.toThrow(
       TEAM_ADAPTER_UNAVAILABLE_MESSAGE,
     );
-    await expect(adapter.listMembers("org-veltex-cleaning")).rejects.toThrow(
+    await expect(adapter.listMembers("org-example-cleaning")).rejects.toThrow(
       TEAM_ADAPTER_UNAVAILABLE_MESSAGE,
     );
   });
@@ -43,7 +43,7 @@ describe("resolveTeamAdapter", () => {
     );
     await expect(
       adapter.inviteMember({
-        organizationId: "org-veltex-cleaning",
+        organizationId: "org-example-cleaning",
         email: "someone@example.com",
         role: "viewer",
       }),
@@ -74,7 +74,7 @@ describe("resolveTeamAdapter", () => {
 
   it("applies the scenario override only in development", async () => {
     const adapter = resolveTeamAdapter("development", "empty");
-    const members = await adapter.listMembers("org-veltex-cleaning");
+    const members = await adapter.listMembers("org-example-cleaning");
     expect(members).toEqual([]);
   });
 
@@ -82,6 +82,7 @@ describe("resolveTeamAdapter", () => {
     const adapter = resolveTeamAdapter("development");
     await expect(adapter.getCapabilities()).resolves.toEqual({
       invitationsEnabled: false,
+      contactDetailsEnabled: false,
     });
   });
 });
