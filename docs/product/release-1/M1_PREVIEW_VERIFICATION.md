@@ -60,4 +60,12 @@ Candidate `b341e50` makes only the obsolete trial routine conditional; the templ
 
 Restoration scope identified from reviewed migration 029 and the current entitlement migration: `proposal_templates`, `template_tier_access`, associated constraints/indexes/RLS/grants/triggers, and the two template-access functions. Use `template-prerequisite-inventory.sql` to compare exact production definitions before restoring only absent preview objects. Do not replay all of 029, seed real data, substitute old entitlement logic, or treat a minimal function-execution fixture as a faithful production clone.
 
-Execution is blocked by browser access: existing-tab state and browser tab enumeration timed out, resetting the session; documented recovery and a direct known-preview selection also timed out. No restore, R0 execution, production deployment or deletion occurred in this continuation. Hosted evidence remains at the prior catalog PASS/R0 rollback checkpoint. Restore the Chrome connection before resuming.
+## Hosted completion update — 2026-09-24 Pacific
+
+- Browser access recovered through a direct in-app-browser preview tab; no replacement project was created.
+- Read-only production metadata established the exact columns, constraints, indexes, RLS policies, ACLs, trigger and function bodies for the two template tables and two entitlement functions. No customer, template-content or credential rows were read.
+- `restore-preview-template-prerequisites.sql` restored only those missing structural objects on preview `wcnfhriosemgchmtwgof`; no application rows were copied. The transaction succeeded.
+- The fail-closed `r0-target-prerequisites.sql` completed without exception. All mandatory routines were present; `start_user_trial(uuid,text)` remained absent as expected.
+- Candidate `b341e50` R0 migration executed transactionally and returned success.
+- Hosted SQL role/ACL assertions PASS: anonymous/authenticated cannot select `system_settings`; the SECURITY DEFINER allowlist is clean; authenticated own-user succeeds; cross-user and forged service-role claims fail; anonymous helper execution fails; actual `service_role` succeeds. Test role transactions were rolled back.
+- This closes the structural migration and SQL-role portion of M-1. Authenticated PostgREST/application staging, email/PDF flows, operator validation and production deployment remain separate gates. Preview deletion remains deferred until those evidence needs are complete.

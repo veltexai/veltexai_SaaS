@@ -247,3 +247,12 @@ After any material action, append or revise the relevant section with:
 - Candidate confirmed `b341e50`; obsolete start_user_trial is optional, required template routines remain mandatory. Updated local read-only R0 preflight accordingly; preserved all prior M-1 evidence.
 - Prepared `quality/service-catalog-round4/template-prerequisite-inventory.sql` to compare only production template schema/ACLs/functions before restoring the missing preview prerequisites. No data/credential queries or blanket migration replay.
 - Browser state, tab inventory and direct preview selection timed out repeatedly after documented recovery. No hosted changes executed this turn; preview restoration/R0 role verification is blocked on browser access. Production unchanged, preview not deleted, R2 not started. Prior catalog hosted SQL tests remain PASS; full M-1/app staging/operator gates remain incomplete.
+
+### M-1 structural and hosted SQL-role PASS — 2026-09-24 Pacific
+
+- In-app browser access recovered by opening preview `wcnfhriosemgchmtwgof` directly; the existing preview was reused.
+- Read-only production metadata captured the exact missing template table/function structure without selecting application rows or credentials. Preview-only structural restoration succeeded; no row data was copied.
+- R0 mandatory preflight passed; obsolete `start_user_trial(uuid,text)` remained absent as intended by `b341e50`.
+- R0 migration executed successfully and transactionally on the preview.
+- Hosted assertions PASS: system-settings client read denial, SECURITY DEFINER allowlist, own-user access, cross-user denial, forged-service-claim denial, anonymous denial and real service-role access. Test transactions rolled back.
+- **STATUS:** M-1 structural migration and SQL-role verification PASS. Authenticated PostgREST/application staging, email/PDF flows, operator validation, founder acceptance and production deployment remain open. Preview remains active and must not be deleted yet.
