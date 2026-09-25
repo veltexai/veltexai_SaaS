@@ -33,6 +33,8 @@ export interface MockTeamAdapterOptions {
   scenario?: MockTeamScenario;
   organizations?: Organization[];
   membersByOrg?: Record<string, OrganizationMember[]>;
+  /** Defaults to the first fixture/provided organization's id, if any. */
+  activeOrganizationId?: string | null;
   /**
    * Defaults to `{ invitationsEnabled: false }`. Only test/story callers
    * that are explicitly demonstrating the mock invite flow should override
@@ -67,12 +69,15 @@ export class MockTeamAdapter implements TeamAdapter {
   private readonly membersByOrg: Record<string, OrganizationMember[]>;
   private readonly invitedEmailsByOrg = new Map<string, Set<string>>();
   private readonly capabilities: TeamCapabilities;
+  private activeOrganizationId: string | null;
 
   constructor(options: MockTeamAdapterOptions = {}) {
     this.latencyMs = options.latencyMs ?? 300;
     this.scenario = options.scenario ?? "default";
     this.organizations = options.organizations ?? FIXTURE_ORGANIZATIONS;
     this.capabilities = { ...DEFAULT_CAPABILITIES, ...options.capabilities };
+    this.activeOrganizationId =
+      options.activeOrganizationId ?? this.organizations[0]?.id ?? null;
 
     const baseMembers = options.membersByOrg ?? FIXTURE_MEMBERS_BY_ORG;
     this.membersByOrg = Object.fromEntries(
@@ -91,6 +96,32 @@ export class MockTeamAdapter implements TeamAdapter {
     }
 
     return this.organizations.map((org) => ({ ...org }));
+  }
+
+  async getActiveOrganizationId(): Promise<string | null> {
+    await wait(this.latencyMs);
+
+    if (this.scenario === "error") {
+      throw new Error("Could not load your active organization. Please try again.");
+    }
+
+    return this.activeOrganizationId;
+  }
+
+  async setActiveOrganizationId(organizationId: string): Promise<void> {
+    await wait(this.latencyMs);
+
+    if (this.scenario === "error") {
+      throw new Error("Could not switch organizations. Please try again.");
+    }
+
+    // Mirrors the real trigger-guarded write: only one of the caller's own
+    // organizations is a valid target.
+    if (!this.organizations.some((org) => org.id === organizationId)) {
+      throw new Error("You don't have access to that organization.");
+    }
+
+    this.activeOrganizationId = organizationId;
   }
 
   async listMembers(organizationId: string): Promise<OrganizationMember[]> {

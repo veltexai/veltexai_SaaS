@@ -4,7 +4,7 @@ import { useMemo, useRef, useState, type MouseEvent } from "react";
 import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { createMockTeamAdapter, type MockTeamAdapterOptions } from "../lib/mock-team-adapter";
+import { createUnavailableTeamAdapter } from "../lib/unavailable-team-adapter";
 import { useOrganizations } from "../hooks/use-organizations";
 import { useTeamMembers } from "../hooks/use-team-members";
 import { useInviteMember } from "../hooks/use-invite-member";
@@ -16,26 +16,30 @@ import type { TeamAdapter } from "../types/organization";
 import type { InviteMemberFormValues } from "../schemas/invite-member";
 
 export interface TeamSettingsShellProps {
-  /** Injectable for tests/stories; defaults to the local mock adapter. */
+  /**
+   * Injectable for tests/stories/an explicit development-only preview
+   * (see `features/organizations/lib/resolve-team-adapter.ts`, used by the
+   * production page). If omitted, this shell defaults to
+   * `createUnavailableTeamAdapter()` — **never** the mock — so it fails
+   * closed with a clear unavailable/error state instead of silently
+   * rendering fixture data if a future caller forgets to pass one.
+   */
   adapter?: TeamAdapter;
-  /** Convenience for demonstrating scenarios without wiring a custom adapter. */
-  mockOptions?: MockTeamAdapterOptions;
 }
 
 /**
  * Responsive organization/team settings shell.
  *
- * This is a self-contained UI feature: it owns its own mocked data adapter
- * and does not call any live endpoint. See
+ * This is a self-contained UI feature: it never calls a live endpoint or
+ * fabricates data itself. It renders whatever `adapter` it is given and
+ * fails closed by default. See
  * docs/product/platform-build/CURSOR_R2_CONTRACT_REQUEST.md for the exact
- * server contract this shell expects once Codex's R2 API is available.
+ * server contract this shell expects once Codex's R2 API is available, and
+ * `resolve-team-adapter.ts` for how the mock stays development/test-only.
  */
-export function TeamSettingsShell({
-  adapter: adapterProp,
-  mockOptions,
-}: TeamSettingsShellProps) {
+export function TeamSettingsShell({ adapter: adapterProp }: TeamSettingsShellProps) {
   const adapter = useMemo(
-    () => adapterProp ?? createMockTeamAdapter(mockOptions),
+    () => adapterProp ?? createUnavailableTeamAdapter(),
     // Intentionally created once per shell instance.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

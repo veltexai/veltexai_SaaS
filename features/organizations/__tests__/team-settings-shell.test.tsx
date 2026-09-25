@@ -6,7 +6,7 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import { TeamSettingsShell } from "../components/team-settings-shell";
 import { createMockTeamAdapter } from "../lib/mock-team-adapter";
 import type { TeamAdapter } from "../types/organization";
-import { FIXTURE_ORGANIZATIONS } from "../lib/fixtures";
+import { FIXTURE_MEMBERS_BY_ORG, FIXTURE_ORGANIZATIONS } from "../lib/fixtures";
 
 jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
@@ -87,6 +87,8 @@ describe("TeamSettingsShell", () => {
       .mockRejectedValue(new Error("Roster service is down"));
     const adapter: TeamAdapter = {
       listOrganizations: async () => FIXTURE_ORGANIZATIONS,
+      getActiveOrganizationId: async () => FIXTURE_ORGANIZATIONS[0]?.id ?? null,
+      setActiveOrganizationId: jest.fn(),
       listMembers,
       getCapabilities: async () => ({ invitationsEnabled: false }),
       inviteMember: jest.fn(),
@@ -177,5 +179,107 @@ describe("TeamSettingsShell", () => {
     expect(
       screen.queryByRole("status", { name: "Loading team members" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("honors the adapter's persisted active organization instead of always picking the first listed", async () => {
+    const adapter = createMockTeamAdapter({
+      latencyMs: 0,
+      activeOrganizationId: "org-summit-facilities",
+    });
+    render(<TeamSettingsShell adapter={adapter} />);
+
+    expect(await screen.findByText("No teammates yet")).toBeInTheDocument();
+    expect(screen.queryByText("Anthony Veliz")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /current organization/i }),
+    ).toHaveTextContent("Summit Facilities Group");
+  });
+
+  it("does not change the displayed organization when setActiveOrganizationId rejects", async () => {
+    const setActiveOrganizationId = jest
+      .fn()
+      .mockRejectedValue(new Error("You don't have access to that organization."));
+    const adapter: TeamAdapter = {
+      listOrganizations: async () => FIXTURE_ORGANIZATIONS,
+      getActiveOrganizationId: async () => "org-veltex-cleaning",
+      setActiveOrganizationId,
+      listMembers: async (organizationId) =>
+        FIXTURE_MEMBERS_BY_ORG[organizationId] ?? [],
+      getCapabilities: async () => ({ invitationsEnabled: false }),
+      inviteMember: jest.fn(),
+    };
+
+    render(<TeamSettingsShell adapter={adapter} />);
+
+    const table = await screen.findByRole("table", { name: "Team members" });
+    expect(within(table).getByText("Anthony Veliz")).toBeInTheDocument();
+
+    fireEvent.keyDown(
+      screen.getByRole("button", { name: /current organization/i }),
+      { key: "Enter" },
+    );
+    fireEvent.click(
+      await screen.findByRole("menuitemradio", {
+        name: "Summit Facilities Group",
+      }),
+    );
+
+    await waitFor(() => expect(setActiveOrganizationId).toHaveBeenCalled());
+    expect(within(table).getByText("Anthony Veliz")).toBeInTheDocument();
+    expect(screen.queryByText("No teammates yet")).not.toBeInTheDocument();
+  });
+
+  it("never leaks fixture roster or organization names when adapter reads fail", async () => {
+    const listMembers = jest
+      .fn()
+      .mockResolvedValue(FIXTURE_MEMBERS_BY_ORG["org-veltex-cleaning"]);
+    const inviteMember = jest.fn();
+    const adapter: TeamAdapter = {
+      listOrganizations: async () => {
+        throw new Error("Team management isn't available yet. Check back soon.");
+      },
+      getActiveOrganizationId: async () => "org-veltex-cleaning",
+      setActiveOrganizationId: jest.fn(),
+      listMembers,
+      getCapabilities: async () => ({ invitationsEnabled: true }),
+      inviteMember,
+    };
+
+    render(<TeamSettingsShell adapter={adapter} />);
+
+    expect(
+      await screen.findByRole("button", { name: /organizations unavailable/i }),
+    ).toBeDisabled();
+    expect(screen.getByText("No organization selected")).toBeInTheDocument();
+    expect(screen.queryByText("Anthony Veliz")).not.toBeInTheDocument();
+    expect(screen.queryByText("Jordan Rivera")).not.toBeInTheDocument();
+    expect(screen.queryByText("Veltex Cleaning Co.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Summit Facilities Group")).not.toBeInTheDocument();
+    expect(screen.queryByRole("table", { name: "Team members" })).not.toBeInTheDocument();
+    expect(listMembers).not.toHaveBeenCalled();
+    expect(inviteMember).not.toHaveBeenCalled();
+  });
+
+  it("fails closed by default with no adapter prop at all — never falls back to fixture/mock data", async () => {
+    // No `adapter` prop, matching how the production page renders this
+    // shell when `resolveTeamAdapter` returns `createUnavailableTeamAdapter()`.
+    // This is the shell's own internal default, independent of the page's
+    // resolution logic — defense in depth so it fails closed even if a
+    // future caller forgets to pass an adapter.
+    render(<TeamSettingsShell />);
+
+    expect(
+      await screen.findByRole("button", { name: /organizations unavailable/i }),
+    ).toBeDisabled();
+    expect(screen.getByText("No organization selected")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /invite teammate/i })).toBeDisabled();
+
+    // Proves no fixture data ever rendered: none of the known fixture
+    // organization/member names appear anywhere in the document.
+    expect(screen.queryByText("Anthony Veliz")).not.toBeInTheDocument();
+    expect(screen.queryByText("Jordan Rivera")).not.toBeInTheDocument();
+    expect(screen.queryByText("Veltex Cleaning Co.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Summit Facilities Group")).not.toBeInTheDocument();
+    expect(screen.queryByRole("table", { name: "Team members" })).not.toBeInTheDocument();
   });
 });

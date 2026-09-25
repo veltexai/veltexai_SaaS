@@ -2,6 +2,8 @@ export * from "./types/organization";
 export * from "./constants/roles";
 export * from "./schemas/invite-member";
 export * from "./lib/mock-team-adapter";
+export * from "./lib/unavailable-team-adapter";
+export * from "./lib/resolve-team-adapter";
 export * from "./hooks/use-organizations";
 export * from "./hooks/use-team-members";
 export * from "./hooks/use-invite-member";

@@ -15,9 +15,11 @@ export interface UseOrganizationsResult {
 }
 
 /**
- * Loads the switchable organization list and tracks which one is active in
- * the UI. Selection is local-only in this shell — persisting the active
- * organization server-side is part of the Codex contract request.
+ * Loads the switchable organization list and the adapter's active
+ * organization. Switching calls `setActiveOrganizationId` and only updates
+ * local UI state after that write resolves — a rejected write leaves the
+ * previous selection intact. No backend/network of its own: it only talks
+ * to the injected `TeamReadAdapter` seam.
  */
 export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
   const [status, setStatus] = useState<OrganizationsLoadStatus>("loading");
@@ -34,9 +36,11 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
     setStatus("loading");
     setError(null);
 
-    adapter
-      .listOrganizations()
-      .then((result) => {
+    Promise.all([
+      adapter.listOrganizations(),
+      adapter.getActiveOrganizationId(),
+    ])
+      .then(([result, persistedId]) => {
         if (cancelled) return;
         setOrganizations(result);
         setStatus("success");
@@ -44,11 +48,16 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
           if (current && result.some((org) => org.id === current)) {
             return current;
           }
+          if (persistedId && result.some((org) => org.id === persistedId)) {
+            return persistedId;
+          }
           return result[0]?.id ?? null;
         });
       })
       .catch((err: unknown) => {
         if (cancelled) return;
+        setOrganizations([]);
+        setActiveOrganizationIdState(null);
         setError(
           err instanceof Error
             ? err.message
@@ -63,9 +72,20 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adapter, reloadToken]);
 
-  const setActiveOrganizationId = useCallback((organizationId: string) => {
-    setActiveOrganizationIdState(organizationId);
-  }, []);
+  const setActiveOrganizationId = useCallback(
+    (organizationId: string) => {
+      adapter
+        .setActiveOrganizationId(organizationId)
+        .then(() => {
+          setActiveOrganizationIdState(organizationId);
+        })
+        .catch(() => {
+          // Fail closed: a rejected write must not corrupt the displayed
+          // selection. The previous active organization stays in place.
+        });
+    },
+    [adapter],
+  );
 
   const reload = useCallback(() => {
     setReloadToken((token) => token + 1);

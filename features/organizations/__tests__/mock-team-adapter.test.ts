@@ -33,6 +33,10 @@ describe("MockTeamAdapter", () => {
     await expect(adapter.listOrganizations()).rejects.toThrow();
     await expect(adapter.listMembers("org-veltex-cleaning")).rejects.toThrow();
     await expect(adapter.getCapabilities()).rejects.toThrow();
+    await expect(adapter.getActiveOrganizationId()).rejects.toThrow();
+    await expect(
+      adapter.setActiveOrganizationId("org-veltex-cleaning"),
+    ).rejects.toThrow();
     await expect(
       adapter.inviteMember({
         organizationId: "org-veltex-cleaning",
@@ -40,6 +44,45 @@ describe("MockTeamAdapter", () => {
         role: "viewer",
       }),
     ).rejects.toThrow();
+  });
+
+  describe("active organization (read-only seam, plus one narrow write)", () => {
+    it("defaults the active organization to the first fixture organization", async () => {
+      const adapter = new MockTeamAdapter({ latencyMs: 0 });
+      await expect(adapter.getActiveOrganizationId()).resolves.toBe(
+        "org-veltex-cleaning",
+      );
+    });
+
+    it("honors an explicit initial active organization", async () => {
+      const adapter = new MockTeamAdapter({
+        latencyMs: 0,
+        activeOrganizationId: "org-summit-facilities",
+      });
+      await expect(adapter.getActiveOrganizationId()).resolves.toBe(
+        "org-summit-facilities",
+      );
+    });
+
+    it("switches the active organization to another of the caller's own organizations", async () => {
+      const adapter = new MockTeamAdapter({ latencyMs: 0 });
+      await adapter.setActiveOrganizationId("org-summit-facilities");
+      await expect(adapter.getActiveOrganizationId()).resolves.toBe(
+        "org-summit-facilities",
+      );
+    });
+
+    it("rejects switching to an organization the caller does not belong to, mirroring the real trigger-guarded write", async () => {
+      const adapter = new MockTeamAdapter({ latencyMs: 0 });
+      await expect(
+        adapter.setActiveOrganizationId("org-not-a-member-of"),
+      ).rejects.toThrow(/don't have access/i);
+
+      // The rejected write must not have silently changed the active id.
+      await expect(adapter.getActiveOrganizationId()).resolves.toBe(
+        "org-veltex-cleaning",
+      );
+    });
   });
 
   describe("capabilities (fail-closed invitation gate)", () => {
