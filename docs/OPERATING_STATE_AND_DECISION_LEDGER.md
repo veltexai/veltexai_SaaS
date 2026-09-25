@@ -306,3 +306,13 @@ After any material action, append or revise the relevant section with:
 - **LOW:** owner paid actions accepted a profile-level active entitlement while the tracked-link entitlement RPC required a subscription row. Correction aligns tracked access with the existing owner rule: either an active subscription row or the existing active profile status. Preview function updated; production untouched.
 - The report's preliminary token-length concern was retracted: `release1-qa-20260924` is exactly 20 characters and satisfies the RPC minimum.
 - Corrected candidate requires full local gates, a follow-up commit and bounded independent re-review before the remaining external acceptance gates continue.
+
+### 3f9ce76 paid-delivery correction review — PASS — 2026-09-24 Pacific
+
+- Independent bounded review of `644000d..3f9ce76` is **PASS**. Prior H1/M1/M2/L1 findings are closed; no Critical, High or Medium findings remain in this delta. Evidence-only commit `447e312` contains both Codex and Claude reports under `quality/review-3f9ce76/` and the intermediate PDF/send evidence under `quality/review-3293601/`.
+- Claude executed the exact 51-migration PostgreSQL 16 chain with the unchanged `CHECK_DEFINERS=1` gate: PASS, including explicit token-bound definer inventory, unknown-token negatives, owner matrix, injection, dirty-data, rerun and 40-way concurrency checks.
+- Actual public catalog PDF generation across all five catalog types passed; the three committed PDF pages were visually inspected with no raw catalog encoding, code fences or visible strong-markdown markers. Failed tracking setup for each of the three delivery methods returns HTTP 500 and does not call email delivery; success controls pass.
+- Owner and tracked-recipient paid-entitlement decisions match across all normal and latent trial combinations, including free-trial precedence, latest active/trialing subscription precedence and legacy active-profile fallback.
+- Local candidate gates remain: 58 suites / 522 tests / 5 snapshots PASS, TypeScript PASS and production build PASS. Preview function was aligned successfully; production remains unchanged.
+- Informational follow-ups: invalid/short tokens currently yield SQL `NULL`, which callers fail closed; consider an explicit `false` contract later. Equal `created_at` ties between multiple subscription rows are nondeterministic in both the existing owner helper and the aligned tracked helper.
+- **REMAINING RELEASE GATES:** one real combined-delivery test email, cleaning-operator pricing validation, founder acceptance, production deployment and post-deploy smoke verification. Preview deletion remains deferred until dependent evidence is complete and still requires action-time confirmation.
