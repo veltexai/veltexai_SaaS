@@ -1,0 +1,68 @@
+PASS features/service-catalog/__tests__/r0-privilege-hardening.test.ts
+PASS features/service-catalog/__tests__/catalog.test.ts
+PASS features/service-catalog/__tests__/review-3293601.test.ts
+  ● Console
+
+    console.error
+      Error creating tracking record: { message: 'insert failed' }
+
+      145 |
+      146 |     if (trackingError) {
+    > 147 |       console.error("Error creating tracking record:", trackingError);
+          |               ^
+      148 |       return NextResponse.json(
+      149 |         {
+      150 |           error: "Proposal delivery setup failed",
+
+      at error (app/api/proposals/[id]/send/route.ts:147:15)
+      at features/service-catalog/__tests__/review-3293601.test.ts:48:17
+
+    console.error
+      Error creating tracking record: { message: 'insert failed' }
+
+      145 |
+      146 |     if (trackingError) {
+    > 147 |       console.error("Error creating tracking record:", trackingError);
+          |               ^
+      148 |       return NextResponse.json(
+      149 |         {
+      150 |           error: "Proposal delivery setup failed",
+
+      at error (app/api/proposals/[id]/send/route.ts:147:15)
+      at features/service-catalog/__tests__/review-3293601.test.ts:48:17
+
+    console.error
+      Error creating tracking record: { message: 'insert failed' }
+
+      145 |
+      146 |     if (trackingError) {
+    > 147 |       console.error("Error creating tracking record:", trackingError);
+          |               ^
+      148 |       return NextResponse.json(
+      149 |         {
+      150 |           error: "Proposal delivery setup failed",
+
+      at error (app/api/proposals/[id]/send/route.ts:147:15)
+      at features/service-catalog/__tests__/review-3293601.test.ts:48:17
+
+PASS features/service-catalog/__tests__/public-view.test.tsx
+PASS features/service-catalog/__tests__/print-session.test.ts
+  ● Console
+
+    console.log
+      Generating PDF...
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:40:13)
+
+    console.log
+      PDF Generated
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:48:13)
+
+PASS features/service-catalog/__tests__/review-3293601-pdf.test.ts
+
+Test Suites: 6 passed, 6 total
+Tests:       80 passed, 80 total
+Snapshots:   0 total
+Time:        0.774 s
+Ran all test suites matching features/service-catalog/__tests__/review-3293601.test.ts|features/service-catalog/__tests__/review-3293601-pdf.test.ts|features/service-catalog/__tests__/catalog.test.ts|features/service-catalog/__tests__/r0-privilege-hardening.test.ts|features/service-catalog/__tests__/print-session.test.ts|features/service-catalog/__tests__/public-view.test.tsx.

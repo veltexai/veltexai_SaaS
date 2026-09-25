@@ -1,0 +1,20 @@
+diff --git a/private/tmp/veltex-review-exact-3293601/features/service-catalog/__tests__/review-3293601-pdf.test.ts b/private/tmp/veltex-review-exact-3293601/features/service-catalog/__tests__/review-3293601-pdf.test.ts
+new file mode 100644
+index 0000000..19c96f3
+--- /dev/null
++++ b/private/tmp/veltex-review-exact-3293601/features/service-catalog/__tests__/review-3293601-pdf.test.ts
+@@ -0,0 +1,14 @@
++import { generateProposalPDF } from '@/features/proposals/services/pdf/generator';
++import { defaultJob, CATALOG } from '../catalog';
++import { composeCatalogProposal } from '../proposal';
++it.each(CATALOG.map(s=>s.id))('review: public %s PDF renders catalog text without source markers',async(id)=>{
++ const p=composeCatalogProposal({job:defaultJob(id),client:{client_name:'QA',client_email:'private@example.com',contact_phone:'555',service_location:'Test',facility_size:1500,service_frequency:'one-time'}});
++ const {service_specific_data,...rest}=p;
++ const projection={...rest,catalog_document:true,company_profiles:{company_name:'QA Cleaning',logo_url:null,primary_color:'#000000',secondary_color:'#ffffff'}};
++ const buffer=await generateProposalPDF(projection as any);
++ const raw=buffer.toString('latin1');
++ expect(raw).toMatch(/^%PDF/);
++ expect(raw).not.toMatch(/veliz_|```|\*\*/);
++ expect(raw).toContain('Your price:');
++ expect(raw).toContain('QA Cleaning');
++});
