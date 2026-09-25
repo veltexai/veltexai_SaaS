@@ -209,13 +209,12 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        const serviceClient = createServiceClientRaw(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        );
-
         void (async () => {
           try {
+            const serviceClient = createServiceClientRaw(
+              process.env.NEXT_PUBLIC_SUPABASE_URL!,
+              process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            );
             const { data: existing } = await serviceClient
               .from("email_automation_log")
               .select("id")
@@ -256,13 +255,12 @@ export async function POST(request: NextRequest) {
         newUsageAfterIncrement >= 3 &&
         usage?.subscription_status === "free_trial"
       ) {
-        const serviceClient = createServiceClientRaw(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        );
-
         void (async () => {
           try {
+            const serviceClient = createServiceClientRaw(
+              process.env.NEXT_PUBLIC_SUPABASE_URL!,
+              process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            );
             const { data: existing } = await serviceClient
               .from("email_automation_log")
               .select("id")

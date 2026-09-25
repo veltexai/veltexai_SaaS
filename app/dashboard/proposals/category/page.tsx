@@ -23,5 +23,6 @@ export default async function CategoryProposalPage({ searchParams }: { searchPar
   const templates = await getUserAccessibleTemplates();
   const template = templates.find(t => t.id === params.templateId) ?? pickQuickDesignTemplate(templates, params.designTemplateType);
   const job = jobTypeSchema.safeParse(params.job);
-  return <CatalogWorkbench source={params.source} demoType={params.demoType} templateId={template?.id} initialJobType={job.success ? job.data : undefined} demo={params.demo === '1'} />;
+  const isDemo = params.demo === '1';
+  return <CatalogWorkbench key={`${isDemo ? 'demo' : 'real'}:${job.success ? job.data : 'default'}`} source={params.source} demoType={params.demoType} templateId={template?.id} initialJobType={job.success ? job.data : undefined} demo={isDemo} />;
 }

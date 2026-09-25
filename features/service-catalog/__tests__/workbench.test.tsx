@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import fs from 'node:fs';
 import { CatalogWorkbench } from '../components/workbench';
 import { composeCatalogProposal } from '../proposal';
 jest.mock('@/lib/analytics/client', () => ({ captureEvent: jest.fn() }));
@@ -63,6 +64,10 @@ it('sample draft cannot be saved', async () => {
   render(<CatalogWorkbench demo />);
   fireEvent.click(screen.getByText('Prepare / regenerate draft'));
   expect(await screen.findByText('Save proposal')).toBeDisabled();
+});
+it('remounts the workbench when leaving the sample for a real job', () => {
+  const page = fs.readFileSync('app/dashboard/proposals/category/page.tsx', 'utf8');
+  expect(page).toContain("key={`${isDemo ? 'demo' : 'real'}:${job.success ? job.data : 'default'}`}");
 });
 it('emits taxonomy-only first-value analytics without customer or entry notes', async () => {
   const { captureEvent } = await import('@/lib/analytics/client');

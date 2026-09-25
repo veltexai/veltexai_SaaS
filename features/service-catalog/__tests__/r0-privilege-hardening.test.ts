@@ -8,6 +8,14 @@ const migration = fs.readFileSync(
   'supabase/migrations/20260924000000_r0_privilege_hardening.sql',
   'utf8',
 );
+const profilesPolicyMigration = fs.readFileSync(
+  'supabase/migrations/20260924010500_fix_profiles_policy_recursion.sql',
+  'utf8',
+);
+const profilesBrandingMigration = fs.readFileSync(
+  'supabase/migrations/20260924011000_align_profiles_branding_columns.sql',
+  'utf8',
+);
 
 describe('R0 privilege hardening', () => {
   it('removes client readability from plaintext system settings', () => {
@@ -41,6 +49,21 @@ describe('R0 privilege hardening', () => {
     expect(migration).toContain('grant execute on function public.update_template_usage(uuid) to service_role');
   });
 
+  it('removes the self-referential profiles admin policy', () => {
+    expect(profilesPolicyMigration).toContain(
+      'drop policy if exists "Admins can view all profiles" on public.profiles',
+    );
+    expect(profilesPolicyMigration).toContain('using (public.is_admin())');
+    expect(profilesPolicyMigration).not.toContain('from public.profiles');
+    expect(profilesPolicyMigration).not.toContain('from profiles');
+  });
+
+  it('keeps proposal branding schema aligned in fresh and preview databases', () => {
+    expect(profilesBrandingMigration).toContain(
+      'add column if not exists logo_url text',
+    );
+  });
+
   it('keeps lifecycle mutation service-only and fixes search paths', () => {
     expect(migration).toContain("if to_regprocedure('public.start_user_trial(uuid,text)') is not null then");
     expect(migration).toContain('revoke all on function public.start_user_trial(uuid,text) from public, anon, authenticated');
@@ -53,6 +76,22 @@ describe('R0 privilege hardening', () => {
     expect(route).not.toContain('email generation prompt');
     const service = fs.readFileSync('lib/email/service.ts', 'utf8');
     expect(service).not.toContain('EmailService: Data:');
+  });
+
+  it('keeps optional lifecycle email setup from failing a saved proposal', () => {
+    const route = fs.readFileSync('app/api/proposals/route.ts', 'utf8');
+    const firstEmailBlock = route.slice(
+      route.indexOf('// First proposal: send congratulatory email'),
+      route.indexOf('// All 3 free-trial proposals used'),
+    );
+    const trialExpiredBlock = route.slice(
+      route.indexOf('// All 3 free-trial proposals used'),
+      route.indexOf('const isFreeTrial'),
+    );
+    for (const block of [firstEmailBlock, trialExpiredBlock]) {
+      expect(block.indexOf('try {')).toBeGreaterThanOrEqual(0);
+      expect(block.indexOf('createServiceClientRaw(')).toBeGreaterThan(block.indexOf('try {'));
+    }
   });
 
   it('keeps system settings and the stored SMTP password server-side', () => {
