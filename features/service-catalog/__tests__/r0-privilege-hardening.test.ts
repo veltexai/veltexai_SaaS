@@ -159,7 +159,9 @@ describe('R0 privilege hardening', () => {
     expect(trackedEngagementMigration).toContain('proposal_downloaded = true');
     expect(trackedEngagementMigration).toContain('security definer set search_path = pg_catalog, public');
     expect(trackedEngagementMigration).toContain('length(token) < 20');
-    expect(trackedEngagementMigration).toContain("pr.subscription_status = 'active'");
+    expect(trackedEngagementMigration).toContain("pr.subscription_status = 'free_trial'");
+    expect(trackedEngagementMigration).toContain("latest.status = 'active'");
+    expect(trackedEngagementMigration).toContain('order by s.created_at desc');
   });
 
   it('keeps system settings and the stored SMTP password server-side', () => {

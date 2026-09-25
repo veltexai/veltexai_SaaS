@@ -65,16 +65,28 @@ end $$;
 
 create or replace function public.tracked_proposal_has_paid_access(token text) returns boolean
 language sql stable security definer set search_path = pg_catalog, public as $$
-  select exists (
-    select 1
-      from public.proposal_tracking t
-      join public.proposals p on p.id = t.proposal_id
-      left join public.subscriptions s on s.user_id = p.user_id
-      left join public.profiles pr on pr.id = p.user_id
-     where t.tracking_id = token
-       and length(token) >= 20
-       and (s.status = 'active' or pr.subscription_status = 'active')
-  );
+  select coalesce(
+    case
+      -- Matches get_user_usage_info: the explicit no-card trial path wins.
+      when pr.subscription_status = 'free_trial' then false
+      -- The latest Stripe-backed active/trialing record is authoritative.
+      when latest.status is not null then latest.status = 'active'
+      -- Legacy active profiles without a subscription row retain owner parity.
+      else pr.subscription_status = 'active'
+    end,
+    false
+  )
+  from public.proposal_tracking t
+  join public.proposals p on p.id = t.proposal_id
+  left join public.profiles pr on pr.id = p.user_id
+  left join lateral (
+    select s.status
+    from public.subscriptions s
+    where s.user_id = p.user_id and s.status in ('active', 'trialing')
+    order by s.created_at desc
+    limit 1
+  ) latest on true
+  where t.tracking_id = token and length(token) >= 20;
 $$;
 
 revoke all on function public.record_tracked_view(text), public.record_tracked_download(text), public.record_tracking_click(text,text,text,text), public.tracked_proposal_has_paid_access(text) from public;
