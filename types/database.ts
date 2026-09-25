@@ -9,6 +9,49 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      organizations: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          slug?: string;
+          updated_at?: string;
+        };
+      };
+      organization_memberships: {
+        Row: {
+          organization_id: string;
+          user_id: string;
+          role: 'owner' | 'admin' | 'estimator' | 'viewer';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          user_id: string;
+          role: 'owner' | 'admin' | 'estimator' | 'viewer';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          role?: 'owner' | 'admin' | 'estimator' | 'viewer';
+          updated_at?: string;
+        };
+      };
       profiles: {
         Row: {
           id: string;
@@ -22,6 +65,7 @@ export interface Database {
           company_founded_date: string | null;
           industries_served: string | null;
           satisfaction_guarantee: string | null;
+          active_organization_id: string | null;
           role: 'user' | 'admin' | 'moderator';
           subscription_status:
             | 'trial'
@@ -46,6 +90,7 @@ export interface Database {
           company_founded_date?: string | null;
           industries_served?: string | null;
           satisfaction_guarantee?: string | null;
+          active_organization_id?: string | null;
           role?: 'user' | 'admin' | 'moderator';
           subscription_status?:
             | 'trial'
@@ -70,6 +115,7 @@ export interface Database {
           company_founded_date?: string | null;
           industries_served?: string | null;
           satisfaction_guarantee?: string | null;
+          active_organization_id?: string | null;
           role?: 'user' | 'admin' | 'moderator';
           subscription_status?:
             | 'trial'
@@ -86,6 +132,7 @@ export interface Database {
       proposals: {
         Row: {
           id: string;
+          organization_id: string;
           user_id: string;
           title: string;
           client_name: string;
@@ -144,6 +191,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          organization_id?: string;
           user_id: string;
           title: string;
           client_name: string;
@@ -202,6 +250,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          organization_id?: string;
           user_id?: string;
           title?: string;
           client_name?: string;
@@ -379,6 +428,7 @@ export interface Database {
       company_profiles: {
         Row: {
           id: string;
+          organization_id: string;
           user_id: string;
           company_name: string;
           contact_info: Json;
@@ -390,6 +440,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          organization_id?: string;
           user_id: string;
           company_name: string;
           contact_info?: Json;
@@ -401,6 +452,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          organization_id?: string;
           user_id?: string;
           company_name?: string;
           contact_info?: Json;
@@ -968,6 +1020,7 @@ export interface Database {
       user_branding_settings: {
         Row: {
           id: string;
+          organization_id: string;
           user_id: string;
           company_name: string;
           company_logo_url: string | null;
@@ -982,6 +1035,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          organization_id?: string;
           user_id: string;
           company_name: string;
           company_logo_url?: string | null;
@@ -996,6 +1050,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          organization_id?: string;
           user_id?: string;
           company_name?: string;
           company_logo_url?: string | null;
@@ -1026,6 +1081,9 @@ export interface Database {
 }
 
 // Export commonly used types
+export type Organization = Database['public']['Tables']['organizations']['Row'];
+export type OrganizationMembership =
+  Database['public']['Tables']['organization_memberships']['Row'];
 export type Profile = Database['public']['Tables']['profiles']['Row'];
 export type Proposal = Database['public']['Tables']['proposals']['Row'];
 export type Subscription = Database['public']['Tables']['subscriptions']['Row'];

@@ -43,6 +43,7 @@ const completePricing = {
 function createProposal(overrides: Partial<Proposal> = {}): Proposal {
   return {
     id: "proposal-1",
+    organization_id: "organization-1",
     user_id: "user-1",
     title: "Office Cleaning Proposal",
     client_name: "Example Client",

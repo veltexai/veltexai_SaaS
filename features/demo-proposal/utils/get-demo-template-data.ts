@@ -24,6 +24,7 @@ function makeMockProposal(
   const dateMetadata = createLocalProposalDateMetadata();
   return {
     id: "", // empty string → useSplitContent guard returns early, no fetch
+    organization_id: "demo-organization",
     user_id: "demo",
     client_email: "demo@example.com",
     contact_phone: "(555) 000-0000",
