@@ -10,6 +10,14 @@ it('keeps genuine but incomplete evidence pending and fails closed', () => {
   const result = spawnSync(process.execPath, [validator, evidence], { encoding: 'utf8' });
   expect(result.status).toBe(2);
   expect(JSON.parse(result.stdout)).toEqual(expect.objectContaining({ status: 'BLOCKED', pendingRows: 1, acceptedRows: 0 }));
+  const [head, line] = readFileSync(evidence, 'utf8').trim().split(/\r?\n/);
+  const headings = head.split(',');
+  const record = Object.fromEntries(headings.map((key, index) => [key, line.split(',')[index]]));
+  expect(record).toEqual(expect.objectContaining({
+    job_square_feet: '1064', actual_labor_hours: '22', crew_size: '2',
+    elapsed_hours_low: '10', elapsed_hours_high: '12', veltex_target: '1155',
+    operator_bid: '1095', absolute_deviation_percent: '5.48', review_status: 'pending',
+  }));
 });
 
 it('counts move-in/out and Airbnb work as turnover evidence', () => {
