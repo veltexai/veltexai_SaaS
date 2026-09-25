@@ -192,7 +192,14 @@ describe("InviteMemberDialog", () => {
     const roleTrigger = screen.getByRole("combobox");
     // Radix's Select trigger opens on Enter/Space when focused, mirroring
     // the dropdown-menu trigger behavior verified elsewhere in this suite.
-    roleTrigger.focus();
+    // Moving focus here blurs the email field, and react-hook-form's
+    // `isValid` subscription reacts to that blur with a state update that
+    // happens outside of React's normal event-dispatch batching — wrapping
+    // the focus call in `act()` is the correct fix (per React's own
+    // guidance), not a suppression of the warning.
+    act(() => {
+      roleTrigger.focus();
+    });
     fireEvent.keyDown(roleTrigger, { key: "Enter" });
     const viewerOption = await screen.findByRole("option", { name: "Viewer" });
     fireEvent.click(viewerOption);

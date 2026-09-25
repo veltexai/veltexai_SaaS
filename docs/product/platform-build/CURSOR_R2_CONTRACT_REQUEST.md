@@ -28,13 +28,52 @@ question is now explicitly tagged `BLOCKED`, `DEFERRED`, or
 
 Cross-reference: Codex's own current backend evidence
 (`docs/product/platform-build/R2_ROLE_AND_RLS_MATRIX.md`,
-`docs/product/platform-build/R2_IMPLEMENTATION_EVIDENCE.md`, range
-`764abc7..1e3c541`) states team/membership mutation is **disabled for every
-runtime role** until a consent-bound invitation flow and a seat-billing
-decision ship, and that "invitation email flows are not implemented." That
-is independent confirmation — not an assumption on this branch's part — that
-the UI's invitation experience must not present as functional yet. This is
-exactly what the capability gate below enforces on the client.
+`docs/product/platform-build/R2_IMPLEMENTATION_EVIDENCE.md`, exact reviewed
+candidate commit `0452823` in `/private/tmp/veltex-r0-privilege-hardening`,
+superseding the previously cited range `764abc7..1e3c541`) states
+team/membership mutation is **disabled for every runtime role** until a
+consent-bound invitation flow and a seat-billing decision ship, and that
+"invitation email flows are not implemented." That is independent
+confirmation — not an assumption on this branch's part — that the UI's
+invitation experience must not present as functional yet. This is exactly
+what the capability gate below enforces on the client.
+
+## Update — read-only backend mapping (this revision)
+
+This revision adds no functional/UI code. It (a) eliminated the React
+`act(...)` warnings Codex's independent test rerun flagged in
+`invite-member-dialog.test.tsx`, and (b) read (without integrating or
+modifying) backend candidate `0452823` to replace the guesses above with an
+exact, source-verified mapping. See "Read-only backend mapping" and
+"Integration checklist" below.
+
+### Read-only backend mapping — candidate `0452823`
+
+Read directly from
+`/private/tmp/veltex-r0-privilege-hardening/supabase/migrations/20260925002000_r2_organization_tenancy.sql`,
+`..._003000_r2_claude_security_remediation.sql`, and
+`..._004000_r2_second_security_remediation.sql` at commit `0452823`. No
+migration, RLS policy, or backend file was modified to produce this table.
+
+| UI adapter operation | Backend table / helper / policy | Status | Evidence |
+| --- | --- | --- | --- |
+| `listOrganizations()` | `public.organizations`, policy `organizations_member_read` (`select` using `is_organization_member(id)`); columns `id, name, slug, created_by, created_at, updated_at` match the local `Organization` type as-is | **AVAILABLE** | `20260925002000...sql` lines ~1-11, ~373-375 |
+| Active organization (read) | `public.profiles.active_organization_id`, policy `"Users can view own profile"` (`select` using `id = auth.uid()`) | **AVAILABLE** | `020_fix_profiles_rls_recursion.sql` (self-select policy); column added in `20260925002000...sql` line ~24 |
+| Active organization (write / "switch org") | `public.profiles.active_organization_id` via generic `"Users can update own profile"` policy (`using id = auth.uid()`), guarded by trigger `guard_profile_active_organization` → `guard_active_organization()`, which raises `42501` unless the new value is one of the caller's own `organization_memberships` rows | **AVAILABLE** (as a plain column write, not a dedicated "switch organization" endpoint) | `20260925002000...sql` lines ~113-130; `020_fix_profiles_rls_recursion.sql` lines ~60-66 |
+| `listMembers(organizationId)` — raw membership rows | `public.organization_memberships`, policy `memberships_member_read` (`select` using `is_organization_member(organization_id)`); returns `organization_id, user_id, role, created_at, updated_at` only — no `id`, `status`, `invited_at`, or `joined_at` | **AVAILABLE**, but shape mismatch vs. `OrganizationMember` | `20260925002000...sql` lines ~14-22, ~380-382 |
+| `listMembers(organizationId)` — name/email/avatar enrichment | Would require joining `public.profiles`, but `profiles` has **no** cross-member read policy — only `"Users can view own profile"` (self) and admin-only view-all policies exist | **NOT IMPLEMENTED** | Confirmed via `grep` of every `profiles` policy across `001_initial_schema.sql`, `003_fix_admin_policies.sql`, `020_fix_profiles_rls_recursion.sql`, `20250901194222_add_user_roles.sql` — none grant member-to-member profile reads |
+| `inviteMember()` / any membership `insert`/`update`/`delete` | `public.organization_memberships`: `revoke insert, update, delete, truncate ... from public, anon, authenticated` (both remediation migrations); trigger `guard_organization_membership()` raises `'team memberships are disabled until invitation consent and seat billing ship'` (errcode `42501`) for every case except a trigger-internal bootstrap (`pg_trigger_depth() >= 2` in the current candidate) | **NOT IMPLEMENTED** (by design) | `20260925003000...sql` lines ~44-84; `20260925004000...sql` lines ~10-47 |
+| `getCapabilities()` (incl. `invitationsEnabled`) | No table column, RPC, or endpoint of any kind exists for this today | **NOT IMPLEMENTED** | Confirmed via `grep` for `capabilit` across all three R2 migrations — zero matches |
+| `InviteMemberInput.role` accepting `"owner"` | `organization_memberships.role` check constraint allows `'owner'|'admin'|'estimator'|'viewer'` at the column level; no server rule specifically rejects an "invite" naming `owner` because no invite path exists at all yet | **NOT IMPLEMENTED** (moot until an invite endpoint exists; the UI already excludes `owner` from `INVITABLE_ROLES` client-side, which is necessary but not itself an authorization boundary) | `20260925002000...sql` line ~18 |
+| Organization-scoped role-based UI gating (`can_manage_organization`, `can_edit_organization_work` semantics assumed by `OrganizationRole`) | `public.can_manage_organization(uuid)` → `role in ('owner','admin')`; `public.can_edit_organization_work(uuid)` → `role in ('owner','admin','estimator')`; `viewer` is read-only everywhere, matching this UI's `ROLE_META`/`INVITABLE_ROLES` assumptions | **AVAILABLE** (already consistent with this UI's role model) | `20260925002000...sql` lines ~46-56 |
+
+Net read-only conclusion: the read side of this UI (`listOrganizations`,
+reading the active organization, and reading raw membership rows) maps
+cleanly to existing RLS today. The write side this UI's mock demonstrates
+(`inviteMember`, `getCapabilities`) has **no** backend surface and is
+explicitly, deliberately blocked server-side — which is exactly what this
+branch's fail-closed default (`invitationsEnabled: false`) already assumes
+and enforces, independent of this new evidence.
 
 ## The contract the UI is coded against
 
@@ -153,11 +192,20 @@ requirement for whatever adapter Codex provides, not just the mock:
    `listOrganizations`?** Session user id via RLS, an explicit membership
    join, or something else? This affects whether the client needs to pass
    any parameter at all.
-3. **`BLOCKED` — Where does "active organization" live?** Local client
-   state (per browser tab), a user preference column, a URL segment, or a
-   cookie? This branch does not assume any persistence mechanism; switching
-   organizations is intentionally local-only `useState` until this is
-   decided.
+3. **`REQUIRED BEFORE INTEGRATION` (updated from `BLOCKED` after reading
+   backend candidate `0452823`) — Where does "active organization" live?**
+   Confirmed by direct source reading, not an assumption: it already exists
+   as `public.profiles.active_organization_id`, readable/writable through
+   the existing generic "own profile" RLS policies and guarded by a trigger
+   that rejects any value that isn't one of the caller's own memberships.
+   No new backend column, endpoint, or design decision is needed — the
+   remaining work is UI-side wiring (read it on load, write it on switch,
+   surface the trigger's rejection if the server and client memberships
+   ever disagree) plus Codex's own confirmation that this generic
+   profile-update surface is the intended path (vs. a dedicated
+   "switch organization" endpoint it may prefer for auditability). Switching
+   organizations in this shell remains local-only `useState` until that
+   confirmation lands — this document does not change that today.
 4. **`DEFERRED` — Should the organization switcher support retry after a
    load failure?** The current shell disables the switcher permanently on
    error within a mount. Not required for the shell to ship; can be added
@@ -226,3 +274,44 @@ an explicit Codex/founder decision, not a default inferred from this UI.
    `features/organizations/hooks/` should need no changes if the contract
    above is accepted as-is, since they depend only on the `TeamAdapter`
    interface, not on the mock implementation.
+
+## Integration checklist — smallest files that change after Claude PASS
+
+This lists only what should need to change once Claude returns a PASS (or
+accepted remediation) on the exact backend candidate, per the read-only
+mapping above. It assumes Codex freezes the read-only contract exactly as
+mapped (organizations + active-organization column + raw membership rows)
+and keeps invitations/`getCapabilities` server-absent. Nothing on this list
+should require touching `features/organizations/components/` or
+`features/organizations/hooks/`.
+
+1. **New file** `features/organizations/lib/server-team-adapter.ts` — the
+   only adapter implementation change. `getCapabilities()` returns a
+   hardcoded `{ invitationsEnabled: false }` (matching "NOT IMPLEMENTED"
+   above); `inviteMember()` throws/rejects rather than calling anything,
+   since no server surface exists to call.
+2. `features/organizations/types/organization.ts` — only if Codex's exact
+   `OrganizationMember` projection differs from this file's current
+   invitation-oriented shape (`status`, nullable `user_id`, `invited_at`).
+   Per the mapping above, the real roster has none of those fields yet, so
+   this type likely needs to shrink to what a real roster RPC can actually
+   return, not grow.
+3. **New file** — a reviewed, auth-bound roster-read RPC/endpoint (owned by
+   Codex, not this branch) is a **prerequisite**, not a Cursor-side file,
+   since no `profiles` policy today lets one member read another's name/
+   email. This UI cannot self-serve that gap.
+4. `app/dashboard/settings/team/page.tsx` — swap
+   `createMockTeamAdapter()` for the new server adapter; remove or
+   development-gate the `?scenario=` fixture controls per Codex's preflight
+   finding that the mock route must not be reachable by signed-in users
+   as-is.
+5. Wiring the active-organization switch to
+   `profiles.active_organization_id` (per the updated question 3 above) —
+   likely a small change inside the new server adapter or a thin
+   organization-context hook, not inside `team-settings-shell.tsx` itself,
+   since that component already delegates entirely to whatever adapter/
+   hook it is given.
+
+No migration, RLS policy, Stripe/billing file, or shared contract file is
+expected to change on the Cursor side of this list — those remain Codex's
+integration-owner responsibility per the coordination plan.
