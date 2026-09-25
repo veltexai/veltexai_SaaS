@@ -7,15 +7,22 @@ export const ORGANIZATION_ROLES = [
 
 export type OrganizationRole = (typeof ORGANIZATION_ROLES)[number];
 
-export const ORGANIZATION_PERMISSIONS = {
-  owner: ['organization:read', 'organization:manage', 'members:manage', 'work:read', 'work:write', 'audit:read'],
-  admin: ['organization:read', 'organization:manage', 'members:manage', 'work:read', 'work:write', 'audit:read'],
-  estimator: ['organization:read', 'work:read', 'work:write'],
-  viewer: ['organization:read', 'work:read'],
-} as const satisfies Record<OrganizationRole, readonly string[]>;
-
 export type OrganizationPermission =
-  (typeof ORGANIZATION_PERMISSIONS)[OrganizationRole][number];
+  | 'organization:read'
+  | 'organization:manage'
+  | 'members:manage'
+  | 'work:read'
+  | 'work:write'
+  | 'audit:read';
+
+export const ORGANIZATION_PERMISSIONS = {
+  owner: ['organization:read', 'organization:manage', 'work:read', 'work:write', 'audit:read'],
+  admin: ['organization:read', 'organization:manage', 'work:read', 'work:write', 'audit:read'],
+  estimator: ['organization:read', 'work:read', 'work:write'],
+  // Raw work records include cost, wage and margin fields. Viewer access stays
+  // fail-closed until a reviewed redacted projection exists.
+  viewer: ['organization:read'],
+} as const satisfies Record<OrganizationRole, readonly OrganizationPermission[]>;
 
 export function roleHasPermission(
   role: OrganizationRole,

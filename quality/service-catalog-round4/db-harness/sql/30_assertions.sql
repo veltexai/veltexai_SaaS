@@ -202,7 +202,11 @@ do $$ declare bad text; begin
       'get_user_current_usage(uuid)','can_user_create_proposal(uuid)',
       'get_user_usage_info(uuid)','increment_user_usage(uuid)',
       'can_user_access_template(uuid,uuid)','user_has_active_access(uuid)',
-      'get_user_accessible_templates(uuid)','is_admin()'
+      'get_user_accessible_templates(uuid)','is_admin()',
+      -- R2 caller-bound membership helpers accept only a tenant identifier and
+      -- derive identity exclusively from auth.uid().
+      'is_organization_member(uuid)','organization_role(uuid)',
+      'can_manage_organization(uuid)','can_edit_organization_work(uuid)'
     );
   if bad is not null then raise exception 'H1 client-executable definer functions not on allowlist: %', bad; end if;
 end $$;

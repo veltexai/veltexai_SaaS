@@ -8,6 +8,13 @@ const migration = fs.readFileSync(
   ),
   'utf8',
 );
+const remediation = fs.readFileSync(
+  path.join(
+    process.cwd(),
+    'supabase/migrations/20260925003000_r2_claude_security_remediation.sql',
+  ),
+  'utf8',
+);
 
 describe('R2 tenancy migration contract', () => {
   it('binds authorization helpers to auth.uid instead of a user parameter', () => {
@@ -58,5 +65,58 @@ describe('R2 tenancy migration contract', () => {
     expect(migration).toContain('public.is_organization_member(organization_id)');
     expect(migration).toContain('drop policy if exists catalog_owner_guard on public.proposal_tracking');
     expect(migration).toContain('drop policy if exists catalog_owner_guard on public.proposal_views');
+  });
+});
+
+describe('R2 Claude security remediation contract', () => {
+  it('keeps team membership mutation fail-closed', () => {
+    expect(remediation).toContain('drop policy if exists memberships_manager_insert');
+    expect(remediation).toContain(
+      'revoke insert, update, delete, truncate on public.organization_memberships',
+    );
+    expect(remediation).toContain(
+      'team memberships are disabled until invitation consent and seat billing ship',
+    );
+  });
+
+  it('allows deletion of an empty private bootstrap tenant without weakening work retention', () => {
+    expect(remediation).toContain('create or replace function public.delete_empty_private_organization()');
+    expect(remediation).toContain('before delete on public.profiles');
+    expect(remediation).toContain('delete from public.organization_audit_log');
+  });
+
+  it('serializes final-owner checks and removes viewer access to raw proposal costs', () => {
+    expect(remediation).toContain(
+      'perform 1 from public.organizations where id = tenant_id for update',
+    );
+    expect(remediation).toContain(
+      'using (public.can_edit_organization_work(organization_id))',
+    );
+  });
+
+  it('inherits tenant boundaries for exports and proposal add-ons', () => {
+    expect(remediation).toContain('drop policy if exists "Users can create own pdf exports"');
+    expect(remediation).toContain('create policy proposal_addons_organization_insert');
+    expect(remediation).toContain('where p.id = proposal_id and public.can_edit_organization_work');
+  });
+
+  it('uses the organization billing owner for tracked paid access', () => {
+    expect(remediation).toContain('join public.organizations o on o.id = p.organization_id');
+    expect(remediation).toContain('where s.user_id = o.created_by');
+  });
+
+  it('suppresses anonymous counter noise and records membership role transitions', () => {
+    expect(remediation).toContain("auth.uid() is null");
+    expect(remediation).toContain("'old_role'");
+    expect(remediation).toContain("'new_role'");
+  });
+
+  it('revokes destructive infrastructure and tracking operations', () => {
+    expect(remediation).toContain(
+      'revoke insert, update, delete, truncate on public.proposal_tracking from anon, authenticated',
+    );
+    expect(remediation).toContain(
+      'revoke insert, update, delete, truncate on public.organization_audit_log',
+    );
   });
 });

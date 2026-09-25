@@ -12,6 +12,9 @@ Status: candidate procedure; do not run on production before isolated-preview ev
 6. Run the role matrix with two organizations and owner/admin/estimator/viewer users. Cross-tenant reads and writes must return no rows or authorization errors.
 7. Verify audit rows and exactly one unique outbox event are created in the same transaction for membership and proposal mutations.
 8. Verify existing owner proposal create/edit/send/download/tracked-link behavior remains unchanged.
+9. Verify empty-user deletion succeeds, while deletion of an organization owner with tenant-owned work fails closed.
+10. Verify all membership mutation is denied outside new-profile bootstrap and that viewers cannot read raw proposal cost fields.
+11. Run `CHECK_DEFINERS=1` against the exact migration chain and retain the output with the candidate evidence.
 
 ## Rollback strategy
 
@@ -38,3 +41,7 @@ where m.user_id is null;
 ```
 
 Every query must return zero rows/count zero before application traffic is enabled.
+
+## Performance evidence required before release
+
+Capture `EXPLAIN (ANALYZE, BUFFERS)` for organization-scoped proposal reads, dependent export/add-on checks and pending-outbox ordering on representative preview volumes. The source indexes are candidates, not proof of acceptable hosted performance.
