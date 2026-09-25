@@ -15,12 +15,20 @@ Status date: 2026-09-25 Pacific
 - Fail-closed rollout guard: snapshots are ignored unless `NEXT_PUBLIC_LOCATION_PRICING_ENABLED=true`; the flag must remain off until the evidence gates pass.
 - Empty operator-results file prepared without invented evidence.
 - Executable operator acceptance validator added at `quality/location-pricing/validate-operator-results.mjs`; it fails closed when evidence is absent or the operator/count/deviation/safety gates are not met.
+- Reviewed seed migration added for the exact official values currently supported: two BLS national occupation medians, all 51 state/DC wage-floor rows, the IRS mileage rate and eight explicitly published BEA state RPP values. Payload checksums identify the exact committed rows and are not misrepresented as vendor-file checksums.
+
+## Isolated preview evidence
+
+- Foundation and reviewed-seed migrations executed successfully in Supabase preview `wcnfhriosemgchmtwgof`; production was not touched.
+- Verified row inventory: 4 active source versions, 52 markets, 2 national occupational wage rows, 51 wage-floor rows, 8 reviewed RPP rows and 1 mileage row.
+- All six benchmark tables have RLS enabled. `anon` has no SELECT privilege; `authenticated` has SELECT privilege subject to the table policies.
+- The national-market schema defect discovered during import was corrected: a national market must have no state code, while non-national markets still require a two-letter state code.
 
 ## Deliberately not claimed
 
 - The full current BLS metro/nonmetro and BEA market datasets have not been imported into the database.
 - Census address-to-market lookup is not activated in an interactive estimate.
-- The migration has not been executed on preview or production.
+- The migrations have been executed on the isolated preview only; production is unchanged.
 - Synthetic resolver tests prove fallback behavior, not real-market price accuracy.
 - No cleaning operator has supplied the real low/normal/high jobs required by the acceptance gate.
 - No founder production acceptance is recorded.
