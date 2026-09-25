@@ -1,2 +1,2 @@
-operator_id,market_code,state_code,service_type,job_condition,job_square_feet,operator_bid,veltex_low,veltex_target,veltex_high,absolute_deviation_percent,unsafe_underestimate,missing_standard_scope,operator_notes,review_status
-
+operator_id,market_code,state_code,service_type,job_condition,job_square_feet,operator_bid,veltex_low,veltex_target,veltex_high,absolute_deviation_percent,unsafe_underestimate,missing_standard_scope,actual_labor_hours,operator_cost,client_approved,completion_status,scope_safety_review_required,operator_notes,review_status
+wa_operator_001,US-WA,WA,move_in_out,high,,1095,,,,,false,true,,700,true,completed,true,Two-day extreme residential turnover deep clean; subcontract payout included supplies; square footage and final labor hours still required,pending

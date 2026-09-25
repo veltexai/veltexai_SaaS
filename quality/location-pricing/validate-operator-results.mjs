@@ -15,8 +15,9 @@ const records = lines.slice(1).filter(Boolean).map(line => {
   return Object.fromEntries(headings.map((heading, index) => [heading, values[index] ?? '']));
 });
 const accepted = records.filter(record => record.review_status === 'accepted');
-const residentialOperators = new Set(accepted.filter(record => record.service_type !== 'airbnb_turnover').map(record => record.operator_id));
-const turnoverOperators = new Set(accepted.filter(record => record.service_type === 'airbnb_turnover').map(record => record.operator_id));
+const turnoverServices = new Set(['move_in_out', 'airbnb_turnover']);
+const residentialOperators = new Set(accepted.filter(record => !turnoverServices.has(record.service_type)).map(record => record.operator_id));
+const turnoverOperators = new Set(accepted.filter(record => turnoverServices.has(record.service_type)).map(record => record.operator_id));
 const deviations = accepted.map(record => Number(record.absolute_deviation_percent)).filter(Number.isFinite).sort((a, b) => a - b);
 const median = deviations.length ? (deviations[Math.floor((deviations.length - 1) / 2)] + deviations[Math.ceil((deviations.length - 1) / 2)]) / 2 : Infinity;
 const unsafe = accepted.some(record => record.unsafe_underestimate === 'true');
@@ -26,6 +27,7 @@ const pass = residentialOperators.size >= 3 && turnoverOperators.size >= 2 && ['
 
 console.log(JSON.stringify({
   status: pass ? 'PASS' : 'BLOCKED',
+  pendingRows: records.filter(record => record.review_status === 'pending').length,
   acceptedRows: accepted.length,
   residentialOperators: residentialOperators.size,
   turnoverOperators: turnoverOperators.size,
@@ -35,4 +37,3 @@ console.log(JSON.stringify({
   missingStandardScope: missingScope,
 }, null, 2));
 process.exit(pass ? 0 : 2);
-
