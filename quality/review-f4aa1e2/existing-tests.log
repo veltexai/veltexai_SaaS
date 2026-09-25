@@ -1,0 +1,43 @@
+PASS features/service-catalog/__tests__/r0-privilege-hardening.test.ts
+PASS features/service-catalog/__tests__/enhanced-proposal-email.test.ts
+  ● Console
+
+    console.log
+      📧 EmailService: Sending enhanced proposal email...
+
+      at EmailService.log [as sendEnhancedProposalEmail] (lib/email/service.ts:668:15)
+
+    console.log
+      ✅ EmailService: Enhanced proposal email sent successfully to recipient@example.com via configured SMTP
+
+      at EmailService.log [as sendEnhancedProposalEmail] (lib/email/service.ts:734:17)
+
+PASS features/service-catalog/__tests__/print-session.test.ts
+  ● Console
+
+    console.log
+      Generating PDF...
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:43:13)
+
+    console.log
+      PDF Generated
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:51:13)
+
+    console.log
+      Generating PDF...
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:43:13)
+
+    console.log
+      PDF Generated
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:51:13)
+
+
+Test Suites: 3 passed, 3 total
+Tests:       18 passed, 18 total
+Snapshots:   0 total
+Time:        0.179 s
+Ran all test suites matching features/service-catalog/__tests__/enhanced-proposal-email.test.ts|features/service-catalog/__tests__/print-session.test.ts|features/service-catalog/__tests__/r0-privilege-hardening.test.ts.

@@ -1,0 +1,36 @@
+FAIL features/service-catalog/__tests__/review-f4aa1e2.test.ts
+  ✓ review: smtp preserves full delivery contract (3 ms)
+  ✓ review: resend preserves full delivery contract
+  ✓ review: missing-key selects configured SMTP
+  ✓ review: missing-address selects configured SMTP
+  ✓ review: blank-key selects configured SMTP
+  ✓ review: blank-address selects configured SMTP
+  ✓ review: no copies or PDF are added when omitted
+  ✓ review: SMTP rejection returns false
+  ✓ review: Resend provider failure does not double-send through SMTP (1 ms)
+  ✓ review: settings lookup failure returns false with no transport
+  ✓ review: service-client construction failure returns false with no transport
+  ✓ review: disabled notifications retain prior no-send behavior
+  ✕ review: main-recipient SMTP rejection must not report delivery success (1 ms)
+
+  ● review: main-recipient SMTP rejection must not report delivery success
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      50 | it('review: main-recipient SMTP rejection must not report delivery success',async()=>{
+      51 |  mail.mockResolvedValue({messageId:'smtp-partial',accepted:[data.senderEmail],rejected:[data.clientEmail],rejectedErrors:[{code:'EENVELOPE',responseCode:550}]});
+    > 52 |  expect(await EmailService.sendEnhancedProposalEmail(data,pdf)).toBe(false);
+         |                                                                 ^
+      53 | });
+      54 |
+
+      at Object.toBe (features/service-catalog/__tests__/review-f4aa1e2.test.ts:52:65)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 12 passed, 13 total
+Snapshots:   0 total
+Time:        0.104 s
+Ran all test suites matching features/service-catalog/__tests__/review-f4aa1e2.test.ts.

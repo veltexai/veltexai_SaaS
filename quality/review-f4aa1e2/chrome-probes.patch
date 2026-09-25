@@ -1,0 +1,15 @@
+diff --git a/private/tmp/veltex-review-exact-f4aa1e2/features/service-catalog/__tests__/review-f4aa1e2-chrome.test.ts b/private/tmp/veltex-review-exact-f4aa1e2/features/service-catalog/__tests__/review-f4aa1e2-chrome.test.ts
+new file mode 100644
+index 0000000..b6f4d12
+--- /dev/null
++++ b/private/tmp/veltex-review-exact-f4aa1e2/features/service-catalog/__tests__/review-f4aa1e2-chrome.test.ts
+@@ -0,0 +1,9 @@
++import {generateProposalPDFWithPlaywright} from '@/features/proposals/services/pdf/playwright-generator';
++const local=jest.fn(),prod=jest.fn(),close=jest.fn(),pdf=jest.fn(),addCookies=jest.fn();
++jest.mock('playwright',()=>({chromium:{launch:(...a:any[])=>local(...a)}}));
++jest.mock('playwright-core',()=>({chromium:{launch:(...a:any[])=>prod(...a)}}));
++jest.mock('@sparticuz/chromium',()=>({__esModule:true,default:{args:['serverless-arg'],executablePath:async()=>'/synthetic/serverless/chromium'}}));
++beforeEach(()=>{jest.clearAllMocks();(process.env as Record<string,string|undefined>).NODE_ENV='test';delete process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;pdf.mockResolvedValue(Buffer.from('pdf'));const browser={close,newPage:async()=>({context:()=>({addCookies}),goto:jest.fn(),getByText:()=>({count:async()=>0}),emulateMedia:jest.fn(),pdf})};local.mockResolvedValue(browser);prod.mockResolvedValue(browser);});
++it('review: absent override retains default local launch',async()=>{await generateProposalPDFWithPlaywright('synthetic');expect(local).toHaveBeenCalledWith({executablePath:undefined});expect(close).toHaveBeenCalledTimes(1);});
++it('review: production ignores local override and retains serverless args',async()=>{(process.env as Record<string,string|undefined>).NODE_ENV='production';process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH='/synthetic/local/chrome';await generateProposalPDFWithPlaywright('synthetic');expect(prod).toHaveBeenCalledWith({args:['serverless-arg'],executablePath:'/synthetic/serverless/chromium',headless:true});expect(local).not.toHaveBeenCalled();expect(close).toHaveBeenCalledTimes(1);});
++it('review: local launch failure rejects before PDF generation',async()=>{local.mockRejectedValueOnce(new Error('Executable missing'));const spy=jest.spyOn(console,'error').mockImplementation(()=>{});try{await expect(generateProposalPDFWithPlaywright('synthetic')).rejects.toThrow('Failed to generate PDF');expect(pdf).not.toHaveBeenCalled();}finally{spy.mockRestore();}});

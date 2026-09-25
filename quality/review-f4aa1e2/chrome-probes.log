@@ -1,0 +1,30 @@
+  console.log
+    Generating PDF...
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:43:13)
+
+  console.log
+    PDF Generated
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:51:13)
+
+  console.log
+    Generating PDF...
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:43:13)
+
+  console.log
+    PDF Generated
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:51:13)
+
+PASS features/service-catalog/__tests__/review-f4aa1e2-chrome.test.ts
+  ✓ review: absent override retains default local launch (15 ms)
+  ✓ review: production ignores local override and retains serverless args (1 ms)
+  ✓ review: local launch failure rejects before PDF generation (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        0.102 s
+Ran all test suites matching features/service-catalog/__tests__/review-f4aa1e2-chrome.test.ts.
