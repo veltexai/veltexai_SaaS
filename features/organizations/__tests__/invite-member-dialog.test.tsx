@@ -5,6 +5,14 @@ import "@testing-library/jest-dom";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { InviteMemberDialog } from "../components/invite-member-dialog";
 
+// jsdom does not implement scrollIntoView. Radix's Select calls it when
+// positioning the highlighted item, which otherwise throws and unmounts the
+// tree mid-test. This is a test-environment gap, not app behavior — real
+// browsers implement scrollIntoView.
+beforeAll(() => {
+  window.HTMLElement.prototype.scrollIntoView = jest.fn();
+});
+
 function renderDialog(
   overrides: Partial<React.ComponentProps<typeof InviteMemberDialog>> = {},
 ) {
@@ -18,6 +26,7 @@ function renderDialog(
       onSubmit={onSubmit}
       status="idle"
       error={null}
+      invitationsEnabled
       {...overrides}
     />,
   );
@@ -45,6 +54,23 @@ describe("InviteMemberDialog", () => {
     expect(screen.getByRole("option", { name: "Viewer" })).toBeInTheDocument();
   });
 
+  it("shows the matching role description as the role selection changes", () => {
+    renderDialog();
+
+    // Default role is estimator.
+    expect(
+      screen.getByText("Create, edit, and send proposals and pricing."),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("combobox"));
+    fireEvent.click(screen.getByRole("option", { name: "Viewer" }));
+
+    expect(screen.getByRole("combobox")).toHaveTextContent("Viewer");
+    expect(
+      screen.getByText("View proposals and reports without editing."),
+    ).toBeInTheDocument();
+  });
+
   it("blocks submission and shows a validation message for an invalid email", async () => {
     const { onSubmit } = renderDialog();
 
@@ -54,6 +80,27 @@ describe("InviteMemberDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: /send invite/i }));
 
     expect(await screen.findByText("Enter a valid email address")).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("blocks submission for an email missing a domain", async () => {
+    const { onSubmit } = renderDialog();
+
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "teammate@" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send invite/i }));
+
+    expect(await screen.findByText("Enter a valid email address")).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("blocks submission for an empty email", async () => {
+    const { onSubmit } = renderDialog();
+
+    fireEvent.click(screen.getByRole("button", { name: /send invite/i }));
+
+    expect(await screen.findByText(/email/i)).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
@@ -74,7 +121,7 @@ describe("InviteMemberDialog", () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("keeps the dialog open and shows the server error when the submit fails", async () => {
+  it("keeps the dialog open and shows the server error when the submit fails (e.g. a duplicate email)", async () => {
     const onOpenChange = jest.fn();
     const onSubmit = jest.fn().mockResolvedValue(false);
 
@@ -85,6 +132,7 @@ describe("InviteMemberDialog", () => {
         onSubmit={onSubmit}
         status="error"
         error="This email has already been invited to this organization."
+        invitationsEnabled
       />,
     );
 
@@ -120,8 +168,92 @@ describe("InviteMemberDialog", () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
+  it("cancels without submitting when Cancel is clicked", () => {
+    const { onOpenChange, onSubmit } = renderDialog();
+
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "someone@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^cancel$/i }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("supports keyboard-only operation: tab to email, type, tab to role, submit with Enter", async () => {
+    const { onSubmit } = renderDialog();
+
+    const emailInput = screen.getByLabelText("Email address");
+    emailInput.focus();
+    expect(emailInput).toHaveFocus();
+
+    fireEvent.change(emailInput, { target: { value: "keyboard@example.com" } });
+
+    const roleTrigger = screen.getByRole("combobox");
+    // Radix's Select trigger opens on Enter/Space when focused, mirroring
+    // the dropdown-menu trigger behavior verified elsewhere in this suite.
+    roleTrigger.focus();
+    fireEvent.keyDown(roleTrigger, { key: "Enter" });
+    const viewerOption = await screen.findByRole("option", { name: "Viewer" });
+    fireEvent.click(viewerOption);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /send invite/i }));
+    });
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      email: "keyboard@example.com",
+      role: "viewer",
+    });
+  });
+
   it("does not render when closed", () => {
     renderDialog({ open: false });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  describe("when invitations are not enabled (fail-closed)", () => {
+    it("explains that invitations aren't enabled instead of showing the invite form", () => {
+      const { onSubmit } = renderDialog({ invitationsEnabled: false });
+
+      expect(
+        screen.getByRole("dialog", {
+          name: "Team invitations aren't enabled yet",
+        }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/no invitation has been sent/i),
+      ).toBeInTheDocument();
+
+      // The form must not be present at all in this state.
+      expect(screen.queryByLabelText("Email address")).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /send invite/i }),
+      ).not.toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it("closes via the explicit acknowledgement button without ever calling onSubmit", () => {
+      const { onOpenChange, onSubmit } = renderDialog({
+        invitationsEnabled: false,
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /^got it$/i }));
+
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it("does not imply success even if a stale success status is passed", () => {
+      // Defense in depth: even if the caller's status somehow says
+      // "success" while the capability is off, the disabled explanation
+      // must still win and no form/success UI may render.
+      renderDialog({ invitationsEnabled: false, status: "success" });
+
+      expect(
+        screen.getByText("Team invitations aren't enabled yet"),
+      ).toBeInTheDocument();
+      expect(screen.queryByLabelText("Email address")).not.toBeInTheDocument();
+    });
   });
 });

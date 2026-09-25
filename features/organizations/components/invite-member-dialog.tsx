@@ -43,6 +43,21 @@ interface InviteMemberDialogProps {
   onSubmit: (values: InviteMemberFormValues) => Promise<boolean>;
   status: "idle" | "loading" | "error" | "success";
   error: string | null;
+  /**
+   * Called instead of Radix's default close-focus behavior. This dialog is
+   * opened from more than one trigger (a header button and the member
+   * list's empty-state CTA), so the caller is responsible for restoring
+   * focus to whichever one was used.
+   */
+  onAfterClose?: () => void;
+  /**
+   * Fail-closed capability gate. When `false`, this dialog never renders the
+   * invite form and never calls `onSubmit` — it only explains that
+   * invitations aren't enabled yet. This must not be bypassed: there is no
+   * live invitation endpoint behind this UI (see
+   * docs/product/platform-build/CURSOR_R2_CONTRACT_REQUEST.md).
+   */
+  invitationsEnabled: boolean;
 }
 
 const DEFAULT_VALUES: InviteMemberFormValues = {
@@ -56,6 +71,8 @@ export function InviteMemberDialog({
   onSubmit,
   status,
   error,
+  onAfterClose,
+  invitationsEnabled,
 }: InviteMemberDialogProps) {
   const form = useForm<InviteMemberFormValues>({
     resolver: zodResolver(inviteMemberSchema),
@@ -80,6 +97,41 @@ export function InviteMemberDialog({
     }
   });
 
+  if (!invitationsEnabled) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent
+          className="sm:max-w-md motion-reduce:animate-none motion-reduce:duration-0"
+          onCloseAutoFocus={(event) => {
+            if (onAfterClose) {
+              event.preventDefault();
+              onAfterClose();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Team invitations aren&apos;t enabled yet</DialogTitle>
+            <DialogDescription>
+              This workspace can&apos;t send teammate invitations yet. No
+              invitation has been sent and no teammate has been added to your
+              roster.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            This capability is being built out with Codex&apos;s
+            organization service. Check back once it&apos;s enabled for your
+            account.
+          </p>
+          <DialogFooter>
+            <Button type="button" onClick={() => onOpenChange(false)}>
+              Got it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog
       open={open}
@@ -87,7 +139,15 @@ export function InviteMemberDialog({
         if (!isSubmitting) onOpenChange(next);
       }}
     >
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md motion-reduce:animate-none motion-reduce:duration-0"
+        onCloseAutoFocus={(event) => {
+          if (onAfterClose) {
+            event.preventDefault();
+            onAfterClose();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Invite a teammate</DialogTitle>
           <DialogDescription>

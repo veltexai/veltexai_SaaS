@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import "@testing-library/jest-dom";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { OrganizationSwitcher } from "../components/organization-switcher";
 import type { Organization } from "../types/organization";
 
@@ -117,6 +117,47 @@ describe("OrganizationSwitcher", () => {
     fireEvent.click(option);
 
     expect(onChange).toHaveBeenCalledWith("org-2");
+  });
+
+  it("truncates a very long organization name but preserves it via title", () => {
+    const longName =
+      "Summit Facilities Group of Greater Metropolitan Downtown Commercial Properties LLC";
+    render(
+      <OrganizationSwitcher
+        organizations={[{ id: "org-1", name: longName, slug: "long" }]}
+        activeOrganizationId="org-1"
+        onChange={jest.fn()}
+        status="success"
+      />,
+    );
+
+    const label = screen.getByText(longName);
+    expect(label).toHaveClass("truncate");
+    expect(label).toHaveAttribute("title", longName);
+  });
+
+  it("returns keyboard focus to the trigger after the menu closes", async () => {
+    render(
+      <OrganizationSwitcher
+        organizations={organizations}
+        activeOrganizationId="org-1"
+        onChange={jest.fn()}
+        status="success"
+      />,
+    );
+
+    const trigger = screen.getByRole("button", {
+      name: /current organization/i,
+    });
+    trigger.focus();
+    fireEvent.keyDown(trigger, { key: "Enter" });
+
+    const option = await screen.findByRole("menuitemradio", {
+      name: "Summit Facilities Group",
+    });
+    fireEvent.keyDown(option, { key: "Escape" });
+
+    await waitFor(() => expect(trigger).toHaveFocus());
   });
 
   it("marks the active organization as checked in the menu", async () => {

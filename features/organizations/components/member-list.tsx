@@ -1,5 +1,6 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import { RefreshCw, Users } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +23,7 @@ interface MemberListProps {
   status: "idle" | "loading" | "error" | "success";
   error: string | null;
   onReload: () => void;
-  onInviteClick: () => void;
+  onInviteClick: (event: MouseEvent<HTMLButtonElement>) => void;
 }
 
 const SKELETON_ROW_COUNT = 3;
@@ -46,12 +47,12 @@ function MemberListLoading() {
       <div className="hidden sm:block space-y-3">
         {Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
           <div key={index} className="flex items-center gap-4">
-            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full motion-reduce:animate-none" />
             <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-1/3" />
-              <Skeleton className="h-3 w-1/4" />
+              <Skeleton className="h-4 w-1/3 motion-reduce:animate-none" />
+              <Skeleton className="h-3 w-1/4 motion-reduce:animate-none" />
             </div>
-            <Skeleton className="h-6 w-16" />
+            <Skeleton className="h-6 w-16 motion-reduce:animate-none" />
           </div>
         ))}
       </div>
@@ -59,10 +60,10 @@ function MemberListLoading() {
       <div className="sm:hidden space-y-3">
         {Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
           <div key={index} className="flex items-center gap-3 rounded-lg border p-3">
-            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full motion-reduce:animate-none" />
             <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-3 w-1/2" />
+              <Skeleton className="h-4 w-2/3 motion-reduce:animate-none" />
+              <Skeleton className="h-3 w-1/2 motion-reduce:animate-none" />
             </div>
           </div>
         ))}
@@ -109,7 +110,11 @@ function MemberListIdle() {
   );
 }
 
-function MemberListEmpty({ onInviteClick }: { onInviteClick: () => void }) {
+function MemberListEmpty({
+  onInviteClick,
+}: {
+  onInviteClick: (event: MouseEvent<HTMLButtonElement>) => void;
+}) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-12 text-center">
       <Users className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
@@ -184,10 +189,16 @@ export function MemberList({
                       avatarUrl={member.avatarUrl}
                     />
                     <div className="min-w-0">
-                      <p className="truncate font-medium leading-none">
+                      <p
+                        className="truncate font-medium leading-none"
+                        title={member.name}
+                      >
                         {member.name}
                       </p>
-                      <p className="truncate text-sm text-muted-foreground">
+                      <p
+                        className="truncate text-sm text-muted-foreground"
+                        title={member.email}
+                      >
                         {member.email}
                       </p>
                     </div>
@@ -219,10 +230,16 @@ export function MemberList({
                 avatarUrl={member.avatarUrl}
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium leading-none">
+                <p
+                  className="truncate font-medium leading-none"
+                  title={member.name}
+                >
                   {member.name}
                 </p>
-                <p className="truncate text-sm text-muted-foreground">
+                <p
+                  className="truncate text-sm text-muted-foreground"
+                  title={member.email}
+                >
                   {member.email}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">

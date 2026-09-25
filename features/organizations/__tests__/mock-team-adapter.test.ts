@@ -28,10 +28,11 @@ describe("MockTeamAdapter", () => {
     expect(members).toEqual([]);
   });
 
-  it("rejects every read in the error scenario", async () => {
+  it("rejects every read in the error scenario, including capabilities", async () => {
     const adapter = new MockTeamAdapter({ latencyMs: 0, scenario: "error" });
     await expect(adapter.listOrganizations()).rejects.toThrow();
     await expect(adapter.listMembers("org-veltex-cleaning")).rejects.toThrow();
+    await expect(adapter.getCapabilities()).rejects.toThrow();
     await expect(
       adapter.inviteMember({
         organizationId: "org-veltex-cleaning",
@@ -41,63 +42,160 @@ describe("MockTeamAdapter", () => {
     ).rejects.toThrow();
   });
 
-  it("invites a new member and returns it with pending status", async () => {
-    const adapter = new MockTeamAdapter({ latencyMs: 0 });
-    const { member } = await adapter.inviteMember({
-      organizationId: "org-veltex-cleaning",
-      email: "New.Teammate@Example.com",
-      role: "estimator",
+  describe("capabilities (fail-closed invitation gate)", () => {
+    it("defaults invitations to disabled when no capabilities are supplied", async () => {
+      const adapter = new MockTeamAdapter({ latencyMs: 0 });
+      const capabilities = await adapter.getCapabilities();
+      expect(capabilities).toEqual({ invitationsEnabled: false });
     });
 
-    expect(member.email).toBe("new.teammate@example.com");
-    expect(member.role).toBe("estimator");
-    expect(member.status).toBe("invited");
+    it("refuses to invite a member while invitations are disabled, even if called directly", async () => {
+      const adapter = new MockTeamAdapter({ latencyMs: 0 });
+      await expect(
+        adapter.inviteMember({
+          organizationId: "org-veltex-cleaning",
+          email: "bypass@example.com",
+          role: "viewer",
+        }),
+      ).rejects.toThrow(/not enabled/i);
 
-    const members = await adapter.listMembers("org-veltex-cleaning");
-    expect(members.some((m) => m.email === "new.teammate@example.com")).toBe(
-      true,
-    );
-  });
+      // No roster mutation happened: the member was not fabricated.
+      const members = await adapter.listMembers("org-veltex-cleaning");
+      expect(
+        members.some((m) => m.email === "bypass@example.com"),
+      ).toBe(false);
+    });
 
-  it("rejects inviting an email that already belongs to the organization", async () => {
-    const adapter = new MockTeamAdapter({ latencyMs: 0 });
-    await expect(
-      adapter.inviteMember({
+    it("honors an explicit opt-in to enable invitations (test/fixture use only)", async () => {
+      const adapter = new MockTeamAdapter({
+        latencyMs: 0,
+        capabilities: { invitationsEnabled: true },
+      });
+      const capabilities = await adapter.getCapabilities();
+      expect(capabilities).toEqual({ invitationsEnabled: true });
+
+      const { member } = await adapter.inviteMember({
         organizationId: "org-veltex-cleaning",
-        email: "anthony@veltexclean.com",
+        email: "opted.in@example.com",
         role: "viewer",
-      }),
-    ).rejects.toThrow(/already/i);
+      });
+      expect(member.email).toBe("opted.in@example.com");
+    });
   });
 
-  it("rejects inviting the same email twice in one session", async () => {
-    const adapter = new MockTeamAdapter({ latencyMs: 0 });
-    await adapter.inviteMember({
-      organizationId: "org-veltex-cleaning",
-      email: "repeat@example.com",
-      role: "viewer",
+  describe("invitations enabled (mock demonstration only)", () => {
+    it("invites a new member and returns it with pending status", async () => {
+      const adapter = new MockTeamAdapter({
+        latencyMs: 0,
+        capabilities: { invitationsEnabled: true },
+      });
+      const { member } = await adapter.inviteMember({
+        organizationId: "org-veltex-cleaning",
+        email: "New.Teammate@Example.com",
+        role: "estimator",
+      });
+
+      expect(member.email).toBe("new.teammate@example.com");
+      expect(member.role).toBe("estimator");
+      expect(member.status).toBe("invited");
+
+      const members = await adapter.listMembers("org-veltex-cleaning");
+      expect(
+        members.some((m) => m.email === "new.teammate@example.com"),
+      ).toBe(true);
     });
 
-    await expect(
-      adapter.inviteMember({
+    it("rejects inviting an email that already belongs to the organization", async () => {
+      const adapter = new MockTeamAdapter({
+        latencyMs: 0,
+        capabilities: { invitationsEnabled: true },
+      });
+      await expect(
+        adapter.inviteMember({
+          organizationId: "org-veltex-cleaning",
+          email: "anthony@veltexclean.com",
+          role: "viewer",
+        }),
+      ).rejects.toThrow(/already/i);
+    });
+
+    it("rejects inviting the same email twice in one session", async () => {
+      const adapter = new MockTeamAdapter({
+        latencyMs: 0,
+        capabilities: { invitationsEnabled: true },
+      });
+      await adapter.inviteMember({
         organizationId: "org-veltex-cleaning",
         email: "repeat@example.com",
         role: "viewer",
-      }),
-    ).rejects.toThrow(/already/i);
-  });
+      });
 
-  it("keeps invited members isolated to their own organization", async () => {
-    const adapter = new MockTeamAdapter({ latencyMs: 0 });
-    await adapter.inviteMember({
-      organizationId: "org-veltex-cleaning",
-      email: "isolated@example.com",
-      role: "viewer",
+      await expect(
+        adapter.inviteMember({
+          organizationId: "org-veltex-cleaning",
+          email: "repeat@example.com",
+          role: "viewer",
+        }),
+      ).rejects.toThrow(/already/i);
     });
 
-    const otherOrgMembers = await adapter.listMembers("org-summit-facilities");
-    expect(
-      otherOrgMembers.some((m) => m.email === "isolated@example.com"),
-    ).toBe(false);
+    it("rejects a duplicate email that only differs by case", async () => {
+      const adapter = new MockTeamAdapter({
+        latencyMs: 0,
+        capabilities: { invitationsEnabled: true },
+      });
+      await expect(
+        adapter.inviteMember({
+          organizationId: "org-veltex-cleaning",
+          email: "ANTHONY@VELTEXCLEAN.COM",
+          role: "viewer",
+        }),
+      ).rejects.toThrow(/already/i);
+    });
+
+    it("keeps invited members isolated to their own organization", async () => {
+      const adapter = new MockTeamAdapter({
+        latencyMs: 0,
+        capabilities: { invitationsEnabled: true },
+      });
+      await adapter.inviteMember({
+        organizationId: "org-veltex-cleaning",
+        email: "isolated@example.com",
+        role: "viewer",
+      });
+
+      const otherOrgMembers = await adapter.listMembers("org-summit-facilities");
+      expect(
+        otherOrgMembers.some((m) => m.email === "isolated@example.com"),
+      ).toBe(false);
+    });
+
+    it("simulates network latency before resolving", async () => {
+      jest.useFakeTimers();
+      const adapter = new MockTeamAdapter({
+        latencyMs: 500,
+        capabilities: { invitationsEnabled: true },
+      });
+
+      const promise = adapter.inviteMember({
+        organizationId: "org-veltex-cleaning",
+        email: "slow.network@example.com",
+        role: "viewer",
+      });
+
+      let settled = false;
+      promise.then(() => {
+        settled = true;
+      });
+
+      await Promise.resolve();
+      expect(settled).toBe(false);
+
+      jest.advanceTimersByTime(500);
+      await promise;
+      expect(settled).toBe(true);
+
+      jest.useRealTimers();
+    });
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type MouseEvent } from "react";
 import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { createMockTeamAdapter, type MockTeamAdapterOptions } from "../lib/mock-
 import { useOrganizations } from "../hooks/use-organizations";
 import { useTeamMembers } from "../hooks/use-team-members";
 import { useInviteMember } from "../hooks/use-invite-member";
+import { useTeamCapabilities } from "../hooks/use-team-capabilities";
 import { OrganizationSwitcher } from "./organization-switcher";
 import { MemberList } from "./member-list";
 import { InviteMemberDialog } from "./invite-member-dialog";
@@ -62,14 +63,43 @@ export function TeamSettingsShell({
     reset: resetInvite,
   } = useInviteMember(adapter);
 
+  const { status: capabilitiesStatus, capabilities } =
+    useTeamCapabilities(adapter);
+
+  // Fail closed: only a confirmed, successfully-loaded `true` counts as
+  // enabled. Loading, error, or any other state is treated as disabled so
+  // the invite form is never shown before the capability is confirmed.
+  const invitationsEnabled =
+    capabilitiesStatus === "success" && capabilities?.invitationsEnabled === true;
+
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState("");
+
+  // Explicit focus restoration: whichever element opened the dialog
+  // (header button or the member list's empty-state CTA) regains focus
+  // once it closes. This dialog is opened from more than one trigger, so
+  // we track the exact element ourselves and hook into Radix's
+  // `onCloseAutoFocus` (see InviteMemberDialog) rather than depending on
+  // its default "return focus to whatever was previously focused"
+  // behavior, which is not guaranteed across multiple triggers.
+  const lastFocusedElementRef = useRef<HTMLElement | null>(null);
+
+  function openInviteDialog(event: MouseEvent<HTMLButtonElement>) {
+    // Capture the exact trigger via the click event rather than
+    // `document.activeElement`: a real click doesn't always leave the
+    // clicked element focused in every environment, but its
+    // `currentTarget` is always the trigger itself.
+    lastFocusedElementRef.current = event.currentTarget;
+    resetInvite();
+    setInviteOpen(true);
+  }
 
   const activeOrganizationName = organizations.find(
     (org) => org.id === activeOrganizationId,
   )?.name;
 
   async function handleInvite(values: InviteMemberFormValues): Promise<boolean> {
-    if (!activeOrganizationId) return false;
+    if (!activeOrganizationId || !invitationsEnabled) return false;
 
     const result = await invite({
       organizationId: activeOrganizationId,
@@ -79,14 +109,21 @@ export function TeamSettingsShell({
 
     if (result) {
       addMember(result.member);
-      toast.success(`Invite sent to ${result.member.email}`);
+      const message = `Invite sent to ${result.member.email}`;
+      toast.success(message);
+      setAnnouncement(message);
       return true;
     }
 
     return false;
   }
 
-  const canInvite = Boolean(activeOrganizationId) && orgStatus === "success";
+  // Only gated on org context being ready. Whether invitations are actually
+  // enabled is decided inside the dialog itself (fail-closed), so clicking
+  // this button always explains the real state rather than being a
+  // silently-disabled dead end.
+  const canOpenInviteDialog =
+    Boolean(activeOrganizationId) && orgStatus === "success";
 
   return (
     <div className="space-y-6">
@@ -103,16 +140,27 @@ export function TeamSettingsShell({
         </div>
 
         <Button
-          onClick={() => {
-            resetInvite();
-            setInviteOpen(true);
-          }}
-          disabled={!canInvite}
+          onClick={openInviteDialog}
+          disabled={!canOpenInviteDialog}
+          aria-describedby={
+            !canOpenInviteDialog ? "invite-teammate-unavailable" : undefined
+          }
           className="w-full sm:w-auto"
         >
           <UserPlus />
           Invite teammate
         </Button>
+        {!canOpenInviteDialog ? (
+          <span id="invite-teammate-unavailable" className="sr-only">
+            Select an organization before inviting a teammate.
+          </span>
+        ) : null}
+      </div>
+
+      {/* Screen-reader-only live status announcer, independent of any toast
+          library implementation detail. */}
+      <div aria-live="polite" role="status" className="sr-only">
+        {announcement}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -133,10 +181,7 @@ export function TeamSettingsShell({
         status={membersStatus}
         error={membersError}
         onReload={reloadMembers}
-        onInviteClick={() => {
-          resetInvite();
-          setInviteOpen(true);
-        }}
+        onInviteClick={openInviteDialog}
       />
 
       <InviteMemberDialog
@@ -145,6 +190,8 @@ export function TeamSettingsShell({
         onSubmit={handleInvite}
         status={inviteStatus}
         error={inviteError}
+        invitationsEnabled={invitationsEnabled}
+        onAfterClose={() => lastFocusedElementRef.current?.focus()}
       />
     </div>
   );

@@ -41,7 +41,7 @@ export function OrganizationSwitcher({
     // collapse to zero width and become visually invisible.
     return (
       <Skeleton
-        className="h-9 w-full sm:w-56"
+        className="h-9 w-full sm:w-56 motion-reduce:animate-none"
         aria-label="Loading organizations"
         role="status"
       />
@@ -81,13 +81,19 @@ export function OrganizationSwitcher({
           }`}
         >
           <Building2 />
-          <span className="max-w-[10rem] truncate sm:max-w-[16rem]">
+          <span
+            className="max-w-[10rem] truncate sm:max-w-[16rem]"
+            title={activeOrganization?.name}
+          >
             {activeOrganization?.name ?? "Select organization"}
           </span>
           <ChevronsUpDown className="ml-auto opacity-60" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64">
+      <DropdownMenuContent
+        align="start"
+        className="w-64 motion-reduce:animate-none motion-reduce:duration-0"
+      >
         <DropdownMenuLabel>Organizations</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup
@@ -96,7 +102,9 @@ export function OrganizationSwitcher({
         >
           {organizations.map((org) => (
             <DropdownMenuRadioItem key={org.id} value={org.id}>
-              {org.name}
+              <span className="block max-w-full truncate" title={org.name}>
+                {org.name}
+              </span>
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

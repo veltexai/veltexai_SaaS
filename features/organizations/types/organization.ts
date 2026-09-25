@@ -56,6 +56,20 @@ export interface InviteMemberResult {
 }
 
 /**
+ * Local, adapter-reported feature capabilities. This is the fail-closed
+ * switch the UI checks before showing (or acting on) the invite flow.
+ *
+ * `invitationsEnabled` MUST default to `false` everywhere except test/story
+ * fixtures that explicitly opt in. There is no real, consent-bound,
+ * seat-billed invitation endpoint yet (see
+ * docs/product/platform-build/CURSOR_R2_CONTRACT_REQUEST.md), so the
+ * production-facing adapter must never report this as `true`.
+ */
+export interface TeamCapabilities {
+  invitationsEnabled: boolean;
+}
+
+/**
  * Frontend-owned data contract for this feature area.
  *
  * This interface is implemented locally today by `MockTeamAdapter`
@@ -67,5 +81,6 @@ export interface InviteMemberResult {
 export interface TeamAdapter {
   listOrganizations(): Promise<Organization[]>;
   listMembers(organizationId: string): Promise<OrganizationMember[]>;
+  getCapabilities(): Promise<TeamCapabilities>;
   inviteMember(input: InviteMemberInput): Promise<InviteMemberResult>;
 }

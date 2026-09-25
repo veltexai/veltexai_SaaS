@@ -4,10 +4,23 @@ import type {
   Organization,
   OrganizationMember,
   TeamAdapter,
+  TeamCapabilities,
 } from "../types/organization";
 import { FIXTURE_MEMBERS_BY_ORG, FIXTURE_ORGANIZATIONS } from "./fixtures";
 
 export type MockTeamScenario = "default" | "empty" | "error";
+
+/**
+ * Fail-closed default. There is no real, consent-bound, seat-billed
+ * invitation endpoint yet, so every caller that does not explicitly opt in
+ * (tests/fixtures/an explicit development-only preview) gets a mock adapter
+ * that reports invitations as disabled. Do not flip this default without an
+ * accepted server contract — see
+ * docs/product/platform-build/CURSOR_R2_CONTRACT_REQUEST.md.
+ */
+const DEFAULT_CAPABILITIES: TeamCapabilities = {
+  invitationsEnabled: false,
+};
 
 export interface MockTeamAdapterOptions {
   /** Simulated network latency in milliseconds. Set to 0 in tests. */
@@ -20,6 +33,12 @@ export interface MockTeamAdapterOptions {
   scenario?: MockTeamScenario;
   organizations?: Organization[];
   membersByOrg?: Record<string, OrganizationMember[]>;
+  /**
+   * Defaults to `{ invitationsEnabled: false }`. Only test/story callers
+   * that are explicitly demonstrating the mock invite flow should override
+   * this to `{ invitationsEnabled: true }`.
+   */
+  capabilities?: Partial<TeamCapabilities>;
 }
 
 function wait(ms: number) {
@@ -47,11 +66,13 @@ export class MockTeamAdapter implements TeamAdapter {
   private readonly organizations: Organization[];
   private readonly membersByOrg: Record<string, OrganizationMember[]>;
   private readonly invitedEmailsByOrg = new Map<string, Set<string>>();
+  private readonly capabilities: TeamCapabilities;
 
   constructor(options: MockTeamAdapterOptions = {}) {
     this.latencyMs = options.latencyMs ?? 300;
     this.scenario = options.scenario ?? "default";
     this.organizations = options.organizations ?? FIXTURE_ORGANIZATIONS;
+    this.capabilities = { ...DEFAULT_CAPABILITIES, ...options.capabilities };
 
     const baseMembers = options.membersByOrg ?? FIXTURE_MEMBERS_BY_ORG;
     this.membersByOrg = Object.fromEntries(
@@ -88,8 +109,26 @@ export class MockTeamAdapter implements TeamAdapter {
     }));
   }
 
+  async getCapabilities(): Promise<TeamCapabilities> {
+    await wait(this.latencyMs);
+
+    if (this.scenario === "error") {
+      throw new Error("Could not load team capabilities. Please try again.");
+    }
+
+    return { ...this.capabilities };
+  }
+
   async inviteMember(input: InviteMemberInput): Promise<InviteMemberResult> {
     await wait(this.latencyMs);
+
+    // Defense in depth: even if a caller reaches this method while
+    // invitations are disabled (e.g. a UI bug bypasses the capability
+    // check), the adapter itself refuses to fabricate an invite or a
+    // roster member. Fail closed, not open.
+    if (!this.capabilities.invitationsEnabled) {
+      throw new Error("Team invitations are not enabled for this organization yet.");
+    }
 
     const normalizedEmail = input.email.trim().toLowerCase();
 

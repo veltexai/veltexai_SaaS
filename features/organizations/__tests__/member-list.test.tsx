@@ -98,6 +98,40 @@ describe("MemberList", () => {
     }
   });
 
+  it("truncates a very long member name/email but preserves the full text via title", () => {
+    const longName = "Bartholomew Alexander Montgomery-Fitzgerald III";
+    const longEmail = "bartholomew.alexander.montgomery-fitzgerald@example-enterprise-domain.com";
+
+    renderList({
+      members: [
+        {
+          id: "m-long",
+          organizationId: "org-1",
+          userId: "u-long",
+          name: longName,
+          email: longEmail,
+          role: "viewer",
+          status: "active",
+          joinedAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+    });
+
+    const nameNodes = screen.getAllByText(longName);
+    const emailNodes = screen.getAllByText(longEmail);
+    // Present once for the desktop table and once for the mobile list.
+    expect(nameNodes.length).toBeGreaterThanOrEqual(2);
+    expect(emailNodes.length).toBeGreaterThanOrEqual(2);
+    for (const node of nameNodes) {
+      expect(node).toHaveClass("truncate");
+      expect(node).toHaveAttribute("title", longName);
+    }
+    for (const node of emailNodes) {
+      expect(node).toHaveClass("truncate");
+      expect(node).toHaveAttribute("title", longEmail);
+    }
+  });
+
   it("keeps the desktop table hidden below the sm breakpoint and the mobile list hidden at/above it", () => {
     renderList();
 

@@ -13,8 +13,11 @@ jest.mock("sonner", () => ({
 }));
 
 describe("TeamSettingsShell", () => {
-  it("loads organizations and members, then supports inviting a teammate end-to-end", async () => {
-    const adapter = createMockTeamAdapter({ latencyMs: 0 });
+  it("loads organizations and members, then supports inviting a teammate end-to-end (mock demonstration only, invitations explicitly enabled)", async () => {
+    const adapter = createMockTeamAdapter({
+      latencyMs: 0,
+      capabilities: { invitationsEnabled: true },
+    });
     render(<TeamSettingsShell adapter={adapter} />);
 
     // Loading, then the default organization's roster renders. Both the
@@ -85,6 +88,7 @@ describe("TeamSettingsShell", () => {
     const adapter: TeamAdapter = {
       listOrganizations: async () => FIXTURE_ORGANIZATIONS,
       listMembers,
+      getCapabilities: async () => ({ invitationsEnabled: false }),
       inviteMember: jest.fn(),
     };
 
@@ -97,5 +101,81 @@ describe("TeamSettingsShell", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /retry/i }));
     await waitFor(() => expect(listMembers).toHaveBeenCalledTimes(2));
+  });
+
+  it("fails closed by default: explains invitations aren't enabled, never sends one, never adds a roster member", async () => {
+    // No `capabilities` override — this is the real production-facing
+    // default, which must stay disabled until a real invitation contract
+    // ships.
+    const adapter = createMockTeamAdapter({ latencyMs: 0 });
+    render(<TeamSettingsShell adapter={adapter} />);
+
+    const table = await screen.findByRole("table", { name: "Team members" });
+    const initialRowCount = within(table).getAllByRole("row").length;
+
+    const inviteButton = screen.getByRole("button", { name: /invite teammate/i });
+    expect(inviteButton).toBeEnabled();
+    fireEvent.click(inviteButton);
+
+    expect(
+      await screen.findByRole("dialog", {
+        name: "Team invitations aren't enabled yet",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Email address")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /^got it$/i }));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+
+    // No roster mutation occurred, and focus returns to the trigger.
+    expect(within(table).getAllByRole("row")).toHaveLength(initialRowCount);
+    expect(inviteButton).toHaveFocus();
+  });
+
+  it("returns focus to the invite trigger after cancelling the (enabled) invite dialog", async () => {
+    const adapter = createMockTeamAdapter({
+      latencyMs: 0,
+      capabilities: { invitationsEnabled: true },
+    });
+    render(<TeamSettingsShell adapter={adapter} />);
+
+    await screen.findByRole("table", { name: "Team members" });
+
+    const inviteButton = screen.getByRole("button", { name: /invite teammate/i });
+    inviteButton.focus();
+    fireEvent.click(inviteButton);
+
+    await screen.findByRole("dialog", { name: "Invite a teammate" });
+    fireEvent.click(screen.getByRole("button", { name: /^cancel$/i }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    expect(inviteButton).toHaveFocus();
+  });
+
+  it("shows the loading skeleton while a slower network resolves, then the roster", async () => {
+    const adapter = createMockTeamAdapter({ latencyMs: 50 });
+    render(<TeamSettingsShell adapter={adapter} />);
+
+    // Before the organization itself resolves, there's no active
+    // organization yet, so the member area is neutral, not "loading".
+    expect(screen.getByText("No organization selected")).toBeInTheDocument();
+
+    // Once the organization resolves, the roster fetch for it begins and
+    // is visibly "loading" until it too resolves.
+    await waitFor(() => {
+      expect(
+        screen.getByRole("status", { name: "Loading team members" }),
+      ).toBeInTheDocument();
+    });
+
+    const table = await screen.findByRole("table", { name: "Team members" });
+    expect(within(table).getByText("Anthony Veliz")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: "Loading team members" }),
+    ).not.toBeInTheDocument();
   });
 });

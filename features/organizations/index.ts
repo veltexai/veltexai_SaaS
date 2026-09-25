@@ -5,6 +5,7 @@ export * from "./lib/mock-team-adapter";
 export * from "./hooks/use-organizations";
 export * from "./hooks/use-team-members";
 export * from "./hooks/use-invite-member";
+export * from "./hooks/use-team-capabilities";
 export * from "./components/team-settings-shell";
 export * from "./components/organization-switcher";
 export * from "./components/member-list";
