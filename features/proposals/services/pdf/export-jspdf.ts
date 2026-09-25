@@ -1398,6 +1398,7 @@ export class PDFExporter {
     const lines = content.split("\n");
 
     lines.forEach((line) => {
+      const displayLine = line.replace(/\*\*(.*?)\*\*/g, "$1");
       if (this.currentY > this.pageHeight - 30) {
         this.pdf.addPage();
         this.currentY = this.margin;
@@ -1412,19 +1413,19 @@ export class PDFExporter {
       if (line.startsWith("# ")) {
         this.pdf.setFontSize(14);
         this.pdf.setFont("helvetica", "bold");
-        const text = line.substring(2);
+        const text = displayLine.substring(2);
         this.pdf.text(text, this.margin + 5, this.currentY);
         this.currentY += 8;
       } else if (line.startsWith("## ")) {
         this.pdf.setFontSize(12);
         this.pdf.setFont("helvetica", "bold");
-        const text = line.substring(3);
+        const text = displayLine.substring(3);
         this.pdf.text(text, this.margin + 5, this.currentY);
         this.currentY += 7;
       } else if (line.startsWith("- ") || line.startsWith("* ")) {
         this.pdf.setFontSize(10);
         this.pdf.setFont("helvetica", "normal");
-        const text = line.substring(2);
+        const text = displayLine.substring(2);
         this.pdf.text("•", this.margin + 5, this.currentY);
         const wrappedText = this.pdf.splitTextToSize(text, maxWidth - 10);
         this.pdf.text(wrappedText, this.margin + 12, this.currentY);
@@ -1432,7 +1433,7 @@ export class PDFExporter {
       } else {
         this.pdf.setFontSize(10);
         this.pdf.setFont("helvetica", "normal");
-        const wrappedText = this.pdf.splitTextToSize(line, maxWidth);
+        const wrappedText = this.pdf.splitTextToSize(displayLine, maxWidth);
         this.pdf.text(wrappedText, this.margin + 5, this.currentY);
         this.currentY += wrappedText.length * 4;
       }

@@ -140,6 +140,10 @@ describe('R0 privilege hardening', () => {
     expect(trackingDeliveryMigration).toContain(
       "'pdf', 'online', 'pdf_only', 'online_only', 'both'",
     );
+    expect(route).toContain('code: "TRACKING_SETUP_ERROR"');
+    expect(route.indexOf('TRACKING_SETUP_ERROR')).toBeLessThan(
+      route.indexOf('EmailService.sendEnhancedProposalEmail'),
+    );
   });
 
   it('keeps tracked engagement compatible without a public service-role dependency', () => {
@@ -155,6 +159,7 @@ describe('R0 privilege hardening', () => {
     expect(trackedEngagementMigration).toContain('proposal_downloaded = true');
     expect(trackedEngagementMigration).toContain('security definer set search_path = pg_catalog, public');
     expect(trackedEngagementMigration).toContain('length(token) < 20');
+    expect(trackedEngagementMigration).toContain("pr.subscription_status = 'active'");
   });
 
   it('keeps system settings and the stored SMTP password server-side', () => {

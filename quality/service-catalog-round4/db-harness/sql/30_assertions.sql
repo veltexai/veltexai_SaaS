@@ -128,6 +128,9 @@ do $$ begin
   perform public.record_tracking_metric(current_setting('h.token'),'time',86400);
   perform public.record_tracking_metric(current_setting('h.token'),'time',86400);
   if public.record_tracking_metric(current_setting('h.token'),'bogus',1) then raise exception 'F4 invalid metric accepted'; end if;
+  if public.record_tracked_download('unknown-synthetic-token-000000') then raise exception 'F4a unknown token downloaded'; end if;
+  if public.record_tracking_click('unknown-synthetic-token-000000','button','Download','download') then raise exception 'F4b unknown token clicked'; end if;
+  if public.tracked_proposal_has_paid_access('unknown-synthetic-token-000000') then raise exception 'F4c unknown token has paid access'; end if;
 end $$;
 reset role;
 do $$ begin
@@ -190,6 +193,10 @@ do $$ declare bad text; begin
     and (has_function_privilege('anon',p.oid,'execute') or has_function_privilege('authenticated',p.oid,'execute'))
     and p.oid::regprocedure::text not in ('read_tracked_proposal(text)',
       'record_tracked_view(text)','record_tracking_metric(text,text,integer)',
+      -- Token-bound public delivery functions resolve an unguessable token,
+      -- reject short/unknown tokens and never accept a caller-supplied row id.
+      'record_tracked_download(text)','record_tracking_click(text,text,text,text)',
+      'tracked_proposal_has_paid_access(text)',
       -- These wrappers call r0_assert_self_or_service before reaching the
       -- ungranted legacy implementations.
       'get_user_current_usage(uuid)','can_user_create_proposal(uuid)',

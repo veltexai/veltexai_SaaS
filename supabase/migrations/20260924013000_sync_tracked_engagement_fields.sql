@@ -69,10 +69,11 @@ language sql stable security definer set search_path = pg_catalog, public as $$
     select 1
       from public.proposal_tracking t
       join public.proposals p on p.id = t.proposal_id
-      join public.subscriptions s on s.user_id = p.user_id
+      left join public.subscriptions s on s.user_id = p.user_id
+      left join public.profiles pr on pr.id = p.user_id
      where t.tracking_id = token
        and length(token) >= 20
-       and s.status = 'active'
+       and (s.status = 'active' or pr.subscription_status = 'active')
   );
 $$;
 

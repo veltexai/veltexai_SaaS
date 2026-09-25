@@ -145,7 +145,14 @@ export async function POST(
 
     if (trackingError) {
       console.error("Error creating tracking record:", trackingError);
-      // Continue without tracking if this fails
+      return NextResponse.json(
+        {
+          error: "Proposal delivery setup failed",
+          code: "TRACKING_SETUP_ERROR",
+          message: "We could not create a secure proposal delivery link. No email was sent. Please try again.",
+        },
+        { status: 500 },
+      );
     }
 
     // Prepare email data

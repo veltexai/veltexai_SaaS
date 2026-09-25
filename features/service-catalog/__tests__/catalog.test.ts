@@ -1,12 +1,16 @@
 import { CATALOG, adaptLegacy, defaultJob } from '../catalog';
 import { businessProfileSchema, jobSchema } from '../schema';
 import { estimateJob } from '../pricing';
-import { catalogAnalytics, composeCatalogProposal, normalizeCatalogProposal } from '../proposal';
+import { catalogAnalytics, composeCatalogProposal, isCatalogProposal, normalizeCatalogProposal } from '../proposal';
 import { catalogDocumentText } from '../document';
 import { SCOPE_TEMPLATE_IDS, getScopeTemplate, getScopeTemplateServiceType } from '@/features/proposals/quick/constants/scope-templates';
 
 const client = { client_name: 'Sample', client_email: 'sample@example.com', contact_phone: '555-0100', service_location: 'Test property', facility_size: 1500, service_frequency: 'one-time' };
 const valid = (id: Parameters<typeof defaultJob>[0] = 'standard') => ({ ...defaultJob(id), access: 'Safe access and parking confirmed' });
+it('retains catalog rendering for the privacy-safe public projection', () => {
+  expect(isCatalogProposal({ catalog_document: true })).toBe(true);
+  expect(isCatalogProposal({ catalog_document: false })).toBe(false);
+});
 it.each(CATALOG.map(s => s.id))('round trips %s with version, selected price and full scope', id => {
   const p = composeCatalogProposal({ job: valid(id), client });
   expect(p.service_type).toBe('residential');

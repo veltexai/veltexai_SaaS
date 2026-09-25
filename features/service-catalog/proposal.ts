@@ -95,7 +95,8 @@ Confirm the scope, scheduling, taxes and payment terms before signing.`;
   });
 }
 
-export function isCatalogProposal(data: { service_specific_data?: unknown }) {
+export function isCatalogProposal(data: { service_specific_data?: unknown; catalog_document?: boolean }) {
+  if (data.catalog_document === true) return true;
   const value = data.service_specific_data;
   return Boolean(value && typeof value === 'object' && 'catalogJob' in value);
 }
