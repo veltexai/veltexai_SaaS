@@ -256,3 +256,12 @@ After any material action, append or revise the relevant section with:
 - R0 migration executed successfully and transactionally on the preview.
 - Hosted assertions PASS: system-settings client read denial, SECURITY DEFINER allowlist, own-user access, cross-user denial, forged-service-claim denial, anonymous denial and real service-role access. Test transactions rolled back.
 - **STATUS:** M-1 structural migration and SQL-role verification PASS. Authenticated PostgREST/application staging, email/PDF flows, operator validation, founder acceptance and production deployment remain open. Preview remains active and must not be deleted yet.
+
+### ded6a10 HTTP/application staging checkpoint — 2026-09-24 Pacific
+
+- Confirmed base ded6a10; reused healthy existing preview in in-app browser. No restoration/R0/SQL-role matrix repeated.
+- Authenticated HTTP/app staging blocked on an existing staging URL or preview-only environment configuration and synthetic sessions/test transport. None available in the candidate worktree/process environment; URL or local file path requested without asking for secret values.
+- NEW VERIFIED RELEASE BLOCKER: preview `enhanced_proposals` is a postgres-owned definer view, no owner filter, with anon/authenticated SELECT and private proposal fields. Metadata only; no customer rows queried. Supabase advisor confirms definer-view warning. Migration 021 grants explain the path; no app call sites found.
+- Added local migration `20260924010000_restrict_legacy_proposal_view.sql` (caller RLS, server-only ACLs, column-grant revocation) and focused metadata assertions. NOT executed/reviewed yet. Evidence: `HTTP_STAGING_CHECKPOINT.md`. Production unchanged; preview not deleted.
+
+- **VIEW FIX VERIFIED ON PREVIEW:** `20260924010000_restrict_legacy_proposal_view.sql` and focused assertions executed atomically on the existing preview; result `legacy proposal view access restricted`. Client table/column read privileges absent, security_invoker enabled, service-role SELECT retained. No completed SQL role matrix repeated. New migration still needs independent review/HTTP checks; production untouched.
