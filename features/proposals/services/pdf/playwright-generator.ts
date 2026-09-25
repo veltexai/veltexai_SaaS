@@ -20,7 +20,10 @@ export async function generateProposalPDFWithPlaywright(
       });
     } else {
       const { chromium } = await import('playwright');
-      browser = await chromium.launch();
+      browser = await chromium.launch({
+        executablePath:
+          process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
+      });
     }
 
     const page = await browser.newPage();

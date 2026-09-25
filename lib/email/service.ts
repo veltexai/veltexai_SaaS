@@ -665,22 +665,11 @@ export class EmailService {
     pdfBuffer?: Buffer,
   ): Promise<boolean> {
     try {
-      console.log(
-        "📧 EmailService: Sending enhanced proposal email (Resend)...",
-      );
+      console.log("📧 EmailService: Sending enhanced proposal email...");
 
       const apiKey = process.env.RESEND_API_KEY;
       const fromName = process.env.EMAIL_SENDER_NAME;
       const fromAddress = process.env.EMAIL_SENDER_ADDRESS;
-
-      if (!apiKey?.trim()) {
-        console.error("❌ EmailService: RESEND_API_KEY is not set");
-        return false;
-      }
-      if (!fromAddress?.trim()) {
-        console.error("❌ EmailService: EMAIL_SENDER_ADDRESS is not set");
-        return false;
-      }
 
       const config = await this.getEmailConfig();
       if (!config) {
@@ -693,50 +682,59 @@ export class EmailService {
         return true;
       }
 
-      const resend = new Resend(apiKey);
       const template = EmailTemplates.getEnhancedProposalEmail(data);
+      const filename = `${data.proposalTitle.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_proposal.pdf`;
 
-      const from = fromName?.trim()
-        ? `"${fromName.trim()}" <${fromAddress.trim()}>`
-        : fromAddress.trim();
-
-      const payload: Parameters<Resend["emails"]["send"]>[0] = {
-        from,
-        to: data.clientEmail,
-        subject: template.subject,
-        html: template.html,
-        text: template.text ?? undefined,
-        headers: {
-          "X-Proposal-Tracking-ID": data.trackingId,
-        },
-      };
-
-      if (data.ccEmails?.length) {
-        payload.cc = data.ccEmails;
+      if (apiKey?.trim() && fromAddress?.trim()) {
+        const resend = new Resend(apiKey);
+        const from = fromName?.trim()
+          ? `"${fromName.trim()}" <${fromAddress.trim()}>`
+          : fromAddress.trim();
+        const payload: Parameters<Resend["emails"]["send"]>[0] = {
+          from,
+          to: data.clientEmail,
+          subject: template.subject,
+          html: template.html,
+          text: template.text ?? undefined,
+          headers: { "X-Proposal-Tracking-ID": data.trackingId },
+          ...(data.ccEmails?.length ? { cc: data.ccEmails } : {}),
+          ...(data.sendCopyToSelf && data.senderEmail
+            ? { bcc: [data.senderEmail] }
+            : {}),
+          ...(pdfBuffer
+            ? { attachments: [{ filename, content: pdfBuffer }] }
+            : {}),
+        };
+        const { data: sendData, error } = await resend.emails.send(payload);
+        if (error) {
+          console.error("❌ EmailService: Resend API error:", error);
+          return false;
+        }
+        console.log(
+          `✅ EmailService: Enhanced proposal email sent successfully to ${data.clientEmail}${sendData?.id ? ` (id: ${sendData.id})` : ""}`,
+        );
+      } else {
+        const transporter = await this.createTransporter();
+        await transporter.sendMail({
+          from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
+          to: data.clientEmail,
+          cc: data.ccEmails?.length ? data.ccEmails : undefined,
+          bcc:
+            data.sendCopyToSelf && data.senderEmail
+              ? data.senderEmail
+              : undefined,
+          subject: template.subject,
+          html: template.html,
+          text: template.text ?? undefined,
+          headers: { "X-Proposal-Tracking-ID": data.trackingId },
+          attachments: pdfBuffer
+            ? [{ filename, content: pdfBuffer, contentType: "application/pdf" }]
+            : undefined,
+        });
+        console.log(
+          `✅ EmailService: Enhanced proposal email sent successfully to ${data.clientEmail} via configured SMTP`,
+        );
       }
-      if (data.sendCopyToSelf && data.senderEmail) {
-        payload.bcc = [data.senderEmail];
-      }
-
-      if (pdfBuffer) {
-        payload.attachments = [
-          {
-            filename: `${data.proposalTitle.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_proposal.pdf`,
-            content: pdfBuffer,
-          },
-        ];
-      }
-
-      const { data: sendData, error } = await resend.emails.send(payload);
-
-      if (error) {
-        console.error("❌ EmailService: Resend API error:", error);
-        return false;
-      }
-
-      console.log(
-        `✅ EmailService: Enhanced proposal email sent successfully to ${data.clientEmail}${sendData?.id ? ` (id: ${sendData.id})` : ""}`,
-      );
       return true;
     } catch (error) {
       console.error(
