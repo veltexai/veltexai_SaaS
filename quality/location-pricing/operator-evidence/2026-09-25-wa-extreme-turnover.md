@@ -44,4 +44,5 @@ Until the first two items are complete, the case remains genuine operator eviden
 ## Source provenance
 
 - Property characteristics were corroborated against a public real-estate record that distinguishes 1,064 finished square feet from 784 unfinished square feet and identifies the county parcel. The precise street address and parcel number are deliberately not copied into this repository.
+- The customer-supplied message used ZIP `98444`, while the corroborated public property record resolves the same street address to ZIP `98405`. The pricing evidence therefore uses the verified Tacoma/Pierce County market and treats the supplied ZIP as an address-quality warning, not as authoritative market input.
 - The county assessor is the authoritative public-record source; third-party listing data is treated as corroboration rather than customer-provided truth.
