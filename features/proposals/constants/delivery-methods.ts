@@ -21,18 +21,15 @@ export const DELIVERY_METHOD_OPTIONS: DeliveryMethodOption[] = [
   {
     value: DeliveryMethod.ONLINE_ONLY,
     label: "Online Link Only",
-    description: "Send secure online link to view proposal (Coming soon)",
+    description: "Send a secure tracked link to view the proposal",
     icon: Link,
-    disabled: true,
-    phase: "Phase 2",
+    disabled: false,
   },
   {
     value: DeliveryMethod.BOTH,
     label: "Both PDF & Online Link",
-    description:
-      "Send both PDF attachment and online viewing link (Coming soon)",
+    description: "Send both the PDF attachment and secure tracked link",
     icon: Mail,
-    disabled: true,
-    phase: "Phase 2",
+    disabled: false,
   },
 ];

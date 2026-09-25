@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { shouldShowPoweredBy } from '@/features/billing/utils/watermark';
 import { formatCurrencySafe } from "@/lib/utils/format";
 import { detectTemplateType } from '@/features/templates/utils/utils';
@@ -7,19 +7,54 @@ import {
   splitMarkdownIntoSections,
 } from '@/features/templates/utils/splitters';
 
-async function getProposalData(id: string) {
-  const supabase = createServiceClient();
-  const { data: proposal } = await supabase
+type PrintDataClient = SupabaseClient<any>;
+
+async function getProposalData(supabase: PrintDataClient, id: string) {
+  const { data: proposal, error: proposalError } = await supabase
     .from('proposals')
-    .select('*, template:proposal_templates(*)')
+    .select('*')
     .eq('id', id)
-    .single();
-  return proposal;
+    .maybeSingle();
+  if (proposalError || !proposal) {
+    if (proposalError) console.error('Print proposal fetch failed:', proposalError.message);
+    return null;
+  }
+
+  let template = null;
+  if (proposal.template_id) {
+    const { data, error } = await supabase
+      .from('proposal_templates')
+      .select('*')
+      .eq('id', proposal.template_id)
+      .maybeSingle();
+    if (error) console.warn('Print template fetch failed:', error.message);
+    template = data ?? null;
+  }
+
+  return { ...proposal, template };
 }
 
-async function getBranding(proposal: any) {
+async function getBranding(supabase: PrintDataClient, proposal: any) {
   if (!proposal) return undefined;
-  const supabase = createServiceClient();
+  const { data: company } = await supabase
+    .from('company_profiles')
+    .select('company_name, logo_url, contact_info')
+    .eq('user_id', proposal.user_id)
+    .maybeSingle();
+  if (company) {
+    const contact =
+      company.contact_info && typeof company.contact_info === 'object'
+        ? (company.contact_info as Record<string, unknown>)
+        : {};
+    return {
+      name: company.company_name || 'Company',
+      logo_url: company.logo_url,
+      phone: typeof contact.phone === 'string' ? contact.phone : null,
+      website: typeof contact.website === 'string' ? contact.website : null,
+      email: typeof contact.email === 'string' ? contact.email : null,
+    };
+  }
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('company_name, full_name, logo_url, phone, website, email')
@@ -37,9 +72,8 @@ async function getBranding(proposal: any) {
     : undefined;
 }
 
-async function getShowPoweredBy(proposal: any) {
+async function getShowPoweredBy(supabase: PrintDataClient, proposal: any) {
   if (!proposal) return true;
-  const supabase = createServiceClient();
   const { data, error } = await supabase
     .rpc('get_user_usage_info', { user_uuid: proposal.user_id })
     .single();
@@ -52,10 +86,9 @@ async function getShowPoweredBy(proposal: any) {
   );
 }
 
-async function getColors(proposal: any) {
+async function getColors(supabase: PrintDataClient, proposal: any) {
   if (!proposal)
     return { primary: '#1e3a8a', secondary: '#0ea5e9', accent: '#1f2937' };
-  const supabase = createServiceClient();
   const { data: userBranding } = await supabase
     .from('user_branding_settings')
     .select('primary_color, secondary_color, accent_color')
@@ -420,9 +453,8 @@ function getPages(proposal: any) {
   return result;
 }
 
-async function getExtrasRows(proposal: any) {
+async function getExtrasRows(supabase: PrintDataClient, proposal: any) {
   if (!proposal) return undefined;
-  const supabase = createServiceClient();
   const { data: pas } = await supabase
     .from('proposal_additional_services')
     .select('label, frequency, subtotal, monthly_amount')
@@ -453,15 +485,15 @@ async function getExtrasRows(proposal: any) {
   }));
 }
 
-export async function getPrintPageData(id: string) {
-  const proposal = await getProposalData(id);
+export async function getPrintPageData(supabase: PrintDataClient, id: string) {
+  const proposal = await getProposalData(supabase, id);
   const [branding, colors, pages, extrasRows, showPoweredBy] =
     await Promise.all([
-      getBranding(proposal),
-      getColors(proposal),
+      getBranding(supabase, proposal),
+      getColors(supabase, proposal),
       getPages(proposal),
-      getExtrasRows(proposal),
-      getShowPoweredBy(proposal),
+      getExtrasRows(supabase, proposal),
+      getShowPoweredBy(supabase, proposal),
     ]);
 
   return {

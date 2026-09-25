@@ -122,7 +122,7 @@ export async function POST(
       validatedData.delivery_method === "online_only" ||
       validatedData.delivery_method === "both"
     ) {
-      proposalViewUrl = `${appUrl}/proposals/view/${proposal.id}?track=${trackingId}`;
+      proposalViewUrl = `${appUrl}/view/${trackingId}`;
     }
 
     // Create proposal tracking record

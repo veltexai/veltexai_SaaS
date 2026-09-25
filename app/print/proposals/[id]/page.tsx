@@ -20,7 +20,7 @@ export default async function PrintProposalPage({
     return <div>Not authorized</div>;
   }
   const { proposal, branding, colors, pages, extrasRows, showPoweredBy } =
-    await getPrintPageData(id);
+    await getPrintPageData(supabase, id);
 
   if (!proposal || proposal.user_id !== user.id) {
     return <div>Proposal not found</div>;

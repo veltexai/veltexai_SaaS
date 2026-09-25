@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { generateProposalPDF } from "@/features/proposals/services/pdf/generator";
-import { headers } from "next/headers";
 import { getUser } from "@/features/auth/services/get-user";
 import { canUsePaidProposalActions } from "@/lib/billing/proposal-entitlements";
 
@@ -17,18 +16,19 @@ export async function GET(
     const sessionClient = await createClient();
     const { user } = await getUser();
     let supabase = sessionClient;
+    let trackedProposal: any = null;
     if (trackingId) {
-      const serviceClient = createServiceClient();
-      const { data: trackingRecord } = await serviceClient
-        .from("proposal_tracking").select("proposal_id")
-        .eq("tracking_id", trackingId).eq("proposal_id", id).maybeSingle();
-      if (!trackingRecord) return NextResponse.json({ error: "Invalid or expired download link" }, { status: 404 });
-      supabase = serviceClient;
+      const { data, error } = await sessionClient.rpc("read_tracked_proposal", {
+        token: trackingId,
+      });
+      const payload = data as { proposal?: any; tracking?: { proposal_id?: string } } | null;
+      if (error || payload?.tracking?.proposal_id !== id || !payload.proposal) {
+        return NextResponse.json({ error: "Invalid or expired download link" }, { status: 404 });
+      }
+      trackedProposal = payload.proposal;
     } else if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const headersList = await headers();
-
     // Fetch proposal data
     let proposalQuery = supabase
       .from("proposals")
@@ -45,7 +45,10 @@ export async function GET(
       )
       .eq("id", id);
     if (!trackingId && user) proposalQuery = proposalQuery.eq("user_id", user.id);
-    const { data: proposal, error: proposalError } = await proposalQuery.single();
+    const proposalResult = trackedProposal
+      ? { data: trackedProposal, error: null }
+      : await proposalQuery.single();
+    const { data: proposal, error: proposalError } = proposalResult;
 
     if (proposalError || !proposal) {
       return NextResponse.json(
@@ -54,7 +57,10 @@ export async function GET(
       );
     }
 
-    if (!(await canUsePaidProposalActions(supabase, proposal.user_id))) {
+    const hasPaidAccess = trackingId
+      ? Boolean((await supabase.rpc("tracked_proposal_has_paid_access", { token: trackingId })).data)
+      : await canUsePaidProposalActions(supabase, proposal.user_id);
+    if (!hasPaidAccess) {
       return NextResponse.json({ error: "A paid plan is required to download proposals", code: "PAID_PLAN_REQUIRED" }, { status: 403 });
     }
 
@@ -63,65 +69,10 @@ export async function GET(
 
     // Track download if tracking ID is provided
     if (trackingId) {
-      const forwarded = headersList.get("x-forwarded-for");
-      const ip = forwarded
-        ? forwarded.split(",")[0]
-        : headersList.get("x-real-ip") || "unknown";
-
-      // Get current tracking record to increment download_count
-      const { data: currentTracking } = await supabase
-        .from("proposal_tracking")
-        .select("download_count")
-        .eq("tracking_id", trackingId)
-        .single();
-
-      // Update tracking record
-      const { error: trackingError } = await supabase
-        .from("proposal_tracking")
-        .update({
-          downloaded: true,
-          downloaded_at: new Date().toISOString(),
-          download_count: (currentTracking?.download_count || 0) + 1,
-        })
-        .eq("tracking_id", trackingId);
-
-      if (trackingError) {
-        console.error("Error updating download tracking:", trackingError);
-      }
-
-      // Insert download record
-      const { error: downloadError } = await supabase
-        .from("proposal_downloads")
-        .insert({
-          proposal_id: id,
-          tracking_id: trackingId,
-          ip_address: ip,
-          user_agent: headersList.get("user-agent"),
-          downloaded_at: new Date().toISOString(),
-        });
-
-      if (downloadError) {
-        console.error("Error inserting download record:", downloadError);
-      }
-
-      // Get current proposal to increment download_count
-      const { data: currentProposal } = await supabase
-        .from("proposals")
-        .select("download_count")
-        .eq("id", id)
-        .single();
-
-      // Update proposal download count
-      const { error: proposalError } = await supabase
-        .from("proposals")
-        .update({
-          download_count: (currentProposal?.download_count || 0) + 1,
-        })
-        .eq("id", id);
-
-      if (proposalError) {
-        console.error("Error updating proposal download count:", proposalError);
-      }
+      const { error: trackingError } = await supabase.rpc("record_tracked_download", {
+        token: trackingId,
+      });
+      if (trackingError) console.error("Error updating download tracking:", trackingError);
     }
 
     // Return PDF

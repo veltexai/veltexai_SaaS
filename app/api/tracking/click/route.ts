@@ -3,13 +3,15 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: 'Invalid request data' }, { status: 400 });
+    }
     const { 
       tracking_id, 
       element_type, 
       element_text, 
-      element_id, 
-      element_class 
+      element_id
     } = body;
 
     if (!tracking_id || !element_type) {
@@ -21,19 +23,14 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Insert click tracking record
-    const { error } = await supabase
-      .from('proposal_click_tracking')
-      .insert({
-        tracking_id,
-        element_type,
-        element_text: element_text?.substring(0, 255) || null, // Limit text length
-        element_id: element_id?.substring(0, 100) || null,
-        element_class: element_class?.substring(0, 255) || null,
-        clicked_at: new Date().toISOString(),
-      });
+    const { data, error } = await supabase.rpc('record_tracking_click', {
+      token: tracking_id,
+      clicked_element_type: element_type.substring(0, 100),
+      clicked_element_text: element_text?.substring(0, 255) || null,
+      clicked_element_id: element_id?.substring(0, 100) || null,
+    });
 
-    if (error) {
+    if (error || !data) {
       console.error('Error inserting click tracking:', error);
       return NextResponse.json(
         { error: 'Failed to track click' },
