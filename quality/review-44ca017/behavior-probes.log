@@ -1,0 +1,38 @@
+PASS app/api/proposals/__tests__/review-44ca017.test.ts
+  ● Console
+
+    console.log
+      🔍 User usage info: {
+        can_create_proposal: true,
+        current_usage: 0,
+        subscription_status: 'free_trial'
+      }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+    console.log
+      🔍 User usage info: {
+        can_create_proposal: true,
+        current_usage: 2,
+        subscription_status: 'free_trial'
+      }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+    console.log
+      ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+PASS features/service-catalog/__tests__/review-44ca017.test.tsx
+
+Test Suites: 2 passed, 2 total
+Tests:       39 skipped, 3 passed, 42 total
+Snapshots:   0 total
+Time:        0.819 s
+Ran all test suites matching app/api/proposals/__tests__/review-44ca017.test.ts|features/service-catalog/__tests__/review-44ca017.test.tsx with tests matching "review:".

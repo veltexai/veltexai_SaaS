@@ -1,0 +1,391 @@
+--- /dev/null
++++ b/app/api/proposals/__tests__/review-44ca017.test.ts
+@@ -0,0 +1,364 @@
++import { defaultJob as defaultV1 } from '@/features/service-catalog/versions/v1/catalog';
++import { composeCatalogProposal } from '@/features/service-catalog/proposal';
++import { defaultJob } from '@/features/service-catalog/catalog';
++import { NextRequest } from 'next/server';
++import { POST as generate } from '../generate/route';
++import { POST as create } from '../route';
++import { GET as reopen, PUT as update } from '../[id]/route';
++import { userCanAccessTemplate } from '@/lib/templates/design-entitlement';
++import { getQuickProposalDefaults } from '@/features/proposals/quick/schemas/quick-proposal';
++import { buildQuickProposalGenerateRequest, buildQuickProposalPayload, buildQuickProposalSavePayload } from '@/features/proposals/quick/lib/build-quick-proposal-payload';
++import { getScopeTemplate } from '@/features/proposals/quick/constants/scope-templates';
++import { PricingEngine } from '@/features/proposals/services/pricing-engine';
++import type { Database } from '@/types/database';
++import type { PersistedServiceFrequency } from '@/features/proposals/schemas/proposal';
++import { recordFunnelEvents } from '@/lib/analytics/funnel-server';
++
++type PricingSettings = Database['public']['Tables']['pricing_settings']['Row'];
++type QuoteSettings = Pick<PricingSettings, 'labor_rate' | 'overhead_percentage' | 'margin_percentage' | 'service_type_rates' | 'production_rates' | 'frequency_multipliers'>;
++
++const completion = jest.fn();
++const insert = jest.fn();
++const templateId = '11111111-1111-4111-8111-111111111111';
++let originalOpenAiApiKey: string | undefined;
++let settingsAvailable = true;
++let reviewUsage = 1;
++const reviewServiceFactory = jest.fn(() => { throw new Error('synthetic missing service key'); });
++jest.mock('@supabase/supabase-js', () => ({ createClient: (...args: unknown[]) => reviewServiceFactory(...args) }));
++jest.mock('next/server', () => ({ ...jest.requireActual('next/server'), after: jest.fn() }));
++let settings: QuoteSettings;
++let savedProposal: Record<string, unknown> | null = null;
++jest.mock('openai', () => ({ __esModule: true, default: jest.fn(() => ({ chat: { completions: { create: (...args: unknown[]) => completion(...args) } } })) }));
++jest.mock('@/lib/auth/auth-helpers', () => ({ getUser: async () => ({ id: 'user' }) }));
++jest.mock('@/features/auth/services/get-user', () => ({ getUser: async () => ({ user: { id: 'user' } }) }));
++jest.mock('@/lib/templates/design-entitlement', () => ({ userCanAccessTemplate: jest.fn(), DESIGN_NOT_ENTITLED_MESSAGE: 'Design not entitled' }));
++jest.mock('@/lib/stripe/stripe', () => ({ stripe: {} }));
++jest.mock('@/lib/email/service', () => ({ EmailService: {} }));
++jest.mock('@/lib/analytics/server', () => ({ captureServerEvent: jest.fn() }));
++jest.mock('@/lib/analytics/funnel-server', () => ({ recordFunnelEvents: jest.fn() }));
++jest.mock('@/lib/supabase/server', () => ({
++  createClient: async () => ({
++    rpc: () => ({ data: true, single: async () => ({ data: { can_create_proposal: true, current_usage: reviewUsage, subscription_status: 'free_trial' } }) }),
++    from: (table: string) => {
++      const data = table === 'profiles' ? { company_name: 'QA Company' }
++        : table === 'proposal_templates' ? { name: 'Executive Premium' }
++        : table === 'proposals' ? savedProposal
++        : settingsAvailable ? [settings] : [];
++      const chain = { select: () => chain, eq: () => chain, order: () => chain,
++        limit: async () => ({ data }), single: async () => ({ data: table === "proposals" ? savedProposal : data }), insert, update: (row: Record<string, unknown>) => { savedProposal = { ...savedProposal, ...row }; return chain; } };
++      return chain;
++    },
++  }),
++}));
++
++const request = (body: unknown, method = 'POST') => new NextRequest('http://localhost/api/proposals', { method, ...(method === 'GET' ? {} : { body: JSON.stringify(body) }) });
++function values(frequency: 'one-time' | 'weekly' = 'one-time') {
++  return { ...getQuickProposalDefaults({ demoType: 'residential', template: getScopeTemplate('residential_deep_clean')! }), clientEmail: 'qa@example.com', clientPhone: '(555) 123-4567', serviceFrequency: frequency };
++}
++beforeEach(() => {
++  originalOpenAiApiKey = process.env.OPENAI_API_KEY;
++  // The route checks configuration even though the OpenAI client is mocked.
++  process.env.OPENAI_API_KEY = 'unit-test-placeholder';
++  jest.clearAllMocks(); settingsAvailable = true;
++  settings = { labor_rate: 35, overhead_percentage: 15, margin_percentage: 25,
++    service_type_rates: { residential: 0.15 }, production_rates: { residential: 1000 },
++    frequency_multipliers: { 'one-time': 1, weekly: 0.9 } };
++  savedProposal = null;
++  insert.mockImplementation((row: Record<string, unknown>) => {
++    savedProposal = JSON.parse(JSON.stringify({ ...row, id: 'saved' }));
++    return { select: () => ({ single: async () => ({ data: savedProposal }) }) };
++  });
++  jest.mocked(userCanAccessTemplate).mockResolvedValue(true);
++  completion.mockResolvedValue({ choices: [{ message: { content: '## Service Quote & Pricing\n```veliz_pricing_table\n{"summary":{"total":"$999999.00"}}\n```' } }] });
++});
++
++afterEach(() => {
++  if (originalOpenAiApiKey === undefined) {
++    delete process.env.OPENAI_API_KEY;
++  } else {
++    process.env.OPENAI_API_KEY = originalOpenAiApiKey;
++  }
++});
++
++it('returns 503 without calling OpenAI when the API key is missing', async () => {
++  delete process.env.OPENAI_API_KEY;
++  const built = buildQuickProposalGenerateRequest(values(), templateId);
++  if (!built.success) throw new Error(built.error);
++  const result = await generate(request(built.payload));
++  expect(result.status).toBe(503);
++  expect(await result.json()).toEqual({ error: 'OpenAI API key not configured' });
++  expect(completion).not.toHaveBeenCalled();
++});
++
++it.each(['one-time', 'weekly'] as const)('returns the exact %s quote used by the generated pricing block', async frequency => {
++  const built = buildQuickProposalGenerateRequest(values(frequency), templateId);
++  if (!built.success) throw new Error(built.error);
++  const result = await generate(request(built.payload));
++  expect(result.status).toBe(200);
++  const body = await result.json();
++  const block = JSON.parse(body.content.match(/```veliz_pricing_table\s*([\s\S]*?)```/)[1]);
++  expect(Number(block.summary.total.replace('$', ''))).toBe(body.pricing_data.price_range.low);
++  expect(body.pricing_data.price_range.low).toBe(body.pricing_data.price_range.high);
++  expect(body.pricing_data.hours_estimate.min).toBeGreaterThan(0);
++  expect(body.content).not.toContain('999999');
++  expect(recordFunnelEvents).toHaveBeenCalledWith([
++    expect.objectContaining({ userId: 'user', eventName: 'proposal_generate_succeeded' }),
++  ]);
++});
++it('fails without pricing settings instead of saving a zero/placeholder quote', async () => {
++  settingsAvailable = false;
++  const built = buildQuickProposalGenerateRequest(values(), templateId);
++  if (!built.success) throw new Error(built.error);
++  const log = jest.spyOn(console, 'error').mockImplementation(() => {});
++  try { expect((await generate(request(built.payload))).status).toBe(500); }
++  finally { log.mockRestore(); }
++  expect(completion).not.toHaveBeenCalled();
++});
++it('rejects incomplete AI pricing output', async () => {
++  completion.mockResolvedValue({ choices: [{ message: { content: 'Incomplete quote' } }] });
++  const built = buildQuickProposalGenerateRequest(values(), templateId);
++  if (!built.success) throw new Error(built.error);
++  expect((await generate(request(built.payload))).status).toBe(502);
++});
++it('enforces locked designs on Generate, Create, and Update before generation or writes', async () => {
++  jest.mocked(userCanAccessTemplate).mockResolvedValue(false);
++  const gen = buildQuickProposalGenerateRequest(values(), templateId);
++  const save = buildQuickProposalPayload(values(), 'Content', templateId);
++  if (!gen.success || !save.success) throw new Error('Invalid test inputs');
++  expect((await generate(request(gen.payload))).status).toBe(403);
++  expect((await create(request(save.payload))).status).toBe(403);
++  expect((await update(request({ template_id: templateId }, 'PUT'), { params: Promise.resolve({ id: 'saved' }) })).status).toBe(403);
++  expect(completion).not.toHaveBeenCalled();
++  expect(insert).not.toHaveBeenCalled();
++});
++
++describe('Quick commercial monthly pricing basis', () => {
++  beforeEach(() => {
++    // Seed/fallback settings that reproduced the production $46,339.13 quote.
++    settings = { labor_rate: 22, overhead_percentage: 12, margin_percentage: 20,
++      service_type_rates: { commercial: 0.15 }, production_rates: {}, frequency_multipliers: null };
++  });
++
++  function commercialValues(size = 12000, frequency: PersistedServiceFrequency = '5x-week') {
++    return { ...getQuickProposalDefaults({ demoType: 'commercial', template: getScopeTemplate('commercial_office')! }),
++      clientEmail: 'qa@example.com', clientPhone: '(555) 123-4567', squareFootage: size, serviceFrequency: frequency };
++  }
++
++  function commercialRequest(size = 12000, frequency: PersistedServiceFrequency = '5x-week') {
++    const built = buildQuickProposalGenerateRequest(commercialValues(size, frequency), templateId);
++    if (!built.success) throw new Error(built.error);
++    return built.payload;
++  }
++
++  function pricingTable(content: string): { rows: { pricePerMonth: string; frequency: string }[]; summary: { total: string; subtotal: string; tax: string } } {
++    const match = content.match(/```veliz_pricing_table\s*([\s\S]*?)```/);
++    if (!match) throw new Error('Missing pricing table');
++    return JSON.parse(match[1]);
++  }
++
++  it.each([[12000, 4490.64, '$4,490.64'], [9000, 3367.98, '$3,367.98']] as const)(
++    'commercial $/sq-ft is a monthly recurring basis and must never be multiplied by monthly visit count (%i sq ft)',
++    async (size, expected, formatted) => {
++      const result = await generate(request(commercialRequest(size)));
++      expect(result.status).toBe(200);
++      const body = await result.json();
++      expect(body.pricing_data.price_range).toEqual({ low: expected, high: expected });
++      const table = pricingTable(body.content);
++      expect(table.rows).toEqual([{ service: 'Standard Janitorial Service', frequency: '5x weekly', pricePerMonth: formatted }]);
++      expect(table.summary).toEqual({ subtotal: formatted, tax: '$0.00', total: formatted });
++      expect(body.content).not.toContain('999999');
++      // Monetary billing basis does not change the existing labor-hour estimate.
++      expect(body.pricing_data.hours_estimate.min).toBeCloseTo(Math.ceil(size / 600) * 21.67);
++    },
++  );
++
++  it.each([
++    ['1x-month', 2376], ['bi-weekly', 2257.20], ['weekly', 2138.40],
++    ['2x-week', 2886.84], ['3x-week', 3421.44], ['4x-week', 3956.04],
++    ['5x-week', 4490.64], ['6x-week', 4918.32], ['daily', 5346.00],
++  ] as const)('applies the approved monthly frequency factor once for %s', async (frequency, expected) => {
++    const result = await generate(request(commercialRequest(12000, frequency)));
++    expect(result.status).toBe(200);
++    expect((await result.json()).pricing_data.price_range).toEqual({ low: expected, high: expected });
++  });
++
++  it('strictly increases from 1x through 7x without any monetary visit expansion', async () => {
++    const frequencies = ['weekly', '2x-week', '3x-week', '4x-week', '5x-week', '6x-week', 'daily'] as const;
++    const prices: number[] = [];
++    for (const frequency of frequencies) {
++      const result = await generate(request(commercialRequest(12000, frequency)));
++      prices.push((await result.json()).pricing_data.price_range.low);
++    }
++    expect(prices).toEqual([2138.40, 2886.84, 3421.44, 3956.04, 4490.64, 4918.32, 5346.00]);
++    prices.slice(1).forEach((price, index) => expect(price).toBeGreaterThan(prices[index]));
++    expect(prices[4]).toBeCloseTo(prices[0] * 2.10, 2);
++    expect(prices[4]).not.toBeCloseTo(46339.13, 2);
++    expect(prices[4]).not.toBeCloseTo(prices[0] * 21.67 * 2.10, 2);
++  });
++
++  it('uses the weekly baseline, not a second frequency-specific settings multiplier', async () => {
++    settings.frequency_multipliers = { 'one-time': 1, weekly: 0.9, '5x-week': 8, '4x-week': 9, '6x-week': 10 };
++    const result = await generate(request(commercialRequest()));
++    expect((await result.json()).pricing_data.price_range.low).toBe(4490.64);
++  });
++
++  it('preserves the engine input and its non-unit multiplier plus the route discount', async () => {
++    settings.frequency_multipliers = { 'one-time': 1.1, weekly: 0.8 };
++    const calculate = jest.spyOn(PricingEngine.prototype, 'calculatePricing');
++    try {
++      const result = await generate(request(commercialRequest()));
++      expect(calculate).toHaveBeenCalledWith(expect.objectContaining({ serviceFrequency: 'one-time' }));
++      // 1800 × 1.1 × 1.32 × 0.8 × 2.1, with no monthly visits expansion.
++      expect((await result.json()).pricing_data.price_range.low).toBe(4390.85);
++    } finally { calculate.mockRestore(); }
++  });
++
++  it('keeps Advanced fallback pricing unchanged even with the same scope template', async () => {
++    const { proposal_flow, ...advanced } = commercialRequest();
++    expect(proposal_flow).toBe('quick');
++    const result = await generate(request(advanced));
++    const body = await result.json();
++    expect(body.pricing_data.price_range.low).toBe(46339.13);
++    expect(pricingTable(body.content).summary.total).toBe('$46339.13');
++  });
++
++  it.each([
++    ['commercial', 'one-time', 12000, 2376],
++    ['residential', 'one-time', 1500, 316.80],
++    ['residential', 'weekly', 1500, 1234.57],
++  ] as const)('keeps %s %s pricing unchanged', async (serviceType, frequency, size, expected) => {
++    const payload = { ...commercialRequest(size, frequency), service_type: serviceType };
++    const result = await generate(request(payload));
++    expect((await result.json()).pricing_data.price_range.low).toBe(expected);
++  });
++
++  it.each(['quick', 'advanced'] as const)('preserves supplied %s pricing without repricing or discounting', async flow => {
++    const snapshot = { price_range: { low: 3000, high: 3200 }, hours_estimate: { min: 12, max: 18 },
++      assumptions: { labor_rate: 22, overhead_percentage: 12, margin_percentage: 20, production_rate: { min: 600, max: 600 } } };
++    const result = await generate(request({ ...commercialRequest(), proposal_flow: flow, pricing_data: snapshot }));
++    const body = await result.json();
++    expect(body.pricing_data).toEqual(snapshot);
++    expect(pricingTable(body.content).summary.total).toBe(flow === 'quick' ? '$3,100.00' : '$3100.00');
++  });
++
++  it('keeps add-on monthly normalization and separate base pricing intact', async () => {
++    const selected_addons = [
++      { label: 'Monthly', frequency: 'monthly', qty: 1, rate: 100 },
++      { label: 'Quarterly', frequency: 'quarterly', subtotal: 300 },
++      { label: 'Annual', frequency: 'annual', subtotal: 1200 },
++      { label: 'One-time', frequency: 'one_time', subtotal: 1200 },
++      { label: 'Supplied monthly amount', frequency: 'annual', subtotal: 1200, monthly_amount: 25 },
++    ];
++    const result = await generate(request({ ...commercialRequest(), selected_addons }));
++    const body = await result.json();
++    expect(body.pricing_data.price_range.low).toBe(4490.64);
++    const table = pricingTable(body.content);
++    expect(table.rows.map(row => row.pricePerMonth)).toEqual(['$4,490.64', '$100.00', '$100.00', '$100.00', '$100.00', '$25.00']);
++    expect(table.summary.total).toBe('$4,915.64');
++  });
++
++  it('keeps one-time residential add-ons payable in full', async () => {
++    const result = await generate(request({ ...commercialRequest(1500, 'one-time'), service_type: 'residential',
++      selected_addons: [{ label: 'One-time', frequency: 'one_time', subtotal: 1200 }] }));
++    const body = await result.json();
++    expect(body.pricing_data.price_range.low).toBe(316.80);
++    expect(pricingTable(body.content).rows[1].pricePerMonth).toBe('$1200.00');
++    expect(pricingTable(body.content).summary.total).toBe('$1516.80');
++  });
++
++  it('uses the discounted monthly total to derive per-visit scope prices', async () => {
++    const payload = commercialRequest();
++    // No design selects the Basic structure, which includes scope money.
++    delete payload.template_id;
++    const result = await generate(request(payload));
++    expect(result.status).toBe(200);
++    const prompt = completion.mock.calls[0][0].messages[1].content as string;
++    expect(prompt).toContain('"costPerVisit":"$207.23"');
++    expect(prompt).toContain('"monthlyCost":"$4,490.64"');
++    expect(prompt).toContain('$4,490.64 monthly cost.');
++  });
++
++  it.each([
++    ['weekly', 2138.40], ['2x-week', 2886.84], ['3x-week', 3421.44],
++    ['4x-week', 3956.04], ['5x-week', 4490.64], ['6x-week', 4918.32], ['daily', 5346.00],
++  ] as const)('retains the %s quote through generate, create, and reopen without recalculation', async (frequency, expected) => {
++    const calculate = jest.spyOn(PricingEngine.prototype, 'calculatePricing');
++    const generated = await generate(request(commercialRequest(12000, frequency)));
++    const body = await generated.json();
++    const built = buildQuickProposalSavePayload(commercialValues(12000, frequency), body.content, templateId, body.pricing_data);
++    if (!built.success) throw new Error(built.error);
++    expect(built.payload).not.toHaveProperty('proposal_flow');
++    const created = await create(request(built.payload));
++    expect(created.status).toBe(200);
++    expect((await created.json()).id).toBe('saved');
++    expect(recordFunnelEvents).toHaveBeenCalledWith(expect.arrayContaining([
++      expect.objectContaining({ eventId: 'proposal_saved:saved', eventName: 'proposal_saved' }),
++      expect.objectContaining({ eventId: 'repeat_proposal:saved', eventName: 'repeat_proposal' }),
++    ]));
++    expect(insert).toHaveBeenCalledTimes(1);
++    const reopened = await reopen(request({}, 'GET'), { params: Promise.resolve({ id: 'saved' }) });
++    const { proposal } = await reopened.json();
++    expect(proposal.pricing_data).toEqual(body.pricing_data);
++    expect(proposal.pricing_data.price_range).toEqual({ low: expected, high: expected });
++    expect(proposal.generated_content).toBe(body.content);
++    expect(pricingTable(proposal.generated_content).summary.total).toBe(
++      expected.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
++    );
++    expect(proposal.service_frequency).toBe(frequency);
++    expect(calculate).toHaveBeenCalledTimes(1);
++    calculate.mockRestore();
++  });
++});
++
++
++it('catalog create, reopen and edit keep canonical price and denormalized columns aligned', async () => {
++  const job = { ...defaultJob('standard'), access: 'Confirmed access' };
++  const original = composeCatalogProposal({ job, client: { client_name: 'Sample', client_email: 'sample@example.com', contact_phone: '555', service_location: 'Test property', facility_size: 1500, service_frequency: 'one-time' } });
++  expect((await create(request({ ...original, generated_content: 'forged', pricing_data: { price_range: { low: 1, high: 1 } } }))).status).toBe(200);
++  expect(savedProposal?.generated_content).toBe(original.generated_content);
++  const revised = composeCatalogProposal({ job: { ...job, squareFeet: 2200, override: { pricePerVisit: 399, reason: 'Operator walkthrough' } }, client: { ...original.global_inputs, client_name: 'Revised customer' } });
++  const result = await update(request(revised, 'PUT'), { params: Promise.resolve({ id: 'saved' }) });
++  expect(result.status).toBe(200);
++  const { proposal } = await (await reopen(request({}, 'GET'), { params: Promise.resolve({ id: 'saved' }) })).json();
++  expect(proposal.client_name).toBe('Revised customer');
++  expect(proposal.facility_size).toBe(2200);
++  expect(proposal.pricing_data.price_range).toEqual({ low: 399, high: 399 });
++  expect(proposal.service_specific_data.catalogJob.override.reason).toBe('Operator walkthrough');
++  expect((await update(request({ service_specific_data: {} }, 'PUT'), { params: Promise.resolve({ id: 'saved' }) })).status).toBe(422);
++});
++it('status-only catalog PUT preserves historical content and price despite current pricing changes', async () => {
++  const p = composeCatalogProposal({ job: defaultJob('standard'), client: { client_name: 'History', client_email: 'history@example.com', contact_phone: '555', service_location: 'Test', facility_size: 1500, service_frequency: 'one-time' } });
++  savedProposal = { ...p, id: 'saved', user_id: 'user', generated_content: 'Frozen accepted proposal', pricing_data: { price_range: { low: 173.21, high: 173.21 } } };
++  const result = await update(request({ status: 'sent' }, 'PUT'), { params: Promise.resolve({ id: 'saved' }) });
++  expect(result.status).toBe(200);
++  expect(savedProposal).toMatchObject({ status: 'sent', generated_content: 'Frozen accepted proposal', pricing_data: { price_range: { low: 173.21, high: 173.21 } } });
++});
++
++it('returns 422 for demo saves and attempted catalog version changes', async () => {
++ const client = { client_name: 'Sample', client_email: 'sample@example.com', contact_phone: '555', service_location: 'Test property', facility_size: 1500, service_frequency: 'one-time' };
++ const sample = composeCatalogProposal({ job: { ...defaultJob('standard'), demo: true }, client });
++ const denied = await create(request(sample));
++ expect(denied.status).toBe(422);
++ expect(JSON.stringify(await denied.json())).toContain('Sample jobs');
++ const original = composeCatalogProposal({ job: defaultV1('standard'), client });
++ expect((await create(request(original))).status).toBe(200);
++ const current = composeCatalogProposal({ job: defaultJob('standard'), client });
++ const changed = await update(request(current, 'PUT'), { params: Promise.resolve({ id: 'saved' }) });
++ expect(changed.status).toBe(422);
++ expect(JSON.stringify(await changed.json())).toContain('catalog version');
++});
++
++// Independent review probes; no network, email or paid-provider calls.
++it.each([0, 2])('review: persisted proposal survives service client throw at usage %s', async count => {
++ reviewUsage = count;
++ const log = jest.spyOn(console,'error').mockImplementation(() => {});
++ const p = composeCatalogProposal({job: defaultJob('standard'), client: {client_name:'Review',client_email:'review@example.test',contact_phone:'555',service_location:'Test',facility_size:1500,service_frequency:'one-time'}});
++ try {
++  const result=await create(request(p));
++  expect(result.status).toBe(200);
++  expect((await result.json()).id).toBe('saved');
++  expect(insert).toHaveBeenCalledTimes(1);
++  expect(reviewServiceFactory).toHaveBeenCalledTimes(1);
++  expect(savedProposal?.generated_content).toBe(p.generated_content);
++ } finally {reviewUsage=1; log.mockRestore();}
++});
+--- /dev/null
++++ b/features/service-catalog/__tests__/review-44ca017.test.tsx
+@@ -0,0 +1,21 @@
++/** @jest-environment jsdom */
++import {render,screen,fireEvent,waitFor} from '@testing-library/react';
++import '@testing-library/jest-dom';
++import Page from '@/app/dashboard/proposals/category/page';
++jest.mock('@/features/auth/services/get-user',()=>({getUser:async()=>({user:{id:'review'}})}));
++jest.mock('@/lib/supabase/server',()=>({createClient:jest.fn()}));
++jest.mock('@/lib/templates/template-service',()=>({getUserAccessibleTemplates:async()=>[]}));
++jest.mock('@/lib/analytics/client',()=>({captureEvent:jest.fn()}));
++jest.mock('next/navigation',()=>({redirect:jest.fn(),notFound:jest.fn(),useRouter:()=>({push:jest.fn(),refresh:jest.fn()})}));
++jest.mock('../components/catalog-document',()=>({CatalogDocument:()=>null}));
++it('review: actual route remount clears demo edits when switching to real',async()=>{
++ global.fetch=jest.fn(async()=>({ok:true,json:async()=>({profile:null})} as Response));
++ const demo=await Page({searchParams:Promise.resolve({demo:'1',job:'standard'})});
++ const view=render(demo);
++ expect(screen.getByLabelText('Client name')).toHaveValue('Sample customer');
++ fireEvent.change(screen.getByLabelText('Client name'),{target:{value:'Edited sample'}});
++ const real=await Page({searchParams:Promise.resolve({demo:'0',job:'standard'})});
++ view.rerender(real);
++ expect(screen.getByLabelText('Client name')).toHaveValue('');
++ await waitFor(()=>expect(global.fetch).toHaveBeenCalled());
++});

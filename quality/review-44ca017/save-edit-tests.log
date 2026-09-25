@@ -1,0 +1,147 @@
+  console.log
+    🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+  console.log
+    🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+  console.log
+    ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+  console.log
+    🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+  console.log
+    ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+  console.log
+    🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+  console.log
+    ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+  console.log
+    🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+  console.log
+    ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+  console.log
+    🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+  console.log
+    ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+  console.log
+    🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+  console.log
+    ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+  console.log
+    🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+  console.log
+    ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+  console.log
+    🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+  console.log
+    ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+  console.log
+    🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+  console.log
+    🔍 User usage info: { can_create_proposal: true, current_usage: 1 }
+
+      at log (app/api/proposals/route.ts:44:13)
+
+  console.log
+    ✅ Usage incremented successfully for user: user
+
+      at log (app/api/proposals/route.ts:173:15)
+
+PASS app/api/proposals/__tests__/design-and-pricing.test.ts
+  ✓ returns 503 without calling OpenAI when the API key is missing (6 ms)
+  ✓ returns the exact one-time quote used by the generated pricing block (15 ms)
+  ✓ returns the exact weekly quote used by the generated pricing block (1 ms)
+  ✓ fails without pricing settings instead of saving a zero/placeholder quote (1 ms)
+  ✓ rejects incomplete AI pricing output (1 ms)
+  ✓ enforces locked designs on Generate, Create, and Update before generation or writes (21 ms)
+  ✓ catalog create, reopen and edit keep canonical price and denormalized columns aligned (6 ms)
+  ✓ status-only catalog PUT preserves historical content and price despite current pricing changes (1 ms)
+  ✓ returns 422 for demo saves and attempted catalog version changes (4 ms)
+  Quick commercial monthly pricing basis
+    ✓ commercial $/sq-ft is a monthly recurring basis and must never be multiplied by monthly visit count (12000 sq ft) (1 ms)
+    ✓ commercial $/sq-ft is a monthly recurring basis and must never be multiplied by monthly visit count (9000 sq ft) (1 ms)
+    ✓ applies the approved monthly frequency factor once for 1x-month
+    ✓ applies the approved monthly frequency factor once for bi-weekly
+    ✓ applies the approved monthly frequency factor once for weekly (1 ms)
+    ✓ applies the approved monthly frequency factor once for 2x-week (1 ms)
+    ✓ applies the approved monthly frequency factor once for 3x-week (1 ms)
+    ✓ applies the approved monthly frequency factor once for 4x-week (1 ms)
+    ✓ applies the approved monthly frequency factor once for 5x-week
+    ✓ applies the approved monthly frequency factor once for 6x-week (1 ms)
+    ✓ applies the approved monthly frequency factor once for daily
+    ✓ strictly increases from 1x through 7x without any monetary visit expansion (3 ms)
+    ✓ uses the weekly baseline, not a second frequency-specific settings multiplier (1 ms)
+    ✓ preserves the engine input and its non-unit multiplier plus the route discount (1 ms)
+    ✓ keeps Advanced fallback pricing unchanged even with the same scope template (1 ms)
+    ✓ keeps commercial one-time pricing unchanged
+    ✓ keeps residential one-time pricing unchanged
+    ✓ keeps residential weekly pricing unchanged
+    ✓ preserves supplied quick pricing without repricing or discounting (1 ms)
+    ✓ preserves supplied advanced pricing without repricing or discounting
+    ✓ keeps add-on monthly normalization and separate base pricing intact (1 ms)
+    ✓ keeps one-time residential add-ons payable in full
+    ✓ uses the discounted monthly total to derive per-visit scope prices (1 ms)
+    ✓ retains the weekly quote through generate, create, and reopen without recalculation (3 ms)
+    ✓ retains the 2x-week quote through generate, create, and reopen without recalculation (3 ms)
+    ✓ retains the 3x-week quote through generate, create, and reopen without recalculation (3 ms)
+    ✓ retains the 4x-week quote through generate, create, and reopen without recalculation (2 ms)
+    ✓ retains the 5x-week quote through generate, create, and reopen without recalculation (7 ms)
+    ✓ retains the 6x-week quote through generate, create, and reopen without recalculation (2 ms)
+    ✓ retains the daily quote through generate, create, and reopen without recalculation (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       39 passed, 39 total
+Snapshots:   0 total
+Time:        0.231 s, estimated 1 s
+Ran all test suites matching app/api/proposals/__tests__/design-and-pricing.test.ts.
