@@ -8,7 +8,7 @@ do $$ begin
   end if;
   if not exists (
     select 1 from supabase_migrations.schema_migrations
-    where version = '20260925002000'
+    where version = '20260925005000'
   ) then raise exception 'R2 migration version is absent'; end if;
 end $$;
 
@@ -27,7 +27,8 @@ insert into auth.users(id,email) values
  ('91000000-0000-4000-8000-000000000013','r2-estimator-a@example.test'),
  ('91000000-0000-4000-8000-000000000014','r2-viewer-a@example.test'),
  ('91000000-0000-4000-8000-000000000015','r2-owner-b@example.test'),
- ('91000000-0000-4000-8000-000000000016','r2-outsider@example.test');
+ ('91000000-0000-4000-8000-000000000016','r2-outsider@example.test'),
+ ('91000000-0000-4000-8000-000000000017','r2-empty-delete@example.test');
 
 -- Signup trigger plus R2 bootstrap must create one owner organization each.
 do $$ declare uid uuid; begin
@@ -39,6 +40,20 @@ do $$ declare uid uuid; begin
       raise exception 'active organization bootstrap failed for %', uid;
     end if;
   end loop;
+end $$;
+
+-- Empty signup accounts must delete end-to-end, including their private tenant.
+-- Accounts with proposal work remain protected by tenant-owned RESTRICT FKs.
+select active_organization_id as empty_org from public.profiles
+where id='91000000-0000-4000-8000-000000000017' \gset
+select set_config('r2.test.empty_org', :'empty_org', true);
+delete from auth.users where id='91000000-0000-4000-8000-000000000017';
+set constraints all immediate;
+do $$ begin
+  if exists(select 1 from public.profiles where id='91000000-0000-4000-8000-000000000017')
+     or exists(select 1 from public.organizations where id=current_setting('r2.test.empty_org')::uuid) then
+    raise exception 'empty auth account cleanup left profile or organization rows';
+  end if;
 end $$;
 
 select active_organization_id as org_a from public.profiles where id='91000000-0000-4000-8000-000000000011' \gset
@@ -62,7 +77,51 @@ insert into public.proposals(
 ) values
  ('91000000-0000-4000-8000-000000000101',:'org_a','91000000-0000-4000-8000-000000000011','R2 A','Synthetic A','client-a@example.test','555-0101','Synthetic A',1000,'residential','one-time','R2-CONTENT-A'),
  ('91000000-0000-4000-8000-000000000102',:'org_b','91000000-0000-4000-8000-000000000015','R2 B','Synthetic B','client-b@example.test','555-0102','Synthetic B',1000,'residential','one-time','R2-CONTENT-B');
+insert into public.proposal_tracking(
+  proposal_id,tracking_id,delivery_method,recipient_email,subject,message
+) values (
+  '91000000-0000-4000-8000-000000000101',
+  '91000000-0000-4000-8000-000000000199',
+  'online','public-r2@example.test','R2 public view','R2 public view'
+);
+do $$ begin
+  begin
+    insert into public.organizations(id,name,slug,created_by)
+    values ('91000000-0000-4000-8000-000000000198','Ownerless R2','ownerless-r2-test',
+      '91000000-0000-4000-8000-000000000011');
+    raise exception 'service role committed an ownerless organization';
+  exception when check_violation then null; end;
+end $$;
 reset role;
+
+-- A signed-in public recipient who is not a tenant member may resolve the
+-- tracked proposal without turning a view counter into audit/outbox noise.
+do $$ declare audit_before bigint; outbox_before bigint; begin
+  select count(*) into audit_before from public.organization_audit_log
+    where organization_id=current_setting('r2.test.org_a')::uuid;
+  select count(*) into outbox_before from public.organization_event_outbox
+    where organization_id=current_setting('r2.test.org_a')::uuid;
+  perform set_config('r2.test.audit_before', audit_before::text, true);
+  perform set_config('r2.test.outbox_before', outbox_before::text, true);
+end $$;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','91000000-0000-4000-8000-000000000016',true);
+do $$ begin
+  if not public.record_tracked_view('91000000-0000-4000-8000-000000000199') then
+    raise exception 'signed-in public tracked view was not recorded';
+  end if;
+end $$;
+reset role;
+do $$ begin
+  if (select count(*) from public.organization_audit_log
+      where organization_id=current_setting('r2.test.org_a')::uuid)
+       <> current_setting('r2.test.audit_before')::bigint
+     or (select count(*) from public.organization_event_outbox
+      where organization_id=current_setting('r2.test.org_a')::uuid)
+       <> current_setting('r2.test.outbox_before')::bigint then
+    raise exception 'public tracked view created organization audit/outbox noise';
+  end if;
+end $$;
 
 -- Owner: manage organization and ordinary membership; cannot forge audit/event.
 set local role authenticated;
@@ -126,6 +185,19 @@ do $$ begin
 end $$;
 reset role;
 
+-- The same auth-user deletion must fail closed once tenant-owned work exists.
+do $$ begin
+  begin
+    delete from auth.users where id='91000000-0000-4000-8000-000000000011';
+    set constraints all immediate;
+    raise exception 'protected owner account deletion unexpectedly succeeded';
+  exception when foreign_key_violation then null; end;
+  if not exists(select 1 from auth.users where id='91000000-0000-4000-8000-000000000011')
+     or not exists(select 1 from public.proposals where id='91000000-0000-4000-8000-000000000101') then
+    raise exception 'protected owner deletion did not roll back atomically';
+  end if;
+end $$;
+
 -- Service inbox: exact replay is idempotent; altered payload conflicts.
 set local role service_role;
 insert into public.organization_event_inbox(consumer,event_id,organization_id,payload_sha256)
@@ -169,10 +241,20 @@ select
   (select count(*) from public.organization_memberships) membership_count,
   (select count(*) from public.profiles where active_organization_id is null) null_active_organization_count,
   (select count(*) from public.proposals where organization_id is null) null_proposal_organization_count;
+do $$ declare baseline record; current_count bigint; current_digest text; begin
+  select * into baseline from r2_baseline;
+  select count(*),
+         encode(digest(coalesce(string_agg(id::text || ':' || coalesce(generated_content,''), '|' order by id),''),'sha256'),'hex')
+    into current_count, current_digest
+  from public.proposals where id::text not like '91000000-%';
+  if current_count <> baseline.proposal_count or current_digest <> baseline.proposal_digest then
+    raise exception 'pre-existing proposal digest changed during hosted matrix';
+  end if;
+end $$;
 select b.proposal_count,
-       (select count(*) from public.proposals) current_proposal_count,
+       (select count(*) from public.proposals where id::text not like '91000000-%') current_proposal_count,
        b.proposal_digest,
-       (select encode(digest(coalesce(string_agg(id::text || ':' || coalesce(generated_content,''), '|' order by id),''),'sha256'),'hex') from public.proposals) current_proposal_digest
+       (select encode(digest(coalesce(string_agg(id::text || ':' || coalesce(generated_content,''), '|' order by id),''),'sha256'),'hex') from public.proposals where id::text not like '91000000-%') current_proposal_digest
 from r2_baseline b;
 
 rollback;

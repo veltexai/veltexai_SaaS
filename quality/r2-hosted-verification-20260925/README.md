@@ -2,7 +2,7 @@
 
 Status: **PREPARED — NOT EXECUTED**
 
-Candidate: second-remediation commit produced from `1e3c541`
+Candidate: third-remediation commit produced from `0452823`
 
 This directory is the bounded hosted-verification plan for R2 organization and
 tenancy. It does not apply migrations, discover credentials, send email, deploy,

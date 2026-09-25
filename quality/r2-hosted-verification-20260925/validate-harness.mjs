@@ -12,7 +12,7 @@ for (const file of required) {
 }
 const all = required.map(f => fs.readFileSync(path.join(root, f), 'utf8')).join('\n');
 for (const marker of [
-  'second-remediation', 'owner', 'admin', 'estimator', 'viewer', 'non-member',
+  'third-remediation', 'owner', 'admin', 'estimator', 'viewer', 'non-member',
   'anonymous', 'service-role', 'active_organization_id', 'creator attribution',
   'last-owner', 'append-only', 'idempotency', 'proposal-content', 'signup',
   'PDF', 'tracked-link', 'iwoaaljitifloolszxlu',

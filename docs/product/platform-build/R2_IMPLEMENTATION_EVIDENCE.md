@@ -68,6 +68,31 @@ Migration `20260925004000_r2_second_security_remediation.sql` and the send-route
 
 Focused source gates and harness static validation pass. Disposable PostgreSQL execution, the privileged-function gate over the exact chain, and hosted application/Auth evidence remain pending and must not be inferred from static tests.
 
+## Third Claude remediation candidate
+
+Migration `20260925005000_r2_third_security_remediation.sql` addresses the
+follow-up findings on `0452823` without enabling team invitations:
+
+- empty auth accounts delete their profile and private bootstrap organization
+  atomically using deferred `NO ACTION` circular references, while existing
+  tenant-owned `RESTRICT` references continue to protect accounts with work;
+- cleanup removes audit/outbox/inbox rows before the organization and keeps the
+  membership cleanup exception nested-trigger-only;
+- a deferred constraint trigger prevents any organization from committing
+  without its creator as an owner, including direct service-role inserts;
+- pure proposal view-counter updates no longer generate organization
+  audit/outbox noise for anonymous or signed-in public recipients;
+- Release 1 assertion D3 now requires permission denial for the intentionally
+  revoked `proposal_tracking` UPDATE privilege; and
+- hosted concurrency cleanup is mandatory and fails the run if fixtures cannot
+  be removed.
+
+Local evidence: 67 suites / 570 tests / 5 snapshots, TypeScript, a 79-page
+production build, shell syntax, hosted-harness static validation and diff checks
+pass. This worktree has no PostgreSQL executable, so executable migration,
+deletion and concurrency evidence remains pending independent/isolated database
+execution. No hosted system was changed.
+
 ## Known boundary
 
 Subscriptions, usage, billing history and user template preferences remain user-scoped in R2. They represent personal/legacy entitlement state and require an explicit seat-billing decision before organization migration. They must not be silently reclassified as company-owned financial records.

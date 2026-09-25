@@ -15,21 +15,30 @@ DB="$R2_PREVIEW_DATABASE_URL"
 
 # Setup is committed so two independent sessions can contend on the same row.
 psql "$DB" -X -q -v ON_ERROR_STOP=1 -f "$HERE/sql/last-owner-cleanup.sql"
-psql "$DB" -X -q -v ON_ERROR_STOP=1 -f "$HERE/sql/last-owner-setup.sql"
+log_a="$(mktemp /tmp/r2-owner-a.XXXXXX.log)"
+log_b="$(mktemp /tmp/r2-owner-b.XXXXXX.log)"
 cleanup() {
-  psql "$DB" -X -q -v ON_ERROR_STOP=1 -f "$HERE/sql/last-owner-cleanup.sql" || true
+  prior=$?
+  trap - EXIT
+  rm -f "$log_a" "$log_b"
+  if ! psql "$DB" -X -q -v ON_ERROR_STOP=1 -f "$HERE/sql/last-owner-cleanup.sql"; then
+    echo "FAIL: concurrency fixture cleanup failed; manual cleanup is required" >&2
+    exit 1
+  fi
+  exit "$prior"
 }
 trap cleanup EXIT
+psql "$DB" -X -q -v ON_ERROR_STOP=1 -f "$HERE/sql/last-owner-setup.sql"
 
 org=$(psql "$DB" -X -qAt -v ON_ERROR_STOP=1 -c \
   "select active_organization_id from public.profiles where id='92000000-0000-4000-8000-000000000011';")
 
 set +e
 psql "$DB" -X -q -v ON_ERROR_STOP=1 -c \
-  "delete from public.organization_memberships where organization_id='$org' and user_id='92000000-0000-4000-8000-000000000011';" >/tmp/r2-owner-a.log 2>&1 &
+  "delete from public.organization_memberships where organization_id='$org' and user_id='92000000-0000-4000-8000-000000000011';" >"$log_a" 2>&1 &
 a=$!
 psql "$DB" -X -q -v ON_ERROR_STOP=1 -c \
-  "delete from public.organization_memberships where organization_id='$org' and user_id='92000000-0000-4000-8000-000000000011';" >/tmp/r2-owner-b.log 2>&1 &
+  "delete from public.organization_memberships where organization_id='$org' and user_id='92000000-0000-4000-8000-000000000011';" >"$log_b" 2>&1 &
 b=$!
 wait "$a"; sa=$?
 wait "$b"; sb=$?

@@ -81,8 +81,10 @@ begin; set local role authenticated; select set_config('request.jwt.claim.sub', 
 do $$ declare n int; begin
   if exists (select 1 from public.proposals where id=current_setting('h.proposal')::uuid) then raise exception 'D1 cross-owner proposal read'; end if;
   if exists (select 1 from public.proposal_tracking where proposal_id=current_setting('h.proposal')::uuid) then raise exception 'D2 cross-owner tracking read'; end if;
-  update public.proposal_tracking set track_opens=false; get diagnostics n=row_count;
-  if n<>0 then raise exception 'D3 cross-owner tracking update (legacy USING(true) path) changed % rows', n; end if;
+  begin
+    update public.proposal_tracking set track_opens=false;
+    raise exception 'D3 proposal_tracking UPDATE privilege was unexpectedly restored';
+  exception when insufficient_privilege then null; end;
   update public.proposals set title='X' where id=current_setting('h.proposal')::uuid; get diagnostics n=row_count;
   if n<>0 then raise exception 'D4 cross-owner proposal update'; end if;
   delete from public.proposals where id=current_setting('h.proposal')::uuid; get diagnostics n=row_count;

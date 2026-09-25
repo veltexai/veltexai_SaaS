@@ -2,7 +2,7 @@
 
 Status: **PREPARED — HUMAN/HOSTED EXECUTION REQUIRED**
 
-Record the isolated preview URL, exact second-remediation commit, timestamp and
+Record the isolated preview URL, exact third-remediation commit, timestamp and
 redacted evidence for every item. A database SQL pass does not satisfy these.
 
 - [ ] New preview signup creates exactly one profile, one organization, one

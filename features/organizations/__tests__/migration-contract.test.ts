@@ -22,6 +22,13 @@ const secondRemediation = fs.readFileSync(
   ),
   'utf8',
 );
+const thirdRemediation = fs.readFileSync(
+  path.join(
+    process.cwd(),
+    'supabase/migrations/20260925005000_r2_third_security_remediation.sql',
+  ),
+  'utf8',
+);
 const sendRoute = fs.readFileSync(
   path.join(process.cwd(), 'app/api/proposals/[id]/send/route.ts'),
   'utf8',
@@ -175,5 +182,25 @@ describe('R2 second security remediation contract', () => {
       'event_sequence bigint generated always as identity',
     );
     expect(secondRemediation).toContain('(available_at, event_sequence)');
+  });
+});
+
+describe('R2 third security remediation contract', () => {
+  it('defers the two circular private-account references without cascading profiles', () => {
+    expect(thirdRemediation).toContain('on delete no action deferrable initially deferred');
+    expect(thirdRemediation).not.toContain('on delete cascade;');
+    expect(thirdRemediation).toContain('delete from public.organizations where id = tenant_id');
+  });
+
+  it('requires every organization to commit with its creator as owner', () => {
+    expect(thirdRemediation).toContain('create constraint trigger require_organization_owner_on_commit');
+    expect(thirdRemediation).toContain('deferrable initially deferred');
+    expect(thirdRemediation).toContain("m.user_id = new.created_by");
+    expect(thirdRemediation).toContain("m.role = 'owner'");
+  });
+
+  it('suppresses pure delivery telemetry regardless of recipient auth state', () => {
+    expect(thirdRemediation).toContain("tg_table_name = 'proposals' and tg_op = 'UPDATE'");
+    expect(thirdRemediation).not.toContain("auth.uid() is null");
   });
 });
