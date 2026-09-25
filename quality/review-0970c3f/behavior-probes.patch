@@ -1,0 +1,84 @@
+diff --git a/private/tmp/veltex-review-exact-0970c3f/features/service-catalog/__tests__/review-0970c3f.test.ts b/private/tmp/veltex-review-exact-0970c3f/features/service-catalog/__tests__/review-0970c3f.test.ts
+new file mode 100644
+index 0000000..ffa1895
+--- /dev/null
++++ b/private/tmp/veltex-review-exact-0970c3f/features/service-catalog/__tests__/review-0970c3f.test.ts
+@@ -0,0 +1,78 @@
++jest.mock('nodemailer',()=>({__esModule:true,default:{createTransport:jest.fn()}}));
++jest.mock('@supabase/supabase-js',()=>({createClient:jest.fn()}));
++jest.mock('resend',()=>({Resend:jest.fn()}));
++import nodemailer from 'nodemailer';
++import {createClient} from '@supabase/supabase-js';
++import {Resend} from 'resend';
++import {EmailService} from '@/lib/email/service';
++import {EmailTemplates} from '@/lib/email/templates';
++const mail=jest.fn(), resend=jest.fn(), single=jest.fn();
++const config={smtp_host:'smtp.example.invalid',smtp_port:465,smtp_username:'synthetic-user',smtp_password:'synthetic-password-do-not-log',smtp_from_email:'configured@example.com',smtp_from_name:'QA Company',enable_email_notifications:true};
++const data={clientName:'QA',clientEmail:'client@example.com',ccEmails:['copy@example.com'],sendCopyToSelf:true,senderEmail:'owner@example.com',subject:'Review me',message:'Please review.',proposalTitle:'QA proposal',companyName:'QA Company',senderName:'Owner',proposalViewUrl:'https://example.invalid/view/uuid',hasAttachment:true,trackingId:'synthetic-tracking-token'};
++const pdf=Buffer.from('%PDF-synthetic');
++let log:jest.SpyInstance, error:jest.SpyInstance;
++beforeEach(()=>{
++ jest.clearAllMocks();
++ delete process.env.RESEND_API_KEY;delete process.env.EMAIL_SENDER_ADDRESS;delete process.env.EMAIL_SENDER_NAME;
++ process.env.NEXT_PUBLIC_SUPABASE_URL='https://example.invalid';process.env.SUPABASE_SERVICE_ROLE_KEY='synthetic-service-key';
++ log=jest.spyOn(console,'log').mockImplementation(()=>{});error=jest.spyOn(console,'error').mockImplementation(()=>{});
++ jest.mocked(nodemailer.createTransport).mockReturnValue({sendMail:mail} as any);
++ jest.mocked(createClient).mockReturnValue({from:()=>({select:()=>({order:()=>({limit:()=>({single})})})})} as any);
++ jest.mocked(Resend).mockImplementation(()=>({emails:{send:resend}}) as any);
++ single.mockResolvedValue({data:config,error:null});mail.mockResolvedValue({messageId:'smtp',accepted:[data.clientEmail],rejected:[]});resend.mockResolvedValue({data:{id:'resend'},error:null});
++});
++afterEach(()=>{log.mockRestore();error.mockRestore();});
++it.each(['smtp','resend'])('review: %s preserves full delivery contract',async(mode)=>{
++ if(mode==='resend'){process.env.RESEND_API_KEY='synthetic-resend-key';process.env.EMAIL_SENDER_ADDRESS='from@example.com';process.env.EMAIL_SENDER_NAME='Sender';}
++ const template=EmailTemplates.getEnhancedProposalEmail(data);
++ expect(await EmailService.sendEnhancedProposalEmail(data,pdf)).toBe(true);
++ const sent=(mode==='smtp'?mail:resend).mock.calls[0][0];
++ expect(sent).toEqual(expect.objectContaining({to:data.clientEmail,cc:data.ccEmails,subject:template.subject,html:template.html,text:template.text,headers:{'X-Proposal-Tracking-ID':data.trackingId},attachments:[expect.objectContaining({filename:'qa_proposal_proposal.pdf',content:pdf})]}));
++ expect(sent.bcc).toEqual(mode==='smtp'?data.senderEmail:[data.senderEmail]);
++ expect(sent.from).toBe(mode==='smtp'?'"QA Company" <configured@example.com>':'"Sender" <from@example.com>');
++ if(mode==='smtp')expect(resend).not.toHaveBeenCalled();else expect(mail).not.toHaveBeenCalled();
++ expect(JSON.stringify([...log.mock.calls,...error.mock.calls])).not.toMatch(/synthetic-password|synthetic-service-key|synthetic-resend-key/);
++});
++it.each(['missing-key','missing-address','blank-key','blank-address'])('review: %s selects configured SMTP',async(mode)=>{
++ process.env.RESEND_API_KEY=mode==='missing-key'?'':mode==='blank-key'?'   ':'synthetic-resend-key';
++ process.env.EMAIL_SENDER_ADDRESS=mode==='missing-address'?'':mode==='blank-address'?'   ':'from@example.com';
++ expect(await EmailService.sendEnhancedProposalEmail(data,pdf)).toBe(true);expect(mail).toHaveBeenCalledTimes(1);expect(resend).not.toHaveBeenCalled();
++});
++it('review: no copies or PDF are added when omitted',async()=>{
++ expect(await EmailService.sendEnhancedProposalEmail({...data,ccEmails:[],sendCopyToSelf:false,hasAttachment:false})).toBe(true);
++ expect(mail.mock.calls[0][0]).toEqual(expect.objectContaining({cc:undefined,bcc:undefined,attachments:undefined}));
++});
++it('review: SMTP rejection returns false',async()=>{mail.mockRejectedValueOnce(new Error('SMTP synthetic failure'));expect(await EmailService.sendEnhancedProposalEmail(data,pdf)).toBe(false);expect(resend).not.toHaveBeenCalled();});
++it('review: Resend provider failure does not double-send through SMTP',async()=>{process.env.RESEND_API_KEY='synthetic';process.env.EMAIL_SENDER_ADDRESS='from@example.com';resend.mockResolvedValue({data:null,error:{message:'Provider denied'}});expect(await EmailService.sendEnhancedProposalEmail(data,pdf)).toBe(false);expect(mail).not.toHaveBeenCalled();});
++it('review: settings lookup failure returns false with no transport',async()=>{single.mockResolvedValueOnce({data:null,error:{code:'DENIED'}});expect(await EmailService.sendEnhancedProposalEmail(data,pdf)).toBe(false);expect(mail).not.toHaveBeenCalled();expect(resend).not.toHaveBeenCalled();});
++it('review: service-client construction failure returns false with no transport',async()=>{jest.mocked(createClient).mockImplementationOnce(()=>{throw new Error('supabaseKey is required');});expect(await EmailService.sendEnhancedProposalEmail(data,pdf)).toBe(false);expect(mail).not.toHaveBeenCalled();});
++it('review: disabled notifications retain prior no-send behavior',async()=>{single.mockResolvedValue({data:{...config,enable_email_notifications:false},error:null});expect(await EmailService.sendEnhancedProposalEmail(data,pdf)).toBe(true);expect(mail).not.toHaveBeenCalled();expect(resend).not.toHaveBeenCalled();});
++it('review: main-recipient SMTP rejection must not report delivery success',async()=>{
++ mail.mockResolvedValue({messageId:'smtp-partial',accepted:[data.senderEmail],rejected:[data.clientEmail],rejectedErrors:[{code:'EENVELOPE',responseCode:550}]});
++ expect(await EmailService.sendEnhancedProposalEmail(data,pdf)).toBe(false);
++ expect(mail).toHaveBeenCalledTimes(1);expect(resend).not.toHaveBeenCalled();
++ expect(JSON.stringify(error.mock.calls)).not.toContain(data.clientEmail);
++ expect(JSON.stringify(error.mock.calls)).not.toContain(data.senderEmail);
++});
++
++it('review: accepted customer with rejected optional recipients warns only counts and never retries',async()=>{
++ const warn=jest.spyOn(console,'warn').mockImplementation(()=>{});
++ mail.mockResolvedValueOnce({accepted:[data.clientEmail],rejected:['optional-private@example.com','owner-private@example.com']});
++ try {
++ expect(await EmailService.sendEnhancedProposalEmail(data,pdf)).toBe(true);
++ expect(mail).toHaveBeenCalledTimes(1);expect(resend).not.toHaveBeenCalled();
++ expect(warn).toHaveBeenCalledWith(expect.stringContaining('rejected optional recipients'),{rejected_count:2});
++ const logs=JSON.stringify([...warn.mock.calls,...log.mock.calls,...error.mock.calls]);
++ expect(logs).not.toContain('optional-private@example.com');expect(logs).not.toContain('owner-private@example.com');
++ expect(mail.mock.calls[0][0].attachments[0].content).toBe(pdf);
++ }finally{warn.mockRestore();}
++});
++it.each([{}, {accepted:[]}, {accepted:['other@example.com']}])('review: no proven customer acceptance is denied without retry: %j',async(result)=>{
++ mail.mockResolvedValueOnce(result);
++ expect(await EmailService.sendEnhancedProposalEmail(data,pdf)).toBe(false);
++ expect(mail).toHaveBeenCalledTimes(1);expect(resend).not.toHaveBeenCalled();
++});
++it('review: accepted address normalization preserves success',async()=>{
++ mail.mockResolvedValueOnce({accepted:[' CLIENT@EXAMPLE.COM '],rejected:[]});
++ expect(await EmailService.sendEnhancedProposalEmail(data,pdf)).toBe(true);expect(mail).toHaveBeenCalledTimes(1);
++});
