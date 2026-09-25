@@ -42,7 +42,11 @@ describe('enhanced proposal email transport', () => {
       },
       error: null,
     });
-    mockSendMail.mockResolvedValue({ messageId: 'smtp-message' });
+    mockSendMail.mockResolvedValue({
+      messageId: 'smtp-message',
+      accepted: ['recipient@example.com'],
+      rejected: [],
+    });
   });
 
   afterAll(() => {
@@ -80,7 +84,42 @@ describe('enhanced proposal email transport', () => {
       attachments: [expect.objectContaining({
         filename: 'recurring_home_cleaning_proposal.pdf',
         contentType: 'application/pdf',
+        content: Buffer.from('pdf'),
       })],
     }));
+  });
+
+  it('fails closed when SMTP accepts an owner copy but rejects the customer', async () => {
+    mockSendMail.mockResolvedValue({
+      messageId: 'partial-smtp-message',
+      accepted: ['owner@example.com'],
+      rejected: ['recipient@example.com'],
+    });
+    const errorLog = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const sent = await EmailService.sendEnhancedProposalEmail({
+        clientName: 'Release One Residential QA',
+        clientEmail: 'recipient@example.com',
+        subject: 'Proposal',
+        message: 'Please review.',
+        proposalTitle: 'Recurring Home Cleaning',
+        companyName: 'Preview Cleaning Co',
+        senderName: 'Owner',
+        senderEmail: 'owner@example.com',
+        proposalViewUrl: 'https://example.com/view/token',
+        hasAttachment: true,
+        sendCopyToSelf: true,
+        trackingId: 'tracking-token',
+      }, Buffer.from('pdf'));
+
+      expect(sent).toBe(false);
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(errorLog).toHaveBeenCalledWith(
+        expect.stringContaining('did not accept the intended customer'),
+        { accepted_count: 1, rejected_count: 1 },
+      );
+    } finally {
+      errorLog.mockRestore();
+    }
   });
 });

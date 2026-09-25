@@ -715,7 +715,7 @@ export class EmailService {
         );
       } else {
         const transporter = await this.createTransporter();
-        await transporter.sendMail({
+        const smtpResult = await transporter.sendMail({
           from: `"${config.smtp_from_name}" <${config.smtp_from_email}>`,
           to: data.clientEmail,
           cc: data.ccEmails?.length ? data.ccEmails : undefined,
@@ -731,6 +731,28 @@ export class EmailService {
             ? [{ filename, content: pdfBuffer, contentType: "application/pdf" }]
             : undefined,
         });
+        const customerEmail = data.clientEmail.trim().toLowerCase();
+        const acceptedRecipients = new Set(
+          (smtpResult.accepted ?? []).map((recipient) =>
+            String(recipient).trim().toLowerCase(),
+          ),
+        );
+        if (!acceptedRecipients.has(customerEmail)) {
+          console.error(
+            "❌ EmailService: SMTP did not accept the intended customer recipient",
+            {
+              accepted_count: acceptedRecipients.size,
+              rejected_count: smtpResult.rejected?.length ?? 0,
+            },
+          );
+          return false;
+        }
+        if (smtpResult.rejected?.length) {
+          console.warn(
+            "⚠️ EmailService: SMTP accepted the customer but rejected optional recipients",
+            { rejected_count: smtpResult.rejected.length },
+          );
+        }
         console.log(
           `✅ EmailService: Enhanced proposal email sent successfully to ${data.clientEmail} via configured SMTP`,
         );
