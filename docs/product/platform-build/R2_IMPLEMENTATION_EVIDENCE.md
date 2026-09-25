@@ -93,6 +93,26 @@ pass. This worktree has no PostgreSQL executable, so executable migration,
 deletion and concurrency evidence remains pending independent/isolated database
 execution. No hosted system was changed.
 
+## Fourth Claude remediation candidate
+
+Migration `20260925006000_r2_cleanup_guard_ordering.sql` removes the one stale
+organization-row lookup from the authorized membership-cascade exception. At
+that trigger point PostgreSQL has already removed the organization row from the
+deleting statement's view. The exception still requires all three independent
+guards: nested trigger depth, an exact private-cleanup organization token, and
+exactly one remaining membership. Every non-bootstrap insert/update/delete still
+raises the fail-closed invitation/seat-billing exception; no service-role bypass
+was introduced.
+
+The committed hosted matrix now proves complete residue removal for both
+auth-user deletion and trusted direct empty-profile cleanup; atomic rollback for
+a work-bearing owner; and absence of a general service-role membership path.
+The concurrency cleanup script also asserts that its auth user, profile,
+organization and membership are all gone and treats cleanup failure as a failed
+run. Local evidence: 67 suites / 572 tests / 5 snapshots, TypeScript, 79-page
+production build, shell syntax, hosted-harness static validation and diff checks
+pass. Exact database execution remains an independent/isolated gate.
+
 ## Known boundary
 
 Subscriptions, usage, billing history and user template preferences remain user-scoped in R2. They represent personal/legacy entitlement state and require an explicit seat-billing decision before organization migration. They must not be silently reclassified as company-owned financial records.

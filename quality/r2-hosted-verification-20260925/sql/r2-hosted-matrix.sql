@@ -8,7 +8,7 @@ do $$ begin
   end if;
   if not exists (
     select 1 from supabase_migrations.schema_migrations
-    where version = '20260925005000'
+    where version = '20260925006000'
   ) then raise exception 'R2 migration version is absent'; end if;
 end $$;
 
@@ -28,7 +28,8 @@ insert into auth.users(id,email) values
  ('91000000-0000-4000-8000-000000000014','r2-viewer-a@example.test'),
  ('91000000-0000-4000-8000-000000000015','r2-owner-b@example.test'),
  ('91000000-0000-4000-8000-000000000016','r2-outsider@example.test'),
- ('91000000-0000-4000-8000-000000000017','r2-empty-delete@example.test');
+ ('91000000-0000-4000-8000-000000000017','r2-empty-delete@example.test'),
+ ('91000000-0000-4000-8000-000000000018','r2-direct-cleanup@example.test');
 
 -- Signup trigger plus R2 bootstrap must create one owner organization each.
 do $$ declare uid uuid; begin
@@ -42,6 +43,26 @@ do $$ declare uid uuid; begin
   end loop;
 end $$;
 
+-- The same cleanup is valid when the empty profile itself is removed by a
+-- trusted maintenance transaction. The auth identity is then removed after
+-- proving that no tenant-scoped residue remains.
+select active_organization_id as direct_org from public.profiles
+where id='91000000-0000-4000-8000-000000000018' \gset
+select set_config('r2.test.direct_org', :'direct_org', true);
+delete from public.profiles where id='91000000-0000-4000-8000-000000000018';
+set constraints all immediate;
+do $$ begin
+  if exists(select 1 from public.profiles where id='91000000-0000-4000-8000-000000000018')
+     or exists(select 1 from public.organizations where id=current_setting('r2.test.direct_org')::uuid)
+     or exists(select 1 from public.organization_memberships where organization_id=current_setting('r2.test.direct_org')::uuid)
+     or exists(select 1 from public.organization_audit_log where organization_id=current_setting('r2.test.direct_org')::uuid)
+     or exists(select 1 from public.organization_event_outbox where organization_id=current_setting('r2.test.direct_org')::uuid)
+     or exists(select 1 from public.organization_event_inbox where organization_id=current_setting('r2.test.direct_org')::uuid) then
+    raise exception 'direct private cleanup left tenant residue';
+  end if;
+end $$;
+delete from auth.users where id='91000000-0000-4000-8000-000000000018';
+
 -- Empty signup accounts must delete end-to-end, including their private tenant.
 -- Accounts with proposal work remain protected by tenant-owned RESTRICT FKs.
 select active_organization_id as empty_org from public.profiles
@@ -51,8 +72,12 @@ delete from auth.users where id='91000000-0000-4000-8000-000000000017';
 set constraints all immediate;
 do $$ begin
   if exists(select 1 from public.profiles where id='91000000-0000-4000-8000-000000000017')
-     or exists(select 1 from public.organizations where id=current_setting('r2.test.empty_org')::uuid) then
-    raise exception 'empty auth account cleanup left profile or organization rows';
+     or exists(select 1 from public.organizations where id=current_setting('r2.test.empty_org')::uuid)
+     or exists(select 1 from public.organization_memberships where organization_id=current_setting('r2.test.empty_org')::uuid)
+     or exists(select 1 from public.organization_audit_log where organization_id=current_setting('r2.test.empty_org')::uuid)
+     or exists(select 1 from public.organization_event_outbox where organization_id=current_setting('r2.test.empty_org')::uuid)
+     or exists(select 1 from public.organization_event_inbox where organization_id=current_setting('r2.test.empty_org')::uuid) then
+    raise exception 'empty auth account cleanup left tenant residue';
   end if;
 end $$;
 
@@ -185,15 +210,29 @@ do $$ begin
 end $$;
 reset role;
 
--- The same auth-user deletion must fail closed once tenant-owned work exists.
-do $$ begin
+-- The same auth-user deletion must fail closed once tenant-owned work exists,
+-- and its attempted cleanup must roll back every profile/tenant/audit row.
+do $$ declare audit_before bigint; outbox_before bigint; begin
+  select count(*) into audit_before from public.organization_audit_log
+    where organization_id=current_setting('r2.test.org_a')::uuid;
+  select count(*) into outbox_before from public.organization_event_outbox
+    where organization_id=current_setting('r2.test.org_a')::uuid;
   begin
     delete from auth.users where id='91000000-0000-4000-8000-000000000011';
     set constraints all immediate;
     raise exception 'protected owner account deletion unexpectedly succeeded';
   exception when foreign_key_violation then null; end;
   if not exists(select 1 from auth.users where id='91000000-0000-4000-8000-000000000011')
-     or not exists(select 1 from public.proposals where id='91000000-0000-4000-8000-000000000101') then
+     or not exists(select 1 from public.profiles where id='91000000-0000-4000-8000-000000000011')
+     or not exists(select 1 from public.organizations where id=current_setting('r2.test.org_a')::uuid)
+     or not exists(select 1 from public.organization_memberships
+        where organization_id=current_setting('r2.test.org_a')::uuid
+          and user_id='91000000-0000-4000-8000-000000000011')
+     or not exists(select 1 from public.proposals where id='91000000-0000-4000-8000-000000000101')
+     or (select count(*) from public.organization_audit_log
+         where organization_id=current_setting('r2.test.org_a')::uuid) <> audit_before
+     or (select count(*) from public.organization_event_outbox
+         where organization_id=current_setting('r2.test.org_a')::uuid) <> outbox_before then
     raise exception 'protected owner deletion did not roll back atomically';
   end if;
 end $$;

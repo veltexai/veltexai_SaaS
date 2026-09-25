@@ -29,6 +29,13 @@ const thirdRemediation = fs.readFileSync(
   ),
   'utf8',
 );
+const cleanupGuardOrdering = fs.readFileSync(
+  path.join(
+    process.cwd(),
+    'supabase/migrations/20260925006000_r2_cleanup_guard_ordering.sql',
+  ),
+  'utf8',
+);
 const sendRoute = fs.readFileSync(
   path.join(process.cwd(), 'app/api/proposals/[id]/send/route.ts'),
   'utf8',
@@ -202,5 +209,28 @@ describe('R2 third security remediation contract', () => {
   it('suppresses pure delivery telemetry regardless of recipient auth state', () => {
     expect(thirdRemediation).toContain("tg_table_name = 'proposals' and tg_op = 'UPDATE'");
     expect(thirdRemediation).not.toContain("auth.uid() is null");
+  });
+});
+
+describe('R2 cleanup guard ordering contract', () => {
+  it('permits only nested token-bound sole-owner cleanup after the org row disappears', () => {
+    expect(cleanupGuardOrdering).toContain('pg_trigger_depth() >= 2');
+    expect(cleanupGuardOrdering).toContain(
+      "current_setting('r2.private_cleanup', true) = old.organization_id::text",
+    );
+    expect(cleanupGuardOrdering).toContain(
+      'where m.organization_id = old.organization_id) = 1',
+    );
+    expect(cleanupGuardOrdering).not.toMatch(
+      /where o\.id = old\.organization_id and o\.created_by = old\.user_id/,
+    );
+  });
+
+  it('does not reopen general service-role membership mutation', () => {
+    expect(cleanupGuardOrdering).toContain(
+      'team memberships are disabled until invitation consent and seat billing ship',
+    );
+    expect(cleanupGuardOrdering).not.toContain("current_setting('role'");
+    expect(cleanupGuardOrdering).not.toContain('session_user');
   });
 });
