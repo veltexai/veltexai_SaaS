@@ -1,0 +1,73 @@
+PASS features/service-catalog/__tests__/r0-privilege-hardening.test.ts
+FAIL features/service-catalog/__tests__/review-71e53d1.test.ts
+  ● Console
+
+    console.error
+      Error creating tracking record: { message: 'insert failed' }
+
+      145 |
+      146 |     if (trackingError) {
+    > 147 |       console.error("Error creating tracking record:", trackingError);
+          |               ^
+      148 |       // Continue without tracking if this fails
+      149 |     }
+      150 |
+
+      at error (app/api/proposals/[id]/send/route.ts:147:15)
+      at Object.<anonymous> (features/service-catalog/__tests__/review-71e53d1.test.ts:48:17)
+
+  ● review: public catalog projection should retain export classification
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      41 |  const p=composeCatalogProposal({job:defaultJob(),client:{client_name:'QA',client_email:'qa@example.com',contact_phone:'555',service_location:'Test',facility_size:1500,service_frequency:'one-time'}});
+      42 |  const {service_specific_data,...publicP}=p;
+    > 43 |  expect(isCatalogProposal({...publicP,catalog_document:true} as any)).toBe(true);
+         |                                                                       ^
+      44 | });
+      45 | it('review: online-only send must fail before mail if tracking insert fails',async()=>{
+      46 |  user={id:'owner',email:'owner@example.com'};trackingInsertFails=true;
+
+      at Object.toBe (features/service-catalog/__tests__/review-71e53d1.test.ts:43:71)
+
+  ● review: online-only send must fail before mail if tracking insert fails
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 400
+    Received:    200
+
+      47 |  const request=new NextRequest('http://localhost/api/proposals/proposal-id/send',{method:'POST',body:JSON.stringify({delivery_method:'online_only',recipient_email:'qa@example.com',subject:'Test',message:'Test'})});
+      48 |  const response=await send(request,{params:Promise.resolve({id:'proposal-id'})});
+    > 49 |  expect(response.status).toBeGreaterThanOrEqual(400);expect(EmailService.sendEnhancedProposalEmail).not.toHaveBeenCalled();
+         |                          ^
+      50 | });
+      51 | it('review: documented token must satisfy public RPC minimum',()=>{
+      52 |  const readme=fs.readFileSync('quality/paid-entitlement-acceptance-20260924/README.md','utf8');
+
+      at Object.toBeGreaterThanOrEqual (features/service-catalog/__tests__/review-71e53d1.test.ts:49:26)
+
+PASS features/service-catalog/__tests__/tracking-boundary.test.ts
+PASS features/service-catalog/__tests__/public-view.test.tsx
+PASS features/service-catalog/__tests__/print-session.test.ts
+  ● Console
+
+    console.log
+      Generating PDF...
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:40:13)
+
+    console.log
+      PDF Generated
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:48:13)
+
+
+Test Suites: 1 failed, 4 passed, 5 total
+Tests:       2 failed, 28 passed, 30 total
+Snapshots:   0 total
+Time:        0.88 s
+Ran all test suites matching features/service-catalog/__tests__/review-71e53d1.test.ts|features/service-catalog/__tests__/r0-privilege-hardening.test.ts|features/service-catalog/__tests__/tracking-boundary.test.ts|features/service-catalog/__tests__/print-session.test.ts|features/service-catalog/__tests__/public-view.test.tsx.

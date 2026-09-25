@@ -1,0 +1,61 @@
+diff --git a/features/service-catalog/__tests__/review-71e53d1.test.ts b/features/service-catalog/__tests__/review-71e53d1.test.ts
+new file mode 100644
+index 0000000..d17d37a
+--- /dev/null
++++ b/features/service-catalog/__tests__/review-71e53d1.test.ts
+@@ -0,0 +1,55 @@
++import { NextRequest } from 'next/server';
++import { GET } from '@/app/api/proposals/[id]/download/route';
++import { POST as send } from '@/app/api/proposals/[id]/send/route';
++import { generateProposalPDF } from '@/features/proposals/services/pdf/generator';
++import { EmailService } from '@/lib/email/service';
++import { defaultJob } from '../catalog';
++import { composeCatalogProposal, isCatalogProposal } from '../proposal';
++import fs from 'node:fs';
++let user: any = null;
++let payload: any;
++let paid = true;
++let trackingInsertFails = false;
++const rpc = jest.fn();
++const single = jest.fn();
++const eq = jest.fn();
++const insert = jest.fn();
++jest.mock('@/features/auth/services/get-user', () => ({ getUser: async () => ({ user }) }));
++jest.mock('@/lib/auth/auth-helpers', () => ({ getUser: async () => user }));
++jest.mock('@/lib/billing/proposal-entitlements', () => ({ canUsePaidProposalActions: async () => paid }));
++jest.mock('@/features/proposals/services/pdf/generator', () => ({ generateProposalPDF: jest.fn(async () => Buffer.from('pdf')) }));
++jest.mock('@/features/proposals/services/pdf/playwright-generator', () => ({ generateProposalPDFWithPlaywright: jest.fn(async () => Buffer.from('pdf')) }));
++jest.mock('@/lib/email/service', () => ({ EmailService: { sendEnhancedProposalEmail: jest.fn(async () => true) } }));
++jest.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ rpc, from: (table: string) => {
++  const chain: any = { select: () => chain, eq: (...args: any[]) => { eq(...args); return chain; },
++    insert: (...args: any[]) => { insert(table, ...args); return chain; }, update: () => chain,
++    single: async () => { single(); return table === 'proposal_tracking' && trackingInsertFails ? { data:null,error:{message:'insert failed'} } : { data: { id:'proposal-id', user_id:'owner', title:'Title' }, error:null }; }
++  }; return chain;
++} }) }));
++const req = (id='proposal-id', token='valid-token-with-at-least-20-chars') => new NextRequest(`http://localhost/api/proposals/${id}/download${token ? '?tracking='+token : ''}`);
++beforeEach(() => {
++ jest.clearAllMocks(); user=null; paid=true; trackingInsertFails=false;
++ payload={ proposal:{id:'proposal-id',title:'Title',catalog_document:true,generated_content:'customer content'},tracking:{proposal_id:'proposal-id'} };
++ rpc.mockImplementation(async(name:string)=>({data:name==='read_tracked_proposal'?payload:name==='tracked_proposal_has_paid_access'?paid:true,error:null}));
++});
++it('review: anonymous caller without token is denied',async()=>{expect((await GET(req('proposal-id',''),{params:Promise.resolve({id:'proposal-id'})})).status).toBe(401);expect(generateProposalPDF).not.toHaveBeenCalled();});
++it('review: wrong proposal token pairing is denied',async()=>{expect((await GET(req('other'),{params:Promise.resolve({id:'other'})})).status).toBe(404);expect(generateProposalPDF).not.toHaveBeenCalled();});
++it('review: valid token with inactive entitlement cannot download',async()=>{paid=false;expect((await GET(req(),{params:Promise.resolve({id:'proposal-id'})})).status).toBe(403);expect(generateProposalPDF).not.toHaveBeenCalled();});
++it('review: paid token uses only allowlisted projection and records download',async()=>{expect((await GET(req(),{params:Promise.resolve({id:'proposal-id'})})).status).toBe(200);expect(single).not.toHaveBeenCalled();expect(generateProposalPDF).toHaveBeenCalledWith(payload.proposal);expect(rpc).toHaveBeenCalledWith('record_tracked_download',expect.anything());});
++it('review: owner query includes owner filter',async()=>{user={id:'owner'};expect((await GET(req('proposal-id',''),{params:Promise.resolve({id:'proposal-id'})})).status).toBe(200);expect(eq).toHaveBeenCalledWith('user_id','owner');});
++it('review: public catalog projection should retain export classification',()=>{
++ const p=composeCatalogProposal({job:defaultJob(),client:{client_name:'QA',client_email:'qa@example.com',contact_phone:'555',service_location:'Test',facility_size:1500,service_frequency:'one-time'}});
++ const {service_specific_data,...publicP}=p;
++ expect(isCatalogProposal({...publicP,catalog_document:true} as any)).toBe(true);
++});
++it('review: online-only send must fail before mail if tracking insert fails',async()=>{
++ user={id:'owner',email:'owner@example.com'};trackingInsertFails=true;
++ const request=new NextRequest('http://localhost/api/proposals/proposal-id/send',{method:'POST',body:JSON.stringify({delivery_method:'online_only',recipient_email:'qa@example.com',subject:'Test',message:'Test'})});
++ const response=await send(request,{params:Promise.resolve({id:'proposal-id'})});
++ expect(response.status).toBeGreaterThanOrEqual(400);expect(EmailService.sendEnhancedProposalEmail).not.toHaveBeenCalled();
++});
++it('review: documented token must satisfy public RPC minimum',()=>{
++ const readme=fs.readFileSync('quality/paid-entitlement-acceptance-20260924/README.md','utf8');
++ const token=readme.match(/Tracking token: `([^`]+)`/)![1];
++ expect(token.length).toBeGreaterThanOrEqual(20);
++});

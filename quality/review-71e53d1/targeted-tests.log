@@ -1,0 +1,21 @@
+PASS features/service-catalog/__tests__/r0-privilege-hardening.test.ts
+PASS features/service-catalog/__tests__/tracking-boundary.test.ts
+PASS features/service-catalog/__tests__/print-session.test.ts
+  ● Console
+
+    console.log
+      Generating PDF...
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:40:13)
+
+    console.log
+      PDF Generated
+
+      at log (features/proposals/services/pdf/playwright-generator.ts:48:13)
+
+
+Test Suites: 3 passed, 3 total
+Tests:       21 passed, 21 total
+Snapshots:   0 total
+Time:        0.164 s, estimated 1 s
+Ran all test suites matching features/service-catalog/__tests__/r0-privilege-hardening.test.ts|features/service-catalog/__tests__/tracking-boundary.test.ts|features/service-catalog/__tests__/print-session.test.ts.
