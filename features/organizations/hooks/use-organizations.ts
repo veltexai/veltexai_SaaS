@@ -35,6 +35,9 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
   >(null);
   const [reloadToken, setReloadToken] = useState(0);
   const switchEpochRef = useRef(0);
+  const switchInFlightRef = useRef(false);
+  const pendingSwitchRef = useRef<string | null>(null);
+  const committedOrganizationIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +66,7 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
             await adapter.setActiveOrganizationId(targetId);
           } catch (err: unknown) {
             if (cancelled || switchEpochRef.current !== loadEpoch) return;
+            committedOrganizationIdRef.current = null;
             setActiveOrganizationIdState(null);
             setFailedSwitchOrganizationId(targetId);
             setSwitchError(
@@ -76,6 +80,7 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
         }
 
         if (cancelled || switchEpochRef.current !== loadEpoch) return;
+        committedOrganizationIdRef.current = targetId;
         setActiveOrganizationIdState(targetId);
         setStatus("success");
       })
@@ -100,24 +105,48 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
 
   const persistActiveOrganizationId = useCallback(
     (organizationId: string) => {
-      const requestEpoch = ++switchEpochRef.current;
       setSwitchError(null);
-      adapter
-        .setActiveOrganizationId(organizationId)
-        .then(() => {
-          if (switchEpochRef.current !== requestEpoch) return;
-          setActiveOrganizationIdState(organizationId);
-          setFailedSwitchOrganizationId(null);
-        })
-        .catch((err: unknown) => {
-          if (switchEpochRef.current !== requestEpoch) return;
-          setFailedSwitchOrganizationId(organizationId);
-          setSwitchError(
-            err instanceof Error
-              ? err.message
-              : "Could not switch organizations. Please try again.",
-          );
-        });
+      setFailedSwitchOrganizationId(null);
+
+      if (switchInFlightRef.current) {
+        // Collapse any queued choices to the latest user intent. The active
+        // write is allowed to finish before this one starts, so PATCHes can
+        // never commit to the server out of order.
+        pendingSwitchRef.current = organizationId;
+        return;
+      }
+
+      const run = (targetId: string) => {
+        switchInFlightRef.current = true;
+        adapter
+          .setActiveOrganizationId(targetId)
+          .then(() => {
+            committedOrganizationIdRef.current = targetId;
+            setActiveOrganizationIdState(targetId);
+            setFailedSwitchOrganizationId(null);
+          })
+          .catch((err: unknown) => {
+            if (pendingSwitchRef.current) return;
+            // The displayed value is always the last server-confirmed value.
+            setActiveOrganizationIdState(committedOrganizationIdRef.current);
+            setFailedSwitchOrganizationId(targetId);
+            setSwitchError(
+              err instanceof Error
+                ? err.message
+                : "Could not switch organizations. Please try again.",
+            );
+          })
+          .finally(() => {
+            switchInFlightRef.current = false;
+            const nextTarget = pendingSwitchRef.current;
+            pendingSwitchRef.current = null;
+            if (nextTarget && nextTarget !== committedOrganizationIdRef.current) {
+              run(nextTarget);
+            }
+          });
+      };
+
+      run(organizationId);
     },
     [adapter],
   );

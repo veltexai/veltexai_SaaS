@@ -49,6 +49,18 @@ describe("team route matrix", () => {
     },
   );
 
+  it.each(["GET", "PATCH"])("requires authentication for active organization %s", async (method) => {
+    const from = jest.fn();
+    createClient.mockResolvedValue({
+      auth: { getUser: jest.fn().mockResolvedValue({ data: { user: null }, error: null }) },
+      from,
+    });
+    const handlers = await import("../active-organization/route");
+    const response = method === "GET" ? await handlers.GET() : await handlers.PATCH(request());
+    expect(response.status).toBe(401);
+    expect(from).not.toHaveBeenCalled();
+  });
+
   it("returns only the capability flags authorized by the server", async () => {
     signedIn(jest.fn());
     const { GET } = await import("../capabilities/route");

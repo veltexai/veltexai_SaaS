@@ -33,13 +33,16 @@ function adapter(overrides: Partial<TeamAdapter> = {}): TeamAdapter {
 }
 
 describe("useOrganizations persistence ordering", () => {
-  it("ignores an earlier success that settles after a later success", async () => {
+  it("serializes B then C and finishes with authoritative state equal to the UI", async () => {
     const first = deferred<void>();
     const second = deferred<void>();
-    const setActiveOrganizationId = jest
-      .fn()
-      .mockReturnValueOnce(first.promise)
-      .mockReturnValueOnce(second.promise);
+    let authoritative = "org-a";
+    const gates = [first, second];
+    const setActiveOrganizationId = jest.fn(async (target: string) => {
+      const gate = gates.shift();
+      await gate?.promise;
+      authoritative = target;
+    });
     const subject = adapter({ setActiveOrganizationId });
     const { result } = renderHook(() => useOrganizations(subject));
     await waitFor(() => expect(result.current.activeOrganizationId).toBe("org-a"));
@@ -48,20 +51,27 @@ describe("useOrganizations persistence ordering", () => {
       result.current.setActiveOrganizationId("org-b");
       result.current.setActiveOrganizationId("org-c");
     });
+    expect(setActiveOrganizationId).toHaveBeenCalledTimes(1);
+    await act(async () => first.resolve());
+    await waitFor(() => expect(setActiveOrganizationId).toHaveBeenCalledTimes(2));
+    expect(authoritative).toBe("org-b");
+    expect(result.current.activeOrganizationId).toBe("org-b");
     await act(async () => second.resolve());
     expect(result.current.activeOrganizationId).toBe("org-c");
-    await act(async () => first.resolve());
-    expect(result.current.activeOrganizationId).toBe("org-c");
+    expect(authoritative).toBe(result.current.activeOrganizationId);
     expect(result.current.switchError).toBeNull();
   });
 
-  it("ignores an earlier failure that settles after a later success", async () => {
+  it("continues to the queued latest intent after the earlier write fails", async () => {
     const first = deferred<void>();
     const second = deferred<void>();
+    let authoritative = "org-a";
     const setActiveOrganizationId = jest
-      .fn()
-      .mockReturnValueOnce(first.promise)
-      .mockReturnValueOnce(second.promise);
+      .fn(async (target: string) => {
+        if (target === "org-b") await first.promise;
+        else await second.promise;
+        authoritative = target;
+      });
     const subject = adapter({ setActiveOrganizationId });
     const { result } = renderHook(() => useOrganizations(subject));
     await waitFor(() => expect(result.current.activeOrganizationId).toBe("org-a"));
@@ -70,19 +80,23 @@ describe("useOrganizations persistence ordering", () => {
       result.current.setActiveOrganizationId("org-b");
       result.current.setActiveOrganizationId("org-c");
     });
-    await act(async () => second.resolve());
     await act(async () => first.reject(new Error("stale failure")));
+    await waitFor(() => expect(setActiveOrganizationId).toHaveBeenCalledTimes(2));
+    await act(async () => second.resolve());
     expect(result.current.activeOrganizationId).toBe("org-c");
+    expect(authoritative).toBe(result.current.activeOrganizationId);
     expect(result.current.switchError).toBeNull();
   });
 
-  it("keeps the persisted selection when the earlier request settles before the later failure", async () => {
+  it("rolls back to the earlier authoritative success when the later write fails", async () => {
     const first = deferred<void>();
     const second = deferred<void>();
-    const setActiveOrganizationId = jest
-      .fn()
-      .mockReturnValueOnce(first.promise)
-      .mockReturnValueOnce(second.promise);
+    let authoritative = "org-a";
+    const setActiveOrganizationId = jest.fn(async (target: string) => {
+      if (target === "org-b") await first.promise;
+      else await second.promise;
+      authoritative = target;
+    });
     const subject = adapter({ setActiveOrganizationId });
     const { result } = renderHook(() => useOrganizations(subject));
     await waitFor(() => expect(result.current.activeOrganizationId).toBe("org-a"));
@@ -91,9 +105,11 @@ describe("useOrganizations persistence ordering", () => {
       result.current.setActiveOrganizationId("org-c");
     });
     await act(async () => first.resolve());
-    expect(result.current.activeOrganizationId).toBe("org-a");
+    await waitFor(() => expect(setActiveOrganizationId).toHaveBeenCalledTimes(2));
+    expect(result.current.activeOrganizationId).toBe("org-b");
     await act(async () => second.reject(new Error("latest failure")));
-    expect(result.current.activeOrganizationId).toBe("org-a");
+    expect(result.current.activeOrganizationId).toBe("org-b");
+    expect(authoritative).toBe(result.current.activeOrganizationId);
     expect(result.current.switchError).toBe("latest failure");
   });
 
