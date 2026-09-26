@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,6 +30,11 @@ const migrationRecords = migrations.map((name) => ({
   version: name.slice(0, 14),
   name: name.replace(/^\d+_/, '').replace(/\.sql$/, ''),
 }));
+const prerequisiteVersions = [...new Set(
+  readdirSync(resolve(root, 'supabase/migrations'))
+    .filter((name) => name.endsWith('.sql') && name < migrations[0])
+    .map((name) => name.split('_')[0]),
+)];
 const sourceDigest = createHash('sha256')
   .update(bodies.map(({ name, body }) => `${name}\n${body}\n`).join(''))
   .digest('hex');
@@ -44,9 +49,9 @@ const sql = `-- GENERATED FILE: do not edit or commit.
 -- Baseline digest: b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f
 -- Source SHA-256: ${sourceDigest}
 
-${fingerprint}
-
 begin;
+
+${fingerprint}
 
 do $$
 begin
@@ -59,6 +64,13 @@ begin
     where version = any (array[${migrationRecords.map(({ version }) => `'${version}'`).join(', ')}])
   ) then
     raise exception 'R2 preflight failed: one or more migration-history rows already exist';
+  end if;
+  if (
+    select count(*)
+    from supabase_migrations.schema_migrations
+    where version = any (array[${prerequisiteVersions.map((version) => `'${version}'`).join(', ')}])
+  ) <> ${prerequisiteVersions.length} then
+    raise exception 'R2 preflight failed: committed pre-R2 migration history is incomplete';
   end if;
 end $$;
 
@@ -113,4 +125,10 @@ select
 
 const output = process.argv[2] ?? resolve('/private/tmp', 'veltex-r2-sql-editor-atomic.sql');
 writeFileSync(output, sql, { encoding: 'utf8', mode: 0o600 });
-console.log(JSON.stringify({ output, sourceDigest, migrations, status: 'PREPARED / NOT HOSTED-EXECUTED' }, null, 2));
+console.log(JSON.stringify({
+  output,
+  sourceDigest,
+  migrations,
+  prerequisiteVersions,
+  status: 'PREPARED / NOT HOSTED-EXECUTED',
+}, null, 2));

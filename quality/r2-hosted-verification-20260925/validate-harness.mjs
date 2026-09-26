@@ -185,10 +185,18 @@ for (const marker of [
   BASELINE_DIGEST,
   'iwoaaljitifloolszxlu',
   '_pre_r2_fingerprint.fragment.sql',
+  'prerequisiteVersions',
+  'committed pre-R2 migration history is incomplete',
 ]) {
   if (!sqlEditorBundle.includes(marker)) {
     throw new Error(`SQL Editor bundle builder missing ${marker}`);
   }
+}
+if (sqlEditorBundle.indexOf('begin;') > sqlEditorBundle.indexOf('${fingerprint}')) {
+  throw new Error('SQL Editor fingerprint guard must run inside the atomic transaction');
+}
+if (/Relation Name' = '(organization_memberships|proposals|organization_event_outbox)'\s+and coalesce\(n ->> 'Index Name'/m.test(u1Sql)) {
+  throw new Error('U1 index flags miss Bitmap Index Scan nodes that omit Relation Name');
 }
 const u8Spike = [
   'u8-local-spike/outbox-claimer.mjs',
@@ -201,6 +209,12 @@ if (/create extension|npm install|qstash|inngest|enable pg_cron|enable pgmq/i.te
 }
 if (!u8Spike.includes("runtime_choice: 'OPEN'") && !u8Spike.includes('runtime_choice: OPEN') && !u8Spike.includes('Runtime choice: **OPEN**')) {
   throw new Error('U8 local spike does not keep the runtime choice OPEN');
+}
+if (/proves the algorithm|proves locally/i.test(u8Spike + '\n' + u8Doc)) {
+  throw new Error('U8 in-memory spike overstates algorithm/runtime proof');
+}
+if (!u8Spike.includes('does not yet contain the modeled immutable') || !u8Doc.includes('does not yet contain the modeled lease-token')) {
+  throw new Error('U8 evidence omits the current-schema lease/dead-letter gap');
 }
 for (const forbidden of ['create extension', 'pg_cron.schedule', 'supabase functions deploy']) {
   if (u8Spike.includes(forbidden)) {

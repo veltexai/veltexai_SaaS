@@ -113,21 +113,18 @@ begin
     ), 0),
     exists (
       select 1 from jsonb_array_elements(nodes) n
-      where n ->> 'Relation Name' = 'organization_memberships'
-        and coalesce(n ->> 'Index Name', '') in (
+      where coalesce(n ->> 'Index Name', '') in (
           'organization_memberships_pkey',
           'organization_memberships_user_idx'
         )
     ),
     exists (
       select 1 from jsonb_array_elements(nodes) n
-      where n ->> 'Relation Name' = 'proposals'
-        and coalesce(n ->> 'Index Name', '') = 'proposals_organization_idx'
+      where coalesce(n ->> 'Index Name', '') = 'proposals_organization_idx'
     ),
     exists (
       select 1 from jsonb_array_elements(nodes) n
-      where n ->> 'Relation Name' = 'organization_event_outbox'
-        and coalesce(n ->> 'Index Name', '') in (
+      where coalesce(n ->> 'Index Name', '') in (
           'organization_event_outbox_delivery_order_idx',
           'organization_event_outbox_pending_idx',
           'organization_event_outbox_event_sequence_idx'

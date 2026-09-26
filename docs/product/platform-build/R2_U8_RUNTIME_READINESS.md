@@ -89,8 +89,10 @@ success/failure denial, atomic inbox+outbox completion, duplicate inbox
 conflict, transactional inbox+outbox commit/rollback under injected
 mid-deliver fault, and a four-total-attempt ceiling: the first three failures
 schedule 100/200/400 ms and the fourth failed attempt terminalizes in
-`dead_lettered_at`. Cleanup is proved in memory against the current outbox
-contract.
+`dead_lettered_at`. Cleanup is asserted in the in-memory model. The committed
+outbox table does not yet contain the modeled lease-token or
+`dead_lettered_at` columns, so this is algorithm evidence rather than current
+schema/runtime proof.
 It does not install or enable `pg_cron`, `pgmq`, QStash, Inngest, or any
 hosted service. The runtime choice remains OPEN.
 
@@ -100,7 +102,7 @@ The present repository evidence favors keeping the committed R2 transactional
 outbox as the sole durable job log. This is a **provisional direction**, not the
 required U8 technical-spike decision. The isolated-preview inventory and
 official external capability/cost comparison are now captured. The local
-in-memory claimer spike proves the algorithm only. Hosted wake, `pgmq`, and
+in-memory claimer spike tests the modeled algorithm only. Hosted wake, `pgmq`, and
 real delivery remain unproven, so U8 remains OPEN and the runtime choice
 remains OPEN until hosted claim/retry/terminal-DLQ behavior is compared and
 proved.
