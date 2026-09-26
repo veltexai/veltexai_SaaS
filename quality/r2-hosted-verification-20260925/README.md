@@ -1,8 +1,8 @@
 # R2 isolated Supabase verification harness
 
-Status: **PREPARED — NOT EXECUTED**
+Status: **PREPARED — NOT EXECUTED AGAINST THE FINAL INTEGRATED CANDIDATE**
 
-Candidate: fourth-remediation commit produced from `dcf56ce`
+Candidate: integrated R2 candidate `f99bb54` (ledger evidence at `652aa94`)
 
 This directory is the bounded hosted-verification plan for R2 organization and
 tenancy. It does not apply migrations, discover credentials, send email, deploy,
@@ -12,8 +12,8 @@ after the exact candidate migration has been applied.
 ## Required evidence
 
 1. Record pre-migration counts and SHA-256 digests for proposal content.
-2. Apply the unmodified candidate through
-   `20260925002000_r2_organization_tenancy.sql`.
+2. Apply the unmodified candidate migrations in order through
+   `20260925006000_r2_cleanup_guard_ordering.sql`.
 3. Run `./run-hosted.sh` with an isolated preview database URL.
 4. Run `./run-last-owner-concurrency.sh` against the same preview.
 5. Complete `HOSTED_APP_CHECKLIST.md` through the preview application/Auth
