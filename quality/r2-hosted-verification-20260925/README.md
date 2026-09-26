@@ -43,6 +43,7 @@ by the runner.
 ## Usage
 
 ```bash
+node ./quality/r2-hosted-verification-20260925/build-preview-migration-bundle.mjs
 export R2_PREVIEW_DATABASE_URL='postgresql://...isolated-preview...'
 export R2_EXPECTED_PROJECT_REF='the-isolated-preview-ref'
 ./quality/r2-hosted-verification-20260925/run-hosted.sh
@@ -52,3 +53,10 @@ export R2_EXPECTED_PROJECT_REF='the-isolated-preview-ref'
 The runners reject the production project reference
 `iwoaaljitifloolszxlu`, require an expected preview reference, and refuse a URL
 that does not contain that reference. They never apply the migration.
+
+The bundle builder creates `/private/tmp/veltex-r2-preview-atomic.sql` from the
+five committed R2 migrations. It validates each source transaction boundary,
+removes the individual boundaries, wraps the exact bodies in one atomic
+transaction and adds fail-closed pre/postconditions. This prevents a later
+migration failure from leaving the preview partially upgraded. The generated
+bundle is local evidence only and must not be committed.
