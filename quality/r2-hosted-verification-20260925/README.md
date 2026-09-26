@@ -26,6 +26,12 @@ U8 claim/retry/DLQ spike lives in `u8-local-spike/`; it does not install or
 enable `pg_cron`, `pgmq`, QStash, or Inngest, and the runtime choice remains
 **OPEN**.
 
+Founder hosted-execution order for isolated preview `wcnfhriosemgchmtwgof` is
+`docs/product/platform-build/R2_ISOLATED_PREVIEW_OPERATOR_EXECUTION_PACKET.md`.
+Local prepare (no database):
+`./quality/r2-hosted-verification-20260925/prepare-hosted-execution.sh`.
+U8 hosted wake/pgmq/HMAC remains OPEN and is not a prerequisite.
+
 This directory is the bounded hosted-verification plan for R2 organization and
 tenancy. It does not apply migrations, discover credentials, send email, deploy,
 or touch production. Run it only against a disposable isolated Supabase preview

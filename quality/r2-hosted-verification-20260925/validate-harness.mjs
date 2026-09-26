@@ -20,6 +20,7 @@ const required = [
   'HOSTED_APP_CHECKLIST.md', 'sql/r2-hosted-matrix.sql',
   'sql/last-owner-setup.sql', 'sql/last-owner-cleanup.sql',
   'run-u1-benchmark.sh', 'sql/u1-membership-rls-benchmark.sql',
+  'prepare-hosted-execution.sh',
   'u8-preview-runtime-inventory-20260926.json',
   'sql-editor/README.md', 'sql-editor/00-preview-guard.sql',
   'sql-editor/_guard.fragment.sql', 'sql-editor/_pre_r2_fingerprint.fragment.sql',
@@ -34,12 +35,33 @@ const required = [
 const requiredDocs = [
   'R2_U1_MEMBERSHIP_RLS_BENCHMARK.md',
   'R2_U8_RUNTIME_READINESS.md',
+  'R2_ISOLATED_PREVIEW_OPERATOR_EXECUTION_PACKET.md',
 ];
 for (const file of required) {
   if (!fs.existsSync(path.join(root, file))) throw new Error(`missing ${file}`);
 }
 for (const file of requiredDocs) {
   if (!fs.existsSync(path.join(docs, file))) throw new Error(`missing docs ${file}`);
+}
+const operatorPacket = fs.readFileSync(path.join(docs, 'R2_ISOLATED_PREVIEW_OPERATOR_EXECUTION_PACKET.md'), 'utf8');
+for (const marker of [
+  'wcnfhriosemgchmtwgof', 'iwoaaljitifloolszxlu', 'PREPARED / NOT HOSTED-EXECUTED',
+  'b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f',
+  'run-hosted.sh', 'run-last-owner-concurrency.sh', 'run-u1-benchmark.sh',
+  'HOSTED_APP_CHECKLIST.md', 'OPEN', 'not a prerequisite',
+  'separately gated', 'Abort criteria',
+]) {
+  if (!operatorPacket.includes(marker)) throw new Error(`operator packet missing ${marker}`);
+}
+const prepareScript = fs.readFileSync(path.join(root, 'prepare-hosted-execution.sh'), 'utf8');
+if (!prepareScript.includes('Refusing production project') || !prepareScript.includes('u8_hosted_wake_pgmq_hmac')) {
+  throw new Error('prepare-hosted-execution.sh lacks production refusal or U8 OPEN notice');
+}
+if (!prepareScript.includes("tr '[:upper:]' '[:lower:]'")) {
+  throw new Error('prepare-hosted-execution.sh must case-fold refs without bash-4 parameter expansion');
+}
+if (/\bpsql\b/.test(prepareScript) || prepareScript.includes('--execute-preview')) {
+  throw new Error('prepare-hosted-execution.sh must not apply hosted SQL');
 }
 const all = required.map(f => fs.readFileSync(path.join(root, f), 'utf8')).join('\n');
 for (const marker of [
