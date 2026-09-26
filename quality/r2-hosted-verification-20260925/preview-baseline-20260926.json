@@ -1,0 +1,13 @@
+{
+  "captured_at": "2026-09-26T03:39:27Z",
+  "project_ref": "wcnfhriosemgchmtwgof",
+  "environment": "isolated Supabase preview m1-r0-verification-20260924",
+  "query_kind": "read-only pre-R2 baseline",
+  "organizations_table": null,
+  "membership_guard": null,
+  "profile_count": 1,
+  "proposal_count": 2,
+  "proposal_content_sha256": "b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f",
+  "r2_migration_history_rows": 0,
+  "production_touched": false
+}
