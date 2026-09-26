@@ -283,11 +283,8 @@ describe("TeamSettingsShell", () => {
   });
 
   it("fails closed by default with no adapter prop at all — never falls back to fixture/mock data", async () => {
-    // No `adapter` prop, matching how the production page renders this
-    // shell when `resolveTeamAdapter` returns `createUnavailableTeamAdapter()`.
-    // This is the shell's own internal default, independent of the page's
-    // resolution logic — defense in depth so it fails closed even if a
-    // future caller forgets to pass an adapter.
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn().mockRejectedValue(new Error("network unavailable"));
     render(<TeamSettingsShell />);
 
     expect(
@@ -304,6 +301,7 @@ describe("TeamSettingsShell", () => {
     expect(screen.queryByText("Example Cleaning Co.")).not.toBeInTheDocument();
     expect(screen.queryByText("Sample Facilities Group")).not.toBeInTheDocument();
     expect(screen.queryByRole("table", { name: "Team members" })).not.toBeInTheDocument();
+    global.fetch = originalFetch;
   });
 
   it("does not show member emails for viewer/estimator-shaped capabilities", async () => {

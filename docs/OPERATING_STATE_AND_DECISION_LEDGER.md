@@ -238,6 +238,12 @@ After any material action, append or revise the relevant section with:
 ### Sequential Cleaning Business OS direction — 2026-09-24 Pacific
 
 - Founder directed continuation after verified Release 1 production deployment, smoke verification and preview cleanup. These conditions remain unmet: current Release 1 schema-fidelity/R0 compatibility blockers are still open. No R2 implementation started.
+
+### R2 authenticated team read adapter — 2026-09-25 Pacific
+
+- **COMPLETE — local integration candidate:** production team settings now use authenticated same-origin server routes backed by canonical `organizations`, `organization_memberships`, and `profiles.active_organization_id` data. Organization switching remains guarded by both a caller-membership precheck and the existing database trigger; client state changes only after the persisted write succeeds.
+- **PRIVACY / CAPABILITIES:** roster output is a deliberately redacted active-membership projection with no profile join, email, phone, or avatar. `invitationsEnabled` and `contactDetailsEnabled` remain server-owned and false because no reviewed invitation or contact-detail projection exists. Direct adapter invitation calls refuse locally and there is no invitation HTTP route.
+- **VERIFIED LOCALLY:** 14 focused Jest suites / 131 tests pass, including unauthenticated denial, roster redaction, fail-closed capability errors, no invitation write path, and failed-switch rollback. TypeScript and `git diff --check` pass. No deployment, push, hosted mutation, credential action, external message, or spend.
 - Next bounded release: R2 organization/tenancy foundation only — organizations, memberships, owner/admin/estimator/viewer roles, tenant isolation, audit trail, event outbox/inbox foundations, migrations, rollback, tests and evidence. Begin from the exact verified production commit recorded at Release 1 handoff, using approved Prompt 2/3/14 decisions and founder strategy; preserve existing work and avoid concurrent release edits.
 - R2 requires Claude independent review and its specified release gates before production. Later R3 through stage 7 remain sequential objectives, each separately implemented and independently reviewed; no combined migration or premature completion claim.
 - Conditional production authorization does not waive release gates. New spending, legal acceptance, regulated/high-hazard content, payment-provider account changes and destructive actions beyond the named preview deletion retain their applicable approval requirements.

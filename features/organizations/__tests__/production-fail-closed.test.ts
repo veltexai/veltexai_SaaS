@@ -53,7 +53,8 @@ describe("production fail-closed source boundaries", () => {
     const source = read(shellPath);
     expect(source).not.toMatch(/createMockTeamAdapter/);
     expect(source).not.toMatch(/mock-team-adapter/);
-    expect(source).toMatch(/createUnavailableTeamAdapter/);
+    expect(source).toMatch(/createServerTeamAdapter/);
+    expect(source).not.toMatch(/createUnavailableTeamAdapter/);
   });
 
   it("only the development preview constructs the mock adapter for the page", () => {

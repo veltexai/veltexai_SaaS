@@ -5,7 +5,7 @@ import { RefreshCw, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { createUnavailableTeamAdapter } from "../lib/unavailable-team-adapter";
+import { createServerTeamAdapter } from "../lib/server-team-adapter";
 import { useOrganizations } from "../hooks/use-organizations";
 import { useTeamMembers } from "../hooks/use-team-members";
 import { useInviteMember } from "../hooks/use-invite-member";
@@ -21,9 +21,8 @@ export interface TeamSettingsShellProps {
    * Injectable for tests/stories/an explicit development-only preview
    * (see `features/organizations/lib/resolve-team-adapter.ts`, used by the
    * production page). If omitted, this shell defaults to
-   * `createUnavailableTeamAdapter()` — **never** the mock — so it fails
-   * closed with a clear unavailable/error state instead of silently
-   * rendering fixture data if a future caller forgets to pass one.
+   * the authenticated server adapter — **never** the mock. Server and network
+   * failures reject into the existing fail-closed error states.
    */
   adapter?: TeamAdapter;
 }
@@ -40,7 +39,7 @@ export interface TeamSettingsShellProps {
  */
 export function TeamSettingsShell({ adapter: adapterProp }: TeamSettingsShellProps) {
   const adapter = useMemo(
-    () => adapterProp ?? createUnavailableTeamAdapter(),
+    () => adapterProp ?? createServerTeamAdapter(),
     // Intentionally created once per shell instance.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

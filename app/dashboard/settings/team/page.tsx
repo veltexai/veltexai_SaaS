@@ -20,14 +20,9 @@ function toScenario(value: string | undefined): MockTeamScenario | undefined {
 }
 
 /**
- * Production fails closed until Codex supplies an accepted server adapter
- * (see docs/product/platform-build/CURSOR_R2_CONTRACT_REQUEST.md).
- *
  * This page never constructs a mock adapter and never passes a class
- * instance across the RSC boundary. In production it renders
- * `TeamSettingsShell` with no adapter, which defaults to
- * `UnavailableTeamAdapter`. The mock preview is imported only inside the
- * development branch.
+ * instance across the RSC boundary. In production, the client shell creates
+ * its authenticated HTTP adapter. The mock preview is development-only.
  */
 export default async function TeamSettingsPage({
   searchParams,
