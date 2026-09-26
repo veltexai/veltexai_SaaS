@@ -63,6 +63,11 @@ do $$ begin
 end $$;
 delete from auth.users where id='91000000-0000-4000-8000-000000000018';
 
+-- The residue assertion above temporarily forces deferred constraints to run.
+-- Restore the transaction's normal deferred mode before exercising the next
+-- independent account-cleanup case.
+set constraints all deferred;
+
 -- Empty signup accounts must delete end-to-end, including their private tenant.
 -- Accounts with proposal work remain protected by tenant-owned RESTRICT FKs.
 select active_organization_id as empty_org from public.profiles
