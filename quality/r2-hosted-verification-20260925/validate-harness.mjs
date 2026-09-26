@@ -192,7 +192,11 @@ for (const marker of [
     throw new Error(`SQL Editor bundle builder missing ${marker}`);
   }
 }
-if (sqlEditorBundle.indexOf('begin;') > sqlEditorBundle.indexOf('${fingerprint}')) {
+const sqlEditorTemplateStart = sqlEditorBundle.indexOf('const sql = `');
+const sqlEditorTemplate = sqlEditorTemplateStart >= 0
+  ? sqlEditorBundle.slice(sqlEditorTemplateStart)
+  : '';
+if (!sqlEditorTemplate || sqlEditorTemplate.indexOf('\nbegin;') > sqlEditorTemplate.indexOf('${fingerprint}')) {
   throw new Error('SQL Editor fingerprint guard must run inside the atomic transaction');
 }
 if (/Relation Name' = '(organization_memberships|proposals|organization_event_outbox)'\s+and coalesce\(n ->> 'Index Name'/m.test(u1Sql)) {
