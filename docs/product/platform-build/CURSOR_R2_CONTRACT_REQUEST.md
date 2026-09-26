@@ -225,13 +225,18 @@ export interface TeamCapabilities {
 
 export interface TeamAdapter {
   listOrganizations(): Promise<Organization[]>;
+  getActiveOrganizationId(): Promise<string | null>;
+  setActiveOrganizationId(organizationId: string): Promise<void>;
   listMembers(organizationId: string): Promise<OrganizationMember[]>;
   getCapabilities(): Promise<TeamCapabilities>;
   inviteMember(input: InviteMemberInput): Promise<InviteMemberResult>;
 }
 ```
 
-Full source: `features/organizations/types/organization.ts`.
+Role identifiers and permission names have one frontend source of truth in
+`features/organizations/domain.ts`; adapter and UI shapes are in
+`features/organizations/types/organization.ts`. Both are aligned to the
+reviewed role/RLS matrix at backend candidate `d12743a`.
 
 ## UI capability requirement: invitations must fail closed
 
@@ -252,41 +257,46 @@ requirement for whatever adapter Codex provides, not just the mock:
   — the real adapter should carry the same server-side refusal regardless
   of what the client believes, since the client capability check is a UX
   convenience, not the authorization boundary.
-- The real adapter must resolve `getCapabilities()` from wherever the true
-  entitlement lives (see open question 8 — this is explicitly unresolved,
-  not assumed to be a simple boolean column).
+- Contact details are independently fail-closed. Member email renders only
+  when `contactDetailsEnabled === true` and the authorized roster projection
+  supplied a non-empty value.
+- A future real adapter must return both capability flags. Until server-owned
+  capability and roster surfaces pass review, both flags remain `false`.
 
-## Behavior the UI already assumes and tests against
+## Current behavior at `72e09a2`
 
 - **`listOrganizations()`** returns only organizations the current user
   belongs to. The UI treats an empty result as "no organizations" (disabled
-  switcher) and a rejected promise as "organizations unavailable" (disabled
-  switcher, retryless — see open question 4).
+  switcher). A rejected promise renders a visible, keyboard-operable Retry
+  action that reloads both the organization list and persisted selection.
 - **`listMembers(organizationId)`** returns the full roster for one
   organization, including invited-but-not-yet-joined rows. Empty array →
   "No teammates yet" empty state with an inline invite CTA (itself gated by
   the capability check above). Rejected promise → retryable error alert
   scoped to the member list only (the switcher stays interactive).
-- **`inviteMember(input)`** is expected to:
+- **Active organization:** the UI reads the adapter's persisted organization
+  id on load. A switch calls `setActiveOrganizationId`; local selection changes
+  only after the adapter write resolves. Rejection preserves the prior
+  selection and renders a visible Retry action for that exact failed target.
+- **`inviteMember(input)`** is mock-preview behavior only and is expected to:
   - Reject with a message safe to show verbatim to the user for duplicate
     emails, e.g. "This email has already been invited to this organization."
   - Resolve with the newly created member row (`status: "invited"`,
     `userId: null`) so the UI can optimistically append it without a full
     refetch.
   - Never be called while `invitationsEnabled` is not `true` (see above).
-- The UI never assumes the shape of an "active organization" persistence
-  mechanism — switching organizations is currently local `useState` only
-  (see open question 3).
+- **Production boundary:** production constructs no mock adapter and ignores
+  scenario query strings. With no accepted authenticated server adapter yet,
+  `TeamSettingsShell` defaults to `UnavailableTeamAdapter` and fails closed.
 
-## Open questions — status legend
+## Remaining decisions and prerequisites
 
 - `BLOCKED`: cannot be resolved without a design/product decision that has
   not been made yet (per Codex's own evidence, not this branch's guess).
 - `DEFERRED`: known, answerable, but not required for this UI shell to
   exist or to eventually merge; can be picked up in a later wave.
-- `REQUIRED BEFORE INTEGRATION`: answerable now, and must be answered
-  before a real `TeamAdapter` implementation can replace the mock — but
-  does not block this UI shell's own existence, tests, or hardening.
+- `REQUIRED BEFORE INTEGRATION`: must be implemented and independently
+  reviewed before `UnavailableTeamAdapter` can be replaced in production.
 
 1. **`REQUIRED BEFORE INTEGRATION` — Is ownership transfer a separate
    endpoint, or does `inviteMember` support `role: "owner"`?** The invite
@@ -295,28 +305,19 @@ requirement for whatever adapter Codex provides, not just the mock:
    branch does not assume ownership transfer belongs in the invite flow at
    all — it is simply not offered. If Codex's design differs, this needs an
    explicit UI change, not just an added enum value.
-2. **`REQUIRED BEFORE INTEGRATION` — What identifies "my organizations" for
-   `listOrganizations`?** Session user id via RLS, an explicit membership
-   join, or something else? This affects whether the client needs to pass
-   any parameter at all.
-3. **`REQUIRED BEFORE INTEGRATION` (updated from `BLOCKED` after reading
-   backend candidate `0452823`) — Where does "active organization" live?**
-   Confirmed by direct source reading, not an assumption: it already exists
-   as `public.profiles.active_organization_id`, readable/writable through
-   the existing generic "own profile" RLS policies and guarded by a trigger
-   that rejects any value that isn't one of the caller's own memberships.
-   No new backend column, endpoint, or design decision is needed — the
-   remaining work is UI-side wiring (read it on load, write it on switch,
-   surface the trigger's rejection if the server and client memberships
-   ever disagree) plus Codex's own confirmation that this generic
-   profile-update surface is the intended path (vs. a dedicated
-   "switch organization" endpoint it may prefer for auditability). Switching
-   organizations in this shell remains local-only `useState` until that
-   confirmation lands — this document does not change that today.
-4. **`DEFERRED` — Should the organization switcher support retry after a
-   load failure?** The current shell disables the switcher permanently on
-   error within a mount. Not required for the shell to ship; can be added
-   alongside the member list's existing retry pattern later.
+2. **`REQUIRED BEFORE INTEGRATION` — authenticated organization adapter.**
+   `listOrganizations()` must be caller-bound through the reviewed RLS path,
+   accept no caller-supplied user id and return only current memberships.
+3. **`REQUIRED BEFORE INTEGRATION` — persisted active organization.** The
+   UI seam and retry behavior are complete. The real adapter must read and
+   write `profiles.active_organization_id` for the authenticated caller and
+   surface the trigger's `42501` rejection safely. It must not substitute
+   browser-local persistence or optimistically change selection.
+4. **`REQUIRED BEFORE INTEGRATION` — privacy-minimized roster and
+   capabilities.** The reviewed server projection must omit or null contact
+   details unless the caller's server-owned capability permits them.
+   `getCapabilities()` must return both `invitationsEnabled` and
+   `contactDetailsEnabled`, defaulting both to `false` on ambiguity.
 5. **`BLOCKED` — Rate limiting / re-invite semantics:** if someone invites
    the same already-invited email again, is that idempotent (return the
    existing pending invite) or an error? The mock treats it as an error.
@@ -335,30 +336,24 @@ requirement for whatever adapter Codex provides, not just the mock:
    covers the member list, invite dialog, and switcher). Codex's backend
    already has final-owner protection server-side; exposing role-change/
    removal in this UI is additional scope for a later wave, not this one.
-8. **`BLOCKED` — How does the client learn `invitationsEnabled` (and any
-   future team capabilities)?** A literal "always false" constant, a
-   per-organization entitlement, a subscription/seat-billing tier check, or
-   a global rollout flag? This branch does not assume seat-billing
-   ownership or shape — Codex's own evidence states seat billing remains an
-   explicit, undecided gate for organization-level entitlement. Until that
-   decision exists, the real adapter's `getCapabilities()` may need to be
-   as simple as a hardcoded `{ invitationsEnabled: false }` at first.
 
 ## Explicit non-assumptions (per hardening assignment)
 
-This branch does not assume, and this document does not imply agreement
-on: ownership-transfer semantics, seat-billing ownership/shape, invitation
-acceptance flow/design, or active-organization persistence semantics. Each
-is tracked above as `BLOCKED` or `REQUIRED BEFORE INTEGRATION` and awaits
-an explicit Codex/founder decision, not a default inferred from this UI.
+This branch does not assume ownership-transfer semantics, seat-billing
+ownership/shape or an invitation acceptance flow. Active-organization
+persistence is no longer an open UI question: the adapter seam, confirmed
+write-before-display behavior and retry states are implemented, while the
+real authenticated adapter remains a required integration prerequisite.
 
 ## What this branch deliberately does NOT do
 
 - No Supabase client, no fetch/axios calls, no environment variables.
-- No shared domain-contract imports (`types/organization.ts` here is local
-  to this feature and intentionally throwaway once a real contract lands).
+- No live server-domain import. Frontend role identifiers and permissions are
+  canonicalized in `features/organizations/domain.ts`, with adapter shapes in
+  `features/organizations/types/organization.ts`.
 - No migrations, RLS, or backend routes.
-- No persistence of the active organization across reloads.
+- No real persistence transport yet; the UI calls the adapter read/write seam
+  and never replaces confirmed server persistence with local storage.
 - No role-change or member-removal UI (not in the assigned R2 UI scope).
 - No live/functional invitation path in any production-facing default —
   the mock's "successful invite" demonstration only runs when a caller
@@ -367,57 +362,42 @@ an explicit Codex/founder decision, not a default inferred from this UI.
 
 ## Suggested integration path
 
-1. Codex confirms/amends the `TeamAdapter` shape above (or provides the real
-   one to replace it), including how `getCapabilities()` should resolve.
-2. Add a server-backed adapter implementing the same interface (e.g.
+1. Add an independently reviewed, authenticated roster projection and decide
+   whether capabilities use the fail-closed constant adapter result or a
+   reviewed server-owned RPC. Both capability fields default to `false`.
+2. Add a server-backed adapter implementing the current interface (e.g.
    `features/organizations/lib/server-team-adapter.ts`) that calls the real
    API/RPC layer. Its `getCapabilities()` should default to
-   `{ invitationsEnabled: false }` until the real invitation/consent flow
-   ships — do not flip this to `true` speculatively.
-3. Swap `createMockTeamAdapter()` for the server adapter at the call site in
-   `app/dashboard/settings/team/page.tsx` (currently the only integration
-   point).
-4. Everything under `features/organizations/components/` and
-   `features/organizations/hooks/` should need no changes if the contract
-   above is accepted as-is, since they depend only on the `TeamAdapter`
-   interface, not on the mock implementation.
+   `{ invitationsEnabled: false, contactDetailsEnabled: false }` until each
+   capability has a separately reviewed server contract.
+3. Bind reads and writes to the authenticated caller, including guarded
+   `profiles.active_organization_id` persistence and the privacy-minimized
+   roster surface.
+4. Replace the production `UnavailableTeamAdapter` with the accepted adapter.
+   Keep `TeamSettingsDevelopmentPreview` and scenario controls restricted to
+   literal development builds.
 
 ## Integration checklist — smallest files that change after Claude PASS
 
-This lists only what should need to change once Claude returns a PASS (or
-accepted remediation) on the exact backend candidate, per the read-only
-mapping above. It assumes Codex freezes the read-only contract exactly as
-mapped (organizations + active-organization column + raw membership rows)
-and keeps invitations/`getCapabilities` server-absent. Nothing on this list
-should require touching `features/organizations/components/` or
-`features/organizations/hooks/`.
+This lists the smallest expected integration surface after independent PASS
+on backend candidate `d12743a` and on the new roster/capability surface.
 
 1. **New file** `features/organizations/lib/server-team-adapter.ts` — the
-   only adapter implementation change. `getCapabilities()` returns a
-   hardcoded `{ invitationsEnabled: false }` (matching "NOT IMPLEMENTED"
-   above); `inviteMember()` throws/rejects rather than calling anything,
-   since no server surface exists to call.
-2. `features/organizations/types/organization.ts` — only if Codex's exact
-   `OrganizationMember` projection differs from this file's current
-   invitation-oriented shape (`status`, nullable `user_id`, `invited_at`).
-   Per the mapping above, the real roster has none of those fields yet, so
-   this type likely needs to shrink to what a real roster RPC can actually
-   return, not grow.
+   adapter implementation. It must implement organization reads, persisted
+   active-organization read/write, privacy-minimized roster reads and both
+   capability flags. `inviteMember()` continues to reject.
+2. `features/organizations/types/organization.ts` changes only if the accepted
+   roster projection differs; email remains optional and fail-closed.
 3. **New file** — a reviewed, auth-bound roster-read RPC/endpoint (owned by
    Codex, not this branch) is a **prerequisite**, not a Cursor-side file,
    since no `profiles` policy today lets one member read another's name/
    email. This UI cannot self-serve that gap.
-4. `app/dashboard/settings/team/page.tsx` — swap
-   `createMockTeamAdapter()` for the new server adapter; remove or
-   development-gate the `?scenario=` fixture controls per Codex's preflight
-   finding that the mock route must not be reachable by signed-in users
-   as-is.
-5. Wiring the active-organization switch to
-   `profiles.active_organization_id` (per the updated question 3 above) —
-   likely a small change inside the new server adapter or a thin
-   organization-context hook, not inside `team-settings-shell.tsx` itself,
-   since that component already delegates entirely to whatever adapter/
-   hook it is given.
+4. `app/dashboard/settings/team/page.tsx` — inject the accepted server adapter
+   in production. Development fixture controls are already literal-
+   development-only and remain that way.
+5. No hook redesign is expected: `useOrganizations` already reads persisted
+   selection, writes before changing displayed state, surfaces safe errors and
+   retries the failed target.
 
 No migration, RLS policy, Stripe/billing file, or shared contract file is
 expected to change on the Cursor side of this list — those remain Codex's
@@ -456,7 +436,7 @@ read-only contract mapped above.
    distinguish the trigger's `42501` ("active organization must be a
    current membership") from a generic network/unknown error and surface a
    specific, safe-to-show message — not swallow it as a generic failure.
-5. **Redacted team roster reads** — **must not** be a client-side join of
+5. **Privacy-minimized team roster reads** — **must not** be a client-side join of
    `organization_memberships` and `profiles` (no policy authorizes that
    join today, per the mapping above). Must call the Codex-owned RPC
    defined in the next section, e.g.
@@ -468,7 +448,8 @@ read-only contract mapped above.
    than backfilled with placeholders.
 6. **Capability reads** — until Codex ships the optional RPC in the next
    section, `getCapabilities()` returns a hardcoded
-   `{ invitationsEnabled: false }` with **no** network call at all (Option A
+   `{ invitationsEnabled: false, contactDetailsEnabled: false }` with **no**
+   network call at all (Option A
    below). If/when Codex ships the RPC (Option B), swap the hardcoded
    return for `supabase.rpc("get_team_capabilities", ...)`, still defaulting
    to `false` on any error, timeout, or unexpected shape — never `true` on
@@ -493,7 +474,7 @@ mock-only regression coverage).
 | Active organization (read) | (1) returns the caller's own `active_organization_id`; (2) returns `null` gracefully if unset (should not happen post-backfill, but must not crash); (3) never reads another user's row (no `user_id`/`profile_id` parameter accepted from the caller) |
 | Active organization (write) | (1) succeeds when switching to a real current membership; (2) the trigger's `42501` rejection (switching to an organization the caller is **not** a member of) surfaces as a specific, safe, non-generic error and does **not** update local UI state optimistically before the write confirms; (3) network error leaves the previously displayed active organization unchanged (no optimistic corruption); (4) a membership revoked concurrently by another session, then a switch attempt to that same now-stale organization, is rejected the same way as case 2 |
 | Redacted roster reads | (1) returns every current member of an organization the caller belongs to, in any caller role including `viewer`; (2) returns `[]` (not an error) for a valid organization id the caller is **not** a member of — must not leak "this organization exists" vs. "this organization doesn't exist"; (3) never returns rows from a different organization than the one requested, tested with two real organizations and cross-checking the response of each against the other's roster; (4) a membership revoked mid-session is reflected on the next read (no stale client-side cache masking a removal); (5) malformed/non-UUID organization id is rejected client-side before any network call, and server-side rejection (if it slips through) is handled without a crash; (6) large roster (≥ 200 rows, matching a plausible upper bound) completes without truncation or timeout in the adapter's contract, or the adapter's contract explicitly documents a pagination limit if Codex's RPC imposes one |
-| Capability reads | (1) resolves `{ invitationsEnabled: false }` today, unconditionally, matching the "NOT IMPLEMENTED" status above; (2) any RPC error, timeout, or unexpected response shape (once Option B ships) resolves to `false`, never `true` and never a rejected promise that the caller might misinterpret as "unknown, assume enabled" |
+| Capability reads | (1) resolves `{ invitationsEnabled: false, contactDetailsEnabled: false }` today, unconditionally, matching the "NOT IMPLEMENTED" status above; (2) any RPC error, timeout, or unexpected response shape (once Option B ships) resolves both flags to `false`, never `true` and never a rejected promise that the caller might misinterpret as "unknown, assume enabled" |
 | `inviteMember()` (out-of-scope guard) | (1) calling the real adapter's `inviteMember` directly (bypassing the UI gate) throws/rejects with a clear "not implemented" error, not a silent success or no-op resolve |
 
 Explicitly **not** in this matrix, per instruction: creating an invitation,
