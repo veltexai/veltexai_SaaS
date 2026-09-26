@@ -124,15 +124,38 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
             committedOrganizationIdRef.current = targetId;
             setActiveOrganizationIdState(targetId);
             setFailedSwitchOrganizationId(null);
+            setSwitchError(null);
           })
-          .catch((err: unknown) => {
-            if (pendingSwitchRef.current) return;
-            // The displayed value is always the last server-confirmed value.
-            setActiveOrganizationIdState(committedOrganizationIdRef.current);
+          .catch(async (err: unknown) => {
+            // A failed response is ambiguous: the server write may have
+            // committed before the response was lost. Re-read the persisted
+            // value before deciding whether a queued intent still needs a
+            // write. Never assume the pre-request value is authoritative.
+            let persistedId: string | null = null;
+            let reconciliationError: unknown = null;
+            try {
+              persistedId = await adapter.getActiveOrganizationId();
+            } catch (reconcileErr: unknown) {
+              reconciliationError = reconcileErr;
+            }
+
+            committedOrganizationIdRef.current = persistedId;
+            setActiveOrganizationIdState(persistedId);
+
+            const queuedTarget = pendingSwitchRef.current;
+            if (queuedTarget && queuedTarget === persistedId) {
+              pendingSwitchRef.current = null;
+              setFailedSwitchOrganizationId(null);
+              setSwitchError(null);
+              return;
+            }
+            if (queuedTarget && reconciliationError === null) return;
+
             setFailedSwitchOrganizationId(targetId);
+            const displayedError = reconciliationError ?? err;
             setSwitchError(
-              err instanceof Error
-                ? err.message
+              displayedError instanceof Error
+                ? displayedError.message
                 : "Could not switch organizations. Please try again.",
             );
           })

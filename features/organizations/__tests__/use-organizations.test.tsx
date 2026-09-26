@@ -43,7 +43,10 @@ describe("useOrganizations persistence ordering", () => {
       await gate?.promise;
       authoritative = target;
     });
-    const subject = adapter({ setActiveOrganizationId });
+    const subject = adapter({
+      getActiveOrganizationId: async () => authoritative,
+      setActiveOrganizationId,
+    });
     const { result } = renderHook(() => useOrganizations(subject));
     await waitFor(() => expect(result.current.activeOrganizationId).toBe("org-a"));
 
@@ -88,6 +91,38 @@ describe("useOrganizations persistence ordering", () => {
     expect(result.current.switchError).toBeNull();
   });
 
+  it("reconciles an ambiguous committed write before applying the queued intent", async () => {
+    const firstResponse = deferred<void>();
+    let authoritative = "org-a";
+    const setActiveOrganizationId = jest.fn(async (target: string) => {
+      if (target === "org-b") {
+        await firstResponse.promise;
+        authoritative = target;
+        throw new Error("response lost after commit");
+      }
+      authoritative = target;
+    });
+    const getActiveOrganizationId = jest.fn(async () => authoritative);
+    const subject = adapter({
+      getActiveOrganizationId,
+      setActiveOrganizationId,
+    });
+    const { result } = renderHook(() => useOrganizations(subject));
+    await waitFor(() => expect(result.current.activeOrganizationId).toBe("org-a"));
+
+    act(() => {
+      result.current.setActiveOrganizationId("org-b");
+      result.current.setActiveOrganizationId("org-a");
+    });
+    await act(async () => firstResponse.resolve());
+
+    await waitFor(() => expect(setActiveOrganizationId).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(result.current.activeOrganizationId).toBe("org-a"));
+    expect(authoritative).toBe("org-a");
+    expect(result.current.switchError).toBeNull();
+    expect(getActiveOrganizationId).toHaveBeenCalledTimes(2);
+  });
+
   it("rolls back to the earlier authoritative success when the later write fails", async () => {
     const first = deferred<void>();
     const second = deferred<void>();
@@ -97,7 +132,10 @@ describe("useOrganizations persistence ordering", () => {
       else await second.promise;
       authoritative = target;
     });
-    const subject = adapter({ setActiveOrganizationId });
+    const subject = adapter({
+      getActiveOrganizationId: async () => authoritative,
+      setActiveOrganizationId,
+    });
     const { result } = renderHook(() => useOrganizations(subject));
     await waitFor(() => expect(result.current.activeOrganizationId).toBe("org-a"));
     act(() => {
