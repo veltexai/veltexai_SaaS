@@ -24,7 +24,13 @@ export async function PATCH(request: NextRequest) {
   try {
     const context = await authenticatedTeamClient();
     if (!context) return unauthorized();
-    const parsed = switchSchema.safeParse(await request.json());
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid organization." }, { status: 400 });
+    }
+    const parsed = switchSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid organization." }, { status: 400 });
     }
@@ -45,10 +51,12 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const { error } = await context.supabase
+    const { data: updated, error } = await context.supabase
       .from("profiles")
       .update({ active_organization_id: parsed.data.organizationId })
-      .eq("id", context.user.id);
+      .eq("id", context.user.id)
+      .select("active_organization_id")
+      .maybeSingle();
     if (error) {
       if (error.code === "42501") {
         return NextResponse.json(
@@ -56,6 +64,9 @@ export async function PATCH(request: NextRequest) {
           { status: 403 },
         );
       }
+      return unavailable();
+    }
+    if (!updated || updated.active_organization_id !== parsed.data.organizationId) {
       return unavailable();
     }
     return NextResponse.json({ data: null });

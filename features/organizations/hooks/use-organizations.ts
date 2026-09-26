@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Organization, TeamAdapter } from "../types/organization";
 
 export type OrganizationsLoadStatus = "loading" | "error" | "success";
@@ -34,6 +34,7 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
     string | null
   >(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const switchEpochRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -43,23 +44,40 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
     setSwitchError(null);
     setFailedSwitchOrganizationId(null);
 
+    const loadEpoch = ++switchEpochRef.current;
     Promise.all([
       adapter.listOrganizations(),
       adapter.getActiveOrganizationId(),
     ])
-      .then(([result, persistedId]) => {
+      .then(async ([result, persistedId]) => {
         if (cancelled) return;
         setOrganizations(result);
+        const validatedPersistedId =
+          persistedId && result.some((org) => org.id === persistedId)
+            ? persistedId
+            : null;
+        const targetId = validatedPersistedId ?? result[0]?.id ?? null;
+
+        if (targetId && !validatedPersistedId) {
+          try {
+            await adapter.setActiveOrganizationId(targetId);
+          } catch (err: unknown) {
+            if (cancelled || switchEpochRef.current !== loadEpoch) return;
+            setActiveOrganizationIdState(null);
+            setFailedSwitchOrganizationId(targetId);
+            setSwitchError(
+              err instanceof Error
+                ? err.message
+                : "Could not switch organizations. Please try again.",
+            );
+            setStatus("success");
+            return;
+          }
+        }
+
+        if (cancelled || switchEpochRef.current !== loadEpoch) return;
+        setActiveOrganizationIdState(targetId);
         setStatus("success");
-        setActiveOrganizationIdState((current) => {
-          if (current && result.some((org) => org.id === current)) {
-            return current;
-          }
-          if (persistedId && result.some((org) => org.id === persistedId)) {
-            return persistedId;
-          }
-          return result[0]?.id ?? null;
-        });
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -75,20 +93,24 @@ export function useOrganizations(adapter: TeamAdapter): UseOrganizationsResult {
 
     return () => {
       cancelled = true;
+      if (switchEpochRef.current === loadEpoch) switchEpochRef.current += 1;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adapter, reloadToken]);
 
   const persistActiveOrganizationId = useCallback(
     (organizationId: string) => {
+      const requestEpoch = ++switchEpochRef.current;
       setSwitchError(null);
       adapter
         .setActiveOrganizationId(organizationId)
         .then(() => {
+          if (switchEpochRef.current !== requestEpoch) return;
           setActiveOrganizationIdState(organizationId);
           setFailedSwitchOrganizationId(null);
         })
         .catch((err: unknown) => {
+          if (switchEpochRef.current !== requestEpoch) return;
           setFailedSwitchOrganizationId(organizationId);
           setSwitchError(
             err instanceof Error
