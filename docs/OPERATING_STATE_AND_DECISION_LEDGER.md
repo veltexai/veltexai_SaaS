@@ -253,6 +253,13 @@ After any material action, append or revise the relevant section with:
 - R2 requires Claude independent review and its specified release gates before production. Later R3 through stage 7 remain sequential objectives, each separately implemented and independently reviewed; no combined migration or premature completion claim.
 - Conditional production authorization does not waive release gates. New spending, legal acceptance, regulated/high-hazard content, payment-provider account changes and destructive actions beyond the named preview deletion retain their applicable approval requirements.
 
+### R3-1 implementation contract prepared — 2026-09-25 Pacific
+
+- **PREPARED / NOT STARTED:** `docs/product/platform-build/CURSOR_R3_1_IMPLEMENTATION_CONTRACT.md` is grounded in the canonical Prompt 3 specification, Prompt 14 final synthesis, their Codex decisions and this integration ledger. Source hashes were independently reproduced by Codex.
+- **SCOPE PRESERVED:** R3-1 is only the first bounded Prompt 3 S1+S2 increment: customers, contacts, properties, both configurable starter pipelines, the 11 canonical stage categories, opportunities/site packages, append-only stage history, in-app tasks/next actions and manual outcome/reactivation paths. It does not redefine or complete the approved R3 Bid-to-Won stage.
+- **REQUIRED R3 COMPLETION MAP:** later R3 increments still require persisted walkthrough evidence; estimate/scenario linkage; immutable proposal versions; C0 customer acceptance/receipt; provider-neutral handoff; A0–A8 activation instrumentation; and acceptance-received operator notification. Onboarding/CSV import/export and legacy proposal migration remain the next separately gated roadmap stage, not discarded scope.
+- **DEPENDENCY GATE:** no R3-1 implementation begins until R2 organization identifiers, membership roles and authorization contracts are accepted and the required U1 membership-RLS and U8 queue/runtime evidence is recorded. No implementation, migration, hosted action, merge, push or deployment occurred from this contract.
+
 ### b341e50 M-1 continuation — browser access blocked
 
 - Candidate confirmed `b341e50`; obsolete start_user_trial is optional, required template routines remain mandatory. Updated local read-only R0 preflight accordingly; preserved all prior M-1 evidence.
