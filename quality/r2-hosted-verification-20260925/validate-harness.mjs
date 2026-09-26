@@ -9,6 +9,7 @@ const required = [
   'HOSTED_APP_CHECKLIST.md', 'sql/r2-hosted-matrix.sql',
   'sql/last-owner-setup.sql', 'sql/last-owner-cleanup.sql',
   'run-u1-benchmark.sh', 'sql/u1-membership-rls-benchmark.sql',
+  'u8-preview-runtime-inventory-20260926.json',
 ];
 const requiredDocs = [
   'R2_U1_MEMBERSHIP_RLS_BENCHMARK.md',
@@ -62,7 +63,12 @@ const u1Required = [
   'begin;', 'rollback;', 'EXPLAIN (ANALYZE, BUFFERS', 'organization_memberships',
   'proposal_additional_services', 'pdf_exports', 'organization_event_outbox',
   'event_sequence', 'r2-u1-', '93000000', 'example.test',
+  'grant select, insert on u1_evidence to authenticated, service_role',
+  'q4a_addon_visibility_rls', 'q5_pdf_export_visibility_rls',
 ];
+if (/insert into public\.pdf_exports\s*\([^)]*(file_url|file_path)/is.test(u1Sql)) {
+  throw new Error('U1 SQL uses a removed pdf_exports path column');
+}
 for (const marker of u1Required) {
   if (!u1Sql.toLowerCase().includes(marker.toLowerCase())) {
     throw new Error(`U1 SQL missing ${marker}`);
@@ -84,5 +90,15 @@ for (const [name, text] of [['U1 doc', u1Doc], ['U8 doc', u8Doc]]) {
 }
 if (!u8Doc.includes('best-effort cron is not sufficient') && !u8Doc.includes('not sufficient for contractual handoffs')) {
   throw new Error('U8 memo does not record the Prompt 2 cron prohibition');
+}
+if (!u8Doc.includes('U8 remains OPEN') || !u8Doc.includes('terminal-DLQ')) {
+  throw new Error('U8 memo prematurely closes the runtime decision');
+}
+const u8Inventory = JSON.parse(fs.readFileSync(path.join(root, 'u8-preview-runtime-inventory-20260926.json'), 'utf8'));
+if (u8Inventory.project_ref === 'iwoaaljitifloolszxlu' || u8Inventory.production_touched !== false) {
+  throw new Error('U8 inventory is not isolated-preview evidence');
+}
+if (u8Inventory.extensions?.pg_net?.installed !== '0.20.4' || u8Inventory.extensions?.pgmq?.installed !== null) {
+  throw new Error('U8 inventory does not match the recorded read-only preview result');
 }
 console.log('R2 harness static validation PASS');

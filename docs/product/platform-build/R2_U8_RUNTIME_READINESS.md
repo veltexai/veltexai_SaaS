@@ -1,8 +1,11 @@
-# U8 background-job / runtime readiness
+# U8 background-job / runtime readiness analysis
 
-Status: **PREPARED / NOT EXECUTED**  
-Date: 2026-09-25 Pacific  
-Candidate head this memo was prepared against: `f761469` on `codex/r2-integrated-read-adapter`  
+Status: **PREPARED / NOT EXECUTED**
+
+Date: 2026-09-25 Pacific
+
+Candidate head this memo was prepared against: `f761469` on `codex/r2-integrated-read-adapter`
+
 Authorization: comparison and recommendation only. No purchase, configuration,
 deployment, credential creation, hosted queue, or worker was performed.
 
@@ -42,15 +45,52 @@ deployment, credential creation, hosted queue, or worker was performed.
 
 | Option | Fits current stack? | Retries / visibility / DLQ | Idempotency | Observability | Secrets / cost | Verdict |
 |---|---|---|---|---|---|---|
-| **R2 outbox + service-role claimer**, woken by a short-interval Supabase scheduled function or `pg_cron` *if present on the preview* | Yes. Uses committed tables and the existing service role already used by server jobs | Visibility via `available_at`; claim with `ORDER BY available_at, event_sequence` and `FOR UPDATE SKIP LOCKED` (spike SQL later); DLQ via exhausted `attempts` + `last_error`; outbox remains the contract if a wake is missed | Inbox `(consumer, event_id)` already committed; outbox `(organization_id, event_id)` unique | `attempts`, `last_error`, `delivered_at`; Sentry already registers Vercel cron check-ins and can be extended later without a new vendor | No new paid product and no new credential in this assignment. Wake cost is scheduled-function invocations only | **Recommended bounded runtime** |
+| **R2 outbox + service-role claimer**, woken by a short-interval Supabase scheduled function or `pg_cron` after separately authorized enablement | Yes. Uses committed tables and the existing service role already used by server jobs | Visibility via `available_at`; claim with `ORDER BY available_at, event_sequence` and `FOR UPDATE SKIP LOCKED` (spike SQL later); an explicit terminal-DLQ state/exclusion predicate is still required | Inbox `(consumer, event_id)` already committed; outbox `(organization_id, event_id)` unique | `attempts`, `last_error`, `delivered_at`; Sentry already registers Vercel cron check-ins and can be extended later without a new vendor | No new paid product and no new credential in this assignment. Wake cost is scheduled-function invocations only | **Provisional direction; executable spike required** |
 | Vercel Cron as the *job store* (pattern of `trial-automation`) | Already exists for marketing/trial mail | Daily schedule; comment in the route admits a skipped day. Prompt 2 U8 forbids this as the contractual mechanism | Table-level dedupe only for that mail feature | Sentry cron check-in for that one path | Existing `CRON_SECRET` | **Rejected as Bid-to-Won dispatcher.** Cron may later *wake* the claimer; it must not replace the outbox |
-| Supabase Queues / pgmq as a *second* durable log | Unknown on hosted preview. No extension inventory is recorded; no `supabase/config.toml` in this worktree | Meets Prompt 2’s preferred class *if* the preview has the extension and visibility/DLQ are configured | Would duplicate the already-committed outbox unless used only as a wake/channel | Provider metrics plus outbox rows | Enabling an extension is a hosted mutation and is **not** authorized here | **Upgrade path, not the first runtime.** Inventory on the isolated preview before any enablement |
+| Supabase Queues / pgmq as a *second* durable log | `pgmq` 1.5.1 is available but not installed on the isolated preview; no `supabase/config.toml` exists in this worktree | Meets Prompt 2’s preferred class if visibility/DLQ are configured and proved | Would duplicate the already-committed outbox unless used only as a wake/channel | Provider metrics plus outbox rows | Enabling the extension is a hosted mutation and is **not** authorized here | **Candidate for the executable spike, not selected** |
 | Inngest-class / QStash / other managed worker | Not in the repo. Would add a dependency and an external control plane | Typically strong retries/DLQ | Must still consume the R2 outbox or risk dual sources of truth | Vendor dashboards | Requires purchase or new credentials — forbidden by this assignment | **Deferred.** Revisit only after a founder cost decision if the Supabase-native claimer fails a later spike |
 
-## Recommendation
+## Evidence captured after the desk review
 
-**Use the committed R2 transactional outbox as the sole durable job log.** Implement
-(when separately authorized) a **service-role outbox claimer** that:
+Read-only isolated-preview inventory on 2026-09-26:
+
+- `pg_net` 0.20.4 is installed;
+- `pg_cron` 1.6.4 is available but not installed;
+- `pgmq` 1.5.1 is available but not installed;
+- `http` 1.6 is available but not installed.
+
+Evidence: `quality/r2-hosted-verification-20260925/u8-preview-runtime-inventory-20260926.json`.
+No extension was enabled.
+
+Current official external comparison (read-only research, 2026-09-25 Pacific):
+
+- [Supabase Queues](https://supabase.com/docs/guides/queues) is Postgres-native,
+  pgmq-backed and provides durable delivery, visibility windows, archival and
+  queue monitoring. The extension is available on the preview, but enabling and
+  executing it remain consequential hosted actions.
+- [QStash pricing](https://upstash.com/pricing/qstash) lists a $0 tier capped at
+  1,000 messages/day and usage pricing of $1 per 100,000 delivery attempts;
+  retries count as additional messages. Usage pricing lists seven-day DLQ
+  retention. This would require a new external account/credential and is not
+  selected.
+- [Inngest pricing](https://www.inngest.com/pricing) lists a $0 Hobby tier with
+  50,000 executions/month and a Pro tier starting at $99/month with one million
+  executions, managed retries, concurrency and observability. This would add an
+  external control plane and is not selected.
+
+This closes the preview metadata and official capability/cost research portions
+of U8. The executable claim/retry/terminal-DLQ comparison remains open.
+
+## Provisional recommendation — U8 remains OPEN
+
+The present repository evidence favors keeping the committed R2 transactional
+outbox as the sole durable job log. This is a **provisional direction**, not the
+required U8 technical-spike decision. The isolated-preview inventory and
+official external capability/cost comparison are now captured. U8 remains open
+until executable claim/retry/terminal-DLQ behavior is compared and proved.
+
+If that evidence passes, implement (when separately authorized) a
+**service-role outbox claimer** that:
 
 1. selects pending rows (`delivered_at is null` and `available_at <= now()`)
    in `event_sequence` order;
@@ -58,14 +98,15 @@ deployment, credential creation, hosted queue, or worker was performed.
    incrementing `attempts` in the same update;
 3. delivers at-least-once to an idempotent consumer (inbox key already exists);
 4. on success sets `delivered_at`;
-5. on exhaustion of a recorded attempt bound writes a dead-letter state through
-   `last_error` (and stops reclaiming until an operator replay);
+5. on exhaustion of a recorded attempt bound writes an explicit terminal state
+   (or equivalent exclusion predicate) that prevents reclaim until an operator
+   intentionally replays it; `last_error` alone is not sufficient;
 6. is *woken* by the smallest Supabase-native scheduler available on the
    isolated preview — not by treating Vercel Cron as the store.
 
-This is the smallest option that honors U8, ADR-007, and the tables already
-merged. It does not require a new vendor, a new secret, or enabling pgmq before
-the preview inventory exists.
+This appears to be the smallest option consistent with U8, ADR-007, and the
+tables already merged. It is not selected until the required spike proves the
+wake/runtime, retry ceiling, terminal dead-letter state, observability and cost.
 
 Do not implement the claimer in this assignment.
 
@@ -80,11 +121,16 @@ preview-only and founder-gated.
 
 - Exact attempt ceiling and 24 h handoff retry bound (Prompt 3 records 24 h for
   later webhook delivery; R2 has no numeric bound yet).
-- Whether the isolated preview already has `pg_cron` or `pgmq` (UNKNOWN until a
-  metadata-only inventory; that inventory is not this memo’s execution).
+- Whether the executable spike should temporarily enable available `pg_cron`
+  1.6.4 and/or `pgmq` 1.5.1 on the isolated preview, then compare them with the
+  outbox-only claimer. The metadata inventory is complete; enablement is not.
 - Whether Sentry check-ins are extended from the trial cron to the claimer.
 - Whether a later founder decision introduces an external worker after the
   native claimer is evidenced.
+- The current outbox has no terminal dead-letter status. `last_error` alone does
+  not stop a row whose `delivered_at` is null and `available_at <= now()` from
+  being reclaimed. The spike must define and prove an explicit terminal state
+  or equivalent exclusion predicate before implementation approval.
 
 ## Risks
 

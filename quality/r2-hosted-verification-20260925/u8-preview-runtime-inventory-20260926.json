@@ -1,0 +1,14 @@
+{
+  "captured_at": "2026-09-26T03:43:00Z",
+  "project_ref": "wcnfhriosemgchmtwgof",
+  "environment": "isolated Supabase preview m1-r0-verification-20260924",
+  "query_kind": "read-only extension inventory",
+  "extensions": {
+    "pg_net": { "available": "0.20.4", "installed": "0.20.4" },
+    "pg_cron": { "available": "1.6.4", "installed": null },
+    "pgmq": { "available": "1.5.1", "installed": null },
+    "http": { "available": "1.6", "installed": null }
+  },
+  "mutation_performed": false,
+  "production_touched": false
+}

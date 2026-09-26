@@ -1,8 +1,11 @@
 # U1 membership-RLS benchmark pack
 
-Status: **PREPARED / NOT EXECUTED**  
-Date: 2026-09-25 Pacific  
-Candidate head this pack was prepared against: `f761469` on `codex/r2-integrated-read-adapter`  
+Status: **PREPARED / NOT EXECUTED**
+
+Date: 2026-09-25 Pacific
+
+Candidate head this pack was prepared against: `f761469` on `codex/r2-integrated-read-adapter`
+
 Authoritative ledger: `/private/tmp/veltex-r2-integration/docs/OPERATING_STATE_AND_DECISION_LEDGER.md`
 
 This is evidence preparation only. It does not modify product code, migrations, or
@@ -31,7 +34,9 @@ the R3-1 contract. It must not be run against production.
 | `q1_membership_lookup` | authenticated owner A | `organization_memberships` by `(organization_id, auth.uid())` — the U1 helper body |
 | `q2_org_scoped_proposals_rls` | authenticated owner A | `proposals` filtered by `organization_id` under current RLS (`can_edit_organization_work`) |
 | `q3_org_scoped_proposals_bypass` | `service_role` | same proposal filter with RLS bypass |
-| `q4_export_addon_paths_rls` | authenticated owner A | `proposals` ⟕ `proposal_additional_services` ⟕ `pdf_exports` |
+| `q4_export_addon_paths_rls` | authenticated owner A | `proposals` ⟕ `proposal_additional_services` ⟕ `pdf_exports` plan |
+| `q4a_addon_visibility_rls` | authenticated owner A | seeded dependent add-on is visible exactly once |
+| `q5_pdf_export_visibility_rls` | authenticated owner A | seeded dependent PDF export is visible exactly once |
 | `q6_pending_outbox_order` | `service_role` | pending outbox ordered by `(available_at, event_sequence)` |
 
 `rls_overhead_ms` is `q2.execution_ms - q3.execution_ms`. Record it. Do not fail
@@ -52,8 +57,9 @@ deterministic plan-shape fixture, not a 5,000-row CRM load.
 - The SQL file is one transaction that **rolls back**.
 - After rollback it asserts no leftover `r2-u1-%@example.test` auth users, no
   `93000000-…` proposals, and no `u1-rls-benchmark-flat` catalog SKU.
-- Baseline proposal digest is printed before rollback for operator comparison
-  against the post-rollback database.
+- Baseline counts and proposal digest are emitted inside the transaction before
+  rollback. After rollback, the script separately asserts that no synthetic U1
+  users, proposals or catalog rows remain; it does not claim a second digest.
 - The runner refuses production project `iwoaaljitifloolszxlu`, requires
   `R2_EXPECTED_PROJECT_REF` to appear in the URL, and requires
   `R2_U1_EXECUTE=preview` plus `--execute-preview`. Default invocation is
@@ -83,7 +89,8 @@ from the preview’s real rows. Synthetic `U1-CONTENT-*` strings are fixtures.
 - signup bootstrap did not create exactly one owner membership per fixture user;
 - owner A membership leaked into org B, or owner A read any org B proposals;
 - authenticated role could `SELECT` `organization_event_outbox`;
-- `q1` row_count ≠ 1, `q2`/`q3` ≠ 64, `q4` < 64, `q6` < 1;
+- `q1` row_count ≠ 1, `q2`/`q3` ≠ 64, `q4` < 64,
+  `q4a`/`q5` ≠ 1, or `q6` < 1;
 - residue remained after rollback;
 - runner accepted the production project ref.
 

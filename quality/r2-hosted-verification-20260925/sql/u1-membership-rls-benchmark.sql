@@ -67,6 +67,8 @@ create temp table u1_evidence (
   plan jsonb not null
 );
 
+grant select, insert on u1_evidence to authenticated, service_role;
+
 create or replace function pg_temp.u1_walk_nodes(node jsonb)
 returns setof jsonb language sql as $$
   select node
@@ -205,13 +207,11 @@ insert into public.proposal_additional_services (
 );
 
 insert into public.pdf_exports (
-  proposal_id, user_id, file_path, file_size, template_version
+  proposal_id, user_id, file_size
 ) values (
   '93000000-0000-4000-8000-000000001001',
   '93000000-0000-4000-8000-000000000011',
-  '/u1/benchmark.pdf',
-  128,
-  'u1-benchmark'
+  128
 );
 
 reset role;
@@ -251,6 +251,20 @@ select pg_temp.u1_capture(
        where p.organization_id = %L::uuid$q$,
     current_setting('r2.u1.org_a')
   )
+);
+
+select pg_temp.u1_capture(
+  'q4a_addon_visibility_rls',
+  'authenticated-owner-a',
+  $q$select count(*) from public.proposal_additional_services
+     where proposal_id = '93000000-0000-4000-8000-000000001001'::uuid$q$
+);
+
+select pg_temp.u1_capture(
+  'q5_pdf_export_visibility_rls',
+  'authenticated-owner-a',
+  $q$select count(*) from public.pdf_exports
+     where proposal_id = '93000000-0000-4000-8000-000000001001'::uuid$q$
 );
 
 do $$
@@ -311,6 +325,12 @@ begin
   end if;
   if (select row_count from u1_evidence where query_key = 'q4_export_addon_paths_rls') < 64 then
     raise exception 'export/add-on path under-counted org A rows';
+  end if;
+  if (select row_count from u1_evidence where query_key = 'q4a_addon_visibility_rls') <> 1 then
+    raise exception 'owner A could not see the seeded add-on row';
+  end if;
+  if (select row_count from u1_evidence where query_key = 'q5_pdf_export_visibility_rls') <> 1 then
+    raise exception 'owner A could not see the seeded PDF export row';
   end if;
   if (select row_count from u1_evidence where query_key = 'q6_pending_outbox_order') < 1 then
     raise exception 'pending outbox produced no claimable rows';
