@@ -2,7 +2,14 @@
 
 Status: **PREPARED — NOT EXECUTED AGAINST THE FINAL INTEGRATED CANDIDATE**
 
-Candidate: integrated R2 candidate `f99bb54` (ledger evidence at `652aa94`)
+Candidate: exact product correction head `f761469`; later evidence-only commits
+do not change the application or migration candidate.
+
+U1 membership-RLS benchmark and U8 runtime memo are also **PREPARED / NOT
+EXECUTED**. They live in this directory plus
+`docs/product/platform-build/R2_U1_MEMBERSHIP_RLS_BENCHMARK.md` and
+`docs/product/platform-build/R2_U8_RUNTIME_READINESS.md`. The U1 runner defaults
+to dry-run and refuses production project `iwoaaljitifloolszxlu`.
 
 This directory is the bounded hosted-verification plan for R2 organization and
 tenancy. It does not apply migrations, discover credentials, send email, deploy,
@@ -46,8 +53,10 @@ by the runner.
 node ./quality/r2-hosted-verification-20260925/build-preview-migration-bundle.mjs
 export R2_PREVIEW_DATABASE_URL='postgresql://...isolated-preview...'
 export R2_EXPECTED_PROJECT_REF='the-isolated-preview-ref'
+export R2_CANDIDATE_COMMIT='f761469'
 ./quality/r2-hosted-verification-20260925/run-hosted.sh
 ./quality/r2-hosted-verification-20260925/run-last-owner-concurrency.sh
+./quality/r2-hosted-verification-20260925/run-u1-benchmark.sh
 ```
 
 The runners reject the production project reference

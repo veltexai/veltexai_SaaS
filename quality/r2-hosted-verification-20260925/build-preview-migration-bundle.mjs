@@ -33,6 +33,10 @@ function migrationBody(name) {
 }
 
 const bodies = migrations.map((name) => ({ name, body: migrationBody(name) }));
+const migrationRecords = migrations.map((name) => ({
+  version: name.slice(0, 14),
+  name: name.replace(/^\d+_/, "").replace(/\.sql$/, ""),
+}));
 const sourceDigest = createHash("sha256")
   .update(bodies.map(({ name, body }) => `${name}\n${body}\n`).join(""))
   .digest("hex");
@@ -48,9 +52,19 @@ begin
   if to_regclass('public.organizations') is not null then
     raise exception 'R2 preflight failed: public.organizations already exists';
   end if;
+  if exists (
+    select 1
+    from supabase_migrations.schema_migrations
+    where version = any (array[${migrationRecords.map(({ version }) => `'${version}'`).join(", ")}])
+  ) then
+    raise exception 'R2 preflight failed: one or more migration-history rows already exist';
+  end if;
 end $$;
 
-${bodies.map(({ name, body }) => `-- BEGIN ${name}\n${body}\n-- END ${name}`).join("\n\n")}
+${bodies.map(({ name, body }, index) => {
+  const { version, name: migrationName } = migrationRecords[index];
+  return `-- BEGIN ${name}\n${body}\ninsert into supabase_migrations.schema_migrations (version, statements, name)\nvalues ('${version}', array[]::text[], '${migrationName}');\n-- END ${name}`;
+}).join("\n\n")}
 
 do $$
 begin
@@ -76,6 +90,13 @@ begin
        )
   ) then
     raise exception 'R2 postcondition failed: profile backfill/orphan mismatch';
+  end if;
+  if (
+    select count(*)
+    from supabase_migrations.schema_migrations
+    where version = any (array[${migrationRecords.map(({ version }) => `'${version}'`).join(", ")}])
+  ) <> ${migrationRecords.length} then
+    raise exception 'R2 postcondition failed: migration-history rows missing';
   end if;
 end $$;
 
