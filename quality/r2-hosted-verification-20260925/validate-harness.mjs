@@ -196,7 +196,12 @@ const sqlEditorTemplateStart = sqlEditorBundle.indexOf('const sql = `');
 const sqlEditorTemplate = sqlEditorTemplateStart >= 0
   ? sqlEditorBundle.slice(sqlEditorTemplateStart)
   : '';
-if (!sqlEditorTemplate || sqlEditorTemplate.indexOf('\nbegin;') > sqlEditorTemplate.indexOf('${fingerprint}')) {
+const sqlEditorBeginIndex = sqlEditorTemplate.indexOf('\nbegin;');
+const sqlEditorFingerprintIndex = sqlEditorTemplate.indexOf('${fingerprint}');
+if (!sqlEditorTemplate
+    || sqlEditorBeginIndex < 0
+    || sqlEditorFingerprintIndex < 0
+    || sqlEditorBeginIndex > sqlEditorFingerprintIndex) {
   throw new Error('SQL Editor fingerprint guard must run inside the atomic transaction');
 }
 if (/Relation Name' = '(organization_memberships|proposals|organization_event_outbox)'\s+and coalesce\(n ->> 'Index Name'/m.test(u1Sql)) {
