@@ -5,11 +5,26 @@ Status: **PREPARED — NOT EXECUTED AGAINST THE FINAL INTEGRATED CANDIDATE**
 Candidate: exact product correction head `f761469`; later evidence-only commits
 do not change the application or migration candidate.
 
-U1 membership-RLS benchmark and U8 runtime memo are also **PREPARED / NOT
-EXECUTED**. They live in this directory plus
+U1 membership-RLS benchmark and U8 runtime memo remain **PREPARED / NOT
+EXECUTED** against any hosted database. They live in this directory plus
 `docs/product/platform-build/R2_U1_MEMBERSHIP_RLS_BENCHMARK.md` and
 `docs/product/platform-build/R2_U8_RUNTIME_READINESS.md`. The U1 runner defaults
 to dry-run and refuses production project `iwoaaljitifloolszxlu`.
+
+SQL-Editor variants live in `sql-editor/` and are **PREPARED / NOT
+HOSTED-EXECUTED**. They exist because local `psql` is unavailable. The
+authoritative `psql` runners `run-hosted.sh`, `run-last-owner-concurrency.sh`
+and `run-u1-benchmark.sh` were concurrently hardened to refuse upper- or
+lower-case production refs. The SQL-Editor migration bundle refuses
+unless the current database matches the recorded isolated-preview fingerprint
+(pre-R2 schema/history, 1 profile, 2 proposals, digest
+`b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f`). A pasted
+preview ref is not identity. A local JS dry-run does not prove hosted
+production refusal. The SQL-Editor `02` check is two-tenant owner plus
+uninvited-role denial, not a positive four-role assignment. A local in-memory
+U8 claim/retry/DLQ spike lives in `u8-local-spike/`; it does not install or
+enable `pg_cron`, `pgmq`, QStash, or Inngest, and the runtime choice remains
+**OPEN**.
 
 This directory is the bounded hosted-verification plan for R2 organization and
 tenancy. It does not apply migrations, discover credentials, send email, deploy,
@@ -60,8 +75,9 @@ export R2_CANDIDATE_COMMIT='f761469'
 ```
 
 The runners reject the production project reference
-`iwoaaljitifloolszxlu`, require an expected preview reference, and refuse a URL
-that does not contain that reference. They never apply the migration.
+`iwoaaljitifloolszxlu` in either letter case, require an expected preview
+reference, and refuse a URL that does not contain that reference. They never
+apply the migration.
 
 The bundle builder creates `/private/tmp/veltex-r2-preview-atomic.sql` from the
 five committed R2 migrations. It validates each source transaction boundary,
@@ -69,3 +85,17 @@ removes the individual boundaries, wraps the exact bodies in one atomic
 transaction and adds fail-closed pre/postconditions. This prevents a later
 migration failure from leaving the preview partially upgraded. The generated
 bundle is local evidence only and must not be committed.
+
+When `psql` is unavailable, use the SQL-Editor pack instead of rewriting the
+authoritative runners:
+
+```bash
+node ./quality/r2-hosted-verification-20260925/sql-editor/dry-run.mjs
+node ./quality/r2-hosted-verification-20260925/sql-editor/build-sql-editor-bundle.mjs
+node --test ./quality/r2-hosted-verification-20260925/u8-local-spike/outbox-claimer.test.mjs
+```
+
+Never paste generated SQL into production `iwoaaljitifloolszxlu`. The SQL
+Editor bundle itself refuses when the database fingerprint does not match the
+recorded isolated preview. Dashboard selection remains operator caution, not
+proof.

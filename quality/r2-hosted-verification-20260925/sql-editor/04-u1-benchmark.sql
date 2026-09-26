@@ -1,10 +1,61 @@
+-- R2 SQL Editor U1 membership-RLS benchmark
+-- Status: PREPARED / NOT HOSTED-EXECUTED.
+-- SQL Editor variant. The psql runners remain the hosted execution path.
+-- No secrets. Fixtures use .example.test addresses.
+-- Identity is the recorded isolated-preview fingerprint, not a pasted ref.
+-- Production project iwoaaljitifloolszxlu is named only as defense in depth.
+
+-- Isolated-preview identity after the R2 candidate is applied.
+-- Legacy non-fixture rows must still match the recorded baseline digest.
+-- A pasted ref is not evidence of database identity.
+do $$
+declare
+  profile_count bigint;
+  proposal_count bigint;
+  proposal_digest text;
+begin
+  if current_setting('r2.sql_editor.preview_ref', true) = 'iwoaaljitifloolszxlu' then
+    raise exception 'Refusing production project';
+  end if;
+  if to_regclass('public.organizations') is null
+     or to_regclass('public.organization_memberships') is null then
+    raise exception 'R2 fingerprint failed: candidate is not applied';
+  end if;
+  if not exists (
+    select 1 from supabase_migrations.schema_migrations
+    where version = '20260925006000'
+  ) then
+    raise exception 'R2 fingerprint failed: migration version is absent';
+  end if;
+  select count(*) into profile_count
+  from public.profiles
+  where id::text not like '91000000-%'
+    and id::text not like '92000000-%'
+    and id::text not like '93000000-%';
+  select count(*) into proposal_count
+  from public.proposals
+  where id::text not like '91000000-%'
+    and id::text not like '92000000-%'
+    and id::text not like '93000000-%';
+  select encode(digest(coalesce(string_agg(id::text || ':' || coalesce(generated_content,''), '|' order by id),''),'sha256'),'hex')
+    into proposal_digest
+    from public.proposals
+    where id::text not like '91000000-%'
+      and id::text not like '92000000-%'
+      and id::text not like '93000000-%';
+  if profile_count <> 1 or proposal_count <> 2 then
+    raise exception 'R2 fingerprint failed: legacy profile/proposal counts do not match isolated-preview baseline';
+  end if;
+  if proposal_digest is distinct from 'b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f' then
+    raise exception 'R2 fingerprint failed: legacy proposal-content digest does not match isolated-preview baseline';
+  end if;
+end $$;
 -- U1 membership-RLS benchmark pack.
 -- Status: PREPARED / NOT EXECUTED.
 -- Isolated preview only. Entire script is one transaction that rolls back.
 -- Fixture prefix 93000000 avoids the hosted matrix (9100…) and last-owner (9200…) UUIDs.
 -- Invitations remain fail-closed: only signup-bootstrap owner memberships are seeded.
 
-\set ON_ERROR_STOP on
 begin;
 
 do $$ begin
@@ -45,12 +96,14 @@ begin
   end loop;
 end $$;
 
-select active_organization_id as u1_org_a
-  from public.profiles where id = '93000000-0000-4000-8000-000000000011' \gset
-select active_organization_id as u1_org_b
-  from public.profiles where id = '93000000-0000-4000-8000-000000000015' \gset
-select set_config('r2.u1.org_a', :'u1_org_a', true),
-       set_config('r2.u1.org_b', :'u1_org_b', true);
+select set_config('r2.u1.org_a', (
+  select active_organization_id::text from public.profiles
+  where id = '93000000-0000-4000-8000-000000000011'
+), true);
+select set_config('r2.u1.org_b', (
+  select active_organization_id::text from public.profiles
+  where id = '93000000-0000-4000-8000-000000000015'
+), true);
 
 create temp table u1_evidence (
   query_key text primary key,
@@ -357,6 +410,7 @@ from u1_evidence
 order by query_key;
 
 select
+  'sql_editor_u1_benchmark' as evidence_key,
   q2.execution_ms as rls_execution_ms,
   q3.execution_ms as bypass_execution_ms,
   round(q2.execution_ms - q3.execution_ms, 3) as rls_overhead_ms

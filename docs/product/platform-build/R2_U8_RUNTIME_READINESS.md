@@ -79,23 +79,41 @@ Current official external comparison (read-only research, 2026-09-25 Pacific):
   external control plane and is not selected.
 
 This closes the preview metadata and official capability/cost research portions
-of U8. The executable claim/retry/terminal-DLQ comparison remains open.
+of U8.
+
+A later local/disposable executable spike now exists at
+`quality/r2-hosted-verification-20260925/u8-local-spike/`. Status:
+**LOCAL SPIKE EXECUTED / HOSTED NOT EXECUTED**. It models claim, an immutable
+lease token, same-worker unexpired-lease denial, expiry/reclaim, stale
+success/failure denial, atomic inbox+outbox completion, duplicate inbox
+conflict, transactional inbox+outbox commit/rollback under injected
+mid-deliver fault, and a four-total-attempt ceiling: the first three failures
+schedule 100/200/400 ms and the fourth failed attempt terminalizes in
+`dead_lettered_at`. Cleanup is proved in memory against the current outbox
+contract.
+It does not install or enable `pg_cron`, `pgmq`, QStash, Inngest, or any
+hosted service. The runtime choice remains OPEN.
 
 ## Provisional recommendation — U8 remains OPEN
 
 The present repository evidence favors keeping the committed R2 transactional
 outbox as the sole durable job log. This is a **provisional direction**, not the
 required U8 technical-spike decision. The isolated-preview inventory and
-official external capability/cost comparison are now captured. U8 remains open
-until executable claim/retry/terminal-DLQ behavior is compared and proved.
+official external capability/cost comparison are now captured. The local
+in-memory claimer spike proves the algorithm only. Hosted wake, `pgmq`, and
+real delivery remain unproven, so U8 remains OPEN and the runtime choice
+remains OPEN until hosted claim/retry/terminal-DLQ behavior is compared and
+proved.
 
 If that evidence passes, implement (when separately authorized) a
 **service-role outbox claimer** that:
 
 1. selects pending rows (`delivered_at is null` and `available_at <= now()`)
    in `event_sequence` order;
-2. claims with a visibility timeout by advancing `available_at` and
-   incrementing `attempts` in the same update;
+2. claims with a visibility timeout by advancing `available_at`,
+   incrementing `attempts`, and issuing an immutable lease token in the same
+   update; the same worker must not reclaim an unexpired lease, and
+   deliver/fail must require the current worker plus token;
 3. delivers at-least-once to an idempotent consumer (inbox key already exists);
 4. on success sets `delivered_at`;
 5. on exhaustion of a recorded attempt bound writes an explicit terminal state

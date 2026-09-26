@@ -3,9 +3,11 @@ set -euo pipefail
 
 : "${R2_PREVIEW_DATABASE_URL:?Set the isolated preview database URL}"
 : "${R2_EXPECTED_PROJECT_REF:?Set the isolated preview project ref}"
-case "$R2_PREVIEW_DATABASE_URL" in
+expected_ref="$(printf '%s' "$R2_EXPECTED_PROJECT_REF" | tr '[:upper:]' '[:lower:]')"
+database_url_lower="$(printf '%s' "$R2_PREVIEW_DATABASE_URL" | tr '[:upper:]' '[:lower:]')"
+case "$database_url_lower" in
   *iwoaaljitifloolszxlu*) echo "Refusing production project" >&2; exit 2 ;;
-  *"$R2_EXPECTED_PROJECT_REF"*) ;;
+  *"$expected_ref"*) ;;
   *) echo "Database URL does not contain expected preview ref" >&2; exit 2 ;;
 esac
 

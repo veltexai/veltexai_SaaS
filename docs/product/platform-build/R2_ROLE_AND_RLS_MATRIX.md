@@ -1,6 +1,6 @@
 # R2 organization role and RLS matrix
 
-Status: implementation candidate; hosted execution and independent review pending.
+Status: local integrated review **PASS**; isolated hosted execution pending.
 
 | Capability | Owner | Admin | Estimator | Viewer | Service role |
 |---|---:|---:|---:|---:|---:|

@@ -1,6 +1,6 @@
 # R2 organization/tenancy implementation evidence
 
-Status: **LOCAL REMEDIATION CANDIDATE — HOSTED VERIFICATION AND CLAUDE RE-REVIEW PENDING**
+Status: **LOCAL INTEGRATED PASS — HOSTED PREVIEW VERIFICATION PENDING**
 
 Date: 2026-09-25 Pacific
 
@@ -27,6 +27,14 @@ Date: 2026-09-25 Pacific
 - Next.js production build: passed; 79 static pages generated.
 - `git diff --check`: passed before the final documentation append and must be repeated at integration handoff.
 
+## Current integrated review status
+
+- Claude executed the complete migration chain and hostile R2 matrix in disposable PostgreSQL and returned a conditional integrated pass.
+- The one reproduced active-organization reconciliation defect was corrected at product head `f761469`; Claude's exact narrow re-review returned **PASS**.
+- The reviewed Cursor organization/team shell and authenticated read adapter are integrated. Invitations remain fail-closed and no live invitation capability is exposed.
+- Evidence commits after `f761469`, including `b2cd639`, prepare hosted verification only; they do not change the reviewed product candidate.
+- The remaining proof is hosted-preview, operator/founder acceptance and separately authorized deployment evidence. The remediation sections below preserve implementation chronology and are not the current gate status.
+
 ## Still required
 
 - Execute the candidate migration on an isolated Supabase preview.
@@ -34,8 +42,8 @@ Date: 2026-09-25 Pacific
 - Verify backfill counts and fail-closed orphan queries.
 - Exercise new-user signup and default-organization creation in hosted Auth.
 - Verify legacy proposal create/edit/send/download/tracked-link behavior after migration.
-- Independently review the exact candidate commit/range through Claude.
-- Freeze server API contracts before integrating Cursor's UI shell.
+- Execute the prepared U1 membership/RLS benchmark in the isolated preview.
+- Complete the U8 hosted wake/runtime comparison before selecting a runtime.
 - Founder acceptance and separate production deployment authorization.
 
 ## Claude exact-candidate remediation

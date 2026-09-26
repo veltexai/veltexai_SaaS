@@ -18,6 +18,7 @@ mode="${1:-dry-run}"
 
 refuse_production() {
   local url="${1:-}"
+  url="$(printf '%s' "$url" | tr '[:upper:]' '[:lower:]')"
   case "$url" in
     *"$PRODUCTION_REF"*)
       echo "Refusing production project" >&2
@@ -49,11 +50,13 @@ if [[ "$R2_U1_EXECUTE" != "preview" ]]; then
 fi
 
 refuse_production "$R2_PREVIEW_DATABASE_URL"
-case "$R2_PREVIEW_DATABASE_URL" in
-  *"$R2_EXPECTED_PROJECT_REF"*) ;;
+expected_ref="$(printf '%s' "$R2_EXPECTED_PROJECT_REF" | tr '[:upper:]' '[:lower:]')"
+database_url_lower="$(printf '%s' "$R2_PREVIEW_DATABASE_URL" | tr '[:upper:]' '[:lower:]')"
+case "$database_url_lower" in
+  *"$expected_ref"*) ;;
   *) echo "Database URL does not contain expected preview ref" >&2; exit 2 ;;
 esac
-if [[ "$R2_EXPECTED_PROJECT_REF" == "$PRODUCTION_REF" ]]; then
+if [[ "$expected_ref" == "$PRODUCTION_REF" ]]; then
   echo "Refusing production project" >&2
   exit 2
 fi

@@ -110,9 +110,16 @@ target without treating either as an R2 pass gate.
 
 - `quality/r2-hosted-verification-20260925/sql/u1-membership-rls-benchmark.sql`
 - `quality/r2-hosted-verification-20260925/run-u1-benchmark.sh`
+- `quality/r2-hosted-verification-20260925/sql-editor/04-u1-benchmark.sql` —
+  SQL-Editor variant (**PREPARED / NOT HOSTED-EXECUTED**). The `psql` runner
+  remains authoritative. Identity is the recorded isolated-preview fingerprint,
+  not a pasted ref. Added against `b2cd639` because local `psql` is
+  unavailable; hosted U1 execution is still **PREPARED / NOT EXECUTED**. The
+  JS dry-run does not prove hosted production refusal.
 
 Default command (does not touch a database):
 
 ```bash
 ./quality/r2-hosted-verification-20260925/run-u1-benchmark.sh
+node ./quality/r2-hosted-verification-20260925/sql-editor/dry-run.mjs
 ```

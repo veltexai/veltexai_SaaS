@@ -1,0 +1,53 @@
+# R2 SQL Editor execution pack
+
+Status: **PREPARED / NOT HOSTED-EXECUTED**
+
+The `psql` runners remain the hosted execution path. They were concurrently
+hardened to refuse upper- or lower-case production refs. This directory only
+prepares SQL-Editor-compatible variants because local `psql` is unavailable
+and those runners use `\set` / `\gset` / `\echo`.
+
+Database identity is the recorded isolated-preview fingerprint from
+`preview-baseline-20260926.json`: pre-R2 schema/history, exactly 1 profile,
+exactly 2 proposals, and proposal-content SHA-256
+`b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f`. A pasted
+project ref is not evidence of database identity. Production project
+`iwoaaljitifloolszxlu` is named only as defense in depth. A local JS dry-run
+does not prove hosted production refusal.
+
+## Operator order
+
+1. Open the isolated preview in the Supabase dashboard. Never open production.
+2. Run `00-preview-guard.sql`. It refuses unless the current database matches
+   the pre-R2 fingerprint. No preview-ref paste is required.
+3. Generate the migration bundle locally; do not commit it:
+
+   ```bash
+   node ./quality/r2-hosted-verification-20260925/sql-editor/build-sql-editor-bundle.mjs
+   ```
+
+   Paste `/private/tmp/veltex-r2-sql-editor-atomic.sql` only into a database
+   that already passed that fingerprint, and only if a later hosted assignment
+   authorizes it. History insert shape is `(version text, statements text[],
+   name text)`.
+4. Run `02-hosted-matrix.sql` (two-tenant owner plus uninvited-role denial,
+   signup bootstrap, audit / outbox / inbox, legacy proposal digest; one
+   transaction that rolls back). This is not a positive four-role assignment.
+   Invitations remain fail-closed.
+5. Run `03-last-owner-single-session.sql`. This is **not** two-session
+   concurrency; `run-last-owner-concurrency.sh` remains the concurrency proof.
+6. Run `04-u1-benchmark.sql` (rolled-back U1 evidence).
+
+Regenerate 02 and 04 from the authoritative `sql/` sources when those sources
+change:
+
+```bash
+node ./quality/r2-hosted-verification-20260925/sql-editor/emit-sql-editor-checks.mjs
+node ./quality/r2-hosted-verification-20260925/sql-editor/emit-sql-editor-checks.mjs --check
+```
+
+## Local checks that do not touch a database
+
+```bash
+node ./quality/r2-hosted-verification-20260925/sql-editor/dry-run.mjs
+```

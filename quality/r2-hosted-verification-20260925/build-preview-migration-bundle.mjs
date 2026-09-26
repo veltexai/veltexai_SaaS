@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -37,6 +37,14 @@ const migrationRecords = migrations.map((name) => ({
   version: name.slice(0, 14),
   name: name.replace(/^\d+_/, "").replace(/\.sql$/, ""),
 }));
+const prerequisiteVersions = [...new Set(
+  readdirSync(resolve(root, "supabase/migrations"))
+    .filter((name) => name.endsWith(".sql") && name < migrations[0])
+    .map((name) => name.split("_")[0]),
+)];
+const expectedProfileCount = 1;
+const expectedProposalCount = 2;
+const expectedProposalDigest = "b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f";
 const sourceDigest = createHash("sha256")
   .update(bodies.map(({ name, body }) => `${name}\n${body}\n`).join(""))
   .digest("hex");
@@ -48,6 +56,10 @@ const sql = `-- GENERATED FILE: do not edit.
 begin;
 
 do $$
+declare
+  actual_profile_count bigint;
+  actual_proposal_count bigint;
+  actual_proposal_digest text;
 begin
   if to_regclass('public.organizations') is not null then
     raise exception 'R2 preflight failed: public.organizations already exists';
@@ -58,6 +70,30 @@ begin
     where version = any (array[${migrationRecords.map(({ version }) => `'${version}'`).join(", ")}])
   ) then
     raise exception 'R2 preflight failed: one or more migration-history rows already exist';
+  end if;
+  if (
+    select count(*)
+    from supabase_migrations.schema_migrations
+    where version = any (array[${prerequisiteVersions.map((version) => `'${version}'`).join(", ")}])
+  ) <> ${prerequisiteVersions.length} then
+    raise exception 'R2 preflight failed: committed pre-R2 migration history is incomplete';
+  end if;
+
+  select count(*) into actual_profile_count from public.profiles;
+  select count(*) into actual_proposal_count from public.proposals;
+  select encode(
+    digest(
+      coalesce(string_agg(id::text || ':' || coalesce(generated_content, ''), '|' order by id), ''),
+      'sha256'
+    ),
+    'hex'
+  ) into actual_proposal_digest
+  from public.proposals;
+
+  if actual_profile_count <> ${expectedProfileCount}
+     or actual_proposal_count <> ${expectedProposalCount}
+     or actual_proposal_digest <> '${expectedProposalDigest}' then
+    raise exception 'R2 preflight failed: database does not match recorded isolated-preview baseline';
   end if;
 end $$;
 
@@ -111,4 +147,14 @@ select
 
 const output = process.argv[2] ?? resolve("/private/tmp", "veltex-r2-preview-atomic.sql");
 writeFileSync(output, sql, { encoding: "utf8", mode: 0o600 });
-console.log(JSON.stringify({ output, sourceDigest, migrations }, null, 2));
+console.log(JSON.stringify({
+  output,
+  sourceDigest,
+  migrations,
+  prerequisiteVersions,
+  previewBaseline: {
+    profileCount: expectedProfileCount,
+    proposalCount: expectedProposalCount,
+    proposalDigest: expectedProposalDigest,
+  },
+}, null, 2));

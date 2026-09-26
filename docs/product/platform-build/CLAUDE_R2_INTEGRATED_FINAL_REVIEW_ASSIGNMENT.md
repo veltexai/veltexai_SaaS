@@ -1,5 +1,7 @@
 # Claude assignment — R2 integrated final review
 
+> **Historical assignment record.** This file preserves the exact range submitted for the earlier integrated review. It is not the current product or evidence head. The reviewed product later advanced to `f761469`, whose narrow correction re-review passed; the current evidence head is recorded in the operating ledger.
+
 ## Candidate
 
 - Branch: `codex/r2-integrated-read-adapter`
