@@ -12,7 +12,7 @@ matrix, migration, or queue implementation.
 | Isolated preview only | `wcnfhriosemgchmtwgof` |
 | Production — refuse | `iwoaaljitifloolszxlu` (any letter case) |
 | Product candidate | `f761469` |
-| Evidence / harness head | `afb679c` on `codex/r2-integrated-read-adapter` |
+| Evidence / harness head | `99ff465` on `codex/r2-integrated-read-adapter` (includes the independently reviewed `afb679c` evidence pack and its closing fixes) |
 | Worktree | `/private/tmp/veltex-r2-integration` |
 | Bundle source SHA-256 | `164e90af1c36e807b11c2299098a408521910439c4befe8c0677617c3f76d3c9` |
 | Pre-R2 fingerprint | 1 profile, 2 proposals, digest `b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f`; no `public.organizations`; no `guard_organization_membership()`; zero R2 history rows |

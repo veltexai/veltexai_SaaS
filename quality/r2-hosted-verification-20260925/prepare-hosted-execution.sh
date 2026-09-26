@@ -10,6 +10,7 @@ PRODUCTION_REF='iwoaaljitifloolszxlu'
 PREVIEW_REF='wcnfhriosemgchmtwgof'
 url="$(printf '%s' "${R2_PREVIEW_DATABASE_URL:-}" | tr '[:upper:]' '[:lower:]')"
 ref="$(printf '%s' "${R2_EXPECTED_PROJECT_REF:-$PREVIEW_REF}" | tr '[:upper:]' '[:lower:]')"
+harness_head="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || printf 'unknown')"
 
 case "$url" in
   *"$PRODUCTION_REF"*) echo "Refusing production project" >&2; exit 2 ;;
@@ -31,7 +32,7 @@ cat <<EOF
   "isolated_preview_ref": "$PREVIEW_REF",
   "production_refused": "$PRODUCTION_REF",
   "product_candidate": "f761469",
-  "harness_head": "afb679c",
+  "harness_head": "$harness_head",
   "packet": "$ROOT/docs/product/platform-build/R2_ISOLATED_PREVIEW_OPERATOR_EXECUTION_PACKET.md",
   "psql_bundle": "/private/tmp/veltex-r2-preview-atomic.sql",
   "sql_editor_bundle": "/private/tmp/veltex-r2-sql-editor-atomic.sql",
