@@ -41,6 +41,46 @@ function validateAssertionIdentifiers(postconditions, source, artifact) {
   }
 }
 
+function validateSafetyStructure(sql, step) {
+  const preconditionStructures = [
+    /if to_regclass\('public\.profiles'\) is null\s+or to_regclass\('public\.proposals'\) is null\s+or to_regclass\('supabase_migrations\.schema_migrations'\) is null then/,
+    /if to_regclass\('public\.organizations'\) is not null then/,
+    /if exists \(select 1 from public\.profiles\) or exists \(select 1 from public\.proposals\) then/,
+    /if actual_history <> \d+ then/,
+    /if \(select count\(\*\) from supabase_migrations\.schema_migrations where version = any\(array\[/,
+    /if exists \(select 1 from supabase_migrations\.schema_migrations where version = any\(array\[/,
+  ];
+  const requiredStructures = [
+    /-- POSTCONDITION:[\s\S]*?if not \(/,
+    /if exists \(select 1 from supabase_migrations\.schema_migrations where version='[^']+'\) then/,
+  ];
+  for (const required of requiredStructures) {
+    if (!required.test(sql)) {
+      throw new Error(`${step.artifact} has a missing or disabled executable safety guard: ${required}`);
+    }
+  }
+  const preconditionCount = (sql.match(/-- PRECONDITION: exact prior history, empty preview data, no R2 schema\./g) ?? []).length;
+  const expectedPreconditions = step.preservesSplitTransaction ? 2 : 1;
+  if (preconditionCount !== expectedPreconditions) {
+    throw new Error(`${step.artifact} expected ${expectedPreconditions} executable precondition block(s), found ${preconditionCount}`);
+  }
+  const marker = "-- PRECONDITION: exact prior history, empty preview data, no R2 schema.";
+  let from = 0;
+  for (let occurrence = 1; occurrence <= expectedPreconditions; occurrence += 1) {
+    const start = sql.indexOf(marker, from);
+    const next = sql.indexOf(marker, start + marker.length);
+    const endMarker = occurrence === expectedPreconditions ? "-- POSTCONDITION:" : marker;
+    const end = occurrence === expectedPreconditions ? sql.indexOf(endMarker, start) : next;
+    const block = sql.slice(start, end);
+    for (const required of preconditionStructures) {
+      if (!required.test(block)) {
+        throw new Error(`${step.artifact} precondition ${occurrence} has a missing or disabled executable guard: ${required}`);
+      }
+    }
+    from = start + marker.length;
+  }
+}
+
 for (const step of manifest.steps) {
   const sql = readFileSync(resolve(outputDir, step.artifact), "utf8");
   const source = readFileSync(resolve("supabase/migrations", step.file), "utf8");
@@ -54,6 +94,7 @@ for (const step of manifest.steps) {
   if (!sql.includes("preview application data is not empty") || !sql.includes("production is not authorized")) {
     throw new Error(`${step.artifact} is missing preview safety guards`);
   }
+  validateSafetyStructure(sql, step);
   if (sha256(source) !== step.sourceSha256) throw new Error(`${step.artifact} source hash does not match committed migration`);
   const bodyStartMarker = step.preservesSplitTransaction
     ? "-- EXACT RAW MIGRATION SOURCE (internal transaction split preserved).\n"
@@ -76,13 +117,58 @@ for (const step of manifest.steps) {
     const rawBegin = bodyStart + sourceLower.indexOf("begin;");
     const rawCommit = bodyStart + sourceLower.indexOf("commit;");
     const rawValidate = bodyStart + sourceLower.indexOf("validate constraint");
+    const repeatedPrecondition = sql.indexOf("-- PRECONDITION: exact prior history, empty preview data, no R2 schema.", rawValidate);
     const postconditionBegin = sql.lastIndexOf("begin;", postcondition);
     if (!(preconditionCommit < bodyStart && bodyStart < rawBegin && rawBegin < rawCommit
-        && rawCommit < rawValidate && rawValidate < postconditionBegin && postconditionBegin < postcondition)) {
+        && rawCommit < rawValidate && rawValidate < postconditionBegin
+        && postconditionBegin < repeatedPrecondition && repeatedPrecondition < postcondition)) {
       throw new Error(`${step.artifact} does not preserve precondition/raw split/postcondition ordering`);
     }
   }
   validateAssertionIdentifiers(step.postconditions, source, step.artifact);
+}
+
+// Mutations must disable real SQL predicates, not merely change the nearby
+// error text. Each mutated artifact must be rejected structurally.
+const firstStep = manifest.steps[0];
+const firstSql = readFileSync(resolve(outputDir, firstStep.artifact), "utf8");
+const assertMutationRejected = (original, mutated, step, label) => {
+  if (mutated === original) throw new Error(`Mutation fixture did not match: ${label}`);
+  let rejected = false;
+  try {
+    validateSafetyStructure(mutated, step);
+  } catch {
+    rejected = true;
+  }
+  if (!rejected) throw new Error(`Executable safety-guard mutation unexpectedly passed: ${label}`);
+};
+for (const [needle, replacement] of [
+  ["if to_regclass('public.profiles') is null", "if false and to_regclass('public.profiles') is null"],
+  ["if to_regclass('public.organizations') is not null then", "if false and to_regclass('public.organizations') is not null then"],
+  ["if exists (select 1 from public.profiles) or exists (select 1 from public.proposals) then", "if false then"],
+  [`if actual_history <> ${firstStep.requiredBefore.length} then`, "if false then"],
+  ["if (select count(*) from supabase_migrations.schema_migrations where version = any(array[", "if false and (select count(*) from supabase_migrations.schema_migrations where version = any(array["],
+  ["if exists (select 1 from supabase_migrations.schema_migrations where version = any(array[", "if false and exists (select 1 from supabase_migrations.schema_migrations where version = any(array["],
+  ["if not (", "if false and not ("],
+  [`if exists (select 1 from supabase_migrations.schema_migrations where version='${firstStep.version}') then`, "if false then"],
+]) {
+  const mutated = firstSql.replace(needle, replacement);
+  assertMutationRejected(firstSql, mutated, firstStep, needle);
+}
+
+// The split-transaction step repeats the entire precondition. Mutating either
+// copy independently must fail so the second copy cannot mask a disabled first
+// guard (or vice versa).
+const splitStep = manifest.steps.find((step) => step.preservesSplitTransaction);
+const splitSql = readFileSync(resolve(outputDir, splitStep.artifact), "utf8");
+const splitNeedle = "if to_regclass('public.organizations') is not null then";
+const firstSplitIndex = splitSql.indexOf(splitNeedle);
+const secondSplitIndex = splitSql.indexOf(splitNeedle, firstSplitIndex + splitNeedle.length);
+for (const [label, index] of [["split first precondition", firstSplitIndex], ["split repeated precondition", secondSplitIndex]]) {
+  if (index < 0) throw new Error(`Mutation fixture did not match: ${label}`);
+  const replacement = "if false and to_regclass('public.organizations') is not null then";
+  const mutated = `${splitSql.slice(0, index)}${replacement}${splitSql.slice(index + splitNeedle.length)}`;
+  assertMutationRejected(splitSql, mutated, splitStep, label);
 }
 
 // Mutation checks prove the validator rejects both the prior invented table

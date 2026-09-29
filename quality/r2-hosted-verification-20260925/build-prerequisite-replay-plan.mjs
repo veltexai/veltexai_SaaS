@@ -65,7 +65,7 @@ const steps = [
   ["040_executive_premium_trial_experience.sql", [
     "to_regprocedure('public.can_user_access_template(uuid,uuid)') is not null",
     "has_function_privilege('authenticated','public.can_user_access_template(uuid,uuid)','EXECUTE')",
-    "not has_function_privilege('anon','public.can_user_access_template(uuid,uuid)','EXECUTE')",
+    "not exists (select 1 from pg_proc p cross join lateral aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) acl where p.oid='public.can_user_access_template(uuid,uuid)'::regprocedure and acl.grantee=0 and acl.privilege_type='EXECUTE')",
   ]],
   ["041_growth_qualification_and_funnel.sql", [
     "to_regclass('public.growth_funnel_daily') is not null",
@@ -95,6 +95,7 @@ const steps = [
     "to_regprocedure('public._r0_can_user_create_proposal_impl(uuid)') is not null",
     "has_function_privilege('authenticated','public.can_user_create_proposal(uuid)','EXECUTE')",
     "not has_function_privilege('anon','public.can_user_create_proposal(uuid)','EXECUTE')",
+    "not has_function_privilege('anon','public.can_user_access_template(uuid,uuid)','EXECUTE')",
   ]],
   ["20260924010000_restrict_legacy_proposal_view.sql", [
     "to_regclass('public.enhanced_proposals') is not null",
@@ -185,8 +186,11 @@ for (let index = 0; index < steps.length; index += 1) {
     ? "-- EXACT RAW MIGRATION SOURCE (internal transaction split preserved)."
     : "-- EXACT MIGRATION BODY (outer transaction wrapper removed only).";
   const transactionBridge = preservesSplitTransaction ? "\ncommit;\n" : "";
-  const postconditionBegin = preservesSplitTransaction ? "begin;\n\n" : "";
-  const sql = `-- GENERATED FILE: do not edit or commit.\n-- Step ${index + 1}/${steps.length}: ${file}\n-- Isolated preview ynzkwctwlssjcsjmahey only; production is not authorized.\n-- Source SHA-256: ${sha256(rawSource)}\n\n${precondition}${transactionBridge}\n${bodyMarker}\n${body}\n\n${postconditionBegin}-- POSTCONDITION: prove this migration's observable outcome before history.\ndo $$\nbegin\n  if not (${checks.join(") or not (")}) then\n    raise exception 'Replay step ${index + 1} postcondition failed for ${file}';\n  end if;\n  if exists (select 1 from supabase_migrations.schema_migrations where version='${version}') then\n    raise exception 'Replay step ${index + 1} postcondition failed: history appeared before verification';\n  end if;\nend $$;\n\n-- HISTORY IS RECORDED ONLY AFTER THE POSTCONDITION SUCCEEDS.\ninsert into supabase_migrations.schema_migrations (version, statements, name)\nvalues ('${version}', array[]::text[], '${nameOf(file)}');\n\ncommit;\n\nselect '${version}'::text as applied_version, '${sha256(rawSource)}'::text as source_sha256;\n`;
+  // The raw split-transaction migration releases its lock before validating.
+  // Repeat every safety precondition in the final history transaction so even
+  // a continue-on-error client cannot record history after a refusal.
+  const finalTransactionGuard = preservesSplitTransaction ? `${precondition}\n\n` : "";
+  const sql = `-- GENERATED FILE: do not edit or commit.\n-- Step ${index + 1}/${steps.length}: ${file}\n-- Isolated preview ynzkwctwlssjmahey only; production is not authorized.\n-- Source SHA-256: ${sha256(rawSource)}\n\n${precondition}${transactionBridge}\n${bodyMarker}\n${body}\n\n${finalTransactionGuard}-- POSTCONDITION: prove this migration's observable outcome before history.\ndo $$\nbegin\n  if not (${checks.join(") or not (")}) then\n    raise exception 'Replay step ${index + 1} postcondition failed for ${file}';\n  end if;\n  if exists (select 1 from supabase_migrations.schema_migrations where version='${version}') then\n    raise exception 'Replay step ${index + 1} postcondition failed: history appeared before verification';\n  end if;\nend $$;\n\n-- HISTORY IS RECORDED ONLY AFTER THE POSTCONDITION SUCCEEDS.\ninsert into supabase_migrations.schema_migrations (version, statements, name)\nvalues ('${version}', array[]::text[], '${nameOf(file)}');\n\ncommit;\n\nselect '${version}'::text as applied_version, '${sha256(rawSource)}'::text as source_sha256;\n`;
   writeFileSync(resolve(outputDir, artifact), sql, { encoding: "utf8", mode: 0o600 });
   manifestSteps.push({ order: index + 1, file, version, artifact, sourceSha256: sha256(rawSource), preservesSplitTransaction, requiredBefore, postconditions: checks });
 }

@@ -2,8 +2,9 @@
 
 Status: **PREPARED — NOT EXECUTED AGAINST THE FINAL INTEGRATED CANDIDATE**
 
-Candidate: exact product correction head `f761469`; later evidence-only commits
-do not change the application or migration candidate.
+Candidate: exact integrated product/recovery head `d128518`; later
+evidence-only and replay-remediation commits do not change application product
+code or committed migration bodies.
 
 U1 membership-RLS benchmark and U8 runtime memo remain **PREPARED / NOT
 EXECUTED** against any hosted database. They live in this directory plus
@@ -41,12 +42,16 @@ artifacts plus a manifest. Every artifact checks the exact prior history and
 empty-preview boundary, executes one source migration, proves a migration-
 specific observable outcome, and only then writes that migration's history
 row. Execute exactly one artifact at a time in manifest order and stop on the
-first error. Never skip forward or manually insert a history row.
+first error. Never skip forward or manually insert a history row. Allowed
+clients are the Supabase SQL Editor (one complete artifact per Run) or `psql`
+with `-v ON_ERROR_STOP=1`. Do not use clients configured to continue after an
+error, batch multiple artifacts into one Run, or resume inside an artifact.
 
 ```sh
 npm run migrations:validate
 npm run r2:validate-prerequisite-plan
 npm run r2:build-prerequisite-plan
+npm run r2:verify-prerequisite-plan
 ```
 
 The generated directory is
