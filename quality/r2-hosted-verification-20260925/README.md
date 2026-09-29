@@ -34,23 +34,28 @@ U8 hosted wake/pgmq/HMAC remains OPEN and is not a prerequisite.
 
 ## Fresh-preview prerequisite reconciliation
 
-`build-prerequisite-replay-bundle.mjs` exists only for the fresh isolated
-preview `ynzkwctwlssjcsjmahey`, whose read-only inventory proved that the first
-29 migration versions are present and the following 23 pre-R2 versions are
-absent. It refuses non-empty application data, any existing replay version, or
-an existing R2 schema. The generated file is one transaction, uses only the
-canonical executable `034_free_trial_no_credit_card.sql`, and records each
-migration-history row immediately after that exact source body succeeds.
+### Required execution mode: bounded per-migration plan
 
-Generate, but do not commit, the replay artifact with:
+Use the per-migration plan for hosted SQL-Editor recovery. It emits 23 separate
+artifacts plus a manifest. Every artifact checks the exact prior history and
+empty-preview boundary, executes one source migration, proves a migration-
+specific observable outcome, and only then writes that migration's history
+row. Execute exactly one artifact at a time in manifest order and stop on the
+first error. Never skip forward or manually insert a history row.
 
 ```sh
 npm run migrations:validate
-npm run r2:build-prerequisite-replay
+npm run r2:validate-prerequisite-plan
+npm run r2:build-prerequisite-plan
 ```
 
-The generated `/private/tmp/veltex-r2-prerequisite-replay.sql` must be reviewed
-and executed only in the named isolated preview. Production is not authorized.
+The generated directory is
+`/private/tmp/veltex-r2-prerequisite-replay/`. It is local operator material,
+not a repository artifact. The rejected single-transaction recovery builder
+was removed. It must not be reconstructed or used for SQL-Editor recovery:
+migration `20260913000000` contains an intentional commit before final
+constraint validation, and each step requires its own verified postcondition
+before history can advance.
 
 This directory is the bounded hosted-verification plan for R2 organization and
 tenancy. It does not apply migrations, discover credentials, send email, deploy,
