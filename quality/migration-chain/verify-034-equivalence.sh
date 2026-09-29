@@ -59,8 +59,10 @@ apply_file "$CURRENT" "$CANONICAL"
 
 # The archived migration contains no data mutation. Both paths must therefore
 # have byte-identical data immediately after canonical 034.
-pg_dump --data-only --inserts --no-owner --no-privileges "$LEGACY" >"$OUT/legacy-after-034.data.sql"
-pg_dump --data-only --inserts --no-owner --no-privileges "$CURRENT" >"$OUT/current-after-034.data.sql"
+pg_dump --data-only --inserts --no-owner --no-privileges "$LEGACY" \
+  | sed '/^\\restrict /d;/^\\unrestrict /d' >"$OUT/legacy-after-034.data.sql"
+pg_dump --data-only --inserts --no-owner --no-privileges "$CURRENT" \
+  | sed '/^\\restrict /d;/^\\unrestrict /d' >"$OUT/current-after-034.data.sql"
 diff -u "$OUT/legacy-after-034.data.sql" "$OUT/current-after-034.data.sql"
 
 while IFS= read -r file; do
@@ -74,8 +76,10 @@ done < <(find "$MIGRATIONS" -maxdepth 1 -type f -name '*.sql' -print | LC_ALL=C 
 # Compare all executable schema semantics while excluding COMMENT metadata.
 # The old duplicate leaves a stale COMMENT on get_user_current_usage; that is
 # deliberately reported below rather than mislabeled as a behavioral change.
-pg_dump --schema-only --no-comments --no-owner --no-privileges "$LEGACY" >"$OUT/legacy-final.schema.sql"
-pg_dump --schema-only --no-comments --no-owner --no-privileges "$CURRENT" >"$OUT/current-final.schema.sql"
+pg_dump --schema-only --no-comments --no-owner --no-privileges "$LEGACY" \
+  | sed '/^\\restrict /d;/^\\unrestrict /d' >"$OUT/legacy-final.schema.sql"
+pg_dump --schema-only --no-comments --no-owner --no-privileges "$CURRENT" \
+  | sed '/^\\restrict /d;/^\\unrestrict /d' >"$OUT/current-final.schema.sql"
 diff -u "$OUT/legacy-final.schema.sql" "$OUT/current-final.schema.sql"
 
 "${PSQL[@]}" -d "$LEGACY" -Atc \
