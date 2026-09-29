@@ -1,14 +1,20 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../..");
 const migrationsDir = resolve(root, "supabase/migrations");
 const outputDir = resolve(process.argv[2] ?? "/private/tmp/veltex-r2-prerequisite-replay");
+const allowedOutputName = /^veltex-r2-prerequisite-replay(?:-[A-Za-z0-9._]+)?$/;
+const splitTransactionMigration = "20260913000000_commercial_quick_weekly_frequencies.sql";
+
+if (dirname(outputDir) !== "/private/tmp" || !allowedOutputName.test(basename(outputDir))) {
+  throw new Error(`Refusing unsafe replay output directory: ${outputDir}`);
+}
 
 // This is deliberately explicit. A changed chain must be reviewed, not inferred.
 const baselineVersions = [
@@ -144,6 +150,23 @@ if (steps[3][0] !== "034_free_trial_no_credit_card.sql") {
   throw new Error("Replay plan must use canonical 034_free_trial_no_credit_card.sql");
 }
 
+if (existsSync(outputDir)) {
+  const existing = readdirSync(outputDir);
+  const priorManifest = resolve(outputDir, "manifest.json");
+  if (!existsSync(priorManifest)) {
+    throw new Error(`Refusing to replace replay directory without its manifest: ${outputDir}`);
+  }
+  const parsed = JSON.parse(readFileSync(priorManifest, "utf8"));
+  if (parsed.target !== "isolated preview ynzkwctwlssjcsjmahey"
+      || parsed.productionAuthorized !== false
+      || !Array.isArray(parsed.steps)) {
+    throw new Error(`Refusing to replace replay directory with an unexpected manifest: ${outputDir}`);
+  }
+  const expectedFiles = new Set(["manifest.json", ...parsed.steps.map((step) => step.artifact)]);
+  if (existing.length !== expectedFiles.size || existing.some((name) => !expectedFiles.has(name))) {
+    throw new Error(`Refusing to replace replay directory with unexpected or missing generated files: ${outputDir}`);
+  }
+}
 rmSync(outputDir, { recursive: true, force: true });
 mkdirSync(outputDir, { recursive: true, mode: 0o700 });
 
@@ -152,13 +175,20 @@ for (let index = 0; index < steps.length; index += 1) {
   const [file, checks] = steps[index];
   const version = versionOf(file);
   const rawSource = readFileSync(resolve(migrationsDir, file), "utf8");
-  const body = migrationBody(rawSource, file);
+  const preservesSplitTransaction = file === splitTransactionMigration;
+  const body = preservesSplitTransaction ? rawSource.trim() : migrationBody(rawSource, file);
   const requiredBefore = [...baselineVersions, ...steps.slice(0, index).map(([prior]) => versionOf(prior))];
   const forbidden = steps.slice(index).map(([later]) => versionOf(later));
   const artifact = `${String(index + 1).padStart(2, "0")}-${file}`;
-  const sql = `-- GENERATED FILE: do not edit or commit.\n-- Step ${index + 1}/${steps.length}: ${file}\n-- Isolated preview ynzkwctwlssjcsjmahey only; production is not authorized.\n-- Source SHA-256: ${sha256(rawSource)}\n\nbegin;\n\n-- PRECONDITION: exact prior history, empty preview data, no R2 schema.\ndo $$\ndeclare actual_history integer;\nbegin\n  if to_regclass('public.profiles') is null\n     or to_regclass('public.proposals') is null\n     or to_regclass('supabase_migrations.schema_migrations') is null then\n    raise exception 'Replay step ${index + 1} refused: baseline objects are absent';\n  end if;\n  if to_regclass('public.organizations') is not null then\n    raise exception 'Replay step ${index + 1} refused: R2 is already present';\n  end if;\n  if exists (select 1 from public.profiles) or exists (select 1 from public.proposals) then\n    raise exception 'Replay step ${index + 1} refused: preview application data is not empty';\n  end if;\n  select count(*) into actual_history from supabase_migrations.schema_migrations;\n  if actual_history <> ${requiredBefore.length} then\n    raise exception 'Replay step ${index + 1} refused: expected ${requiredBefore.length} total history rows, found %', actual_history;\n  end if;\n  if (select count(*) from supabase_migrations.schema_migrations where version = any(array[${sqlList(requiredBefore)}])) <> ${requiredBefore.length} then\n    raise exception 'Replay step ${index + 1} refused: required prior versions do not match';\n  end if;\n  if exists (select 1 from supabase_migrations.schema_migrations where version = any(array[${sqlList(forbidden)}])) then\n    raise exception 'Replay step ${index + 1} refused: current or later replay version already exists';\n  end if;\nend $$;\n\n-- EXACT MIGRATION BODY (transaction wrapper removed only).\n${body}\n\n-- POSTCONDITION: prove this migration's observable outcome before history.\ndo $$\nbegin\n  if not (${checks.join(") or not (")}) then\n    raise exception 'Replay step ${index + 1} postcondition failed for ${file}';\n  end if;\n  if exists (select 1 from supabase_migrations.schema_migrations where version='${version}') then\n    raise exception 'Replay step ${index + 1} postcondition failed: history appeared before verification';\n  end if;\nend $$;\n\n-- HISTORY IS RECORDED ONLY AFTER THE POSTCONDITION SUCCEEDS.\ninsert into supabase_migrations.schema_migrations (version, statements, name)\nvalues ('${version}', array[]::text[], '${nameOf(file)}');\n\ncommit;\n\nselect '${version}'::text as applied_version, '${sha256(rawSource)}'::text as source_sha256;\n`;
+  const precondition = `begin;\n\n-- PRECONDITION: exact prior history, empty preview data, no R2 schema.\ndo $$\ndeclare actual_history integer;\nbegin\n  if to_regclass('public.profiles') is null\n     or to_regclass('public.proposals') is null\n     or to_regclass('supabase_migrations.schema_migrations') is null then\n    raise exception 'Replay step ${index + 1} refused: baseline objects are absent';\n  end if;\n  if to_regclass('public.organizations') is not null then\n    raise exception 'Replay step ${index + 1} refused: R2 is already present';\n  end if;\n  if exists (select 1 from public.profiles) or exists (select 1 from public.proposals) then\n    raise exception 'Replay step ${index + 1} refused: preview application data is not empty';\n  end if;\n  select count(*) into actual_history from supabase_migrations.schema_migrations;\n  if actual_history <> ${requiredBefore.length} then\n    raise exception 'Replay step ${index + 1} refused: expected ${requiredBefore.length} total history rows, found %', actual_history;\n  end if;\n  if (select count(*) from supabase_migrations.schema_migrations where version = any(array[${sqlList(requiredBefore)}])) <> ${requiredBefore.length} then\n    raise exception 'Replay step ${index + 1} refused: required prior versions do not match';\n  end if;\n  if exists (select 1 from supabase_migrations.schema_migrations where version = any(array[${sqlList(forbidden)}])) then\n    raise exception 'Replay step ${index + 1} refused: current or later replay version already exists';\n  end if;\nend $$;`;
+  const bodyMarker = preservesSplitTransaction
+    ? "-- EXACT RAW MIGRATION SOURCE (internal transaction split preserved)."
+    : "-- EXACT MIGRATION BODY (outer transaction wrapper removed only).";
+  const transactionBridge = preservesSplitTransaction ? "\ncommit;\n" : "";
+  const postconditionBegin = preservesSplitTransaction ? "begin;\n\n" : "";
+  const sql = `-- GENERATED FILE: do not edit or commit.\n-- Step ${index + 1}/${steps.length}: ${file}\n-- Isolated preview ynzkwctwlssjcsjmahey only; production is not authorized.\n-- Source SHA-256: ${sha256(rawSource)}\n\n${precondition}${transactionBridge}\n${bodyMarker}\n${body}\n\n${postconditionBegin}-- POSTCONDITION: prove this migration's observable outcome before history.\ndo $$\nbegin\n  if not (${checks.join(") or not (")}) then\n    raise exception 'Replay step ${index + 1} postcondition failed for ${file}';\n  end if;\n  if exists (select 1 from supabase_migrations.schema_migrations where version='${version}') then\n    raise exception 'Replay step ${index + 1} postcondition failed: history appeared before verification';\n  end if;\nend $$;\n\n-- HISTORY IS RECORDED ONLY AFTER THE POSTCONDITION SUCCEEDS.\ninsert into supabase_migrations.schema_migrations (version, statements, name)\nvalues ('${version}', array[]::text[], '${nameOf(file)}');\n\ncommit;\n\nselect '${version}'::text as applied_version, '${sha256(rawSource)}'::text as source_sha256;\n`;
   writeFileSync(resolve(outputDir, artifact), sql, { encoding: "utf8", mode: 0o600 });
-  manifestSteps.push({ order: index + 1, file, version, artifact, sourceSha256: sha256(rawSource), requiredBefore, postconditions: checks });
+  manifestSteps.push({ order: index + 1, file, version, artifact, sourceSha256: sha256(rawSource), preservesSplitTransaction, requiredBefore, postconditions: checks });
 }
 
 const manifest = {

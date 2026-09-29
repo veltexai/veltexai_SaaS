@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 
@@ -19,6 +19,7 @@ const normalizedBody = (source) => {
   if (begins.length === 0) return source.trim();
   return source.replace(/^\s*begin\s*;\s*$/im, "").replace(/^\s*commit\s*;\s*$/im, "").trim();
 };
+const splitTransactionMigration = "20260913000000_commercial_quick_weekly_frequencies.sql";
 // The earlier draft invented this table name. The two funnel view names are
 // intentionally not banned: they are created verbatim by migrations 039/041.
 const forbiddenIdentifiers = ["addon_services"];
@@ -54,11 +55,32 @@ for (const step of manifest.steps) {
     throw new Error(`${step.artifact} is missing preview safety guards`);
   }
   if (sha256(source) !== step.sourceSha256) throw new Error(`${step.artifact} source hash does not match committed migration`);
-  const bodyStartMarker = "-- EXACT MIGRATION BODY (transaction wrapper removed only).\n";
+  const bodyStartMarker = step.preservesSplitTransaction
+    ? "-- EXACT RAW MIGRATION SOURCE (internal transaction split preserved).\n"
+    : "-- EXACT MIGRATION BODY (outer transaction wrapper removed only).\n";
   const bodyStart = sql.indexOf(bodyStartMarker) + bodyStartMarker.length;
-  const generatedBody = sql.slice(bodyStart, sql.indexOf("\n\n-- POSTCONDITION:", bodyStart));
-  if (bodyStart < bodyStartMarker.length || generatedBody !== normalizedBody(source)) {
+  const bodyEnd = step.preservesSplitTransaction
+    ? sql.lastIndexOf("\n\nbegin;", postcondition)
+    : sql.indexOf("\n\n-- POSTCONDITION:", bodyStart);
+  const generatedBody = sql.slice(bodyStart, bodyEnd);
+  const expectedBody = step.preservesSplitTransaction ? source.trim() : normalizedBody(source);
+  if (bodyStart < bodyStartMarker.length || generatedBody !== expectedBody) {
     throw new Error(`${step.artifact} body is not the exact committed migration body`);
+  }
+  if (step.preservesSplitTransaction !== (step.file === splitTransactionMigration)) {
+    throw new Error(`${step.artifact} has an incorrect split-transaction manifest flag`);
+  }
+  if (step.preservesSplitTransaction) {
+    const sourceLower = source.toLowerCase();
+    const preconditionCommit = sql.lastIndexOf("commit;", bodyStart);
+    const rawBegin = bodyStart + sourceLower.indexOf("begin;");
+    const rawCommit = bodyStart + sourceLower.indexOf("commit;");
+    const rawValidate = bodyStart + sourceLower.indexOf("validate constraint");
+    const postconditionBegin = sql.lastIndexOf("begin;", postcondition);
+    if (!(preconditionCommit < bodyStart && bodyStart < rawBegin && rawBegin < rawCommit
+        && rawCommit < rawValidate && rawValidate < postconditionBegin && postconditionBegin < postcondition)) {
+      throw new Error(`${step.artifact} does not preserve precondition/raw split/postcondition ordering`);
+    }
   }
   validateAssertionIdentifiers(step.postconditions, source, step.artifact);
 }
@@ -77,5 +99,37 @@ for (const mutation of [
   }
   if (!rejected) throw new Error(`Validator mutation test unexpectedly accepted: ${mutation}`);
 }
+
+// Recursive cleanup must never accept a path outside one dedicated /private/tmp
+// directory or replace a directory containing anything not in its manifest.
+for (const unsafePath of [
+  "/private/tmp/not-veltex-replay",
+  "/private/tmp/veltex-r2-prerequisite-replay-unsafe/nested",
+  "/private/tmp/veltex-r2-prerequisite-replay-../escape",
+]) {
+  let rejected = false;
+  try {
+    execFileSync(process.execPath, [resolve("quality/r2-hosted-verification-20260925/build-prerequisite-replay-plan.mjs"), unsafePath], { stdio: "pipe" });
+  } catch {
+    rejected = true;
+  }
+  if (!rejected) throw new Error(`Unsafe output path unexpectedly accepted: ${unsafePath}`);
+}
+
+const contaminatedDir = "/private/tmp/veltex-r2-prerequisite-replay-contaminated-test";
+rmSync(contaminatedDir, { recursive: true, force: true });
+mkdirSync(contaminatedDir, { recursive: true });
+writeFileSync(resolve(contaminatedDir, "manifest.json"), JSON.stringify({ target: "isolated preview ynzkwctwlssjcsjmahey", productionAuthorized: false, steps: [] }));
+writeFileSync(resolve(contaminatedDir, "user-file.txt"), "must survive");
+let contaminatedRejected = false;
+try {
+  execFileSync(process.execPath, [resolve("quality/r2-hosted-verification-20260925/build-prerequisite-replay-plan.mjs"), contaminatedDir], { stdio: "pipe" });
+} catch {
+  contaminatedRejected = true;
+}
+if (!contaminatedRejected || readFileSync(resolve(contaminatedDir, "user-file.txt"), "utf8") !== "must survive") {
+  throw new Error("Contaminated output directory was not rejected intact");
+}
+rmSync(contaminatedDir, { recursive: true, force: true });
 
 console.log("Prerequisite replay plan validation passed: 23 ordered, guarded steps.");

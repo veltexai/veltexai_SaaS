@@ -59,8 +59,9 @@ before history can advance.
 
 This directory is the bounded hosted-verification plan for R2 organization and
 tenancy. It does not apply migrations, discover credentials, send email, deploy,
-or touch production. Run it only against a disposable isolated Supabase preview
-after the exact candidate migration has been applied.
+or touch production. Run prerequisite recovery first against the named disposable
+isolated Supabase preview; only after all 23 steps pass may the exact R2 candidate
+migrations be applied.
 
 ## Required evidence
 
