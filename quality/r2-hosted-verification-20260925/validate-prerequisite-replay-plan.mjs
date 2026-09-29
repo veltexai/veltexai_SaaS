@@ -84,6 +84,9 @@ function validateSafetyStructure(sql, step) {
 for (const step of manifest.steps) {
   const sql = readFileSync(resolve(outputDir, step.artifact), "utf8");
   const source = readFileSync(resolve("supabase/migrations", step.file), "utf8");
+  if (!sql.includes(`-- ${manifest.target.replace("isolated", "Isolated")} only; production is not authorized.`)) {
+    throw new Error(`${step.artifact} target header does not match the manifest`);
+  }
   const postcondition = sql.indexOf("-- POSTCONDITION:");
   const history = sql.indexOf("-- HISTORY IS RECORDED ONLY AFTER THE POSTCONDITION SUCCEEDS.");
   const historyInsert = sql.indexOf("insert into supabase_migrations.schema_migrations", history);
@@ -217,5 +220,6 @@ if (!contaminatedRejected || readFileSync(resolve(contaminatedDir, "user-file.tx
   throw new Error("Contaminated output directory was not rejected intact");
 }
 rmSync(contaminatedDir, { recursive: true, force: true });
+rmSync(outputDir, { recursive: true, force: true });
 
 console.log("Prerequisite replay plan validation passed: 23 ordered, guarded steps.");
