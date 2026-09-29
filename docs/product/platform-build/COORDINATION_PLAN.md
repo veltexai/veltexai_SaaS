@@ -2,7 +2,12 @@
 
 Status: ACTIVE COORDINATION PLAN
 
-Authoritative implementation base: `fe8b1d1` on `codex/r0-privilege-hardening`
+Authoritative integration worktree: `/private/tmp/veltex-r2-integration`
+
+Current implementation candidate: `d128518` on
+`codex/r2-integrated-read-adapter`. Commit `35daa80` is a ledger-only R3
+no-duplication checkpoint and does not change the R2 candidate. Neither commit
+is a production release approval.
 
 ## Ownership
 
@@ -10,7 +15,7 @@ Authoritative implementation base: `fe8b1d1` on `codex/r0-privilege-hardening`
 - Claude is an independent read-only architecture and security reviewer. It must not edit the implementation branch or declare deployment success.
 - Cursor owns a bounded frontend-only worktree. It must not create migrations, edit RLS, alter shared domain contracts or touch deployment configuration.
 
-## Wave 1 boundaries
+## Current wave boundaries
 
 ### Codex — R2 organization and tenancy
 
@@ -22,7 +27,13 @@ Review the authoritative ledger, Prompt 2 architecture decisions and the exact R
 
 ### Cursor — organization/team UI shell only
 
-Create a separate worktree and branch `cursor/r2-team-ui-shell` from `fe8b1d1`. Build responsive, accessible organization/team interfaces using local mocked adapters and interfaces owned within the bounded feature folder. Do not assume database columns or APIs; document required contracts for Codex. No migrations, RLS, backend routes, production configuration, deployment, dependencies or external calls.
+The historical shell is preserved on `cursor/r2-team-ui-shell`; do not merge or
+rebase it as a unit. Its accepted pieces are already represented in the
+authoritative R2 integration candidate. Cursor's next assignment, after R2
+database acceptance freezes the server contract, is limited to active-
+membership type alignment, responsive/accessibility regression hardening and
+warning-clean tests from the accepted R2 head. No migrations, RLS, backend
+routes, production configuration, deployment, dependencies or external calls.
 
 ## Integration gates
 
@@ -36,3 +47,8 @@ Create a separate worktree and branch `cursor/r2-team-ui-shell` from `fe8b1d1`. 
 ## Next-wave rule
 
 Customer/property and walkthrough work may begin only after the organization identifiers, membership roles and authorization contract are frozen. Invoicing follows accepted contracts and financial ownership; it must not be implemented against the legacy single-user model.
+
+The seven-stage dependency and release gates are canonical in
+`SEVEN_STAGE_RELEASE_GATE_MATRIX.md`. A downstream lane may prepare read-only
+research, contracts and tests, but it may not create implementation commits
+until that matrix's entry gate is satisfied.
