@@ -32,6 +32,26 @@ Local prepare (no database):
 `./quality/r2-hosted-verification-20260925/prepare-hosted-execution.sh`.
 U8 hosted wake/pgmq/HMAC remains OPEN and is not a prerequisite.
 
+## Fresh-preview prerequisite reconciliation
+
+`build-prerequisite-replay-bundle.mjs` exists only for the fresh isolated
+preview `ynzkwctwlssjcsjmahey`, whose read-only inventory proved that the first
+29 migration versions are present and the following 23 pre-R2 versions are
+absent. It refuses non-empty application data, any existing replay version, or
+an existing R2 schema. The generated file is one transaction, uses only the
+canonical executable `034_free_trial_no_credit_card.sql`, and records each
+migration-history row immediately after that exact source body succeeds.
+
+Generate, but do not commit, the replay artifact with:
+
+```sh
+npm run migrations:validate
+npm run r2:build-prerequisite-replay
+```
+
+The generated `/private/tmp/veltex-r2-prerequisite-replay.sql` must be reviewed
+and executed only in the named isolated preview. Production is not authorized.
+
 This directory is the bounded hosted-verification plan for R2 organization and
 tenancy. It does not apply migrations, discover credentials, send email, deploy,
 or touch production. Run it only against a disposable isolated Supabase preview
