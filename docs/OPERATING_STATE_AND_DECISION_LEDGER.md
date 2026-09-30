@@ -569,6 +569,11 @@ After any material action, append or revise the relevant section with:
 - **NEXT GATE:** obtain independent exact-candidate review of this four-file recovery delta. Only a PASS unlocks executing artifact `00` on isolated preview `ynzkwctwlssjcsjmahey`, followed by regeneration and byte verification before resuming artifact `01`. Production remains untouched and unauthorized.
 - **CLAUDE REVIEW SUBMITTED:** after explicit founder authorization, `veltex-r2-030-reconciliation-87ab319.zip` (61,944 bytes; SHA-256 `0e753cda7647addff9074b3ca213c65a20ebe559e3aadc4153b5506865839144`) and the narrow exact-delta assignment were sent to the existing `Veltex AI R2 Organization & Tenancy Review` task. Claude is visibly working. It was prohibited from hosted execution and directed to stop after an exact-evidence PASS/FAIL verdict.
 
+### Founder continuity preference — 2026-09-29 Pacific
+
+- **AUTONOMOUS BUILD PROGRESS REQUESTED:** continue authorized local implementation, testing, internal Codex coordination, evidence collection, read-only inspection and isolated-preview verification without pausing for routine confirmations. Consolidate questions and approvals whenever safe.
+- **MANDATORY GATES REMAIN:** this preference does not authorize production mutation/deployment, spending, credential creation/revocation or disclosure, publication, deletion, campaign mutation, external access changes or external messages beyond an action already approved with the required specificity. Interrupt only when one of those gates, a materially different product decision or unavoidable founder input is actually next.
+
 ### Duplicate 034 disposable PostgreSQL equivalence — 2026-09-29 Pacific
 
 - **RUNTIME GATE PASS:** PostgreSQL 16.15 was installed locally and the guarded Unix-socket-only disposable harness ran both histories through `20260925001000`: archived legacy `034` followed by canonical `034`, versus canonical `034` alone. Data immediately after canonical `034` is identical, and executable schema through the complete pre-R2 chain is equivalent.
