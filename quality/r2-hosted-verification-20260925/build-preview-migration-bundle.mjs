@@ -18,6 +18,7 @@ const migrations = [
   "20260925004000_r2_second_security_remediation.sql",
   "20260925005000_r2_third_security_remediation.sql",
   "20260925006000_r2_cleanup_guard_ordering.sql",
+  "20260925007000_r2_service_role_proposal_read.sql",
 ];
 
 function migrationBody(name) {

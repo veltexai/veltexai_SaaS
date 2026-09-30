@@ -88,7 +88,8 @@ migrations be applied.
 1. Record the exact 52-version prerequisite history, repaired template objects,
    zero application-row counts and empty SHA-256 proposal digest.
 2. Apply the unmodified candidate migrations in order through
-   `20260925006000_r2_cleanup_guard_ordering.sql`.
+   `20260925006000_r2_cleanup_guard_ordering.sql` and
+   `20260925007000_r2_service_role_proposal_read.sql`.
 3. Run `./run-hosted.sh` with an isolated preview database URL.
 4. Run `./run-last-owner-concurrency.sh` against the same preview.
 5. Complete `HOSTED_APP_CHECKLIST.md` through the preview application/Auth

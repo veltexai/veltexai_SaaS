@@ -15,7 +15,7 @@ do $$ begin
   end if;
   if not exists (
     select 1 from supabase_migrations.schema_migrations
-    where version = '20260925006000'
+    where version = '20260925007000'
   ) then
     raise exception 'R2 migration version is absent';
   end if;
@@ -141,8 +141,6 @@ end $$;
 
 grant execute on function pg_temp.u1_capture(text, text, text) to authenticated, service_role;
 
-set local role service_role;
-
 insert into public.additional_service_catalog (
   sku, label, unit_type, rate, min_qty, default_frequency,
   frequency_options, amortize_to_monthly, default_qty_source, active
@@ -210,8 +208,6 @@ insert into public.pdf_exports (
   '93000000-0000-4000-8000-000000000011',
   128
 );
-
-reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '93000000-0000-4000-8000-000000000011', true);

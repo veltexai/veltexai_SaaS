@@ -8,7 +8,7 @@ do $$ begin
   end if;
   if not exists (
     select 1 from supabase_migrations.schema_migrations
-    where version = '20260925006000'
+    where version = '20260925007000'
   ) then raise exception 'R2 migration version is absent'; end if;
 end $$;
 
@@ -101,6 +101,7 @@ do $$ begin
     raise exception 'service role manufactured an unconsented membership';
   exception when insufficient_privilege then null; end;
 end $$;
+reset role;
 insert into public.proposals(
   id,organization_id,user_id,title,client_name,client_email,contact_phone,
   service_location,facility_size,service_type,service_frequency,generated_content
@@ -114,6 +115,7 @@ insert into public.proposal_tracking(
   '91000000-0000-4000-8000-000000000199',
   'online','public-r2@example.test','R2 public view','R2 public view'
 );
+set local role service_role;
 do $$ begin
   begin
     insert into public.organizations(id,name,slug,created_by)
@@ -212,6 +214,14 @@ reset role;
 set local role service_role;
 do $$ begin
   if (select count(*) from public.proposals where id in ('91000000-0000-4000-8000-000000000101','91000000-0000-4000-8000-000000000102')) <> 2 then raise exception 'service role cannot read both tenants'; end if;
+  begin
+    update public.proposals set title='UNAUTHORIZED SERVICE EDIT' where id='91000000-0000-4000-8000-000000000101';
+    raise exception 'service role updated a proposal';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform 1 from public.proposal_tracking limit 1;
+    raise exception 'service role read raw proposal tracking';
+  exception when insufficient_privilege then null; end;
 end $$;
 reset role;
 

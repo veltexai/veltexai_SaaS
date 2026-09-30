@@ -171,6 +171,29 @@ const sqlEditorTexts = [
   'sql-editor/README.md',
 ].map((file) => fs.readFileSync(path.join(root, file), 'utf8'));
 const sqlEditorPack = sqlEditorTexts.join('\n');
+const serviceProposalGrantMigration = fs.readFileSync(
+  path.resolve(root, '../../supabase/migrations/20260925007000_r2_service_role_proposal_read.sql'),
+  'utf8',
+);
+for (const marker of [
+  'grant select on table public.proposals to service_role',
+  'revoke all on table public.proposals from service_role',
+  'revoke all on table public.proposal_tracking from service_role',
+]) {
+  if (!serviceProposalGrantMigration.toLowerCase().includes(marker)) {
+    throw new Error(`service-role proposal grant migration missing: ${marker}`);
+  }
+}
+for (const marker of [
+  "where version = '20260925007000'",
+  "reset role;\ninsert into public.proposals",
+  'service role updated a proposal',
+  'service role read raw proposal tracking',
+]) {
+  if (!sqlEditorPack.includes(marker)) {
+    throw new Error(`hosted evidence missing least-privilege marker: ${marker}`);
+  }
+}
 if (!sqlEditorPack.includes("has_function_privilege('service_role','public._r0_can_user_access_template_impl(uuid,uuid)','EXECUTE')")
     || sqlEditorPack.includes("not has_function_privilege('service_role','public._r0_can_user_access_template_impl(uuid,uuid)','EXECUTE')")) {
   throw new Error('pre-R2 fingerprint must keep the private implementation ungranted to service_role');

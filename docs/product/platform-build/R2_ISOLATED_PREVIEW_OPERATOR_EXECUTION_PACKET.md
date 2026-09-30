@@ -30,7 +30,7 @@ incomplete.
 | Local prepare | `prepare-hosted-execution.sh` | same |
 | Pre-R2 fingerprint | read-only counts/digest matching `preview-baseline-20260926.json` | `sql-editor/00-preview-guard.sql` |
 | Atomic apply | `/private/tmp/veltex-r2-preview-atomic.sql` from `build-preview-migration-bundle.mjs` | `/private/tmp/veltex-r2-sql-editor-atomic.sql` from `sql-editor/build-sql-editor-bundle.mjs` |
-| Post-R2 fingerprint | same digest on non-`9100`/`9200`/`9300` rows; five R2 history versions present | `sql-editor/_post_r2_fingerprint.fragment.sql` (included by 02/03/04) |
+| Post-R2 fingerprint | same digest on non-`9100`/`9200`/`9300` rows; six R2 history versions present | `sql-editor/_post_r2_fingerprint.fragment.sql` (included by 02/03/04) |
 | Role / RLS matrix | `run-hosted.sh` → `sql/r2-hosted-matrix.sql` | `sql-editor/02-hosted-matrix.sql` (owner plus uninvited-role denial; not a positive four-role assignment) |
 | Last-owner concurrency | `run-last-owner-concurrency.sh` | `sql-editor/03-last-owner-single-session.sql` is **not** two-session proof |
 | U1 benchmark | `run-u1-benchmark.sh --execute-preview` with `R2_U1_EXECUTE=preview` | `sql-editor/04-u1-benchmark.sql` |
@@ -48,8 +48,8 @@ Do not commit connection strings, JWTs, customer content, or live emails.
 |---|---|
 | `00-local-prepare.json` | stdout of `prepare-hosted-execution.sh` (bundle paths and source digest) |
 | `01-pre-r2-fingerprint.txt` | exact 52 prerequisites, repaired template objects, profile_count `0`, proposal_count `0`, empty digest match, no organizations / R2 history |
-| `02-atomic-apply.txt` | apply result; history insert of five versions; source SHA-256 |
-| `03-post-r2-fingerprint.txt` | organizations present; exact 52 prerequisites plus versions `20260925002000`…`20260925006000`; legacy digest still `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| `02-atomic-apply.txt` | apply result; history insert of six versions; source SHA-256 |
+| `03-post-r2-fingerprint.txt` | organizations present; exact 52 prerequisites plus versions `20260925002000`…`20260925007000`; legacy digest still `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 | `04-hosted-matrix.txt` | `R2 HOSTED DATABASE MATRIX PASSED (transaction rolled back)` or SQL-Editor `sql_editor_hosted_matrix` / `PASS` / `owner_plus_uninvited_role_denial` |
 | `05-last-owner-concurrency.txt` | `PASS: concurrent final-owner invariant retained` (psql). Record SQL-Editor 03 as single-session only. |
 | `06-u1-benchmark.txt` | `u1_evidence` rows, `rls_overhead_ms`, residue check; no production URL |
@@ -84,7 +84,7 @@ session labeled `iwoaaljitifloolszxlu`.
 
 Apply **one** generated bundle to that preview only.
 
-**PASS:** five R2 `schema_migrations` rows; required organization tables and
+**PASS:** six R2 `schema_migrations` rows; required organization tables and
 guards exist; null `active_organization_id` count is 0.
 **FAIL / abort:** preflight fingerprint failure; partial apply; unexpected
 application rows or a non-empty proposal digest.
@@ -92,9 +92,9 @@ application rows or a non-empty proposal digest.
 ### S3 — post-R2 fingerprint (read-only)
 
 Re-check legacy (non-`9100`/`9200`/`9300`) profile/proposal counts and digest,
-plus presence of `20260925006000`.
+plus presence of `20260925007000`.
 
-**PASS:** 0 / 0 / recorded empty digest, exact 52 prerequisites plus five R2 rows.
+**PASS:** 0 / 0 / recorded empty digest, exact 52 prerequisites plus six R2 rows.
 **FAIL / abort:** any mismatch.
 
 ### S4 — hosted role / RLS matrix

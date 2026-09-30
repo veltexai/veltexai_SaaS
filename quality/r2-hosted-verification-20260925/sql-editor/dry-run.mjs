@@ -38,7 +38,7 @@ if (!/to_regclass\('public\.organizations'\) is not null/.test(preR2)) {
   throw new Error('pre-R2 fingerprint does not require the recorded pre-R2 schema state');
 }
 if (!postR2.includes(BASELINE_DIGEST) || !/id::text not like '91000000-%'/.test(postR2)
-    || !/schema_migrations\) <> 57/.test(postR2)) {
+    || !/schema_migrations\) <> 58/.test(postR2)) {
   throw new Error('post-R2 fingerprint missing legacy baseline digest');
 }
 
