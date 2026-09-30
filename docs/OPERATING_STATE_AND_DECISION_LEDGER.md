@@ -903,3 +903,12 @@ After any material action, append or revise the relevant section with:
   cross-tenant, wrong-proposal and no-residue behavior already pass executable
   database and route/component tests, but hosted operator UI acceptance is not
   claimed without an authenticated session.
+- **PREVIEW GOOGLE OAUTH BLOCKER CONFIRMED:** `Continue with Google` from the
+  branch deployment correctly reached the isolated preview callback
+  `https://ynzkwctwlssjcsjmahey.supabase.co/auth/v1/callback`, but Google returned
+  `redirect_uri_mismatch`. That callback is not currently registered on OAuth
+  client `952177158425-e46jnm90bp4evmuokb3n620vkpkc9r5e`. This is evidence that
+  the branch is using the intended preview Supabase project, not evidence of an
+  application or revocation defect. Adding the exact preview callback to the
+  Google Cloud OAuth allowlist is the next external configuration action needed
+  for authenticated operator UI acceptance; no OAuth configuration was changed.
