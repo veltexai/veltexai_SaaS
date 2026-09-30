@@ -712,3 +712,39 @@ After any material action, append or revise the relevant section with:
   responsive, full cross-tenant surface and exact migration replay assertions
   remain open. Production `iwoaaljitifloolszxlu` and the separate pilot were not
   touched.
+
+### R2 tracked-delivery validation continuation — BLOCKED (2026-09-30 Pacific)
+
+- **NO REAL DELIVERY:** the authorized `online_only` test to
+  `client@veltex.test` created one preview tracking row and then returned
+  `EMAIL_SEND_ERROR`. No customer or real inbox received a message. Successful
+  paid-send acceptance remains unproved.
+- **TOKEN BOUNDARY PASS SO FAR:** the valid token rendered the customer-safe
+  projection; a random UUID returned 404; one deliberate download incremented
+  its counter once; and three deliberate valid navigations produced three
+  token-bound view rows/count increments. With `track_opens` and
+  `track_downloads` temporarily false, access remained available but neither
+  counter changed. Both flags were restored. The model has no revocation field,
+  so a truly disabled link cannot yet fail closed.
+- **TENANT RLS PASS SO FAR:** role-switched authenticated checks for the three
+  synthetic identities each exposed only one organization and membership. The
+  two unrelated owner tenants saw zero proposals, tracking rows and views; the
+  UI QA tenant saw exactly one proposal, one tracking row and three views.
+  Browser export denial remains unclaimed because the verified handoff did not
+  contain the owner fixture password; no credential was recreated.
+- **MIGRATION EVIDENCE:** preview history contains 59 rows and includes exact
+  version `20260925002000`. Replay refusal and content-digest evidence remain
+  open.
+- **AUTHENTICATED PDF PASS IS PARTIAL:** a fresh final deployment export
+  (`proposal-Synthetic QA Client (4).pdf`, 2,793,668 bytes) has a genuinely
+  inspected, correctly framed cover. A fresh second-page render was not
+  obtained, so the entire final PDF is not yet perceptually verified.
+- **NEW RELEASE BLOCKER — TRACKED PDF DIVERGENCE:** the public tracked download
+  used the legacy jsPDF route and generated a one-page 3,877-byte file containing
+  essentially the title and footer, not the polished two-page proposal. R2
+  cannot be accepted until tracked download uses an equivalent secure canonical
+  rendering and passes visual, entitlement, token and cross-tenant regression
+  checks.
+- **RESPONSIVE STILL OPEN:** the in-app viewport override did not alter the
+  observed 1280px viewport; no mobile PASS is claimed. Production and the 100D
+  pilot remained untouched.

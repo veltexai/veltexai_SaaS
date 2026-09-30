@@ -69,5 +69,44 @@ redacted evidence for every item. A database SQL pass does not satisfy these.
   and event-once behavior, complete cross-tenant members/tracking/views/exports,
   responsive tracked-link review, and final post-polish PDF perception.
 
+## 2026-09-30 tracked-delivery continuation
+
+- The exact hosted migration table contains version `20260925002000` and the
+  isolated preview has 59 history rows. The destructive replay refusal/content
+  digest portion of this checklist item remains open.
+- A founder-authorized `online_only` send to `client@veltex.test` created one
+  tracking record, then failed safely with `EMAIL_SEND_ERROR`; no real customer
+  received anything. The route left the unshared token row in place, which made
+  it possible to validate the public surface but does not satisfy successful
+  delivery acceptance.
+- Tracking token `8fe40198-2a46-49f0-8e9d-863f8aa0ebf7` rendered only the
+  customer-safe projection. A random UUID returned the application 404. One
+  download increased `download_count` from 0 to 1, and three deliberate valid
+  navigations produced exactly three scoped view rows/count increments.
+- Setting both `track_opens` and `track_downloads` false left the public proposal
+  readable but prevented a subsequent reload/download from changing either
+  counter (`3` views, `1` download). Both flags were restored to true. There is
+  no current revocation/disabled-link field, so the checklist's disabled-link
+  fail-closed requirement is not implemented and remains a release decision.
+- Authenticated RLS-session checks across all three preview identities passed:
+  each identity saw one organization and one membership; both unrelated owner
+  tenants saw zero proposals, tracking rows and proposal views, while the UI QA
+  tenant saw exactly one proposal, one tracking row and three view rows. The
+  browser export-denial subcheck remains open because the synthetic owner
+  password was not available in the verified handoff; no password was reset or
+  recreated.
+- A fresh post-contact-polish authenticated export was downloaded as
+  `proposal-Synthetic QA Client (4).pdf` (2,793,668 bytes). Its cover was
+  genuinely rendered and visually inspected: title, client, address and date
+  are legible and correctly framed. A fresh second-page render was not obtained,
+  so the full PDF row remains open.
+- The public tracked `Download PDF` path produced a separate one-page 3,877-byte
+  legacy jsPDF document rather than the polished authenticated two-page export.
+  Visual inspection showed only the title/footer and no meaningful proposal
+  body. This is a genuine release blocker; tracked downloads must use an
+  equivalent customer-safe canonical proposal rendering before R2 acceptance.
+- The in-app browser viewport override did not change `window.innerWidth` from
+  1280, so no mobile/responsive PASS is claimed from that attempted check.
+
 Final status must remain `PREPARED` until these checks and the database matrix
 have evidence. Record failures; do not rerun by silently changing the candidate.
