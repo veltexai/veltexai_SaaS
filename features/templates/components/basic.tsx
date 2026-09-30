@@ -17,8 +17,10 @@ import {
   HorizontalBar,
   NavitationNumber,
   PoweredBy,
+  ThankYouPage,
   VerticalBar,
 } from "./shared";
+import { resolveServiceCategory } from "../utils/proposal-service-context";
 
 export function BasicTemplate({
   proposal,
@@ -35,6 +37,7 @@ export function BasicTemplate({
   const companyName = branding?.name ?? "Company";
   const preparedFor =
     proposal.client_company || proposal.client_name || "Client";
+  const serviceCategory = resolveServiceCategory(proposal);
 
   const acceptanceVariant =
     acceptanceVariantMap[(proposal as any).templateType as TemplateType] ??
@@ -208,19 +211,16 @@ export function BasicTemplate({
       )}
 
       <div id="page-five" className="relative aspect-[1/1.4] overflow-hidden">
-        <VerticalBar className="right-6 sm:right-12 md:right-20" />
-        <HorizontalBar className="top-6 sm:top-12 md:top-20" />
-        <Image
-          src={coverBg}
-          alt="Background"
-          className="absolute inset-0 w-full h-full object-cover"
-          height={1600}
-          width={1100}
+        <ThankYouPage
+          email={branding?.email ?? null}
+          phone={branding?.phone ?? null}
+          website={branding?.website ?? null}
+          logoUrl={logoUrl}
+          companyName={companyName}
+          templateType="basic"
+          thankYouImage={images?.thankYouImage}
+          serviceCategory={serviceCategory}
         />
-        {logoUrl ? (
-          <HeaderLogo logoUrl={logoUrl} companyName={companyName} />
-        ) : null}
-        <PoweredBy colorLogo="white" isCenter />
       </div>
     </section>
   );
