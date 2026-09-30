@@ -171,6 +171,10 @@ const sqlEditorTexts = [
   'sql-editor/README.md',
 ].map((file) => fs.readFileSync(path.join(root, file), 'utf8'));
 const sqlEditorPack = sqlEditorTexts.join('\n');
+if (!sqlEditorPack.includes("has_function_privilege('service_role','public._r0_can_user_access_template_impl(uuid,uuid)','EXECUTE')")
+    || sqlEditorPack.includes("not has_function_privilege('service_role','public._r0_can_user_access_template_impl(uuid,uuid)','EXECUTE')")) {
+  throw new Error('pre-R2 fingerprint must keep the private implementation ungranted to service_role');
+}
 if (sqlEditorPack.includes("'PREVIEW_REF_HERE'") || new RegExp(`preview_ref <> '${activeBaseline.project_ref}'`).test(sqlEditorPack)) {
   throw new Error('SQL Editor pack still uses a pasted GUC/ref as database identity');
 }

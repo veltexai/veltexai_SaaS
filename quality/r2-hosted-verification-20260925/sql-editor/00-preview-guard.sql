@@ -105,7 +105,7 @@ begin
      or not exists (select 1 from pg_proc p where p.oid='public.can_user_access_template(uuid,uuid)'::regprocedure and p.prosecdef and p.provolatile='s' and p.proconfig @> array['search_path=pg_catalog, public'])
      or position('active-free-trial exception for Executive Premium' in coalesce(obj_description('public._r0_can_user_access_template_impl(uuid,uuid)'::regprocedure),'')) = 0
      or has_function_privilege('authenticated','public._r0_can_user_access_template_impl(uuid,uuid)','EXECUTE')
-     or not has_function_privilege('service_role','public._r0_can_user_access_template_impl(uuid,uuid)','EXECUTE')
+     or has_function_privilege('service_role','public._r0_can_user_access_template_impl(uuid,uuid)','EXECUTE')
      or not has_function_privilege('authenticated','public.can_user_access_template(uuid,uuid)','EXECUTE')
      or not has_function_privilege('service_role','public.can_user_access_template(uuid,uuid)','EXECUTE')
      or exists (select 1 from pg_proc p cross join lateral aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where p.oid in ('public._r0_can_user_access_template_impl(uuid,uuid)'::regprocedure,'public.can_user_access_template(uuid,uuid)'::regprocedure) and a.grantee=0 and a.privilege_type='EXECUTE') then
