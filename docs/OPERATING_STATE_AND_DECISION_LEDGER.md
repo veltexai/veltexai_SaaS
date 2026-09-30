@@ -870,3 +870,36 @@ After any material action, append or revise the relevant section with:
   estimator/viewer denial, revoked-link 404/no-download/no-counter behavior and
   unaffected sibling links before any founder or production decision. Genuine
   390px responsive evidence remains a separate open R2 gate.
+
+### R2 tracked-link revocation — ISOLATED PREVIEW DATABASE PASS / APP OPERATOR ACCEPTANCE PENDING (2026-09-30 Pacific)
+
+- **CANDIDATE COMMITTED AND PUSHED:** exact revocation candidate `a18e6e3` is on
+  `codex/r2-fresh-preview-guard`. The complete local, build, disposable-database
+  and independent-review evidence in the preceding entry remains green.
+- **MIGRATION 10000 APPLIED TO ISOLATED PREVIEW ONLY:** the guarded SQL bundle
+  first proved the exact 60-version post-09000 state and absence of a partial or
+  unrecorded revocation schema. Supabase preview `ynzkwctwlssjcsjmahey` returned
+  evidence key `r2_tracked_link_revocation`, exact version `20260925010000`,
+  source SHA-256
+  `29b132c34d5779dcad50aa13544dcd27e1b714e86eeaa530b64dbc64940c0078`,
+  history count `61` and a present revoke RPC. The same transaction verified
+  authenticated execution, anonymous denial and the fail-closed revocation
+  predicate in all seven public token functions before commit.
+- **HOSTED ROLLBACK-ONLY LIFECYCLE PASS:** against the known preview proposal,
+  a synthetic sibling delivery was readable before revocation; owner revocation
+  and an idempotent repeat both succeeded; customer and print reads became null;
+  paid access and all view/download/click/time/open metric calls returned false;
+  exactly one audit event was observed; and the pre-existing sibling token stayed
+  active. A deliberate inner subtransaction rollback then proved both the
+  synthetic tracking row and its audit row were not persisted.
+- **BRANCH SITE REACHABLE / PROTECTION PRESERVED:** the branch-only Vercel URL
+  serves the Veltex application while direct unauthenticated command-line API
+  access remains protected by Vercel Authentication. Protection was not changed.
+  Production `iwoaaljitifloolszxlu`, the separate pilot, email and campaigns were
+  not queried or mutated.
+- **REMAINING R2 ACCEPTANCE:** an authenticated owner/admin browser session is
+  still needed to exercise the deployed Links tab end to end, confirm its visible
+  revoked state, and capture genuine 390px responsive evidence. Estimator/viewer,
+  cross-tenant, wrong-proposal and no-residue behavior already pass executable
+  database and route/component tests, but hosted operator UI acceptance is not
+  claimed without an authenticated session.
