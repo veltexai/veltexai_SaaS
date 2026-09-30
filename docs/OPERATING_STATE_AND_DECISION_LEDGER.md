@@ -553,7 +553,14 @@ After any material action, append or revise the relevant section with:
 
 - **FIRST REVIEW FAIL / NO HOSTED EXECUTION:** independent review rejected the initial per-step draft because it rewrapped migration `20260913000000` across its deliberate lock-releasing commit, permitted an unsafe recursive output path and contained one reversed dependency sentence. No generated step was run on Supabase.
 - **REMEDIATION PASS:** exact commit `41fa1b0` preserves the raw source sequence `BEGIN → constraint replacement → COMMIT → out-of-lock VALIDATE`, then opens a new transaction for its final-state proof and history insert. Generated cleanup is restricted to one direct, named `/private/tmp` replay directory and requires an exact non-production manifest/file set; unsafe, nested, traversal and contaminated-directory mutation tests reject without removing user content. Documentation now requires all 23 prerequisites before R2.
+
 - **INDEPENDENT EVIDENCE:** re-review PASS; 57 unique migration versions, 23-step build/validator, raw body/hash and transaction-order proof, R2 static harness, equivalence shell syntax, diff check, 81 Jest suites / 695 tests / 5 snapshots and the previously recorded TypeScript/84-route build all pass. PostgreSQL equivalence runtime remains pending because this host has no PostgreSQL or container runtime. Production and isolated preview remain unchanged.
+
+### R2 hosted prerequisite replay — step 1 blocked safely (2026-09-29 Pacific)
+
+- **HOSTED STEP 1 FAILED / CLEAN ROLLBACK:** after the exact per-step plan passed Claude re-review and the full 23-step disposable PostgreSQL gate, generated artifact `01-031_enhance_addon_catalog.sql` was verified byte-for-byte and executed only on isolated preview `ynzkwctwlssjcsjmahey`. PostgreSQL stopped at `ERROR 42P01: relation "public.additional_service_catalog" does not exist`. Because the artifact is transaction-wrapped, no `031` history row or partial schema change committed; execution stopped before step 2. Production `iwoaaljitifloolszxlu` was untouched.
+- **BASELINE CONTRADICTION CONFIRMED READ-ONLY:** the preview reports migration version `030` as recorded, `public.additional_service_catalog` as absent, and 29 total migration-history rows. Migration `030_special_services.sql` is the committed source that creates that table, so the preview's recorded history and materialized schema are inconsistent.
+- **NEXT REQUIRED CORRECTION:** do not rerun `031`, synthesize later history or weaken the guard. Add a separately reviewed preview-only baseline-reconciliation step that proves `030` is recorded, replays the exact committed `030` body only when all of its expected objects are absent, verifies its complete final state without duplicating its history row, and expands the disposable gate to reproduce this recorded-history/missing-schema condition before hosted retry.
 
 ### Duplicate 034 disposable PostgreSQL equivalence — 2026-09-29 Pacific
 
