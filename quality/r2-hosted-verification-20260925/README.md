@@ -37,8 +37,13 @@ U8 hosted wake/pgmq/HMAC remains OPEN and is not a prerequisite.
 
 ### Required execution mode: bounded per-migration plan
 
-Use the per-migration plan for hosted SQL-Editor recovery. It emits 23 separate
-artifacts plus a manifest. Every artifact checks the exact prior history and
+Use the per-migration plan for hosted SQL-Editor recovery. It emits one narrowly
+guarded baseline-030 reconciliation artifact, 23 forward-replay artifacts, and
+a manifest. The baseline artifact is permitted only when the exact 29-version
+history already records `030`, application data is empty, R2 is absent, and all
+objects created by committed migration 030 are absent. It replays the exact 030
+body, verifies its full final state, and never inserts or changes history. Run
+it first. Every subsequent artifact checks the exact prior history and
 empty-preview boundary, executes one source migration, proves a migration-
 specific observable outcome, and only then writes that migration's history
 row. Execute exactly one artifact at a time in manifest order and stop on the

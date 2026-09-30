@@ -12,6 +12,10 @@ const manifest = JSON.parse(readFileSync(resolve(outputDir, "manifest.json"), "u
 if (manifest.steps.length !== 23) throw new Error("Expected exactly 23 replay steps");
 if (manifest.steps[3].file !== "034_free_trial_no_credit_card.sql") throw new Error("Canonical 034 is not step 4");
 if (new Set(manifest.steps.map((step) => step.version)).size !== 23) throw new Error("Replay versions are not unique");
+if (manifest.baselineReconciliation?.recordedVersion !== "030"
+    || manifest.baselineReconciliation?.insertsHistory !== false) {
+  throw new Error("Missing guarded, history-preserving baseline-030 reconciliation");
+}
 
 const sha256 = (text) => createHash("sha256").update(text).digest("hex");
 const normalizedBody = (source) => {
@@ -79,6 +83,86 @@ function validateSafetyStructure(sql, step) {
     }
     from = start + marker.length;
   }
+}
+
+const baseline = manifest.baselineReconciliation;
+const baselineSql = readFileSync(resolve(outputDir, baseline.artifact), "utf8");
+const baselineSource = readFileSync(resolve("supabase/migrations", baseline.file), "utf8");
+const baselineMarker = "-- EXACT RAW MIGRATION 030 BODY; ITS EXISTING HISTORY ROW IS NOT MODIFIED.\n";
+const baselineStart = baselineSql.indexOf(baselineMarker) + baselineMarker.length;
+const baselineEnd = baselineSql.indexOf("\n\n-- POSTCONDITION:", baselineStart);
+if (sha256(baselineSource) !== baseline.sourceSha256
+    || baselineStart < baselineMarker.length
+    || baselineSql.slice(baselineStart, baselineEnd) !== baselineSource.trim()) {
+  throw new Error("Baseline-030 reconciliation body/hash does not exactly match the committed migration");
+}
+for (const required of [
+  "actual_history <> 29",
+  "version='030'",
+  "preview application data is not empty",
+  "R2 is already present",
+  "one or more migration-030 objects already exist",
+  "changed or duplicated migration-030 history",
+  "production is not authorized",
+]) {
+  if (!baselineSql.includes(required)) throw new Error(`Baseline-030 reconciliation missing guard: ${required}`);
+}
+if (baselineSql.includes("insert into supabase_migrations.schema_migrations")) {
+  throw new Error("Baseline-030 reconciliation must not insert migration history");
+}
+validateAssertionIdentifiers(baseline.postconditions, baselineSource, baseline.artifact);
+
+function validateBaselineSafetyStructure(sql) {
+  const preconditionStart = sql.indexOf("-- PRECONDITION: exact recorded-history/missing-schema preview fingerprint.");
+  const bodyStart = sql.indexOf(baselineMarker);
+  const postconditionStart = sql.indexOf("-- POSTCONDITION: prove the complete migration-030 final state.");
+  if (!(preconditionStart >= 0 && preconditionStart < bodyStart && bodyStart < postconditionStart)) {
+    throw new Error("Baseline-030 reconciliation has invalid guard/body/postcondition ordering");
+  }
+  const precondition = sql.slice(preconditionStart, bodyStart);
+  const postcondition = sql.slice(postconditionStart);
+  for (const required of [
+    /if to_regclass\('public\.profiles'\) is null[\s\S]*?to_regclass\('public\.proposals'\) is null[\s\S]*?to_regclass\('supabase_migrations\.schema_migrations'\) is null then/,
+    /if to_regclass\('public\.organizations'\) is not null then/,
+    /if exists \(select 1 from public\.profiles\) or exists \(select 1 from public\.proposals\) then/,
+    /if actual_history <> 29/,
+    /not exists \(select 1 from supabase_migrations\.schema_migrations where version='030'\)/,
+    /if to_regclass\('public\.additional_service_catalog'\) is not null[\s\S]*?to_regclass\('public\.proposal_additional_services'\) is not null/,
+  ]) {
+    if (!required.test(precondition)) throw new Error(`Baseline-030 executable precondition is missing or disabled: ${required}`);
+  }
+  for (const required of [
+    /if not \(/,
+    /count\(\*\) from supabase_migrations\.schema_migrations where version='030'\) <> 1/,
+  ]) {
+    if (!required.test(postcondition)) throw new Error(`Baseline-030 executable postcondition is missing or disabled: ${required}`);
+  }
+}
+
+validateBaselineSafetyStructure(baselineSql);
+
+const assertBaselineMutationRejected = (needle, replacement) => {
+  const mutated = baselineSql.replace(needle, replacement);
+  if (mutated === baselineSql) throw new Error(`Baseline-030 mutation fixture did not match: ${needle}`);
+  let rejected = false;
+  try {
+    validateBaselineSafetyStructure(mutated);
+  } catch {
+    rejected = true;
+  }
+  if (!rejected) throw new Error(`Baseline-030 safety mutation unexpectedly passed: ${needle}`);
+};
+for (const [needle, replacement] of [
+  ["if to_regclass('public.profiles') is null", "if false and to_regclass('public.profiles') is null"],
+  ["if to_regclass('public.organizations') is not null then", "if false and to_regclass('public.organizations') is not null then"],
+  ["if exists (select 1 from public.profiles) or exists (select 1 from public.proposals) then", "if false then"],
+  ["if actual_history <> 29", "if false and actual_history <> 29"],
+  ["or not exists (select 1 from supabase_migrations.schema_migrations where version='030') then", "or false then"],
+  ["if to_regclass('public.additional_service_catalog') is not null", "if false and to_regclass('public.additional_service_catalog') is not null"],
+  ["if not (", "if false and not ("],
+  ["if (select count(*) from supabase_migrations.schema_migrations where version='030') <> 1 then", "if false then"],
+]) {
+  assertBaselineMutationRejected(needle, replacement);
 }
 
 for (const step of manifest.steps) {

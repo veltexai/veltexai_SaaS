@@ -78,11 +78,15 @@ while IFS= read -r version; do
     exit 1
   }
   file="${matches[0]}"
-  "${PSQL[@]}" -d "$TEMPLATE" -f "$file" >"$OUT/baseline-$version.log" 2>&1 || {
-    echo "Baseline migration failed: $(basename "$file")" >&2
-    grep -E 'ERROR|LINE|HINT' "$OUT/baseline-$version.log" | head -10 >&2 || true
-    exit 1
-  }
+  if [ "$version" != 030 ]; then
+    "${PSQL[@]}" -d "$TEMPLATE" -f "$file" >"$OUT/baseline-$version.log" 2>&1 || {
+      echo "Baseline migration failed: $(basename "$file")" >&2
+      grep -E 'ERROR|LINE|HINT' "$OUT/baseline-$version.log" | head -10 >&2 || true
+      exit 1
+    }
+  else
+    echo "Recorded history without schema body (preview mismatch fixture)" >"$OUT/baseline-$version.log"
+  fi
   name="$(basename "$file" .sql)"
   name="${name#${version}_}"
   "${PSQL[@]}" -d "$TEMPLATE" -v version="$version" -v name="$name" <<'SQL'
@@ -93,6 +97,27 @@ done <"$OUT/baseline-versions.txt"
 
 "${PSQL[@]}" -d postgres -c "create database $REPLAY template $TEMPLATE"
 "${PSQL[@]}" -d postgres -c "create database $DIRECT template $TEMPLATE"
+
+# Reproduce the recorded preview mismatch: version 030 exists in history while
+# every object from its exact body is absent. Repair only the replay side; the
+# direct side receives the same committed body without another history insert.
+"${PSQL[@]}" -d "$REPLAY" -f "$PLAN/00-030-recorded-history-reconciliation.sql" >"$OUT/reconcile-030.log" 2>&1
+"${PSQL[@]}" -d "$DIRECT" -f "$MIGRATIONS/030_special_services.sql" >"$OUT/direct-030.log" 2>&1
+for db in "$REPLAY" "$DIRECT"; do
+  count030="$("${PSQL[@]}" -d "$db" -Atc "select count(*) from supabase_migrations.schema_migrations where version='030'")"
+  [ "$count030" = 1 ] || { echo "$db changed or duplicated version-030 history" >&2; exit 1; }
+done
+
+# Once any 030 object exists, the reconciliation must refuse without changing
+# its already-recorded history row.
+"${PSQL[@]}" -d postgres -c "create database $GUARD template $REPLAY"
+if "${PSQL[@]}" -d "$GUARD" -f "$PLAN/00-030-recorded-history-reconciliation.sql" >"$OUT/reconcile-030-refusal.log" 2>&1; then
+  echo "Baseline-030 reconciliation unexpectedly accepted an already-repaired schema" >&2
+  exit 1
+fi
+count030="$("${PSQL[@]}" -d "$GUARD" -Atc "select count(*) from supabase_migrations.schema_migrations where version='030'")"
+[ "$count030" = 1 ] || { echo "Refused baseline reconciliation changed version-030 history" >&2; exit 1; }
+"${PSQL[@]}" -d postgres -c "drop database $GUARD"
 
 node -e 'const m=require(process.argv[1]); for (const s of m.steps) console.log([s.order,s.artifact,s.file,s.version].join("\t"))' "$PLAN/manifest.json" \
   >"$OUT/steps.tsv"
@@ -146,6 +171,7 @@ pg_dump --schema-only --no-comments --no-owner "$DIRECT" \
 diff -u "$OUT/direct.schema.sql" "$OUT/replay.schema.sql"
 
 NONDETERMINISTIC_SOURCE_TABLES=(
+  --exclude-table-data=public.additional_service_catalog
   --exclude-table-data=public.pricing_source_versions
   --exclude-table-data=public.occupational_wage_benchmarks
   --exclude-table-data=public.minimum_wage_rules
@@ -202,4 +228,20 @@ for db in "$REPLAY" "$DIRECT"; do
 done
 diff -u "$OUT/$DIRECT.pricing-semantic.json" "$OUT/$REPLAY.pricing-semantic.json"
 
-echo "PASS: all 23 guarded replay steps match direct ordered migrations; step 13 cannot record history after refusal."
+# Migration 030 seeds generated UUIDs and timestamps. Compare its catalog rows
+# by stable business fields rather than independently generated identities.
+cat >"$OUT/additional-services-semantic.sql" <<'SQL'
+select coalesce(jsonb_agg(to_jsonb(s) order by s.sku), '[]'::jsonb)
+from (
+  select sku, label, unit_type, rate, min_qty, default_frequency,
+    frequency_options, amortize_to_monthly, default_qty_source, active,
+    category, show_in_proposals, description, notes
+  from public.additional_service_catalog
+) s;
+SQL
+for db in "$REPLAY" "$DIRECT"; do
+  "${PSQL[@]}" -d "$db" -Atf "$OUT/additional-services-semantic.sql" >"$OUT/$db.additional-services-semantic.json"
+done
+diff -u "$OUT/$DIRECT.additional-services-semantic.json" "$OUT/$REPLAY.additional-services-semantic.json"
+
+echo "PASS: recorded-history/missing-schema 030 reconciliation and all 23 guarded replay steps match direct ordered migrations; no duplicate 030 history; step 13 cannot record history after refusal."

@@ -11,6 +11,8 @@ const migrationsDir = resolve(root, "supabase/migrations");
 const outputDir = resolve(process.argv[2] ?? "/private/tmp/veltex-r2-prerequisite-replay");
 const allowedOutputName = /^veltex-r2-prerequisite-replay(?:-[A-Za-z0-9._]+)?$/;
 const splitTransactionMigration = "20260913000000_commercial_quick_weekly_frequencies.sql";
+const baselineReconciliationFile = "030_special_services.sql";
+const baselineReconciliationArtifact = "00-030-recorded-history-reconciliation.sql";
 
 if (dirname(outputDir) !== "/private/tmp" || !allowedOutputName.test(basename(outputDir))) {
   throw new Error(`Refusing unsafe replay output directory: ${outputDir}`);
@@ -163,13 +165,38 @@ if (existsSync(outputDir)) {
       || !Array.isArray(parsed.steps)) {
     throw new Error(`Refusing to replace replay directory with an unexpected manifest: ${outputDir}`);
   }
-  const expectedFiles = new Set(["manifest.json", ...parsed.steps.map((step) => step.artifact)]);
+  const expectedFiles = new Set([
+    "manifest.json",
+    ...(parsed.baselineReconciliation ? [parsed.baselineReconciliation.artifact] : []),
+    ...parsed.steps.map((step) => step.artifact),
+  ]);
   if (existing.length !== expectedFiles.size || existing.some((name) => !expectedFiles.has(name))) {
     throw new Error(`Refusing to replace replay directory with unexpected or missing generated files: ${outputDir}`);
   }
 }
 rmSync(outputDir, { recursive: true, force: true });
 mkdirSync(outputDir, { recursive: true, mode: 0o700 });
+
+const baselineSource = readFileSync(resolve(migrationsDir, baselineReconciliationFile), "utf8");
+const baselineChecks = [
+  "to_regclass('public.additional_service_catalog') is not null",
+  "to_regclass('public.proposal_additional_services') is not null",
+  "(select count(*) from information_schema.columns where table_schema='public' and table_name='additional_service_catalog' and column_name in ('id','sku','label','unit_type','rate','min_qty','default_frequency','frequency_options','amortize_to_monthly','default_qty_source','active','created_at')) = 12",
+  "(select count(*) from information_schema.columns where table_schema='public' and table_name='proposal_additional_services' and column_name in ('id','proposal_id','sku','label','unit_type','rate','qty','min_qty','frequency','subtotal','monthly_amount','notes','created_by','created_at')) = 14",
+  "(select count(*) from pg_constraint where conrelid='public.additional_service_catalog'::regclass and contype in ('p','u','c')) = 4",
+  "(select count(*) from pg_constraint where conrelid='public.proposal_additional_services'::regclass and contype in ('p','f','c')) = 4",
+  "exists (select 1 from pg_attribute where attrelid='public.proposal_additional_services'::regclass and attname='subtotal' and attgenerated='s')",
+  "to_regprocedure('public.calc_monthly_amount(numeric,text,boolean)') is not null",
+  "to_regprocedure('public.apply_pas_monthly()') is not null",
+  "public.calc_monthly_amount(120,'quarterly',true) = 40",
+  "public.calc_monthly_amount(120,'quarterly',false) is null",
+  "exists (select 1 from pg_trigger where tgname='trg_pas_monthly_amount' and tgrelid='public.proposal_additional_services'::regclass and not tgisinternal)",
+  "(select count(*) from pg_class where oid in ('public.additional_service_catalog'::regclass,'public.proposal_additional_services'::regclass) and relrowsecurity) = 2",
+  "(select count(*) from pg_policies where schemaname='public' and ((tablename='additional_service_catalog' and policyname in ('admin_all_catalog','catalog_read')) or (tablename='proposal_additional_services' and policyname in ('admin_all_pas','owner_pas_select','owner_pas_insert','owner_pas_update','owner_pas_delete')))) = 7",
+  "(select count(*) from public.additional_service_catalog where sku in ('carpet_extraction','strip_wax_vct','window_wash_in_out','breakroom_fridge_micro')) = 4",
+];
+const baselineSql = `-- GENERATED FILE: do not edit or commit.\n-- Preview-only repair for recorded migration 030 with its schema absent.\n-- Isolated preview ynzkwctwlssjcsjmahey only; production is not authorized.\n-- Source SHA-256: ${sha256(baselineSource)}\n\nbegin;\n\n-- PRECONDITION: exact recorded-history/missing-schema preview fingerprint.\ndo $$\ndeclare actual_history integer;\nbegin\n  if to_regclass('public.profiles') is null\n     or to_regclass('public.proposals') is null\n     or to_regclass('supabase_migrations.schema_migrations') is null then\n    raise exception 'Baseline reconciliation refused: required baseline objects are absent';\n  end if;\n  if to_regclass('public.organizations') is not null then\n    raise exception 'Baseline reconciliation refused: R2 is already present';\n  end if;\n  if exists (select 1 from public.profiles) or exists (select 1 from public.proposals) then\n    raise exception 'Baseline reconciliation refused: preview application data is not empty';\n  end if;\n  select count(*) into actual_history from supabase_migrations.schema_migrations;\n  if actual_history <> ${baselineVersions.length}\n     or (select count(*) from supabase_migrations.schema_migrations where version = any(array[${sqlList(baselineVersions)}])) <> ${baselineVersions.length}\n     or not exists (select 1 from supabase_migrations.schema_migrations where version='030') then\n    raise exception 'Baseline reconciliation refused: expected exact 29-row history including recorded version 030';\n  end if;\n  if to_regclass('public.additional_service_catalog') is not null\n     or to_regclass('public.proposal_additional_services') is not null\n     or to_regprocedure('public.calc_monthly_amount(numeric,text,boolean)') is not null\n     or to_regprocedure('public.apply_pas_monthly()') is not null\n     or exists (select 1 from pg_trigger where tgname='trg_pas_monthly_amount')\n     or exists (select 1 from pg_policies where schemaname='public' and (tablename='additional_service_catalog' or tablename='proposal_additional_services')) then\n    raise exception 'Baseline reconciliation refused: one or more migration-030 objects already exist';\n  end if;\nend $$;\n\n-- EXACT RAW MIGRATION 030 BODY; ITS EXISTING HISTORY ROW IS NOT MODIFIED.\n${baselineSource.trim()}\n\n-- POSTCONDITION: prove the complete migration-030 final state.\ndo $$\nbegin\n  if not (${baselineChecks.join(") or not (")}) then\n    raise exception 'Baseline reconciliation postcondition failed for 030_special_services.sql';\n  end if;\n  if (select count(*) from supabase_migrations.schema_migrations where version='030') <> 1 then\n    raise exception 'Baseline reconciliation changed or duplicated migration-030 history';\n  end if;\nend $$;\n\ncommit;\n\nselect '030'::text as reconciled_recorded_version, '${sha256(baselineSource)}'::text as source_sha256;\n`;
+writeFileSync(resolve(outputDir, baselineReconciliationArtifact), baselineSql, { encoding: "utf8", mode: 0o600 });
 
 const manifestSteps = [];
 for (let index = 0; index < steps.length; index += 1) {
@@ -201,7 +228,15 @@ const manifest = {
   productionAuthorized: false,
   baselineVersions,
   canonical034: "034_free_trial_no_credit_card.sql",
-  executionRule: "Execute exactly one artifact at a time, in manifest order; stop on any error.",
+  baselineReconciliation: {
+    file: baselineReconciliationFile,
+    artifact: baselineReconciliationArtifact,
+    sourceSha256: sha256(baselineSource),
+    recordedVersion: "030",
+    insertsHistory: false,
+    postconditions: baselineChecks,
+  },
+  executionRule: "Execute baselineReconciliation first, then exactly one step artifact at a time in manifest order; stop on any error.",
   steps: manifestSteps,
 };
 writeFileSync(resolve(outputDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
