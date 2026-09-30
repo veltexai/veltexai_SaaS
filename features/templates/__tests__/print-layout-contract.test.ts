@@ -34,4 +34,19 @@ describe("proposal print layout contract", () => {
     expect(basic).toContain('templateType="basic"');
     expect(basic).toContain("serviceCategory={serviceCategory}");
   });
+
+  it("omits empty closing-page contact rows", () => {
+    const thankYou = fs.readFileSync(
+      path.join(
+        root,
+        "features/templates/components/sections/thank-you-section.tsx"
+      ),
+      "utf8"
+    );
+
+    expect(thankYou).toContain("{email ? (");
+    expect(thankYou).toContain("{phone ? (");
+    expect(thankYou).toContain("{website ? (");
+    expect(thankYou).toContain("serving your cleaning needs");
+  });
 });

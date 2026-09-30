@@ -43,8 +43,8 @@ const ThankYouSection = ({
               measurable results.
             </p>
             <p className="font-bold italic sm:text-base text-2xs">
-              We look forward to serving your Cleaning needs with the highest
-              standards of care
+              We look forward to serving your cleaning needs with the highest
+              standards of care.
             </p>
           </>
         ) : (
@@ -54,18 +54,24 @@ const ThankYouSection = ({
             results.
           </p>
         )}
-        <div className={`flex items-center gap-2 ${fontWeight} ${fontFamily}`}>
-          <EmailIcon className="sm:size-6 size-4 text-[var(--color-primary)]" />
-          <span className="sm:text-base text-3xs">Email: {email}</span>
-        </div>
-        <div className={`flex items-center gap-2 ${fontWeight} ${fontFamily}`}>
-          <PhoneIcon className="sm:size-6 size-4 text-[var(--color-primary)]" />
-          <span className="sm:text-base text-3xs">Phone: {phone}</span>
-        </div>
-        <div className={`flex items-center gap-2 ${fontWeight} ${fontFamily}`}>
-          <WebTrafficIcon className="sm:size-6 size-4 text-[var(--color-primary)]" />
-          <span className="sm:text-base text-3xs">{website}</span>
-        </div>
+        {email ? (
+          <div className={`flex items-center gap-2 ${fontWeight} ${fontFamily}`}>
+            <EmailIcon className="sm:size-6 size-4 text-[var(--color-primary)]" />
+            <span className="sm:text-base text-3xs">Email: {email}</span>
+          </div>
+        ) : null}
+        {phone ? (
+          <div className={`flex items-center gap-2 ${fontWeight} ${fontFamily}`}>
+            <PhoneIcon className="sm:size-6 size-4 text-[var(--color-primary)]" />
+            <span className="sm:text-base text-3xs">Phone: {phone}</span>
+          </div>
+        ) : null}
+        {website ? (
+          <div className={`flex items-center gap-2 ${fontWeight} ${fontFamily}`}>
+            <WebTrafficIcon className="sm:size-6 size-4 text-[var(--color-primary)]" />
+            <span className="sm:text-base text-3xs">{website}</span>
+          </div>
+        ) : null}
       </div>
     </>
   );
