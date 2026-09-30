@@ -171,6 +171,12 @@ const sqlEditorTexts = [
   'sql-editor/README.md',
 ].map((file) => fs.readFileSync(path.join(root, file), 'utf8'));
 const sqlEditorPack = sqlEditorTexts.join('\n');
+if (!/Team invitations[\s\S]*set local role service_role;[\s\S]*service role manufactured an unconsented membership[\s\S]*reset role;[\s\S]*insert into public\.proposals/.test(sqlEditorPack)) {
+  throw new Error('hosted matrix does not retain service_role around membership denial and reset before fixtures');
+}
+if (/insert into public\.proposal_tracking[\s\S]*set local role service_role;[\s\S]*Ownerless R2/.test(sqlEditorPack)) {
+  throw new Error('ownerless-organization invariant incorrectly runs as service_role');
+}
 const serviceProposalGrantMigration = fs.readFileSync(
   path.resolve(root, '../../supabase/migrations/20260925007000_r2_service_role_proposal_read.sql'),
   'utf8',

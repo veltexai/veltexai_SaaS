@@ -186,16 +186,14 @@ insert into public.proposal_tracking(
   '91000000-0000-4000-8000-000000000199',
   'online','public-r2@example.test','R2 public view','R2 public view'
 );
-set local role service_role;
 do $$ begin
   begin
     insert into public.organizations(id,name,slug,created_by)
     values ('91000000-0000-4000-8000-000000000198','Ownerless R2','ownerless-r2-test',
       '91000000-0000-4000-8000-000000000011');
-    raise exception 'service role committed an ownerless organization';
+    raise exception 'database owner committed an ownerless organization';
   exception when check_violation then null; end;
 end $$;
-reset role;
 
 -- A signed-in public recipient who is not a tenant member may resolve the
 -- tracked proposal without turning a view counter into audit/outbox noise.
