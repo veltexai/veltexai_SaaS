@@ -27,8 +27,11 @@ if (!preR2.includes(BASELINE_DIGEST) || !/profile_count <> 0/.test(preR2) || !/p
 if (!/prerequisite_count <> 52/.test(preR2)
     || !/count\(\*\) from supabase_migrations\.schema_migrations\) <> 52/.test(preR2)
     || !preR2.includes("to_regclass('public.proposal_templates') is null")
+    || !preR2.includes("to_regprocedure('public._r0_can_user_access_template_impl(uuid,uuid)') is null")
     || !preR2.includes("to_regprocedure('public.can_user_access_template(uuid,uuid)') is null")
-    || !preR2.includes('active-free-trial exception for Executive Premium')) {
+    || !preR2.includes(activeBaseline.template_access_implementation_sha256)
+    || !preR2.includes(activeBaseline.template_access_wrapper_sha256)
+    || !preR2.includes('migration-029 schema/policy/trigger/index/FK/seed contract is incomplete')) {
   throw new Error('pre-R2 fingerprint lacks exact prerequisite/template-repair guards');
 }
 if (!/to_regclass\('public\.organizations'\) is not null/.test(preR2)) {

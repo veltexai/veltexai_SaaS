@@ -8,6 +8,10 @@ import { ACTIVE_BASELINE_FILE, activeBaseline } from './preview-baseline-active.
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../..");
+const fingerprint = readFileSync(
+  resolve(here, 'sql-editor/_pre_r2_fingerprint.fragment.sql'),
+  'utf8',
+).trim();
 const migrations = [
   "20260925002000_r2_organization_tenancy.sql",
   "20260925003000_r2_claude_security_remediation.sql",
@@ -59,70 +63,7 @@ const sql = `-- GENERATED FILE: do not edit.
 -- Refuse production at the runner/UI selection layer before executing.
 begin;
 
-do $$
-declare
-  actual_profile_count bigint;
-  actual_proposal_count bigint;
-  actual_proposal_digest text;
-begin
-  if to_regclass('public.organizations') is not null then
-    raise exception 'R2 preflight failed: public.organizations already exists';
-  end if;
-  if exists (
-    select 1
-    from supabase_migrations.schema_migrations
-    where version = any (array[${migrationRecords.map(({ version }) => `'${version}'`).join(", ")}])
-  ) then
-    raise exception 'R2 preflight failed: one or more migration-history rows already exist';
-  end if;
-  if (
-    select count(*)
-    from supabase_migrations.schema_migrations
-    where version = any (array[${prerequisiteVersions.map((version) => `'${version}'`).join(", ")}])
-  ) <> ${prerequisiteVersions.length} then
-    raise exception 'R2 preflight failed: committed pre-R2 migration history is incomplete';
-  end if;
-  if (select count(*) from supabase_migrations.schema_migrations) <> ${prerequisiteVersions.length}
-     or exists (
-       select 1 from supabase_migrations.schema_migrations
-       where version <> all (array[${prerequisiteVersions.map((version) => `'${version}'`).join(", ")}])
-     ) then
-    raise exception 'R2 preflight failed: migration history is not the exact recorded 52-version prerequisite set';
-  end if;
-  if to_regclass('public.proposal_templates') is null
-     or to_regclass('public.template_tier_access') is null
-     or to_regprocedure('public.can_user_access_template(uuid,uuid)') is null then
-    raise exception 'R2 preflight failed: repaired migration-029 objects are incomplete';
-  end if;
-  if not exists (
-    select 1 from pg_proc p
-    where p.oid = 'public.can_user_access_template(uuid,uuid)'::regprocedure
-      and p.prosecdef
-      and p.proconfig @> array['search_path=public']
-  ) or position(
-    'active-free-trial exception for Executive Premium'
-    in coalesce(obj_description('public.can_user_access_template(uuid,uuid)'::regprocedure), '')
-  ) = 0 then
-    raise exception 'R2 preflight failed: post-040 template access hardening is absent';
-  end if;
-
-  select count(*) into actual_profile_count from public.profiles;
-  select count(*) into actual_proposal_count from public.proposals;
-  select encode(
-    digest(
-      coalesce(string_agg(id::text || ':' || coalesce(generated_content, ''), '|' order by id), ''),
-      'sha256'
-    ),
-    'hex'
-  ) into actual_proposal_digest
-  from public.proposals;
-
-  if actual_profile_count <> ${expectedProfileCount}
-     or actual_proposal_count <> ${expectedProposalCount}
-     or actual_proposal_digest <> '${expectedProposalDigest}' then
-    raise exception 'R2 preflight failed: database does not match recorded isolated-preview baseline';
-  end if;
-end $$;
+${fingerprint}
 
 ${bodies.map(({ name, body }, index) => {
   const { version, name: migrationName } = migrationRecords[index];

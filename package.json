@@ -14,6 +14,7 @@
     "r2:build-prerequisite-plan": "node quality/r2-hosted-verification-20260925/build-prerequisite-replay-plan.mjs",
     "r2:validate-prerequisite-plan": "node quality/r2-hosted-verification-20260925/validate-prerequisite-replay-plan.mjs",
     "r2:verify-prerequisite-plan": "bash quality/r2-hosted-verification-20260925/verify-prerequisite-replay-plan.sh",
+    "r2:verify-fresh-preview-bundles": "bash quality/r2-hosted-verification-20260925/verify-fresh-preview-bundles.sh",
     "100s:operator": "node 100X/100S/operator/cli.mjs",
     "test:100s": "jest 100X/100S/tests --runInBand"
   },

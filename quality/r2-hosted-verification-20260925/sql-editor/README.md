@@ -9,7 +9,8 @@ and those runners use `\set` / `\gset` / `\echo`.
 
 Database identity is the recorded isolated-preview fingerprint from
 `preview-baseline-ynzkwctwlssjcsjmahey-20260930.json`: the exact 52-version
-pre-R2 history, repaired migration-029/post-040 template objects, zero profiles,
+pre-R2 history, repaired migration-029 plus post-R0 implementation/wrapper,
+zero profiles,
 zero proposals, and empty proposal-content SHA-256
 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`. A pasted
 project ref is not evidence of database identity. Production project

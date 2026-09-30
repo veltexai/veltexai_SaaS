@@ -15,7 +15,7 @@ matrix, migration, or queue implementation.
 | Evidence / harness head | `99ff465` on `codex/r2-integrated-read-adapter` (includes the independently reviewed `afb679c` evidence pack and its closing fixes) |
 | Worktree | `/private/tmp/veltex-r2-integration` |
 | Bundle source SHA-256 | `164e90af1c36e807b11c2299098a408521910439c4befe8c0677617c3f76d3c9` |
-| Pre-R2 fingerprint | exact 52 prerequisite history rows; repaired migration-029/post-040 template objects; 0 profiles; 0 proposals; empty digest `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`; no `public.organizations`; no `guard_organization_membership()`; zero R2 history rows |
+| Pre-R2 fingerprint | exact 52 prerequisite history rows; complete migration-029 schema/seeds plus exact post-R0 private implementation and public wrapper; 0 profiles; 0 proposals; empty digest `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`; no `public.organizations`; no `guard_organization_membership()`; zero R2 history rows |
 
 U8 hosted wake, `pgmq`, and HMAC delivery remain **OPEN**. They are not a prerequisite claim for this packet and must not be enabled or selected here.
 

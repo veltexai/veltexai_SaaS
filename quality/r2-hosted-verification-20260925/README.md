@@ -18,7 +18,7 @@ authoritative `psql` runners `run-hosted.sh`, `run-last-owner-concurrency.sh`
 and `run-u1-benchmark.sh` were concurrently hardened to refuse upper- or
 lower-case production refs. The SQL-Editor migration bundle refuses
 unless the current database matches the active isolated-preview fingerprint
-(exact 52-version pre-R2 history, repaired migration-029/post-040 template
+(exact 52-version pre-R2 history, repaired migration-029 plus post-R0 template
 objects, 0 profiles, 0 proposals, empty digest
 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`). A pasted
 preview ref is not identity. A local JS dry-run does not prove hosted

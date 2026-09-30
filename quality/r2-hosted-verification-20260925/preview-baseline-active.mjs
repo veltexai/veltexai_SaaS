@@ -19,6 +19,8 @@ const required = {
   proposal_templates_table: 'present',
   template_tier_access_table: 'present',
   hardened_template_access_function: 'present',
+  template_access_implementation_sha256: '7c871b2d16b15e81620ed02ad786deeac3df4dc96ce15995d5d6b3f95e3b7f94',
+  template_access_wrapper_sha256: '6cc3ca802581cd4f430e1489ff8c6cb6781e8e013c592955631f226c17563428',
   r2_migration_history_rows: 0,
   production_touched: false,
 };

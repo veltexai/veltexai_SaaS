@@ -22,11 +22,13 @@ const required = [
   'sql/last-owner-setup.sql', 'sql/last-owner-cleanup.sql',
   'run-u1-benchmark.sh', 'sql/u1-membership-rls-benchmark.sql',
   'prepare-hosted-execution.sh',
+  'verify-fresh-preview-bundles.sh',
   'preview-baseline-active.mjs', ACTIVE_BASELINE_FILE, 'preview-baseline-20260926.json',
   'u8-preview-runtime-inventory-20260926.json',
   'sql-editor/README.md', 'sql-editor/00-preview-guard.sql',
   'sql-editor/_guard.fragment.sql', 'sql-editor/_pre_r2_fingerprint.fragment.sql',
   'sql-editor/_post_r2_fingerprint.fragment.sql',
+  'sql-editor/build-preview-guard.mjs',
   'sql-editor/build-sql-editor-bundle.mjs',
   'sql-editor/emit-sql-editor-checks.mjs', 'sql-editor/dry-run.mjs',
   'sql-editor/02-hosted-matrix.sql', 'sql-editor/03-last-owner-single-session.sql',
@@ -84,13 +86,8 @@ for (const marker of [
 const bundleBuilder = fs.readFileSync(path.join(root, 'build-preview-migration-bundle.mjs'), 'utf8');
 for (const marker of [
   'supabase_migrations.schema_migrations',
-  'migration-history rows already exist',
   'migration-history rows missing',
-  'database does not match recorded isolated-preview baseline',
-  'committed pre-R2 migration history is incomplete',
-  'migration history is not the exact recorded 52-version prerequisite set',
-  'repaired migration-029 objects are incomplete',
-  'post-040 template access hardening is absent',
+  "sql-editor/_pre_r2_fingerprint.fragment.sql",
   'ACTIVE_BASELINE_FILE', 'activeBaseline.proposal_content_sha256',
 ]) {
   if (!bundleBuilder.includes(marker)) throw new Error(`bundle builder missing ${marker}`);
@@ -198,8 +195,7 @@ for (const marker of [
   'iwoaaljitifloolszxlu',
   '_pre_r2_fingerprint.fragment.sql',
   'prerequisiteVersions',
-  'committed pre-R2 migration history is incomplete',
-  'migration history is not the exact recorded 52-version prerequisite set',
+  '_pre_r2_fingerprint.fragment.sql',
 ]) {
   if (!sqlEditorBundle.includes(marker)) {
     throw new Error(`SQL Editor bundle builder missing ${marker}`);
@@ -317,5 +313,20 @@ const emitCheck = spawnSync(process.execPath, [path.join(root, 'sql-editor/emit-
 });
 if (emitCheck.status !== 0) {
   throw new Error(`SQL Editor generator parity failed: ${emitCheck.stderr || emitCheck.stdout}`);
+}
+const guardCheck = spawnSync(process.execPath, [path.join(root, 'sql-editor/build-preview-guard.mjs'), '--check'], {
+  encoding: 'utf8',
+});
+if (guardCheck.status !== 0) {
+  throw new Error(`SQL Editor guard generator parity failed: ${guardCheck.stderr || guardCheck.stdout}`);
+}
+const freshVerifier = fs.readFileSync(path.join(root, 'verify-fresh-preview-bundles.sh'), 'utf8');
+for (const marker of [
+  'r2_fresh_psql', 'r2_fresh_editor', '02-hosted-matrix.sql',
+  '03-last-owner-single-session.sql', '04-u1-benchmark.sql',
+  'extra-history', 'missing-index', 'wrapper-tamper', 'seed-tamper',
+  'atomic failure retained R2 history', 'listen_addresses',
+]) {
+  if (!freshVerifier.includes(marker)) throw new Error(`fresh-preview verifier missing ${marker}`);
 }
 console.log('R2 harness static validation PASS');

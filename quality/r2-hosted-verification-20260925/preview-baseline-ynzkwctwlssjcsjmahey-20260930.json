@@ -9,6 +9,8 @@
   "proposal_templates_table": "present",
   "template_tier_access_table": "present",
   "hardened_template_access_function": "present",
+  "template_access_implementation_sha256": "7c871b2d16b15e81620ed02ad786deeac3df4dc96ce15995d5d6b3f95e3b7f94",
+  "template_access_wrapper_sha256": "6cc3ca802581cd4f430e1489ff8c6cb6781e8e013c592955631f226c17563428",
   "profile_count": 0,
   "proposal_count": 0,
   "proposal_content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
