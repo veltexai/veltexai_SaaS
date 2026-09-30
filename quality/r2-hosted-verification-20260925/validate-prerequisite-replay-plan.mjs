@@ -107,8 +107,8 @@ for (const required of [
 ]) {
   if (!baselineSql.includes(required)) throw new Error(`Baseline-030 reconciliation missing guard: ${required}`);
 }
-if (baselineSql.includes("insert into supabase_migrations.schema_migrations")) {
-  throw new Error("Baseline-030 reconciliation must not insert migration history");
+if (/\b(?:insert\s+into|update|delete\s+from)\s+supabase_migrations\.schema_migrations\b/i.test(baselineSql)) {
+  throw new Error("Baseline-030 reconciliation must not mutate migration history");
 }
 validateAssertionIdentifiers(baseline.postconditions, baselineSource, baseline.artifact);
 
@@ -126,8 +126,9 @@ function validateBaselineSafetyStructure(sql) {
     /if to_regclass\('public\.organizations'\) is not null then/,
     /if exists \(select 1 from public\.profiles\) or exists \(select 1 from public\.proposals\) then/,
     /if actual_history <> 29/,
+    /count\(\*\) from supabase_migrations\.schema_migrations where version = any\(array\[[\s\S]*?\]\)\) <> 29/,
     /not exists \(select 1 from supabase_migrations\.schema_migrations where version='030'\)/,
-    /if to_regclass\('public\.additional_service_catalog'\) is not null[\s\S]*?to_regclass\('public\.proposal_additional_services'\) is not null/,
+    /if to_regclass\('public\.additional_service_catalog'\) is not null[\s\S]*?to_regclass\('public\.proposal_additional_services'\) is not null[\s\S]*?to_regprocedure\('public\.calc_monthly_amount\(numeric,text,boolean\)'\) is not null[\s\S]*?to_regprocedure\('public\.apply_pas_monthly\(\)'\) is not null[\s\S]*?tgname='trg_pas_monthly_amount'[\s\S]*?tablename='additional_service_catalog'[\s\S]*?tablename='proposal_additional_services'/,
   ]) {
     if (!required.test(precondition)) throw new Error(`Baseline-030 executable precondition is missing or disabled: ${required}`);
   }
@@ -136,6 +137,14 @@ function validateBaselineSafetyStructure(sql) {
     /count\(\*\) from supabase_migrations\.schema_migrations where version='030'\) <> 1/,
   ]) {
     if (!required.test(postcondition)) throw new Error(`Baseline-030 executable postcondition is missing or disabled: ${required}`);
+  }
+  for (const check of baseline.postconditions) {
+    if (!postcondition.includes(check)) {
+      throw new Error(`Baseline-030 executable postcondition is missing exact assertion: ${check}`);
+    }
+  }
+  if (/\b(?:insert\s+into|update|delete\s+from)\s+supabase_migrations\.schema_migrations\b/i.test(sql)) {
+    throw new Error("Baseline-030 reconciliation contains a forbidden migration-history mutation");
   }
 }
 
@@ -157,12 +166,32 @@ for (const [needle, replacement] of [
   ["if to_regclass('public.organizations') is not null then", "if false and to_regclass('public.organizations') is not null then"],
   ["if exists (select 1 from public.profiles) or exists (select 1 from public.proposals) then", "if false then"],
   ["if actual_history <> 29", "if false and actual_history <> 29"],
+  ["or (select count(*) from supabase_migrations.schema_migrations where version = any(array[", "or (select 29 from supabase_migrations.schema_migrations where version = any(array["],
   ["or not exists (select 1 from supabase_migrations.schema_migrations where version='030') then", "or false then"],
   ["if to_regclass('public.additional_service_catalog') is not null", "if false and to_regclass('public.additional_service_catalog') is not null"],
+  ["or to_regclass('public.proposal_additional_services') is not null", "or false"],
+  ["or to_regprocedure('public.calc_monthly_amount(numeric,text,boolean)') is not null", "or false"],
+  ["or to_regprocedure('public.apply_pas_monthly()') is not null", "or false"],
+  ["or exists (select 1 from pg_trigger where tgname='trg_pas_monthly_amount')", "or false"],
+  ["or exists (select 1 from pg_policies where schemaname='public' and (tablename='additional_service_catalog' or tablename='proposal_additional_services'))", "or false"],
   ["if not (", "if false and not ("],
+  ["(select count(*) from pg_policies where schemaname='public' and ((tablename='additional_service_catalog' and policyname in ('admin_all_catalog','catalog_read')) or (tablename='proposal_additional_services' and policyname in ('admin_all_pas','owner_pas_select','owner_pas_insert','owner_pas_update','owner_pas_delete')))) = 7", "true"],
   ["if (select count(*) from supabase_migrations.schema_migrations where version='030') <> 1 then", "if false then"],
 ]) {
   assertBaselineMutationRejected(needle, replacement);
+}
+
+for (const mutation of [
+  "\nupdate supabase_migrations.schema_migrations set name='tampered' where version='030';\n",
+  "\ndelete from supabase_migrations.schema_migrations where version='030';\n",
+]) {
+  let rejected = false;
+  try {
+    validateBaselineSafetyStructure(baselineSql.replace("\ncommit;", `${mutation}\ncommit;`));
+  } catch {
+    rejected = true;
+  }
+  if (!rejected) throw new Error("Baseline-030 history-mutation fixture unexpectedly passed");
 }
 
 for (const step of manifest.steps) {

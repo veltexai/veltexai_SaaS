@@ -97,6 +97,8 @@ done <"$OUT/baseline-versions.txt"
 
 "${PSQL[@]}" -d postgres -c "create database $REPLAY template $TEMPLATE"
 "${PSQL[@]}" -d postgres -c "create database $DIRECT template $TEMPLATE"
+history030_before="$("${PSQL[@]}" -d "$TEMPLATE" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='030'")"
+[ -n "$history030_before" ] || { echo "Missing version-030 history fixture" >&2; exit 1; }
 
 # Reproduce the recorded preview mismatch: version 030 exists in history while
 # every object from its exact body is absent. Repair only the replay side; the
@@ -106,17 +108,22 @@ done <"$OUT/baseline-versions.txt"
 for db in "$REPLAY" "$DIRECT"; do
   count030="$("${PSQL[@]}" -d "$db" -Atc "select count(*) from supabase_migrations.schema_migrations where version='030'")"
   [ "$count030" = 1 ] || { echo "$db changed or duplicated version-030 history" >&2; exit 1; }
+  history030_after="$("${PSQL[@]}" -d "$db" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='030'")"
+  [ "$history030_after" = "$history030_before" ] || { echo "$db rewrote the version-030 history row" >&2; exit 1; }
 done
 
 # Once any 030 object exists, the reconciliation must refuse without changing
 # its already-recorded history row.
 "${PSQL[@]}" -d postgres -c "create database $GUARD template $REPLAY"
+guard_history030_before="$("${PSQL[@]}" -d "$GUARD" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='030'")"
 if "${PSQL[@]}" -d "$GUARD" -f "$PLAN/00-030-recorded-history-reconciliation.sql" >"$OUT/reconcile-030-refusal.log" 2>&1; then
   echo "Baseline-030 reconciliation unexpectedly accepted an already-repaired schema" >&2
   exit 1
 fi
 count030="$("${PSQL[@]}" -d "$GUARD" -Atc "select count(*) from supabase_migrations.schema_migrations where version='030'")"
 [ "$count030" = 1 ] || { echo "Refused baseline reconciliation changed version-030 history" >&2; exit 1; }
+guard_history030_after="$("${PSQL[@]}" -d "$GUARD" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='030'")"
+[ "$guard_history030_after" = "$guard_history030_before" ] || { echo "Refused baseline reconciliation rewrote the version-030 history row" >&2; exit 1; }
 "${PSQL[@]}" -d postgres -c "drop database $GUARD"
 
 node -e 'const m=require(process.argv[1]); for (const s of m.steps) console.log([s.order,s.artifact,s.file,s.version].join("\t"))' "$PLAN/manifest.json" \
