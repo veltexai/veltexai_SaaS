@@ -50,7 +50,7 @@ export const HeaderTemplate = ({
           Proposal for
         </p>
         <h1
-          className={`capitalize font-bold ${
+          className={`proposal-title capitalize font-bold ${
             template === "modern_corporate"
               ? "text-[32px] sm:text-[48px] md:text-[68px] pl-2 sm:pl-4 md:pl-8 bg-gradient-to-r from-[#001B7A] to-[#3555C7] bg-clip-text text-transparent print:bg-none print:text-[#001B7A] print:bg-clip-border"
               : "text-[36px] sm:text-[54px] md:text-[81px]"

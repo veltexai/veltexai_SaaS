@@ -37,9 +37,12 @@ export default async function PrintProposalPage({
         @page { size: A4; margin: 0; }
         html, body, .print-root { width: 210mm; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         @media print { .no-print { display: none !important; } }
-        [id^="page-"] { width: 210mm !important; height: 297mm !important; break-inside: avoid; page-break-after: auto; overflow: hidden; background: #ffffff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        [id^="page-"] { width: 210mm !important; height: 296mm !important; box-sizing: border-box; break-inside: avoid; page-break-after: auto; overflow: hidden; background: #ffffff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         #page-five { page-break-after: auto; }
         .text-5xl { font-size: 54px !important; line-height: 1.15 !important; }
+        .proposal-title { font-size: 44px !important; line-height: 1.04 !important; overflow-wrap: normal !important; word-break: normal !important; hyphens: none !important; }
+        .print-root > section { margin-top: 0 !important; margin-bottom: 0 !important; }
+        .print-root > section > [id^="page-"] { margin-top: 0 !important; margin-bottom: 0 !important; }
         [id^="page-"] * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         :root { --color-primary: ${colors.primary}; --color-secondary: ${colors.secondary}; --color-accent: ${colors.accent}; }
       `}</style>
