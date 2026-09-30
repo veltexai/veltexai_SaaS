@@ -784,3 +784,51 @@ After any material action, append or revise the relevant section with:
   PDF, repeat token/unpaid/cross-proposal/counter checks and finish responsive
   validation. Production `iwoaaljitifloolszxlu` and the separate pilot remain
   untouched and separately gated.
+
+### R2 canonical tracked-PDF remediation — ISOLATED PREVIEW PASS / RESPONSIVE EVIDENCE OPEN (2026-09-30 Pacific)
+
+- **CANDIDATE COMMITTED AND PUSHED:** exact repair commit `0e9a991` is on
+  `codex/r2-fresh-preview-guard`. Local and disposable-database evidence from
+  the preceding entry remains green.
+- **MIGRATION 09000 APPLIED TO ISOLATED PREVIEW ONLY:** guarded SQL execution on
+  Supabase preview `ynzkwctwlssjcsjmahey` returned evidence key
+  `r2_tracked_print_projection`, exact version `20260925009000`, source SHA-256
+  `a17b482279c580b8709b0d131d19a0e17cee37a2275447b9ca1c18c23f396569` and
+  migration-history count `60`. Production `iwoaaljitifloolszxlu` was not
+  queried or changed.
+- **BRANCH-ONLY APP ISOLATION CORRECTED:** the first automatic Vercel build did
+  not inherit the fresh-preview database variables because the earlier four
+  overrides were scoped only to `codex/r0-privilege-hardening`. Four new
+  overrides now target only `codex/r2-fresh-preview-guard`: the fresh-preview
+  URL, its legacy browser-compatible anon key, an intentionally inert
+  service-role placeholder and the branch preview URL. Production was not
+  selected. Corrected preview deployment `dpl_8bVA36LwVr3uaZbEu8sCdZ4BTgaY` is
+  Ready and uses commit `0e9a991`.
+- **HOSTED CUSTOMER LINK PASS:** the known token rendered proposal
+  `741ef971-06bd-405e-b792-c86056c56f06` from the fresh preview with client,
+  address, service type, facility size and frequency. A random UUID returned
+  404. The fixture was independently confirmed in the preview database; before
+  this run it had download count `1` and view count `3`.
+- **VERCEL-PROTECTION FAILURE MODE PRESERVED:** with Standard Vercel
+  Authentication enabled, the server-side Chromium renderer received Vercel's
+  login page and produced a one-page 147,590-byte PDF titled `Login – Vercel`.
+  This was not accepted as product evidence. Founder authorized a short
+  preview-only validation window; Vercel Authentication was disabled, the real
+  PDF was generated and inspected, and Standard Protection was immediately
+  restored. Production custom domains were never included in this setting.
+- **GENUINE PDF VISUAL PASS:** the accepted tracked download
+  `r2_legacy_compatibility_draft___reopened (5).pdf` is 2,785,456 bytes and two
+  A4 pages. Both pages were rendered to PNG and genuinely inspected: page 1 is
+  the full blue branded cover with complete title, client, address and date;
+  page 2 contains the full facility image and complete thank-you copy. No
+  clipping, overlap, black glyphs, Vercel login screen or legacy near-empty
+  output was present.
+- **PROTECTION RESTORED / PRODUCTION UNTOUCHED:** `Require Log In` is checked
+  again with Standard Protection and the saved control is disabled, confirming
+  restoration. No production deployment, database mutation, email, campaign
+  change or pilot change occurred.
+- **RESPONSIVE EVIDENCE REMAINS OPEN:** both available browser viewport controls
+  accepted a 390x844 request but `window.innerWidth` and document width still
+  reported 1280px. The resulting cropped capture is not valid mobile-breakpoint
+  evidence, so no responsive PASS or FAIL is claimed. A real 390px device or a
+  working browser emulation surface remains required.
