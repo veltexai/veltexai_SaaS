@@ -212,10 +212,14 @@ const templateChecks = [
   "exists (select 1 from information_schema.columns where table_schema='public' and table_name='proposals' and column_name='template_id' and data_type='uuid')",
   "exists (select 1 from information_schema.columns where table_schema='public' and table_name='user_branding_settings' and column_name='template_version' and data_type='integer' and column_default='1')",
   "(select count(*) from pg_class where oid in ('public.proposal_templates'::regclass,'public.template_tier_access'::regclass,'public.user_template_preferences'::regclass) and relrowsecurity) = 3",
-  "(select count(*) from pg_indexes where schemaname='public' and indexname in ('idx_proposal_templates_type','idx_proposal_templates_active','idx_template_tier_access_tier','idx_template_tier_access_template','idx_user_template_preferences_user','idx_proposals_template_id')) = 6",
+  "(select count(*) from pg_indexes where schemaname='public' and ((tablename='proposal_templates' and indexname in ('idx_proposal_templates_type','idx_proposal_templates_active')) or (tablename='template_tier_access' and indexname in ('idx_template_tier_access_tier','idx_template_tier_access_template')) or (tablename='user_template_preferences' and indexname='idx_user_template_preferences_user') or (tablename='proposals' and indexname='idx_proposals_template_id'))) = 6",
   "(select count(*) from pg_constraint where conrelid in ('public.proposal_templates'::regclass,'public.template_tier_access'::regclass,'public.user_template_preferences'::regclass) and contype in ('p','u')) = 5",
   "(select count(*) from pg_constraint where conname in ('proposal_templates_template_type_check','template_tier_access_subscription_tier_check')) = 2",
-  "(select count(*) from pg_constraint where conname in ('template_tier_access_template_id_fkey','user_template_preferences_user_id_fkey','user_template_preferences_preferred_template_id_fkey','proposals_template_id_fkey') and contype='f' and confdeltype in ('c','n')) = 4",
+  "exists (select 1 from pg_constraint where conname='template_tier_access_template_id_fkey' and conrelid='public.template_tier_access'::regclass and confrelid='public.proposal_templates'::regclass and confdeltype='c')",
+  "exists (select 1 from pg_constraint where conname='user_template_preferences_user_id_fkey' and conrelid='public.user_template_preferences'::regclass and confrelid='public.profiles'::regclass and confdeltype='c')",
+  "exists (select 1 from pg_constraint where conname='user_template_preferences_preferred_template_id_fkey' and conrelid='public.user_template_preferences'::regclass and confrelid='public.proposal_templates'::regclass and confdeltype='n')",
+  "exists (select 1 from pg_constraint where conname='proposals_template_id_fkey' and conrelid='public.proposals'::regclass and confrelid='public.proposal_templates'::regclass and confdeltype='n')",
+  "(select count(*) from information_schema.columns where table_schema='public' and ((table_name='proposal_templates' and column_name in ('id','template_config','is_active','sort_order','created_at','updated_at')) or (table_name='template_tier_access' and column_name in ('id','created_at')) or (table_name='user_template_preferences' and column_name in ('id','created_at','updated_at')) or (table_name='user_branding_settings' and column_name='template_version')) and column_default is not null) = 12",
   "(select count(*) from pg_policies where schemaname='public' and ((tablename='proposal_templates' and policyname in ('Users can view active templates','Admins can manage all templates')) or (tablename='template_tier_access' and policyname in ('Users can view template tier access','Admins can manage template tier access')) or (tablename='user_template_preferences' and policyname in ('Users can view own template preferences','Users can insert own template preferences','Users can update own template preferences','Users can delete own template preferences','Admins can view all template preferences')))) = 9",
   "to_regprocedure('public.get_user_accessible_templates(uuid)') is not null",
   "to_regprocedure('public.can_user_access_template(uuid,uuid)') is not null",
@@ -223,8 +227,8 @@ const templateChecks = [
   "has_function_privilege('authenticated','public.get_user_accessible_templates(uuid)','EXECUTE')",
   "has_function_privilege('authenticated','public.can_user_access_template(uuid,uuid)','EXECUTE')",
   "not exists (select 1 from pg_proc p cross join lateral aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) acl where p.oid='public.can_user_access_template(uuid,uuid)'::regprocedure and acl.grantee=0 and acl.privilege_type='EXECUTE')",
-  "exists (select 1 from pg_trigger where tgname='proposal_templates_updated_at' and tgrelid='public.proposal_templates'::regclass and not tgisinternal)",
-  "exists (select 1 from pg_trigger where tgname='user_template_preferences_updated_at' and tgrelid='public.user_template_preferences'::regclass and not tgisinternal)",
+  "exists (select 1 from pg_trigger where tgname='proposal_templates_updated_at' and tgrelid='public.proposal_templates'::regclass and tgfoid='public.handle_updated_at()'::regprocedure and not tgisinternal)",
+  "exists (select 1 from pg_trigger where tgname='user_template_preferences_updated_at' and tgrelid='public.user_template_preferences'::regclass and tgfoid='public.handle_updated_at()'::regprocedure and not tgisinternal)",
   "(select count(*) from public.proposal_templates where name in ('Basic Professional','Executive Premium','Modern Corporate','Luxury Elite')) = 4",
   "(select count(*) from public.template_tier_access tta join public.proposal_templates pt on pt.id=tta.template_id where (pt.name='Basic Professional' and tta.subscription_tier in ('starter','professional','enterprise')) or (pt.name='Executive Premium' and tta.subscription_tier in ('professional','enterprise')) or (pt.name in ('Modern Corporate','Luxury Elite') and tta.subscription_tier='enterprise')) = 7",
   "has_table_privilege('authenticated','public.proposal_templates','SELECT,INSERT,UPDATE,DELETE')",
@@ -274,8 +278,10 @@ begin
      or exists (select 1 from pg_policies where schemaname='public' and tablename in ('proposal_templates','template_tier_access','user_template_preferences')) then
     raise exception 'Template reconciliation refused: one or more migration-029 objects already exist';
   end if;
-  if to_regprocedure('public.can_user_access_template(uuid,uuid)') is null
-     or position('active-free-trial exception for Executive Premium' in coalesce(obj_description('public.can_user_access_template(uuid,uuid)'::regprocedure),'')) = 0
+  if to_regprocedure('public.can_user_access_template(uuid,uuid)') is null then
+    raise exception 'Template reconciliation refused: post-040 function is absent';
+  end if;
+  if position('active-free-trial exception for Executive Premium' in coalesce(obj_description('public.can_user_access_template(uuid,uuid)'::regprocedure),'')) = 0
      or not exists (select 1 from pg_proc p where p.oid='public.can_user_access_template(uuid,uuid)'::regprocedure and p.prosecdef and p.proconfig @> array['search_path=public']) then
     raise exception 'Template reconciliation refused: exact post-040 hardening is absent';
   end if;

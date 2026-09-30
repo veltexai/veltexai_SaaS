@@ -112,7 +112,7 @@ for (const required of [
 ]) {
   if (!baselineSql.includes(required)) throw new Error(`Baseline-030 reconciliation missing guard: ${required}`);
 }
-if (/\b(?:insert\s+into|update|delete\s+from)\s+supabase_migrations\.schema_migrations\b/i.test(baselineSql)) {
+if (/\b(?:insert\s+into|update|delete\s+from|truncate(?:\s+table)?)\s+supabase_migrations\.schema_migrations\b/i.test(baselineSql)) {
   throw new Error("Baseline-030 reconciliation must not mutate migration history");
 }
 validateAssertionIdentifiers(baseline.postconditions, baselineSource, baseline.artifact);
@@ -148,7 +148,7 @@ function validateBaselineSafetyStructure(sql) {
       throw new Error(`Baseline-030 executable postcondition is missing exact assertion: ${check}`);
     }
   }
-  if (/\b(?:insert\s+into|update|delete\s+from)\s+supabase_migrations\.schema_migrations\b/i.test(sql)) {
+  if (/\b(?:insert\s+into|update|delete\s+from|truncate(?:\s+table)?)\s+supabase_migrations\.schema_migrations\b/i.test(sql)) {
     throw new Error("Baseline-030 reconciliation contains a forbidden migration-history mutation");
   }
 }
@@ -200,6 +200,20 @@ for (const mutation of [
 }
 
 const template = manifest.templateReconciliation;
+const requiredTemplateAssertions = [
+  "idx_proposal_templates_type", "idx_proposal_templates_active", "idx_template_tier_access_tier",
+  "idx_template_tier_access_template", "idx_user_template_preferences_user", "idx_proposals_template_id",
+  "template_tier_access_template_id_fkey", "user_template_preferences_user_id_fkey",
+  "user_template_preferences_preferred_template_id_fkey", "proposals_template_id_fkey",
+  "column_default is not null", "proposal_templates_updated_at", "user_template_preferences_updated_at",
+  "tgfoid='public.handle_updated_at()'::regprocedure", "Admins can manage template tier access",
+  "Admins can view all template preferences", "has_table_privilege('authenticated','public.proposal_templates'",
+];
+for (const assertion of requiredTemplateAssertions) {
+  if (!template.postconditions.some((check) => check.includes(assertion))) {
+    throw new Error(`Template manifest dropped required independent assertion: ${assertion}`);
+  }
+}
 const templateSql = readFileSync(resolve(outputDir, template.artifact), "utf8");
 const template029Source = readFileSync(resolve("supabase/migrations", template.files[0]), "utf8");
 const template040Source = readFileSync(resolve("supabase/migrations", template.files[1]), "utf8");
@@ -222,7 +236,17 @@ if (template029Start < template029Marker.length
 if (/\b(?:insert\s+into|update|delete\s+from)\s+supabase_migrations\.schema_migrations\b/i.test(templateSql)) {
   throw new Error("Template reconciliation must not mutate migration history");
 }
-validateAssertionIdentifiers(template.postconditions, `${template029Source}\n${template040Source}`, template.artifact);
+const generatedConstraintIdentifiers = [
+  "template_tier_access_template_id_fkey",
+  "user_template_preferences_user_id_fkey",
+  "user_template_preferences_preferred_template_id_fkey",
+  "proposals_template_id_fkey",
+];
+validateAssertionIdentifiers(
+  template.postconditions,
+  `${template029Source}\n${template040Source}\n${generatedConstraintIdentifiers.join("\n")}`,
+  template.artifact,
+);
 
 function validateTemplateSafetyStructure(sql) {
   const preconditionStart = sql.indexOf("-- PRECONDITION: exact post-step-11 recorded-history/missing-template fingerprint.");
@@ -267,7 +291,7 @@ function validateTemplateSafetyStructure(sql) {
   for (const check of template.postconditions) {
     if (!postcondition.includes(`if not (${check}) then`)) throw new Error(`Template reconciliation missing exact executable assertion: ${check}`);
   }
-  if (/\b(?:insert\s+into|update|delete\s+from)\s+supabase_migrations\.schema_migrations\b/i.test(sql)) {
+  if (/\b(?:insert\s+into|update|delete\s+from|truncate(?:\s+table)?)\s+supabase_migrations\.schema_migrations\b/i.test(sql)) {
     throw new Error("Template reconciliation contains a forbidden migration-history mutation");
   }
 }
@@ -301,6 +325,7 @@ for (const [needle, replacement] of [
 for (const mutation of [
   "\nupdate supabase_migrations.schema_migrations set name='tampered' where version='029';\n",
   "\ndelete from supabase_migrations.schema_migrations where version='040';\n",
+  "\ntruncate table supabase_migrations.schema_migrations;\n",
 ]) {
   let rejected = false;
   try { validateTemplateSafetyStructure(templateSql.replace("\ncommit;", `${mutation}\ncommit;`)); } catch { rejected = true; }

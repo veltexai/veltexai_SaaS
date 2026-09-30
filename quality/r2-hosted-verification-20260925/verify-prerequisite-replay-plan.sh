@@ -188,6 +188,18 @@ SQL
       }
     done
 
+    # Compare immediately after the repair, before later migrations could hide
+    # an intermediate mismatch. Keep comments and grants in this comparison.
+    pg_dump --schema-only --no-owner "$REPLAY" \
+      | sed '/^\\restrict /d;/^\\unrestrict /d' >"$OUT/replay-after-template-repair.schema.sql"
+    pg_dump --schema-only --no-owner "$DIRECT" \
+      | sed '/^\\restrict /d;/^\\unrestrict /d' >"$OUT/direct-after-template-repair.schema.sql"
+    diff -u "$OUT/direct-after-template-repair.schema.sql" "$OUT/replay-after-template-repair.schema.sql"
+    template_semantic_sql="select jsonb_build_object('templates',(select jsonb_agg(jsonb_build_object('name',name,'description',description,'template_type',template_type,'preview_image_url',preview_image_url,'template_config',template_config,'is_active',is_active,'sort_order',sort_order) order by sort_order,name) from public.proposal_templates),'tier_access',(select jsonb_agg(jsonb_build_object('template_name',pt.name,'subscription_tier',tta.subscription_tier) order by pt.name,tta.subscription_tier) from public.template_tier_access tta join public.proposal_templates pt on pt.id=tta.template_id));"
+    "${PSQL[@]}" -d "$REPLAY" -Atc "$template_semantic_sql" >"$OUT/replay-after-template-repair.semantic.json"
+    "${PSQL[@]}" -d "$DIRECT" -Atc "$template_semantic_sql" >"$OUT/direct-after-template-repair.semantic.json"
+    diff -u "$OUT/direct-after-template-repair.semantic.json" "$OUT/replay-after-template-repair.semantic.json"
+
     # A second run must refuse and preserve both recorded rows.
     "${PSQL[@]}" -d postgres -c "create database $GUARD template $REPLAY"
     guard029_before="$("${PSQL[@]}" -d "$GUARD" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='029'")"
