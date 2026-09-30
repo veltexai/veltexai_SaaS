@@ -113,7 +113,7 @@ async function getColors(supabase: PrintDataClient, proposal: any) {
   };
 }
 
-function getPages(proposal: any) {
+export function getPrintPages(proposal: any) {
   if (
     !proposal?.generated_content ||
     typeof proposal.generated_content !== 'string'
@@ -491,7 +491,7 @@ export async function getPrintPageData(supabase: PrintDataClient, id: string) {
     await Promise.all([
       getBranding(supabase, proposal),
       getColors(supabase, proposal),
-      getPages(proposal),
+      getPrintPages(proposal),
       getExtrasRows(supabase, proposal),
       getShowPoweredBy(supabase, proposal),
     ]);

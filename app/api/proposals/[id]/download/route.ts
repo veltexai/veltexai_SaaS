@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateProposalPDF } from "@/features/proposals/services/pdf/generator";
+import { generateTrackedProposalPDFWithPlaywright } from "@/features/proposals/services/pdf/playwright-generator";
 import { getUser } from "@/features/auth/services/get-user";
 import { canUsePaidProposalActions } from "@/lib/billing/proposal-entitlements";
 
@@ -65,7 +66,9 @@ export async function GET(
     }
 
     // Generate PDF
-    const pdfBuffer = await generateProposalPDF(proposal);
+    const pdfBuffer = trackingId
+      ? await generateTrackedProposalPDFWithPlaywright(id, trackingId)
+      : await generateProposalPDF(proposal);
 
     // Track download if tracking ID is provided
     if (trackingId) {

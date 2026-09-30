@@ -748,3 +748,39 @@ After any material action, append or revise the relevant section with:
 - **RESPONSIVE STILL OPEN:** the in-app viewport override did not alter the
   observed 1280px viewport; no mobile PASS is claimed. Production and the 100D
   pilot remained untouched.
+
+### R2 canonical tracked-PDF remediation — LOCAL PASS / PREVIEW PENDING (2026-09-30 Pacific)
+
+- **ROOT CAUSE CORRECTED LOCALLY:** tracked downloads no longer use the legacy
+  jsPDF renderer that produced the nearly empty one-page file. The token-bound
+  route now renders through the same shared Chromium document/template system
+  used by authenticated exports. The tracking token stays out of the URL and is
+  carried only in an ephemeral, path-scoped, HttpOnly, SameSite=Strict cookie.
+- **CUSTOMER-SAFE PRESENTATION RPC ADDED:** transactional migration
+  `20260925009000_r2_tracked_print_projection.sql` returns only renderer-safe
+  proposal, template, organization branding/contact, color, date/location and
+  same-proposal add-on display fields. It excludes raw cost, wage, margin,
+  overhead, access-note, estimate-snapshot and service-profile inputs. Billing,
+  branding and watermark identity resolve through the organization owner, not
+  an estimator who happened to create the proposal. Colors are restricted to
+  six-digit hex values before entering Chromium styles.
+- **SECURITY/COUNTER CONTRACT PRESERVED:** the print page independently checks
+  the token projection, proposal-id binding and paid entitlement without a
+  service-role client. Download tracking remains after successful PDF
+  generation, so failed renders do not increment the counter.
+- **LOCAL GATES PASS:** 83 suites / 703 tests / five snapshots and TypeScript
+  pass; migration-chain validation reports 60 unique executable versions; R2
+  static harness validation and `git diff --check` pass. A fresh disposable
+  PostgreSQL 16 run applied all 60 migrations, passed the owner matrix, C7–C12
+  token/projection checks, full CHECK_DEFINERS/H1, injection refusal tests and
+  40-way concurrency. The synthetic fixture portability correction is confined
+  to the disposable test harness and does not weaken a production migration.
+- **INDEPENDENT REVIEW — PASS:** two read-only reviewers verified the final
+  security boundary and canonical-render parity with no remaining blocking
+  finding.
+- **NEXT ACTION / STILL NOT HOSTED:** commit the candidate, then apply migration
+  `09000` and deploy the application only to isolated Supabase preview
+  `ynzkwctwlssjcsjmahey`. Re-download and visually inspect the complete tracked
+  PDF, repeat token/unpaid/cross-proposal/counter checks and finish responsive
+  validation. Production `iwoaaljitifloolszxlu` and the separate pilot remain
+  untouched and separately gated.

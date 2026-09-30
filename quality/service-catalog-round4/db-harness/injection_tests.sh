@@ -19,7 +19,7 @@ fi
 R1="$SRC/20260922000000_service_catalog_release_1.sql"; R3="$SRC/20260922010000_catalog_remediation.sql"
 P() { psql -X -q -v ON_ERROR_STOP=1 "$@"; }
 fresh() { P -d postgres -c "drop database if exists t_$1" -c "create database t_$1 template ${DB}_base_tpl"; P -d "t_$1" -f "$R1" >/dev/null; }
-state() { psql -X -At -d "t_$1" -c "select count(*) from pg_policy where polname='catalog_owner_guard'" -c "select count(*) from service_catalog_versions where version='2026-09-22.2'" | paste -sd' '; }
+state() { psql -X -At -d "t_$1" -c "select count(*) from pg_policy where polname='catalog_owner_guard'" -c "select count(*) from service_catalog_versions where version='2026-09-22.2'" | paste -s -d ' ' -; }
 fail=0
 fresh inject; P -d t_inject -c "create policy leak on public.proposals for select to authenticated using (true)"
 if P -d t_inject -f "$R3" >/dev/null 2>&1; then echo "inject: FAIL (migration applied despite permissive policy)"; fail=1

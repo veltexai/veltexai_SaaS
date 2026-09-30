@@ -1,7 +1,11 @@
-import { generateProposalPDFWithPlaywright } from '@/features/proposals/services/pdf/playwright-generator';
-const addCookies = jest.fn(), pdf = jest.fn(), close = jest.fn();
+import {
+  generateProposalPDFWithPlaywright,
+  generateTrackedProposalPDFWithPlaywright,
+  TRACKED_PRINT_COOKIE,
+} from '@/features/proposals/services/pdf/playwright-generator';
+const addCookies = jest.fn(), pdf = jest.fn(), close = jest.fn(), goto = jest.fn();
 const mockLaunch = jest.fn(async () => ({ close, newPage: async () => ({
-  context: () => ({ addCookies }), goto: jest.fn(), emulateMedia: jest.fn(),
+  context: () => ({ addCookies }), goto, emulateMedia: jest.fn(),
   getByText: () => ({ count: async () => denied ? 1 : 0 }), pdf,
 }) }));
 let denied = false;
@@ -31,4 +35,22 @@ it('uses the configured local Chrome executable for attachment generation', asyn
     if (previous === undefined) delete process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
     else process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = previous;
   }
+});
+
+it('keeps tracked tokens out of the URL and inside a path-scoped secure cookie', async () => {
+  await generateTrackedProposalPDFWithPlaywright('proposal-id', 'tracking-token-value');
+  expect(addCookies).toHaveBeenCalledWith([
+    expect.objectContaining({
+      name: TRACKED_PRINT_COOKIE,
+      value: 'tracking-token-value',
+      path: '/print/tracked/proposal-id',
+      httpOnly: true,
+      sameSite: 'Strict',
+    }),
+  ]);
+  expect(goto).toHaveBeenCalledWith(
+    expect.stringContaining('/print/tracked/proposal-id'),
+    { waitUntil: 'networkidle' },
+  );
+  expect(goto.mock.calls[0][0]).not.toContain('tracking-token-value');
 });

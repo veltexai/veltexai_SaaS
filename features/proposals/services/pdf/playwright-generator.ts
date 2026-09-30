@@ -1,9 +1,20 @@
-export async function generateProposalPDFWithPlaywright(
-  id: string,
-  sessionCookies: Array<{ name: string; value: string }> = [],
+export const TRACKED_PRINT_COOKIE = 'veltex_tracked_print_token';
+
+type PrintCookie = {
+  name: string;
+  value: string;
+  path?: string;
+  httpOnly?: boolean;
+  secure?: boolean;
+  sameSite?: 'Strict' | 'Lax' | 'None';
+};
+
+async function generatePdfAtPath(
+  path: string,
+  cookies: PrintCookie[],
 ): Promise<Buffer> {
   const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const url = `${base}/print/proposals/${id}`;
+  const url = `${base}${path}`;
 
   let browser: any;
   try {
@@ -28,11 +39,19 @@ export async function generateProposalPDFWithPlaywright(
 
     const page = await browser.newPage();
     const target = new URL(base);
-    if (sessionCookies.length) await page.context().addCookies(sessionCookies.map(cookie => ({
-      ...cookie, domain: target.hostname, path: '/', secure: target.protocol === 'https:', httpOnly: true, sameSite: 'Lax' as const,
+    if (cookies.length) await page.context().addCookies(cookies.map(cookie => ({
+      ...cookie,
+      domain: target.hostname,
+      path: cookie.path ?? '/',
+      secure: cookie.secure ?? target.protocol === 'https:',
+      httpOnly: cookie.httpOnly ?? true,
+      sameSite: cookie.sameSite ?? 'Lax' as const,
     })));
     await page.goto(url, { waitUntil: 'networkidle' });
-    if (await page.getByText('Not authorized', { exact: true }).count() || await page.getByText('Proposal not found', { exact: true }).count()) {
+    if (
+      await page.getByText('Not authorized', { exact: true }).count() ||
+      await page.getByText('Proposal not found', { exact: true }).count()
+    ) {
       throw new Error('Print session could not access the proposal');
     }
 
@@ -57,4 +76,26 @@ export async function generateProposalPDFWithPlaywright(
   } finally {
     if (browser) await browser.close();
   }
+}
+
+export async function generateProposalPDFWithPlaywright(
+  id: string,
+  sessionCookies: Array<{ name: string; value: string }> = [],
+): Promise<Buffer> {
+  return generatePdfAtPath(`/print/proposals/${id}`, sessionCookies);
+}
+
+export async function generateTrackedProposalPDFWithPlaywright(
+  id: string,
+  trackingToken: string,
+): Promise<Buffer> {
+  return generatePdfAtPath(`/print/tracked/${id}`, [
+    {
+      name: TRACKED_PRINT_COOKIE,
+      value: trackingToken,
+      path: `/print/tracked/${id}`,
+      httpOnly: true,
+      sameSite: 'Strict',
+    },
+  ]);
 }

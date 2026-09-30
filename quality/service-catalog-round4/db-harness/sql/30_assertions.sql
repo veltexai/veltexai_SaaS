@@ -76,6 +76,23 @@ do $$ declare j jsonb; begin
 end $$;
 rollback;
 
+-- C2. Canonical tracked-print projection: token-bound, presentation-complete,
+-- and free of private estimating or creator-profile fields.
+begin; set local role anon;
+do $$ declare j jsonb; begin
+  if public.read_tracked_proposal_print('short') is not null then raise exception 'C7 short print token resolved'; end if;
+  if public.read_tracked_proposal_print('unknown-synthetic-token-000000') is not null then raise exception 'C8 unknown print token resolved'; end if;
+  j := public.read_tracked_proposal_print(current_setting('h.token'));
+  if j is null then raise exception 'C9 valid print token did not resolve'; end if;
+  if not ((j->'proposal') ?& array['template','company_profiles','additional_services','facility_details','service_specific_data','global_inputs'])
+    then raise exception 'C10 print presentation projection incomplete'; end if;
+  if (j->'proposal') ?| array['client_email','user_id','contact_phone','pricing_breakdown']
+    then raise exception 'C11 private print key present'; end if;
+  if j::text ~ '4821|Lockbox|31\.25|pat@example\.test|owner@example\.test|"cost"|estimateSnapshot|catalogJob|assumptions|labor_rate|margin|overhead'
+    then raise exception 'C12 sentinel leaked in print payload: %', j::text; end if;
+end $$;
+rollback;
+
 -- D. Second authenticated user: no cross-owner reach
 begin; set local role authenticated; select set_config('request.jwt.claim.sub', current_setting('h.other'), true);
 do $$ declare n int; begin
@@ -185,7 +202,8 @@ rollback;
 begin; set local role service_role;
 do $$ begin
  if not exists (select 1 from public.proposals where id=current_setting('h.proposal')::uuid) then raise exception 'G7 service role cannot read fixture'; end if;
- if not exists (select 1 from public.proposal_tracking where proposal_id=current_setting('h.proposal')::uuid) then raise exception 'G8 service role cannot read tracking'; end if;
+ begin perform 1 from public.proposal_tracking; raise exception 'G8 service role retained raw tracking access';
+ exception when insufficient_privilege then null; end;
  perform * from public.get_proposal_tracking_stats(current_setting('h.proposal')::uuid);
 end $$;
 rollback;
@@ -198,6 +216,7 @@ do $$ declare bad text; begin
   where n.nspname='public' and p.prosecdef and p.prorettype <> 'trigger'::regtype
     and (has_function_privilege('anon',p.oid,'execute') or has_function_privilege('authenticated',p.oid,'execute'))
     and p.oid::regprocedure::text not in ('read_tracked_proposal(text)',
+      'read_tracked_proposal_print(text)',
       'record_tracked_view(text)','record_tracking_metric(text,text,integer)',
       -- Token-bound public delivery functions resolve an unguessable token,
       -- reject short/unknown tokens and never accept a caller-supplied row id.

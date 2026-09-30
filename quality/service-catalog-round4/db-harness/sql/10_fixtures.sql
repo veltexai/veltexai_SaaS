@@ -2,8 +2,15 @@
 -- proposal with planted sentinels (access "Lockbox 4821", wage-derived labor_rate 31.25, client email
 -- pat@example.test, cost snapshot) and two tracking tokens (UUID and legacy track_<ms>_<rand> format).
 -- All values are fictitious; .test/.example domains only.
+-- The disposable cluster is initialized under the local macOS account, so the
+-- SECURITY DEFINER signup function is locally owned by that account rather
+-- than Supabase's `postgres` owner. Disable only the entitlement trigger while
+-- installing these synthetic fixtures; production migrations and guards are
+-- unchanged, and all other profile/bootstrap triggers continue to execute.
+alter table public.profiles disable trigger profiles_protect_entitlements;
 insert into auth.users(id,email) values ('11111111-1111-4111-8111-111111111111','owner@example.test'),('22222222-2222-4222-8222-222222222222','other@example.test');
 update public.profiles set subscription_status='active' where id in ('11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222');
+alter table public.profiles enable trigger profiles_protect_entitlements;
 insert into public.company_profiles(user_id,organization_id,company_name)
 select '11111111-1111-4111-8111-111111111111', active_organization_id, 'Keystone Cleaning'
 from public.profiles where id='11111111-1111-4111-8111-111111111111';

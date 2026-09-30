@@ -1,7 +1,5 @@
-import { CatalogDocument } from '@/features/service-catalog/components/catalog-document';
-import { isCatalogProposal } from '@/features/service-catalog/proposal';
 import { getPrintPageData } from '@/features/templates/services/print-data-service';
-import { PrintTemplateSwitcher } from '@/features/templates/components/print-template-switcher';
+import { CanonicalPrintDocument } from '@/features/templates/components/canonical-print-document';
 import { createClient } from '@/lib/supabase/server';
 import { canUsePaidProposalActions } from '@/lib/billing/proposal-entitlements';
 
@@ -26,39 +24,14 @@ export default async function PrintProposalPage({
     return <div>Proposal not found</div>;
   }
 
-  if (isCatalogProposal(proposal)) return <div className="bg-white">
-    <style>{`@page { size: A4; margin: 16mm; } html, body { margin: 0; }`}</style>
-    <CatalogDocument content={proposal.generated_content ?? ''} companyName={branding?.name} branding={branding} showPoweredBy={showPoweredBy} />
-  </div>;
-
   return (
-    <div className="bg-white print-root">
-      <style>{`
-        @page { size: A4; margin: 0; }
-        html, body, .print-root { width: 210mm; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        @media print { .no-print { display: none !important; } }
-        [id^="page-"] { width: 210mm !important; height: 296mm !important; box-sizing: border-box; break-inside: avoid; page-break-after: auto; overflow: hidden; background: #ffffff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        #page-five { page-break-after: auto; }
-        .text-5xl { font-size: 54px !important; line-height: 1.15 !important; }
-        .proposal-title { font-size: 44px !important; line-height: 1.04 !important; overflow-wrap: normal !important; word-break: normal !important; hyphens: none !important; }
-        .print-root > section { margin-top: 0 !important; margin-bottom: 0 !important; }
-        .print-root > section > [id^="page-"] { margin-top: 0 !important; margin-bottom: 0 !important; }
-        [id^="page-"] * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        :root { --color-primary: ${colors.primary}; --color-secondary: ${colors.secondary}; --color-accent: ${colors.accent}; }
-      `}</style>
-      <PrintTemplateSwitcher
-        proposal={proposal as any}
-        branding={branding as any}
-        pages={pages}
-        print
-        extrasRows={extrasRows}
-        showPoweredBy={showPoweredBy}
-      />
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `(function(){function check(){var el=document.querySelector('[data-extras-ready="true"]'); if(el){ window.__EXTRAS_READY__=true; } else { setTimeout(check,100);} } check();})();`,
-        }}
-      />
-    </div>
+    <CanonicalPrintDocument
+      proposal={proposal}
+      branding={branding}
+      colors={colors}
+      pages={pages}
+      extrasRows={extrasRows}
+      showPoweredBy={showPoweredBy}
+    />
   );
 }
