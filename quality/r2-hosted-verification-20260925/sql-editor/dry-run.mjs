@@ -2,10 +2,11 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { activeBaseline } from '../preview-baseline-active.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const PRODUCTION_REF = 'iwoaaljitifloolszxlu';
-const BASELINE_DIGEST = 'b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f';
+const BASELINE_DIGEST = activeBaseline.proposal_content_sha256;
 const sqlFiles = readdirSync(here).filter((name) => name.endsWith('.sql'));
 
 const preR2 = readFileSync(resolve(here, '00-preview-guard.sql'), 'utf8')
@@ -17,16 +18,24 @@ const postR2 = [
   '_post_r2_fingerprint.fragment.sql',
 ].map((name) => readFileSync(resolve(here, name), 'utf8')).join('\n');
 
-if (preR2.includes("'PREVIEW_REF_HERE'") || /preview_ref <> 'wcnfhriosemgchmtwgof'/.test(preR2)) {
+if (preR2.includes("'PREVIEW_REF_HERE'") || new RegExp(`preview_ref <> '${activeBaseline.project_ref}'`).test(preR2)) {
   throw new Error('pre-R2 guard still treats a pasted preview ref as identity');
 }
-if (!preR2.includes(BASELINE_DIGEST) || !/profile_count <> 1/.test(preR2) || !/proposal_count <> 2/.test(preR2)) {
+if (!preR2.includes(BASELINE_DIGEST) || !/profile_count <> 0/.test(preR2) || !/proposal_count <> 0/.test(preR2)) {
   throw new Error('pre-R2 fingerprint missing recorded baseline counts or digest');
+}
+if (!/prerequisite_count <> 52/.test(preR2)
+    || !/count\(\*\) from supabase_migrations\.schema_migrations\) <> 52/.test(preR2)
+    || !preR2.includes("to_regclass('public.proposal_templates') is null")
+    || !preR2.includes("to_regprocedure('public.can_user_access_template(uuid,uuid)') is null")
+    || !preR2.includes('active-free-trial exception for Executive Premium')) {
+  throw new Error('pre-R2 fingerprint lacks exact prerequisite/template-repair guards');
 }
 if (!/to_regclass\('public\.organizations'\) is not null/.test(preR2)) {
   throw new Error('pre-R2 fingerprint does not require the recorded pre-R2 schema state');
 }
-if (!postR2.includes(BASELINE_DIGEST) || !/id::text not like '91000000-%'/.test(postR2)) {
+if (!postR2.includes(BASELINE_DIGEST) || !/id::text not like '91000000-%'/.test(postR2)
+    || !/schema_migrations\) <> 57/.test(postR2)) {
   throw new Error('post-R2 fingerprint missing legacy baseline digest');
 }
 

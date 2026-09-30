@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ACTIVE_BASELINE_FILE, activeBaseline } from './preview-baseline-active.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../..");
@@ -42,9 +43,12 @@ const prerequisiteVersions = [...new Set(
     .filter((name) => name.endsWith(".sql") && name < migrations[0])
     .map((name) => name.split("_")[0]),
 )];
-const expectedProfileCount = 1;
-const expectedProposalCount = 2;
-const expectedProposalDigest = "b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f";
+if (prerequisiteVersions.length !== activeBaseline.prerequisite_migration_count) {
+  throw new Error(`active baseline expects ${activeBaseline.prerequisite_migration_count} prerequisite migrations, found ${prerequisiteVersions.length}`);
+}
+const expectedProfileCount = activeBaseline.profile_count;
+const expectedProposalCount = activeBaseline.proposal_count;
+const expectedProposalDigest = activeBaseline.proposal_content_sha256;
 const sourceDigest = createHash("sha256")
   .update(bodies.map(({ name, body }) => `${name}\n${body}\n`).join(""))
   .digest("hex");
@@ -77,6 +81,29 @@ begin
     where version = any (array[${prerequisiteVersions.map((version) => `'${version}'`).join(", ")}])
   ) <> ${prerequisiteVersions.length} then
     raise exception 'R2 preflight failed: committed pre-R2 migration history is incomplete';
+  end if;
+  if (select count(*) from supabase_migrations.schema_migrations) <> ${prerequisiteVersions.length}
+     or exists (
+       select 1 from supabase_migrations.schema_migrations
+       where version <> all (array[${prerequisiteVersions.map((version) => `'${version}'`).join(", ")}])
+     ) then
+    raise exception 'R2 preflight failed: migration history is not the exact recorded 52-version prerequisite set';
+  end if;
+  if to_regclass('public.proposal_templates') is null
+     or to_regclass('public.template_tier_access') is null
+     or to_regprocedure('public.can_user_access_template(uuid,uuid)') is null then
+    raise exception 'R2 preflight failed: repaired migration-029 objects are incomplete';
+  end if;
+  if not exists (
+    select 1 from pg_proc p
+    where p.oid = 'public.can_user_access_template(uuid,uuid)'::regprocedure
+      and p.prosecdef
+      and p.proconfig @> array['search_path=public']
+  ) or position(
+    'active-free-trial exception for Executive Premium'
+    in coalesce(obj_description('public.can_user_access_template(uuid,uuid)'::regprocedure), '')
+  ) = 0 then
+    raise exception 'R2 preflight failed: post-040 template access hardening is absent';
   end if;
 
   select count(*) into actual_profile_count from public.profiles;
@@ -153,6 +180,9 @@ console.log(JSON.stringify({
   migrations,
   prerequisiteVersions,
   previewBaseline: {
+    file: ACTIVE_BASELINE_FILE,
+    projectRef: activeBaseline.project_ref,
+    prerequisiteMigrationCount: activeBaseline.prerequisite_migration_count,
     profileCount: expectedProfileCount,
     proposalCount: expectedProposalCount,
     proposalDigest: expectedProposalDigest,

@@ -8,9 +8,10 @@ prepares SQL-Editor-compatible variants because local `psql` is unavailable
 and those runners use `\set` / `\gset` / `\echo`.
 
 Database identity is the recorded isolated-preview fingerprint from
-`preview-baseline-20260926.json`: pre-R2 schema/history, exactly 1 profile,
-exactly 2 proposals, and proposal-content SHA-256
-`b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f`. A pasted
+`preview-baseline-ynzkwctwlssjcsjmahey-20260930.json`: the exact 52-version
+pre-R2 history, repaired migration-029/post-040 template objects, zero profiles,
+zero proposals, and empty proposal-content SHA-256
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`. A pasted
 project ref is not evidence of database identity. Production project
 `iwoaaljitifloolszxlu` is named only as defense in depth. A local JS dry-run
 does not prove hosted production refusal.

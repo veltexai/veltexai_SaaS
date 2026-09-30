@@ -9,17 +9,17 @@ matrix, migration, or queue implementation.
 
 | Item | Value |
 |---|---|
-| Isolated preview only | `wcnfhriosemgchmtwgof` |
+| Isolated preview only | `ynzkwctwlssjcsjmahey` |
 | Production — refuse | `iwoaaljitifloolszxlu` (any letter case) |
 | Product candidate | `f761469` |
 | Evidence / harness head | `99ff465` on `codex/r2-integrated-read-adapter` (includes the independently reviewed `afb679c` evidence pack and its closing fixes) |
 | Worktree | `/private/tmp/veltex-r2-integration` |
 | Bundle source SHA-256 | `164e90af1c36e807b11c2299098a408521910439c4befe8c0677617c3f76d3c9` |
-| Pre-R2 fingerprint | 1 profile, 2 proposals, digest `b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f`; no `public.organizations`; no `guard_organization_membership()`; zero R2 history rows |
+| Pre-R2 fingerprint | exact 52 prerequisite history rows; repaired migration-029/post-040 template objects; 0 profiles; 0 proposals; empty digest `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`; no `public.organizations`; no `guard_organization_membership()`; zero R2 history rows |
 
 U8 hosted wake, `pgmq`, and HMAC delivery remain **OPEN**. They are not a prerequisite claim for this packet and must not be enabled or selected here.
 
-Cleanup or deletion of preview `wcnfhriosemgchmtwgof` remains separately gated.
+Cleanup or deletion of preview `ynzkwctwlssjcsjmahey` remains separately gated.
 Prior deletion authorization does not apply while R2 hosted evidence is
 incomplete.
 
@@ -37,7 +37,7 @@ incomplete.
 | Browser / operator | `HOSTED_APP_CHECKLIST.md` | same; SQL is not a substitute |
 
 Runners refuse production in either letter case and require
-`R2_EXPECTED_PROJECT_REF=wcnfhriosemgchmtwgof` inside the URL.
+`R2_EXPECTED_PROJECT_REF=ynzkwctwlssjcsjmahey` inside the URL.
 
 ## Artifact filenames
 
@@ -47,9 +47,9 @@ Do not commit connection strings, JWTs, customer content, or live emails.
 | File | Contents |
 |---|---|
 | `00-local-prepare.json` | stdout of `prepare-hosted-execution.sh` (bundle paths and source digest) |
-| `01-pre-r2-fingerprint.txt` | profile_count `1`, proposal_count `2`, digest match, no organizations / R2 history |
+| `01-pre-r2-fingerprint.txt` | exact 52 prerequisites, repaired template objects, profile_count `0`, proposal_count `0`, empty digest match, no organizations / R2 history |
 | `02-atomic-apply.txt` | apply result; history insert of five versions; source SHA-256 |
-| `03-post-r2-fingerprint.txt` | organizations present; versions `20260925002000`…`20260925006000`; legacy digest still `b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f` |
+| `03-post-r2-fingerprint.txt` | organizations present; exact 52 prerequisites plus versions `20260925002000`…`20260925006000`; legacy digest still `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 | `04-hosted-matrix.txt` | `R2 HOSTED DATABASE MATRIX PASSED (transaction rolled back)` or SQL-Editor `sql_editor_hosted_matrix` / `PASS` / `owner_plus_uninvited_role_denial` |
 | `05-last-owner-concurrency.txt` | `PASS: concurrent final-owner invariant retained` (psql). Record SQL-Editor 03 as single-session only. |
 | `06-u1-benchmark.txt` | `u1_evidence` rows, `rls_overhead_ms`, residue check; no production URL |
@@ -71,11 +71,12 @@ builder exception.
 
 ### S1 — pre-R2 fingerprint (read-only hosted)
 
-Open dashboard project `wcnfhriosemgchmtwgof` only. Never open production.
+Open dashboard project `ynzkwctwlssjcsjmahey` only. Never open production.
 Run `sql-editor/00-preview-guard.sql` or the equivalent count/digest query.
 
 **PASS:** evidence_key `sql_editor_preview_fingerprint`; identity
-`pre_r2_isolated_preview_baseline`; counts and digest match.
+`pre_r2_isolated_preview_baseline`; exact 52-row history, repaired-template
+objects, counts and digest match.
 **FAIL / abort:** organizations exist; R2 history present; digest/count mismatch;
 session labeled `iwoaaljitifloolszxlu`.
 
@@ -85,20 +86,20 @@ Apply **one** generated bundle to that preview only.
 
 **PASS:** five R2 `schema_migrations` rows; required organization tables and
 guards exist; null `active_organization_id` count is 0.
-**FAIL / abort:** preflight fingerprint failure; partial apply; digest change of
-the two legacy proposals.
+**FAIL / abort:** preflight fingerprint failure; partial apply; unexpected
+application rows or a non-empty proposal digest.
 
 ### S3 — post-R2 fingerprint (read-only)
 
 Re-check legacy (non-`9100`/`9200`/`9300`) profile/proposal counts and digest,
 plus presence of `20260925006000`.
 
-**PASS:** 1 / 2 / recorded digest.
+**PASS:** 0 / 0 / recorded empty digest, exact 52 prerequisites plus five R2 rows.
 **FAIL / abort:** any mismatch.
 
 ### S4 — hosted role / RLS matrix
 
-`psql`: `R2_PREVIEW_DATABASE_URL`, `R2_EXPECTED_PROJECT_REF=wcnfhriosemgchmtwgof`,
+`psql`: `R2_PREVIEW_DATABASE_URL`, `R2_EXPECTED_PROJECT_REF=ynzkwctwlssjcsjmahey`,
 `R2_CANDIDATE_COMMIT=f761469`, then `./run-hosted.sh`.
 SQL Editor: `02-hosted-matrix.sql` after the post-R2 fingerprint.
 
@@ -121,8 +122,8 @@ SQL-Editor 03 may be recorded as supporting single-session evidence only.
 
 ```bash
 R2_U1_EXECUTE=preview \
-R2_PREVIEW_DATABASE_URL='…wcnfhriosemgchmtwgof…' \
-R2_EXPECTED_PROJECT_REF=wcnfhriosemgchmtwgof \
+R2_PREVIEW_DATABASE_URL='…ynzkwctwlssjcsjmahey…' \
+R2_EXPECTED_PROJECT_REF=ynzkwctwlssjcsjmahey \
 ./quality/r2-hosted-verification-20260925/run-u1-benchmark.sh --execute-preview
 ```
 
@@ -159,14 +160,14 @@ retry a rejected path.
 
 ## Still requiring consequential approval
 
-1. Applying the R2 atomic bundle to preview `wcnfhriosemgchmtwgof`.
+1. Applying the R2 atomic bundle to preview `ynzkwctwlssjcsjmahey`.
 2. Providing / using the isolated preview database URL or SQL Editor session.
 3. Executing hosted matrix, last-owner concurrency, and U1.
 4. Pointing a preview app/Auth surface at that project for S7.
 5. Any paid-entitlement, send, or one-time delivery acceptance.
 6. Enabling hosted U8 wake (`pg_cron` / `pgmq`) or HMAC webhook delivery.
 7. Creating or rotating credentials.
-8. Deleting preview `wcnfhriosemgchmtwgof`.
+8. Deleting preview `ynzkwctwlssjcsjmahey`.
 9. Founder acceptance of R2.
 10. Production deployment, merge, or push.
 

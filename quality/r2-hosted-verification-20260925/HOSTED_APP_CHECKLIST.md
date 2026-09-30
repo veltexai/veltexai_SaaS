@@ -5,7 +5,7 @@ Status: **PREPARED — HUMAN/HOSTED EXECUTION REQUIRED**
 Run this checklist as S7 of
 `docs/product/platform-build/R2_ISOLATED_PREVIEW_OPERATOR_EXECUTION_PACKET.md`.
 Do not start it before the isolated-preview fingerprint, atomic apply, matrix,
-last-owner, and U1 evidence for `wcnfhriosemgchmtwgof`.
+last-owner, and U1 evidence for `ynzkwctwlssjcsjmahey`.
 
 Record the isolated preview URL, exact candidate commit, timestamp and
 redacted evidence for every item. A database SQL pass does not satisfy these.

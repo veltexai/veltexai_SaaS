@@ -1,0 +1,17 @@
+{
+  "captured_at": "2026-09-30",
+  "project_ref": "ynzkwctwlssjcsjmahey",
+  "environment": "fresh isolated Supabase preview after bounded prerequisite reconciliation",
+  "query_kind": "verified hosted pre-R2 baseline",
+  "prerequisite_migration_count": 52,
+  "organizations_table": null,
+  "membership_guard": null,
+  "proposal_templates_table": "present",
+  "template_tier_access_table": "present",
+  "hardened_template_access_function": "present",
+  "profile_count": 0,
+  "proposal_count": 0,
+  "proposal_content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "r2_migration_history_rows": 0,
+  "production_touched": false
+}

@@ -11,6 +11,7 @@ import {
   pendingRows,
   runLeaseContractScenario,
 } from './u8-local-spike/outbox-claimer.mjs';
+import { ACTIVE_BASELINE_FILE, activeBaseline } from './preview-baseline-active.mjs';
 
 const root = path.dirname(new URL(import.meta.url).pathname);
 const docs = path.resolve(root, '../../docs/product/platform-build');
@@ -21,6 +22,7 @@ const required = [
   'sql/last-owner-setup.sql', 'sql/last-owner-cleanup.sql',
   'run-u1-benchmark.sh', 'sql/u1-membership-rls-benchmark.sql',
   'prepare-hosted-execution.sh',
+  'preview-baseline-active.mjs', ACTIVE_BASELINE_FILE, 'preview-baseline-20260926.json',
   'u8-preview-runtime-inventory-20260926.json',
   'sql-editor/README.md', 'sql-editor/00-preview-guard.sql',
   'sql-editor/_guard.fragment.sql', 'sql-editor/_pre_r2_fingerprint.fragment.sql',
@@ -43,10 +45,17 @@ for (const file of required) {
 for (const file of requiredDocs) {
   if (!fs.existsSync(path.join(docs, file))) throw new Error(`missing docs ${file}`);
 }
+const historicalBaseline = JSON.parse(fs.readFileSync(path.join(root, 'preview-baseline-20260926.json'), 'utf8'));
+if (historicalBaseline.project_ref !== 'wcnfhriosemgchmtwgof'
+    || historicalBaseline.profile_count !== 1
+    || historicalBaseline.proposal_count !== 2
+    || historicalBaseline.proposal_content_sha256 !== 'b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f') {
+  throw new Error('historical preview baseline was altered');
+}
 const operatorPacket = fs.readFileSync(path.join(docs, 'R2_ISOLATED_PREVIEW_OPERATOR_EXECUTION_PACKET.md'), 'utf8');
 for (const marker of [
-  'wcnfhriosemgchmtwgof', 'iwoaaljitifloolszxlu', 'PREPARED / NOT HOSTED-EXECUTED',
-  'b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f',
+  activeBaseline.project_ref, 'iwoaaljitifloolszxlu', 'PREPARED / NOT HOSTED-EXECUTED',
+  activeBaseline.proposal_content_sha256,
   'run-hosted.sh', 'run-last-owner-concurrency.sh', 'run-u1-benchmark.sh',
   'HOSTED_APP_CHECKLIST.md', 'OPEN', 'not a prerequisite',
   'separately gated', 'Abort criteria',
@@ -79,7 +88,10 @@ for (const marker of [
   'migration-history rows missing',
   'database does not match recorded isolated-preview baseline',
   'committed pre-R2 migration history is incomplete',
-  'b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f',
+  'migration history is not the exact recorded 52-version prerequisite set',
+  'repaired migration-029 objects are incomplete',
+  'post-040 template access hardening is absent',
+  'ACTIVE_BASELINE_FILE', 'activeBaseline.proposal_content_sha256',
 ]) {
   if (!bundleBuilder.includes(marker)) throw new Error(`bundle builder missing ${marker}`);
 }
@@ -149,7 +161,7 @@ if (!u8Doc.includes('LOCAL SPIKE EXECUTED') || !u8Doc.includes('runtime choice r
 if (!u8Doc.includes('lease token') && !u8Doc.includes('claim token')) {
   throw new Error('U8 memo does not record immutable lease/claim tokens');
 }
-const BASELINE_DIGEST = 'b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f';
+const BASELINE_DIGEST = activeBaseline.proposal_content_sha256;
 const sqlEditorTexts = [
   'sql-editor/00-preview-guard.sql',
   'sql-editor/_guard.fragment.sql',
@@ -162,7 +174,7 @@ const sqlEditorTexts = [
   'sql-editor/README.md',
 ].map((file) => fs.readFileSync(path.join(root, file), 'utf8'));
 const sqlEditorPack = sqlEditorTexts.join('\n');
-if (sqlEditorPack.includes("'PREVIEW_REF_HERE'") || /preview_ref <> 'wcnfhriosemgchmtwgof'/.test(sqlEditorPack)) {
+if (sqlEditorPack.includes("'PREVIEW_REF_HERE'") || new RegExp(`preview_ref <> '${activeBaseline.project_ref}'`).test(sqlEditorPack)) {
   throw new Error('SQL Editor pack still uses a pasted GUC/ref as database identity');
 }
 if (!sqlEditorPack.includes(BASELINE_DIGEST)) {
@@ -182,11 +194,12 @@ for (const marker of [
   'supabase_migrations.schema_migrations',
   'array[]::text[]',
   'PREPARED / NOT HOSTED-EXECUTED',
-  BASELINE_DIGEST,
+  'activeBaseline.proposal_content_sha256',
   'iwoaaljitifloolszxlu',
   '_pre_r2_fingerprint.fragment.sql',
   'prerequisiteVersions',
   'committed pre-R2 migration history is incomplete',
+  'migration history is not the exact recorded 52-version prerequisite set',
 ]) {
   if (!sqlEditorBundle.includes(marker)) {
     throw new Error(`SQL Editor bundle builder missing ${marker}`);

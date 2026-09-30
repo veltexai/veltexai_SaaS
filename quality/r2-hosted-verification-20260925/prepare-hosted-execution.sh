@@ -7,7 +7,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
 PRODUCTION_REF='iwoaaljitifloolszxlu'
-PREVIEW_REF='wcnfhriosemgchmtwgof'
+PREVIEW_REF='ynzkwctwlssjcsjmahey'
 url="$(printf '%s' "${R2_PREVIEW_DATABASE_URL:-}" | tr '[:upper:]' '[:lower:]')"
 ref="$(printf '%s' "${R2_EXPECTED_PROJECT_REF:-$PREVIEW_REF}" | tr '[:upper:]' '[:lower:]')"
 harness_head="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || printf 'unknown')"

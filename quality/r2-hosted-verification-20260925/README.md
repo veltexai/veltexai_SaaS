@@ -17,9 +17,10 @@ HOSTED-EXECUTED**. They exist because local `psql` is unavailable. The
 authoritative `psql` runners `run-hosted.sh`, `run-last-owner-concurrency.sh`
 and `run-u1-benchmark.sh` were concurrently hardened to refuse upper- or
 lower-case production refs. The SQL-Editor migration bundle refuses
-unless the current database matches the recorded isolated-preview fingerprint
-(pre-R2 schema/history, 1 profile, 2 proposals, digest
-`b6e9b28c32c8ea56f1d2110a476466fce2976be18225e3b2415b1c67009a371f`). A pasted
+unless the current database matches the active isolated-preview fingerprint
+(exact 52-version pre-R2 history, repaired migration-029/post-040 template
+objects, 0 profiles, 0 proposals, empty digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`). A pasted
 preview ref is not identity. A local JS dry-run does not prove hosted
 production refusal. The SQL-Editor `02` check is two-tenant owner plus
 uninvited-role denial, not a positive four-role assignment. A local in-memory
@@ -27,7 +28,7 @@ U8 claim/retry/DLQ spike lives in `u8-local-spike/`; it does not install or
 enable `pg_cron`, `pgmq`, QStash, or Inngest, and the runtime choice remains
 **OPEN**.
 
-Founder hosted-execution order for isolated preview `wcnfhriosemgchmtwgof` is
+Founder hosted-execution order for isolated preview `ynzkwctwlssjcsjmahey` is
 `docs/product/platform-build/R2_ISOLATED_PREVIEW_OPERATOR_EXECUTION_PACKET.md`.
 Local prepare (no database):
 `./quality/r2-hosted-verification-20260925/prepare-hosted-execution.sh`.
@@ -84,7 +85,8 @@ migrations be applied.
 
 ## Required evidence
 
-1. Record pre-migration counts and SHA-256 digests for proposal content.
+1. Record the exact 52-version prerequisite history, repaired template objects,
+   zero application-row counts and empty SHA-256 proposal digest.
 2. Apply the unmodified candidate migrations in order through
    `20260925006000_r2_cleanup_guard_ordering.sql`.
 3. Run `./run-hosted.sh` with an isolated preview database URL.
@@ -118,7 +120,7 @@ by the runner.
 ```bash
 node ./quality/r2-hosted-verification-20260925/build-preview-migration-bundle.mjs
 export R2_PREVIEW_DATABASE_URL='postgresql://...isolated-preview...'
-export R2_EXPECTED_PROJECT_REF='the-isolated-preview-ref'
+export R2_EXPECTED_PROJECT_REF='ynzkwctwlssjcsjmahey'
 export R2_CANDIDATE_COMMIT='f761469'
 ./quality/r2-hosted-verification-20260925/run-hosted.sh
 ./quality/r2-hosted-verification-20260925/run-last-owner-concurrency.sh
