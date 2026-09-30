@@ -19,7 +19,7 @@ OUT="$(mktemp -d /tmp/veltex-r2-fresh-evidence.XXXXXX)"
 export HARNESS_PGDATA="$TMP" PGHOST="$TMP" PGPORT="${PGPORT:-55441}" PGUSER=postgres
 unset PGHOSTADDR PGSERVICE PGSERVICEFILE
 PSQL=(psql -X -q -v ON_ERROR_STOP=1)
-DATABASES=(r2_fresh_base r2_fresh_psql r2_fresh_editor r2_standalone_repair r2_refuse_history r2_refuse_schema r2_refuse_wrapper r2_refuse_data r2_atomic_rollback)
+DATABASES=(r2_fresh_base r2_fresh_psql r2_fresh_editor r2_standalone_repair r2_refuse_repair_history r2_refuse_history r2_refuse_schema r2_refuse_wrapper r2_refuse_data r2_atomic_rollback)
 
 cleanup() {
   if [ -f "$TMP/.veltex-disposable" ]; then
@@ -72,7 +72,7 @@ for db in r2_fresh_psql r2_fresh_editor; do "${PSQL[@]}" -d postgres -c "create 
 "${PSQL[@]}" -d r2_fresh_editor -f "$OUT/editor-bundle.sql" >"$OUT/editor-apply.log" 2>&1
 
 for db in r2_fresh_psql r2_fresh_editor; do
-  [ "$("${PSQL[@]}" -d "$db" -Atc 'select count(*) from supabase_migrations.schema_migrations')" = 58 ] || { echo "$db does not have 58 history rows" >&2; exit 1; }
+  [ "$("${PSQL[@]}" -d "$db" -Atc 'select count(*) from supabase_migrations.schema_migrations')" = 59 ] || { echo "$db does not have 59 history rows" >&2; exit 1; }
   for check in 02-hosted-matrix.sql 03-last-owner-single-session.sql 04-u1-benchmark.sql; do
     "${PSQL[@]}" -d "$db" -f "$ROOT/quality/r2-hosted-verification-20260925/sql-editor/$check" >"$OUT/$db-$check.log" 2>&1 || {
       echo "$check failed on $db" >&2; tail -40 "$OUT/$db-$check.log" >&2; exit 1;
@@ -81,7 +81,7 @@ for db in r2_fresh_psql r2_fresh_editor; do
 done
 
 # Reproduce the hosted preview's current 57-version state, then prove that the
-# standalone 07000 repair is guarded, atomic, and sufficient for checks 02-04.
+# standalone 07000 and 08000 repairs are guarded, atomic, and sufficient for checks 02-04.
 "${PSQL[@]}" -d postgres -c "create database r2_standalone_repair template r2_fresh_base"
 for migration in \
   20260925002000_r2_organization_tenancy.sql \
@@ -108,7 +108,27 @@ done
     exit 1
   }
 [ "$("${PSQL[@]}" -d r2_standalone_repair -Atc 'select count(*) from supabase_migrations.schema_migrations')" = 58 ] || {
-  echo 'standalone repair did not produce 58 history rows' >&2; exit 1;
+  echo 'standalone 07000 repair did not produce 58 history rows' >&2; exit 1;
+}
+"${PSQL[@]}" -d postgres -c "create database r2_refuse_repair_history template r2_standalone_repair"
+"${PSQL[@]}" -d r2_refuse_repair_history -c "delete from supabase_migrations.schema_migrations where version='001'; insert into supabase_migrations.schema_migrations values ('99999999999998',array[]::text[],'swapped_prerequisite')" >/dev/null
+if "${PSQL[@]}" -d r2_refuse_repair_history \
+  -f "$ROOT/quality/r2-hosted-verification-20260925/sql-editor/06-addon-acl-alignment-repair.sql" \
+  >"$OUT/refuse-addon-acl-swapped-history.log" 2>&1; then
+  echo 'standalone 08000 repair accepted swapped prerequisite history' >&2; exit 1
+fi
+[ "$("${PSQL[@]}" -d r2_refuse_repair_history -Atc "select count(*) from supabase_migrations.schema_migrations where version='20260925008000'")" = 0 ] || {
+  echo 'refused standalone 08000 repair recorded history' >&2; exit 1;
+}
+"${PSQL[@]}" -d r2_standalone_repair \
+  -f "$ROOT/quality/r2-hosted-verification-20260925/sql-editor/06-addon-acl-alignment-repair.sql" \
+  >"$OUT/standalone-addon-acl-repair.log" 2>&1 || {
+    echo 'standalone 08000 repair failed' >&2
+    tail -40 "$OUT/standalone-addon-acl-repair.log" >&2
+    exit 1
+  }
+[ "$("${PSQL[@]}" -d r2_standalone_repair -Atc 'select count(*) from supabase_migrations.schema_migrations')" = 59 ] || {
+  echo 'standalone 08000 repair did not produce 59 history rows' >&2; exit 1;
 }
 for check in 02-hosted-matrix.sql 03-last-owner-single-session.sql 04-u1-benchmark.sql; do
   "${PSQL[@]}" -d r2_standalone_repair -f "$ROOT/quality/r2-hosted-verification-20260925/sql-editor/$check" >"$OUT/r2_standalone_repair-$check.log" 2>&1 || {
@@ -121,7 +141,7 @@ assert_refusal() {
   if "${PSQL[@]}" -d "$db" -f "$bundle" >"$OUT/refuse-$label.log" 2>&1; then
     echo "$label mutation unexpectedly passed" >&2; exit 1
   fi
-  [ "$("${PSQL[@]}" -d "$db" -Atc "select count(*) from supabase_migrations.schema_migrations where version in ('20260925002000','20260925003000','20260925004000','20260925005000','20260925006000','20260925007000')")" = 0 ] || {
+  [ "$("${PSQL[@]}" -d "$db" -Atc "select count(*) from supabase_migrations.schema_migrations where version in ('20260925002000','20260925003000','20260925004000','20260925005000','20260925006000','20260925007000','20260925008000')")" = 0 ] || {
     echo "$label refusal recorded R2 history" >&2; exit 1
   }
   [ "$("${PSQL[@]}" -d "$db" -Atc "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname='organizations'")" = 0 ] || {
@@ -151,8 +171,8 @@ assert_refusal r2_refuse_data "$OUT/editor-bundle.sql" seed-tamper
 if "${PSQL[@]}" -d r2_atomic_rollback -f "$OUT/editor-bundle.sql" >"$OUT/atomic-rollback.log" 2>&1; then
   echo 'atomic rollback mutation unexpectedly passed' >&2; exit 1
 fi
-[ "$("${PSQL[@]}" -d r2_atomic_rollback -Atc "select count(*) from supabase_migrations.schema_migrations where version in ('20260925002000','20260925003000','20260925004000','20260925005000','20260925006000','20260925007000')")" = 0 ] || { echo 'atomic failure retained R2 history' >&2; exit 1; }
+[ "$("${PSQL[@]}" -d r2_atomic_rollback -Atc "select count(*) from supabase_migrations.schema_migrations where version in ('20260925002000','20260925003000','20260925004000','20260925005000','20260925006000','20260925007000','20260925008000')")" = 0 ] || { echo 'atomic failure retained R2 history' >&2; exit 1; }
 [ "$("${PSQL[@]}" -d r2_atomic_rollback -Atc "select to_regclass('public.organizations') is null")" = t ] || { echo 'atomic failure retained organizations' >&2; exit 1; }
 [ "$("${PSQL[@]}" -d r2_atomic_rollback -Atc "select to_regclass('public.organization_memberships') is not null")" = t ] || { echo 'atomic failure removed pre-existing fixture' >&2; exit 1; }
 
-echo 'PASS: exact empty 52-version preview accepts both R2 bundles; standalone 07000 repair and 02/03/04 pass; history/schema/function/seed tampering refuses; forced mid-bundle failure rolls back atomically.'
+echo 'PASS: exact empty 52-version preview accepts both seven-migration R2 bundles; standalone 07000/08000 repairs and 02/03/04 pass; history/schema/function/seed tampering refuses; forced mid-bundle failure rolls back atomically.'

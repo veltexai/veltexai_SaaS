@@ -190,14 +190,41 @@ for (const marker of [
     throw new Error(`service-role proposal grant migration missing: ${marker}`);
   }
 }
+const addonAclMigration = fs.readFileSync(
+  path.resolve(root, '../../supabase/migrations/20260925008000_r2_addon_acl_alignment.sql'),
+  'utf8',
+).toLowerCase();
 for (const marker of [
-  "where version = '20260925007000'",
+  'revoke all on table public.proposal_additional_services from anon, service_role',
+  'grant select, insert, update, delete\n  on table public.proposal_additional_services to authenticated',
+  'revoke truncate, references, trigger\n  on table public.proposal_additional_services from authenticated',
+  'revoke all on table public.additional_service_catalog from anon, service_role',
+  'grant select, insert, update, delete\n  on table public.additional_service_catalog to authenticated',
+  'revoke truncate, references, trigger\n  on table public.additional_service_catalog from authenticated',
+  'grant select, insert on table public.additional_service_catalog to service_role',
+  'revoke update, delete, truncate, references, trigger\n  on table public.additional_service_catalog from service_role',
+]) {
+  if (!addonAclMigration.includes(marker)) {
+    throw new Error(`add-on ACL migration missing: ${marker}`);
+  }
+}
+for (const marker of [
+  "where version = '20260925008000'",
   "reset role;\ninsert into public.proposals",
   'service role updated a proposal',
   'service role read raw proposal tracking',
 ]) {
   if (!sqlEditorPack.includes(marker)) {
     throw new Error(`hosted evidence missing least-privilege marker: ${marker}`);
+  }
+}
+for (const marker of [
+  "has_table_privilege('authenticated', 'public.proposal_additional_services', 'SELECT')",
+  "has_table_privilege('authenticated', 'public.additional_service_catalog', 'SELECT')",
+  'add-on table ACL contract is not exact',
+]) {
+  if (!sqlEditorPack.includes(marker)) {
+    throw new Error(`hosted evidence missing add-on ACL marker: ${marker}`);
   }
 }
 if (!sqlEditorPack.includes("has_function_privilege('service_role','public._r0_can_user_access_template_impl(uuid,uuid)','EXECUTE')")

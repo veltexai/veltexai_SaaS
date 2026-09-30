@@ -23,11 +23,11 @@ begin
   end if;
   if not exists (
     select 1 from supabase_migrations.schema_migrations
-    where version = '20260925007000'
+    where version = '20260925008000'
   ) then
     raise exception 'R2 fingerprint failed: migration version is absent';
   end if;
-  if (select count(*) from supabase_migrations.schema_migrations) <> 58
+  if (select count(*) from supabase_migrations.schema_migrations) <> 59
      or (select count(*) from supabase_migrations.schema_migrations where version in (
        '001','002','003','004','005','006','009','010','011','012','013','014','015','016',
        '017','018','019','020','021','022','023','024','025','026','027','028','029','030',
@@ -37,9 +37,35 @@ begin
        '20260924012000','20260924013000','20260925000000','20260925001000'
      )) <> 52
      or (select count(*) from supabase_migrations.schema_migrations where version in (
-       '20260925002000','20260925003000','20260925004000','20260925005000','20260925006000','20260925007000'
-     )) <> 6 then
-    raise exception 'R2 fingerprint failed: migration history is not the exact 52 prerequisites plus six R2 versions';
+       '20260925002000','20260925003000','20260925004000','20260925005000','20260925006000','20260925007000','20260925008000'
+     )) <> 7 then
+    raise exception 'R2 fingerprint failed: migration history is not the exact 52 prerequisites plus seven R2 versions';
+  end if;
+  if not has_table_privilege('authenticated', 'public.proposal_additional_services', 'SELECT')
+     or not has_table_privilege('authenticated', 'public.proposal_additional_services', 'INSERT')
+     or not has_table_privilege('authenticated', 'public.proposal_additional_services', 'UPDATE')
+     or not has_table_privilege('authenticated', 'public.proposal_additional_services', 'DELETE')
+     or has_table_privilege('authenticated', 'public.proposal_additional_services', 'TRUNCATE')
+     or has_table_privilege('authenticated', 'public.proposal_additional_services', 'REFERENCES')
+     or has_table_privilege('authenticated', 'public.proposal_additional_services', 'TRIGGER')
+     or has_table_privilege('anon', 'public.proposal_additional_services', 'SELECT')
+     or has_table_privilege('service_role', 'public.proposal_additional_services', 'SELECT')
+     or not has_table_privilege('authenticated', 'public.additional_service_catalog', 'SELECT')
+     or not has_table_privilege('authenticated', 'public.additional_service_catalog', 'INSERT')
+     or not has_table_privilege('authenticated', 'public.additional_service_catalog', 'UPDATE')
+     or not has_table_privilege('authenticated', 'public.additional_service_catalog', 'DELETE')
+     or has_table_privilege('authenticated', 'public.additional_service_catalog', 'TRUNCATE')
+     or has_table_privilege('authenticated', 'public.additional_service_catalog', 'REFERENCES')
+     or has_table_privilege('authenticated', 'public.additional_service_catalog', 'TRIGGER')
+     or has_table_privilege('anon', 'public.additional_service_catalog', 'SELECT')
+     or not has_table_privilege('service_role', 'public.additional_service_catalog', 'SELECT')
+     or not has_table_privilege('service_role', 'public.additional_service_catalog', 'INSERT')
+     or has_table_privilege('service_role', 'public.additional_service_catalog', 'UPDATE')
+     or has_table_privilege('service_role', 'public.additional_service_catalog', 'DELETE')
+     or has_table_privilege('service_role', 'public.additional_service_catalog', 'TRUNCATE')
+     or has_table_privilege('service_role', 'public.additional_service_catalog', 'REFERENCES')
+     or has_table_privilege('service_role', 'public.additional_service_catalog', 'TRIGGER') then
+    raise exception 'R2 fingerprint failed: add-on table ACL contract is not exact';
   end if;
   select count(*) into profile_count
   from public.profiles
@@ -80,7 +106,7 @@ do $$ begin
   end if;
   if not exists (
     select 1 from supabase_migrations.schema_migrations
-    where version = '20260925007000'
+    where version = '20260925008000'
   ) then
     raise exception 'R2 migration version is absent';
   end if;

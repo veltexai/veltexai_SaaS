@@ -8,7 +8,7 @@ do $$ begin
   end if;
   if not exists (
     select 1 from supabase_migrations.schema_migrations
-    where version = '20260925007000'
+    where version = '20260925008000'
   ) then raise exception 'R2 migration version is absent'; end if;
 end $$;
 
