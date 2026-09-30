@@ -912,3 +912,15 @@ After any material action, append or revise the relevant section with:
   application or revocation defect. Adding the exact preview callback to the
   Google Cloud OAuth allowlist is the next external configuration action needed
   for authenticated operator UI acceptance; no OAuth configuration was changed.
+- **GOOGLE OAUTH OWNER ACCESS ABSENT:** founder authorized adding the exact
+  preview callback, but neither accessible Veltex Google identity can administer
+  Cloud project number `952177158425`, which owns the configured OAuth client.
+  Both `sales@veltexclean.com` and the Chrome `veltexclean@gmail.com` context
+  return missing `resourcemanager.projects.get`; no callback, permission, client
+  or secret was changed. Do not retry this path without access from the actual
+  Cloud-project owner.
+- **MAGIC-LINK FALLBACK NOT AVAILABLE:** the existing preview organization owner
+  is the intentionally synthetic `r2-ui-signup-20260930@veltex.test`, which
+  cannot receive email. The remaining bounded option is an explicitly approved
+  preview-only password rotation for that synthetic QA identity, followed by
+  operator UI testing and replacement with a fresh unknown random password.
