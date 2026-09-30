@@ -15,6 +15,7 @@ psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$OWNER_MATRIX" \
   -v proposal_id=33333333-3333-4333-8333-333333333333 -v tracking_token=aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa \
   && echo "OWNER MATRIX PASSED"
 psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$HERE/sql/30_assertions.sql" ${CHECK_DEFINERS:+-v check_definers=1}
+psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$HERE/../tracked-link-revocation-assertions.sql"
 "$HERE/injection_tests.sh" ${1:-}
 "$HERE/concurrency.sh"
 echo "HARNESS COMPLETE"

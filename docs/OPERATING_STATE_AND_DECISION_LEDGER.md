@@ -832,3 +832,41 @@ After any material action, append or revise the relevant section with:
   reported 1280px. The resulting cropped capture is not valid mobile-breakpoint
   evidence, so no responsive PASS or FAIL is claimed. A real 390px device or a
   working browser emulation surface remains required.
+
+### R2 tracked-link revocation — LOCAL PASS / PREVIEW PENDING (2026-09-30 Pacific)
+
+- **OWNER/ADMIN REVOCATION IMPLEMENTED LOCALLY:** migration
+  `20260925010000_tracked_link_revocation.sql` adds nullable revocation evidence
+  without invalidating existing links. The caller-bound, fixed-search-path
+  `revoke_tracked_proposal_link` function requires an authenticated organization
+  owner or admin, binds both tracking-row and proposal IDs, row-locks the target,
+  is idempotent and writes exactly one privacy-safe audit event. Estimators,
+  viewers, cross-tenant callers, wrong-proposal callers and anonymous callers
+  cannot revoke. Direct browser-role table mutation remains denied.
+- **PUBLIC TOKEN ACCESS FAILS CLOSED:** the customer projection, canonical print
+  projection, paid-entitlement check, view, download, click and time/scroll/open
+  metric functions all require `revoked_at is null`. Revoking one delivery does
+  not disable another token for the same proposal, and no bearer token or
+  recipient address enters the audit log.
+- **USABLE MANAGEMENT SURFACE ADDED:** proposal details now include a responsive
+  `Links` tab listing delivery status, recipient, method, views and downloads.
+  Owners/admins receive a confirmed irreversible `Revoke link` control;
+  estimator/viewer access remains read-only and server authorization remains
+  authoritative. Missing, unauthorized and cross-tenant revoke requests are
+  deliberately indistinguishable at the API boundary.
+- **FULL LOCAL GATES PASS:** migration-chain validation reports 61 unique
+  executable versions; 86 Jest suites / 721 tests / five snapshots, standalone
+  TypeScript, production build and `git diff --check` pass. A fresh guarded
+  PostgreSQL 16 database applied all 61 migrations and passed the owner matrix,
+  complete CHECK_DEFINERS/H1 assertions, executed revocation role/proposal/token
+  lifecycle checks, injection refusal tests, idempotent replay and 40-way
+  concurrency. The disposable cluster was stopped and removed afterward.
+- **INDEPENDENT REVIEW — PASS:** the final read-only review found no blocker
+  after the stale test expectation was corrected and the wrong-proposal runtime
+  denial was added. Production, the separate pilot, email and campaigns remain
+  untouched.
+- **NEXT:** commit the exact candidate, then apply migration `10000` and its app
+  only to isolated preview `ynzkwctwlssjcsjmahey`. Verify owner/admin UI revoke,
+  estimator/viewer denial, revoked-link 404/no-download/no-counter behavior and
+  unaffected sibling links before any founder or production decision. Genuine
+  390px responsive evidence remains a separate open R2 gate.

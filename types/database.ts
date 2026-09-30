@@ -827,6 +827,9 @@ export interface Database {
           download_count: number;
           user_agent: string | null;
           ip_address: string | null;
+          revoked_at: string | null;
+          revoked_by: string | null;
+          revocation_reason: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -853,6 +856,9 @@ export interface Database {
           download_count?: number;
           user_agent?: string | null;
           ip_address?: string | null;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          revocation_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -879,6 +885,9 @@ export interface Database {
           download_count?: number;
           user_agent?: string | null;
           ip_address?: string | null;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          revocation_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };

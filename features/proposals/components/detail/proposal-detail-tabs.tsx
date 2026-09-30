@@ -1,10 +1,11 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProposalEditWrapper } from "./proposal-edit-wrapper";
 import { ProposalStatusHistory } from "./proposal-status-history";
-import { Edit, History, Eye } from "lucide-react";
+import { Edit, History, Eye, Link2 } from "lucide-react";
 import { Database } from "@/types/database";
 import { TemplateRenderer } from "@/features/templates";
 import type { ProposalPermissions } from "@/features/proposals/types/proposal";
+import { ProposalTrackingLinks } from "./proposal-tracking-links";
 
 type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 
@@ -19,7 +20,7 @@ export function ProposalDetailTabs({
 }: ProposalDetailTabsProps) {
   return (
     <Tabs defaultValue="edit" className="w-full">
-      <TabsList className="grid w-full grid-cols-3 h-auto p-1">
+      <TabsList className="grid w-full grid-cols-4 h-auto p-1">
         <TabsTrigger
           value="edit"
           className="flex items-center justify-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 text-xs sm:text-sm"
@@ -41,6 +42,13 @@ export function ProposalDetailTabs({
           <History className="h-4 w-4 flex-shrink-0" />
           <span className="hidden xs:inline">History</span>
         </TabsTrigger>
+        <TabsTrigger
+          value="links"
+          className="flex items-center justify-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 text-xs sm:text-sm"
+        >
+          <Link2 className="h-4 w-4 flex-shrink-0" />
+          <span className="hidden xs:inline">Links</span>
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="edit" className="mt-4 sm:mt-6">
@@ -58,6 +66,10 @@ export function ProposalDetailTabs({
 
       <TabsContent value="history" className="mt-4 sm:mt-6">
         <ProposalStatusHistory proposalId={proposal.id} />
+      </TabsContent>
+
+      <TabsContent value="links" className="mt-4 sm:mt-6">
+        <ProposalTrackingLinks proposalId={proposal.id} />
       </TabsContent>
     </Tabs>
   );

@@ -222,6 +222,9 @@ do $$ declare bad text; begin
       -- reject short/unknown tokens and never accept a caller-supplied row id.
       'record_tracked_download(text)','record_tracking_click(text,text,text,text)',
       'tracked_proposal_has_paid_access(text)',
+      -- Authenticated managers may revoke a tenant-owned tracked link. The
+      -- function binds identity to auth.uid() and accepts only a row UUID.
+      'revoke_tracked_proposal_link(uuid,uuid,text)',
       -- These wrappers call r0_assert_self_or_service before reaching the
       -- ungranted legacy implementations.
       'get_user_current_usage(uuid)','can_user_create_proposal(uuid)',
