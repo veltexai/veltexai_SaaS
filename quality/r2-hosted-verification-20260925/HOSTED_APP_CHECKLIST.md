@@ -1,6 +1,6 @@
 # R2 hosted application/Auth checkpoints
 
-Status: **PREPARED — HUMAN/HOSTED EXECUTION REQUIRED**
+Status: **IN PROGRESS — ISOLATED PREVIEW APPLICATION VALIDATION**
 
 Run this checklist as S7 of
 `docs/product/platform-build/R2_ISOLATED_PREVIEW_OPERATOR_EXECUTION_PACKET.md`.
@@ -10,12 +10,12 @@ last-owner, and U1 evidence for `ynzkwctwlssjcsjmahey`.
 Record the isolated preview URL, exact candidate commit, timestamp and
 redacted evidence for every item. A database SQL pass does not satisfy these.
 
-- [ ] New preview signup creates exactly one profile, one organization, one
+- [x] New preview signup creates exactly one profile, one organization, one
       owner membership, one active organization and the expected trial usage.
 - [ ] Migration history contains exactly one `20260925002000` row; a normal
       migration command reports it already applied rather than replaying the
       non-idempotent DDL. Record pre/post row counts and content digest.
-- [ ] Existing owner can create, reopen and edit a legacy-shaped proposal while
+- [x] Existing owner can create, reopen and edit a legacy-shaped proposal while
       omitting `organization_id`; the server assigns the active editable tenant.
 - [ ] Owner can generate a PDF; every uninvited/non-member identity is denied.
 - [ ] Paid owner can send a proposal; free-trial and non-member behavior
@@ -29,9 +29,45 @@ redacted evidence for every item. A database SQL pass does not satisfy these.
       each other's organization, members, proposals, tracking, views or exports.
 - [ ] Switching the active organization to a non-membership fails and leaves the
       previous active organization unchanged.
-- [ ] Refresh/relogin preserves the legitimate active organization.
-- [ ] No real customer email is sent. Use only a controlled `.test`/sink address
+- [x] Refresh/relogin preserves the legitimate active organization.
+- [x] No real customer email is sent. Use only a controlled `.test`/sink address
       unless founder separately authorizes a one-time delivery acceptance.
+
+## 2026-09-30 application evidence
+
+- Stable preview alias: `https://veltex-r2-preview-20260930.vercel.app`.
+- Synthetic signup `317aad89-f73c-42d5-a95d-41329c5e8e93` created exactly one
+  profile, organization `8ca5fd88-2eea-4a64-aeb4-33a01fcef152`, owner
+  membership, active organization and untouched trial usage. Confirm-email was
+  restored after preview-only signup; no email was sent.
+- Legacy-shaped proposal `741ef971-06bd-405e-b792-c86056c56f06` omitted
+  `organization_id`, was assigned to the active organization, and was reopened
+  and edited through the authenticated application.
+- Paid entitlement fixture is isolated to the synthetic preview user and was
+  verified as `active / professional` in both profile and subscription rows.
+- Authenticated PDF export succeeded. Visual review found and corrected an
+  unreadable long-title wrap, a content-free Basic-template closing page, and
+  empty contact rows. Commits: `219ecd8`, `8aab1ca`, `fbea721`. The final
+  preview deployment is `dpl_56dMjbYd25nXTnYdPMa2PT8XQC3S`; its runtime and
+  build Supabase URL/key target only `ynzkwctwlssjcsjmahey`, and its service
+  role is an inert sentinel. Production is not reachable from this deployment.
+- The final rendered two-page structure was visually inspected after the title
+  and thank-you-page repairs. The last contact-row-only polish is deployed and
+  source/type/regression verified, but the Chrome connection dropped before a
+  fresh post-polish download could be visually re-inspected; do not mark the
+  full PDF/non-member checklist row complete yet.
+- Separate-organization browser and REST checks denied cross-tenant proposal,
+  organization and membership reads. The invalid active-organization switch
+  failed with `42501` and preserved the prior organization. The legitimate
+  active organization `Veltex R2 Preview QA` remained selected after explicit
+  sign-out and password relogin.
+- Verification gates after the PDF fixes: 82 suites, 697 tests, five snapshots,
+  TypeScript and production build pass. Known Supabase Edge-runtime and missing
+  Sentry-upload-token messages remain warnings, not failures.
+- Remaining checks are deliberately open: exact hosted migration-row replay
+  assertion, paid send without real delivery, tracked-link projection/download
+  and event-once behavior, complete cross-tenant members/tracking/views/exports,
+  responsive tracked-link review, and final post-polish PDF perception.
 
 Final status must remain `PREPARED` until these checks and the database matrix
 have evidence. Record failures; do not rerun by silently changing the candidate.

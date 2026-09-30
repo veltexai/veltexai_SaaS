@@ -685,3 +685,30 @@ After any material action, append or revise the relevant section with:
 - **LAST-OWNER INVARIANT PASS:** `sql_editor_last_owner_cleanup` returned `PASS` after its rollback-only lifecycle checks.
 - **U1 MEMBERSHIP/RLS BENCHMARK PASS:** the complete query executed without database error after the prior ACL blocker was repaired. Its rollback cleanup returned zero profiles, zero proposals, zero outbox rows and the unchanged empty baseline digest, proving no synthetic residue survived.
 - **SAFETY STATE:** production `iwoaaljitifloolszxlu` was neither queried nor mutated. The next unfinished R2 gate is preview application/browser validation (including real authenticated role/team flows and the U8 runtime decision), followed by founder acceptance before any production deployment decision.
+
+### R2 isolated-preview application validation — IN PROGRESS (2026-09-30 Pacific)
+
+- **AUTH/OWNERSHIP PASS:** a preview-only synthetic signup created one profile,
+  one organization, one owner membership and one active organization. A legacy
+  proposal created without `organization_id` inherited that active organization
+  and remained editable after reopen. Confirm-email was restored and no real
+  email was sent.
+- **TENANT/SESSION PASS SO FAR:** a second organization could not read the first
+  organization or proposal; invalid active-organization switching failed closed
+  and preserved the valid selection. Explicit sign-out/relogin preserved the
+  legitimate `Veltex R2 Preview QA` active organization.
+- **PAID PDF DEFECTS FOUND AND REMEDIATED:** preview-only paid entitlement enabled
+  the real export path. Visual QA found long-title word breaking, a decorative
+  but content-free Basic closing page, and empty contact rows. Fixes are commits
+  `219ecd8`, `8aab1ca` and `fbea721`; 82 suites / 697 tests / five snapshots,
+  TypeScript and production build pass. The final preview deployment is
+  `dpl_56dMjbYd25nXTnYdPMa2PT8XQC3S` behind the stable R2 alias and explicitly
+  targets only Supabase preview `ynzkwctwlssjcsjmahey`; its service-role value
+  is inert, so it cannot reach production through that credential.
+- **STATUS REMAINS IN PROGRESS:** the corrected two-page title and thank-you
+  structure were genuinely rendered and inspected. The final contact-row-only
+  polish is deployed and code-verified, but browser connectivity dropped before
+  a fresh final download could be perceived. Tracked-link/send/event-once,
+  responsive, full cross-tenant surface and exact migration replay assertions
+  remain open. Production `iwoaaljitifloolszxlu` and the separate pilot were not
+  touched.
