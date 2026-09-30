@@ -16,6 +16,11 @@ if (manifest.baselineReconciliation?.recordedVersion !== "030"
     || manifest.baselineReconciliation?.insertsHistory !== false) {
   throw new Error("Missing guarded, history-preserving baseline-030 reconciliation");
 }
+if (manifest.templateReconciliation?.recordedVersions?.join(",") !== "029,040"
+    || manifest.templateReconciliation?.afterStep !== 11
+    || manifest.templateReconciliation?.insertsHistory !== false) {
+  throw new Error("Missing guarded, history-preserving migration-029-plus-040 reconciliation");
+}
 
 const sha256 = (text) => createHash("sha256").update(text).digest("hex");
 const normalizedBody = (source) => {
@@ -192,6 +197,114 @@ for (const mutation of [
     rejected = true;
   }
   if (!rejected) throw new Error("Baseline-030 history-mutation fixture unexpectedly passed");
+}
+
+const template = manifest.templateReconciliation;
+const templateSql = readFileSync(resolve(outputDir, template.artifact), "utf8");
+const template029Source = readFileSync(resolve("supabase/migrations", template.files[0]), "utf8");
+const template040Source = readFileSync(resolve("supabase/migrations", template.files[1]), "utf8");
+const template029Marker = "-- EXACT RAW MIGRATION 029 BODY; ITS EXISTING HISTORY ROW IS NOT MODIFIED.\n";
+const template040Marker = "-- EXACT RAW MIGRATION 040 BODY; RESTORES THE ALREADY-RECORDED HARDENED FUNCTION.\n";
+const templatePostMarker = "-- POSTCONDITION: prove migration 029 state plus byte-identical post-040 hardening.";
+const template029Start = templateSql.indexOf(template029Marker) + template029Marker.length;
+const template040MarkerIndex = templateSql.indexOf(template040Marker, template029Start);
+const template040Start = template040MarkerIndex + template040Marker.length;
+const templatePostStart = templateSql.indexOf(templatePostMarker, template040Start);
+if (template029Start < template029Marker.length
+    || template040MarkerIndex < template029Start
+    || templatePostStart < template040Start
+    || templateSql.slice(template029Start, template040MarkerIndex).trim() !== template029Source.trim()
+    || templateSql.slice(template040Start, templatePostStart).trim() !== template040Source.trim()
+    || sha256(template029Source) !== template.sourceSha256[0]
+    || sha256(template040Source) !== template.sourceSha256[1]) {
+  throw new Error("Template reconciliation bodies/hashes/order do not exactly match committed migrations 029 then 040");
+}
+if (/\b(?:insert\s+into|update|delete\s+from)\s+supabase_migrations\.schema_migrations\b/i.test(templateSql)) {
+  throw new Error("Template reconciliation must not mutate migration history");
+}
+validateAssertionIdentifiers(template.postconditions, `${template029Source}\n${template040Source}`, template.artifact);
+
+function validateTemplateSafetyStructure(sql) {
+  const preconditionStart = sql.indexOf("-- PRECONDITION: exact post-step-11 recorded-history/missing-template fingerprint.");
+  const snapshotStart = sql.indexOf("create temporary table veltex_template_reconciliation_snapshot", preconditionStart);
+  const body029Start = sql.indexOf(template029Marker, snapshotStart);
+  const body040Start = sql.indexOf(template040Marker, body029Start);
+  const postStart = sql.indexOf(templatePostMarker, body040Start);
+  if (!(preconditionStart >= 0 && preconditionStart < snapshotStart && snapshotStart < body029Start
+      && body029Start < body040Start && body040Start < postStart)) {
+    throw new Error("Template reconciliation has invalid guard/snapshot/body/postcondition ordering");
+  }
+  const precondition = sql.slice(preconditionStart, snapshotStart);
+  const postcondition = sql.slice(postStart);
+  for (const required of [
+    /^  if to_regclass\('public\.profiles'\) is null[\s\S]*?to_regclass\('public\.proposals'\) is null[\s\S]*?to_regclass\('public\.user_branding_settings'\) is null[\s\S]*?to_regclass\('supabase_migrations\.schema_migrations'\) is null[\s\S]*?to_regprocedure\('public\.handle_updated_at\(\)'\) is null/m,
+    /^  if to_regclass\('public\.organizations'\) is not null/m,
+    /^  if exists \(select 1 from public\.profiles\) or exists \(select 1 from public\.proposals\)/m,
+    /^  if actual_history <> 40/m,
+    /count\(\*\) from supabase_migrations\.schema_migrations where version = any\(array\[[\s\S]*?\]\)\) <> 40/,
+    /count\(\*\) from supabase_migrations\.schema_migrations where version='029'\) <> 1/,
+    /count\(\*\) from supabase_migrations\.schema_migrations where version='040'\) <> 1/,
+    /^     or exists \(select 1 from supabase_migrations\.schema_migrations where version = any\(array\[/m,
+    /^  if to_regclass\('public\.proposal_templates'\) is not null[\s\S]*?to_regclass\('public\.template_tier_access'\) is not null[\s\S]*?to_regclass\('public\.user_template_preferences'\) is not null/m,
+    /to_regprocedure\('public\.get_user_accessible_templates\(uuid\)'\) is not null/,
+    /^  if to_regprocedure\('public\.can_user_access_template\(uuid,uuid\)'\) is null/m,
+    /active-free-trial exception for Executive Premium/,
+    /p\.proconfig @> array\['search_path=public'\]/,
+  ]) {
+    if (!required.test(precondition)) throw new Error(`Template reconciliation precondition is missing or disabled: ${required}`);
+  }
+  for (const required of [
+    /if not \(/,
+    /pg_get_functiondef\('public\.can_user_access_template\(uuid,uuid\)'::regprocedure\) <> function_definition/,
+    /p\.proconfig is distinct from function_config/,
+    /p\.proacl is distinct from function_acl/,
+    /obj_description\(p\.oid\) is distinct from function_comment/,
+    /version='029'[\s\S]*?is distinct from \(select history_029/,
+    /version='040'[\s\S]*?is distinct from \(select history_040/,
+  ]) {
+    if (!required.test(postcondition)) throw new Error(`Template reconciliation postcondition is missing or disabled: ${required}`);
+  }
+  for (const check of template.postconditions) {
+    if (!postcondition.includes(`if not (${check}) then`)) throw new Error(`Template reconciliation missing exact executable assertion: ${check}`);
+  }
+  if (/\b(?:insert\s+into|update|delete\s+from)\s+supabase_migrations\.schema_migrations\b/i.test(sql)) {
+    throw new Error("Template reconciliation contains a forbidden migration-history mutation");
+  }
+}
+
+validateTemplateSafetyStructure(templateSql);
+const assertTemplateMutationRejected = (needle, replacement) => {
+  const mutated = templateSql.replace(needle, replacement);
+  if (mutated === templateSql) throw new Error(`Template mutation fixture did not match: ${needle}`);
+  let rejected = false;
+  try { validateTemplateSafetyStructure(mutated); } catch { rejected = true; }
+  if (!rejected) throw new Error(`Template reconciliation safety mutation unexpectedly passed: ${needle}`);
+};
+for (const [needle, replacement] of [
+  ["if to_regclass('public.profiles') is null", "if false and to_regclass('public.profiles') is null"],
+  ["if to_regclass('public.organizations') is not null then", "if false and to_regclass('public.organizations') is not null then"],
+  ["if exists (select 1 from public.profiles) or exists (select 1 from public.proposals) then", "if false then"],
+  ["if actual_history <> 40", "if false and actual_history <> 40"],
+  ["or (select count(*) from supabase_migrations.schema_migrations where version = any(array[", "or (select 40 from supabase_migrations.schema_migrations where version = any(array["],
+  ["or (select count(*) from supabase_migrations.schema_migrations where version='029') <> 1", "or false"],
+  ["or (select count(*) from supabase_migrations.schema_migrations where version='040') <> 1", "or false"],
+  ["or exists (select 1 from supabase_migrations.schema_migrations where version = any(array[", "or false and exists (select 1 from supabase_migrations.schema_migrations where version = any(array["],
+  ["if to_regclass('public.proposal_templates') is not null", "if false and to_regclass('public.proposal_templates') is not null"],
+  ["if to_regprocedure('public.can_user_access_template(uuid,uuid)') is null", "if false and to_regprocedure('public.can_user_access_template(uuid,uuid)') is null"],
+  [`if not (${template.postconditions[0]}) then`, `if false and not (${template.postconditions[0]}) then`],
+  ["p.proconfig is distinct from function_config", "false"],
+  ["p.proacl is distinct from function_acl", "false"],
+  ["obj_description(p.oid) is distinct from function_comment", "false"],
+  ["is distinct from (select history_029", "is not distinct from (select history_029"],
+  ["is distinct from (select history_040", "is not distinct from (select history_040"],
+]) assertTemplateMutationRejected(needle, replacement);
+for (const mutation of [
+  "\nupdate supabase_migrations.schema_migrations set name='tampered' where version='029';\n",
+  "\ndelete from supabase_migrations.schema_migrations where version='040';\n",
+]) {
+  let rejected = false;
+  try { validateTemplateSafetyStructure(templateSql.replace("\ncommit;", `${mutation}\ncommit;`)); } catch { rejected = true; }
+  if (!rejected) throw new Error("Template reconciliation history-mutation fixture unexpectedly passed");
 }
 
 for (const step of manifest.steps) {

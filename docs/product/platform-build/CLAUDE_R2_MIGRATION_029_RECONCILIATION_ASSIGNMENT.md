@@ -1,5 +1,11 @@
 # Claude assignment — R2 migration-029 recorded-history reconciliation
 
+> **SUPERSEDED DESIGN:** Claude's review rejected the 029-only approach below.
+> The accepted local candidate requires the exact post-040 function, executes
+> exact committed migration 029 followed by exact committed migration 040 in
+> one transaction, and proves that hardened function plus the complete 029 and
+> 040 history rows remain byte-identical. `proposal_designs` is unrelated.
+
 ## Purpose
 
 Independently audit and design the narrow repair for the isolated Supabase preview's second verified recorded-history/missing-schema inconsistency. Return an exact-evidence `PASS` or `FAIL` on the proposed approach. Do not implement against, connect to or mutate any hosted system.
@@ -13,7 +19,7 @@ Independently audit and design the narrow repair for the isolated Supabase previ
 - Migration `030` reconciliation succeeded with source SHA-256 `ebae62829ea25098d8b3535f838660288e80e82c44fdeebe7314a8762fbf1d74`.
 - Guarded replay steps 1–11 (`031`–`041`) succeeded.
 - Step 12 (`20260908000000_enforce_proposal_design_entitlements.sql`) failed cleanly with PostgreSQL `42P01` because `public.template_tier_access` is absent. Its history row was not recorded.
-- Read-only diagnosis confirms migration `029` is recorded exactly once while `public.proposal_templates`, `public.template_tier_access` and `public.proposal_designs` are absent.
+- Read-only diagnosis confirms migration `029` is recorded exactly once while `public.proposal_templates`, `public.template_tier_access` and `public.user_template_preferences` are absent.
 
 ## Proposed bounded repair
 

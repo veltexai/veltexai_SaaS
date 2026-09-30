@@ -13,6 +13,9 @@ const allowedOutputName = /^veltex-r2-prerequisite-replay(?:-[A-Za-z0-9._]+)?$/;
 const splitTransactionMigration = "20260913000000_commercial_quick_weekly_frequencies.sql";
 const baselineReconciliationFile = "030_special_services.sql";
 const baselineReconciliationArtifact = "00-030-recorded-history-reconciliation.sql";
+const templateReconciliationFile = "029_proposal_templates_system.sql";
+const templateHardeningFile = "040_executive_premium_trial_experience.sql";
+const templateReconciliationArtifact = "11a-029-recorded-history-reconciliation.sql";
 
 if (dirname(outputDir) !== "/private/tmp" || !allowedOutputName.test(basename(outputDir))) {
   throw new Error(`Refusing unsafe replay output directory: ${outputDir}`);
@@ -168,6 +171,7 @@ if (existsSync(outputDir)) {
   const expectedFiles = new Set([
     "manifest.json",
     ...(parsed.baselineReconciliation ? [parsed.baselineReconciliation.artifact] : []),
+    ...(parsed.templateReconciliation ? [parsed.templateReconciliation.artifact] : []),
     ...parsed.steps.map((step) => step.artifact),
   ]);
   if (existing.length !== expectedFiles.size || existing.some((name) => !expectedFiles.has(name))) {
@@ -197,6 +201,131 @@ const baselineChecks = [
 ];
 const baselineSql = `-- GENERATED FILE: do not edit or commit.\n-- Preview-only repair for recorded migration 030 with its schema absent.\n-- Isolated preview ynzkwctwlssjcsjmahey only; production is not authorized.\n-- Source SHA-256: ${sha256(baselineSource)}\n\nbegin;\n\n-- PRECONDITION: exact recorded-history/missing-schema preview fingerprint.\ndo $$\ndeclare actual_history integer;\nbegin\n  if to_regclass('public.profiles') is null\n     or to_regclass('public.proposals') is null\n     or to_regclass('supabase_migrations.schema_migrations') is null then\n    raise exception 'Baseline reconciliation refused: required baseline objects are absent';\n  end if;\n  if to_regclass('public.organizations') is not null then\n    raise exception 'Baseline reconciliation refused: R2 is already present';\n  end if;\n  if exists (select 1 from public.profiles) or exists (select 1 from public.proposals) then\n    raise exception 'Baseline reconciliation refused: preview application data is not empty';\n  end if;\n  select count(*) into actual_history from supabase_migrations.schema_migrations;\n  if actual_history <> ${baselineVersions.length}\n     or (select count(*) from supabase_migrations.schema_migrations where version = any(array[${sqlList(baselineVersions)}])) <> ${baselineVersions.length}\n     or not exists (select 1 from supabase_migrations.schema_migrations where version='030') then\n    raise exception 'Baseline reconciliation refused: expected exact 29-row history including recorded version 030';\n  end if;\n  if to_regclass('public.additional_service_catalog') is not null\n     or to_regclass('public.proposal_additional_services') is not null\n     or to_regprocedure('public.calc_monthly_amount(numeric,text,boolean)') is not null\n     or to_regprocedure('public.apply_pas_monthly()') is not null\n     or exists (select 1 from pg_trigger where tgname='trg_pas_monthly_amount')\n     or exists (select 1 from pg_policies where schemaname='public' and (tablename='additional_service_catalog' or tablename='proposal_additional_services')) then\n    raise exception 'Baseline reconciliation refused: one or more migration-030 objects already exist';\n  end if;\nend $$;\n\n-- EXACT RAW MIGRATION 030 BODY; ITS EXISTING HISTORY ROW IS NOT MODIFIED.\n${baselineSource.trim()}\n\n-- POSTCONDITION: prove the complete migration-030 final state.\ndo $$\nbegin\n  if not (${baselineChecks.join(") or not (")}) then\n    raise exception 'Baseline reconciliation postcondition failed for 030_special_services.sql';\n  end if;\n  if (select count(*) from supabase_migrations.schema_migrations where version='030') <> 1 then\n    raise exception 'Baseline reconciliation changed or duplicated migration-030 history';\n  end if;\nend $$;\n\ncommit;\n\nselect '030'::text as reconciled_recorded_version, '${sha256(baselineSource)}'::text as source_sha256;\n`;
 writeFileSync(resolve(outputDir, baselineReconciliationArtifact), baselineSql, { encoding: "utf8", mode: 0o600 });
+
+const templateSource = readFileSync(resolve(migrationsDir, templateReconciliationFile), "utf8");
+const templateHardeningSource = readFileSync(resolve(migrationsDir, templateHardeningFile), "utf8");
+const historyThroughStep11 = [...baselineVersions, ...steps.slice(0, 11).map(([file]) => versionOf(file))];
+const templateChecks = [
+  "to_regclass('public.proposal_templates') is not null",
+  "to_regclass('public.template_tier_access') is not null",
+  "to_regclass('public.user_template_preferences') is not null",
+  "exists (select 1 from information_schema.columns where table_schema='public' and table_name='proposals' and column_name='template_id' and data_type='uuid')",
+  "exists (select 1 from information_schema.columns where table_schema='public' and table_name='user_branding_settings' and column_name='template_version' and data_type='integer' and column_default='1')",
+  "(select count(*) from pg_class where oid in ('public.proposal_templates'::regclass,'public.template_tier_access'::regclass,'public.user_template_preferences'::regclass) and relrowsecurity) = 3",
+  "(select count(*) from pg_indexes where schemaname='public' and indexname in ('idx_proposal_templates_type','idx_proposal_templates_active','idx_template_tier_access_tier','idx_template_tier_access_template','idx_user_template_preferences_user','idx_proposals_template_id')) = 6",
+  "(select count(*) from pg_constraint where conrelid in ('public.proposal_templates'::regclass,'public.template_tier_access'::regclass,'public.user_template_preferences'::regclass) and contype in ('p','u')) = 5",
+  "(select count(*) from pg_constraint where conname in ('proposal_templates_template_type_check','template_tier_access_subscription_tier_check')) = 2",
+  "(select count(*) from pg_constraint where conname in ('template_tier_access_template_id_fkey','user_template_preferences_user_id_fkey','user_template_preferences_preferred_template_id_fkey','proposals_template_id_fkey') and contype='f' and confdeltype in ('c','n')) = 4",
+  "(select count(*) from pg_policies where schemaname='public' and ((tablename='proposal_templates' and policyname in ('Users can view active templates','Admins can manage all templates')) or (tablename='template_tier_access' and policyname in ('Users can view template tier access','Admins can manage template tier access')) or (tablename='user_template_preferences' and policyname in ('Users can view own template preferences','Users can insert own template preferences','Users can update own template preferences','Users can delete own template preferences','Admins can view all template preferences')))) = 9",
+  "to_regprocedure('public.get_user_accessible_templates(uuid)') is not null",
+  "to_regprocedure('public.can_user_access_template(uuid,uuid)') is not null",
+  "exists (select 1 from pg_proc p where p.oid='public.can_user_access_template(uuid,uuid)'::regprocedure and p.prosecdef and p.proconfig @> array['search_path=public'])",
+  "has_function_privilege('authenticated','public.get_user_accessible_templates(uuid)','EXECUTE')",
+  "has_function_privilege('authenticated','public.can_user_access_template(uuid,uuid)','EXECUTE')",
+  "not exists (select 1 from pg_proc p cross join lateral aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) acl where p.oid='public.can_user_access_template(uuid,uuid)'::regprocedure and acl.grantee=0 and acl.privilege_type='EXECUTE')",
+  "exists (select 1 from pg_trigger where tgname='proposal_templates_updated_at' and tgrelid='public.proposal_templates'::regclass and not tgisinternal)",
+  "exists (select 1 from pg_trigger where tgname='user_template_preferences_updated_at' and tgrelid='public.user_template_preferences'::regclass and not tgisinternal)",
+  "(select count(*) from public.proposal_templates where name in ('Basic Professional','Executive Premium','Modern Corporate','Luxury Elite')) = 4",
+  "(select count(*) from public.template_tier_access tta join public.proposal_templates pt on pt.id=tta.template_id where (pt.name='Basic Professional' and tta.subscription_tier in ('starter','professional','enterprise')) or (pt.name='Executive Premium' and tta.subscription_tier in ('professional','enterprise')) or (pt.name in ('Modern Corporate','Luxury Elite') and tta.subscription_tier='enterprise')) = 7",
+  "has_table_privilege('authenticated','public.proposal_templates','SELECT,INSERT,UPDATE,DELETE')",
+  "has_table_privilege('authenticated','public.template_tier_access','SELECT,INSERT,UPDATE,DELETE')",
+  "has_table_privilege('authenticated','public.user_template_preferences','SELECT,INSERT,UPDATE,DELETE')",
+];
+const templateSql = `-- GENERATED FILE: do not edit or commit.
+-- Preview-only repair for recorded migration 029 after forward step 11.
+-- Isolated preview ynzkwctwlssjcsjmahey only; production is not authorized.
+-- Migration 029 SHA-256: ${sha256(templateSource)}
+-- Migration 040 SHA-256: ${sha256(templateHardeningSource)}
+
+begin;
+
+-- PRECONDITION: exact post-step-11 recorded-history/missing-template fingerprint.
+do $$
+declare actual_history integer;
+begin
+  if to_regclass('public.profiles') is null
+     or to_regclass('public.proposals') is null
+     or to_regclass('public.user_branding_settings') is null
+     or to_regclass('supabase_migrations.schema_migrations') is null
+     or to_regprocedure('public.handle_updated_at()') is null then
+    raise exception 'Template reconciliation refused: required baseline objects are absent';
+  end if;
+  if to_regclass('public.organizations') is not null then
+    raise exception 'Template reconciliation refused: R2 is already present';
+  end if;
+  if exists (select 1 from public.profiles) or exists (select 1 from public.proposals) then
+    raise exception 'Template reconciliation refused: preview application data is not empty';
+  end if;
+  select count(*) into actual_history from supabase_migrations.schema_migrations;
+  if actual_history <> ${historyThroughStep11.length}
+     or (select count(*) from supabase_migrations.schema_migrations where version = any(array[${sqlList(historyThroughStep11)}])) <> ${historyThroughStep11.length}
+     or (select count(*) from supabase_migrations.schema_migrations where version='029') <> 1
+     or (select count(*) from supabase_migrations.schema_migrations where version='040') <> 1
+     or exists (select 1 from supabase_migrations.schema_migrations where version = any(array[${sqlList(steps.slice(11).map(([file]) => versionOf(file)))}])) then
+    raise exception 'Template reconciliation refused: expected exact 40-row history through step 11';
+  end if;
+  if to_regclass('public.proposal_templates') is not null
+     or to_regclass('public.template_tier_access') is not null
+     or to_regclass('public.user_template_preferences') is not null
+     or exists (select 1 from information_schema.columns where table_schema='public' and table_name='proposals' and column_name='template_id')
+     or exists (select 1 from information_schema.columns where table_schema='public' and table_name='user_branding_settings' and column_name='template_version')
+     or to_regprocedure('public.get_user_accessible_templates(uuid)') is not null
+     or exists (select 1 from pg_trigger where tgname in ('proposal_templates_updated_at','user_template_preferences_updated_at'))
+     or exists (select 1 from pg_policies where schemaname='public' and tablename in ('proposal_templates','template_tier_access','user_template_preferences')) then
+    raise exception 'Template reconciliation refused: one or more migration-029 objects already exist';
+  end if;
+  if to_regprocedure('public.can_user_access_template(uuid,uuid)') is null
+     or position('active-free-trial exception for Executive Premium' in coalesce(obj_description('public.can_user_access_template(uuid,uuid)'::regprocedure),'')) = 0
+     or not exists (select 1 from pg_proc p where p.oid='public.can_user_access_template(uuid,uuid)'::regprocedure and p.prosecdef and p.proconfig @> array['search_path=public']) then
+    raise exception 'Template reconciliation refused: exact post-040 hardening is absent';
+  end if;
+end $$;
+
+create temporary table veltex_template_reconciliation_snapshot on commit drop as
+select
+  pg_get_functiondef('public.can_user_access_template(uuid,uuid)'::regprocedure) as function_definition,
+  p.proconfig as function_config,
+  p.proacl as function_acl,
+  obj_description(p.oid) as function_comment,
+  (select row_to_json(m)::text from supabase_migrations.schema_migrations m where version='029') as history_029,
+  (select row_to_json(m)::text from supabase_migrations.schema_migrations m where version='040') as history_040
+from pg_proc p where p.oid='public.can_user_access_template(uuid,uuid)'::regprocedure;
+
+-- EXACT RAW MIGRATION 029 BODY; ITS EXISTING HISTORY ROW IS NOT MODIFIED.
+${templateSource.trim()}
+
+-- EXACT RAW MIGRATION 040 BODY; RESTORES THE ALREADY-RECORDED HARDENED FUNCTION.
+${templateHardeningSource.trim()}
+
+-- POSTCONDITION: prove migration 029 state plus byte-identical post-040 hardening.
+do $$
+begin
+${templateChecks.map((check, index) => `  if not (${check}) then
+    raise exception 'Template reconciliation postcondition ${index + 1} failed';
+  end if;`).join("\n")}
+  if (select pg_get_functiondef('public.can_user_access_template(uuid,uuid)'::regprocedure) <> function_definition
+             or p.proconfig is distinct from function_config
+             or p.proacl is distinct from function_acl
+             or obj_description(p.oid) is distinct from function_comment
+      from pg_proc p cross join veltex_template_reconciliation_snapshot
+      where p.oid='public.can_user_access_template(uuid,uuid)'::regprocedure) then
+    raise exception 'Template reconciliation changed the post-040 function';
+  end if;
+  if (select row_to_json(m)::text from supabase_migrations.schema_migrations m where version='029')
+       is distinct from (select history_029 from veltex_template_reconciliation_snapshot)
+     or (select row_to_json(m)::text from supabase_migrations.schema_migrations m where version='040')
+       is distinct from (select history_040 from veltex_template_reconciliation_snapshot) then
+    raise exception 'Template reconciliation changed migration history';
+  end if;
+end $$;
+
+commit;
+
+select '029+040'::text as reconciled_recorded_versions,
+       '${sha256(templateSource)}'::text as migration_029_sha256,
+       '${sha256(templateHardeningSource)}'::text as migration_040_sha256;
+`;
+writeFileSync(resolve(outputDir, templateReconciliationArtifact), templateSql, { encoding: "utf8", mode: 0o600 });
 
 const manifestSteps = [];
 for (let index = 0; index < steps.length; index += 1) {
@@ -236,7 +365,16 @@ const manifest = {
     insertsHistory: false,
     postconditions: baselineChecks,
   },
-  executionRule: "Execute baselineReconciliation first, then exactly one step artifact at a time in manifest order; stop on any error.",
+  templateReconciliation: {
+    files: [templateReconciliationFile, templateHardeningFile],
+    artifact: templateReconciliationArtifact,
+    sourceSha256: [sha256(templateSource), sha256(templateHardeningSource)],
+    recordedVersions: ["029", "040"],
+    afterStep: 11,
+    insertsHistory: false,
+    postconditions: templateChecks,
+  },
+  executionRule: "Execute baselineReconciliation first; execute steps 1-11 one artifact per run; execute templateReconciliation; then execute steps 12-23 one artifact per run. Stop on any error.",
   steps: manifestSteps,
 };
 writeFileSync(resolve(outputDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });

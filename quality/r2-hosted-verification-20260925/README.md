@@ -38,8 +38,9 @@ U8 hosted wake/pgmq/HMAC remains OPEN and is not a prerequisite.
 ### Required execution mode: bounded per-migration plan
 
 Use the per-migration plan for hosted SQL-Editor recovery. It emits one narrowly
-guarded baseline-030 reconciliation artifact, 23 forward-replay artifacts, and
-a manifest. The baseline artifact is permitted only when the exact 29-version
+guarded baseline-030 reconciliation artifact, a guarded migration-029-plus-040
+reconciliation artifact, 23 forward-replay artifacts, and a manifest. The
+baseline-030 artifact is permitted only when the exact 29-version
 history already records `030`, application data is empty, R2 is absent, and all
 objects created by committed migration 030 are absent. It replays the exact 030
 body, verifies the required tables and named columns, constraint counts,
@@ -48,8 +49,14 @@ seed rows, and never inserts or changes history. Run
 it first. Every subsequent artifact checks the exact prior history and
 empty-preview boundary, executes one source migration, proves a migration-
 specific observable outcome, and only then writes that migration's history
-row. Execute exactly one artifact at a time in manifest order and stop on the
-first error. Never skip forward or manually insert a history row. Allowed
+row. After steps 1–11, the template reconciliation accepts only the exact
+40-row post-041 history with migration 029's objects absent and migration 040's
+hardened access function present. It executes exact committed 029 followed by
+exact committed 040 in one transaction, proves the hardened function and both
+history rows byte-identical, and supplies no history write. Steps 12–23 follow
+only after that repair succeeds. Execute exactly one artifact per Run in the
+manifest's execution order and stop on the first error. Never skip forward or
+manually insert a history row. Allowed
 clients are the Supabase SQL Editor (one complete artifact per Run) or `psql`
 with `-v ON_ERROR_STOP=1`. Do not use clients configured to continue after an
 error, batch multiple artifacts into one Run, or resume inside an artifact.

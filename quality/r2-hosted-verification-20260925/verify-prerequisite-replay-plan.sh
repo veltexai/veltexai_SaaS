@@ -78,7 +78,7 @@ while IFS= read -r version; do
     exit 1
   }
   file="${matches[0]}"
-  if [ "$version" != 030 ]; then
+  if [ "$version" != 029 ] && [ "$version" != 030 ]; then
     "${PSQL[@]}" -d "$TEMPLATE" -f "$file" >"$OUT/baseline-$version.log" 2>&1 || {
       echo "Baseline migration failed: $(basename "$file")" >&2
       grep -E 'ERROR|LINE|HINT' "$OUT/baseline-$version.log" | head -10 >&2 || true
@@ -100,10 +100,11 @@ done <"$OUT/baseline-versions.txt"
 history030_before="$("${PSQL[@]}" -d "$TEMPLATE" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='030'")"
 [ -n "$history030_before" ] || { echo "Missing version-030 history fixture" >&2; exit 1; }
 
-# Reproduce the recorded preview mismatch: version 030 exists in history while
-# every object from its exact body is absent. Repair only the replay side; the
-# direct side receives the same committed body without another history insert.
+# Reproduce both recorded preview mismatches: versions 029 and 030 exist in
+# history while their exact bodies are absent. Repair 030 first on replay. The
+# direct chain receives both exact baseline bodies without history rewrites.
 "${PSQL[@]}" -d "$REPLAY" -f "$PLAN/00-030-recorded-history-reconciliation.sql" >"$OUT/reconcile-030.log" 2>&1
+"${PSQL[@]}" -d "$DIRECT" -f "$MIGRATIONS/029_proposal_templates_system.sql" >"$OUT/direct-029.log" 2>&1
 "${PSQL[@]}" -d "$DIRECT" -f "$MIGRATIONS/030_special_services.sql" >"$OUT/direct-030.log" 2>&1
 for db in "$REPLAY" "$DIRECT"; do
   count030="$("${PSQL[@]}" -d "$db" -Atc "select count(*) from supabase_migrations.schema_migrations where version='030'")"
@@ -164,6 +165,41 @@ while IFS=$'\t' read -r order artifact file version; do
 insert into supabase_migrations.schema_migrations(version, statements, name)
 values (:'version', array[]::text[], :'name');
 SQL
+
+  if [ "$order" = 11 ]; then
+    history029_before="$("${PSQL[@]}" -d "$REPLAY" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='029'")"
+    history040_before="$("${PSQL[@]}" -d "$REPLAY" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='040'")"
+    [ -n "$history029_before" ] && [ -n "$history040_before" ] || {
+      echo "Missing version-029 or version-040 history fixture" >&2
+      exit 1
+    }
+    "${PSQL[@]}" -d "$REPLAY" -f "$PLAN/11a-029-recorded-history-reconciliation.sql" >"$OUT/reconcile-029-040.log" 2>&1 || {
+      echo "Template reconciliation failed" >&2
+      tail -40 "$OUT/reconcile-029-040.log" >&2 || true
+      exit 1
+    }
+    for pair in "029:$history029_before" "040:$history040_before"; do
+      history_version="${pair%%:*}"
+      history_before="${pair#*:}"
+      history_after="$("${PSQL[@]}" -d "$REPLAY" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='$history_version'")"
+      [ "$history_after" = "$history_before" ] || {
+        echo "Template reconciliation rewrote version-$history_version history" >&2
+        exit 1
+      }
+    done
+
+    # A second run must refuse and preserve both recorded rows.
+    "${PSQL[@]}" -d postgres -c "create database $GUARD template $REPLAY"
+    guard029_before="$("${PSQL[@]}" -d "$GUARD" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='029'")"
+    guard040_before="$("${PSQL[@]}" -d "$GUARD" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='040'")"
+    if "${PSQL[@]}" -d "$GUARD" -f "$PLAN/11a-029-recorded-history-reconciliation.sql" >"$OUT/reconcile-029-040-refusal.log" 2>&1; then
+      echo "Template reconciliation unexpectedly accepted an already-repaired schema" >&2
+      exit 1
+    fi
+    [ "$("${PSQL[@]}" -d "$GUARD" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='029'")" = "$guard029_before" ] || exit 1
+    [ "$("${PSQL[@]}" -d "$GUARD" -Atc "select md5(row_to_json(m)::text) from supabase_migrations.schema_migrations m where version='040'")" = "$guard040_before" ] || exit 1
+    "${PSQL[@]}" -d postgres -c "drop database $GUARD"
+  fi
 done <"$OUT/steps.tsv"
 
 for db in "$REPLAY" "$DIRECT"; do
@@ -179,6 +215,8 @@ diff -u "$OUT/direct.schema.sql" "$OUT/replay.schema.sql"
 
 NONDETERMINISTIC_SOURCE_TABLES=(
   --exclude-table-data=public.additional_service_catalog
+  --exclude-table-data=public.proposal_templates
+  --exclude-table-data=public.template_tier_access
   --exclude-table-data=public.pricing_source_versions
   --exclude-table-data=public.occupational_wage_benchmarks
   --exclude-table-data=public.minimum_wage_rules
@@ -251,4 +289,25 @@ for db in "$REPLAY" "$DIRECT"; do
 done
 diff -u "$OUT/$DIRECT.additional-services-semantic.json" "$OUT/$REPLAY.additional-services-semantic.json"
 
-echo "PASS: recorded-history/missing-schema 030 reconciliation and all 23 guarded replay steps match direct ordered migrations; no duplicate 030 history; step 13 cannot record history after refusal."
+# Migration 029 also seeds generated UUIDs and timestamps. Compare templates
+# and tier relationships through stable names and business fields.
+cat >"$OUT/templates-semantic.sql" <<'SQL'
+select jsonb_build_object(
+  'templates', (select jsonb_agg(to_jsonb(t) order by t.sort_order, t.name) from (
+    select name, description, template_type, preview_image_url, template_config,
+      is_active, sort_order
+    from public.proposal_templates
+  ) t),
+  'tier_access', (select jsonb_agg(to_jsonb(a) order by a.template_name, a.subscription_tier) from (
+    select pt.name template_name, tta.subscription_tier
+    from public.template_tier_access tta
+    join public.proposal_templates pt on pt.id = tta.template_id
+  ) a)
+);
+SQL
+for db in "$REPLAY" "$DIRECT"; do
+  "${PSQL[@]}" -d "$db" -Atf "$OUT/templates-semantic.sql" >"$OUT/$db.templates-semantic.json"
+done
+diff -u "$OUT/$DIRECT.templates-semantic.json" "$OUT/$REPLAY.templates-semantic.json"
+
+echo "PASS: recorded-history/missing-schema 030 and 029+040 reconciliations plus all 23 guarded replay steps match direct ordered migrations; history is byte-preserved; step 13 cannot record history after refusal."
