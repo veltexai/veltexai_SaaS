@@ -17,9 +17,27 @@ does not authorize or perform a production write.
   by the production classifier.
 - `classify-production-capture.mjs` refuses wrong identity/history, any R2
   evidence, partial state, unexpected drift, and fully superseded migrations
-  that cannot be inferred from catalog state alone.
+  that cannot be inferred from catalog state alone. Prerequisite classification
+  compares each step with the cumulatively selected predecessor state instead
+  of only the original baseline, so a legitimately absent later step is not
+  confused with partial application after earlier steps are complete.
 - `test-classifier.mjs` proves fail-closed behavior for baseline ambiguity,
-  partial state, and stray R2 state.
+  partial state, cumulative predecessor states, and stray R2 state.
+
+Physical column ordinals are intentionally excluded from semantic atom hashes.
+Named-column type, nullability, default, identity, generated status and
+collation remain exact. This permits equivalent additive schemas whose column
+creation order differs while still rejecting every behaviorally meaningful
+column drift.
+
+The only `absent-equivalent` prerequisite is
+`20260924010000_restrict_legacy_proposal_view.sql`: complete absence of the
+legacy `enhanced_proposals` view, all its columns and every explicit view ACL is
+strictly safer than hardening that unused view in place. The classifier binds
+the exact absent-atom set by SHA-256; the builder and validator independently
+recompute it and allow only the dedicated `reconcile-absent-equivalent` mode.
+Partial removal, a forged proof or use of this mode for any other migration is
+rejected.
 
 The catalog contract cannot prove historical one-time data transformations by
 itself. Data-bearing migrations—including catalog classification, free-trial

@@ -1588,3 +1588,35 @@ After any material action, append or revise the relevant section with:
   fail-closed equivalence rule for the absent legacy view. Mutation-negative
   tests and an independent review are required before another production
   capture or any production plan. Production remains unmodified.
+
+### R2 production G3 classifier remediation — LOCAL PASS / INDEPENDENT REVIEW PENDING (2026-10-01 Pacific)
+
+- **SEMANTIC COLUMN CONTRACT:** physical `attnum` was removed from completion
+  hashes while exact named-column type, nullability, default, identity,
+  generated status and collation remain enforced. This closes the false partial
+  caused by production's earlier `logo_url` creation without weakening any
+  behaviorally meaningful column requirement.
+- **CUMULATIVE STATE CLASSIFICATION:** every prerequisite is now compared with
+  the state produced by the already classified predecessors and with its own
+  exact after-transition. Final reconstruction remains exact. A dedicated
+  production-shaped fixture proves catalog remediation can be absent after its
+  predecessors while later steps remain complete; arbitrary mixed or partial
+  atoms still refuse.
+- **LEGACY VIEW POLICY:** only
+  `20260924010000_restrict_legacy_proposal_view.sql` may use the new
+  `absent-equivalent` state. It requires complete absence of the view, all view
+  columns and every explicit view ACL, with the exact absent atom set bound by
+  SHA-256. Builder and validator independently recompute the proof and emit
+  only the unarmed `reconcile-absent-equivalent` mode. Partial deletion, forged
+  proof and use on another migration are rejected.
+- **LOCAL GATES PASS:** deterministic expected-state regeneration/check passes;
+  expected-state static and classifier mutation suites pass; builder/validator
+  refusal and forged-artifact suites pass; hosted-preview compatibility passes;
+  the production-shaped PostgreSQL 16 gate replays 126 migrations and matches
+  the fresh 63-file chain; TypeScript and diff hygiene pass; all 86 Jest suites,
+  721 tests and five snapshots pass.
+- **STATUS:** this is a local candidate only. The regenerated production capture
+  contract invalidates the earlier local capture by design, so production was
+  not recaptured. Independent exact-delta review is required before another
+  read-only production capture. Production remains unmodified and no deployment
+  or production plan is authorized.

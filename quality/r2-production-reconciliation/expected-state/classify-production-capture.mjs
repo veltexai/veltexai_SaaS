@@ -39,21 +39,47 @@ for(const version of ['031','034','041','20260922000000','20260922010000','20260
 }
 const classified={};
 const deferredSuperseded=[];
+const classificationExpected=new Map(baselineExpected);
+const legacyViewEquivalentVersion='20260924010000';
+const legacyViewAtom = key => key==='view:enhanced_proposals'
+  || key.startsWith('column:enhanced_proposals.')
+  || key.startsWith('acl:view:enhanced_proposals:');
 for(const step of prerequisiteSteps){
   const atoms=step.prerequisite_effective_atoms??[];
   if(!atoms.length){
     deferredSuperseded.push(step);
     continue;
   }
-  const afterMatches=atoms.filter(atom=>(current.get(atom)??null)===(prerequisiteExpected.get(atom)??null)).length;
-  const beforeMatches=atoms.filter(atom=>(current.get(atom)??null)===(baselineExpected.get(atom)??null)).length;
+  const transition=new Map(step.diff.evidence.map(evidence=>[evidence.atom,evidence]));
+  if(atoms.some(atom=>!transition.has(atom))) throw new Error(`missing transition evidence: ${step.file}`);
+  const afterMatches=atoms.filter(atom=>(current.get(atom)??null)===(transition.get(atom).after_sha256??null)).length;
+  const beforeMatches=atoms.filter(atom=>(current.get(atom)??null)===(classificationExpected.get(atom)??null)).length;
   let state;
   if(afterMatches===atoms.length&&beforeMatches!==atoms.length) state='complete';
   else if(beforeMatches===atoms.length&&afterMatches!==atoms.length) state='absent';
   else if(afterMatches===atoms.length&&beforeMatches===atoms.length) state='ambiguous';
   else state='partial';
-  classified[step.file.split('_',1)[0]]={history:capture.migration_history.versions.includes(step.file.split('_',1)[0]),state,expected_atom_count:atoms.length,matched_atom_count:afterMatches};
+  const version=step.file.split('_',1)[0];
+  if(version===legacyViewEquivalentVersion && state==='partial') {
+    const absenceAtoms=[...baselineExpected.keys()].filter(legacyViewAtom).sort();
+    if(absenceAtoms.length>0 && absenceAtoms.every(atom=>!current.has(atom))) {
+      state='absent-equivalent';
+      classified[version]={
+        history:capture.migration_history.versions.includes(version),
+        state,
+        expected_atom_count:absenceAtoms.length,
+        matched_atom_count:absenceAtoms.length,
+        equivalence_proof:{kind:'legacy-view-absent',atom_set_sha256:createHash('sha256').update(absenceAtoms.join('\n')).digest('hex')},
+      };
+    }
+  }
+  classified[version]??={history:capture.migration_history.versions.includes(version),state,expected_atom_count:atoms.length,matched_atom_count:afterMatches};
   if(state==='partial'||state==='ambiguous') throw new Error(`${state} prerequisite state: ${step.file}`);
+  if(state==='complete') for(const evidence of step.diff.evidence) {
+    if(evidence.after_sha256===null) classificationExpected.delete(evidence.atom);
+    else classificationExpected.set(evidence.atom,evidence.after_sha256);
+  }
+  if(state==='absent-equivalent') for(const atom of [...classificationExpected.keys()].filter(legacyViewAtom)) classificationExpected.delete(atom);
 }
 for(const step of deferredSuperseded){
   const version=step.file.split('_',1)[0];
@@ -76,12 +102,19 @@ for(const step of deferredSuperseded){
 const reconstructed=new Map(baselineExpected);
 for(const step of prerequisiteSteps){
   const state=classified[step.file.split('_',1)[0]].state;
+  if(state==='absent-equivalent') {
+    for(const atom of [...reconstructed.keys()].filter(legacyViewAtom)) reconstructed.delete(atom);
+    continue;
+  }
   if(state!=='complete'&&state!=='superseded-equivalent') continue;
-  for(const e of step.diff.evidence){if(e.after_sha256===null)reconstructed.delete(e.atom);else reconstructed.set(e.atom,e.after_sha256);}
+  for(const evidence of step.diff.evidence){
+    if(evidence.after_sha256===null) reconstructed.delete(evidence.atom);
+    else reconstructed.set(evidence.atom,evidence.after_sha256);
+  }
 }
 const mismatch=[...current].filter(([k,v])=>reconstructed.get(k)!==v);
 const missing=[...reconstructed].filter(([k])=>!current.has(k));
-if(mismatch.length||missing.length) throw new Error(`catalog is not an exact baseline-plus-classified-steps state: mismatched=${mismatch.length} missing=${missing.length}`);
+if(mismatch.length||missing.length) throw new Error(`catalog is not an exact baseline-plus-classified-steps state: mismatched=${mismatch.length} missing=${missing.length} sample=${JSON.stringify({mismatch:mismatch.slice(0,3).map(([key])=>key),missing:missing.slice(0,3).map(([key])=>key)})}`);
 for(const step of r2Steps) classified[step.file.split('_',1)[0]]={history:false,state:'absent',expected_atom_count:step.diff.evidence.length,matched_atom_count:0};
 const output={...capture,contract_version:2,baseline:{state:'complete',atom_digest:contract.recorded_baseline.atoms_sha256,expected_atom_count:baselineExpected.size,matched_atom_count:baselineExpected.size},steps:classified,r2_absent:true,classification:{expected_state_sha256:createHash('sha256').update(readFileSync(resolve(here,'expected-state.v1.json'))).digest('hex'),classified_at:new Date().toISOString()}};
 writeFileSync(outputPath,JSON.stringify(output,null,2)+'\n',{mode:0o600});

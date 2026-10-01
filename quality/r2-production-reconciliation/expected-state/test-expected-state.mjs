@@ -47,5 +47,6 @@ assert.deepEqual(newClientGrantAll,[],'new GRANT ALL to anon/authenticated requi
 const sql=readFileSync(resolve(here,'catalog.sql'),'utf8');
 for(const required of ['table','column','constraint','index','function','view','trigger','policy','acl','type','sequence','extension']) assert.match(sql,new RegExp(`'${required}'`));
 for(const required of ['reloptions','collation','ready','language','result','owned_by']) assert.match(sql,new RegExp(`'${required}'`));
+assert.doesNotMatch(sql,/'position'\s*,/,'physical column order is diagnostic, not semantic migration evidence');
 assert.doesNotMatch(sql,/'(?:oid|relid|typid|owner_oid)'\s*,/i,'catalog must not label internal identifiers as emitted values');
 console.log('expected-state deterministic fixture/static contract PASS');

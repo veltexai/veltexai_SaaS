@@ -11,7 +11,7 @@ tables as (
     and not exists (select 1 from pg_depend d where d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e')
 ), columns as (
   select jsonb_build_object('kind','column','identity',c.relname||'.'||a.attname,'value',jsonb_build_object(
-    'position',a.attnum,'type',pg_catalog.format_type(a.atttypid,a.atttypmod),
+    'type',pg_catalog.format_type(a.atttypid,a.atttypmod),
     'not_null',a.attnotnull,'identity',a.attidentity,'generated',a.attgenerated,
     'collation',case when a.attcollation=0 then null else coll.collname end,
     'default',case when d.oid is null then null else pg_get_expr(d.adbin,d.adrelid,false) end)) atom

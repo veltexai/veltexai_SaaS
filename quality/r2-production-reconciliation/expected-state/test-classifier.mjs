@@ -28,6 +28,30 @@ const prerequisiteResult=run('prereq',capture(contract.prerequisite_checkpoint.a
 assert.equal(prerequisiteResult.steps['040'].state,'superseded-equivalent');
 assert.deepEqual(prerequisiteResult.steps['040'].equivalence_proof,['20260908000000','20260924000000']);
 
+const predecessorState=structuredClone(contract.prerequisite_checkpoint.atoms);
+const predecessorByKey=new Map(predecessorState.map(atom=>[`${atom.kind}:${atom.identity}`,atom]));
+const catalogRemediation=contract.production_steps.find(step=>step.file.startsWith('20260922010000_'));
+const catalogIndex=contract.production_steps.indexOf(catalogRemediation);
+const laterTouched=new Set(contract.production_steps.slice(catalogIndex+1,23).flatMap(step=>step.diff.evidence.map(evidence=>evidence.atom)));
+for(const evidence of catalogRemediation.diff.evidence.filter(candidate=>!laterTouched.has(candidate.atom))){
+  const [kind,...identityParts]=evidence.atom.split(':'); const identity=identityParts.join(':');
+  if(evidence.before_sha256===null) predecessorByKey.delete(evidence.atom);
+  else predecessorByKey.set(evidence.atom,{kind,identity,value_sha256:evidence.before_sha256,value:{}});
+}
+const predecessorResult=run('cumulative-predecessor',capture([...predecessorByKey.values()],{
+  ...contract.prerequisite_checkpoint.data_invariants,
+  '20260922010000':{applicable:false},
+}));
+assert.equal(predecessorResult.steps['20260922010000'].state,'absent');
+
+const legacyViewAtom=atom=>atom.identity==='enhanced_proposals'||atom.identity.startsWith('enhanced_proposals.')||(atom.kind==='acl'&&atom.identity.startsWith('view:enhanced_proposals:'));
+const viewAbsent=contract.prerequisite_checkpoint.atoms.filter(atom=>!legacyViewAtom(atom));
+const viewAbsentResult=run('legacy-view-absent',capture(viewAbsent,contract.prerequisite_checkpoint.data_invariants));
+assert.equal(viewAbsentResult.steps['20260924010000'].state,'absent-equivalent');
+assert.equal(viewAbsentResult.steps['20260924010000'].equivalence_proof.kind,'legacy-view-absent');
+const viewOnlyMissing=contract.prerequisite_checkpoint.atoms.filter(atom=>!(atom.kind==='view'&&atom.identity==='enhanced_proposals'));
+run('legacy-view-partial-removal',capture(viewOnlyMissing,contract.prerequisite_checkpoint.data_invariants),false);
+
 const mixed=structuredClone(contract.prerequisite_checkpoint.atoms);
 const r0Step=contract.production_steps.find(step=>step.file.startsWith('20260924000000_'));
 const baselineByKey=new Map(contract.recorded_baseline.atoms.map(atom=>[`${atom.kind}:${atom.identity}`,atom]));

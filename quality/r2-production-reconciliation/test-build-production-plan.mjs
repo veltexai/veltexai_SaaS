@@ -16,6 +16,10 @@ const template=JSON.parse(readFileSync(resolve(root,'quality/r2-production-recon
 const temp=mkdtempSync(resolve(tmpdir(),'veltex-g3-test-'));
 const builder=resolve(root,'quality/r2-production-reconciliation/build-production-plan.mjs');
 const validator=resolve(root,'quality/r2-production-reconciliation/validate-production-plan.mjs');
+const expectedStateContract=JSON.parse(readFileSync(resolve(root,'quality/r2-production-reconciliation/expected-state/expected-state.v1.json'),'utf8'));
+const legacyViewAtom=key=>key==='view:enhanced_proposals'||key.startsWith('column:enhanced_proposals.')||key.startsWith('acl:view:enhanced_proposals:');
+const legacyViewAtoms=expectedStateContract.recorded_baseline.atoms.map(atom=>`${atom.kind}:${atom.identity}`).filter(legacyViewAtom).sort();
+const legacyViewProofSha256=createHash('sha256').update(legacyViewAtoms.join('\n')).digest('hex');
 let refused=false;
 try { execFileSync(process.execPath,[builder,'/private/tmp/veltex-r2-production-plan-test-pending',resolve(root,'quality/r2-production-reconciliation/production-fingerprint.template.json')],{stdio:'pipe'}); } catch { refused=true; }
 if(!refused) throw new Error('pending fingerprint unexpectedly built');
@@ -52,6 +56,8 @@ expectBuildRefusal('partial-step',fp=>{fp.steps['031'].state='partial';fp.steps[
 expectBuildRefusal('r2-stray-object',fp=>{fp.steps['20260925002000'].state='partial';fp.steps['20260925002000'].matched_atom_count=1;});
 expectBuildRefusal('040-false-equivalence',fp=>{fp.steps['040']={history:false,state:'superseded-equivalent',expected_atom_count:0,matched_atom_count:0,equivalence_proof:['20260908000000','20260924000000']};});
 expectBuildRefusal('equivalence-on-other-version',fp=>{fp.steps['031']={history:false,state:'superseded-equivalent',expected_atom_count:0,matched_atom_count:0,equivalence_proof:['20260908000000','20260924000000']};});
+expectBuildRefusal('absent-equivalence-on-other-version',fp=>{fp.steps['031']={history:false,state:'absent-equivalent',expected_atom_count:legacyViewAtoms.length,matched_atom_count:legacyViewAtoms.length,equivalence_proof:{kind:'legacy-view-absent',atom_set_sha256:legacyViewProofSha256}};});
+expectBuildRefusal('legacy-view-forged-proof',fp=>{fp.steps['20260924010000']={history:false,state:'absent-equivalent',expected_atom_count:legacyViewAtoms.length,matched_atom_count:legacyViewAtoms.length,equivalence_proof:{kind:'legacy-view-absent',atom_set_sha256:'f'.repeat(64)}};});
 expectBuildRefusal('040-absent-after-complete-successors',fp=>{for(const successor of ['20260908000000','20260924000000'])fp.steps[successor]={history:false,state:'complete',expected_atom_count:4,matched_atom_count:4};});
 expectBuildRefusal('040-absent-after-mixed-successors',fp=>{fp.steps['20260908000000']={history:false,state:'complete',expected_atom_count:4,matched_atom_count:4};});
 const output='/private/tmp/veltex-r2-production-plan-test-reviewed';
@@ -70,6 +76,15 @@ execFileSync(process.execPath,[builder,equivalentOutput,equivalentFixture,equiva
 execFileSync(process.execPath,[validator,equivalentOutput,equivalentFixture,equivalentReview],{cwd:root,stdio:'pipe'});
 const equivalentManifest=JSON.parse(readFileSync(resolve(equivalentOutput,'manifest.json'),'utf8'));
 if(equivalentManifest.steps.find(step=>step.version==='040')?.mode!=='reconcile-superseded-equivalent') throw new Error('migration 040 terminal-equivalence mode missing');
+const absentViewTemplate=structuredClone(template);
+absentViewTemplate.steps['20260924010000']={history:false,state:'absent-equivalent',expected_atom_count:legacyViewAtoms.length,matched_atom_count:legacyViewAtoms.length,equivalence_proof:{kind:'legacy-view-absent',atom_set_sha256:legacyViewProofSha256}};
+const absentViewFixture=resolve(temp,'absent-view.json'); writeFileSync(absentViewFixture,JSON.stringify(absentViewTemplate));
+const absentViewReview=resolve(temp,'absent-view-review.json'); writeFileSync(absentViewReview,JSON.stringify({status:'PASS',reviewer:'synthetic-test-only',reviewed_at:'2026-09-30T00:00:00Z',fingerprint_sha256:createHash('sha256').update(readFileSync(absentViewFixture)).digest('hex')}));
+const absentViewOutput='/private/tmp/veltex-r2-production-plan-test-absent-view';
+execFileSync(process.execPath,[builder,absentViewOutput,absentViewFixture,absentViewReview],{stdio:'pipe'});
+execFileSync(process.execPath,[validator,absentViewOutput,absentViewFixture,absentViewReview],{cwd:root,stdio:'pipe'});
+const absentViewManifest=JSON.parse(readFileSync(resolve(absentViewOutput,'manifest.json'),'utf8'));
+if(absentViewManifest.steps.find(step=>step.version==='20260924010000')?.mode!=='reconcile-absent-equivalent') throw new Error('legacy-view absence-equivalence mode missing');
 const forged=structuredClone(manifest); forged.steps[0].mode='apply';
 const forgedText=JSON.stringify(forged,null,2)+'\n'; const forgedEncoded=Buffer.from(forgedText).toString('base64');
 const forgedSql=`-- GENERATED G3 REVIEW ARTIFACT. UNARMED AND NON-EXECUTABLE.\n-- Target label: iwoaaljitifloolszxlu; identity still requires exact database fingerprint.\n-- Fingerprint SHA-256: ${forged.fingerprint_sha256}\n-- Manifest Base64 SHA-256: ${createHash('sha256').update(forgedEncoded).digest('hex')}\n-- No production authorization is encoded in this file.\n\ndo $$ begin raise exception 'UNARMED G3 ARTIFACT: G2, exact-artifact review, G4 and action-specific production authorization are required'; end $$;\n\n-- MANIFEST_BASE64:${forgedEncoded}\n`;

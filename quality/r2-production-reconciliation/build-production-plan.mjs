@@ -33,15 +33,23 @@ const prerequisiteFiles = [
 const r2Files = ['20260925002000_r2_organization_tenancy.sql','20260925003000_r2_claude_security_remediation.sql','20260925004000_r2_second_security_remediation.sql','20260925005000_r2_third_security_remediation.sql','20260925006000_r2_cleanup_guard_ordering.sql','20260925007000_r2_service_role_proposal_read.sql','20260925008000_r2_addon_acl_alignment.sql','20260925009000_r2_tracked_print_projection.sql','20260925010000_tracked_link_revocation.sql','20260925011000_r0_private_function_service_role_acl.sql'];
 const sha = text => createHash('sha256').update(text).digest('hex');
 const reviewedSourceHashes = JSON.parse(readFileSync(resolve(root,'quality/r2-production-reconciliation/reviewed-source-sha256.json'),'utf8'));
+const expectedStateContract = JSON.parse(readFileSync(resolve(root,'quality/r2-production-reconciliation/expected-state/expected-state.v1.json'),'utf8'));
 const exactFiles = [...prerequisiteFiles, ...r2Files];
 const supersededEquivalentVersion = '040';
 const supersededEquivalentProof = ['20260908000000','20260924000000'];
+const absentEquivalentVersion = '20260924010000';
+const legacyViewAtom = key => key==='view:enhanced_proposals'
+  || key.startsWith('column:enhanced_proposals.')
+  || key.startsWith('acl:view:enhanced_proposals:');
+const absentEquivalentAtoms = expectedStateContract.recorded_baseline.atoms
+  .map(atom=>`${atom.kind}:${atom.identity}`).filter(legacyViewAtom).sort();
+const absentEquivalentProofSha256 = sha(absentEquivalentAtoms.join('\n'));
 if (JSON.stringify(Object.keys(reviewedSourceHashes)) !== JSON.stringify(exactFiles)) throw new Error('reviewed source hash table does not match the exact ordered migration set');
 const steps = [...prerequisiteFiles, ...r2Files].map(file => {
   const version = file.split('_',1)[0];
   const source = readFileSync(resolve(root,'supabase/migrations',file),'utf8');
   const observed = fp.steps?.[version];
-  if (!observed || typeof observed.history !== 'boolean' || !['absent','complete','partial','ambiguous','superseded-equivalent'].includes(observed.state)) throw new Error(`incomplete object fingerprint for ${version}`);
+  if (!observed || typeof observed.history !== 'boolean' || !['absent','complete','partial','ambiguous','superseded-equivalent','absent-equivalent'].includes(observed.state)) throw new Error(`incomplete object fingerprint for ${version}`);
   const allowsZeroAtoms = version===supersededEquivalentVersion && ['absent','superseded-equivalent'].includes(observed.state);
   if (!Number.isInteger(observed.expected_atom_count) || !Number.isInteger(observed.matched_atom_count) || observed.expected_atom_count < (allowsZeroAtoms?0:1) || observed.matched_atom_count < 0 || observed.matched_atom_count > observed.expected_atom_count) throw new Error(`invalid atom evidence for ${version}`);
   if (observed.state === 'partial' || observed.state === 'ambiguous') throw new Error(`partial/ambiguous state for ${version}`);
@@ -56,6 +64,11 @@ const steps = [...prerequisiteFiles, ...r2Files].map(file => {
       if (!evidence || evidence.state!=='complete' || evidence.matched_atom_count!==evidence.expected_atom_count) throw new Error(`migration 040 successor is not exactly complete: ${successor}`);
     }
     mode='reconcile-superseded-equivalent';
+  } else if (version===absentEquivalentVersion && !observed.history && observed.state==='absent-equivalent') {
+    if(observed.expected_atom_count!==absentEquivalentAtoms.length || observed.matched_atom_count!==absentEquivalentAtoms.length
+      || observed.equivalence_proof?.kind!=='legacy-view-absent'
+      || observed.equivalence_proof?.atom_set_sha256!==absentEquivalentProofSha256) throw new Error('legacy-view absence equivalence proof mismatch');
+    mode='reconcile-absent-equivalent';
   } else if (observed.history && observed.state === 'complete' && observed.matched_atom_count === observed.expected_atom_count) mode = 'verify-recorded';
   else if (!observed.history && observed.state === 'complete' && observed.matched_atom_count === observed.expected_atom_count) mode = 'reconcile-history';
   else if (!observed.history && observed.state === 'absent' && observed.matched_atom_count === 0) {
