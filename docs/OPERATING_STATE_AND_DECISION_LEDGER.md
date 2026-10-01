@@ -1168,3 +1168,27 @@ After any material action, append or revise the relevant section with:
   matching QA profile internal. Literal historical execution is still not
   inferred from terminal data state; migration 040 terminal-equivalence policy
   and independent review remain required before a buildable production plan.
+
+### R2 migration 040 terminal-equivalence policy — APPROVED / LOCAL PASS / INDEPENDENT REVIEW PENDING (2026-09-30 Pacific)
+
+- **FOUNDER DECISION:** migration `040_executive_premium_trial_experience.sql`
+  must never be replayed after its exact successor states are present. When
+  both `20260908000000_enforce_proposal_design_entitlements.sql` and
+  `20260924000000_r0_privilege_hardening.sql` are proven complete, G3 may mark
+  040 `superseded-equivalent` and reconcile history only. When both successors
+  are absent, 040 remains an ordinary apply step. Mixed, partial, drifted or
+  forged successor evidence fails closed.
+- **BOUNDED IMPLEMENTATION:** only version 040 can use the explicit
+  `reconcile-superseded-equivalent` plan mode. The classifier, builder and
+  validator independently require the same ordered successor proof; zero-atom
+  evidence and this mode are rejected for every other migration.
+- **LOCAL EVIDENCE:** baseline classification now succeeds with 040 absent;
+  the full prerequisite checkpoint succeeds with 040 terminally equivalent;
+  false equivalence, equivalence on another migration, mixed successors,
+  one-atom prerequisite drift and stray R2 state are refused. The disposable
+  PostgreSQL 16 production-shaped gate again passes 124 migration applications
+  and proves the exact `29 + 23 + 10` branch equals a fresh lexical 62-file
+  replay. Production remains untouched.
+- **NEXT GATE:** run the complete local verification set, commit and push the
+  exact policy implementation, then obtain an independent Claude PASS bound to
+  that commit before any production capture, reconciliation or deployment.

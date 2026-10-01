@@ -31,16 +31,21 @@ for(const step of manifest.steps){
   const source=readFileSync(resolve(root,'supabase/migrations',step.file),'utf8');
   const digest=createHash('sha256').update(source).digest('hex');
   if(digest!==step.source_sha256||digest!==reviewedSourceHashes[step.file]) throw new Error(`source drift: ${step.file}`);
-  if(!['verify-recorded','reconcile-history','apply'].includes(step.mode)) throw new Error(`invalid mode: ${step.file}`);
+  if(!['verify-recorded','reconcile-history','reconcile-superseded-equivalent','apply'].includes(step.mode)) throw new Error(`invalid mode: ${step.file}`);
 }
+const supersededEquivalentProof=['20260908000000','20260924000000'];
 const expectedSteps=exactFiles.map(file=>{
   const version=file.split('_',1)[0];
   const observed=fingerprint.steps?.[version];
-  if(!observed||!['absent','complete'].includes(observed.state)) throw new Error(`fingerprint state is not buildable: ${version}`);
+  if(!observed||!['absent','complete','superseded-equivalent'].includes(observed.state)) throw new Error(`fingerprint state is not buildable: ${version}`);
   let mode;
   if(file>='20260925002000_') {
     if(observed.history||observed.state!=='absent'||observed.matched_atom_count!==0) throw new Error(`R2/forward state is not absent: ${version}`);
     mode='apply';
+  } else if(version==='040'&&!observed.history&&observed.state==='superseded-equivalent') {
+    if(observed.expected_atom_count!==0||observed.matched_atom_count!==0||JSON.stringify(observed.equivalence_proof)!==JSON.stringify(supersededEquivalentProof)) throw new Error('migration 040 equivalence evidence mismatch');
+    for(const successor of supersededEquivalentProof){const evidence=fingerprint.steps?.[successor];if(!evidence||evidence.state!=='complete'||evidence.matched_atom_count!==evidence.expected_atom_count) throw new Error(`migration 040 successor is not exactly complete: ${successor}`);}
+    mode='reconcile-superseded-equivalent';
   } else if(observed.history&&observed.state==='complete'&&observed.matched_atom_count===observed.expected_atom_count) mode='verify-recorded';
   else if(!observed.history&&observed.state==='complete'&&observed.matched_atom_count===observed.expected_atom_count) mode='reconcile-history';
   else if(!observed.history&&observed.state==='absent'&&observed.matched_atom_count===0) mode='apply';

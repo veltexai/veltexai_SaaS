@@ -34,18 +34,28 @@ const r2Files = ['20260925002000_r2_organization_tenancy.sql','20260925003000_r2
 const sha = text => createHash('sha256').update(text).digest('hex');
 const reviewedSourceHashes = JSON.parse(readFileSync(resolve(root,'quality/r2-production-reconciliation/reviewed-source-sha256.json'),'utf8'));
 const exactFiles = [...prerequisiteFiles, ...r2Files];
+const supersededEquivalentVersion = '040';
+const supersededEquivalentProof = ['20260908000000','20260924000000'];
 if (JSON.stringify(Object.keys(reviewedSourceHashes)) !== JSON.stringify(exactFiles)) throw new Error('reviewed source hash table does not match the exact ordered migration set');
 const steps = [...prerequisiteFiles, ...r2Files].map(file => {
   const version = file.split('_',1)[0];
   const source = readFileSync(resolve(root,'supabase/migrations',file),'utf8');
   const observed = fp.steps?.[version];
-  if (!observed || typeof observed.history !== 'boolean' || !['absent','complete','partial','ambiguous'].includes(observed.state)) throw new Error(`incomplete object fingerprint for ${version}`);
-  if (!Number.isInteger(observed.expected_atom_count) || !Number.isInteger(observed.matched_atom_count) || observed.expected_atom_count < 1 || observed.matched_atom_count < 0 || observed.matched_atom_count > observed.expected_atom_count) throw new Error(`invalid atom evidence for ${version}`);
+  if (!observed || typeof observed.history !== 'boolean' || !['absent','complete','partial','ambiguous','superseded-equivalent'].includes(observed.state)) throw new Error(`incomplete object fingerprint for ${version}`);
+  const allowsZeroAtoms = version===supersededEquivalentVersion && ['absent','superseded-equivalent'].includes(observed.state);
+  if (!Number.isInteger(observed.expected_atom_count) || !Number.isInteger(observed.matched_atom_count) || observed.expected_atom_count < (allowsZeroAtoms?0:1) || observed.matched_atom_count < 0 || observed.matched_atom_count > observed.expected_atom_count) throw new Error(`invalid atom evidence for ${version}`);
   if (observed.state === 'partial' || observed.state === 'ambiguous') throw new Error(`partial/ambiguous state for ${version}`);
   let mode;
   if (r2Files.includes(file)) {
     if (observed.history || observed.state !== 'absent' || observed.matched_atom_count !== 0) throw new Error(`R2/forward migration is not exhaustively absent: ${version}`);
     mode = 'apply';
+  } else if (version===supersededEquivalentVersion && !observed.history && observed.state==='superseded-equivalent') {
+    if (JSON.stringify(observed.equivalence_proof)!==JSON.stringify(supersededEquivalentProof)) throw new Error('migration 040 equivalence proof mismatch');
+    for (const successor of supersededEquivalentProof) {
+      const evidence=fp.steps?.[successor];
+      if (!evidence || evidence.state!=='complete' || evidence.matched_atom_count!==evidence.expected_atom_count) throw new Error(`migration 040 successor is not exactly complete: ${successor}`);
+    }
+    mode='reconcile-superseded-equivalent';
   } else if (observed.history && observed.state === 'complete' && observed.matched_atom_count === observed.expected_atom_count) mode = 'verify-recorded';
   else if (!observed.history && observed.state === 'complete' && observed.matched_atom_count === observed.expected_atom_count) mode = 'reconcile-history';
   else if (!observed.history && observed.state === 'absent' && observed.matched_atom_count === 0) mode = 'apply';

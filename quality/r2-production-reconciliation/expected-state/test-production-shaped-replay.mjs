@@ -38,6 +38,12 @@ const expectRefusal=(name,atoms,dataInvariants,pattern)=>{
   assert.match(stderr,pattern,`${name} refusal reason`);
   return stderr.match(pattern)?.[0];
 };
+const classify=(name,atoms,dataInvariants)=>{
+  const input=resolve(work,`${name}.json`); const output=`/private/tmp/veltex-g3-replay-${process.pid}-${name}.json`;
+  writeFileSync(input,JSON.stringify(capture(atoms,dataInvariants)));
+  run(process.execPath,[classifier,input,output]);
+  return JSON.parse(readFileSync(output,'utf8'));
+};
 
 const files=migrationFiles();
 assert.equal(files.length,62);
@@ -55,7 +61,8 @@ try{
   for(const file of contract.recorded_baseline.files) psql(branchDb,['-f',resolve(migrationDir,file)]);
   const baseline=catalog(branchDb);
   assert.deepEqual(baseline,contract.recorded_baseline.atoms,'canonical 29-file replay differs from recorded baseline');
-  const baselineReason=expectRefusal('canonical-baseline',baseline,contract.recorded_baseline.data_invariants,/ambiguous fully-superseded prerequisite/);
+  const baselineClassification=classify('canonical-baseline',baseline,contract.recorded_baseline.data_invariants);
+  assert.equal(baselineClassification.steps['040'].state,'absent');
   psql(branchDb,['-c',`insert into public.additional_service_catalog
     (sku,label,unit_type,rate,min_qty,default_frequency,frequency_options,amortize_to_monthly,default_qty_source)
     values ('fixture_clean_detail','Fixture clean detail','flat',1,0,'one_time',array['one_time'],false,'manual')`]);
@@ -76,7 +83,8 @@ try{
     'addon_category',(select category from public.additional_service_catalog where sku='fixture_clean_detail')
   )::text from public.profiles p where p.id='33333333-3333-4333-8333-333333333333'`]).trim());
   assert.deepEqual(fixtureProof,{status:'free_trial',trial_end_present:true,is_internal:true,usage_rows:1,addon_category:'cleaning'},'031/034/041 synthetic backfill proof failed');
-  const prerequisiteReason=expectRefusal('prerequisite-complete',prerequisite,contract.prerequisite_checkpoint.data_invariants,/ambiguous fully-superseded prerequisite/);
+  const prerequisiteClassification=classify('prerequisite-complete',prerequisite,contract.prerequisite_checkpoint.data_invariants);
+  assert.equal(prerequisiteClassification.steps['040'].state,'superseded-equivalent');
 
   const effective=contract.production_steps.slice(0,23).flatMap(s=>s.prerequisite_effective_atoms??[]);
   const baselineMap=new Map(baseline.map(a=>[key(a),a])); const prerequisiteMap=new Map(prerequisite.map(a=>[key(a),a]));
@@ -105,7 +113,7 @@ try{
   assert.notDeepEqual(branchFinal,explicitOwnerVariant,'owner-variant fixture did not create a distinct ACL catalog');
   assert.deepEqual(normalizeOwner(branchFinal,'OBJECT_OWNER'),normalizeOwner(explicitOwnerVariant,renamedOwner),'owner normalization is not invariant across database owners');
 
-  console.log(JSON.stringify({status:'PASS',postgres_major:16,migrations_replayed:124,branch_model:'29 recorded + 23 prerequisite + 10 R2',canonical_model:'fresh lexical 62',renamed_owner_invariant:true,synthetic_backfills:{migration_031_category:fixtureProof.addon_category,migration_034_status:fixtureProof.status,migration_034_usage_rows:fixtureProof.usage_rows,migration_041_internal:fixtureProof.is_internal},states:{canonical_baseline:{atoms:baseline.length,refusal:baselineReason},prerequisite_complete:{atoms:prerequisite.length,refusal:prerequisiteReason},one_atom_partial:{atom:changedAtom,refusal:partialReason},stray_r2:{migration:r2Files[0],atoms:strayR2.length,refusal:strayReason}}},null,2));
+  console.log(JSON.stringify({status:'PASS',postgres_major:16,migrations_replayed:124,branch_model:'29 recorded + 23 prerequisite + 10 R2',canonical_model:'fresh lexical 62',renamed_owner_invariant:true,synthetic_backfills:{migration_031_category:fixtureProof.addon_category,migration_034_status:fixtureProof.status,migration_034_usage_rows:fixtureProof.usage_rows,migration_041_internal:fixtureProof.is_internal},states:{canonical_baseline:{atoms:baseline.length,migration_040:baselineClassification.steps['040'].state},prerequisite_complete:{atoms:prerequisite.length,migration_040:prerequisiteClassification.steps['040'].state},one_atom_partial:{atom:changedAtom,refusal:partialReason},stray_r2:{migration:r2Files[0],atoms:strayR2.length,refusal:strayReason}}},null,2));
 } finally {
   if(started) try{run(resolve(pgBin,'pg_ctl'),['-D',data,'stop','-m','fast']);}catch{}
   rmSync(work,{recursive:true,force:true});

@@ -21,12 +21,22 @@ const run=(name,value,ok=true)=>{
   return passed?JSON.parse(readFileSync(output,'utf8')):null;
 };
 
-// A fully superseded, unrecorded migration is intentionally not inferable
-// from catalog state alone. The classifier must stop instead of inventing
-// evidence that it ran (or did not run).
-run('baseline',capture(contract.recorded_baseline.atoms),false);
+const baselineResult=run('baseline',capture(contract.recorded_baseline.atoms));
+assert.equal(baselineResult.steps['040'].state,'absent');
 
-run('prereq',capture(contract.prerequisite_checkpoint.atoms,contract.prerequisite_checkpoint.data_invariants),false);
+const prerequisiteResult=run('prereq',capture(contract.prerequisite_checkpoint.atoms,contract.prerequisite_checkpoint.data_invariants));
+assert.equal(prerequisiteResult.steps['040'].state,'superseded-equivalent');
+assert.deepEqual(prerequisiteResult.steps['040'].equivalence_proof,['20260908000000','20260924000000']);
+
+const mixed=structuredClone(contract.prerequisite_checkpoint.atoms);
+const r0Step=contract.production_steps.find(step=>step.file.startsWith('20260924000000_'));
+const baselineByKey=new Map(contract.recorded_baseline.atoms.map(atom=>[`${atom.kind}:${atom.identity}`,atom]));
+const mixedByKey=new Map(mixed.map(atom=>[`${atom.kind}:${atom.identity}`,atom]));
+for(const evidence of r0Step.diff.evidence){
+  const prior=baselineByKey.get(evidence.atom);
+  if(prior)mixedByKey.set(evidence.atom,structuredClone(prior));else mixedByKey.delete(evidence.atom);
+}
+run('mixed-040-successors',capture([...mixedByKey.values()],contract.prerequisite_checkpoint.data_invariants),false);
 
 const badData=structuredClone(contract.prerequisite_checkpoint.data_invariants); badData['20260925001000'].market_rows=51;
 run('bad-data',capture(contract.prerequisite_checkpoint.atoms,badData),false);

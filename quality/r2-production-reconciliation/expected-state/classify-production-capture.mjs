@@ -38,9 +38,13 @@ for(const version of ['031','034','041','20260922000000','20260922010000','20260
   if(structurallyComplete&&JSON.stringify(capture.data_invariants[version])!==JSON.stringify(contract.prerequisite_checkpoint.data_invariants[version])) throw new Error(`data invariant mismatch for ${version}`);
 }
 const classified={};
+const deferredSuperseded=[];
 for(const step of prerequisiteSteps){
   const atoms=step.prerequisite_effective_atoms??[];
-  if(!atoms.length) throw new Error(`ambiguous fully-superseded prerequisite requires recorded history: ${step.file}`);
+  if(!atoms.length){
+    deferredSuperseded.push(step);
+    continue;
+  }
   const afterMatches=atoms.filter(atom=>(current.get(atom)??null)===(prerequisiteExpected.get(atom)??null)).length;
   const beforeMatches=atoms.filter(atom=>(current.get(atom)??null)===(baselineExpected.get(atom)??null)).length;
   let state;
@@ -51,10 +55,28 @@ for(const step of prerequisiteSteps){
   classified[step.file.split('_',1)[0]]={history:capture.migration_history.versions.includes(step.file.split('_',1)[0]),state,expected_atom_count:atoms.length,matched_atom_count:afterMatches};
   if(state==='partial'||state==='ambiguous') throw new Error(`${state} prerequisite state: ${step.file}`);
 }
+for(const step of deferredSuperseded){
+  const version=step.file.split('_',1)[0];
+  if(version!=='040') throw new Error(`ambiguous fully-superseded prerequisite requires recorded history: ${step.file}`);
+  const successors=['20260908000000','20260924000000'];
+  const successorStates=successors.map(successor=>classified[successor]?.state);
+  let state;
+  if(successorStates.every(candidate=>candidate==='complete')) state='superseded-equivalent';
+  else if(successorStates.every(candidate=>candidate==='absent')) state='absent';
+  else throw new Error(`migration 040 successor state is mixed or unproven: ${successorStates.join(',')}`);
+  classified[version]={
+    history:capture.migration_history.versions.includes(version),
+    state,
+    expected_atom_count:0,
+    matched_atom_count:0,
+    ...(state==='superseded-equivalent'?{equivalence_proof:successors}:{}),
+  };
+  if(classified[version].history&&state==='absent') throw new Error('migration 040 history exists but both successors are absent');
+}
 const reconstructed=new Map(baselineExpected);
 for(const step of prerequisiteSteps){
   const state=classified[step.file.split('_',1)[0]].state;
-  if(state!=='complete') continue;
+  if(state!=='complete'&&state!=='superseded-equivalent') continue;
   for(const e of step.diff.evidence){if(e.after_sha256===null)reconstructed.delete(e.atom);else reconstructed.set(e.atom,e.after_sha256);}
 }
 const mismatch=[...current].filter(([k,v])=>reconstructed.get(k)!==v);
