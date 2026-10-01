@@ -1209,3 +1209,21 @@ After any material action, append or revise the relevant section with:
   replay. The catalog contract will therefore be tested by a read-only capture
   on the isolated preview before any production capture; a mismatch must be
   handled as a safe refusal, never normalized by assumption.
+
+### R2 G3 migration-040 remediation — INDEPENDENT PASS / G3 STILL UNARMED (2026-09-30 Pacific)
+
+- **EXACT PASS COMMIT:** Claude independently re-reviewed pushed commit
+  `994f1ae85308ac755ff93a5292a7551f9623b101` and returned PASS with no blocker
+  in the bounded 040 remediation.
+- **INDEPENDENT ADVERSARIAL EVIDENCE:** both builder and validator refuse 040
+  apply when both successors are complete, either mixed order, a supposedly
+  absent successor has a matched atom, or a successor is missing. The validator
+  also rejected unsafe artifacts built by a deliberately weakened scratch
+  builder. The all-absent chain still schedules 040 normally, and the exact
+  successor-complete chain uses `reconcile-superseded-equivalent`.
+- **CURRENT STATUS:** G3 remains unarmed. The next gate is a hashes-only,
+  read-only capture on the isolated Supabase preview to measure hosted
+  `pgcrypto` schema and platform-grant differences. Only after that capture is
+  independently reviewed should a production read-only capture be considered.
+  G2, exact-artifact review, G4 and action-specific production authorization
+  remain mandatory before any production mutation.
