@@ -1514,3 +1514,34 @@ After any material action, append or revise the relevant section with:
   correctly provisioned Vercel build generated all 84 static pages. Production
   deployment and production database migration remain separate consequential
   actions and are not authorized by this preview acceptance.
+
+### R2 production G3 strict recapture — READ-ONLY COMPLETE / CLASSIFIER BLOCKED (2026-10-01 Pacific)
+
+- **AUTHORIZED READ-ONLY CAPTURE:** the contract-v3/canonicalization-v2 capture
+  ran against confirmed production project `iwoaaljitifloolszxlu` inside
+  `begin transaction read only` / `rollback`. Generated SQL was 29,768 bytes
+  with SHA-256 `1de9c415536e1740a89649f3517435a3d8e0fb0f05ce4feb8af6a9846745bd2c`.
+  The exported local-only JSON is 526,281 bytes with SHA-256
+  `3a9fdb1b2a62578e9f66becb6af7c59afa794b5f8e9429804bfaead163571253`.
+  No production row, schema object, migration history, credential or hosted
+  configuration was changed.
+- **CURRENT PRODUCTION SHAPE:** PostgreSQL reports version 17.6 and exactly the
+  expected 29 recorded migration versions. Counts remain 86 profiles, 166
+  proposals, 11 subscriptions, zero company profiles, four proposal-tracking
+  rows and four branding rows. Measured proposal/profile and tracking/proposal
+  orphan counts remain zero.
+- **FAIL-CLOSED CLASSIFICATION:** the strict classifier refused to create a
+  production plan at `036_add_company_profile_fields.sql`. All three expected
+  profile columns exist with the intended nullable types and no defaults, but
+  their exact catalog hashes differ from both the recorded baseline and the
+  generated prerequisite checkpoint. A full diagnostic pass also reports
+  partial state for 041, catalog remediation, R0 privilege hardening and three
+  profile/view alignment prerequisites. This supersedes the earlier coarse
+  discovery labels; presence alone is not accepted as proof of exact migration
+  execution.
+- **STATUS:** production remains unmodified and G3 remains **BLOCKED**. No
+  history-only reconciliation, production SQL plan, deployment or migration is
+  authorized. The next safe step is a bounded, hashes-only drift analysis that
+  distinguishes harmless hosted catalog representation/order differences from
+  genuine partial prerequisite effects, followed by independent review before
+  any plan can be generated.
