@@ -1405,3 +1405,39 @@ After any material action, append or revise the relevant section with:
   not mutated. Production application remains a separate gated action; the
   next safe release step is the remaining full preview application/operator
   acceptance suite before any production decision.
+
+### R2 full preview acceptance — DATABASE PASS / APP DEPLOYMENT STALE (2026-10-01 Pacific)
+
+- **DATABASE AND AUTOMATED GATES PASS:** the isolated preview remains on the
+  exact 63-version migration chain with the PostgreSQL 17 security postflight
+  passing. The repository test suite passes 86 suites, 721 tests and five
+  snapshots; `pnpm exec tsc --noEmit` also passes.
+- **LOCAL BUILD CONTEXT LIMITATION:** the production build compiled and passed
+  type checking, but prerendering `/pricing` and `/admin/addons` could not
+  finish because this isolated worktree intentionally has no Supabase URL/API
+  key environment. This is an environment-context limitation, not evidence of
+  an application regression. The hosted preview remains the authoritative
+  runtime acceptance target.
+- **PUBLIC TRACKING BOUNDARY PASS:** the previously revoked tracking token now
+  returns 404, while a synthetic active preview-only tracking row renders the
+  complete proposal page at the stable preview alias. The active test token is
+  retained temporarily for post-deployment PDF verification and must be
+  revoked after that verification. No email was sent and no production record
+  was created.
+- **BLOCKING DEPLOYMENT DRIFT:** the stable preview alias
+  `https://veltex-r2-preview-20260930.vercel.app` is serving code older than the
+  current integration branch. Its tracked Download PDF action produced a
+  3,877-byte, one-page A4 file with producer `jsPDF 3.0.1`, reproducing the
+  legacy near-empty tracked-PDF defect. The current repository contains the
+  reviewed Chromium canonical tracked-PDF repair, and its focused tests pass,
+  but that repair is not present in the deployed preview.
+- **VERCEL PROJECT IDENTITY CONFIRMED:** local Vercel metadata binds to project
+  `veltex-services-veliz` (`prj_qvXFtdH78f4cfmhjkxlBVNHs0JNL`). Despite the
+  legacy name, the authoritative ledger confirms this is the Veltex AI SaaS
+  project that owns `www.veltexai.com`; `veltex-ai-100d-pilot` remains separate
+  and unchanged.
+- **CURRENT STATUS:** full preview acceptance is **BLOCKED** only on deploying
+  current commit `5f8998b` (or a successor containing the same reviewed fixes)
+  to a branch-isolated Vercel Preview wired exclusively to Supabase preview
+  `ynzkwctwlssjcsjmahey`, then repeating tracked-PDF and operator acceptance.
+  Production deployment and production database mutation remain out of scope.
