@@ -1144,3 +1144,24 @@ After any material action, append or revise the relevant section with:
   selected. Data-bearing history reconciliation for 031, 034, 041, catalog
   version seeds and location-pricing seeds also remains blocked until the
   hashes-only business-key invariant contract passes.
+
+### R2 production G3 data-invariant layer — LOCAL PASS / POLICY DECISION OPEN (2026-09-30 Pacific)
+
+- **HASHES ONLY:** production capture now emits structured invariant results
+  without raw rows, emails, UUIDs, proposal content or tracking tokens. Exact
+  checks cover migration 031 catalog classification/override rows, active
+  free-trial usage safety for 034, internal QA classification for 041, both
+  service-catalog version seeds, and all reviewed location-pricing scopes.
+- **LOCATION DATA PROOF:** expected counts are 4 source versions, 52 markets,
+  two wage benchmarks, 51 state/DC minimum-wage rows, eight regional parity
+  rows and one mileage row. Naturalized projection hashes exclude generated
+  foreign-key IDs and bind every scoped row to the reviewed checkpoint.
+- **CLASSIFIER CONSUMPTION:** a prerequisite whose final structural atoms match
+  but whose business-data invariant differs is rejected as a data-invariant
+  mismatch. Mutation coverage includes an intentionally corrupted market-row
+  count. The read-only capture remains transaction-scoped and rolled back.
+- **LOCAL EVIDENCE:** deterministic regeneration, static contract checks,
+  classifier mutation tests, TypeScript and the 124-application
+  production-shaped replay pass. Literal historical execution is still not
+  inferred from terminal data state; migration 040 terminal-equivalence policy
+  and independent review remain required before a buildable production plan.

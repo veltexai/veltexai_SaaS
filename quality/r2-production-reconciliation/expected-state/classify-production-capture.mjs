@@ -30,6 +30,13 @@ for(const step of r2Steps) for(const e of step.diff.evidence) {
 const r2History=capture.migration_history.versions.some(v=>v>='20260925002000');
 if(r2History||r2AfterMatches) throw new Error(`R2/forward state is not absent: history=${r2History} after_matches=${r2AfterMatches}`);
 const prerequisiteExpected=new Map(contract.prerequisite_checkpoint.atoms.map(a=>[`${a.kind}:${a.identity}`,a.value_sha256]));
+if(!capture.data_invariants||typeof capture.data_invariants!=='object') throw new Error('missing hashes-only data invariants');
+for(const version of ['031','034','041','20260922000000','20260922010000','20260925001000']){
+  const step=prerequisiteSteps.find(candidate=>candidate.file.startsWith(`${version}_`));
+  const atoms=step?.prerequisite_effective_atoms??[];
+  const structurallyComplete=atoms.length>0&&atoms.every(atom=>(current.get(atom)??null)===(prerequisiteExpected.get(atom)??null));
+  if(structurallyComplete&&JSON.stringify(capture.data_invariants[version])!==JSON.stringify(contract.prerequisite_checkpoint.data_invariants[version])) throw new Error(`data invariant mismatch for ${version}`);
+}
 const classified={};
 for(const step of prerequisiteSteps){
   const atoms=step.prerequisite_effective_atoms??[];

@@ -4,6 +4,7 @@
   "migration_count": 62,
   "migrations_sha256": "3e2a466ffaeefe24e241b0443d9f367703e983db52f594b8a770b1f156fe1b14",
   "catalog_sha256": "a76eb124d19317d689f2999245b51c5fcdb47ebb27f9dafaaa2258cb353d8d82",
+  "data_invariants_sha256": "1a017254ef80ed2ab1b7c2bc71a45e5bf469db333e4abe56c3e48d49d003b314",
   "production_order": [
     "001_initial_schema.sql",
     "002_grant_permissions.sql",
@@ -21089,7 +21090,30 @@
         "value_sha256": "ec402a4781a82439f49e16acf44b9fc4ca2d7fceff1fbd7d8667ae9990b4e49a"
       }
     ],
-    "atoms_sha256": "b90afe1a8ba8f0e12825cd67b83ef9565e9d51aa8d3578e0e5c5867198957c1b"
+    "atoms_sha256": "b90afe1a8ba8f0e12825cd67b83ef9565e9d51aa8d3578e0e5c5867198957c1b",
+    "data_invariants": {
+      "031": {
+        "applicable": false
+      },
+      "034": {
+        "applicable": true,
+        "usage_orphans": 0,
+        "pending_profiles": 0,
+        "active_free_trials_missing_usage": 0
+      },
+      "041": {
+        "applicable": false
+      },
+      "20260922000000": {
+        "applicable": false
+      },
+      "20260922010000": {
+        "applicable": false
+      },
+      "20260925001000": {
+        "applicable": false
+      }
+    }
   },
   "prerequisite_checkpoint": {
     "through": "20260925001000_location_pricing_reviewed_seed.sql",
@@ -49911,7 +49935,54 @@
         "value_sha256": "de767e7ac2c9aec621b9dc811e8c190da95674e5c136c7c2b98c4975d2a64fd7"
       }
     ],
-    "atoms_sha256": "cb6708c88bc366d63fd368f780e92bbb05dcbdcb31b5fc449b924e7121a593e2"
+    "atoms_sha256": "cb6708c88bc366d63fd368f780e92bbb05dcbdcb31b5fc449b924e7121a593e2",
+    "data_invariants": {
+      "031": {
+        "applicable": true,
+        "null_category": 0,
+        "seed_key_count": 4,
+        "null_visibility": 0,
+        "invalid_category": 0,
+        "duplicate_seed_keys": 0,
+        "seed_projection_sha256": "1720823e7b2981ada06731f370e0345578c668c6795b51a10520a47fe971a13d"
+      },
+      "034": {
+        "applicable": true,
+        "usage_orphans": 0,
+        "pending_profiles": 0,
+        "active_free_trials_missing_usage": 0
+      },
+      "041": {
+        "applicable": true,
+        "matching_internal_false": 0
+      },
+      "20260922000000": {
+        "key_rows": 1,
+        "applicable": true,
+        "exact_rows": 1
+      },
+      "20260922010000": {
+        "key_rows": 1,
+        "applicable": true,
+        "exact_rows": 1
+      },
+      "20260925001000": {
+        "rpp_rows": 8,
+        "wage_rows": 2,
+        "applicable": true,
+        "market_rows": 52,
+        "source_rows": 4,
+        "mileage_rows": 1,
+        "minimum_wage_rows": 51,
+        "rpp_projection_sha256": "664e1cc5316a5886084674a5000d0991043a837be1aaf59c8eb9b09039a69df3",
+        "wage_projection_sha256": "87d1c9c6cda438a1ac16445c99484506f2451daecb196e1ec6b51b96d70283fd",
+        "source_checksum_matches": 4,
+        "market_projection_sha256": "55079d51f613505c46a0983c42bad10b35014b610537857220a40fd905d0f5da",
+        "source_projection_sha256": "fbc0b20d0fe4748bde0df100eaa062b8b96abbf6a81ba293e0ead93667abbc02",
+        "mileage_projection_sha256": "0ec831ca061505a1881f6f55371258a4f2ee4b595f2e3674986ad3428b49f4ce",
+        "minimum_wage_projection_sha256": "201f4808ae647b469b122c0f815808a3d650ddb3662d97ad11126bd25fe6dace"
+      }
+    }
   },
   "steps": [
     {

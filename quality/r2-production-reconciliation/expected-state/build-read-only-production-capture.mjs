@@ -6,6 +6,7 @@ const here=dirname(new URL(import.meta.url).pathname);
 const output=resolve(process.argv[2]??'/private/tmp/veltex-r2-production-catalog-capture.sql');
 if(!output.startsWith('/private/tmp/')) throw new Error('capture SQL output must remain below /private/tmp');
 const catalog=readFileSync(resolve(here,'catalog.sql'),'utf8');
+const dataInvariants=readFileSync(resolve(here,'data-invariants-expression.sql'),'utf8').trim();
 const marker='-- CATALOG_TERMINAL_QUERY\n';
 const markerIndex=catalog.indexOf(marker);
 if(markerIndex<0||catalog.indexOf(marker,markerIndex+1)>=0) throw new Error('catalog.sql terminal query marker drifted');
@@ -45,6 +46,7 @@ const redacted=`select jsonb_pretty(jsonb_build_object(
     'tier_access_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.template_tier_access x) q),
     'template_preferences_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.user_template_preferences x) q)
   ),
+  'data_invariants',${dataInvariants},
   'catalog_atoms',coalesce(jsonb_agg(jsonb_build_object(
     'kind',atom->>'kind','identity',atom->>'identity','value_sha256',atom->>'value_sha256'
   ) order by atom->>'kind',atom->>'identity'),'[]'::jsonb)

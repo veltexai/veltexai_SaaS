@@ -46,6 +46,10 @@ const run=(file,args=[],options={})=>execFileSync(file,args,{encoding:'utf8',std
 const pgBin=process.env.PG_BIN||dirname(run('/usr/bin/which',['initdb']).trim());
 function psql(socket,port,db,args=[]){return run(resolve(pgBin,'psql'),['-X','-A','-t','-q','-v','ON_ERROR_STOP=1','-h',socket,'-p',String(port),'-d',db,...args]);}
 function catalog(socket,port,db){return JSON.parse(psql(socket,port,db,['-f',resolve(here,'catalog.sql')]).trim());}
+function dataInvariants(socket,port,db){
+  const expression=readFileSync(resolve(here,'data-invariants-expression.sql'),'utf8').trim();
+  return JSON.parse(psql(socket,port,db,['-c',`select (${expression})::text`]).trim());
+}
 export function buildContract({keep=false}={}){
   const files=migrationFiles(); if(files.length!==62) throw new Error(`expected exact 62-migration chain, found ${files.length}`);
   const recordedBaselineFiles=['001_initial_schema.sql','002_grant_permissions.sql','003_fix_admin_policies.sql','004_add_proposal_fields.sql','005_fix_proposals_schema.sql','006_add_pdf_exports_fields.sql','009_add_profile_fields.sql','010_admin_panel_tables.sql','011_admin_panel_missing_tables.sql','012_enhanced_proposals_system.sql','013_enhance_admin_tables.sql','014_stripe_subscription_schema.sql','015_trial_system_setup.sql','016_add_canceled_at.sql','017_add_billing_history_plan_tracking.sql','018_system_settings_table.sql','019_add_invoice_date_to_billing_history.sql','020_fix_profiles_rls_recursion.sql','021_enhanced_proposal_system.sql','022_enhanced_proposal_system.sql','023_proposal_tracking.sql','024_enhanced_prompt_templates.sql','025_enhanced_prompt_templates.sql','026_enhanced_tracking_tables.sql','027_user_branding_settings.sql','028_enhanced_cancellation_flow.sql','029_proposal_templates_system.sql','030_special_services.sql','20250901194222_add_user_roles.sql'];
@@ -71,20 +75,24 @@ export function buildContract({keep=false}={}){
     attributeFinalWriters(steps);
     for(const file of recordedBaselineFiles) psql(work,port,'veltex_production_branch',['-f',resolve(migrationDir,file)]);
     const baselineAtoms=catalog(work,port,'veltex_production_branch');
-    let branchPrior=baselineAtoms; const productionSteps=[]; let prerequisiteAtoms=[];
+    const baselineDataInvariants=dataInvariants(work,port,'veltex_production_branch');
+    let branchPrior=baselineAtoms; const productionSteps=[]; let prerequisiteAtoms=[]; let prerequisiteDataInvariants=null;
     for(const [index,file] of [...prerequisiteFiles,...r2Files].entries()){
       psql(work,port,'veltex_production_branch',['-f',resolve(migrationDir,file)]);
       const atoms=catalog(work,port,'veltex_production_branch');
       productionSteps.push({ordinal:index+1,file,source_sha256:sha256(readFileSync(resolve(migrationDir,file))),atom_count:atoms.length,diff:diffAtoms(branchPrior,atoms)});
       branchPrior=atoms;
-      if(file===prerequisiteFiles.at(-1)) prerequisiteAtoms=atoms;
+      if(file===prerequisiteFiles.at(-1)) {
+        prerequisiteAtoms=atoms;
+        prerequisiteDataInvariants=dataInvariants(work,port,'veltex_production_branch');
+      }
     }
     attributeFinalWriters(productionSteps);
     const prerequisiteSteps=structuredClone(productionSteps.slice(0,prerequisiteFiles.length));
     attributeFinalWriters(prerequisiteSteps);
     for(let i=0;i<prerequisiteSteps.length;i++) productionSteps[i].prerequisite_effective_atoms=prerequisiteSteps[i].effective_atoms;
     if(JSON.stringify(branchPrior)!==JSON.stringify(prior)) throw new Error('production-shaped replay final catalog differs from fresh lexical 62-chain replay');
-    return {contract_version:2,postgres_major:16,migration_count:files.length,migrations_sha256:sha256(files.map(f=>`${f}\0${sha256(readFileSync(resolve(migrationDir,f)))}\n`).join('')),catalog_sha256:sha256(readFileSync(resolve(here,'catalog.sql'))),production_order:productionOrder,recorded_baseline:{files:recordedBaselineFiles,atoms:baselineAtoms,atoms_sha256:sha256(JSON.stringify(baselineAtoms))},prerequisite_checkpoint:{through:prerequisiteFiles.at(-1),atoms:prerequisiteAtoms,atoms_sha256:sha256(JSON.stringify(prerequisiteAtoms))},steps,production_steps:productionSteps,atoms:prior};
+    return {contract_version:2,postgres_major:16,migration_count:files.length,migrations_sha256:sha256(files.map(f=>`${f}\0${sha256(readFileSync(resolve(migrationDir,f)))}\n`).join('')),catalog_sha256:sha256(readFileSync(resolve(here,'catalog.sql'))),data_invariants_sha256:sha256(readFileSync(resolve(here,'data-invariants-expression.sql'))),production_order:productionOrder,recorded_baseline:{files:recordedBaselineFiles,atoms:baselineAtoms,atoms_sha256:sha256(JSON.stringify(baselineAtoms)),data_invariants:baselineDataInvariants},prerequisite_checkpoint:{through:prerequisiteFiles.at(-1),atoms:prerequisiteAtoms,atoms_sha256:sha256(JSON.stringify(prerequisiteAtoms)),data_invariants:prerequisiteDataInvariants},steps,production_steps:productionSteps,atoms:prior};
   } finally {
     try{run(resolve(pgBin,'pg_ctl'),['-D',data,'stop','-m','fast']);}finally{if(!keep)rmSync(work,{recursive:true,force:true});}
   }

@@ -24,6 +24,8 @@ const contract=JSON.parse(readFileSync(resolve(here,'expected-state.v1.json')));
 assert.equal(contract.contract_version,2);
 assert.equal(contract.production_order.length,62);
 assert.equal(contract.production_steps.length,33);
+assert.match(contract.data_invariants_sha256,/^[0-9a-f]{64}$/);
+for(const version of ['031','034','041','20260922000000','20260922010000','20260925001000']) assert.ok(contract.prerequisite_checkpoint.data_invariants[version]);
 assert.equal(new Set(contract.production_order).size,62);
 assert.deepEqual(new Set(contract.production_order),new Set(files));
 const sql=readFileSync(resolve(here,'catalog.sql'),'utf8');

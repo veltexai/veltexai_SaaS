@@ -22,3 +22,12 @@ itself. Data-bearing migrations—including catalog classification, free-trial
 backfill, internal-profile classification, and reviewed location-pricing seed
 rows—must receive explicit data-invariant probes or a separately reviewed
 idempotent forward repair before G3 can pass.
+
+`data-invariants-expression.sql` supplies the hashes-only portion of that
+proof. It emits no source rows or customer identifiers. It checks terminal
+catalog-classification safety, active free-trial usage coverage, internal QA
+classification, both catalog-version seeds, and scoped reviewed pricing rows.
+The pricing projection hashes naturalize source foreign keys and exclude
+generated IDs. The classifier refuses a structurally complete data-bearing
+migration when its invariant object differs from the generated pre-R2
+checkpoint.

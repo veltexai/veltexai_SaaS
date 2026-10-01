@@ -12,7 +12,7 @@ const captureBuilder=resolve(here,'build-read-only-production-capture.mjs');
 const work=mkdtempSync(resolve(tmpdir(),'veltex-g3-classifier-'));
 const history=['001','002','003','004','005','006','009','010','011','012','013','014','015','016','017','018','019','020','021','022','023','024','025','026','027','028','029','030','20250901194222'];
 const digests=Object.fromEntries(['profiles_all','proposals_all','tracking_all','branding_all','subscriptions_all','usage_all','addon_catalog_all','proposal_addons_all','proposal_templates_all','tier_access_all','template_preferences_all'].map(k=>[k,'0'.repeat(64)]));
-const capture=atoms=>({contract_version:2,captured_at:'2026-09-30T00:00:00Z',project_ref:'iwoaaljitifloolszxlu',environment:'production',read_only:true,migration_history:{count:29,versions:history},row_counts:{},orphan_counts:{},content_digests:digests,catalog_atoms:atoms.map(a=>({kind:a.kind,identity:a.identity,value_sha256:a.value_sha256}))});
+const capture=(atoms,dataInvariants=contract.recorded_baseline.data_invariants)=>({contract_version:2,captured_at:'2026-09-30T00:00:00Z',project_ref:'iwoaaljitifloolszxlu',environment:'production',read_only:true,migration_history:{count:29,versions:history},row_counts:{},orphan_counts:{},content_digests:digests,data_invariants:dataInvariants,catalog_atoms:atoms.map(a=>({kind:a.kind,identity:a.identity,value_sha256:a.value_sha256}))});
 const run=(name,value,ok=true)=>{
   const input=resolve(work,`${name}.json`); const output=`/private/tmp/veltex-g3-${name}-classified.json`;
   writeFileSync(input,JSON.stringify(value));
@@ -26,11 +26,14 @@ const run=(name,value,ok=true)=>{
 // evidence that it ran (or did not run).
 run('baseline',capture(contract.recorded_baseline.atoms),false);
 
-run('prereq',capture(contract.prerequisite_checkpoint.atoms),false);
+run('prereq',capture(contract.prerequisite_checkpoint.atoms,contract.prerequisite_checkpoint.data_invariants),false);
+
+const badData=structuredClone(contract.prerequisite_checkpoint.data_invariants); badData['20260925001000'].market_rows=51;
+run('bad-data',capture(contract.prerequisite_checkpoint.atoms,badData),false);
 
 const corrupt=structuredClone(contract.prerequisite_checkpoint.atoms);
 corrupt.find(a=>a.kind==='column').value_sha256='f'.repeat(64);
-run('partial',capture(corrupt),false);
+run('partial',capture(corrupt,contract.prerequisite_checkpoint.data_invariants),false);
 
 const r2Evidence=contract.production_steps.slice(23).flatMap(s=>s.diff.evidence).find(e=>e.after_sha256);
 const stray=structuredClone(contract.recorded_baseline.atoms);

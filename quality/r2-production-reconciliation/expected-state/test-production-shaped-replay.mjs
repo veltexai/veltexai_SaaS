@@ -20,7 +20,7 @@ const contract=JSON.parse(readFileSync(resolve(here,'expected-state.v1.json'),'u
 const classifier=resolve(here,'classify-production-capture.mjs');
 const history=['001','002','003','004','005','006','009','010','011','012','013','014','015','016','017','018','019','020','021','022','023','024','025','026','027','028','029','030','20250901194222'];
 const digestNames=['profiles_all','proposals_all','tracking_all','branding_all','subscriptions_all','usage_all','addon_catalog_all','proposal_addons_all','proposal_templates_all','tier_access_all','template_preferences_all'];
-const capture=atoms=>({contract_version:2,captured_at:'2026-09-30T00:00:00Z',project_ref:'iwoaaljitifloolszxlu',environment:'production',read_only:true,migration_history:{count:29,versions:history},row_counts:{},orphan_counts:{},content_digests:Object.fromEntries(digestNames.map(k=>[k,'0'.repeat(64)])),catalog_atoms:atoms.map(({kind,identity,value_sha256})=>({kind,identity,value_sha256}))});
+const capture=(atoms,dataInvariants)=>({contract_version:2,captured_at:'2026-09-30T00:00:00Z',project_ref:'iwoaaljitifloolszxlu',environment:'production',read_only:true,migration_history:{count:29,versions:history},row_counts:{},orphan_counts:{},content_digests:Object.fromEntries(digestNames.map(k=>[k,'0'.repeat(64)])),data_invariants:dataInvariants,catalog_atoms:atoms.map(({kind,identity,value_sha256})=>({kind,identity,value_sha256}))});
 const key=a=>`${a.kind}:${a.identity}`;
 const sha=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const normalizeOwner=(atoms,owner)=>atoms.map(atom=>{
@@ -28,9 +28,9 @@ const normalizeOwner=(atoms,owner)=>atoms.map(atom=>{
   const identity=atom.kind==='acl'?atom.identity.replace(`:${owner}:`,':<database_owner>:'):atom.identity;
   return {...atom,identity,value,value_sha256:sha(value)};
 });
-const expectRefusal=(name,atoms,pattern)=>{
+const expectRefusal=(name,atoms,dataInvariants,pattern)=>{
   const input=resolve(work,`${name}.json`); const output=`/private/tmp/veltex-g3-replay-${process.pid}-${name}.json`;
-  writeFileSync(input,JSON.stringify(capture(atoms)));
+  writeFileSync(input,JSON.stringify(capture(atoms,dataInvariants)));
   let stderr='';
   try{run(process.execPath,[classifier,input,output]); assert.fail(`${name} unexpectedly classified`);}catch(error){stderr=String(error.stderr??error.message);}
   assert.match(stderr,pattern,`${name} refusal reason`);
@@ -53,14 +53,14 @@ try{
   for(const file of contract.recorded_baseline.files) psql(branchDb,['-f',resolve(migrationDir,file)]);
   const baseline=catalog(branchDb);
   assert.deepEqual(baseline,contract.recorded_baseline.atoms,'canonical 29-file replay differs from recorded baseline');
-  const baselineReason=expectRefusal('canonical-baseline',baseline,/ambiguous fully-superseded prerequisite/);
+  const baselineReason=expectRefusal('canonical-baseline',baseline,contract.recorded_baseline.data_invariants,/ambiguous fully-superseded prerequisite/);
 
   const prerequisiteFiles=contract.production_steps.slice(0,23).map(s=>s.file);
   assert.equal(prerequisiteFiles.length,23);
   for(const file of prerequisiteFiles) psql(branchDb,['-f',resolve(migrationDir,file)]);
   const prerequisite=catalog(branchDb);
   assert.deepEqual(prerequisite,contract.prerequisite_checkpoint.atoms,'prerequisite replay differs from checkpoint');
-  const prerequisiteReason=expectRefusal('prerequisite-complete',prerequisite,/ambiguous fully-superseded prerequisite/);
+  const prerequisiteReason=expectRefusal('prerequisite-complete',prerequisite,contract.prerequisite_checkpoint.data_invariants,/ambiguous fully-superseded prerequisite/);
 
   const effective=contract.production_steps.slice(0,23).flatMap(s=>s.prerequisite_effective_atoms??[]);
   const baselineMap=new Map(baseline.map(a=>[key(a),a])); const prerequisiteMap=new Map(prerequisite.map(a=>[key(a),a]));
@@ -68,13 +68,13 @@ try{
   assert.ok(changedAtom,'no prerequisite atom suitable for one-atom partial state');
   const partialMap=new Map(baselineMap); partialMap.set(changedAtom,prerequisiteMap.get(changedAtom));
   const partial=[...partialMap.values()].sort((a,b)=>key(a).localeCompare(key(b),'en'));
-  const partialReason=expectRefusal('one-atom-partial',partial,/partial prerequisite state/);
+  const partialReason=expectRefusal('one-atom-partial',partial,contract.recorded_baseline.data_invariants,/partial prerequisite state/);
 
   const r2Files=contract.production_steps.slice(23).map(s=>s.file); assert.equal(r2Files.length,10);
   psql(branchDb,['-f',resolve(migrationDir,r2Files[0])]);
   const strayR2=catalog(branchDb);
   assert.notDeepEqual(strayR2,prerequisite,'first R2 migration made no catalog change');
-  const strayReason=expectRefusal('stray-r2',strayR2,/R2\/forward state is not absent/);
+  const strayReason=expectRefusal('stray-r2',strayR2,contract.prerequisite_checkpoint.data_invariants,/R2\/forward state is not absent/);
   for(const file of r2Files.slice(1)) psql(branchDb,['-f',resolve(migrationDir,file)]);
   const branchFinal=catalog(branchDb);
 
