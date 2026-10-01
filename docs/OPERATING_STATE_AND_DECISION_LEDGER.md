@@ -1162,6 +1162,9 @@ After any material action, append or revise the relevant section with:
   count. The read-only capture remains transaction-scoped and rolled back.
 - **LOCAL EVIDENCE:** deterministic regeneration, static contract checks,
   classifier mutation tests, TypeScript and the 124-application
-  production-shaped replay pass. Literal historical execution is still not
+  production-shaped replay pass. The replay now injects fixed synthetic rows
+  and proves 031 classifies a NULL-category cleaning add-on, 034 converts the
+  pending signup to `free_trial` with exactly one usage row, and 041 marks the
+  matching QA profile internal. Literal historical execution is still not
   inferred from terminal data state; migration 040 terminal-equivalence policy
   and independent review remain required before a buildable production plan.

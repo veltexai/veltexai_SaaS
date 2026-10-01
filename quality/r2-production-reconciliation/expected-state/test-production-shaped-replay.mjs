@@ -16,6 +16,8 @@ const branchDb='veltex_production_shaped_branch'; const canonicalDb='veltex_prod
 const currentOwner=process.env.USER||'postgres'; const renamedOwner=`replay_owner_${process.pid}`;
 const psql=(db,args,user=currentOwner)=>run(resolve(pgBin,'psql'),['-X','-A','-t','-q','-v','ON_ERROR_STOP=1','-h',work,'-p',String(port),'-U',user,'-d',db,...args]);
 const catalog=(db,user=currentOwner)=>JSON.parse(psql(db,['-f',resolve(here,'catalog.sql')],user).trim());
+const dataInvariantExpression=readFileSync(resolve(here,'data-invariants-expression.sql'),'utf8').trim();
+const dataInvariants=(db,user=currentOwner)=>JSON.parse(psql(db,['-c',`select (${dataInvariantExpression})::text`],user).trim());
 const contract=JSON.parse(readFileSync(resolve(here,'expected-state.v1.json'),'utf8'));
 const classifier=resolve(here,'classify-production-capture.mjs');
 const history=['001','002','003','004','005','006','009','010','011','012','013','014','015','016','017','018','019','020','021','022','023','024','025','026','027','028','029','030','20250901194222'];
@@ -54,12 +56,26 @@ try{
   const baseline=catalog(branchDb);
   assert.deepEqual(baseline,contract.recorded_baseline.atoms,'canonical 29-file replay differs from recorded baseline');
   const baselineReason=expectRefusal('canonical-baseline',baseline,contract.recorded_baseline.data_invariants,/ambiguous fully-superseded prerequisite/);
+  psql(branchDb,['-c',`insert into public.additional_service_catalog
+    (sku,label,unit_type,rate,min_qty,default_frequency,frequency_options,amortize_to_monthly,default_qty_source)
+    values ('fixture_clean_detail','Fixture clean detail','flat',1,0,'one_time',array['one_time'],false,'manual')`]);
 
   const prerequisiteFiles=contract.production_steps.slice(0,23).map(s=>s.file);
   assert.equal(prerequisiteFiles.length,23);
-  for(const file of prerequisiteFiles) psql(branchDb,['-f',resolve(migrationDir,file)]);
+  for(const file of prerequisiteFiles){
+    psql(branchDb,['-f',resolve(migrationDir,file)]);
+    if(file==='033_7_day_trial_system.sql') psql(branchDb,['-c',`insert into auth.users(id,email) values ('33333333-3333-4333-8333-333333333333','veltexclean+g3fixture@gmail.com')`]);
+  }
   const prerequisite=catalog(branchDb);
   assert.deepEqual(prerequisite,contract.prerequisite_checkpoint.atoms,'prerequisite replay differs from checkpoint');
+  const prerequisiteData=dataInvariants(branchDb);
+  assert.deepEqual(prerequisiteData,contract.prerequisite_checkpoint.data_invariants,'production-shaped data invariants differ from generated checkpoint');
+  const fixtureProof=JSON.parse(psql(branchDb,['-c',`select jsonb_build_object(
+    'status',p.subscription_status,'trial_end_present',p.trial_end_at is not null,'is_internal',p.is_internal,
+    'usage_rows',(select count(*) from public.usage u where u.user_id=p.id),
+    'addon_category',(select category from public.additional_service_catalog where sku='fixture_clean_detail')
+  )::text from public.profiles p where p.id='33333333-3333-4333-8333-333333333333'`]).trim());
+  assert.deepEqual(fixtureProof,{status:'free_trial',trial_end_present:true,is_internal:true,usage_rows:1,addon_category:'cleaning'},'031/034/041 synthetic backfill proof failed');
   const prerequisiteReason=expectRefusal('prerequisite-complete',prerequisite,contract.prerequisite_checkpoint.data_invariants,/ambiguous fully-superseded prerequisite/);
 
   const effective=contract.production_steps.slice(0,23).flatMap(s=>s.prerequisite_effective_atoms??[]);
@@ -89,7 +105,7 @@ try{
   assert.notDeepEqual(branchFinal,explicitOwnerVariant,'owner-variant fixture did not create a distinct ACL catalog');
   assert.deepEqual(normalizeOwner(branchFinal,'OBJECT_OWNER'),normalizeOwner(explicitOwnerVariant,renamedOwner),'owner normalization is not invariant across database owners');
 
-  console.log(JSON.stringify({status:'PASS',postgres_major:16,migrations_replayed:124,branch_model:'29 recorded + 23 prerequisite + 10 R2',canonical_model:'fresh lexical 62',renamed_owner_invariant:true,states:{canonical_baseline:{atoms:baseline.length,refusal:baselineReason},prerequisite_complete:{atoms:prerequisite.length,refusal:prerequisiteReason},one_atom_partial:{atom:changedAtom,refusal:partialReason},stray_r2:{migration:r2Files[0],atoms:strayR2.length,refusal:strayReason}}},null,2));
+  console.log(JSON.stringify({status:'PASS',postgres_major:16,migrations_replayed:124,branch_model:'29 recorded + 23 prerequisite + 10 R2',canonical_model:'fresh lexical 62',renamed_owner_invariant:true,synthetic_backfills:{migration_031_category:fixtureProof.addon_category,migration_034_status:fixtureProof.status,migration_034_usage_rows:fixtureProof.usage_rows,migration_041_internal:fixtureProof.is_internal},states:{canonical_baseline:{atoms:baseline.length,refusal:baselineReason},prerequisite_complete:{atoms:prerequisite.length,refusal:prerequisiteReason},one_atom_partial:{atom:changedAtom,refusal:partialReason},stray_r2:{migration:r2Files[0],atoms:strayR2.length,refusal:strayReason}}},null,2));
 } finally {
   if(started) try{run(resolve(pgBin,'pg_ctl'),['-D',data,'stop','-m','fast']);}catch{}
   rmSync(work,{recursive:true,force:true});
