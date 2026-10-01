@@ -45,6 +45,7 @@ const exactFiles = [...prerequisiteFiles, ...r2Files];
 const supersededEquivalentVersion = '040';
 const supersededEquivalentProof = ['20260908000000','20260924000000'];
 const absentEquivalentVersion = '20260924010000';
+const platformConditionalVersion = '20260925012000';
 const legacyViewAtom = key => key==='view:enhanced_proposals'
   || key.startsWith('column:enhanced_proposals.')
   || key.startsWith('acl:view:enhanced_proposals:');
@@ -57,12 +58,13 @@ const steps = [...prerequisiteFiles, ...r2Files].map(file => {
   const source = readFileSync(resolve(root,'supabase/migrations',file),'utf8');
   const observed = fp.steps?.[version];
   if (!observed || typeof observed.history !== 'boolean' || !['absent','complete','partial','ambiguous','superseded-equivalent','absent-equivalent'].includes(observed.state)) throw new Error(`incomplete object fingerprint for ${version}`);
-  const allowsZeroAtoms = version===supersededEquivalentVersion && ['absent','superseded-equivalent'].includes(observed.state);
+  const allowsZeroAtoms = (version===supersededEquivalentVersion && ['absent','superseded-equivalent'].includes(observed.state)) || (version===platformConditionalVersion&&observed.state==='absent');
   if (!Number.isInteger(observed.expected_atom_count) || !Number.isInteger(observed.matched_atom_count) || observed.expected_atom_count < (allowsZeroAtoms?0:1) || observed.matched_atom_count < 0 || observed.matched_atom_count > observed.expected_atom_count) throw new Error(`invalid atom evidence for ${version}`);
   if (observed.state === 'partial' || observed.state === 'ambiguous') throw new Error(`partial/ambiguous state for ${version}`);
   let mode;
   if (r2Files.includes(file)) {
     if (observed.history || observed.state !== 'absent' || observed.matched_atom_count !== 0) throw new Error(`R2/forward migration is not exhaustively absent: ${version}`);
+    if(version===platformConditionalVersion&&(observed.expected_atom_count!==0||observed.platform_proof?.kind!=='pg17-maintain-hardening'||observed.platform_proof?.postgres_major!==17||!fp.postgres_version.startsWith('17.'))) throw new Error('PG17 MAINTAIN repair platform proof mismatch');
     mode = 'apply';
   } else if (version===supersededEquivalentVersion && !observed.history && observed.state==='superseded-equivalent') {
     if (JSON.stringify(observed.equivalence_proof)!==JSON.stringify(supersededEquivalentProof)) throw new Error('migration 040 equivalence proof mismatch');

@@ -130,7 +130,14 @@ for(const step of prerequisiteSteps){
 const mismatch=[...current].filter(([k,v])=>reconstructed.get(k)!==v);
 const missing=[...reconstructed].filter(([k])=>!current.has(k));
 if(mismatch.length||missing.length) throw new Error(`catalog is not an exact baseline-plus-classified-steps state: mismatched=${mismatch.length} missing=${missing.length} sample=${JSON.stringify({mismatch:mismatch.slice(0,3).map(([key])=>key),missing:missing.slice(0,3).map(([key])=>key)})}`);
-for(const step of r2Steps) classified[step.file.split('_',1)[0]]={history:false,state:'absent',expected_atom_count:step.diff.evidence.length,matched_atom_count:0};
+for(const step of r2Steps) {
+  const version=step.file.split('_',1)[0];
+  classified[version]={history:false,state:'absent',expected_atom_count:step.diff.evidence.length,matched_atom_count:0};
+  if(version==='20260925012000') {
+    if(!capture.postgres_version.startsWith('17.')) throw new Error('PG17 MAINTAIN repair proof requires PostgreSQL 17 production');
+    classified[version].platform_proof={kind:'pg17-maintain-hardening',postgres_major:17};
+  }
+}
 const output={...capture,classified_contract_version:1,baseline:{state:'complete',atom_digest:contract.recorded_baseline.atoms_sha256,expected_atom_count:baselineExpected.size,matched_atom_count:baselineExpected.size},steps:classified,r2_absent:true,classification:{expected_state_sha256:createHash('sha256').update(contractBytes).digest('hex'),classified_at:new Date().toISOString()}};
 writeFileSync(outputPath,JSON.stringify(output,null,2)+'\n',{mode:0o600});
 console.log(outputPath);

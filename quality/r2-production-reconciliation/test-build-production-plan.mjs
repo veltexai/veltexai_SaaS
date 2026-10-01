@@ -37,6 +37,7 @@ template.steps=Object.fromEntries([
   ...versions.map((version,index)=>[version,{history:false,state:index<5?'complete':'absent',expected_atom_count:4,matched_atom_count:index<5?4:0}]),
   ...r2Versions.map(version=>[version,{history:false,state:'absent',expected_atom_count:4,matched_atom_count:0}])
 ]);
+template.steps['20260925012000']={history:false,state:'absent',expected_atom_count:0,matched_atom_count:0,platform_proof:{kind:'pg17-maintain-hardening',postgres_major:17}};
 template.steps['040']={history:false,state:'absent',expected_atom_count:0,matched_atom_count:0};
 template.r2_absent=true;
 const fixture=resolve(temp,'reviewed.json'); writeFileSync(fixture,JSON.stringify(template));
@@ -63,6 +64,7 @@ expectBuildRefusal('expected-state-binding',fp=>{fp.classification.expected_stat
 expectBuildRefusal('capture-binding',fp=>{fp.contract_binding.catalog_sha256='f'.repeat(64);});
 expectBuildRefusal('partial-step',fp=>{fp.steps['031'].state='partial';fp.steps['031'].matched_atom_count=2;});
 expectBuildRefusal('r2-stray-object',fp=>{fp.steps['20260925002000'].state='partial';fp.steps['20260925002000'].matched_atom_count=1;});
+expectBuildRefusal('maintain-repair-forged-proof',fp=>{fp.steps['20260925012000'].platform_proof.postgres_major=16;});
 expectBuildRefusal('040-false-equivalence',fp=>{fp.steps['040']={history:false,state:'superseded-equivalent',expected_atom_count:0,matched_atom_count:0,equivalence_proof:['20260908000000','20260924000000']};});
 expectBuildRefusal('equivalence-on-other-version',fp=>{fp.steps['031']={history:false,state:'superseded-equivalent',expected_atom_count:0,matched_atom_count:0,equivalence_proof:['20260908000000','20260924000000']};});
 expectBuildRefusal('absent-equivalence-on-other-version',fp=>{fp.steps['031']={history:false,state:'absent-equivalent',expected_atom_count:legacyViewAtoms.length,matched_atom_count:legacyViewAtoms.length,equivalence_proof:{kind:'legacy-view-absent',atom_set_sha256:legacyViewProofSha256}};});
@@ -76,6 +78,18 @@ const manifest=JSON.parse(readFileSync(resolve(output,'manifest.json'),'utf8'));
 if(manifest.steps.filter(s=>s.mode==='reconcile-history').length!==5) throw new Error('classification mismatch');
 if(manifest.steps.filter(s=>s.mode==='apply').length!==29) throw new Error('apply classification mismatch');
 if(manifest.steps.at(-1)?.version!=='20260925012000') throw new Error('PG17 MAINTAIN repair missing from exact plan');
+const classifier=resolve(root,'quality/r2-production-reconciliation/expected-state/classify-production-capture.mjs');
+const genuineRaw={...template,catalog_atoms:expectedStateContract.recorded_baseline.atoms.map(({kind,identity,value_sha256})=>({kind,identity,value_sha256})),data_invariants:expectedStateContract.recorded_baseline.data_invariants};
+delete genuineRaw.baseline; delete genuineRaw.steps; delete genuineRaw.r2_absent; delete genuineRaw.classification; delete genuineRaw.classified_contract_version;
+const genuineRawPath=resolve(temp,'genuine-raw-capture.json'); writeFileSync(genuineRawPath,JSON.stringify(genuineRaw));
+const genuineClassifiedPath='/private/tmp/veltex-r2-production-classified-e2e-test.json';
+execFileSync(process.execPath,[classifier,genuineRawPath,genuineClassifiedPath],{stdio:'pipe'});
+const genuineReview=resolve(temp,'genuine-review.json'); writeFileSync(genuineReview,JSON.stringify({status:'PASS',reviewer:'synthetic-e2e-test-only',reviewed_at:'2026-09-30T00:00:00Z',fingerprint_sha256:createHash('sha256').update(readFileSync(genuineClassifiedPath)).digest('hex')}));
+const genuineOutput='/private/tmp/veltex-r2-production-plan-test-genuine-e2e';
+execFileSync(process.execPath,[builder,genuineOutput,genuineClassifiedPath,genuineReview],{stdio:'pipe'});
+execFileSync(process.execPath,[validator,genuineOutput,genuineClassifiedPath,genuineReview],{cwd:root,stdio:'pipe'});
+const genuineManifest=JSON.parse(readFileSync(resolve(genuineOutput,'manifest.json'),'utf8'));
+if(genuineManifest.steps.length!==34||genuineManifest.steps.at(-1)?.version!=='20260925012000'||genuineManifest.steps.at(-1)?.mode!=='apply') throw new Error('genuine classifier-to-builder chain omitted PG17 repair');
 const equivalentTemplate=structuredClone(template);
 equivalentTemplate.steps['040']={history:false,state:'superseded-equivalent',expected_atom_count:0,matched_atom_count:0,equivalence_proof:['20260908000000','20260924000000']};
 for(const successor of ['20260908000000','20260924000000']) equivalentTemplate.steps[successor]={history:false,state:'complete',expected_atom_count:4,matched_atom_count:4};

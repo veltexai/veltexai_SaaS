@@ -52,6 +52,7 @@ const expectedSteps=exactFiles.map(file=>{
   let mode;
   if(file>='20260925002000_') {
     if(observed.history||observed.state!=='absent'||observed.matched_atom_count!==0) throw new Error(`R2/forward state is not absent: ${version}`);
+    if(version==='20260925012000'&&(observed.expected_atom_count!==0||observed.platform_proof?.kind!=='pg17-maintain-hardening'||observed.platform_proof?.postgres_major!==17||!fingerprint.postgres_version.startsWith('17.'))) throw new Error('PG17 MAINTAIN repair platform proof mismatch');
     mode='apply';
   } else if(version==='040'&&!observed.history&&observed.state==='superseded-equivalent') {
     if(observed.expected_atom_count!==0||observed.matched_atom_count!==0||JSON.stringify(observed.equivalence_proof)!==JSON.stringify(supersededEquivalentProof)) throw new Error('migration 040 equivalence evidence mismatch');

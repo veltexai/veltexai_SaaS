@@ -1647,3 +1647,13 @@ After any material action, append or revise the relevant section with:
 - **STATUS:** production remains untouched. This is a corrected local candidate
   pending independent exact-delta re-review; no new production capture, plan,
   deployment, migration-history write or other production mutation is approved.
+- **FIRST RE-REVIEW FAILURE AND FIX:** the independent re-review confirmed all
+  three original proof-chain blockers were closed, then found that the genuine
+  classifier emits zero catalog atoms for the PG17-only MAINTAIN repair because
+  the canonical catalog is generated on PG16. The synthetic builder fixture had
+  masked that end-to-end rejection. Migration `20260925012000` now has the only
+  permitted platform-conditional zero-atom proof, bound to PostgreSQL 17 and the
+  exact migration identity. Forged platform proofs are refused, and a genuine
+  raw capture -> classifier -> independent-review record -> 34-step builder ->
+  validator integration test passes. Final independent re-review is still
+  required; the failed review remains preserved rather than overwritten.
