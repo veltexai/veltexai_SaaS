@@ -1,6 +1,6 @@
 # R2 production release packet
 
-Status: **G0/G1 VERIFIED / G2–G4 PENDING / NOT DEPLOYED**
+Status: **G0/G1/G2/G3 VERIFIED / G4 PENDING / NOT DEPLOYED**
 
 Date: 2026-09-30 Pacific
 
@@ -14,7 +14,7 @@ email, campaign mutation or preview deletion.
 | Item | Exact value |
 |---|---|
 | Accepted branch | `codex/r2-fresh-preview-guard` |
-| Frozen production-release code tree | `abc7517d850f6c2a92bb94bc9bd523e434776ed7` |
+| Frozen production-release code tree | `6660b629bbed304c856c33395538c26aa27db65f` |
 | Last application/security change | `a18e6e3` (`add secure tracked link revocation`) |
 | Canonical tracked-PDF repair | `0e9a991` |
 | Recorded production application base | `a4deb7c0d0f50ae03dfd1ff1981833fa5f996cd1` |
@@ -23,9 +23,10 @@ email, campaign mutation or preview deletion.
 | Production Vercel project | `veltex-services-veliz` (legacy name; owns `www.veltexai.com`) |
 | Separately protected pilot | `veltex-ai-100d-pilot` — exclude from this release |
 
-The deployable Git object is the frozen `abc7517` code tree. Later evidence-only
-documentation commits do not change application or migration bytes and are not
-silently substituted as the deployment target. Because this branch is
+The current production-release candidate is the frozen `6660b62` code tree.
+Later evidence-only documentation commits do not change application or
+migration bytes and are not silently substituted as the deployment target.
+Because this branch is
 cumulative from the recorded production base, it contains Release 1, R0,
 location-pricing, R2,
 tracked-PDF and link-revocation changes. Production promotion must therefore be
@@ -143,27 +144,47 @@ production reconciliation artifact are mandatory before mutation.
 
 ### G2 — backup and recovery readiness
 
-- [ ] Confirm Supabase production point-in-time recovery or take an approved,
+- [x] Confirm Supabase production point-in-time recovery or take an approved,
       restorable backup immediately before the migration window.
-- [ ] Record the backup/recovery timestamp and owner without storing database
+- [x] Record the backup/recovery timestamp and owner without storing database
       credentials in the repository.
-- [ ] Record the current Vercel deployment and its rollback command/path.
-- [ ] Confirm the application-first rollback below has an operator and a tested
+- [x] Record the current Vercel deployment and its rollback command/path.
+- [x] Confirm the application-first rollback below has an operator and a tested
       decision trigger.
+
+**G2 evidence:** production Supabase project `iwoaaljitifloolszxlu` has daily
+physical backups. The newest visible restore point at verification time was
+`01 Oct 2026 12:20:09 (+0000)`; seven additional daily physical restore points
+through `24 Sep 2026` were visible. Point-in-time recovery is **not enabled**
+and remains a paid add-on, so the physical restore point—not PITR—is the
+approved database recovery checkpoint. Supabase is the backup owner; no
+credential was displayed or stored.
+
+GitHub and Vercel independently reconfirmed the known-good application rollback
+target: production deployment `6557542919`, successful at
+`2026-09-20T20:49:26Z`, exact SHA `a4deb7c0d0f50ae03dfd1ff1981833fa5f996cd1`,
+URL `https://veltex-services-veliz-3068c22ex-veltex-ai.vercel.app`. The linked
+Vercel project is `veltex-services-veliz` (`prj_qvXFtdH78f4cfmhjkxlBVNHs0JNL`);
+the pilot remains excluded. Anthony is the release decision owner and Codex is
+the execution operator. On any abort condition below, the first response is to
+route production back to that known-good deployment using Vercel Instant
+Rollback / `vercel rollback <deployment-url>` (or promote that exact deployment
+in the dashboard), verify `www.veltexai.com`, and only then assess database
+recovery. No rollback was executed during G2.
 
 ### G3 — production-specific migration plan
 
-- [ ] Build an ordered plan from the fresh G1 fingerprint. Reuse the reviewed
+- [x] Build an ordered plan from the fresh G1 fingerprint. Reuse the reviewed
       migration bodies and reconciliation contracts, but remove preview-only
       empty-database assumptions.
-- [ ] For every missing or recorded-but-incomplete migration, prove exact
+- [x] For every missing or recorded-but-incomplete migration, prove exact
       preconditions, source SHA, postconditions and transaction behavior.
-- [ ] Require the production project ref explicitly and refuse the pilot and
+- [x] Require the production project ref explicitly and refuse the pilot and
       preview refs. The preview refusal guards are not themselves authorization
       to run against production.
-- [ ] Run the generated production plan against a disposable schema-faithful
+- [x] Run the generated production plan against a disposable schema-faithful
       copy before the live window.
-- [ ] Obtain independent exact-artifact review with no blocking findings.
+- [x] Obtain independent exact-artifact review with no blocking findings.
 
 **G3 progress — discovery contract prepared, production still unmodified:**
 
@@ -290,10 +311,10 @@ Rollback is application-first:
 
 ## Current decision
 
-**NOT READY TO MUTATE PRODUCTION.** The isolated-preview acceptance, G0 exact
-candidate and G1 read-only discovery gates are closed. G2 backup/PITR evidence,
-G3 production-specific migration artifact/disposable proof/independent review
-and G4 operator/founder acceptance remain open. The next safe move is to build
-the G3 reconciliation artifact from the verified 29-history/real-data shape and
-review it locally; do not execute it on production before G2 and explicit
-production authorization.
+**NOT READY TO MUTATE PRODUCTION.** G0 through G3 are verified. The latest
+physical database restore point and exact application rollback target are
+recorded, and the 35-step production plan is independently reviewed but remains
+deliberately unarmed (`armed:false`, `productionAuthorized:false`). G4 founder
+acceptance and explicit production deployment authorization remain open. The
+next safe move is the G4 scope/truthfulness acceptance decision; do not arm or
+execute production SQL before that decision and a final no-drift check.
