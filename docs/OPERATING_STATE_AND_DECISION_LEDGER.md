@@ -1373,3 +1373,35 @@ After any material action, append or revise the relevant section with:
   by `20260925012000` is the next consequential release action and is not
   implied by this rollback test. Production remains untouched and out of
   scope.
+
+### R2 PostgreSQL 17 provider-aware MAINTAIN repair — ISOLATED PREVIEW VERIFIED (2026-09-30 Pacific)
+
+- **CANONICAL APPLICATION COMPLETE:** after explicit founder approval, the
+  official Supabase CLI was authenticated and linked first to parent project
+  `iwoaaljitifloolszxlu`, then explicitly to isolated branch
+  `r2-fresh-verification-20260926` (`ynzkwctwlssjcsjmahey`). CLI status proved
+  the branch identity before any write. The migration-list preflight showed
+  exactly 61 remote versions and the dry run named only
+  `20260925011000_r0_private_function_service_role_acl.sql` and
+  `20260925012000_revoke_client_maintain.sql`, in that order.
+- **MIGRATIONS APPLIED:** `supabase db push --linked --include-all` applied
+  exactly those two files successfully through the canonical migration
+  runner. No history row was inserted manually. A second dry run reports the
+  remote database is up to date, and migration history now contains all 63
+  exact versions including `25011000` and `25012000`.
+- **HOSTED SECURITY POSTFLIGHT PASS:** the preview reports
+  `client_maintain_count=0`, `public_maintain_count=0`,
+  `non_postgres_app_owners=0`, `unsafe_default_count=2`, and
+  `provider_variance_count=2`. The two remaining defaults are the exact dormant
+  `supabase_admin` public-table, non-grantable MAINTAIN entries for `anon` and
+  `authenticated`; they are not effective on any current Veltex relation.
+- **RUNTIME PRESERVATION PASS:** all 21 combinations of seven private R0
+  implementations across `anon`, `authenticated` and `service_role` remain
+  denied. All 18 reviewed runtime requirements remain allowed: seven
+  authenticated wrapper RPCs, four required relation privileges and seven
+  anonymous tracked-link RPCs.
+- **CURRENT STATUS:** the R2 PostgreSQL 17 history/security repair is
+  **VERIFIED on the isolated preview**. Production `iwoaaljitifloolszxlu` was
+  not mutated. Production application remains a separate gated action; the
+  next safe release step is the remaining full preview application/operator
+  acceptance suite before any production decision.
