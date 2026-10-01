@@ -1441,3 +1441,41 @@ After any material action, append or revise the relevant section with:
   to a branch-isolated Vercel Preview wired exclusively to Supabase preview
   `ynzkwctwlssjcsjmahey`, then repeating tracked-PDF and operator acceptance.
   Production deployment and production database mutation remain out of scope.
+
+### R2 full preview acceptance — CURRENT APP DEPLOYED / PROTECTION GATE OPEN (2026-10-01 Pacific)
+
+- **PREVIEW-ONLY DEPLOYMENT AUTHORIZED:** founder explicitly approved deploying
+  the current R2 integration candidate for the full isolated-preview acceptance
+  suite. No production deployment or production alias was authorized.
+- **FIRST CLI DEPLOYMENT REJECTED BY ISOLATION CHECK:** direct Vercel deployment
+  `dpl_DtVBgNNjwjgT5Yf2vteW7cAF1Rk9` completed as target `preview` with
+  `productionUrl=null`, but its metadata carried no Git branch. The active
+  preview-only tracking token returned an application 404, proving Vercel had
+  not selected the `codex/r2-fresh-preview-guard` branch overrides. No proposal
+  download or database write succeeded through this incorrectly bound build.
+- **GIT-BACKED CORRECTION COMPLETE:** commit `bfe8428` was pushed to existing
+  remote branch `codex/r2-fresh-preview-guard`. Vercel Git deployment
+  `dpl_7Z81JGTDRomHkwetgCowMY8phw5r` completed `READY` as target `preview` and
+  received the branch alias
+  `veltex-services-veliz-git-codex-r2-fresh-previ-e45636-veltex-ai.vercel.app`.
+  The synthetic preview-only tracking token then rendered its exact isolated
+  record, proving the branch-scoped Supabase preview environment is active.
+- **STABLE PREVIEW ALIAS CORRECTED:**
+  `https://veltex-r2-preview-20260930.vercel.app` now points to the verified
+  Git-backed deployment rather than the metadata-less CLI deployment.
+  Production domains and the 100-day pilot were unchanged.
+- **HOSTED BUILD PASS:** the Git-backed Vercel build completed successfully,
+  including all 84 static-page generation steps and the Chromium-backed tracked
+  print route. The prior local prerender limitation is therefore closed by the
+  correctly provisioned hosted environment.
+- **REMAINING PROTECTION GATE:** Vercel Authentication is enabled on the new
+  deployment and stable preview alias. The signed-in operator can render the
+  tracked proposal, but the server-side isolated Chromium process has no Vercel
+  login session; the tracked PDF request did not produce a download before its
+  90-second acceptance timeout. This matches the previously preserved failure
+  mode where deployment protection intercepts the internal print route.
+- **CURRENT STATUS:** application and database isolation are verified, but PDF
+  acceptance remains **BLOCKED** until action-specific approval temporarily
+  disables Vercel Authentication for this preview validation window (or an
+  equivalently reviewed preview-only bypass is configured). After validation,
+  protection must be restored and the synthetic tracking token revoked.
