@@ -15,9 +15,14 @@ const fingerprintBytes = readFileSync(fingerprintPath);
 const fp = JSON.parse(fingerprintBytes.toString('utf8'));
 const review = JSON.parse(readFileSync(reviewPath, 'utf8'));
 const expectedHistory = ['001','002','003','004','005','006','009','010','011','012','013','014','015','016','017','018','019','020','021','022','023','024','025','026','027','028','029','030','20250901194222'];
-const requiredDigests = ['profiles_identity','proposals_identity_and_content','tracking_identity_and_counters','branding_identity','subscriptions_identity'];
+const requiredDigests = [
+  'profiles_all','proposals_all','tracking_all','branding_all','subscriptions_all',
+  'usage_all','addon_catalog_all','proposal_addons_all','proposal_templates_all',
+  'tier_access_all','template_preferences_all'
+];
 if (fp.project_ref !== productionRef || fp.environment !== 'production' || fp.read_only !== true) throw new Error('fingerprint is not the explicit production read-only contract');
 if (fp.migration_history?.count !== 29 || JSON.stringify(fp.migration_history.versions) !== JSON.stringify(expectedHistory)) throw new Error('production history drift');
+if (fp.baseline?.state !== 'complete' || !/^[0-9a-f]{64}$/.test(fp.baseline?.atom_digest ?? '')) throw new Error('recorded baseline objects are not independently proven complete');
 if (fp.r2_absent !== true) throw new Error('R2 is not wholly absent');
 const fingerprintSha256 = createHash('sha256').update(fingerprintBytes).digest('hex');
 if (review.status !== 'PASS' || review.fingerprint_sha256 !== fingerprintSha256 || !review.reviewer || !review.reviewed_at) throw new Error('independent fingerprint review is incomplete or does not bind this exact fingerprint');
@@ -34,13 +39,17 @@ const steps = [...prerequisiteFiles, ...r2Files].map(file => {
   const version = file.split('_',1)[0];
   const source = readFileSync(resolve(root,'supabase/migrations',file),'utf8');
   const observed = fp.steps?.[version];
+  if (!observed || typeof observed.history !== 'boolean' || !['absent','complete','partial','ambiguous'].includes(observed.state)) throw new Error(`incomplete object fingerprint for ${version}`);
+  if (!Number.isInteger(observed.expected_atom_count) || !Number.isInteger(observed.matched_atom_count) || observed.expected_atom_count < 1 || observed.matched_atom_count < 0 || observed.matched_atom_count > observed.expected_atom_count) throw new Error(`invalid atom evidence for ${version}`);
+  if (observed.state === 'partial' || observed.state === 'ambiguous') throw new Error(`partial/ambiguous state for ${version}`);
   let mode;
-  if (r2Files.includes(file)) mode = 'apply';
-  else if (!observed || typeof observed.history !== 'boolean' || typeof observed.complete !== 'boolean') throw new Error(`incomplete object fingerprint for ${version}`);
-  else if (observed.history && observed.complete) mode = 'verify-recorded';
-  else if (!observed.history && observed.complete) mode = 'reconcile-history';
-  else if (!observed.history && !observed.complete) mode = 'apply';
-  else throw new Error(`partial/inconsistent state for ${version}`);
+  if (r2Files.includes(file)) {
+    if (observed.history || observed.state !== 'absent' || observed.matched_atom_count !== 0) throw new Error(`R2/forward migration is not exhaustively absent: ${version}`);
+    mode = 'apply';
+  } else if (observed.history && observed.state === 'complete' && observed.matched_atom_count === observed.expected_atom_count) mode = 'verify-recorded';
+  else if (!observed.history && observed.state === 'complete' && observed.matched_atom_count === observed.expected_atom_count) mode = 'reconcile-history';
+  else if (!observed.history && observed.state === 'absent' && observed.matched_atom_count === 0) mode = 'apply';
+  else throw new Error(`history/state mismatch for ${version}`);
   const sourceSha256 = sha(source);
   if (reviewedSourceHashes[file] !== sourceSha256) throw new Error(`migration source is not independently pinned: ${file}`);
   return { file, version, source_sha256: sourceSha256, mode };

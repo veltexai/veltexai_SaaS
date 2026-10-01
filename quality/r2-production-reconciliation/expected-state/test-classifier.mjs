@@ -1,0 +1,51 @@
+#!/usr/bin/env node
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { resolve } from 'node:path';
+
+const here=new URL('.',import.meta.url).pathname;
+const contract=JSON.parse(readFileSync(resolve(here,'expected-state.v1.json'),'utf8'));
+const classifier=resolve(here,'classify-production-capture.mjs');
+const captureBuilder=resolve(here,'build-read-only-production-capture.mjs');
+const work=mkdtempSync(resolve(tmpdir(),'veltex-g3-classifier-'));
+const history=['001','002','003','004','005','006','009','010','011','012','013','014','015','016','017','018','019','020','021','022','023','024','025','026','027','028','029','030','20250901194222'];
+const digests=Object.fromEntries(['profiles_all','proposals_all','tracking_all','branding_all','subscriptions_all','usage_all','addon_catalog_all','proposal_addons_all','proposal_templates_all','tier_access_all','template_preferences_all'].map(k=>[k,'0'.repeat(64)]));
+const capture=atoms=>({contract_version:2,captured_at:'2026-09-30T00:00:00Z',project_ref:'iwoaaljitifloolszxlu',environment:'production',read_only:true,migration_history:{count:29,versions:history},row_counts:{},orphan_counts:{},content_digests:digests,catalog_atoms:atoms.map(a=>({kind:a.kind,identity:a.identity,value_sha256:a.value_sha256}))});
+const run=(name,value,ok=true)=>{
+  const input=resolve(work,`${name}.json`); const output=`/private/tmp/veltex-g3-${name}-classified.json`;
+  writeFileSync(input,JSON.stringify(value));
+  let passed=true; try{execFileSync(process.execPath,[classifier,input,output],{stdio:'pipe'});}catch{passed=false;}
+  assert.equal(passed,ok,`${name} classification result`);
+  return passed?JSON.parse(readFileSync(output,'utf8')):null;
+};
+
+// A fully superseded, unrecorded migration is intentionally not inferable
+// from catalog state alone. The classifier must stop instead of inventing
+// evidence that it ran (or did not run).
+run('baseline',capture(contract.recorded_baseline.atoms),false);
+
+run('prereq',capture(contract.prerequisite_checkpoint.atoms),false);
+
+const corrupt=structuredClone(contract.prerequisite_checkpoint.atoms);
+corrupt.find(a=>a.kind==='column').value_sha256='f'.repeat(64);
+run('partial',capture(corrupt),false);
+
+const r2Evidence=contract.steps.slice(52).flatMap(s=>s.diff.evidence).find(e=>e.after_sha256);
+const stray=structuredClone(contract.recorded_baseline.atoms);
+const [kind,...identityParts]=r2Evidence.atom.split(':');
+const identity=identityParts.join(':');
+const prior=stray.find(a=>a.kind===kind&&a.identity===identity);
+if(prior) prior.value_sha256=r2Evidence.after_sha256;
+else stray.push({kind,identity,value_sha256:r2Evidence.after_sha256,value:{}});
+run('r2-stray',capture(stray),false);
+
+const sqlPath='/private/tmp/veltex-g3-production-capture-test.sql';
+execFileSync(process.execPath,[captureBuilder,sqlPath],{stdio:'pipe'});
+const sql=readFileSync(sqlPath,'utf8');
+assert.match(sql,/begin transaction read only;/i);
+assert.match(sql,/^rollback;$/im);
+assert.match(sql,/'project_ref','iwoaaljitifloolszxlu'/);
+for(const forbidden of ['recipient_email','client_email','access_notes','tracking_id']) assert.doesNotMatch(sql,new RegExp(`['"]${forbidden}['"]`,'i'));
+console.log('expected-state production classifier mutation tests PASS');

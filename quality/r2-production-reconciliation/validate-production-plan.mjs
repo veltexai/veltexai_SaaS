@@ -4,12 +4,23 @@ import { dirname, resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 const root=resolve(dirname(new URL(import.meta.url).pathname),'../..');
 const dir=resolve(process.argv[2]??'/private/tmp/veltex-r2-production-plan');
+const fingerprintPath=resolve(process.argv[3]??'');
+const reviewPath=resolve(process.argv[4]??'');
+if(!fingerprintPath||!reviewPath) throw new Error('exact fingerprint and independent review paths are required');
+const fingerprintBytes=readFileSync(fingerprintPath);
+const fingerprint=JSON.parse(fingerprintBytes.toString('utf8'));
+const reviewBytes=readFileSync(reviewPath);
+const review=JSON.parse(reviewBytes.toString('utf8'));
 const manifest=JSON.parse(readFileSync(resolve(dir,'manifest.json'),'utf8'));
 const manifestText=readFileSync(resolve(dir,'manifest.json'),'utf8');
 const sql=readFileSync(resolve(dir,'UNARMED-production-plan.sql'),'utf8');
 const reviewedSourceHashes=JSON.parse(readFileSync(resolve(root,'quality/r2-production-reconciliation/reviewed-source-sha256.json'),'utf8'));
 const exactFiles=Object.keys(reviewedSourceHashes);
+const sha=value=>createHash('sha256').update(value).digest('hex');
 if(manifest.contract_version!==2||manifest.target!=='production iwoaaljitifloolszxlu'||manifest.productionAuthorized!==false||manifest.armed!==false) throw new Error('manifest safety contract failed');
+for(const [name,value] of [['fingerprint_sha256',manifest.fingerprint_sha256],['review_sha256',manifest.review_sha256]]) if(!/^[0-9a-f]{64}$/.test(value??'')) throw new Error(`invalid ${name}`);
+const fingerprintSha256=sha(fingerprintBytes);
+if(review.status!=='PASS'||review.fingerprint_sha256!==fingerprintSha256||!review.reviewer||!review.reviewed_at) throw new Error('independent review does not bind the exact fingerprint');
 if(JSON.stringify(manifest.steps.map(step=>step.file))!==JSON.stringify(exactFiles)) throw new Error('manifest migration order/set mismatch');
 if(!sql.includes("raise exception 'UNARMED G3 ARTIFACT")) throw new Error('unarmed refusal missing');
 const encoded=sql.match(/^-- MANIFEST_BASE64:([A-Za-z0-9+/=]+)$/m)?.[1];
@@ -22,4 +33,20 @@ for(const step of manifest.steps){
   if(digest!==step.source_sha256||digest!==reviewedSourceHashes[step.file]) throw new Error(`source drift: ${step.file}`);
   if(!['verify-recorded','reconcile-history','apply'].includes(step.mode)) throw new Error(`invalid mode: ${step.file}`);
 }
+const expectedSteps=exactFiles.map(file=>{
+  const version=file.split('_',1)[0];
+  const observed=fingerprint.steps?.[version];
+  if(!observed||!['absent','complete'].includes(observed.state)) throw new Error(`fingerprint state is not buildable: ${version}`);
+  let mode;
+  if(file>='20260925002000_') {
+    if(observed.history||observed.state!=='absent'||observed.matched_atom_count!==0) throw new Error(`R2/forward state is not absent: ${version}`);
+    mode='apply';
+  } else if(observed.history&&observed.state==='complete'&&observed.matched_atom_count===observed.expected_atom_count) mode='verify-recorded';
+  else if(!observed.history&&observed.state==='complete'&&observed.matched_atom_count===observed.expected_atom_count) mode='reconcile-history';
+  else if(!observed.history&&observed.state==='absent'&&observed.matched_atom_count===0) mode='apply';
+  else throw new Error(`history/state mismatch: ${version}`);
+  return {file,version,source_sha256:reviewedSourceHashes[file],mode};
+});
+const expectedManifest={contract_version:2,target:'production iwoaaljitifloolszxlu',productionAuthorized:false,armed:false,fingerprint_sha256:fingerprintSha256,review_sha256:sha(reviewBytes),frozen_counts:fingerprint.row_counts,frozen_orphans:fingerprint.orphan_counts,frozen_content_digests:fingerprint.content_digests,steps:expectedSteps};
+if(manifestText!==JSON.stringify(expectedManifest,null,2)+'\n') throw new Error('manifest was not derived exactly from the reviewed fingerprint and source contract');
 console.log(`G3 unarmed plan validated: ${manifest.steps.length} independently pinned steps; production mutation impossible`);

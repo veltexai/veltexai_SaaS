@@ -1,0 +1,24 @@
+{
+  "before": [
+    {"kind":"column","identity":"widgets.name","value":{"type":"text"}},
+    {"kind":"function","identity":"old_widget()","value":{"definition":"old"}},
+    {"kind":"table","identity":"widgets","value":{"rls":false}}
+  ],
+  "after": [
+    {"kind":"column","identity":"widgets.name","value":{"type":"text"}},
+    {"kind":"column","identity":"widgets.tenant_id","value":{"type":"uuid"}},
+    {"kind":"function","identity":"new_widget()","value":{"definition":"new"}},
+    {"kind":"table","identity":"widgets","value":{"rls":true}}
+  ],
+  "expected": {
+    "added": ["column:widgets.tenant_id","function:new_widget()"],
+    "removed": ["function:old_widget()"],
+    "changed": ["table:widgets"],
+    "evidence": [
+      {"atom":"column:widgets.tenant_id","before_sha256":null,"after_sha256":"38b0563a89a8dd18e671c96478df9ea563f9c02b4e8f0b480339f0dffed974ed"},
+      {"atom":"function:new_widget()","before_sha256":null,"after_sha256":"b70a92283914cd4ed27dad63bfea64f456b772a56a1a0f7e326b949571e00e72"},
+      {"atom":"function:old_widget()","before_sha256":"245669ae711acf41944e92dfe4e6cd4f4f6b4db17e7845dce9070d9784d99fa6","after_sha256":null},
+      {"atom":"table:widgets","before_sha256":"3b7776291ca88a8c350e2737f93f860d7a762e30503690dda6849c6ede1d26b3","after_sha256":"a3c0b5b6e40882fc6293ad0fa04eeedec9ba3ac171ca6410f2a1ed481f3bb69f"}
+    ]
+  }
+}

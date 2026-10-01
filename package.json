@@ -15,6 +15,12 @@
     "r2:validate-prerequisite-plan": "node quality/r2-hosted-verification-20260925/validate-prerequisite-replay-plan.mjs",
     "r2:verify-prerequisite-plan": "bash quality/r2-hosted-verification-20260925/verify-prerequisite-replay-plan.sh",
     "r2:verify-fresh-preview-bundles": "bash quality/r2-hosted-verification-20260925/verify-fresh-preview-bundles.sh",
+    "r2:test-expected-state": "node quality/r2-production-reconciliation/expected-state/test-expected-state.mjs",
+    "r2:generate-expected-state": "node quality/r2-production-reconciliation/expected-state/generate-expected-state.mjs",
+    "r2:check-expected-state": "node quality/r2-production-reconciliation/expected-state/generate-expected-state.mjs --check",
+    "r2:build-production-capture": "node quality/r2-production-reconciliation/expected-state/build-read-only-production-capture.mjs",
+    "r2:classify-production-capture": "node quality/r2-production-reconciliation/expected-state/classify-production-capture.mjs",
+    "r2:test-production-classifier": "node quality/r2-production-reconciliation/expected-state/test-classifier.mjs",
     "100s:operator": "node 100X/100S/operator/cli.mjs",
     "test:100s": "jest 100X/100S/tests --runInBand"
   },

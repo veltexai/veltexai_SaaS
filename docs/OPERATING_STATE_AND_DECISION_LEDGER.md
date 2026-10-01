@@ -1082,3 +1082,33 @@ After any material action, append or revise the relevant section with:
   complete per-migration vectors, all baseline and R2 object-state checks,
   wider preservation digests and a production-shaped replay. No arming or
   production runner exists, and no hosted mutation is authorized by this work.
+
+### R2 production G3 expected-state contract — LOCAL PASS / G3 STILL BLOCKED (2026-09-30 Pacific)
+
+- **GENERATED CONTRACT:** a socket-only disposable PostgreSQL 16 replay now
+  captures the exact 62-migration chain as 2,584 normalized catalog atoms,
+  including the exact 29-file recorded baseline, the pre-R2 checkpoint,
+  per-step before/after hashes and supersession ownership. Regeneration is
+  deterministic and matches the checked-in contract.
+- **FAIL-CLOSED CLASSIFIER:** the new hashes-only production capture covers
+  eleven affected-table preservation digests and the full catalog inventory.
+  Classification refuses wrong project/history, any R2 evidence, partial or
+  unexpected catalog state, and a fully superseded migration whose execution
+  cannot be proven from final catalog state. Production was not queried or
+  changed during this local work.
+- **VALIDATOR REMEDIATION:** Claude passed the bounded `bb0ee2a` fixes but found
+  that a self-consistent forged manifest could still validate. The validator
+  now requires the exact fingerprint and independent-review files, reconstructs
+  the manifest from those sources and the reviewed migration hash table, checks
+  both hashes as 64 lowercase hex characters, and rejects a forged mode even
+  when its SQL and Base64 manifest agree.
+- **LOCAL EVIDENCE:** deterministic expected-state check, static contract test,
+  classifier mutation tests, builder/validator negatives, migration-chain
+  validation, TypeScript and diff hygiene pass.
+- **OPEN BLOCKER:** catalog state cannot prove one-time data transformations.
+  Explicit data invariants or reviewed idempotent forward repairs are still
+  required for data-bearing prerequisites (notably 031, 034, 041 and the
+  reviewed location-pricing seed). Migration 040 is fully superseded and needs
+  an explicit reconciliation decision rather than an inferred history write.
+  Production-shaped replay, G2, exact-artifact review, G4 and action-specific
+  production approval remain open.
