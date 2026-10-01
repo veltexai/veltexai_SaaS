@@ -1192,3 +1192,20 @@ After any material action, append or revise the relevant section with:
 - **NEXT GATE:** run the complete local verification set, commit and push the
   exact policy implementation, then obtain an independent Claude PASS bound to
   that commit before any production capture, reconciliation or deployment.
+
+### R2 G3 migration-040 independent review — FAIL / REMEDIATION IN PROGRESS (2026-09-30 Pacific)
+
+- **EXACT REVIEWED COMMIT:** Claude reviewed pushed commit `ca9006403a32d9da64b719699f23280e275080a3`
+  read-only and returned FAIL on one blocker. The classifier selected 040
+  correctly, but a forged reviewed fingerprint could label 040 `absent` while
+  either successor was complete; the builder and validator would then schedule
+  the obsolete 040 migration and overwrite the hardened entitlement wrapper.
+- **REMEDIATION:** builder and validator now independently permit 040 `absent`
+  and `apply` only when both exact successors are also absent with zero matched
+  atoms. Complete or mixed successor states fail closed. Dedicated negative
+  tests cover both combinations before a follow-up commit and re-review.
+- **NON-BLOCKING REVIEW NOTE:** hosted Supabase may place `pgcrypto` in the
+  `extensions` schema and grant platform roles differently from the local
+  replay. The catalog contract will therefore be tested by a read-only capture
+  on the isolated preview before any production capture; a mismatch must be
+  handled as a safe refusal, never normalized by assumption.

@@ -52,6 +52,8 @@ expectBuildRefusal('partial-step',fp=>{fp.steps['031'].state='partial';fp.steps[
 expectBuildRefusal('r2-stray-object',fp=>{fp.steps['20260925002000'].state='partial';fp.steps['20260925002000'].matched_atom_count=1;});
 expectBuildRefusal('040-false-equivalence',fp=>{fp.steps['040']={history:false,state:'superseded-equivalent',expected_atom_count:0,matched_atom_count:0,equivalence_proof:['20260908000000','20260924000000']};});
 expectBuildRefusal('equivalence-on-other-version',fp=>{fp.steps['031']={history:false,state:'superseded-equivalent',expected_atom_count:0,matched_atom_count:0,equivalence_proof:['20260908000000','20260924000000']};});
+expectBuildRefusal('040-absent-after-complete-successors',fp=>{for(const successor of ['20260908000000','20260924000000'])fp.steps[successor]={history:false,state:'complete',expected_atom_count:4,matched_atom_count:4};});
+expectBuildRefusal('040-absent-after-mixed-successors',fp=>{fp.steps['20260908000000']={history:false,state:'complete',expected_atom_count:4,matched_atom_count:4};});
 const output='/private/tmp/veltex-r2-production-plan-test-reviewed';
 execFileSync(process.execPath,[builder,output,fixture,review],{stdio:'pipe'});
 execFileSync(process.execPath,[validator,output,fixture,review],{cwd:root,stdio:'inherit'});

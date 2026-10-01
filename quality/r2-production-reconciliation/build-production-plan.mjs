@@ -58,7 +58,15 @@ const steps = [...prerequisiteFiles, ...r2Files].map(file => {
     mode='reconcile-superseded-equivalent';
   } else if (observed.history && observed.state === 'complete' && observed.matched_atom_count === observed.expected_atom_count) mode = 'verify-recorded';
   else if (!observed.history && observed.state === 'complete' && observed.matched_atom_count === observed.expected_atom_count) mode = 'reconcile-history';
-  else if (!observed.history && observed.state === 'absent' && observed.matched_atom_count === 0) mode = 'apply';
+  else if (!observed.history && observed.state === 'absent' && observed.matched_atom_count === 0) {
+    if (version===supersededEquivalentVersion) {
+      for (const successor of supersededEquivalentProof) {
+        const evidence=fp.steps?.[successor];
+        if (!evidence || evidence.state!=='absent' || evidence.matched_atom_count!==0) throw new Error(`migration 040 cannot apply after a successor is present: ${successor}`);
+      }
+    }
+    mode = 'apply';
+  }
   else throw new Error(`history/state mismatch for ${version}`);
   const sourceSha256 = sha(source);
   if (reviewedSourceHashes[file] !== sourceSha256) throw new Error(`migration source is not independently pinned: ${file}`);
