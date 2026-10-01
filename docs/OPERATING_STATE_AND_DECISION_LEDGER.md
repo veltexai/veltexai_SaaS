@@ -1657,3 +1657,12 @@ After any material action, append or revise the relevant section with:
   raw capture -> classifier -> independent-review record -> 34-step builder ->
   validator integration test passes. Final independent re-review is still
   required; the failed review remains preserved rather than overwritten.
+- **FINAL INDEPENDENT VERDICT — PASS:** exact-delta re-review verified the
+  genuine raw v3 PostgreSQL-17 capture -> classifier -> exact-hash review ->
+  builder -> validator chain succeeds with 34 steps, migration `25012000` final
+  in `apply` mode. Its zero-atom allowance is confined to that exact migration,
+  absent state and PG17 platform proof; forged proof and other zero-atom forward
+  steps fail. The original capture binding, baseline binding and omitted-step
+  blockers remain closed. This PASS authorizes the next read-only production
+  recapture/reclassification gate only; it does not authorize production SQL,
+  deployment, migration history changes or other production mutation.
