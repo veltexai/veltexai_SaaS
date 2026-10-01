@@ -1,6 +1,6 @@
 # R2 production release packet
 
-Status: **PREPARED / NOT AUTHORIZED / NOT DEPLOYED**
+Status: **G0/G1 VERIFIED / G2–G4 PENDING / NOT DEPLOYED**
 
 Date: 2026-09-30 Pacific
 
@@ -14,7 +14,7 @@ email, campaign mutation or preview deletion.
 | Item | Exact value |
 |---|---|
 | Accepted branch | `codex/r2-fresh-preview-guard` |
-| Accepted ledger head | `509ea97` |
+| Frozen production-release code tree | `abc7517d850f6c2a92bb94bc9bd523e434776ed7` |
 | Last application/security change | `a18e6e3` (`add secure tracked link revocation`) |
 | Canonical tracked-PDF repair | `0e9a991` |
 | Recorded production application base | `a4deb7c0d0f50ae03dfd1ff1981833fa5f996cd1` |
@@ -23,9 +23,11 @@ email, campaign mutation or preview deletion.
 | Production Vercel project | `veltex-services-veliz` (legacy name; owns `www.veltexai.com`) |
 | Separately protected pilot | `veltex-ai-100d-pilot` — exclude from this release |
 
-The deployable Git object is the exact accepted branch head after the final
-release-only documentation commit. Because this branch is cumulative from the
-recorded production base, it contains Release 1, R0, location-pricing, R2,
+The deployable Git object is the frozen `abc7517` code tree. Later evidence-only
+documentation commits do not change application or migration bytes and are not
+silently substituted as the deployment target. Because this branch is
+cumulative from the recorded production base, it contains Release 1, R0,
+location-pricing, R2,
 tracked-PDF and link-revocation changes. Production promotion must therefore be
 treated as one cumulative release; do not cherry-pick only the final R2
 migrations or assume the live migration history from an earlier inspection.
@@ -70,31 +72,74 @@ Every item below must be recorded as PASS before the production mutation window.
 
 ### G0 — exact candidate freeze
 
-- [ ] Confirm the worktree is clean and remote branch equals the local release
+- [x] Confirm the worktree is clean and remote branch equals the local release
       head.
-- [ ] Record the final Git SHA in this packet and the operating ledger.
-- [ ] Re-run `git diff --check`, the full Jest suite, TypeScript, production
+- [x] Record the final Git SHA in this packet and the operating ledger.
+- [x] Re-run `git diff --check`, the full Jest suite, TypeScript, production
       build, 61-migration validator and guarded disposable PostgreSQL gate on
       that exact SHA.
-- [ ] Confirm no later branch, Cursor output or unrelated worktree delta has
+- [x] Confirm no later branch, Cursor output or unrelated worktree delta has
       been merged into the candidate.
+
+**G0 evidence:** local and remote both resolved to `abc7517`. Full Jest passed
+86 suites / 721 tests / five snapshots; TypeScript passed; the production build
+generated 84 pages; migration validation found 61 unique executable versions;
+and a fresh guarded PostgreSQL 16 cluster passed the full chain, owner matrix,
+H1/definer assertions, revocation lifecycle, injection refusal, idempotent
+replay and 40-way concurrency. The first build attempt lacked worktree-local
+Supabase environment variables; rerunning with the existing local Veltex
+configuration passed without changing or exposing those values. This was an
+execution-context issue, not a product failure.
 
 ### G1 — read-only production discovery
 
-- [ ] Confirm `www.veltexai.com` currently resolves to Vercel project
+- [x] Confirm `www.veltexai.com` currently resolves to Vercel project
       `veltex-services-veliz` and record the live deployment SHA/ID as the
       application rollback reference.
-- [ ] Read the complete production `schema_migrations` history and fingerprint
+- [x] Read the complete production `schema_migrations` history and fingerprint
       the relevant objects for migrations 029, 030, 034, 040, 041 and
       `20260922` through `20260925010000`.
-- [ ] Record production row counts and orphan/owner checks for profiles,
+- [x] Record production row counts and orphan/owner checks for profiles,
       proposals, tracking rows, company/branding rows, service profiles and
       subscriptions without exporting customer content.
-- [ ] Confirm production SMTP remains healthy without revealing or rotating its
+- [x] Confirm production SMTP remains healthy without revealing or rotating its
       credential.
-- [ ] Stop if live code, schema or migration history differs from the recorded
+- [x] Stop if live code, schema or migration history differs from the recorded
       assumptions. Diagnose the drift; never insert history rows merely to make
       the release continue.
+
+**G1 evidence:**
+
+- GitHub deployment `6557542919` is the latest recorded successful Production
+  deployment for `veltex-services-veliz`; it points to exact SHA `a4deb7c` and
+  URL `https://veltex-services-veliz-3068c22ex-veltex-ai.vercel.app`.
+  `https://www.veltexai.com` returned HTTP 200 from Vercel. This deployment is
+  the application rollback reference pending final dashboard confirmation in
+  the maintenance window.
+- Production Supabase `iwoaaljitifloolszxlu` has exactly 29 recorded migration
+  versions: `001`–`006`, `009`–`030`, and `20250901194222`. Organization,
+  membership, service-catalog, location-pricing, R0, tracked-print and revoke
+  objects are absent.
+- The known history/schema contradiction is still present: proposal templates
+  and additional-service catalog exist; free-trial support, email automation,
+  attribution/funnel, calculator capture and buyer-role fields also exist even
+  though their later migration versions are not recorded. Company profile
+  expansion, Release 1 service-catalog, location-pricing, R0 and R2 objects are
+  absent. This matches the previously diagnosed baseline class but must be
+  reconciled against real rows, not copied from the empty preview.
+- Counts-only discovery found 86 profiles, 166 proposals, four tracking rows,
+  zero company-profile rows, four branding rows and 11 subscriptions. The
+  Release 1 `business_service_profiles` table does not yet exist. There are zero
+  proposals without profiles and zero tracking rows without proposals. No
+  customer content, email address, token or credential was exported.
+- Supabase custom SMTP is enabled with the previously verified Gmail provider
+  configuration. The stored password remained hidden and unchanged. Prior
+  end-to-end production Auth email delivery remains the latest delivery proof;
+  G1 did not send another email.
+
+G1 therefore passes as read-only discovery but explicitly blocks direct reuse
+of the preview artifact. G2 backup readiness and a new real-data-safe G3
+production reconciliation artifact are mandatory before mutation.
 
 ### G2 — backup and recovery readiness
 
@@ -211,8 +256,10 @@ Rollback is application-first:
 
 ## Current decision
 
-**NOT READY TO MUTATE PRODUCTION.** The isolated-preview acceptance gate is
-closed, but G0 exact-candidate replay, G1 fresh production discovery, G2 backup,
-G3 production-specific migration artifact/review and G4 founder acceptance are
-not yet recorded. The next safe move is G0 plus read-only G1 discovery. Neither
-step deploys or changes production.
+**NOT READY TO MUTATE PRODUCTION.** The isolated-preview acceptance, G0 exact
+candidate and G1 read-only discovery gates are closed. G2 backup/PITR evidence,
+G3 production-specific migration artifact/disposable proof/independent review
+and G4 operator/founder acceptance remain open. The next safe move is to build
+the G3 reconciliation artifact from the verified 29-history/real-data shape and
+review it locally; do not execute it on production before G2 and explicit
+production authorization.

@@ -973,3 +973,35 @@ After any material action, append or revise the relevant section with:
   read-only production discovery. No production database mutation, deployment,
   credential action, email, campaign change or preview deletion is authorized
   by the packet.
+
+### R2 production G0/G1 — VERIFIED / NO MUTATION (2026-09-30 Pacific)
+
+- **G0 EXACT CANDIDATE PASS:** frozen code tree
+  `abc7517d850f6c2a92bb94bc9bd523e434776ed7` matched its remote branch with a
+  clean worktree. Full verification passed: 86 Jest suites / 721 tests / five
+  snapshots, TypeScript, 84-page production build, 61-version migration-chain
+  validation, and a fresh guarded PostgreSQL 16 run covering the owner matrix,
+  H1/definers, tracked-link lifecycle, injection refusal, idempotent replay and
+  40-way concurrency. An initial build lacking worktree-local Supabase
+  variables was rerun successfully with the existing local Veltex configuration;
+  no configuration value was exposed or changed.
+- **VERCEL PRODUCTION IDENTITY VERIFIED READ-ONLY:** latest recorded successful
+  `Production – veltex-services-veliz` deployment remains GitHub deployment
+  `6557542919`, exact SHA `a4deb7c`, with the prior deployment URL. The public
+  `www.veltexai.com` domain returned HTTP 200 from Vercel. The separate
+  `veltex-ai-100d-pilot` project was not accessed or changed.
+- **SUPABASE PRODUCTION FINGERPRINT VERIFIED READ-ONLY:** production
+  `iwoaaljitifloolszxlu` still records 29 migration versions while several later
+  schema effects exist without matching history. It contains 86 profiles, 166
+  proposals, four tracking rows, zero company-profile rows, four branding rows
+  and 11 subscriptions; measured proposal/profile and tracking/proposal orphan
+  counts are both zero. Service-catalog, location-pricing, R0, organization,
+  tracked-print and revoke objects are absent. No customer content was exported.
+- **SMTP CONFIGURATION PRESERVED:** custom SMTP is enabled with the previously
+  accepted Gmail provider configuration. Its stored password remained hidden
+  and unchanged; no email was sent.
+- **DECISION:** G0 and G1 pass. The empty-preview reconciliation bundle is not
+  safe to copy directly onto these real production rows. G2 backup/PITR remains
+  open; G3 must produce and independently review a real-data-safe production
+  reconciliation artifact; G4 operator/founder acceptance and production
+  deployment authorization remain open. Production was read only throughout.
