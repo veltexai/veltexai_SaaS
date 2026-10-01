@@ -1545,3 +1545,46 @@ After any material action, append or revise the relevant section with:
   distinguishes harmless hosted catalog representation/order differences from
   genuine partial prerequisite effects, followed by independent review before
   any plan can be generated.
+
+### R2 production G3 strict drift analysis — READ-ONLY COMPLETE / CLASSIFIER REMEDIATION REQUIRED (2026-10-01 Pacific)
+
+- **COLUMN-ORDER FALSE POSITIVES:** narrow read-only catalog probes prove the
+  036 company-profile columns and all five 041 qualification columns have the
+  exact intended types, nullability and defaults; the three 041 checks are
+  exact and validated, its trigger/function/view remain present, and its
+  hashes-only internal-profile data invariant passes. Production added nullable
+  `profiles.logo_url` earlier at physical position 16, so the later fields are
+  shifted relative to the disposable replay. Because the catalog atom hashes
+  include `attnum`, the classifier incorrectly labels 036, the five 041 column
+  atoms and the later logo alignment as partial. Physical column order is not a
+  semantic migration difference for these named-column operations.
+- **NON-CUMULATIVE FALSE POSITIVES:** production is at the exact 041 predecessor
+  state for the marketing-event constraint and `growth_funnel_daily`; catalog
+  remediation `20260922010000` is genuinely absent. Likewise, the six inspected
+  entitlement/usage routines remain the expected 034/040 implementations and
+  no `_r0_*` implementation or `r0_assert_self_or_service` wrapper exists, so
+  R0 hardening is genuinely absent. Comparing each later migration only against
+  the original 29-file baseline or the final prerequisite checkpoint mistakes
+  these valid intermediate predecessor states for partial application. The
+  classifier must use cumulative per-step checkpoints/state-machine replay.
+- **REAL NONCANONICAL STATES:** `public.enhanced_proposals` is absent, not merely
+  unhardened. This is fail-closed for the stated client-access threat, but the
+  exact `20260924010000` migration cannot run because it casts the missing view
+  to `regclass`; treating absence as terminal security equivalence requires an
+  explicit reviewed policy. The profiles policy named `Admins can view all
+  profiles` currently uses `is_admin() OR id = auth.uid()` instead of only
+  `is_admin()`. Separate authenticated self-view policy already supplies the
+  same self branch, making the current effective SELECT behavior equivalent,
+  but the named policy is not byte-identical and should be normalized by the
+  exact migration rather than silently reconciled.
+- **CONFIRMED SAFE DATA STATE:** 031, 034 and 041 hashes-only invariants exactly
+  match the generated prerequisite checkpoint: zero NULL/invalid add-on
+  categories, all four reviewed seed keys, zero pending profiles, zero usage
+  orphans, zero active free trials missing usage and zero matching internal QA
+  profiles left unclassified. No raw customer row was read or exported.
+- **NEXT GATE:** update the local classifier/contract so additive named-column
+  completion ignores physical ordinal while preserving ordinal as a diagnostic,
+  classify against cumulative predecessor checkpoints, and add an explicit
+  fail-closed equivalence rule for the absent legacy view. Mutation-negative
+  tests and an independent review are required before another production
+  capture or any production plan. Production remains unmodified.
