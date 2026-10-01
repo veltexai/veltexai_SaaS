@@ -1,6 +1,6 @@
 # R2 production release packet
 
-Status: **G0/G1/G2/G3 VERIFIED / G4 PENDING / NOT DEPLOYED**
+Status: **G0–G4 VERIFIED / FINAL EXECUTION ARTIFACT PENDING / NOT DEPLOYED**
 
 Date: 2026-09-30 Pacific
 
@@ -222,16 +222,22 @@ recovery. No rollback was executed during G2.
 
 ### G4 — operator and founder acceptance
 
-- [ ] Record founder acceptance of the cumulative release scope, including
+- [x] Record founder acceptance of the cumulative release scope, including
       organizations/roles, residential and turnover catalogs, location-aware
       pricing foundation, tracked-PDF parity and link revocation.
-- [ ] Confirm the operator understands that pricing remains an explainable
+- [x] Confirm the operator understands that pricing remains an explainable
       starting range and requires job-specific review; it is not a guaranteed
       market price.
-- [ ] Confirm the truthful capability boundary: no live team invitations,
+- [x] Confirm the truthful capability boundary: no live team invitations,
       native invoicing, scheduling or full field-service system is claimed.
-- [ ] Obtain explicit production deployment authorization only after G0–G4 are
+- [x] Obtain explicit production deployment authorization only after G0–G4 are
       complete.
+
+**G4 evidence:** on 2026-10-01 Pacific, the founder approved the complete G4
+acceptance statement presented after G0–G3 verification. That approval covers
+the cumulative scope and truthful limitations above and authorizes the bounded
+production release sequence. It does not waive the final no-drift guard,
+source-hash checks, atomicity, postflight assertions or rollback triggers.
 
 ## Authorized production sequence — only after G0–G4 PASS
 
@@ -311,10 +317,13 @@ Rollback is application-first:
 
 ## Current decision
 
-**NOT READY TO MUTATE PRODUCTION.** G0 through G3 are verified. The latest
-physical database restore point and exact application rollback target are
-recorded, and the 35-step production plan is independently reviewed but remains
-deliberately unarmed (`armed:false`, `productionAuthorized:false`). G4 founder
-acceptance and explicit production deployment authorization remain open. The
-next safe move is the G4 scope/truthfulness acceptance decision; do not arm or
-execute production SQL before that decision and a final no-drift check.
+**AUTHORIZED, BUT NOT YET ARMED OR DEPLOYED.** G0 through G4 are verified. A
+final read-only capture at `2026-10-01T23:09:32.90909Z` reproduced the reviewed
+production state exactly after excluding only capture/classification timestamps
+and the new capture-file hash: 29 history rows, 2,045 catalog atoms, unchanged
+counts/digests/invariants and the same 137-atom PG17 envelope. The reviewed
+35-step artifact remains deliberately unarmed (`armed:false`,
+`productionAuthorized:false`). The repository does not yet contain a reviewed
+production armer/runner, so no mutating SQL has been generated or executed.
+The next safe move is to build and verify that single-transaction execution
+artifact; do not paste migration bodies manually or weaken the proof chain.
