@@ -24,7 +24,10 @@ const history=['001','002','003','004','005','006','009','010','011','012','013'
 const digestNames=['profiles_all','proposals_all','tracking_all','branding_all','subscriptions_all','usage_all','addon_catalog_all','proposal_addons_all','proposal_templates_all','tier_access_all','template_preferences_all'];
 const fileSha=path=>createHash('sha256').update(readFileSync(resolve(here,path))).digest('hex');
 const contractBinding={catalog_sha256:contract.catalog_sha256,data_invariants_sha256:contract.data_invariants_sha256,migrations_sha256:contract.migrations_sha256,capture_generator_sha256:fileSha('build-read-only-production-capture.mjs'),effective_privileges_expression_sha256:fileSha('effective-privileges-expression.sql'),expected_effective_privileges_sha256:fileSha('expected-effective-privileges.v1.json')};
-const capture=(atoms,dataInvariants)=>({contract_version:3,canonicalization_version:2,postgres_version:'16.10',contract_binding:contractBinding,captured_at:'2026-09-30T00:00:00Z',project_ref:'iwoaaljitifloolszxlu',environment:'production',read_only:true,migration_history:{count:29,versions:history},row_counts:{},orphan_counts:{},content_digests:Object.fromEntries(digestNames.map(k=>[k,'0'.repeat(64)])),data_invariants:dataInvariants,catalog_atoms:atoms.map(({kind,identity,value_sha256})=>({kind,identity,value_sha256}))});
+// PostgreSQL 16 executes the disposable canonical catalog replay; the envelope
+// models the verified hosted production major (17) so the PG17-only forward
+// repair receives the same platform proof as a real production capture.
+const capture=(atoms,dataInvariants)=>({contract_version:3,canonicalization_version:2,postgres_version:'17.6',contract_binding:contractBinding,captured_at:'2026-09-30T00:00:00Z',project_ref:'iwoaaljitifloolszxlu',environment:'production',read_only:true,migration_history:{count:29,versions:history},row_counts:{},orphan_counts:{},content_digests:Object.fromEntries(digestNames.map(k=>[k,'0'.repeat(64)])),data_invariants:dataInvariants,catalog_atoms:atoms.map(({kind,identity,value_sha256})=>({kind,identity,value_sha256}))});
 const key=a=>`${a.kind}:${a.identity}`;
 const sha=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const normalizeOwner=(atoms,owner)=>atoms.map(atom=>{
