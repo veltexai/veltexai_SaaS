@@ -1112,3 +1112,35 @@ After any material action, append or revise the relevant section with:
   an explicit reconciliation decision rather than an inferred history write.
   Production-shaped replay, G2, exact-artifact review, G4 and action-specific
   production approval remain open.
+
+### R2 production G3 contract correction — VERIFIED LOCALLY / NOT PROMOTED (2026-09-30 Pacific)
+
+- **INDEPENDENT AUDIT CORRECTED THE FIRST CONTRACT:** the initial generated
+  contract at `133975d` was not promoted. It contained environment-specific
+  owner ACL atoms, derived prerequisite transitions from lexical migration
+  order instead of the real recorded-production branch, and could not produce
+  any successful classification because migration 040 is fully superseded.
+  It also lacked executable data/backfill proof. These findings supersede any
+  interpretation of the prior local test pass as a G3 pass.
+- **PORTABLE CATALOG:** extension-owned implementation objects are excluded
+  while extension schema/version remains pinned; implicit owner ACLs normalize
+  to `OBJECT_OWNER`; UNION identities remain text rather than PostgreSQL
+  `name`; extension version and broader sequence ownership are captured; and
+  duplicate atom identities fail generation.
+- **REAL PRODUCTION BRANCH MODEL:** the generator now independently builds the
+  exact recorded 29-file baseline, applies the exact 23 missing prerequisites,
+  then the ten R2/forward migrations. Its final 2,476-atom result must equal a
+  separate fresh lexical 62-migration replay byte-for-byte.
+- **PRODUCTION-SHAPED REPLAY PASS:** a fresh PostgreSQL 16 test replayed 124
+  migration applications across the production-shaped and canonical branches.
+  The explicit 29-file baseline and pre-R2 checkpoint match the generated
+  contract; owner normalization is invariant under a renamed database owner;
+  one-atom prerequisite partial state and stray R2 state are refused.
+- **INTENTIONAL OPEN DECISION:** baseline-only and full-prerequisite states
+  still refuse at migration 040. Because 040 has no surviving final-writer
+  catalog atom and no data DML, terminal equivalence can be established only
+  through exact later 080/R0 successor state and an explicit reviewed policy;
+  literal historical execution cannot be inferred. No policy was silently
+  selected. Data-bearing history reconciliation for 031, 034, 041, catalog
+  version seeds and location-pricing seeds also remains blocked until the
+  hashes-only business-key invariant contract passes.

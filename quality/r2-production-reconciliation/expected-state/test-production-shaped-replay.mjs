@@ -1,0 +1,96 @@
+#!/usr/bin/env node
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, resolve } from 'node:path';
+import { here, migrationDir, migrationFiles, root } from './generate-expected-state.mjs';
+
+const run=(file,args,options={})=>execFileSync(file,args,{encoding:'utf8',stdio:['ignore','pipe','pipe'],...options});
+const pgBin=process.env.PG_BIN||dirname(run('/usr/bin/which',['initdb']).trim());
+const work=mkdtempSync(resolve(tmpdir(),'veltex-production-shaped-replay-'));
+const data=resolve(work,'data');
+const port=Number(process.env.EXPECTED_STATE_REPLAY_PGPORT||56000+(process.pid%500));
+const branchDb='veltex_production_shaped_branch'; const canonicalDb='veltex_production_shaped_canonical';
+const currentOwner=process.env.USER||'postgres'; const renamedOwner=`replay_owner_${process.pid}`;
+const psql=(db,args,user=currentOwner)=>run(resolve(pgBin,'psql'),['-X','-A','-t','-q','-v','ON_ERROR_STOP=1','-h',work,'-p',String(port),'-U',user,'-d',db,...args]);
+const catalog=(db,user=currentOwner)=>JSON.parse(psql(db,['-f',resolve(here,'catalog.sql')],user).trim());
+const contract=JSON.parse(readFileSync(resolve(here,'expected-state.v1.json'),'utf8'));
+const classifier=resolve(here,'classify-production-capture.mjs');
+const history=['001','002','003','004','005','006','009','010','011','012','013','014','015','016','017','018','019','020','021','022','023','024','025','026','027','028','029','030','20250901194222'];
+const digestNames=['profiles_all','proposals_all','tracking_all','branding_all','subscriptions_all','usage_all','addon_catalog_all','proposal_addons_all','proposal_templates_all','tier_access_all','template_preferences_all'];
+const capture=atoms=>({contract_version:2,captured_at:'2026-09-30T00:00:00Z',project_ref:'iwoaaljitifloolszxlu',environment:'production',read_only:true,migration_history:{count:29,versions:history},row_counts:{},orphan_counts:{},content_digests:Object.fromEntries(digestNames.map(k=>[k,'0'.repeat(64)])),catalog_atoms:atoms.map(({kind,identity,value_sha256})=>({kind,identity,value_sha256}))});
+const key=a=>`${a.kind}:${a.identity}`;
+const sha=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
+const normalizeOwner=(atoms,owner)=>atoms.map(atom=>{
+  const value=structuredClone(atom.value); if(atom.kind==='acl'&&value.grantee===owner)value.grantee='<database_owner>';
+  const identity=atom.kind==='acl'?atom.identity.replace(`:${owner}:`,':<database_owner>:'):atom.identity;
+  return {...atom,identity,value,value_sha256:sha(value)};
+});
+const expectRefusal=(name,atoms,pattern)=>{
+  const input=resolve(work,`${name}.json`); const output=`/private/tmp/veltex-g3-replay-${process.pid}-${name}.json`;
+  writeFileSync(input,JSON.stringify(capture(atoms)));
+  let stderr='';
+  try{run(process.execPath,[classifier,input,output]); assert.fail(`${name} unexpectedly classified`);}catch(error){stderr=String(error.stderr??error.message);}
+  assert.match(stderr,pattern,`${name} refusal reason`);
+  return stderr.match(pattern)?.[0];
+};
+
+const files=migrationFiles();
+assert.equal(files.length,62);
+assert.equal(contract.recorded_baseline.files.length,29);
+let started=false;
+try{
+  run(resolve(pgBin,'initdb'),['-D',data,'-A','trust','-U',process.env.USER||'postgres']);
+  run(resolve(pgBin,'pg_ctl'),['-D',data,'-o',`-p ${port} -k ${work} -c listen_addresses=''`,'-l',resolve(work,'postgres.log'),'start']); started=true;
+  psql('postgres',['-c',`create role ${renamedOwner} login superuser`]);
+  psql('postgres',['-c',`create database ${branchDb}`]);
+  psql('postgres',['-c',`create database ${canonicalDb} owner ${renamedOwner}`]);
+  psql(branchDb,['-f',resolve(root,'quality/service-catalog-round4/db-harness/sql/00_supabase_shim.sql')]);
+  psql(canonicalDb,['-f',resolve(root,'quality/service-catalog-round4/db-harness/sql/00_supabase_shim.sql')],renamedOwner);
+
+  for(const file of contract.recorded_baseline.files) psql(branchDb,['-f',resolve(migrationDir,file)]);
+  const baseline=catalog(branchDb);
+  assert.deepEqual(baseline,contract.recorded_baseline.atoms,'canonical 29-file replay differs from recorded baseline');
+  const baselineReason=expectRefusal('canonical-baseline',baseline,/ambiguous fully-superseded prerequisite/);
+
+  const prerequisiteFiles=contract.production_steps.slice(0,23).map(s=>s.file);
+  assert.equal(prerequisiteFiles.length,23);
+  for(const file of prerequisiteFiles) psql(branchDb,['-f',resolve(migrationDir,file)]);
+  const prerequisite=catalog(branchDb);
+  assert.deepEqual(prerequisite,contract.prerequisite_checkpoint.atoms,'prerequisite replay differs from checkpoint');
+  const prerequisiteReason=expectRefusal('prerequisite-complete',prerequisite,/ambiguous fully-superseded prerequisite/);
+
+  const effective=contract.production_steps.slice(0,23).flatMap(s=>s.prerequisite_effective_atoms??[]);
+  const baselineMap=new Map(baseline.map(a=>[key(a),a])); const prerequisiteMap=new Map(prerequisite.map(a=>[key(a),a]));
+  const changedAtom=effective.find(k=>prerequisiteMap.has(k)&&baselineMap.get(k)?.value_sha256!==prerequisiteMap.get(k).value_sha256);
+  assert.ok(changedAtom,'no prerequisite atom suitable for one-atom partial state');
+  const partialMap=new Map(baselineMap); partialMap.set(changedAtom,prerequisiteMap.get(changedAtom));
+  const partial=[...partialMap.values()].sort((a,b)=>key(a).localeCompare(key(b),'en'));
+  const partialReason=expectRefusal('one-atom-partial',partial,/partial prerequisite state/);
+
+  const r2Files=contract.production_steps.slice(23).map(s=>s.file); assert.equal(r2Files.length,10);
+  psql(branchDb,['-f',resolve(migrationDir,r2Files[0])]);
+  const strayR2=catalog(branchDb);
+  assert.notDeepEqual(strayR2,prerequisite,'first R2 migration made no catalog change');
+  const strayReason=expectRefusal('stray-r2',strayR2,/R2\/forward state is not absent/);
+  for(const file of r2Files.slice(1)) psql(branchDb,['-f',resolve(migrationDir,file)]);
+  const branchFinal=catalog(branchDb);
+
+  for(const file of files) psql(canonicalDb,['-f',resolve(migrationDir,file)],renamedOwner);
+  const canonicalFinal=catalog(canonicalDb,renamedOwner);
+  assert.deepEqual(branchFinal,canonicalFinal,'catalog must normalize database-owner ACLs before hashing');
+  const explicitOwnerVariant=canonicalFinal.map(atom=>{
+    if(atom.kind!=='acl'||atom.value.grantee!=='OBJECT_OWNER') return atom;
+    const value={...atom.value,grantee:renamedOwner};
+    return {...atom,identity:atom.identity.replace(':OBJECT_OWNER:',`:${renamedOwner}:`),value,value_sha256:sha(value)};
+  });
+  assert.notDeepEqual(branchFinal,explicitOwnerVariant,'owner-variant fixture did not create a distinct ACL catalog');
+  assert.deepEqual(normalizeOwner(branchFinal,'OBJECT_OWNER'),normalizeOwner(explicitOwnerVariant,renamedOwner),'owner normalization is not invariant across database owners');
+
+  console.log(JSON.stringify({status:'PASS',postgres_major:16,migrations_replayed:124,branch_model:'29 recorded + 23 prerequisite + 10 R2',canonical_model:'fresh lexical 62',renamed_owner_invariant:true,states:{canonical_baseline:{atoms:baseline.length,refusal:baselineReason},prerequisite_complete:{atoms:prerequisite.length,refusal:prerequisiteReason},one_atom_partial:{atom:changedAtom,refusal:partialReason},stray_r2:{migration:r2Files[0],atoms:strayR2.length,refusal:strayReason}}},null,2));
+} finally {
+  if(started) try{run(resolve(pgBin,'pg_ctl'),['-D',data,'stop','-m','fast']);}catch{}
+  rmSync(work,{recursive:true,force:true});
+}

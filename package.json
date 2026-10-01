@@ -21,6 +21,7 @@
     "r2:build-production-capture": "node quality/r2-production-reconciliation/expected-state/build-read-only-production-capture.mjs",
     "r2:classify-production-capture": "node quality/r2-production-reconciliation/expected-state/classify-production-capture.mjs",
     "r2:test-production-classifier": "node quality/r2-production-reconciliation/expected-state/test-classifier.mjs",
+    "r2:test-production-shaped-replay": "node quality/r2-production-reconciliation/expected-state/test-production-shaped-replay.mjs",
     "100s:operator": "node 100X/100S/operator/cli.mjs",
     "test:100s": "jest 100X/100S/tests --runInBand"
   },

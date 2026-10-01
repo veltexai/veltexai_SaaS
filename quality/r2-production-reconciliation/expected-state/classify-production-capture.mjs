@@ -17,9 +17,8 @@ if(!Array.isArray(capture.catalog_atoms)||capture.catalog_atoms.some(a=>!a.kind|
 const current=new Map(capture.catalog_atoms.map(a=>[`${a.kind}:${a.identity}`,a.value_sha256]));
 if(current.size!==capture.catalog_atoms.length) throw new Error('duplicate catalog atom identity');
 const baselineExpected=new Map(contract.recorded_baseline.atoms.map(a=>[`${a.kind}:${a.identity}`,a.value_sha256]));
-const prerequisiteFiles=contract.steps.slice(28,52).map(s=>s.file).filter(f=>f!=='20250901194222_add_user_roles.sql');
-const prerequisiteSteps=prerequisiteFiles.map(file=>contract.steps.find(s=>s.file===file));
-const r2Steps=contract.steps.slice(52);
+const prerequisiteSteps=contract.production_steps.slice(0,23);
+const r2Steps=contract.production_steps.slice(23);
 let r2AfterMatches=0;
 for(const step of r2Steps) for(const e of step.diff.evidence) {
   const baselineValue=baselineExpected.get(e.atom)??null;

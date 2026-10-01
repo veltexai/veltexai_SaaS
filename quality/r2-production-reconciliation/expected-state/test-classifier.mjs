@@ -32,7 +32,7 @@ const corrupt=structuredClone(contract.prerequisite_checkpoint.atoms);
 corrupt.find(a=>a.kind==='column').value_sha256='f'.repeat(64);
 run('partial',capture(corrupt),false);
 
-const r2Evidence=contract.steps.slice(52).flatMap(s=>s.diff.evidence).find(e=>e.after_sha256);
+const r2Evidence=contract.production_steps.slice(23).flatMap(s=>s.diff.evidence).find(e=>e.after_sha256);
 const stray=structuredClone(contract.recorded_baseline.atoms);
 const [kind,...identityParts]=r2Evidence.atom.split(':');
 const identity=identityParts.join(':');

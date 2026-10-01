@@ -6,8 +6,9 @@ const here=dirname(new URL(import.meta.url).pathname);
 const output=resolve(process.argv[2]??'/private/tmp/veltex-r2-production-catalog-capture.sql');
 if(!output.startsWith('/private/tmp/')) throw new Error('capture SQL output must remain below /private/tmp');
 const catalog=readFileSync(resolve(here,'catalog.sql'),'utf8');
-const terminal="select coalesce(jsonb_agg(atom order by atom->>'kind',atom->>'identity'),'[]'::jsonb)::text from hashed;";
-if(!catalog.endsWith(`${terminal}\n`)) throw new Error('catalog.sql terminal query drifted');
+const marker='-- CATALOG_TERMINAL_QUERY\n';
+const markerIndex=catalog.indexOf(marker);
+if(markerIndex<0||catalog.indexOf(marker,markerIndex+1)>=0) throw new Error('catalog.sql terminal query marker drifted');
 const redacted=`select jsonb_pretty(jsonb_build_object(
   'contract_version',2,
   'captured_at',clock_timestamp(),
@@ -48,7 +49,7 @@ const redacted=`select jsonb_pretty(jsonb_build_object(
     'kind',atom->>'kind','identity',atom->>'identity','value_sha256',atom->>'value_sha256'
   ) order by atom->>'kind',atom->>'identity'),'[]'::jsonb)
 )) from hashed;`;
-const sql=`-- Generated from expected-state/catalog.sql. Returns hashes only; no row content.\n-- Confirm the dashboard project is iwoaaljitifloolszxlu before running.\nbegin transaction read only;\n\n${catalog.slice(0,-terminal.length-1)}${redacted}\n\nrollback;\n`;
+const sql=`-- Generated from expected-state/catalog.sql. Returns hashes only; no row content.\n-- Confirm the dashboard project is iwoaaljitifloolszxlu before running.\nbegin transaction read only;\n\n${catalog.slice(0,markerIndex)}${redacted}\n\nrollback;\n`;
 if(!/begin transaction read only;/i.test(sql)||!/^rollback;$/im.test(sql)) throw new Error('capture must remain read-only and rolled back');
 writeFileSync(output,sql,{mode:0o600});
 console.log(output);
