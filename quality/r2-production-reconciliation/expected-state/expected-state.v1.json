@@ -1,8 +1,8 @@
 {
   "contract_version": 2,
   "postgres_major": 16,
-  "migration_count": 63,
-  "migrations_sha256": "bce4f5bbbd8c75cd23e5f2492135dbe566b91b78876f8c710bfd585f6865cdd7",
+  "migration_count": 64,
+  "migrations_sha256": "d63895099d07526261a665dbcdd173496521840d5137bc17b106dec541bcc733",
   "catalog_sha256": "4f832a947ad034a9427a929d77bf68faa86339657cf17c16bb4f76b275fcad98",
   "data_invariants_sha256": "18f4031145112d29a5b4181672a360251d7b0b33da9e2d7edb3f00a19cb91bd7",
   "production_order": [
@@ -68,7 +68,8 @@
     "20260925009000_r2_tracked_print_projection.sql",
     "20260925010000_tracked_link_revocation.sql",
     "20260925011000_r0_private_function_service_role_acl.sql",
-    "20260925012000_revoke_client_maintain.sql"
+    "20260925012000_revoke_client_maintain.sql",
+    "20260925013000_production_schema_compatibility.sql"
   ],
   "recorded_baseline": {
     "files": [
@@ -52873,6 +52874,11 @@
           "action": "removed"
         },
         {
+          "atom": "column:profiles.subscription_status",
+          "by": "20260925013000_production_schema_compatibility.sql",
+          "action": "changed"
+        },
+        {
           "atom": "column:proposals.ai_generated_content",
           "by": "005_fix_proposals_schema.sql",
           "action": "removed"
@@ -52941,6 +52947,11 @@
           "atom": "constraint:proposals.proposals_service_type_check",
           "by": "005_fix_proposals_schema.sql",
           "action": "removed"
+        },
+        {
+          "atom": "constraint:subscriptions.subscriptions_status_check",
+          "by": "20260925013000_production_schema_compatibility.sql",
+          "action": "changed"
         },
         {
           "atom": "function:handle_new_user()",
@@ -53155,7 +53166,6 @@
         "column:profiles.id",
         "column:profiles.phone",
         "column:profiles.subscription_plan",
-        "column:profiles.subscription_status",
         "column:profiles.trial_ends_at",
         "column:profiles.updated_at",
         "column:proposals.client_name",
@@ -53189,7 +53199,6 @@
         "constraint:proposals.proposals_user_id_fkey",
         "constraint:subscriptions.subscriptions_pkey",
         "constraint:subscriptions.subscriptions_plan_check",
-        "constraint:subscriptions.subscriptions_status_check",
         "constraint:subscriptions.subscriptions_stripe_subscription_id_key",
         "constraint:subscriptions.subscriptions_user_id_fkey",
         "index:billing_history_pkey",
@@ -56335,12 +56344,17 @@
           }
         ]
       },
-      "superseded_atoms": [],
+      "superseded_atoms": [
+        {
+          "atom": "constraint:billing_history.billing_history_action_check",
+          "by": "20260925013000_production_schema_compatibility.sql",
+          "action": "changed"
+        }
+      ],
       "effective_atoms": [
         "column:billing_history.action",
         "column:billing_history.new_plan",
         "column:billing_history.previous_plan",
-        "constraint:billing_history.billing_history_action_check",
         "index:idx_billing_history_action"
       ]
     },
@@ -74321,6 +74335,66 @@
       },
       "superseded_atoms": [],
       "effective_atoms": []
+    },
+    {
+      "ordinal": 64,
+      "file": "20260925013000_production_schema_compatibility.sql",
+      "source_sha256": "53d92755fcf8ff391fb7538a80088b069814363872498c5836baa709ee5d8c77",
+      "atom_count": 2479,
+      "diff": {
+        "added": [
+          "column:proposal_templates.preview_pdf_url",
+          "column:proposals.city",
+          "policy:billing_history.Admins can view all billing history"
+        ],
+        "removed": [],
+        "changed": [
+          "column:profiles.subscription_status",
+          "constraint:billing_history.billing_history_action_check",
+          "constraint:subscriptions.subscriptions_status_check"
+        ],
+        "evidence": [
+          {
+            "atom": "column:profiles.subscription_status",
+            "before_sha256": "61ba13ce9e5ac44375fc5f18806d831c98162ee842a85f33f2dcd8620b53c357",
+            "after_sha256": "91dbf2a59fb6f0a38a0c7c707c509cf1ae6970f237b26e5f4bb619ecf1a82122"
+          },
+          {
+            "atom": "column:proposal_templates.preview_pdf_url",
+            "before_sha256": null,
+            "after_sha256": "09eda0f798d6057050a03c523893f4c6efc3d6e1a92fa56ff44409915c8aa974"
+          },
+          {
+            "atom": "column:proposals.city",
+            "before_sha256": null,
+            "after_sha256": "f1c5a704815d8982ae9dfe7616f1c7376a0c4cb69cd3894ba74587d608a2115f"
+          },
+          {
+            "atom": "constraint:billing_history.billing_history_action_check",
+            "before_sha256": "557cd7afd7967d2130e246e45f46e5b73ce0e6ad1176b1ddedab4a112f1f56aa",
+            "after_sha256": "ed89f7915a9165137c111bf0296edbdd05c4c049d93e4b10d1cc811bf3a4dc48"
+          },
+          {
+            "atom": "constraint:subscriptions.subscriptions_status_check",
+            "before_sha256": "9d74b1c1a60151546c936027452d557ff4d12ed9cac3e8e47dae79e15b66ef0f",
+            "after_sha256": "a9f1fe5145ff33ffb66ff99dadd78bfdbdad30861f722aaa07d11c847baa0ad0"
+          },
+          {
+            "atom": "policy:billing_history.Admins can view all billing history",
+            "before_sha256": null,
+            "after_sha256": "a321d3c91751172a745e094a5c656e0d0f39d7bba9dc87ee0a80179eddd42927"
+          }
+        ]
+      },
+      "superseded_atoms": [],
+      "effective_atoms": [
+        "column:profiles.subscription_status",
+        "column:proposal_templates.preview_pdf_url",
+        "column:proposals.city",
+        "constraint:billing_history.billing_history_action_check",
+        "constraint:subscriptions.subscriptions_status_check",
+        "policy:billing_history.Admins can view all billing history"
+      ]
     }
   ],
   "production_steps": [
@@ -84794,6 +84868,66 @@
       },
       "superseded_atoms": [],
       "effective_atoms": []
+    },
+    {
+      "ordinal": 35,
+      "file": "20260925013000_production_schema_compatibility.sql",
+      "source_sha256": "53d92755fcf8ff391fb7538a80088b069814363872498c5836baa709ee5d8c77",
+      "atom_count": 2479,
+      "diff": {
+        "added": [
+          "column:proposal_templates.preview_pdf_url",
+          "column:proposals.city",
+          "policy:billing_history.Admins can view all billing history"
+        ],
+        "removed": [],
+        "changed": [
+          "column:profiles.subscription_status",
+          "constraint:billing_history.billing_history_action_check",
+          "constraint:subscriptions.subscriptions_status_check"
+        ],
+        "evidence": [
+          {
+            "atom": "column:profiles.subscription_status",
+            "before_sha256": "61ba13ce9e5ac44375fc5f18806d831c98162ee842a85f33f2dcd8620b53c357",
+            "after_sha256": "91dbf2a59fb6f0a38a0c7c707c509cf1ae6970f237b26e5f4bb619ecf1a82122"
+          },
+          {
+            "atom": "column:proposal_templates.preview_pdf_url",
+            "before_sha256": null,
+            "after_sha256": "09eda0f798d6057050a03c523893f4c6efc3d6e1a92fa56ff44409915c8aa974"
+          },
+          {
+            "atom": "column:proposals.city",
+            "before_sha256": null,
+            "after_sha256": "f1c5a704815d8982ae9dfe7616f1c7376a0c4cb69cd3894ba74587d608a2115f"
+          },
+          {
+            "atom": "constraint:billing_history.billing_history_action_check",
+            "before_sha256": "557cd7afd7967d2130e246e45f46e5b73ce0e6ad1176b1ddedab4a112f1f56aa",
+            "after_sha256": "ed89f7915a9165137c111bf0296edbdd05c4c049d93e4b10d1cc811bf3a4dc48"
+          },
+          {
+            "atom": "constraint:subscriptions.subscriptions_status_check",
+            "before_sha256": "9d74b1c1a60151546c936027452d557ff4d12ed9cac3e8e47dae79e15b66ef0f",
+            "after_sha256": "a9f1fe5145ff33ffb66ff99dadd78bfdbdad30861f722aaa07d11c847baa0ad0"
+          },
+          {
+            "atom": "policy:billing_history.Admins can view all billing history",
+            "before_sha256": null,
+            "after_sha256": "a321d3c91751172a745e094a5c656e0d0f39d7bba9dc87ee0a80179eddd42927"
+          }
+        ]
+      },
+      "superseded_atoms": [],
+      "effective_atoms": [
+        "column:profiles.subscription_status",
+        "column:proposal_templates.preview_pdf_url",
+        "column:proposals.city",
+        "constraint:billing_history.billing_history_action_check",
+        "constraint:subscriptions.subscriptions_status_check",
+        "policy:billing_history.Admins can view all billing history"
+      ]
     }
   ],
   "atoms": [
@@ -105640,14 +105774,14 @@
       "kind": "column",
       "value": {
         "type": "text",
-        "default": "'trial'::text",
+        "default": "'pending'::text",
         "identity": "",
         "not_null": false,
         "collation": "default",
         "generated": ""
       },
       "identity": "profiles.subscription_status",
-      "value_sha256": "61ba13ce9e5ac44375fc5f18806d831c98162ee842a85f33f2dcd8620b53c357"
+      "value_sha256": "91dbf2a59fb6f0a38a0c7c707c509cf1ae6970f237b26e5f4bb619ecf1a82122"
     },
     {
       "kind": "column",
@@ -106679,6 +106813,19 @@
     {
       "kind": "column",
       "value": {
+        "type": "text",
+        "default": null,
+        "identity": "",
+        "not_null": false,
+        "collation": "default",
+        "generated": ""
+      },
+      "identity": "proposal_templates.preview_pdf_url",
+      "value_sha256": "09eda0f798d6057050a03c523893f4c6efc3d6e1a92fa56ff44409915c8aa974"
+    },
+    {
+      "kind": "column",
+      "value": {
         "type": "integer",
         "default": "0",
         "identity": "",
@@ -107416,6 +107563,19 @@
       },
       "identity": "proposals.ai_tone",
       "value_sha256": "5257859c6e63b1127b969e9f97b656b1e5fa891760a9b468cacd17d87bc993f9"
+    },
+    {
+      "kind": "column",
+      "value": {
+        "type": "character varying(100)",
+        "default": "NULL::character varying",
+        "identity": "",
+        "not_null": false,
+        "collation": "default",
+        "generated": ""
+      },
+      "identity": "proposals.city",
+      "value_sha256": "f1c5a704815d8982ae9dfe7616f1c7376a0c4cb69cd3894ba74587d608a2115f"
     },
     {
       "kind": "column",
@@ -109341,10 +109501,10 @@
         "deferred": false,
         "validated": true,
         "deferrable": false,
-        "definition": "CHECK (action = ANY (ARRAY['upgrade'::text, 'downgrade'::text, 'payment'::text, 'refund'::text]))"
+        "definition": "CHECK (action = ANY (ARRAY['upgrade'::text, 'downgrade'::text, 'payment'::text, 'refund'::text, 'subscription_start'::text]))"
       },
       "identity": "billing_history.billing_history_action_check",
-      "value_sha256": "557cd7afd7967d2130e246e45f46e5b73ce0e6ad1176b1ddedab4a112f1f56aa"
+      "value_sha256": "ed89f7915a9165137c111bf0296edbdd05c4c049d93e4b10d1cc811bf3a4dc48"
     },
     {
       "kind": "constraint",
@@ -111069,10 +111229,10 @@
         "deferred": false,
         "validated": true,
         "deferrable": false,
-        "definition": "CHECK (status = ANY (ARRAY['active'::text, 'cancelled'::text, 'past_due'::text, 'unpaid'::text]))"
+        "definition": "CHECK (status = ANY (ARRAY['active'::text, 'trialing'::text, 'cancelled'::text, 'past_due'::text, 'unpaid'::text]))"
       },
       "identity": "subscriptions.subscriptions_status_check",
-      "value_sha256": "9d74b1c1a60151546c936027452d557ff4d12ed9cac3e8e47dae79e15b66ef0f"
+      "value_sha256": "a9f1fe5145ff33ffb66ff99dadd78bfdbdad30861f722aaa07d11c847baa0ad0"
     },
     {
       "kind": "constraint",
@@ -114752,6 +114912,20 @@
       },
       "identity": "admin_audit_log.Allow admin read access to audit logs",
       "value_sha256": "15e41a56dabd4538aaf0c6bf3426103bcd944f11e3fd94151fb29d5d8ada0394"
+    },
+    {
+      "kind": "policy",
+      "value": {
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "is_admin()",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      "identity": "billing_history.Admins can view all billing history",
+      "value_sha256": "a321d3c91751172a745e094a5c656e0d0f39d7bba9dc87ee0a80179eddd42927"
     },
     {
       "kind": "policy",

@@ -4,7 +4,7 @@ This directory replaces coarse migration-existence booleans with a PostgreSQL
 16-generated catalog contract. It is a safety and discovery mechanism only; it
 does not authorize or perform a production write.
 
-- `generate-expected-state.mjs` replays the exact 63-file migration chain and
+- `generate-expected-state.mjs` replays the exact 64-file migration chain and
   records normalized catalog atoms, per-step before/after hashes, final-writer
   attribution, the exact 29-file recorded baseline, and the pre-R2 checkpoint.
 - `build-read-only-production-capture.mjs` creates a hashes-only SQL query under
@@ -89,7 +89,7 @@ and anonymous EXECUTE for `read_tracked_proposal`,
 other expected allows is reported as a more-restrictive variance, but removing
 one of these reviewed runtime capabilities blocks compatibility.
 
-Compatibility requires the exact canonical lexically sorted 63-version history
+Compatibility requires the exact canonical lexically sorted 64-version history
 emitted by the read-only capture. `20260925012000` follows `20260925011000`
 and uses version-gated dynamic SQL: it is a parseable no-op on PostgreSQL 16.
 On PostgreSQL 17 it requires the `postgres` migration identity, postgres-owned
@@ -107,3 +107,10 @@ The exact sorted 61-version preview set with all seven
 reported only as `effect-complete/history-absent`; it remains non-ready and
 requires separately reviewed history reconciliation. No comparator writes SQL
 or migration history.
+
+`20260925013000_production_schema_compatibility.sql` is the final forward
+compatibility step. It canonicalizes the production-required proposal city and
+template-preview fields, the `pending` profile default, Stripe
+`subscription_start`/`trialing` values, and replaces the legacy public-role
+billing-history policy with authenticated-only `is_admin()` access. It rewrites
+no application rows and validates both replacement constraints before commit.

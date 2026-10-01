@@ -1666,3 +1666,47 @@ After any material action, append or revise the relevant section with:
   blockers remain closed. This PASS authorizes the next read-only production
   recapture/reclassification gate only; it does not authorize production SQL,
   deployment, migration history changes or other production mutation.
+
+### R2 production G3 v3 recapture — READ-ONLY COMPLETE / EXACT PARTIAL STATE FOUND (2026-10-01 Pacific)
+
+- **AUTHORIZED READ-ONLY CAPTURE:** the exact 29,748-byte query with SHA-256
+  `65cb01bd9691ebac763896daca22c88572ec505d21b8111b1a6da11a2c47297f`
+  was run once in Supabase project `iwoaaljitifloolszxlu`. It explicitly used
+  `BEGIN TRANSACTION READ ONLY` and ended with `ROLLBACK`; one hashes-only JSON
+  row returned. No production data, schema, ACL, history or configuration was
+  changed.
+- **CAPTURE EVIDENCE:** local-only JSON
+  `/private/tmp/veltex-r2-production-capture-v3-final.json` is 439,014 bytes
+  before its terminating newline and has SHA-256
+  `ba26445998a554ad6b1f2b85dc4d37c756739831f8e235622db8c93a727ba363`.
+  Identity is production/project `iwoaaljitifloolszxlu`, capture contract v3,
+  canonicalization v2, PostgreSQL 17.6 and exactly 29 history rows. Counts remain
+  86 profiles, 166 proposals, 11 subscriptions, zero company profiles, four
+  tracking rows and four branding rows.
+- **FAIL-CLOSED RESULT:** the classifier refused at
+  `20260924000000_r0_privilege_hardening.sql`. Hash diagnosis proves production
+  still has `can_user_access_template(uuid,uuid)` at the migration-040 hash
+  `cfd827c6...`, not the migration-080 predecessor hash `c97cac59...` or R0 hash
+  `70512b41...`. The other 36 R0 effective atoms remain at their predecessor
+  values. This exposes a real partial migration-080 state that the prior
+  final-writer-only effective-atom classification did not detect.
+- **STATUS:** no plan was generated and production remains unmodified. The next
+  gate is an independent read-only audit of exact migration-080 replay safety,
+  followed by a narrowly proven partial-replay classifier/planner contract and
+  disposable tests if replay is accepted. No waiver or history-only
+  reconciliation is permitted for this partial state.
+### Production six-object read-only diagnostic — 2026-10-01 Pacific
+
+- **VERIFIED / READ ONLY:** founder approved and Codex ran the 2,218-byte catalog-only diagnostic (SHA-256 `6b09d01999d484b3171c1c55b3c12cb6957f38ff8ba6abfe6c9ac85797a05adc`) in production project `iwoaaljitifloolszxlu`. It began `begin transaction read only;` and ended `rollback;`; one metadata row returned and no production mutation occurred. Evidence is `/private/tmp/veltex-r2-production-six-object-diagnostic.json` (SHA-256 `18fa08c5bc952f0b1741e18c143a8c9d81fb262fb3fecdfda3e1d64369d3eefa`).
+- **EXACT LEGACY DEFINITIONS CONFIRMED:** `profiles.subscription_status` is nullable text defaulting to `pending`; `proposal_templates.preview_pdf_url` is nullable text; `proposals.city` is nullable `varchar(100)`; the billing-history action constraint additionally allows `subscription_start`; the subscriptions status constraint additionally allows `trialing`; and the extra permissive billing-history policy is public-role SELECT limited by `auth.uid()` plus profile role `admin`.
+- **HOSTED PLATFORM METADATA CONFIRMED:** production carries `pg_stat_statements 1.11` and `pgcrypto 1.3` in `extensions`, `supabase_vault 0.3.1` in `vault`, and `uuid-ossp 1.1` in `extensions`. These explain the four extension atoms in the strict classifier delta; they are not evidence that an application migration ran.
+- **BLOCKED PENDING AN EXPLICIT POLICY DECISION:** the exact classifier still correctly refuses 143 catalog deltas: 132 PostgreSQL-17 `MAINTAIN` ACL atoms addressed only by the reviewed forward hardening migration, one hosted `public` schema ACL, four extension atoms, and the six exact legacy application objects above. No exception was added. Treating the six objects as an accepted production overlay, or codifying/normalizing them in a new forward migration, changes the production proof contract and requires an explicit reviewed choice before the G3 plan can advance.
+
+### G3 production compatibility proof — 2026-10-01 Pacific
+
+- **FOUNDER APPROVED:** the founder explicitly approved the bounded PostgreSQL-17 platform envelope and migration-130 partial-replay proof. This approval covers proof construction and the unarmed plan only; it is not authorization to execute production SQL or deploy.
+- **COMPATIBILITY MIGRATION PREPARED:** `20260925013000_production_schema_compatibility.sql` canonically preserves the production-required `preview_pdf_url` and `city` fields, the fail-closed `pending` profile default, Stripe `subscription_start` and `trialing` values, and replaces the legacy PUBLIC/raw-profile billing policy with authenticated-only `public.is_admin()` access. It rewrites no application rows, validates replacement constraints before commit, and is pinned at SHA-256 `53d92755fcf8ff391fb7538a80088b069814363872498c5836baa709ee5d8c77`.
+- **BOUND READ-ONLY RECAPTURE VERIFIED:** the regenerated 29,748-byte hashes-only query (SHA-256 `29e7dfc04950c0f25f75e145ac0d894014e6b9e095657400c03824c51f6be63c`) ran against verified production project `iwoaaljitifloolszxlu` under `begin transaction read only` plus `rollback`. It returned 29 migration-history rows and 2,045 catalog atoms; no production mutation occurred. Capture evidence: `/private/tmp/veltex-r2-production-capture-v4.json`, SHA-256 `667146cfeb6c65a77f4057682f03499bc126d96eda3a8d80c57108c633e8a88c`.
+- **EXACT CLASSIFICATION PASS:** `/private/tmp/veltex-r2-production-classified-v4.json` (SHA-256 `77b6575264b72d43e06d8f4ad20a0446332fc922271745934ad7a5a39a1ee618`) binds the 137-atom hosted PG17 envelope at evidence SHA `6b7d138e76e5b72581af54653a717ba59ad9215c60efe62ebd1128ab126706f9`; migration 080, R0 and 130 are exact version-specific replayable partials; the profiles policy has its separate normalization proof; the legacy view is absent-equivalent; all other forward state is absent.
+- **INDEPENDENT REVIEW PASS:** the independent classifier audit reviewed that exact fingerprint and current tree. Classifier mutations, builder/validator adversarial tests, migration-130 checks, hosted-preview compatibility, deterministic 64-file regeneration, TypeScript, diff hygiene, 86 Jest suites / 721 tests / 5 snapshots, and the 128-application production-shaped replay all passed. The replay proves 29 recorded + 23 prerequisite + 12 forward equals a fresh 64-file chain; migration 130's exact five-of-six overlay normalizes to six-of-six, is idempotent, and preserves protected invariants.
+- **UNARMED ARTIFACT VALIDATED:** `/private/tmp/veltex-r2-production-plan-v4` contains 35 independently pinned steps. `manifest.json` SHA-256 is `0cfdaf8572e8d3c7f72a00b7cf9e1ef6bc03916959b7fdade7813dc531279689`; `UNARMED-production-plan.sql` SHA-256 is `beec1f4f6214f19f03127948c618755f4f93d74bf5311ff31f6df19b9a9758ff`. The manifest remains `armed:false` and `productionAuthorized:false`; its SQL raises immediately and cannot mutate production.

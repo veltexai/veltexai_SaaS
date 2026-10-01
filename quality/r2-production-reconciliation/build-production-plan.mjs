@@ -39,13 +39,24 @@ for (const key of requiredDigests) if (!/^[0-9a-f]{64}$/.test(fp.content_digests
 const prerequisiteFiles = [
   '031_enhance_addon_catalog.sql','032_fix_addon_catalog_rls.sql','033_7_day_trial_system.sql','034_free_trial_no_credit_card.sql','035_email_automation_log.sql','036_add_company_profile_fields.sql','037_marketing_attribution.sql','038_calculator_estimate_capture.sql','039_acquisition_attribution_funnel.sql','040_executive_premium_trial_experience.sql','041_growth_qualification_and_funnel.sql','20260908000000_enforce_proposal_design_entitlements.sql','20260913000000_commercial_quick_weekly_frequencies.sql','20260922000000_service_catalog_release_1.sql','20260922010000_catalog_remediation.sql','20260924000000_r0_privilege_hardening.sql','20260924010000_restrict_legacy_proposal_view.sql','20260924010500_fix_profiles_policy_recursion.sql','20260924011000_align_profiles_branding_columns.sql','20260924012000_align_tracking_delivery_methods.sql','20260924013000_sync_tracked_engagement_fields.sql','20260925000000_location_pricing_foundation.sql','20260925001000_location_pricing_reviewed_seed.sql'
 ];
-const r2Files = ['20260925002000_r2_organization_tenancy.sql','20260925003000_r2_claude_security_remediation.sql','20260925004000_r2_second_security_remediation.sql','20260925005000_r2_third_security_remediation.sql','20260925006000_r2_cleanup_guard_ordering.sql','20260925007000_r2_service_role_proposal_read.sql','20260925008000_r2_addon_acl_alignment.sql','20260925009000_r2_tracked_print_projection.sql','20260925010000_tracked_link_revocation.sql','20260925011000_r0_private_function_service_role_acl.sql','20260925012000_revoke_client_maintain.sql'];
+const r2Files = ['20260925002000_r2_organization_tenancy.sql','20260925003000_r2_claude_security_remediation.sql','20260925004000_r2_second_security_remediation.sql','20260925005000_r2_third_security_remediation.sql','20260925006000_r2_cleanup_guard_ordering.sql','20260925007000_r2_service_role_proposal_read.sql','20260925008000_r2_addon_acl_alignment.sql','20260925009000_r2_tracked_print_projection.sql','20260925010000_tracked_link_revocation.sql','20260925011000_r0_private_function_service_role_acl.sql','20260925012000_revoke_client_maintain.sql','20260925013000_production_schema_compatibility.sql'];
 const reviewedSourceHashes = JSON.parse(readFileSync(resolve(root,'quality/r2-production-reconciliation/reviewed-source-sha256.json'),'utf8'));
 const exactFiles = [...prerequisiteFiles, ...r2Files];
 const supersededEquivalentVersion = '040';
 const supersededEquivalentProof = ['20260908000000','20260924000000'];
 const absentEquivalentVersion = '20260924010000';
+const replayablePartialVersion = '20260908000000';
+const replayablePartialAtom = 'function:can_user_access_template(user_uuid uuid, template_uuid uuid)';
 const platformConditionalVersion = '20260925012000';
+const compatibilityVersion='20260925013000';
+const compatibilityPolicyAtom='policy:billing_history.Admins can view all billing history';
+const legacyCompatibilityPolicySha256='15e41a56dabd4538aaf0c6bf3426103bcd944f11e3fd94151fb29d5d8ada0394';
+const platformAtomKey=atom=>`${atom.kind}:${atom.identity}`;
+const finalExpectedAtoms=new Map(expectedStateContract.atoms.map(atom=>[platformAtomKey(atom),atom.value_sha256]));
+const platformAtoms=(fp.catalog_atoms??[]).map(atom=>[platformAtomKey(atom),atom.value_sha256]).filter(([key,value])=>(key==='acl:schema:public:postgres:USAGE'||key.startsWith('extension:')||/^acl:(?:table|view):[^:]+:(?:anon|authenticated|OBJECT_OWNER|service_role):MAINTAIN$/.test(key))&&(finalExpectedAtoms.get(key)??null)!==value);
+const platformEvidenceSha256=sha(platformAtoms.slice().sort(([a],[b])=>a<b?-1:a>b?1:0).map(([key,value])=>`${key}=${value}`).join('\n'));
+const acceptedPlatformEvidence=new Map([[0,sha('')],[137,'6b7d138e76e5b72581af54653a717ba59ad9215c60efe62ebd1128ab126706f9']]);
+if(fp.platform_variance?.kind!=='hosted-pg17-catalog-envelope-v1'||!acceptedPlatformEvidence.has(fp.platform_variance.count)||platformAtoms.length!==fp.platform_variance.count||fp.platform_variance.evidence_sha256!==platformEvidenceSha256||fp.platform_variance.evidence_sha256!==acceptedPlatformEvidence.get(fp.platform_variance.count)) throw new Error('hosted PG17 platform variance proof mismatch');
 const legacyViewAtom = key => key==='view:enhanced_proposals'
   || key.startsWith('column:enhanced_proposals.')
   || key.startsWith('acl:view:enhanced_proposals:');
@@ -57,12 +68,22 @@ const steps = [...prerequisiteFiles, ...r2Files].map(file => {
   const version = file.split('_',1)[0];
   const source = readFileSync(resolve(root,'supabase/migrations',file),'utf8');
   const observed = fp.steps?.[version];
-  if (!observed || typeof observed.history !== 'boolean' || !['absent','complete','partial','ambiguous','superseded-equivalent','absent-equivalent'].includes(observed.state)) throw new Error(`incomplete object fingerprint for ${version}`);
+  if (!observed || typeof observed.history !== 'boolean' || !['absent','complete','partial','ambiguous','superseded-equivalent','absent-equivalent','replayable-partial','normalize-equivalent-drift'].includes(observed.state)) throw new Error(`incomplete object fingerprint for ${version}`);
   const allowsZeroAtoms = (version===supersededEquivalentVersion && ['absent','superseded-equivalent'].includes(observed.state)) || (version===platformConditionalVersion&&observed.state==='absent');
   if (!Number.isInteger(observed.expected_atom_count) || !Number.isInteger(observed.matched_atom_count) || observed.expected_atom_count < (allowsZeroAtoms?0:1) || observed.matched_atom_count < 0 || observed.matched_atom_count > observed.expected_atom_count) throw new Error(`invalid atom evidence for ${version}`);
   if (observed.state === 'partial' || observed.state === 'ambiguous') throw new Error(`partial/ambiguous state for ${version}`);
   let mode;
-  if (r2Files.includes(file)) {
+  if (version===compatibilityVersion&&!observed.history&&observed.state==='replayable-partial') {
+    const contractStep=expectedStateContract.production_steps.find(step=>step.file===file);
+    const atomSet=contractStep.diff.evidence.map(evidence=>evidence.atom).sort();
+    const afterPolicy=contractStep.diff.evidence.find(evidence=>evidence.atom===compatibilityPolicyAtom)?.after_sha256;
+    const proof=observed.replay_proof;
+    if(observed.expected_atom_count!==atomSet.length||observed.matched_atom_count!==atomSet.length-1
+      ||proof?.kind!=='production-schema-compatibility-with-policy-normalization'||proof?.policy_atom!==compatibilityPolicyAtom
+      ||proof?.current_policy_sha256!==legacyCompatibilityPolicySha256||proof?.after_policy_sha256!==afterPolicy
+      ||proof?.atom_set_sha256!==sha(atomSet.join('\n'))) throw new Error('migration 130 compatibility replay proof mismatch');
+    mode='apply-replayable-partial';
+  } else if (r2Files.includes(file)) {
     if (observed.history || observed.state !== 'absent' || observed.matched_atom_count !== 0) throw new Error(`R2/forward migration is not exhaustively absent: ${version}`);
     if(version===platformConditionalVersion&&(observed.expected_atom_count!==0||observed.platform_proof?.kind!=='pg17-maintain-hardening'||observed.platform_proof?.postgres_major!==17||!fp.postgres_version.startsWith('17.'))) throw new Error('PG17 MAINTAIN repair platform proof mismatch');
     mode = 'apply';
@@ -78,6 +99,34 @@ const steps = [...prerequisiteFiles, ...r2Files].map(file => {
       || observed.equivalence_proof?.kind!=='legacy-view-absent'
       || observed.equivalence_proof?.atom_set_sha256!==absentEquivalentProofSha256) throw new Error('legacy-view absence equivalence proof mismatch');
     mode='reconcile-absent-equivalent';
+  } else if(version===replayablePartialVersion&&!observed.history&&observed.state==='replayable-partial') {
+    const contractStep=expectedStateContract.production_steps.find(step=>step.file===file);
+    const transition=new Map(contractStep.diff.evidence.map(evidence=>[evidence.atom,evidence]));
+    const predecessor=transition.get(replayablePartialAtom);
+    const atomSet=contractStep.diff.evidence.map(evidence=>evidence.atom).sort();
+    if(observed.expected_atom_count!==atomSet.length||observed.matched_atom_count!==atomSet.length-1
+      ||observed.replay_proof?.kind!=='canonical-080-function-predecessor'
+      ||observed.replay_proof?.atom!==replayablePartialAtom
+      ||observed.replay_proof?.before_sha256!==predecessor.before_sha256
+      ||observed.replay_proof?.after_sha256!==predecessor.after_sha256
+      ||observed.replay_proof?.atom_set_sha256!==sha(atomSet.join('\n'))
+      ||!['absent','replayable-partial'].includes(fp.steps?.['20260924000000']?.state)) throw new Error('migration 080 replay proof mismatch');
+    mode='apply-replayable-partial';
+  } else if(version==='20260924000000'&&!observed.history&&observed.state==='replayable-partial') {
+    const contractStep=expectedStateContract.production_steps.find(step=>step.file===file);
+    const atomSet=contractStep.diff.evidence.map(evidence=>evidence.atom).sort();
+    const proof=observed.replay_proof;
+    if(observed.expected_atom_count!==atomSet.length||proof?.kind!=='canonical-r0-mixed-with-conditional-absence'||proof?.conditional_absent_atom!=='function:start_user_trial(user_uuid uuid, plan_name text)'||!Number.isInteger(proof.before_count)||!Number.isInteger(proof.after_count)||proof.before_count<1||proof.after_count<1||proof.before_count+proof.after_count!==atomSet.length-1||observed.matched_atom_count!==proof.after_count||proof.atom_set_sha256!==sha(atomSet.join('\n'))) throw new Error('R0 replay proof mismatch');
+    mode='apply-replayable-partial';
+  } else if(version==='20260924010500'&&!observed.history&&observed.state==='normalize-equivalent-drift') {
+    const atom='policy:profiles.Admins can view all profiles';
+    const supporting='policy:profiles.Users can view own profile';
+    const contractStep=expectedStateContract.production_steps.find(step=>step.file===file);
+    const after=contractStep.diff.evidence.find(evidence=>evidence.atom===atom)?.after_sha256;
+    const proof=observed.normalization_proof;
+    const reviewed='5b2a0fe6d19cd361821d758ae148d8bff9d49997019bbb2e0bf3a18eb673d5bc';
+    if(observed.expected_atom_count!==1||observed.matched_atom_count!==0||proof?.kind!=='redundant-self-view-admin-policy'||proof?.atom!==atom||proof?.supporting_atom!==supporting||proof?.current_sha256!==reviewed||proof?.supporting_sha256!==reviewed||proof?.after_sha256!==after) throw new Error('profiles policy normalization proof mismatch');
+    mode='apply-normalize-equivalent-drift';
   } else if (observed.history && observed.state === 'complete' && observed.matched_atom_count === observed.expected_atom_count) mode = 'verify-recorded';
   else if (!observed.history && observed.state === 'complete' && observed.matched_atom_count === observed.expected_atom_count) mode = 'reconcile-history';
   else if (!observed.history && observed.state === 'absent' && observed.matched_atom_count === 0) {

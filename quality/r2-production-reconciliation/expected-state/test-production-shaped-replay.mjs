@@ -27,7 +27,7 @@ const contractBinding={catalog_sha256:contract.catalog_sha256,data_invariants_sh
 // PostgreSQL 16 executes the disposable canonical catalog replay; the envelope
 // models the verified hosted production major (17) so the PG17-only forward
 // repair receives the same platform proof as a real production capture.
-const capture=(atoms,dataInvariants)=>({contract_version:3,canonicalization_version:2,postgres_version:'17.6',contract_binding:contractBinding,captured_at:'2026-09-30T00:00:00Z',project_ref:'iwoaaljitifloolszxlu',environment:'production',read_only:true,migration_history:{count:29,versions:history},row_counts:{},orphan_counts:{},content_digests:Object.fromEntries(digestNames.map(k=>[k,'0'.repeat(64)])),data_invariants:dataInvariants,catalog_atoms:atoms.map(({kind,identity,value_sha256})=>({kind,identity,value_sha256}))});
+const capture=(atoms,dataInvariants)=>({contract_version:3,canonicalization_version:2,postgres_version:'17.6',contract_binding:contractBinding,captured_at:'2026-09-30T00:00:00Z',project_ref:'iwoaaljitifloolszxlu',environment:'production',read_only:true,migration_history:{count:29,versions:history},row_counts:{},orphan_counts:{},content_digests:Object.fromEntries(digestNames.map(k=>[k,'0'.repeat(64)])),data_invariants:dataInvariants,platform_capabilities:{pgcrypto:{installed:true,schema:'public',version:'1.3',digest_extension_owned:true,digest_callable:true}},catalog_atoms:atoms.map(({kind,identity,value_sha256})=>({kind,identity,value_sha256}))});
 const key=a=>`${a.kind}:${a.identity}`;
 const sha=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const normalizeOwner=(atoms,owner)=>atoms.map(atom=>{
@@ -51,7 +51,7 @@ const classify=(name,atoms,dataInvariants)=>{
 };
 
 const files=migrationFiles();
-assert.equal(files.length,63);
+assert.equal(files.length,64);
 assert.equal(contract.recorded_baseline.files.length,29);
 let started=false;
 try{
@@ -93,6 +93,33 @@ try{
   const prerequisiteClassification=classify('prerequisite-complete',prerequisite,contract.prerequisite_checkpoint.data_invariants);
   assert.equal(prerequisiteClassification.steps['040'].state,'superseded-equivalent');
 
+  // Reproduce the exact five-of-six production compatibility state: the two
+  // fields, pending default, and both Stripe constraints already match while
+  // the legacy PUBLIC/raw-profile admin policy still needs normalization.
+  psql(branchDb,['-c',`alter table public.profiles alter column subscription_status set default 'pending'::text;
+    alter table public.proposal_templates add column if not exists preview_pdf_url text;
+    alter table public.proposals add column if not exists city varchar(100);
+    alter table public.proposals alter column city set default null;
+    alter table public.billing_history drop constraint if exists billing_history_action_check;
+    alter table public.billing_history add constraint billing_history_action_check check (action=any(array['upgrade'::text,'downgrade'::text,'payment'::text,'refund'::text,'subscription_start'::text]));
+    alter table public.subscriptions drop constraint if exists subscriptions_status_check;
+    alter table public.subscriptions add constraint subscriptions_status_check check (status=any(array['active'::text,'trialing'::text,'cancelled'::text,'past_due'::text,'unpaid'::text]));
+    drop policy if exists "Admins can view all billing history" on public.billing_history;
+    create policy "Admins can view all billing history" on public.billing_history for select using (exists(select 1 from public.profiles where profiles.id=auth.uid() and profiles.role='admin'::text));`]);
+  const compatibilityStep=contract.production_steps.find(step=>step.file.startsWith('20260925013000_'));
+  const compatibilityKeys=new Set(compatibilityStep.diff.evidence.map(evidence=>evidence.atom));
+  const compatibilityBefore=catalog(branchDb).filter(atom=>compatibilityKeys.has(key(atom)));
+  const compatibilityBeforeMap=new Map(compatibilityBefore.map(atom=>[key(atom),atom.value_sha256]));
+  const policyAtom='policy:billing_history.Admins can view all billing history';
+  assert.equal(compatibilityStep.diff.evidence.filter(evidence=>evidence.atom!==policyAtom&&compatibilityBeforeMap.get(evidence.atom)===evidence.after_sha256).length,compatibilityStep.diff.evidence.length-1,'five compatibility atoms are not exact');
+  assert.equal(compatibilityBeforeMap.get(policyAtom),'15e41a56dabd4538aaf0c6bf3426103bcd944f11e3fd94151fb29d5d8ada0394','legacy billing policy fixture is not exact');
+  const compatibilityDataBefore=dataInvariants(branchDb);
+  psql(branchDb,['-f',resolve(migrationDir,compatibilityStep.file)]);
+  psql(branchDb,['-f',resolve(migrationDir,compatibilityStep.file)]);
+  const compatibilityAfterMap=new Map(catalog(branchDb).filter(atom=>compatibilityKeys.has(key(atom))).map(atom=>[key(atom),atom.value_sha256]));
+  for(const evidence of compatibilityStep.diff.evidence) assert.equal(compatibilityAfterMap.get(evidence.atom)??null,evidence.after_sha256,`compatibility normalization mismatch: ${evidence.atom}`);
+  assert.deepEqual(dataInvariants(branchDb),compatibilityDataBefore,'compatibility migration changed protected data invariants');
+
   const effective=contract.production_steps.slice(0,23).flatMap(s=>s.prerequisite_effective_atoms??[]);
   const baselineMap=new Map(baseline.map(a=>[key(a),a])); const prerequisiteMap=new Map(prerequisite.map(a=>[key(a),a]));
   const changedAtom=effective.find(k=>prerequisiteMap.has(k)&&baselineMap.get(k)?.value_sha256!==prerequisiteMap.get(k).value_sha256);
@@ -101,7 +128,7 @@ try{
   const partial=[...partialMap.values()].sort((a,b)=>key(a).localeCompare(key(b),'en'));
   const partialReason=expectRefusal('one-atom-partial',partial,contract.recorded_baseline.data_invariants,/partial prerequisite state/);
 
-  const r2Files=contract.production_steps.slice(23).map(s=>s.file); assert.equal(r2Files.length,11);
+  const r2Files=contract.production_steps.slice(23).map(s=>s.file); assert.equal(r2Files.length,12);
   psql(branchDb,['-f',resolve(migrationDir,r2Files[0])]);
   const strayR2=catalog(branchDb);
   assert.notDeepEqual(strayR2,prerequisite,'first R2 migration made no catalog change');
@@ -120,7 +147,7 @@ try{
   assert.notDeepEqual(branchFinal,explicitOwnerVariant,'owner-variant fixture did not create a distinct ACL catalog');
   assert.deepEqual(normalizeOwner(branchFinal,'OBJECT_OWNER'),normalizeOwner(explicitOwnerVariant,renamedOwner),'owner normalization is not invariant across database owners');
 
-  console.log(JSON.stringify({status:'PASS',postgres_major:16,migrations_replayed:126,branch_model:'29 recorded + 23 prerequisite + 11 forward',canonical_model:'fresh lexical 63',renamed_owner_invariant:true,synthetic_backfills:{migration_031_category:fixtureProof.addon_category,migration_034_status:fixtureProof.status,migration_034_usage_rows:fixtureProof.usage_rows,migration_041_internal:fixtureProof.is_internal},states:{canonical_baseline:{atoms:baseline.length,migration_040:baselineClassification.steps['040'].state},prerequisite_complete:{atoms:prerequisite.length,migration_040:prerequisiteClassification.steps['040'].state},one_atom_partial:{atom:changedAtom,refusal:partialReason},stray_r2:{migration:r2Files[0],atoms:strayR2.length,refusal:strayReason}}},null,2));
+  console.log(JSON.stringify({status:'PASS',postgres_major:16,migrations_replayed:128,branch_model:'29 recorded + 23 prerequisite + 12 forward',canonical_model:'fresh lexical 64',renamed_owner_invariant:true,synthetic_backfills:{migration_031_category:fixtureProof.addon_category,migration_034_status:fixtureProof.status,migration_034_usage_rows:fixtureProof.usage_rows,migration_041_internal:fixtureProof.is_internal},states:{canonical_baseline:{atoms:baseline.length,migration_040:baselineClassification.steps['040'].state},prerequisite_complete:{atoms:prerequisite.length,migration_040:prerequisiteClassification.steps['040'].state},one_atom_partial:{atom:changedAtom,refusal:partialReason},stray_r2:{migration:r2Files[0],atoms:strayR2.length,refusal:strayReason}}},null,2));
 } finally {
   if(started) try{run(resolve(pgBin,'pg_ctl'),['-D',data,'stop','-m','fast']);}catch{}
   rmSync(work,{recursive:true,force:true});

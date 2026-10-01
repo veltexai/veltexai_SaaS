@@ -25,6 +25,12 @@ const binding=fingerprint.contract_binding;
 const bindingExact=binding&&typeof binding==='object'&&!Array.isArray(binding)&&JSON.stringify(Object.keys(binding).sort())===JSON.stringify(bindingKeys)&&bindingKeys.every(key=>binding[key]===expectedBinding[key]);
 if(fingerprint.contract_version!==3||fingerprint.canonicalization_version!==2||fingerprint.classified_contract_version!==1||fingerprint.classification?.expected_state_sha256!==sha(expectedStateBytes)||!bindingExact) throw new Error('fingerprint classifier/contract binding failed');
 if(fingerprint.baseline?.state!=='complete'||fingerprint.baseline.atom_digest!==expectedStateContract.recorded_baseline.atoms_sha256||fingerprint.baseline.expected_atom_count!==expectedStateContract.recorded_baseline.atoms.length||fingerprint.baseline.matched_atom_count!==expectedStateContract.recorded_baseline.atoms.length) throw new Error('baseline proof mismatch');
+const compatibilityVersion='20260925013000'; const compatibilityPolicyAtom='policy:billing_history.Admins can view all billing history'; const legacyCompatibilityPolicySha256='15e41a56dabd4538aaf0c6bf3426103bcd944f11e3fd94151fb29d5d8ada0394';
+const finalExpectedAtoms=new Map(expectedStateContract.atoms.map(atom=>[`${atom.kind}:${atom.identity}`,atom.value_sha256]));
+const platformAtoms=(fingerprint.catalog_atoms??[]).map(atom=>[`${atom.kind}:${atom.identity}`,atom.value_sha256]).filter(([key,value])=>(key==='acl:schema:public:postgres:USAGE'||key.startsWith('extension:')||/^acl:(?:table|view):[^:]+:(?:anon|authenticated|OBJECT_OWNER|service_role):MAINTAIN$/.test(key))&&(finalExpectedAtoms.get(key)??null)!==value);
+const platformEvidenceSha256=sha(platformAtoms.slice().sort(([a],[b])=>a<b?-1:a>b?1:0).map(([key,value])=>`${key}=${value}`).join('\n'));
+const acceptedPlatformEvidence=new Map([[0,sha('')],[137,'6b7d138e76e5b72581af54653a717ba59ad9215c60efe62ebd1128ab126706f9']]);
+if(fingerprint.platform_variance?.kind!=='hosted-pg17-catalog-envelope-v1'||!acceptedPlatformEvidence.has(fingerprint.platform_variance.count)||platformAtoms.length!==fingerprint.platform_variance.count||fingerprint.platform_variance.evidence_sha256!==platformEvidenceSha256||fingerprint.platform_variance.evidence_sha256!==acceptedPlatformEvidence.get(fingerprint.platform_variance.count)) throw new Error('hosted PG17 platform variance proof mismatch');
 const legacyViewAtom=key=>key==='view:enhanced_proposals'||key.startsWith('column:enhanced_proposals.')||key.startsWith('acl:view:enhanced_proposals:');
 const absentEquivalentAtoms=expectedStateContract.recorded_baseline.atoms.map(atom=>`${atom.kind}:${atom.identity}`).filter(legacyViewAtom).sort();
 const absentEquivalentProofSha256=sha(absentEquivalentAtoms.join('\n'));
@@ -42,15 +48,20 @@ for(const step of manifest.steps){
   const source=readFileSync(resolve(root,'supabase/migrations',step.file),'utf8');
   const digest=createHash('sha256').update(source).digest('hex');
   if(digest!==step.source_sha256||digest!==reviewedSourceHashes[step.file]) throw new Error(`source drift: ${step.file}`);
-  if(!['verify-recorded','reconcile-history','reconcile-superseded-equivalent','reconcile-absent-equivalent','apply'].includes(step.mode)) throw new Error(`invalid mode: ${step.file}`);
+  if(!['verify-recorded','reconcile-history','reconcile-superseded-equivalent','reconcile-absent-equivalent','apply-replayable-partial','apply-normalize-equivalent-drift','apply'].includes(step.mode)) throw new Error(`invalid mode: ${step.file}`);
 }
 const supersededEquivalentProof=['20260908000000','20260924000000'];
 const expectedSteps=exactFiles.map(file=>{
   const version=file.split('_',1)[0];
   const observed=fingerprint.steps?.[version];
-  if(!observed||!['absent','complete','superseded-equivalent','absent-equivalent'].includes(observed.state)) throw new Error(`fingerprint state is not buildable: ${version}`);
+  if(!observed||!['absent','complete','superseded-equivalent','absent-equivalent','replayable-partial','normalize-equivalent-drift'].includes(observed.state)) throw new Error(`fingerprint state is not buildable: ${version}`);
   let mode;
-  if(file>='20260925002000_') {
+  if(version===compatibilityVersion&&!observed.history&&observed.state==='replayable-partial') {
+    const contractStep=expectedStateContract.production_steps.find(step=>step.file===file); const atomSet=contractStep.diff.evidence.map(evidence=>evidence.atom).sort(); const proof=observed.replay_proof;
+    const afterPolicy=contractStep.diff.evidence.find(evidence=>evidence.atom===compatibilityPolicyAtom)?.after_sha256;
+    if(observed.expected_atom_count!==atomSet.length||observed.matched_atom_count!==atomSet.length-1||proof?.kind!=='production-schema-compatibility-with-policy-normalization'||proof?.policy_atom!==compatibilityPolicyAtom||proof?.current_policy_sha256!==legacyCompatibilityPolicySha256||proof?.after_policy_sha256!==afterPolicy||proof?.atom_set_sha256!==sha(atomSet.join('\n'))) throw new Error('migration 130 compatibility replay proof mismatch');
+    mode='apply-replayable-partial';
+  } else if(file>='20260925002000_') {
     if(observed.history||observed.state!=='absent'||observed.matched_atom_count!==0) throw new Error(`R2/forward state is not absent: ${version}`);
     if(version==='20260925012000'&&(observed.expected_atom_count!==0||observed.platform_proof?.kind!=='pg17-maintain-hardening'||observed.platform_proof?.postgres_major!==17||!fingerprint.postgres_version.startsWith('17.'))) throw new Error('PG17 MAINTAIN repair platform proof mismatch');
     mode='apply';
@@ -63,6 +74,27 @@ const expectedSteps=exactFiles.map(file=>{
       ||observed.equivalence_proof?.kind!=='legacy-view-absent'
       ||observed.equivalence_proof?.atom_set_sha256!==absentEquivalentProofSha256) throw new Error('legacy-view absence equivalence evidence mismatch');
     mode='reconcile-absent-equivalent';
+  } else if(version==='20260908000000'&&!observed.history&&observed.state==='replayable-partial') {
+    const contractStep=expectedStateContract.production_steps.find(step=>step.file===file);
+    const atom='function:can_user_access_template(user_uuid uuid, template_uuid uuid)';
+    const predecessor=contractStep.diff.evidence.find(evidence=>evidence.atom===atom);
+    const atomSet=contractStep.diff.evidence.map(evidence=>evidence.atom).sort();
+    if(observed.expected_atom_count!==atomSet.length||observed.matched_atom_count!==atomSet.length-1
+      ||observed.replay_proof?.kind!=='canonical-080-function-predecessor'||observed.replay_proof?.atom!==atom
+      ||observed.replay_proof?.before_sha256!==predecessor.before_sha256||observed.replay_proof?.after_sha256!==predecessor.after_sha256
+      ||observed.replay_proof?.atom_set_sha256!==sha(atomSet.join('\n'))||!['absent','replayable-partial'].includes(fingerprint.steps?.['20260924000000']?.state)) throw new Error('migration 080 replay proof mismatch');
+    mode='apply-replayable-partial';
+  } else if(version==='20260924000000'&&!observed.history&&observed.state==='replayable-partial') {
+    const contractStep=expectedStateContract.production_steps.find(step=>step.file===file); const atomSet=contractStep.diff.evidence.map(evidence=>evidence.atom).sort(); const proof=observed.replay_proof;
+    if(observed.expected_atom_count!==atomSet.length||proof?.kind!=='canonical-r0-mixed-with-conditional-absence'||proof?.conditional_absent_atom!=='function:start_user_trial(user_uuid uuid, plan_name text)'||!Number.isInteger(proof.before_count)||!Number.isInteger(proof.after_count)||proof.before_count<1||proof.after_count<1||proof.before_count+proof.after_count!==atomSet.length-1||observed.matched_atom_count!==proof.after_count||proof.atom_set_sha256!==sha(atomSet.join('\n'))) throw new Error('R0 replay proof mismatch');
+    mode='apply-replayable-partial';
+  } else if(version==='20260924010500'&&!observed.history&&observed.state==='normalize-equivalent-drift') {
+    const atom='policy:profiles.Admins can view all profiles'; const supporting='policy:profiles.Users can view own profile';
+    const contractStep=expectedStateContract.production_steps.find(step=>step.file===file);
+    const after=contractStep.diff.evidence.find(evidence=>evidence.atom===atom)?.after_sha256; const proof=observed.normalization_proof;
+    const reviewed='5b2a0fe6d19cd361821d758ae148d8bff9d49997019bbb2e0bf3a18eb673d5bc';
+    if(observed.expected_atom_count!==1||observed.matched_atom_count!==0||proof?.kind!=='redundant-self-view-admin-policy'||proof?.atom!==atom||proof?.supporting_atom!==supporting||proof?.current_sha256!==reviewed||proof?.supporting_sha256!==reviewed||proof?.after_sha256!==after) throw new Error('profiles policy normalization proof mismatch');
+    mode='apply-normalize-equivalent-drift';
   } else if(observed.history&&observed.state==='complete'&&observed.matched_atom_count===observed.expected_atom_count) mode='verify-recorded';
   else if(!observed.history&&observed.state==='complete'&&observed.matched_atom_count===observed.expected_atom_count) mode='reconcile-history';
   else if(!observed.history&&observed.state==='absent'&&observed.matched_atom_count===0) {

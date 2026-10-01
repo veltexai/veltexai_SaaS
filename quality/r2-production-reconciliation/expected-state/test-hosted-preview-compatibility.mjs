@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 const here=new URL('.',import.meta.url).pathname; const contract=JSON.parse(readFileSync(resolve(here,'expected-state.v1.json')));
 const comparator=resolve(here,'compare-hosted-preview.mjs'); const work=mkdtempSync(resolve(tmpdir(),'veltex-preview-compat-'));
-const versions=contract.production_order.map(f=>f.split('_',1)[0]).filter(x=>!['20260925011000','20260925012000'].includes(x)).sort();
+const versions=contract.production_order.map(f=>f.split('_',1)[0]).filter(x=>!['20260925011000','20260925012000','20260925013000'].includes(x)).sort();
 const base=structuredClone(contract.atoms);
 const effective_privileges=JSON.parse(readFileSync(resolve(here,'expected-effective-privileges.v1.json')));
 const sha=p=>createHash('sha256').update(readFileSync(p)).digest('hex');
@@ -35,5 +35,5 @@ for(const [name,mutate] of Object.entries({bad_version:x=>x.contract_version=2,b
 }
 for(const [name,mutate] of Object.entries({missing_prior:x=>{x.migration_history.versions=x.migration_history.versions.slice(1);x.migration_history.count=60;},extra_history:x=>{x.migration_history.versions.push('999');x.migration_history.count=62;},reordered:x=>x.migration_history.versions.reverse()})){const value=structuredClone(capture);mutate(value);const result=run(name,value);assert.equal(result.status,2);assert.equal(result.result.effect_history_state,'invalid');}
 for(const [name,mutate] of Object.entries({bad_extension_schema:x=>x.platform_capabilities.pgcrypto.schema='private',bad_extension_version:x=>x.platform_capabilities.pgcrypto.version='1.4',not_callable:x=>x.platform_capabilities.pgcrypto.digest_callable=false})){const value=structuredClone(capture);mutate(value);assert.equal(run(name,value).result.pgcrypto.compatible,false);}
-const complete=structuredClone(capture); complete.migration_history={count:63,versions:contract.production_order.map(f=>f.split('_',1)[0]).sort()}; const ready=run('complete-after-maintain-repair',complete); assert.equal(ready.status,0); assert.equal(ready.result.compatible,true);
+const complete=structuredClone(capture); complete.migration_history={count:64,versions:contract.production_order.map(f=>f.split('_',1)[0]).sort()}; const ready=run('complete-after-maintain-repair',complete); assert.equal(ready.status,0); assert.equal(ready.result.compatible,true);
 console.log('hosted-preview compatibility/security/history tests PASS');
