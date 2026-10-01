@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 
 const here=new URL('.',import.meta.url).pathname;
 const contract=JSON.parse(readFileSync(resolve(here,'expected-state.v1.json'),'utf8'));
@@ -12,7 +13,9 @@ const captureBuilder=resolve(here,'build-read-only-production-capture.mjs');
 const work=mkdtempSync(resolve(tmpdir(),'veltex-g3-classifier-'));
 const history=['001','002','003','004','005','006','009','010','011','012','013','014','015','016','017','018','019','020','021','022','023','024','025','026','027','028','029','030','20250901194222'];
 const digests=Object.fromEntries(['profiles_all','proposals_all','tracking_all','branding_all','subscriptions_all','usage_all','addon_catalog_all','proposal_addons_all','proposal_templates_all','tier_access_all','template_preferences_all'].map(k=>[k,'0'.repeat(64)]));
-const capture=(atoms,dataInvariants=contract.recorded_baseline.data_invariants)=>({contract_version:2,captured_at:'2026-09-30T00:00:00Z',project_ref:'iwoaaljitifloolszxlu',environment:'production',read_only:true,migration_history:{count:29,versions:history},row_counts:{},orphan_counts:{},content_digests:digests,data_invariants:dataInvariants,catalog_atoms:atoms.map(a=>({kind:a.kind,identity:a.identity,value_sha256:a.value_sha256}))});
+const sha=path=>createHash('sha256').update(readFileSync(resolve(here,path))).digest('hex');
+const binding={catalog_sha256:contract.catalog_sha256,data_invariants_sha256:contract.data_invariants_sha256,migrations_sha256:contract.migrations_sha256,capture_generator_sha256:sha('build-read-only-production-capture.mjs'),effective_privileges_expression_sha256:sha('effective-privileges-expression.sql'),expected_effective_privileges_sha256:sha('expected-effective-privileges.v1.json')};
+const capture=(atoms,dataInvariants=contract.recorded_baseline.data_invariants)=>({contract_version:3,canonicalization_version:2,postgres_version:'17.6',contract_binding:{...binding},captured_at:'2026-09-30T00:00:00Z',project_ref:'iwoaaljitifloolszxlu',environment:'production',read_only:true,migration_history:{count:29,versions:history},row_counts:{},orphan_counts:{},content_digests:digests,data_invariants:dataInvariants,catalog_atoms:atoms.map(a=>({kind:a.kind,identity:a.identity,value_sha256:a.value_sha256}))});
 const run=(name,value,ok=true)=>{
   const input=resolve(work,`${name}.json`); const output=`/private/tmp/veltex-g3-${name}-classified.json`;
   writeFileSync(input,JSON.stringify(value));
@@ -22,7 +25,13 @@ const run=(name,value,ok=true)=>{
 };
 
 const baselineResult=run('baseline',capture(contract.recorded_baseline.atoms));
+assert.equal(baselineResult.contract_version,3);
+assert.equal(baselineResult.classified_contract_version,1);
 assert.equal(baselineResult.steps['040'].state,'absent');
+const wrongVersion=capture(contract.recorded_baseline.atoms); wrongVersion.contract_version=999; run('wrong-contract-version',wrongVersion,false);
+const wrongCanonicalization=capture(contract.recorded_baseline.atoms); wrongCanonicalization.canonicalization_version=999; run('wrong-canonicalization',wrongCanonicalization,false);
+const forgedBinding=capture(contract.recorded_baseline.atoms); forgedBinding.contract_binding={...binding,catalog_sha256:'f'.repeat(64)}; run('forged-binding',forgedBinding,false);
+const missingBinding=capture(contract.recorded_baseline.atoms); delete missingBinding.contract_binding.expected_effective_privileges_sha256; run('missing-binding',missingBinding,false);
 
 const prerequisiteResult=run('prereq',capture(contract.prerequisite_checkpoint.atoms,contract.prerequisite_checkpoint.data_invariants));
 assert.equal(prerequisiteResult.steps['040'].state,'superseded-equivalent');

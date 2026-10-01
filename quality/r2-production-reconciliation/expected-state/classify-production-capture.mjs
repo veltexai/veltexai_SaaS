@@ -9,9 +9,24 @@ const outputPath=resolve(process.argv[3]??'/private/tmp/veltex-r2-production-cla
 if(!capturePath) throw new Error('production capture path required');
 if(!outputPath.startsWith('/private/tmp/')) throw new Error('classified output must remain below /private/tmp');
 const capture=JSON.parse(readFileSync(capturePath,'utf8'));
-const contract=JSON.parse(readFileSync(resolve(here,'expected-state.v1.json'),'utf8'));
+const contractPath=resolve(here,'expected-state.v1.json');
+const contractBytes=readFileSync(contractPath);
+const contract=JSON.parse(contractBytes);
 const expectedHistory=['001','002','003','004','005','006','009','010','011','012','013','014','015','016','017','018','019','020','021','022','023','024','025','026','027','028','029','030','20250901194222'];
 if(capture.project_ref!=='iwoaaljitifloolszxlu'||capture.environment!=='production'||capture.read_only!==true) throw new Error('wrong capture identity');
+if(capture.contract_version!==3||capture.canonicalization_version!==2) throw new Error('unsupported capture contract/canonicalization version');
+if(!/^(16|17)\./.test(capture.postgres_version??'')) throw new Error('unsupported PostgreSQL major');
+const expectedBinding={
+  catalog_sha256:contract.catalog_sha256,
+  data_invariants_sha256:contract.data_invariants_sha256,
+  migrations_sha256:contract.migrations_sha256,
+  capture_generator_sha256:createHash('sha256').update(readFileSync(resolve(here,'build-read-only-production-capture.mjs'))).digest('hex'),
+  effective_privileges_expression_sha256:createHash('sha256').update(readFileSync(resolve(here,'effective-privileges-expression.sql'))).digest('hex'),
+  expected_effective_privileges_sha256:createHash('sha256').update(readFileSync(resolve(here,'expected-effective-privileges.v1.json'))).digest('hex'),
+};
+const bindingKeys=Object.keys(expectedBinding).sort();
+const binding=capture.contract_binding;
+if(!binding||typeof binding!=='object'||Array.isArray(binding)||JSON.stringify(Object.keys(binding).sort())!==JSON.stringify(bindingKeys)||bindingKeys.some(key=>!/^[0-9a-f]{64}$/.test(binding[key]??'')||binding[key]!==expectedBinding[key])) throw new Error('capture source/contract binding mismatch');
 if(capture.migration_history?.count!==29||JSON.stringify(capture.migration_history.versions)!==JSON.stringify(expectedHistory)) throw new Error('production history drift');
 if(!Array.isArray(capture.catalog_atoms)||capture.catalog_atoms.some(a=>!a.kind||!a.identity||!/^[0-9a-f]{64}$/.test(a.value_sha256??''))) throw new Error('invalid redacted catalog atoms');
 const current=new Map(capture.catalog_atoms.map(a=>[`${a.kind}:${a.identity}`,a.value_sha256]));
@@ -116,6 +131,6 @@ const mismatch=[...current].filter(([k,v])=>reconstructed.get(k)!==v);
 const missing=[...reconstructed].filter(([k])=>!current.has(k));
 if(mismatch.length||missing.length) throw new Error(`catalog is not an exact baseline-plus-classified-steps state: mismatched=${mismatch.length} missing=${missing.length} sample=${JSON.stringify({mismatch:mismatch.slice(0,3).map(([key])=>key),missing:missing.slice(0,3).map(([key])=>key)})}`);
 for(const step of r2Steps) classified[step.file.split('_',1)[0]]={history:false,state:'absent',expected_atom_count:step.diff.evidence.length,matched_atom_count:0};
-const output={...capture,contract_version:2,baseline:{state:'complete',atom_digest:contract.recorded_baseline.atoms_sha256,expected_atom_count:baselineExpected.size,matched_atom_count:baselineExpected.size},steps:classified,r2_absent:true,classification:{expected_state_sha256:createHash('sha256').update(readFileSync(resolve(here,'expected-state.v1.json'))).digest('hex'),classified_at:new Date().toISOString()}};
+const output={...capture,classified_contract_version:1,baseline:{state:'complete',atom_digest:contract.recorded_baseline.atoms_sha256,expected_atom_count:baselineExpected.size,matched_atom_count:baselineExpected.size},steps:classified,r2_absent:true,classification:{expected_state_sha256:createHash('sha256').update(contractBytes).digest('hex'),classified_at:new Date().toISOString()}};
 writeFileSync(outputPath,JSON.stringify(output,null,2)+'\n',{mode:0o600});
 console.log(outputPath);

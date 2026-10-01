@@ -14,6 +14,7 @@ if (!reviewPath || !existsSync(reviewPath)) throw new Error('independent review 
 const fingerprintBytes = readFileSync(fingerprintPath);
 const fp = JSON.parse(fingerprintBytes.toString('utf8'));
 const review = JSON.parse(readFileSync(reviewPath, 'utf8'));
+const sha = text => createHash('sha256').update(text).digest('hex');
 const expectedHistory = ['001','002','003','004','005','006','009','010','011','012','013','014','015','016','017','018','019','020','021','022','023','024','025','026','027','028','029','030','20250901194222'];
 const requiredDigests = [
   'profiles_all','proposals_all','tracking_all','branding_all','subscriptions_all',
@@ -21,8 +22,16 @@ const requiredDigests = [
   'tier_access_all','template_preferences_all'
 ];
 if (fp.project_ref !== productionRef || fp.environment !== 'production' || fp.read_only !== true) throw new Error('fingerprint is not the explicit production read-only contract');
+const expectedStatePath=resolve(root,'quality/r2-production-reconciliation/expected-state/expected-state.v1.json');
+const expectedStateBytes=readFileSync(expectedStatePath);
+const expectedStateContract=JSON.parse(expectedStateBytes);
+const expectedBinding={catalog_sha256:expectedStateContract.catalog_sha256,data_invariants_sha256:expectedStateContract.data_invariants_sha256,migrations_sha256:expectedStateContract.migrations_sha256,capture_generator_sha256:sha(readFileSync(resolve(root,'quality/r2-production-reconciliation/expected-state/build-read-only-production-capture.mjs'))),effective_privileges_expression_sha256:sha(readFileSync(resolve(root,'quality/r2-production-reconciliation/expected-state/effective-privileges-expression.sql'))),expected_effective_privileges_sha256:sha(readFileSync(resolve(root,'quality/r2-production-reconciliation/expected-state/expected-effective-privileges.v1.json')))};
+const bindingKeys=Object.keys(expectedBinding).sort();
+const binding=fp.contract_binding;
+const bindingExact=binding&&typeof binding==='object'&&!Array.isArray(binding)&&JSON.stringify(Object.keys(binding).sort())===JSON.stringify(bindingKeys)&&bindingKeys.every(key=>binding[key]===expectedBinding[key]);
+if(fp.contract_version!==3||fp.canonicalization_version!==2||fp.classified_contract_version!==1||fp.classification?.expected_state_sha256!==sha(expectedStateBytes)||!bindingExact) throw new Error('fingerprint classifier/contract binding failed');
 if (fp.migration_history?.count !== 29 || JSON.stringify(fp.migration_history.versions) !== JSON.stringify(expectedHistory)) throw new Error('production history drift');
-if (fp.baseline?.state !== 'complete' || !/^[0-9a-f]{64}$/.test(fp.baseline?.atom_digest ?? '')) throw new Error('recorded baseline objects are not independently proven complete');
+if (fp.baseline?.state !== 'complete' || fp.baseline.atom_digest!==expectedStateContract.recorded_baseline.atoms_sha256 || fp.baseline.expected_atom_count!==expectedStateContract.recorded_baseline.atoms.length || fp.baseline.matched_atom_count!==expectedStateContract.recorded_baseline.atoms.length) throw new Error('recorded baseline objects are not independently proven complete');
 if (fp.r2_absent !== true) throw new Error('R2 is not wholly absent');
 const fingerprintSha256 = createHash('sha256').update(fingerprintBytes).digest('hex');
 if (review.status !== 'PASS' || review.fingerprint_sha256 !== fingerprintSha256 || !review.reviewer || !review.reviewed_at) throw new Error('independent fingerprint review is incomplete or does not bind this exact fingerprint');
@@ -30,10 +39,8 @@ for (const key of requiredDigests) if (!/^[0-9a-f]{64}$/.test(fp.content_digests
 const prerequisiteFiles = [
   '031_enhance_addon_catalog.sql','032_fix_addon_catalog_rls.sql','033_7_day_trial_system.sql','034_free_trial_no_credit_card.sql','035_email_automation_log.sql','036_add_company_profile_fields.sql','037_marketing_attribution.sql','038_calculator_estimate_capture.sql','039_acquisition_attribution_funnel.sql','040_executive_premium_trial_experience.sql','041_growth_qualification_and_funnel.sql','20260908000000_enforce_proposal_design_entitlements.sql','20260913000000_commercial_quick_weekly_frequencies.sql','20260922000000_service_catalog_release_1.sql','20260922010000_catalog_remediation.sql','20260924000000_r0_privilege_hardening.sql','20260924010000_restrict_legacy_proposal_view.sql','20260924010500_fix_profiles_policy_recursion.sql','20260924011000_align_profiles_branding_columns.sql','20260924012000_align_tracking_delivery_methods.sql','20260924013000_sync_tracked_engagement_fields.sql','20260925000000_location_pricing_foundation.sql','20260925001000_location_pricing_reviewed_seed.sql'
 ];
-const r2Files = ['20260925002000_r2_organization_tenancy.sql','20260925003000_r2_claude_security_remediation.sql','20260925004000_r2_second_security_remediation.sql','20260925005000_r2_third_security_remediation.sql','20260925006000_r2_cleanup_guard_ordering.sql','20260925007000_r2_service_role_proposal_read.sql','20260925008000_r2_addon_acl_alignment.sql','20260925009000_r2_tracked_print_projection.sql','20260925010000_tracked_link_revocation.sql','20260925011000_r0_private_function_service_role_acl.sql'];
-const sha = text => createHash('sha256').update(text).digest('hex');
+const r2Files = ['20260925002000_r2_organization_tenancy.sql','20260925003000_r2_claude_security_remediation.sql','20260925004000_r2_second_security_remediation.sql','20260925005000_r2_third_security_remediation.sql','20260925006000_r2_cleanup_guard_ordering.sql','20260925007000_r2_service_role_proposal_read.sql','20260925008000_r2_addon_acl_alignment.sql','20260925009000_r2_tracked_print_projection.sql','20260925010000_tracked_link_revocation.sql','20260925011000_r0_private_function_service_role_acl.sql','20260925012000_revoke_client_maintain.sql'];
 const reviewedSourceHashes = JSON.parse(readFileSync(resolve(root,'quality/r2-production-reconciliation/reviewed-source-sha256.json'),'utf8'));
-const expectedStateContract = JSON.parse(readFileSync(resolve(root,'quality/r2-production-reconciliation/expected-state/expected-state.v1.json'),'utf8'));
 const exactFiles = [...prerequisiteFiles, ...r2Files];
 const supersededEquivalentVersion = '040';
 const supersededEquivalentProof = ['20260908000000','20260924000000'];

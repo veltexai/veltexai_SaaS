@@ -1620,3 +1620,30 @@ After any material action, append or revise the relevant section with:
   not recaptured. Independent exact-delta review is required before another
   read-only production capture. Production remains unmodified and no deployment
   or production plan is authorized.
+
+### R2 production G3 proof-chain audit remediation — LOCAL PASS / RE-REVIEW PENDING (2026-10-01 Pacific)
+
+- **INDEPENDENT AUDIT FAILURE PRESERVED:** review of commit `67ac8b7` found that
+  the classifier accepted stale or forged capture-contract metadata, the plan
+  builder/validator did not bind the exact classifier and baseline proof, and
+  the reviewed plan omitted the final PG17 client-MAINTAIN repair migration.
+  Those were real release blockers; the earlier local PASS was not promoted.
+- **CAPTURE-TO-PLAN BINDING:** production classification now requires capture
+  contract v3, canonicalization v2, PostgreSQL 16/17 and the exact six-file
+  contract binding. It preserves the v3 envelope, adds classified-contract v1,
+  and binds the exact expected-state bytes. Builder and validator independently
+  recompute those bindings and require the exact baseline atom digest and count.
+- **COMPLETE PINNED PLAN:** `20260925012000_revoke_client_maintain.sql` is now
+  source-pinned at SHA-256
+  `e0fca6d81e8af64891ad1039f95963ac7dafe5d6c52bf0fc7043aaa4de2314dd`
+  as the 34th production step. The unarmed artifact test now proves all 34
+  independently pinned steps are present and refuses forged or stale proof.
+- **LOCAL GATES PASS:** classifier mutation tests, builder/validator adversarial
+  tests, expected-state static checks, hosted-preview compatibility, TypeScript,
+  diff hygiene, all 86 Jest suites / 721 tests / five snapshots, deterministic
+  PG16 regeneration, and the 126-application production-shaped replay all pass.
+  The heavy replay models 29 recorded + 23 prerequisite + 11 forward migrations
+  and exactly matches the fresh lexical 63-file chain.
+- **STATUS:** production remains untouched. This is a corrected local candidate
+  pending independent exact-delta re-review; no new production capture, plan,
+  deployment, migration-history write or other production mutation is approved.
