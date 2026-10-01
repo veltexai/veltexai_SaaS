@@ -58,3 +58,5 @@ next-env.d.ts
 
 # claude
 AGENTS.md
+# Production-derived G3 fingerprint evidence remains local-only.
+quality/r2-production-reconciliation/production-fingerprint-*.json

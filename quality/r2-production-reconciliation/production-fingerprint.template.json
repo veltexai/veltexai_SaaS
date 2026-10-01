@@ -1,0 +1,42 @@
+{
+  "contract_version": 1,
+  "captured_at": null,
+  "project_ref": "iwoaaljitifloolszxlu",
+  "environment": "production",
+  "read_only": true,
+  "migration_history": {
+    "count": 29,
+    "versions": [
+      "001", "002", "003", "004", "005", "006", "009", "010", "011", "012",
+      "013", "014", "015", "016", "017", "018", "019", "020", "021", "022",
+      "023", "024", "025", "026", "027", "028", "029", "030", "20250901194222"
+    ]
+  },
+  "row_counts": {
+    "profiles": 86,
+    "proposals": 166,
+    "proposal_tracking": 4,
+    "company_profiles": 0,
+    "user_branding_settings": 4,
+    "subscriptions": 11
+  },
+  "orphan_counts": {
+    "proposals_without_profile": 0,
+    "tracking_without_proposal": 0
+  },
+  "content_digests": {
+    "profiles_identity": null,
+    "proposals_identity_and_content": null,
+    "tracking_identity_and_counters": null,
+    "branding_identity": null,
+    "subscriptions_identity": null
+  },
+  "steps": {},
+  "r2_absent": null,
+  "review": {
+    "status": "PENDING",
+    "reviewer": null,
+    "reviewed_at": null
+  }
+}
+

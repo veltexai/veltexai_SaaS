@@ -1005,3 +1005,42 @@ After any material action, append or revise the relevant section with:
   open; G3 must produce and independently review a real-data-safe production
   reconciliation artifact; G4 operator/founder acceptance and production
   deployment authorization remain open. Production was read only throughout.
+
+### R2 production G3 redacted discovery — VERIFIED READ ONLY / PLAN UNARMED (2026-09-30 Pacific)
+
+- **FRESH REDACTED FINGERPRINT:** the committed G3 query ran inside
+  `begin transaction read only` / `rollback` against confirmed production
+  project `iwoaaljitifloolszxlu`. It selected only migration versions, counts,
+  object-state booleans and SHA-256 identity/content digests—no customer text,
+  email, tracking token, credential or raw business record. It reconfirmed 29
+  history rows, 86 profiles, 166 proposals, four tracking rows, zero company
+  profiles, four branding rows, 11 subscriptions, zero measured orphans and
+  complete R2 absence.
+- **PREREQUISITE SHAPE:** schema effects are present without history for 031,
+  032, 034–041, `20260908000000`, `20260913000000`, `20260924010500` and
+  `20260924011000`. The current probes classify 033, Release 1, catalog
+  remediation, R0, tracked-engagement alignment and location pricing as absent.
+  These are discovery classifications only; history-only reconciliation is not
+  authorized until each `complete` probe receives exact independent review.
+- **UNARMED GENERATOR:** `quality/r2-production-reconciliation/` contains the
+  read-only discovery contract, redacted result, builder, validator and tests.
+  The digest-bearing result remains local-only and is excluded from Git/GitHub.
+  The builder refuses the wrong project, history drift, incomplete digests,
+  existing R2, pending review and partial/inconsistent state. A reviewed
+  synthetic fixture produced 32 source-pinned steps and an unarmed SQL artifact
+  whose first executable statement always raises; no arming or production
+  runner is implemented.
+- **TRIAL HISTORY PRESERVED:** the initial disposable query run found that the
+  local harness intentionally lacks Supabase's `schema_migrations`; adding 29
+  synthetic history rows only in that disposable database closed the syntax
+  proof. The first hosted read failed safely because PostgreSQL planned a
+  reference to the absent pricing table, and a second editor attempt appended
+  instead of replacing text; the read-only transaction prevented mutation.
+  The query was corrected/replaced and the final production read returned one
+  redacted row successfully.
+- **STATUS:** production remains unmodified. G3 is `IN PROGRESS`, not complete.
+  Independent review instructions are prepared at
+  `docs/product/platform-build/CLAUDE_R2_G3_PRODUCTION_RECONCILIATION_REVIEW.md`.
+  G2 backup/PITR, accepted exact probes, production-shaped disposable replay,
+  G4 acceptance and action-specific production deployment approval remain
+  mandatory.
