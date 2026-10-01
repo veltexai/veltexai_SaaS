@@ -1479,3 +1479,38 @@ After any material action, append or revise the relevant section with:
   disables Vercel Authentication for this preview validation window (or an
   equivalently reviewed preview-only bypass is configured). After validation,
   protection must be restored and the synthetic tracking token revoked.
+
+### R2 full preview acceptance — PASS / PREVIEW RE-PROTECTED (2026-10-01 Pacific)
+
+- **VALIDATION WINDOW AUTHORIZED AND CLOSED:** founder explicitly approved a
+  temporary Vercel Authentication disable for the isolated preview acceptance
+  window. The setting was disabled only long enough to test public tracked-link
+  behavior, then restored. A public HTTP postcheck now redirects to Vercel SSO,
+  proving Standard Protection is active again.
+- **CANONICAL TRACKED PDF PASS:** the corrected public endpoint returned HTTP
+  200 in approximately seven seconds with a valid 2,785,456-byte, two-page A4
+  PDF. Metadata reports `Creator: Chromium` and `Producer: Skia/PDF m141`, not
+  legacy jsPDF. Both rendered pages were inspected at full-page resolution.
+  Page 1 contains the correct title, synthetic client, address and date; page 2
+  contains the intended commercial image and closing copy. No clipping,
+  overlap, black glyphs, blank page, Vercel login screen or legacy near-empty
+  output was present.
+- **PUBLIC BOUNDARIES PASS:** a random well-formed token returned 404 and the
+  previously revoked token remained 404. The active synthetic fixture rendered
+  only while unrevoked and recorded successful download state. Its accumulated
+  `download_count=4` reflects the authorized diagnostic/acceptance attempts and
+  is not treated as an exactly-once single-request assertion; the focused route
+  and database tests cover one-increment-per-success behavior.
+- **SYNTHETIC FIXTURE REVOKED:** tracking row
+  `04196326-f2b6-4fad-94c2-7d9869ec784b` was retained as evidence but marked
+  revoked with reason `Preview acceptance cleanup`. Hosted postchecks show
+  `read_tracked_proposal(...) is null`, paid access false, download timestamps
+  present and the signed-in preview URL returns the application 404. No email
+  was sent and no production record was created.
+- **FINAL GATE RESULT:** the isolated preview database, branch-scoped runtime,
+  public tracked-link boundary, canonical tracked PDF, visual rendering and
+  post-validation access controls are **VERIFIED / PASS**. Automated evidence
+  remains 86 Jest suites, 721 tests, five snapshots and TypeScript PASS; the
+  correctly provisioned Vercel build generated all 84 static pages. Production
+  deployment and production database migration remain separate consequential
+  actions and are not authorized by this preview acceptance.
