@@ -924,3 +924,35 @@ After any material action, append or revise the relevant section with:
   cannot receive email. The remaining bounded option is an explicitly approved
   preview-only password rotation for that synthetic QA identity, followed by
   operator UI testing and replacement with a fresh unknown random password.
+
+### R2 tracked-link revocation — ISOLATED PREVIEW OPERATOR ACCEPTANCE PASS (2026-09-30 Pacific)
+
+- **AUTHENTICATED OWNER SURFACE VERIFIED:** the current branch deployment, not
+  the outdated stable alias, displayed the proposal `Links` tab for the known
+  isolated-preview delivery. It showed the intended recipient, active status,
+  delivery method, eight views, six downloads and the owner-only `Revoke link`
+  control. The confirmation dialog was exercised before the approved revoke.
+- **GENUINE RESPONSIVE PASS:** the deployed Links surface was inspected at a
+  real 390x844 browser viewport. `window.innerWidth` and document width both
+  reported 390px, scroll width remained 390px, and the visible title, delivery
+  card, status, counters and revoke control were correctly framed without
+  horizontal overflow. This closes the previously open responsive evidence
+  gate for this surface.
+- **APPROVED REVOCATION VERIFIED END TO END:** the isolated-preview delivery row
+  `eb592da1-b2bd-41f7-8d23-226a852bb95a` for proposal
+  `741ef971-06bd-405e-b792-c86056c56f06` is revoked by the organization owner.
+  The public customer URL now returns 404; customer and canonical-print reads
+  return null; paid entitlement fails closed; view/download counters remain
+  unchanged at 8/6; and exactly one `proposal_tracking.revoked` audit event
+  exists. No bearer token or recipient address was written to that audit event.
+- **TEMPORARY QA CREDENTIAL RETIRED:** after acceptance, the synthetic preview
+  owner's temporary password was replaced with a fresh server-generated random
+  value that was never returned, displayed, copied or stored. The SQL result
+  confirmed `temporary preview password permanently retired`. No reusable
+  credential was added to the repository, chat, clipboard or environment.
+- **R2 REVOCATION STATUS — VERIFIED IN ISOLATED PREVIEW:** local tests, build,
+  61-migration guarded database gates, independent review, hosted lifecycle,
+  authenticated operator UI, public 404 behavior, immutable counters, audit
+  evidence and responsive presentation all pass. Production
+  `iwoaaljitifloolszxlu`, the separate 100D pilot, email and campaigns remained
+  untouched. Any production deployment remains a separately gated action.
