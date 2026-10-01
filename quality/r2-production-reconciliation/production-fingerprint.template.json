@@ -32,11 +32,5 @@
     "subscriptions_identity": null
   },
   "steps": {},
-  "r2_absent": null,
-  "review": {
-    "status": "PENDING",
-    "reviewer": null,
-    "reviewed_at": null
-  }
+  "r2_absent": null
 }
-

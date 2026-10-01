@@ -1044,3 +1044,41 @@ After any material action, append or revise the relevant section with:
   G2 backup/PITR, accepted exact probes, production-shaped disposable replay,
   G4 acceptance and action-specific production deployment approval remain
   mandatory.
+
+### R2 production G3 independent review — FAIL / REMEDIATION IN PROGRESS (2026-09-30 Pacific)
+
+- **CLAUDE VERDICT:** exact commit `bdd43c1` is safe as a read-only, unarmed
+  artifact but fails the bar for any production history reconciliation. Claude
+  reproduced false-positive completion for migration `040` on the baseline
+  alone and for seed migration `20260925001000` with zero seed rows. It also
+  found that all 29 recorded baseline versions were trusted from history alone,
+  the other completion probes were incomplete, source hashes were calculated
+  rather than checked against independently reviewed values, and a crafted
+  fingerprint could escape the raw JSON block comment when a client continued
+  after the opening exception. G2, G3 and G4 remain open; production remains
+  unmodified.
+- **INDEPENDENT CODEX AUDIT:** separately reached the same FAIL conclusion and
+  identified the required minimum contract: exact structured
+  `absent / complete / partial` vectors, full affected-table preservation
+  coverage, exhaustive R2 absence, externally bound fingerprint review,
+  exact ordered-source validation, mutation-negative tests and a
+  production-shaped disposable replay.
+- **FAIL-CLOSED REMEDIATION COMPLETED LOCALLY SO FAR:** restored
+  `20260924000000_r0_privilege_hardening.sql` byte-for-byte to the version
+  independently accepted and applied on preview; moved its later service-role
+  revokes into new forward-only migration
+  `20260925011000_r0_private_function_service_role_acl.sql`; added an ordered
+  reviewed source-hash table; bound review approval to the exact fingerprint
+  bytes; replaced raw JSON SQL interpolation with Base64 plus exact-byte
+  validation; and added wrong-project, history-drift, missing-digest,
+  R2-present, stale-review and SQL-tail-tamper negatives.
+- **LOCAL EVIDENCE:** the G3 builder/validator tests pass with 33 independently
+  pinned steps; migration validation reports 62 unique executable versions;
+  TypeScript passes; and the complete fresh PostgreSQL 16 harness passes all 62
+  migrations, owner matrix, CHECK_DEFINERS/H1, tracked-link lifecycle,
+  injection, dirty-data, idempotency and 40-way concurrency. The disposable
+  server was stopped afterward.
+- **STILL OPEN:** the production discovery contract must be replaced with the
+  complete per-migration vectors, all baseline and R2 object-state checks,
+  wider preservation digests and a production-shaped replay. No arming or
+  production runner exists, and no hosted mutation is authorized by this work.
