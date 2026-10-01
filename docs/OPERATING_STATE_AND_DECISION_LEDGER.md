@@ -956,3 +956,20 @@ After any material action, append or revise the relevant section with:
   evidence and responsive presentation all pass. Production
   `iwoaaljitifloolszxlu`, the separate 100D pilot, email and campaigns remained
   untouched. Any production deployment remains a separately gated action.
+
+### R2 production release packet — PREPARED / NOT AUTHORIZED (2026-09-30 Pacific)
+
+- **PACKET CREATED:**
+  `docs/product/platform-build/R2_PRODUCTION_RELEASE_PACKET.md` freezes the
+  current release identity, accepted evidence, truthful deferred scope,
+  production go/no-go gates, ordered deployment/smoke sequence and
+  application-first rollback plan.
+- **CUMULATIVE RELEASE BOUNDARY:** recorded production application base remains
+  `a4deb7c`; current accepted branch head is cumulative and cannot be treated as
+  a revocation-only patch. A fresh read-only production code/schema/history
+  fingerprint, backup/PITR evidence and a production-specific reviewed
+  migration artifact are mandatory before mutation.
+- **NEXT SAFE ACTION:** repeat the exact-candidate local gates and perform
+  read-only production discovery. No production database mutation, deployment,
+  credential action, email, campaign change or preview deletion is authorized
+  by the packet.
