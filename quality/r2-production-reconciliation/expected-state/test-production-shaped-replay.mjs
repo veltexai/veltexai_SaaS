@@ -46,7 +46,7 @@ const classify=(name,atoms,dataInvariants)=>{
 };
 
 const files=migrationFiles();
-assert.equal(files.length,62);
+assert.equal(files.length,63);
 assert.equal(contract.recorded_baseline.files.length,29);
 let started=false;
 try{
@@ -77,6 +77,8 @@ try{
   assert.deepEqual(prerequisite,contract.prerequisite_checkpoint.atoms,'prerequisite replay differs from checkpoint');
   const prerequisiteData=dataInvariants(branchDb);
   assert.deepEqual(prerequisiteData,contract.prerequisite_checkpoint.data_invariants,'production-shaped data invariants differ from generated checkpoint');
+  psql(branchDb,['-c',`alter database ${branchDb} set timezone='Pacific/Kiritimati'`,'-c',`alter database ${branchDb} set datestyle='SQL, DMY'`]);
+  assert.deepEqual(dataInvariants(branchDb),prerequisiteData,'canonical invariant hashes changed under TimeZone/DateStyle GUCs');
   const fixtureProof=JSON.parse(psql(branchDb,['-c',`select jsonb_build_object(
     'status',p.subscription_status,'trial_end_present',p.trial_end_at is not null,'is_internal',p.is_internal,
     'usage_rows',(select count(*) from public.usage u where u.user_id=p.id),
@@ -94,7 +96,7 @@ try{
   const partial=[...partialMap.values()].sort((a,b)=>key(a).localeCompare(key(b),'en'));
   const partialReason=expectRefusal('one-atom-partial',partial,contract.recorded_baseline.data_invariants,/partial prerequisite state/);
 
-  const r2Files=contract.production_steps.slice(23).map(s=>s.file); assert.equal(r2Files.length,10);
+  const r2Files=contract.production_steps.slice(23).map(s=>s.file); assert.equal(r2Files.length,11);
   psql(branchDb,['-f',resolve(migrationDir,r2Files[0])]);
   const strayR2=catalog(branchDb);
   assert.notDeepEqual(strayR2,prerequisite,'first R2 migration made no catalog change');
@@ -113,7 +115,7 @@ try{
   assert.notDeepEqual(branchFinal,explicitOwnerVariant,'owner-variant fixture did not create a distinct ACL catalog');
   assert.deepEqual(normalizeOwner(branchFinal,'OBJECT_OWNER'),normalizeOwner(explicitOwnerVariant,renamedOwner),'owner normalization is not invariant across database owners');
 
-  console.log(JSON.stringify({status:'PASS',postgres_major:16,migrations_replayed:124,branch_model:'29 recorded + 23 prerequisite + 10 R2',canonical_model:'fresh lexical 62',renamed_owner_invariant:true,synthetic_backfills:{migration_031_category:fixtureProof.addon_category,migration_034_status:fixtureProof.status,migration_034_usage_rows:fixtureProof.usage_rows,migration_041_internal:fixtureProof.is_internal},states:{canonical_baseline:{atoms:baseline.length,migration_040:baselineClassification.steps['040'].state},prerequisite_complete:{atoms:prerequisite.length,migration_040:prerequisiteClassification.steps['040'].state},one_atom_partial:{atom:changedAtom,refusal:partialReason},stray_r2:{migration:r2Files[0],atoms:strayR2.length,refusal:strayReason}}},null,2));
+  console.log(JSON.stringify({status:'PASS',postgres_major:16,migrations_replayed:126,branch_model:'29 recorded + 23 prerequisite + 11 forward',canonical_model:'fresh lexical 63',renamed_owner_invariant:true,synthetic_backfills:{migration_031_category:fixtureProof.addon_category,migration_034_status:fixtureProof.status,migration_034_usage_rows:fixtureProof.usage_rows,migration_041_internal:fixtureProof.is_internal},states:{canonical_baseline:{atoms:baseline.length,migration_040:baselineClassification.steps['040'].state},prerequisite_complete:{atoms:prerequisite.length,migration_040:prerequisiteClassification.steps['040'].state},one_atom_partial:{atom:changedAtom,refusal:partialReason},stray_r2:{migration:r2Files[0],atoms:strayR2.length,refusal:strayReason}}},null,2));
 } finally {
   if(started) try{run(resolve(pgBin,'pg_ctl'),['-D',data,'stop','-m','fast']);}catch{}
   rmSync(work,{recursive:true,force:true});

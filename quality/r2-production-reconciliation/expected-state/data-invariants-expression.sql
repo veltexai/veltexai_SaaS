@@ -104,12 +104,14 @@ jsonb_build_object(
           (dataset_key='dol_state_minimum_wages' and version='2026-07-01' and checksum='payload-sha256:7051450504ac3cf161b880e30c9497d772125de8f96287b1fd1beb94421e2ed5') or
           (dataset_key='irs_business_mileage' and version='2026-07-01' and checksum='payload-sha256:e66c57a511fd6dcc4cd0544388c4cf4572b1aa2c41f07a44f6ba9f947e764cbc') or
           (dataset_key='bea_rpp_reviewed_states' and version='2024' and checksum='payload-sha256:eeda67e6daf6fd685edda5da093e2404e71cf300e88f6fbd8f8083149c31cf30'))::bigint source_checksum_matches,
-        (select encode(digest(coalesce(string_agg(to_jsonb(q)::text,',' order by dataset_key,version),''),'sha256'),'hex') from (
-          select dataset_key,version,source_agency,source_url,source_vintage,retrieved_at,checksum,active
-          from public.pricing_source_versions where (dataset_key,version) in (
+        (select encode(digest(convert_to(coalesce(jsonb_agg(jsonb_build_array(
+          dataset_key::text,version::text,source_agency::text,source_url::text,source_vintage::text,
+          (extract(epoch from retrieved_at)*1000000)::bigint,checksum::text,active
+        ) order by dataset_key collate "C",version collate "C")::text,'[]'),'UTF8'),'sha256'),'hex')
+        from public.pricing_source_versions where (dataset_key,version) in (
             ('bls_oews_national_cleaning','2025-05'),('dol_state_minimum_wages','2026-07-01'),
             ('irs_business_mileage','2026-07-01'),('bea_rpp_reviewed_states','2024'))
-        ) q)::text source_projection_sha256,
+        )::text source_projection_sha256,
         (select encode(digest(coalesce(string_agg(to_jsonb(q)::text,',' order by market_code),''),'sha256'),'hex') from (
           select market_code,dataset_version,market_name,country_code,state_code,resolution,confidence
           from public.geographic_pricing_markets where dataset_version='us-location-2026-09-25.1'

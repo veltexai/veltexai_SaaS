@@ -16,18 +16,34 @@ assert.deepEqual(attributed[0].superseded_atoms,[{atom:'function:f()',by:'two.sq
 assert.deepEqual(attributed[1].effective_atoms,['function:f()']);
 assert.deepEqual(attributed[2].effective_atoms,['table:t']);
 const files=migrationFiles();
-assert.equal(files.length,62,'the contract is intentionally pinned to exactly 62 migrations');
-assert.equal(new Set(files).size,62);
+assert.equal(files.length,63,'the contract is intentionally pinned to exactly 63 migrations');
+assert.equal(new Set(files).size,63);
 assert.equal(files[0],'001_initial_schema.sql');
-assert.equal(files.at(-1),'20260925011000_r0_private_function_service_role_acl.sql');
+assert.equal(files.at(-1),'20260925012000_revoke_client_maintain.sql');
 const contract=JSON.parse(readFileSync(resolve(here,'expected-state.v1.json')));
 assert.equal(contract.contract_version,2);
-assert.equal(contract.production_order.length,62);
-assert.equal(contract.production_steps.length,33);
+assert.equal(contract.production_order.length,63);
+assert.equal(contract.production_steps.length,34);
 assert.match(contract.data_invariants_sha256,/^[0-9a-f]{64}$/);
 for(const version of ['031','034','041','20260922000000','20260922010000','20260925001000']) assert.ok(contract.prerequisite_checkpoint.data_invariants[version]);
-assert.equal(new Set(contract.production_order).size,62);
+assert.equal(new Set(contract.production_order).size,63);
 assert.deepEqual(new Set(contract.production_order),new Set(files));
+const maintainRepair=readFileSync(resolve(here,'../../../supabase/migrations/20260925012000_revoke_client_maintain.sql'),'utf8');
+for(const required of ['server_version_num',"execute 'revoke maintain on all tables in schema public from public, anon, authenticated'",'alter default privileges','has_table_privilege','pg_default_acl','pg_auth_members']) assert.match(maintainRepair,new RegExp(required,'i'));
+assert.match(maintainRepair,/alter default privileges for role postgres in schema public revoke maintain on tables/i);
+assert.match(maintainRepair,/supabase_admin/);
+assert.match(maintainRepair,/current_user <> 'postgres'/);
+const historicalGrantAllAllowlist=new Set(['002_grant_permissions.sql','010_admin_panel_tables.sql','011_admin_panel_missing_tables.sql','014_stripe_subscription_schema.sql']);
+const newClientGrantAll=[];
+for(const file of files){
+  if(historicalGrantAllAllowlist.has(file))continue;
+  const statements=readFileSync(resolve(here,'../../../supabase/migrations',file),'utf8').split(';');
+  for(const statement of statements){
+    const normalized=statement.replace(/--[^\n]*/g,' ').replace(/\s+/g,' ').trim();
+    if(/\bgrant\s+all(?:\s+privileges)?\s+on\b.*\bto\s+(?:public\s*,\s*)?(?:anon|authenticated)\b/i.test(normalized))newClientGrantAll.push(`${file}: ${normalized}`);
+  }
+}
+assert.deepEqual(newClientGrantAll,[],'new GRANT ALL to anon/authenticated requires explicit reviewed allowlisting');
 const sql=readFileSync(resolve(here,'catalog.sql'),'utf8');
 for(const required of ['table','column','constraint','index','function','view','trigger','policy','acl','type','sequence','extension']) assert.match(sql,new RegExp(`'${required}'`));
 for(const required of ['reloptions','collation','ready','language','result','owned_by']) assert.match(sql,new RegExp(`'${required}'`));

@@ -63,22 +63,23 @@ tables as (
       case when a.grantee=o.owner_oid then 'OBJECT_OWNER' else coalesce(r.rolname,'PUBLIC') end||':'||a.privilege_type,
     'value',jsonb_build_object('object_kind',o.object_kind,'object',o.object_identity,
       'grantee',case when a.grantee=o.owner_oid then 'OBJECT_OWNER' else coalesce(r.rolname,'PUBLIC') end,
-      'privilege',a.privilege_type,'grantable',a.is_grantable)) atom
+      'privilege',a.privilege_type,'grantable',a.is_grantable,'acl_source','explicit')) atom
   from (
     select (case c.relkind when 'S' then 'sequence' when 'v' then 'view' when 'm' then 'materialized_view' else 'table' end)::text object_kind,
       c.relname::text object_identity, c.relowner owner_oid,
-      coalesce(c.relacl,acldefault(case when c.relkind='S' then 'S'::"char" else 'r'::"char" end,c.relowner)) acl
+      c.relacl acl
     from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind in ('r','p','v','m','S')
       and not exists (select 1 from pg_depend d where d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e')
     union all
     select 'function'::text,(p.proname||'('||pg_get_function_identity_arguments(p.oid)||')')::text,p.proowner,
-      coalesce(p.proacl,acldefault('f',p.proowner))
+      p.proacl
     from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public'
       and not exists (select 1 from pg_depend d where d.classid='pg_proc'::regclass and d.objid=p.oid and d.deptype='e')
     union all
-    select 'schema'::text,'public'::text,n.nspowner,coalesce(n.nspacl,acldefault('n',n.nspowner))
+    select 'schema'::text,'public'::text,n.nspowner,n.nspacl
     from pg_namespace n where n.nspname='public'
   ) o cross join lateral aclexplode(o.acl) a left join pg_roles r on r.oid=a.grantee
+  where o.acl is not null
 ), types as (
   select jsonb_build_object('kind','type','identity',t.typname,'value',jsonb_strip_nulls(jsonb_build_object(
     'type_kind',t.typtype,'category',t.typcategory,'not_null',t.typnotnull,
@@ -106,7 +107,7 @@ tables as (
   select jsonb_build_object('kind','extension','identity',e.extname,'value',jsonb_build_object(
     'schema',n.nspname,'version',e.extversion,'relocatable',e.extrelocatable)) atom
   from pg_extension e join pg_namespace n on n.oid=e.extnamespace
-  where n.nspname='public'
+  where e.extname<>'plpgsql'
 ), atoms as (
   select atom from tables union all select atom from columns union all select atom from constraints
   union all select atom from indexes union all select atom from functions union all select atom from views

@@ -1227,3 +1227,149 @@ After any material action, append or revise the relevant section with:
   independently reviewed should a production read-only capture be considered.
   G2, exact-artifact review, G4 and action-specific production authorization
   remain mandatory before any production mutation.
+
+### R2 G3 isolated-preview portability capture — READ-ONLY COMPLETE / REMEDIATION REQUIRED (2026-09-30 Pacific)
+
+- **TARGET AND SAFETY:** the hashes-only capture ran only on isolated preview
+  `ynzkwctwlssjcsjmahey` (`r2-fresh-verification-20260926`), PostgreSQL 17.6.
+  The generated query was explicitly labeled `isolated-preview`, began with
+  `BEGIN TRANSACTION READ ONLY`, ended with `ROLLBACK`, and returned no source
+  rows, customer content, emails, UUIDs or bearer tokens. Production
+  `iwoaaljitifloolszxlu` was not opened, queried or changed.
+- **APPLICATION SEMANTICS MATCH:** all 2,284 hosted atoms shared with the local
+  contract have zero value mismatches. The only non-ACL contract difference is
+  `pgcrypto` placement: local PostgreSQL 16 installs version 1.3 in `public`,
+  while Supabase installs version 1.3 in `extensions`. Orphan counts are zero.
+- **PLATFORM ACL VARIANCE:** the raw catalog comparison reports 355 local-only
+  and 164 preview-only ACL atoms. The preview-only set is 163 PostgreSQL 17
+  `MAINTAIN` privileges plus provider schema usage; the local-only set contains
+  PostgreSQL 16/default-role expansion. This is not accepted wholesale. The
+  contract must separate exact migration-owned grants/revokes from provider
+  defaults and gate reviewed runtime permissions through narrow effective
+  allow/deny probes.
+- **DATA PROOF:** every invariant count and hash matches except the four-row
+  pricing-source projection. A second read-only query proved every agency,
+  URL, vintage, retrieval instant, checksum and active flag matches exactly.
+  The false mismatch is caused by the old hash serializing `timestamptz`
+  through the session time zone (local Pacific versus hosted UTC). The hash
+  canonicalization must use time-zone-independent epoch microseconds, explicit
+  UTF-8 bytes and C ordering before recapture.
+- **HISTORY DISCREPANCY PRESERVED:** preview records 61 migrations through
+  `20260925010000` and lacks `20260925011000`, but all seven private `_r0_*`
+  functions already deny effective `service_role` execution. Git evidence
+  explains that the older applied `20260924000000` bytes contained those
+  revokes before reviewed immutable bytes moved them into `25011000`. Treat
+  this as effect complete/history absent; do not silently insert history.
+- **NEXT GATE:** implement and test portable source hashing, global extension
+  capability capture and a strict migration-owned ACL/effective-permission
+  matrix; regenerate deterministically on PostgreSQL 16/17; recapture this
+  preview read-only; then independently review any proposed `25011000` history
+  resolution. No preview mutation or production action is authorized by this
+  evidence.
+
+### R2 G3 hosted-portability verifier — INDEPENDENT LOCAL PASS / PREVIEW BLOCKED (2026-09-30 Pacific)
+
+- **VERIFIER REMEDIATION COMPLETE:** capture contract v3/canonicalization v2
+  now binds the catalog, data invariants, migration inventory, capture
+  generator, effective-privilege query and expected privilege matrix by exact
+  SHA-256. It compares application objects exactly, physical ACL provenance
+  separately, and 1,347 effective privilege outcomes by stable key. PostgreSQL
+  17 `MAINTAIN`, role-membership direction, all seven private R0 functions and
+  18 application-required runtime permissions are explicit fail-closed gates.
+- **PORTABILITY PROOF:** the pricing-source hash now uses epoch microseconds,
+  C ordering and explicit UTF-8 bytes. The PostgreSQL 16 production-shaped
+  replay again applied 124 migrations and proved the exact 29 + 23 + 10 branch
+  equals the fresh 62-file chain; deterministic regeneration, classifier,
+  TypeScript and diff checks pass.
+- **REAL READ-ONLY PREVIEW RESULT:** application semantics, data invariants,
+  required runtime permissions and pgcrypto capability match. The exact
+  61-version history set is recognized as full-minus-`20260925011000`, so the
+  state is correctly `effect-complete/history-absent` and reconciliation is
+  required. The preview is **not compatible** and remains non-ready.
+- **SECURITY BLOCKER:** Supabase PostgreSQL 17 reports effective `MAINTAIN` for
+  `anon` on 28 relations and `authenticated` on 43 relations. All 71 grants
+  remain blocking. Separately, 190 missing direct ACL atoms and 309 optional
+  effective privilege reductions are recorded as more restrictive, not
+  silently treated as drift. There are zero missing required-runtime allows,
+  zero unexpected direct client-role ACLs and all private R0 routines remain
+  denied.
+- **INDEPENDENT VERDICT:** PASS on the bounded verifier correction; FAIL/non-ready
+  on the hosted preview state. No hosted mutation, production query, history
+  insertion, deployment, spend or external message occurred.
+- **NEXT ACTION:** prepare a forward-only preview repair that revokes client
+  `MAINTAIN` privileges and ordinarily applies the exact pinned
+  `20260925011000` migration through the canonical migration mechanism. Run it
+  first on the isolated preview with pre/post privilege, history, catalog and
+  invariant checks. This consequential preview mutation requires explicit
+  action-specific authorization; production remains out of scope.
+
+### R2 PostgreSQL 17 client-MAINTAIN repair — LOCAL DESIGN PASS / PG17 EXECUTION PENDING (2026-09-30 Pacific)
+
+- **FORWARD MIGRATION PREPARED:**
+  `20260925012000_revoke_client_maintain.sql` is the 63rd migration and follows
+  the existing idempotent `20260925011000` private-function ACL migration. Its
+  PostgreSQL-17-only syntax is held inside version-gated dynamic SQL so the
+  canonical PostgreSQL 16 chain parses and intentionally no-ops.
+- **DURABLE SCOPE:** on PostgreSQL 17 the candidate removes `MAINTAIN` from
+  `PUBLIC`, `anon` and `authenticated` on current non-extension public
+  relations; repairs only global/public default ACL owners that actually grant
+  unsafe client `MAINTAIN`; refuses client-owned relations and upward client
+  role inheritance; and aborts atomically if any effective or default client
+  `MAINTAIN` remains. Global and public-scoped default ACLs use their correct,
+  distinct `ALTER DEFAULT PRIVILEGES` forms.
+- **SOURCE PREVENTION:** expected-state checks reject new unreviewed
+  `GRANT ALL` statements to `anon` or `authenticated`; the four immutable
+  historical sources are explicitly enumerated rather than ignored broadly.
+- **LOCAL VERIFICATION:** the 63-version chain, hosted comparator, classifier,
+  TypeScript, diff hygiene and deterministic PostgreSQL 16 contract pass. The
+  production-shaped replay applied 126 migrations and matched the fresh
+  lexical 63-file chain. An independent review found no remaining local
+  code/design blocker.
+- **HONEST LIMITATION:** the executable PostgreSQL 17 harness is **PENDING**
+  because only PostgreSQL 16 is installed locally. The harness includes direct
+  and PUBLIC grants, global and public unsafe defaults, future-table denial,
+  provider-direction memberships, client inheritance/ownership refusal,
+  unrelated safe unassumable defaults, unsafe unassumable-owner atomic failure
+  and idempotence. It has not yet executed on PostgreSQL 17.
+- **NEXT ACTION:** run the exact rollback-only PostgreSQL 17 harness on the
+  named isolated preview (or an equivalent disposable PostgreSQL 17 instance),
+  collect the result, and obtain final review. Only after PASS should the exact
+  `25011000` then `25012000` migrations be considered for persistent isolated-
+  preview application. Production remains untouched and out of scope.
+
+### R2 PostgreSQL 17 provider-aware MAINTAIN repair — ROLLBACK-ONLY PREVIEW PASS (2026-09-30 Pacific)
+
+- **FIRST ATTEMPT SAFELY REJECTED:** the isolated PostgreSQL 17 preview proved
+  that SQL-editor `current_user=postgres` cannot alter provider-owned
+  `supabase_admin` default privileges (`42501`). The transaction rolled back;
+  the probe table was absent afterward and the original four unsafe default
+  entries plus 71 effective client MAINTAIN grants remained unchanged. Do not
+  retry provider privilege escalation or record migration history manually.
+- **PROVIDER-AWARE POLICY:** the revised `20260925012000` candidate now hardens
+  only postgres-owned Veltex relations and postgres public-table defaults. It
+  permits exactly two dormant Supabase platform-default entries—public-schema
+  table MAINTAIN for `anon` and `authenticated`, owned by `supabase_admin` and
+  non-grantable—while treating every other owner, scope, grantee, grant option,
+  client membership or non-postgres application-relation owner as a blocker.
+  The provider defaults are not accepted as application privileges.
+- **ABSOLUTE APPLICATION POSTCONDITION:** every current non-extension public
+  Veltex relation must have effective MAINTAIN=false for both `anon` and
+  `authenticated`, PUBLIC must have no direct MAINTAIN, and a newly created
+  postgres-owned table must not inherit client MAINTAIN. Deployment identity
+  and application relation ownership must remain `postgres`.
+- **REAL PG17 ROLLBACK PASS:** the exact revised 7,388-character query ran on
+  preview project `ynzkwctwlssjcsjmahey` inside `BEGIN ... ROLLBACK`. During
+  the transaction it returned `rollback_probe=pass`, `current_user=postgres`,
+  `client_maintain_count=0`, and `provider_variance_count=2`; the future-table
+  inheritance assertion also passed. A post-rollback read proved
+  `probe_table_absent=true`, `unsafe_default_count=4`, and the original
+  `client_maintain_count=71`, confirming no persistent preview mutation.
+- **VERIFICATION:** the provider-aware migration and harness received an
+  independent local-design PASS. Static/source lint, hosted compatibility,
+  classifier, TypeScript, diff hygiene, deterministic regeneration and the
+  126-application PostgreSQL 16 production-shaped replay all pass.
+- **CURRENT STATUS:** rollback-only PostgreSQL 17 execution is **VERIFIED**.
+  Persistent preview application of the exact pinned `20260925011000` followed
+  by `20260925012000` is the next consequential release action and is not
+  implied by this rollback test. Production remains untouched and out of
+  scope.
