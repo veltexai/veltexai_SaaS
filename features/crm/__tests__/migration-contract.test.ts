@@ -56,6 +56,12 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain('link a sent proposal before moving to this stage');
   });
 
+  it('requires bounded idempotency keys on every command-created workflow row', () => {
+    expect(migration.match(/idempotency_key text not null check \(length\(idempotency_key\) between 8 and 200\)/g))
+      .toHaveLength(5);
+    expect(migration.match(/unique \(organization_id, idempotency_key\)/g)).toHaveLength(5);
+  });
+
   it('seeds both templates and all eleven canonical categories', () => {
     expect(migration).toContain("'commercial_facility_v1'");
     expect(migration).toContain("'residential_turnover_v1'");

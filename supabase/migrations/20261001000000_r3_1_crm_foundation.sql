@@ -191,6 +191,7 @@ create table public.crm_leads (
   status text not null default 'new'
     check (status in ('new', 'contacted', 'converted', 'junk', 'merged', 'disqualified')),
   intake_method text not null default 'manual' check (intake_method in ('manual', 'direct_opportunity')),
+  idempotency_key text not null check (length(idempotency_key) between 8 and 200),
   lead_source_id uuid,
   referral_source_id uuid,
   customer_name text,
@@ -215,6 +216,7 @@ create table public.crm_leads (
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
   unique (organization_id, id),
+  unique (organization_id, idempotency_key),
   foreign key (organization_id, lead_source_id)
     references public.crm_lead_sources(organization_id, id) on delete restrict,
   foreign key (organization_id, referral_source_id)
@@ -241,6 +243,7 @@ create table public.crm_opportunities (
   pipeline_id uuid not null,
   stage_id uuid not null,
   lead_id uuid,
+  idempotency_key text not null check (length(idempotency_key) between 8 and 200),
   name text not null check (length(trim(name)) between 1 and 200),
   owner_user_id uuid not null,
   estimator_user_id uuid,
@@ -268,6 +271,7 @@ create table public.crm_opportunities (
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
   unique (organization_id, id),
+  unique (organization_id, idempotency_key),
   foreign key (organization_id, customer_id)
     references public.crm_customers(organization_id, id) on delete restrict,
   foreign key (organization_id, property_id)
@@ -306,6 +310,7 @@ create table public.crm_walkthroughs (
   property_id uuid not null,
   estimator_user_id uuid not null,
   site_contact_id uuid,
+  idempotency_key text not null check (length(idempotency_key) between 8 and 200),
   window_start timestamptz not null,
   window_end timestamptz not null,
   timezone text not null check (length(trim(timezone)) between 1 and 80),
@@ -316,6 +321,7 @@ create table public.crm_walkthroughs (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (organization_id, id),
+  unique (organization_id, idempotency_key),
   foreign key (organization_id, opportunity_id)
     references public.crm_opportunities(organization_id, id) on delete cascade,
   foreign key (organization_id, property_id)
@@ -335,6 +341,7 @@ create table public.crm_tasks (
   organization_id uuid not null references public.organizations(id) on delete restrict,
   opportunity_id uuid,
   lead_id uuid,
+  idempotency_key text not null check (length(idempotency_key) between 8 and 200),
   title text not null check (length(trim(title)) between 1 and 240),
   due_at timestamptz,
   timezone text,
@@ -348,6 +355,7 @@ create table public.crm_tasks (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (organization_id, id),
+  unique (organization_id, idempotency_key),
   foreign key (organization_id, opportunity_id)
     references public.crm_opportunities(organization_id, id) on delete cascade,
   foreign key (organization_id, lead_id)
@@ -373,12 +381,14 @@ create table public.crm_site_work_packages (
   )),
   walkthrough_id uuid,
   proposal_id uuid,
+  idempotency_key text not null check (length(idempotency_key) between 8 and 200),
   loss_reason_id uuid,
   created_by uuid not null references public.profiles(id) on delete restrict,
   updated_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (organization_id, id),
+  unique (organization_id, idempotency_key),
   foreign key (organization_id, opportunity_id)
     references public.crm_opportunities(organization_id, id) on delete cascade,
   foreign key (organization_id, property_id)
@@ -678,6 +688,49 @@ set search_path = pg_catalog, public as $$
 $$;
 revoke all on function public.can_access_crm_opportunity(uuid) from public, anon;
 grant execute on function public.can_access_crm_opportunity(uuid) to authenticated, service_role;
+
+create function public.find_crm_duplicate_candidates(
+  target_organization uuid,
+  candidate_email text default null,
+  candidate_phone text default null
+)
+returns table(entity_type text, entity_id uuid, matched_on text)
+language sql stable security definer
+set search_path = pg_catalog, public as $$
+  select candidate.entity_type, candidate.entity_id, candidate.matched_on
+  from (
+    select 'contact'::text as entity_type, c.id as entity_id,
+      case
+        when candidate_email is not null and lower(c.email) = lower(candidate_email) then 'email'
+        else 'phone'
+      end as matched_on
+    from public.crm_contacts c
+    where c.organization_id = target_organization and c.deleted_at is null
+      and (
+        (candidate_email is not null and lower(c.email) = lower(candidate_email))
+        or (candidate_phone is not null and c.phone = candidate_phone)
+      )
+    union all
+    select 'lead'::text, l.id,
+      case
+        when candidate_email is not null and lower(l.email) = lower(candidate_email) then 'email'
+        else 'phone'
+      end
+    from public.crm_leads l
+    where l.organization_id = target_organization and l.deleted_at is null
+      and l.status not in ('merged', 'junk')
+      and (
+        (candidate_email is not null and lower(l.email) = lower(candidate_email))
+        or (candidate_phone is not null and l.phone = candidate_phone)
+      )
+  ) candidate
+  where public.can_edit_organization_work(target_organization)
+  order by candidate.entity_type, candidate.entity_id;
+$$;
+revoke all on function public.find_crm_duplicate_candidates(uuid, text, text)
+  from public, anon;
+grant execute on function public.find_crm_duplicate_candidates(uuid, text, text)
+  to authenticated, service_role;
 
 create function public.bootstrap_crm_for_organization(target_organization uuid, actor uuid)
 returns void language plpgsql security definer
