@@ -10,7 +10,7 @@ const root = resolve(here, '../..');
 const rawArgs = process.argv.slice(2);
 const rollbackProof = rawArgs.includes('--rollback-proof');
 const positionalArgs = rawArgs.filter((value) => value !== '--rollback-proof');
-const [manifestPath, reviewedFingerprintPath, finalFingerprintPath, authorizationPath, outputPath] = positionalArgs.map((value) => value ? resolve(value) : value);
+const [manifestPath, reviewedFingerprintPath, finalFingerprintPath, authorizationPath, outputPath, postflightContractArg] = positionalArgs.map((value) => value ? resolve(value) : value);
 if (!manifestPath || !reviewedFingerprintPath || !finalFingerprintPath || !authorizationPath || !outputPath) {
   throw new Error('usage: build-authorized-production-bundle.mjs <manifest> <reviewed-fingerprint> <final-fingerprint> <authorization> <output>');
 }
@@ -21,10 +21,13 @@ const manifestBytes = readFileSync(manifestPath);
 const reviewedBytes = readFileSync(reviewedFingerprintPath);
 const finalBytes = readFileSync(finalFingerprintPath);
 const authorizationBytes = readFileSync(authorizationPath);
+const postflightContractPath = postflightContractArg ?? resolve(here, 'production-postflight-contract-20261001.json');
+const postflightContractBytes = readFileSync(postflightContractPath);
 const manifest = JSON.parse(manifestBytes);
 const reviewed = JSON.parse(reviewedBytes);
 const final = JSON.parse(finalBytes);
 const authorization = JSON.parse(authorizationBytes);
+const postflightContract = JSON.parse(postflightContractBytes);
 const expectedStateBytes = readFileSync(resolve(here, 'expected-state/expected-state.v1.json'));
 const expectedState = JSON.parse(expectedStateBytes);
 const invariantExpressionBytes = readFileSync(resolve(here, 'expected-state/data-invariants-expression.sql'));
@@ -45,6 +48,11 @@ if (authorization.status !== 'APPROVED' || authorization.scope !== 'R2 productio
 if (authorization.manifest_sha256 !== sha(manifestBytes) || authorization.reviewed_fingerprint_sha256 !== sha(reviewedBytes) || authorization.final_fingerprint_sha256 !== sha(finalBytes)) {
   throw new Error('production authorization does not bind both fingerprints');
 }
+if (authorization.postflight_contract_sha256 !== sha(postflightContractBytes)
+    || authorization.rollback_artifact_sha256 !== postflightContract.rollback_artifact_sha256
+    || authorization.rollback_evidence_sha256 !== postflightContract.rollback_evidence_sha256) {
+  throw new Error('production authorization does not bind rollback evidence and postflight contract');
+}
 if (!authorization.approved_by || !authorization.approved_at || authorization.gates !== 'G0-G4 VERIFIED') {
   throw new Error('production authorization metadata incomplete');
 }
@@ -60,6 +68,22 @@ if (JSON.stringify(comparableFingerprint(reviewed)) !== JSON.stringify(comparabl
   throw new Error('final production fingerprint drifted from reviewed state');
 }
 if (final.classification?.expected_state_sha256 !== sha(expectedStateBytes)) throw new Error('final fingerprint does not bind current expected state');
+
+const exactKeys = (value, keys) => JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...keys].sort());
+const hex64 = (value) => typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
+const postflightKeys = ['rollback_proof','history_count','history_sha256','catalog_count','catalog_sha256','effective_privileges_sha256','content_digests_sha256','data_invariants_sha256'];
+if (!exactKeys(postflightContract, ['contract_version','target','rollback_artifact_sha256','rollback_evidence_sha256','postflight'])
+    || postflightContract.contract_version !== 1
+    || postflightContract.target !== 'production iwoaaljitifloolszxlu'
+    || !hex64(postflightContract.rollback_artifact_sha256)
+    || !hex64(postflightContract.rollback_evidence_sha256)
+    || !exactKeys(postflightContract.postflight, postflightKeys)
+    || postflightContract.postflight.rollback_proof !== true
+    || postflightContract.postflight.history_count !== 64
+    || postflightContract.postflight.catalog_count !== 2527
+    || !postflightKeys.filter((key) => key.endsWith('_sha256')).every((key) => hex64(postflightContract.postflight[key]))) {
+  throw new Error('postflight contract shape or values are invalid');
+}
 
 const reviewedSources = readJson(resolve(here, 'reviewed-source-sha256.json'));
 if (manifest.steps.length !== 35 || JSON.stringify(Object.keys(reviewedSources)) !== JSON.stringify(manifest.steps.map((step) => step.file))) {
@@ -143,6 +167,9 @@ const artifactBinding = {
   reviewed_fingerprint_sha256: sha(reviewedBytes),
   final_fingerprint_sha256: sha(finalBytes),
   authorization_sha256: sha(authorizationBytes),
+  postflight_contract_sha256: sha(postflightContractBytes),
+  rollback_artifact_sha256: postflightContract.rollback_artifact_sha256,
+  rollback_evidence_sha256: postflightContract.rollback_evidence_sha256,
   generator_sha256: sha(generatorBytes),
   expected_state_sha256: sha(expectedStateBytes),
   data_invariants_expression_sha256: sha(invariantExpressionBytes),
@@ -155,7 +182,17 @@ const bindingBase64 = Buffer.from(JSON.stringify(artifactBinding)).toString('bas
 const frozen = manifest.frozen_counts;
 const terminalSql = rollbackProof
   ? `-- Raise hashes-only postflight evidence as a deliberate error. The error aborts\n-- the transaction; the explicit ROLLBACK below is a defensive unreachable boundary.\ndo $rollback_proof$\ndeclare rollback_evidence jsonb;\nbegin\n${postflightEvidenceStatement};\n  raise exception using errcode='P0001',message='R2_ROLLBACK_PROOF:'||rollback_evidence::text;\nend\n$rollback_proof$;\nrollback;`
-  : `commit;\n\nselect 'R2_PRODUCTION_RELEASE_COMMITTED'::text evidence_key,\n  (select count(*) from supabase_migrations.schema_migrations)::bigint migration_history_count,\n  (select count(*) from public.organizations)::bigint organization_count,\n  (select count(*) from public.organization_memberships)::bigint membership_count;`;
+  : `-- Recompute and require the exact independently reviewed rollback-proof postflight before commit.
+do $commit_postflight$
+declare rollback_evidence jsonb;
+begin
+${postflightEvidenceStatement};
+  if rollback_evidence is distinct from $authorized_postflight$${JSON.stringify(postflightContract.postflight)}$authorized_postflight$::jsonb then
+    raise exception 'R2 release postcondition failed: exhaustive postflight differs from rollback proof';
+  end if;
+end
+$commit_postflight$;
+commit;\n\nselect 'R2_PRODUCTION_RELEASE_COMMITTED'::text evidence_key,\n  (select count(*) from supabase_migrations.schema_migrations)::bigint migration_history_count,\n  (select count(*) from public.organizations)::bigint organization_count,\n  (select count(*) from public.organization_memberships)::bigint membership_count;`;
 const sql = `-- GENERATED, HASH-BOUND R2 PRODUCTION ${rollbackProof ? 'ROLLBACK-PROOF' : 'EXECUTION'} ARTIFACT. DO NOT EDIT.
 -- Target: iwoaaljitifloolszxlu only. Confirm dashboard project before execution.
 -- Binding SHA-256: ${sha(bindingBase64)}

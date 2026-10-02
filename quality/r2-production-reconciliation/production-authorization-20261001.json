@@ -7,5 +7,8 @@
   "approved_at": "2026-10-01T23:20:00Z",
   "manifest_sha256": "0cfdaf8572e8d3c7f72a00b7cf9e1ef6bc03916959b7fdade7813dc531279689",
   "reviewed_fingerprint_sha256": "77b6575264b72d43e06d8f4ad20a0446332fc922271745934ad7a5a39a1ee618",
-  "final_fingerprint_sha256": "f441921f8b560372cf1fd21b589e3a072a05bee4a3d7d06195d08536722bab13"
+  "final_fingerprint_sha256": "f441921f8b560372cf1fd21b589e3a072a05bee4a3d7d06195d08536722bab13",
+  "postflight_contract_sha256": "5819200560f707fe419d92e925fa731c8de38364ddb793bde33c2af2d7cf2c99",
+  "rollback_artifact_sha256": "98fe6dbdb9dd86d1039105bf4d3a6d80fec2f4257009717f6d7202adb180514e",
+  "rollback_evidence_sha256": "397c8dfdf549a73dc6aefc87da6b8852cc358827605e3c7bfd565fb2798f8e5a"
 }

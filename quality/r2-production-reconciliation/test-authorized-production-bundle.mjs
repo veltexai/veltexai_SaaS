@@ -16,18 +16,20 @@ const manifest = '/private/tmp/veltex-r2-production-plan-v4/manifest.json';
 const reviewed = '/private/tmp/veltex-r2-production-classified-v4.json';
 const final = '/private/tmp/veltex-r2-production-classified-v4-final-drift.json';
 const authorization = resolve(here, 'production-authorization-20261001.json');
-for (const path of [manifest, reviewed, final, authorization]) readFileSync(path);
+const postflightContract = resolve(here, 'production-postflight-contract-20261001.json');
+for (const path of [manifest, reviewed, final, authorization, postflightContract]) readFileSync(path);
 
-const run = (name, args = [manifest, reviewed, final, authorization]) => {
+const run = (name, args = [manifest, reviewed, final, authorization], contract = postflightContract) => {
   const output = resolve(work, `${name}.sql`);
-  execFileSync(process.execPath, [builder, ...args, output], { cwd: root, stdio: 'pipe' });
+  execFileSync(process.execPath, [builder, ...args, output, contract], { cwd: root, stdio: 'pipe' });
   return readFileSync(output, 'utf8');
 };
 const expectFailure = (name, mutate) => {
-  const files = { manifest: resolve(work, `${name}-manifest.json`), reviewed: resolve(work, `${name}-reviewed.json`), final: resolve(work, `${name}-final.json`), authorization: resolve(work, `${name}-authorization.json`) };
+  const files = { manifest: resolve(work, `${name}-manifest.json`), reviewed: resolve(work, `${name}-reviewed.json`), final: resolve(work, `${name}-final.json`), authorization: resolve(work, `${name}-authorization.json`), postflight: resolve(work, `${name}-postflight.json`) };
   cpSync(manifest, files.manifest); cpSync(reviewed, files.reviewed); cpSync(final, files.final); cpSync(authorization, files.authorization);
+  cpSync(postflightContract, files.postflight);
   mutate(files);
-  assert.throws(() => run(name, [files.manifest, files.reviewed, files.final, files.authorization]));
+  assert.throws(() => run(name, [files.manifest, files.reviewed, files.final, files.authorization], files.postflight));
 };
 
 const sqlA = run('a');
@@ -43,6 +45,8 @@ assert.match(sqlA, /frozen row counts drifted/);
 assert.match(sqlA, /exact live catalog differs from authorized fingerprint/);
 assert.match(sqlA, /effective privileges differ from authorized fingerprint/);
 assert.match(sqlA, /protected content digests differ from authorized fingerprint/);
+assert.match(sqlA, /exhaustive postflight differs from rollback proof/);
+assert.ok(sqlA.indexOf('exhaustive postflight differs from rollback proof') < sqlA.lastIndexOf('commit;'));
 assert.match(sqlA, /lock table supabase_migrations\.schema_migrations in share row exclusive mode/);
 assert.match(sqlA, /in share row exclusive mode/);
 assert.match(sqlA, /organization backfill mismatch/);
@@ -65,6 +69,17 @@ assert.match(rollbackSql,/effective_privileges_sha256/);
 assert.doesNotMatch(rollbackSql,/^\+/m,'rollback SQL must not contain diff-marker prefixes');
 assert.doesNotMatch(rollbackSql,/E'\\000'/,"rollback SQL must not construct forbidden PostgreSQL NUL text values");
 assert.match(rollbackSql,/jsonb_build_array\(atom->>'kind',atom->>'identity',atom->>'value_sha256'\)::text/);
+
+for (const key of ['rollback_proof','history_count','history_sha256','catalog_count','catalog_sha256','effective_privileges_sha256','content_digests_sha256','data_invariants_sha256']) {
+  expectFailure(`postflight-${key}-drift`, ({ postflight: path }) => {
+    const x=JSON.parse(readFileSync(path));
+    x.postflight[key] = typeof x.postflight[key] === 'boolean' ? false : typeof x.postflight[key] === 'number' ? x.postflight[key] + 1 : '0'.repeat(64);
+    writeFileSync(path, JSON.stringify(x));
+  });
+}
+expectFailure('postflight-extra-key', ({ postflight: path }) => { const x=JSON.parse(readFileSync(path)); x.postflight.extra=true; writeFileSync(path,JSON.stringify(x)); });
+expectFailure('rollback-artifact-binding-drift', ({ authorization: path }) => { const x=JSON.parse(readFileSync(path)); x.rollback_artifact_sha256='0'.repeat(64); writeFileSync(path,JSON.stringify(x)); });
+expectFailure('rollback-evidence-binding-drift', ({ authorization: path }) => { const x=JSON.parse(readFileSync(path)); x.rollback_evidence_sha256='0'.repeat(64); writeFileSync(path,JSON.stringify(x)); });
 
 expectFailure('bad-approval', ({ authorization: path }) => { const x=JSON.parse(readFileSync(path)); x.status='PENDING'; writeFileSync(path, JSON.stringify(x)); });
 expectFailure('wrong-project', ({ authorization: path }) => { const x=JSON.parse(readFileSync(path)); x.project_ref='ynzkwctwlssjcsjmahey'; writeFileSync(path, JSON.stringify(x)); });
