@@ -1994,17 +1994,17 @@ set search_path = pg_catalog, public as $$
   ), opportunities as (
     select coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
       'id', o.id,
-      'name', o.name,
+      'name', case when c.role='viewer' then 'Opportunity' else o.name end,
       'pipeline_id', o.pipeline_id,
       'stage_id', o.stage_id,
-      'property_id', o.property_id,
+      'property_id', case when c.role<>'viewer' then o.property_id end,
       'category', s.category,
       'segment', o.segment,
       'service_family', o.service_family,
       'expected_close_date', o.expected_close_date,
       'updated_at', o.updated_at,
-      'owner_user_id', o.owner_user_id,
-      'estimator_user_id', o.estimator_user_id,
+      'owner_user_id', case when c.role<>'viewer' then o.owner_user_id end,
+      'estimator_user_id', case when c.role<>'viewer' then o.estimator_user_id end,
       'next_action_due_at', o.next_action_due_at,
       'needs_follow_up', (
         s.category not in ('won','lost','disqualified','handed_off')
@@ -2054,11 +2054,19 @@ set search_path = pg_catalog, public as $$
       order by x.name,x.id),'[]'::jsonb) as value
     from public.crm_customers x cross join caller c
     where x.organization_id=target_organization and x.deleted_at is null and c.role<>'viewer'
+      and (c.role in ('owner','admin') or (c.role='estimator' and (x.created_by=auth.uid()
+        or exists (select 1 from public.crm_opportunities o where o.organization_id=x.organization_id
+          and o.customer_id=x.id and o.deleted_at is null
+          and (o.created_by=auth.uid() or o.owner_user_id=auth.uid() or o.estimator_user_id=auth.uid())))))
   ), properties as (
     select coalesce(jsonb_agg(jsonb_build_object('id',p.id,'customer_id',p.customer_id,'name',p.name)
       order by p.name,p.id),'[]'::jsonb) as value
     from public.crm_properties p cross join caller c
     where p.organization_id=target_organization and p.deleted_at is null and c.role<>'viewer'
+      and (c.role in ('owner','admin') or (c.role='estimator' and (p.created_by=auth.uid()
+        or exists (select 1 from public.crm_opportunities o where o.organization_id=p.organization_id
+          and o.property_id=p.id and o.deleted_at is null
+          and (o.created_by=auth.uid() or o.owner_user_id=auth.uid() or o.estimator_user_id=auth.uid())))))
   ), leads as (
     select coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
       'id',l.id,'status',l.status,'customer_name',l.customer_name,

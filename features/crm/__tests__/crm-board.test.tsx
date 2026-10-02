@@ -126,6 +126,43 @@ describe('R3-1 CRM board', () => {
     expect(await screen.findByText('Lead updated.')).toBeInTheDocument();
   });
 
+  it('requires confirmation before converting a lead and reuses captured details', async () => {
+    const pipelineId = '22222222-2222-4222-8222-222222222222';
+    jest.spyOn(global.crypto, 'randomUUID').mockReturnValue('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+    const board = {
+      organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], assignable_members: [],
+      viewer_price_redacted: false, customers: [], properties: [],
+      pipelines: [{ id: pipelineId, name: 'Commercial', segment: 'commercial', is_default: true, stages: [] }],
+      opportunities: [], leads: [{ id: 'lead-1', status: 'new', contact_name: 'Morgan Lee',
+        email: 'morgan@example.test', property_name: 'North Campus' }],
+    };
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: board }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        opportunity_id: 'opportunity-1', customer_id: 'customer-1', replayed: false,
+      } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { ...board, leads: [] } }) });
+
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'Open leads' });
+    fireEvent.click(screen.getByRole('button', { name: 'Convert lead' }));
+    expect(screen.getByRole('dialog', { name: 'Convert lead' })).toBeInTheDocument();
+    expect(screen.getByText(/Captured contact details will be reused/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Opportunity name')).toHaveValue('North Campus');
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm conversion' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(5));
+    expect(fetchMock.mock.calls[2][0]).toBe(`/api/orgs/${ORG_ID}/crm/leads/lead-1/convert`);
+    expect(fetchMock.mock.calls[2][1].headers['idempotency-key']).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+    expect(fetchMock.mock.calls[2][1].body).toBe(JSON.stringify({
+      pipelineId, opportunityName: 'North Campus', segment: 'commercial',
+      existingCustomerId: null, existingPropertyId: null,
+    }));
+    expect(await screen.findByText('Lead converted to an opportunity.')).toBeInTheDocument();
+  });
+
   it('creates a scoped site work package from a property-bound opportunity', async () => {
     jest.spyOn(global.crypto, 'randomUUID')
       .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1')

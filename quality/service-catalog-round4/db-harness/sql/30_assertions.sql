@@ -234,7 +234,28 @@ do $$ declare bad text; begin
       -- R2 caller-bound membership helpers accept only a tenant identifier and
       -- derive identity exclusively from auth.uid().
       'is_organization_member(uuid)','organization_role(uuid)',
-      'can_manage_organization(uuid)','can_edit_organization_work(uuid)'
+      'can_manage_organization(uuid)','can_edit_organization_work(uuid)',
+      -- R3-1 caller-bound CRM commands derive identity from auth.uid(), bind
+      -- every record to an explicit organization, and expose no admin bypass.
+      'assign_crm_opportunity(uuid,uuid,text,uuid,uuid,boolean)',
+      'can_access_crm_opportunity(uuid)',
+      'command_crm_lead(uuid,uuid,text,text,uuid,uuid,text)',
+      'command_crm_task(uuid,uuid,text,text,timestamp with time zone)',
+      'configure_crm_pipeline_stage(uuid,uuid,uuid,text,text,integer,boolean,text)',
+      'convert_crm_lead(uuid,uuid,text,uuid,text,text,uuid,uuid,uuid)',
+      'create_crm_account_bundle(uuid,uuid,uuid,uuid,text,text,text,text,text,text,text,text,text,text,text,text)',
+      'create_crm_direct_opportunity(uuid,uuid,uuid,text,uuid,uuid,uuid,text,uuid,uuid)',
+      'find_crm_duplicate_candidates(uuid,text,text)',
+      'move_crm_opportunity_stage(uuid,uuid,uuid,text,uuid,text)',
+      'qualify_crm_opportunity(uuid,uuid,uuid,text,text,jsonb,text,boolean,uuid)',
+      'reactivate_crm_opportunity(uuid,uuid,text,text)',
+      'read_crm_pipeline_board(uuid)',
+      'save_crm_contact_record(uuid,uuid,timestamp with time zone,text,text,text,text,text,text,boolean,text)',
+      'save_crm_customer_record(uuid,uuid,timestamp with time zone,text,text)',
+      'save_crm_property_record(uuid,uuid,timestamp with time zone,uuid,text,text,text,text,text,text,text,text,text)',
+      'save_crm_site_work_package(uuid,uuid,uuid,uuid,text,text,uuid,uuid,uuid,timestamp with time zone)',
+      'schedule_crm_walkthrough(uuid,uuid,uuid,uuid,uuid,text,timestamp with time zone,timestamp with time zone,text)',
+      'update_crm_opportunity_details(uuid,uuid,timestamp with time zone,text,text,date,bigint,text,text,timestamp with time zone)'
     );
   if bad is not null then raise exception 'H1 client-executable definer functions not on allowlist: %', bad; end if;
 end $$;

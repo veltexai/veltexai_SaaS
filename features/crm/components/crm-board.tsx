@@ -8,7 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 type Stage = { id: string; label: string; category: string; position: number; hidden: boolean };
-type Pipeline = { id: string; name: string; is_default: boolean; stages: Stage[] };
+type Pipeline = {
+  id: string;
+  name: string;
+  segment?: 'commercial' | 'residential_turnover';
+  is_default: boolean;
+  stages: Stage[];
+};
 type Opportunity = {
   id: string;
   name: string;
@@ -87,6 +93,7 @@ export function CrmBoard() {
   const [assigningOpportunity, setAssigningOpportunity] = useState<Opportunity | null>(null);
   const [qualifyingOpportunity, setQualifyingOpportunity] = useState<Opportunity | null>(null);
   const [managingLead, setManagingLead] = useState<Lead | null>(null);
+  const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
   const [leadAction, setLeadAction] = useState<Lead['status']>('contacted');
   const [packageFor, setPackageFor] = useState<{ opportunity: Opportunity; item?: WorkPackage } | null>(null);
   const [followUpOnly, setFollowUpOnly] = useState(false);
@@ -326,6 +333,46 @@ export function CrmBoard() {
       lead.id === managingLead.id ? { ...lead, status: leadAction } : lead) } : current);
     setManagingLead(null);
     setNotice('Lead updated.');
+  }
+
+  async function submitLeadConversion(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!organizationId || !convertingLead) return;
+    const form = new FormData(event.currentTarget);
+    const pipelineId = String(form.get('pipelineId') || '');
+    const segment = String(form.get('segment') || '');
+    const selectedPipeline = board?.pipelines.find((pipeline) => pipeline.id === pipelineId);
+    const compatible = selectedPipeline?.segment === 'commercial'
+      ? ['commercial', 'specialty'].includes(segment)
+      : selectedPipeline?.segment === 'residential_turnover'
+        ? ['residential', 'turnover'].includes(segment)
+        : true;
+    if (!compatible) {
+      setNotice('Choose a pipeline that matches the opportunity segment.');
+      return;
+    }
+    setSaving(true);
+    const response = await fetch(`/api/orgs/${organizationId}/crm/leads/${convertingLead.id}/convert`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() },
+      body: JSON.stringify({
+        pipelineId,
+        opportunityName: String(form.get('opportunityName') || ''),
+        segment,
+        existingCustomerId: String(form.get('existingCustomerId') || '') || null,
+        existingPropertyId: String(form.get('existingPropertyId') || '') || null,
+      }),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      setNotice(payload.error ?? 'Unable to convert the lead.');
+      setSaving(false);
+      return;
+    }
+    setConvertingLead(null);
+    setNotice('Lead converted to an opportunity.');
+    setSaving(false);
+    await loadBoard();
   }
 
   async function submitWorkPackage(event: FormEvent<HTMLFormElement>) {
@@ -595,6 +642,44 @@ export function CrmBoard() {
           </form></CardContent>
         </Card>
       )}
+      {convertingLead && (
+        <Card role="dialog" aria-modal="true" aria-labelledby="lead-conversion-heading">
+          <CardHeader><CardTitle id="lead-conversion-heading">Convert lead</CardTitle></CardHeader>
+          <CardContent><form className="grid gap-4 sm:grid-cols-2" onSubmit={submitLeadConversion}>
+            <p className="text-sm text-gray-700 sm:col-span-2">
+              Confirm conversion of {convertingLead.contact_name || convertingLead.email || 'this lead'}.
+              Captured contact details will be reused; nothing is merged automatically.
+            </p>
+            <div className="space-y-2 sm:col-span-2"><Label htmlFor="conversion-name">Opportunity name</Label>
+              <Input id="conversion-name" name="opportunityName" required maxLength={200}
+                defaultValue={convertingLead.property_name || convertingLead.contact_name || 'New opportunity'} /></div>
+            <div className="space-y-2"><Label htmlFor="conversion-segment">Segment</Label>
+              <select id="conversion-segment" name="segment" required defaultValue="commercial"
+                className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                <option value="commercial">Commercial</option><option value="specialty">Specialty</option>
+                <option value="residential">Residential</option><option value="turnover">Turnover</option>
+              </select></div>
+            <div className="space-y-2"><Label htmlFor="conversion-pipeline">Pipeline</Label>
+              <select id="conversion-pipeline" name="pipelineId" required defaultValue={activePipeline.id}
+                className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                {board.pipelines.map((pipeline) => <option key={pipeline.id} value={pipeline.id}>{pipeline.name}</option>)}
+              </select></div>
+            <div className="space-y-2"><Label htmlFor="conversion-customer">Existing customer (optional)</Label>
+              <select id="conversion-customer" name="existingCustomerId"
+                className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                <option value="">Create from this lead</option>{(board.customers ?? []).map((customer) =>
+                  <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></div>
+            <div className="space-y-2"><Label htmlFor="conversion-property">Existing property (optional)</Label>
+              <select id="conversion-property" name="existingPropertyId"
+                className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                <option value="">Create from this lead</option>{(board.properties ?? []).map((property) =>
+                  <option key={property.id} value={property.id}>{property.name}</option>)}</select></div>
+            <div className="flex flex-wrap gap-3 sm:col-span-2"><Button type="submit" disabled={saving} className="min-h-11">
+              {saving ? 'Converting…' : 'Confirm conversion'}</Button>
+              <Button type="button" variant="outline" className="min-h-11" onClick={() => setConvertingLead(null)}>Cancel</Button></div>
+          </form></CardContent>
+        </Card>
+      )}
       {packageFor && (
         <Card role="dialog" aria-modal="true" aria-labelledby="package-heading">
           <CardHeader><CardTitle id="package-heading">Site work package</CardTitle></CardHeader>
@@ -805,8 +890,9 @@ export function CrmBoard() {
             {lead.property_name && <p className="mt-1 text-sm text-gray-600">{lead.property_name}</p>}
             <p className="mt-1 text-xs capitalize text-gray-500">{lead.status}</p>
             {board.caller_role !== 'viewer' && ['new', 'contacted'].includes(lead.status) &&
-              <Button type="button" variant="outline" className="mt-3 min-h-11"
-                onClick={() => { setLeadAction('contacted'); setManagingLead(lead); }}>Manage lead</Button>}
+              <div className="mt-3 flex flex-wrap gap-2"><Button type="button" variant="outline" className="min-h-11"
+                onClick={() => { setLeadAction('contacted'); setManagingLead(lead); }}>Manage lead</Button>
+                <Button type="button" className="min-h-11" onClick={() => setConvertingLead(lead)}>Convert lead</Button></div>}
           </article>)}
         </CardContent>
       </Card>}

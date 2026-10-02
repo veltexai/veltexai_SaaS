@@ -217,6 +217,13 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain("case when c.role <> 'viewer' then o.value_amount_minor end");
     expect(migration).toContain("case when c.role <> 'viewer' then o.value_basis end");
     expect(migration).toContain("case when c.role <> 'viewer' then o.currency end");
+    expect(migration).toContain("case when c.role='viewer' then 'Opportunity' else o.name end");
+    expect(migration).toContain("case when c.role<>'viewer' then o.property_id end");
+    expect(migration).toContain("case when c.role<>'viewer' then o.owner_user_id end");
+    expect(migration).toContain("case when c.role<>'viewer' then o.estimator_user_id end");
+    expect(migration).toContain("c.role='estimator' and (x.created_by=auth.uid()");
+    expect(migration).toContain("c.role='estimator' and (p.created_by=auth.uid()");
+    expect(migration).toContain("o.owner_user_id=auth.uid() or o.estimator_user_id=auth.uid()");
     expect(migration).toContain("'caller_role', (select role from caller)");
     expect(migration).toContain("'loss_reasons', (select value from loss_reasons)");
     expect(migration).toContain("'assignable_members', (select value from assignable_members)");
