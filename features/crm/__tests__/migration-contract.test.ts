@@ -22,6 +22,7 @@ const tenantTables = [
   'crm_tasks',
   'crm_site_work_packages',
   'crm_opportunity_stage_history',
+  'crm_opportunity_stage_commands',
   'crm_attribution_touches',
   'crm_qualification_responses',
 ];
@@ -39,7 +40,7 @@ describe('R3-1 CRM migration contract', () => {
 
   it('requires tenant ownership and enables RLS for all CRM tables', () => {
     expect(migration.match(/organization_id uuid not null references public\.organizations/g))
-      .toHaveLength(17);
+      .toHaveLength(18);
     expect(migration).toContain("execute format('alter table public.%I enable row level security'");
     expect(migration).toContain("execute format('revoke all on public.%I from public, anon'");
     expect(migration).toContain('public.can_access_crm_opportunity');
@@ -60,6 +61,16 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration.match(/idempotency_key text not null check \(length\(idempotency_key\) between 8 and 200\)/g))
       .toHaveLength(5);
     expect(migration.match(/unique \(organization_id, idempotency_key\)/g)).toHaveLength(5);
+  });
+
+  it('moves stages through one caller-bound idempotent transaction', () => {
+    expect(migration).toContain('create table public.crm_opportunity_stage_commands (');
+    expect(migration).toContain('unique (organization_id, command_key)');
+    expect(migration).toContain('create function public.move_crm_opportunity_stage(');
+    expect(migration).toContain('for update;');
+    expect(migration).toContain('idempotency key was already used for another transition');
+    expect(migration).toContain('not public.can_access_crm_opportunity(target_opportunity)');
+    expect(migration).toContain('revoke all on function public.move_crm_opportunity_stage');
   });
 
   it('projects the board through a caller-bound redacted RPC', () => {

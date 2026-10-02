@@ -428,6 +428,30 @@ create table public.crm_opportunity_stage_history (
 create index crm_stage_history_opportunity_idx
   on public.crm_opportunity_stage_history(organization_id, opportunity_id, occurred_at, id);
 
+-- Command receipts make stage moves safe to retry without duplicating the
+-- immutable stage-history event. They are writable only through the
+-- caller-bound transition RPC below.
+create table public.crm_opportunity_stage_commands (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete restrict,
+  opportunity_id uuid not null,
+  command_key text not null check (length(command_key) between 8 and 200),
+  target_stage_id uuid not null,
+  loss_reason_id uuid,
+  manual_win_reason text,
+  actor_user_id uuid not null references public.profiles(id) on delete restrict,
+  completed_at timestamptz not null default now(),
+  unique (organization_id, command_key),
+  foreign key (organization_id, opportunity_id)
+    references public.crm_opportunities(organization_id, id) on delete cascade,
+  foreign key (organization_id, target_stage_id)
+    references public.crm_pipeline_stages(organization_id, id) on delete restrict,
+  foreign key (organization_id, loss_reason_id)
+    references public.crm_loss_reasons(organization_id, id) on delete restrict
+);
+create index crm_stage_commands_opportunity_idx
+  on public.crm_opportunity_stage_commands(organization_id, opportunity_id, completed_at);
+
 create table public.crm_attribution_touches (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete restrict,
@@ -732,6 +756,88 @@ revoke all on function public.find_crm_duplicate_candidates(uuid, text, text)
 grant execute on function public.find_crm_duplicate_candidates(uuid, text, text)
   to authenticated, service_role;
 
+create function public.move_crm_opportunity_stage(
+  target_organization uuid,
+  target_opportunity uuid,
+  target_stage uuid,
+  request_key text,
+  selected_loss_reason uuid default null,
+  selected_manual_win_reason text default null
+)
+returns table(opportunity_id uuid, stage_id uuid, replayed boolean)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare
+  existing_command public.crm_opportunity_stage_commands%rowtype;
+  current_opportunity public.crm_opportunities%rowtype;
+  target_category text;
+begin
+  if auth.uid() is null or length(request_key) not between 8 and 200 then
+    raise exception 'stage transition unavailable' using errcode = '42501';
+  end if;
+
+  select o.* into current_opportunity
+  from public.crm_opportunities o
+  where o.organization_id = target_organization
+    and o.id = target_opportunity
+    and o.deleted_at is null
+  for update;
+  if current_opportunity.id is null
+     or not public.can_access_crm_opportunity(target_opportunity) then
+    raise exception 'stage transition unavailable' using errcode = '42501';
+  end if;
+
+  select c.* into existing_command
+  from public.crm_opportunity_stage_commands c
+  where c.organization_id = target_organization and c.command_key = request_key;
+  if existing_command.id is not null then
+    if existing_command.opportunity_id is distinct from target_opportunity
+       or existing_command.target_stage_id is distinct from target_stage
+       or existing_command.loss_reason_id is distinct from selected_loss_reason
+       or existing_command.manual_win_reason is distinct from selected_manual_win_reason then
+      raise exception 'idempotency key was already used for another transition'
+        using errcode = '23514';
+    end if;
+    return query select existing_command.opportunity_id,
+      existing_command.target_stage_id, true;
+    return;
+  end if;
+
+  select s.category into target_category
+  from public.crm_pipeline_stages s
+  where s.organization_id = target_organization
+    and s.id = target_stage
+    and s.pipeline_id = current_opportunity.pipeline_id;
+  if target_category is null then
+    raise exception 'stage transition unavailable' using errcode = '23514';
+  end if;
+
+  update public.crm_opportunities o set
+    stage_id = target_stage,
+    loss_reason_id = case when target_category in ('lost', 'disqualified')
+      then selected_loss_reason else null end,
+    acceptance_method = case when target_category = 'won' then 'manual' else null end,
+    manual_win_reason = case when target_category = 'won'
+      then nullif(trim(selected_manual_win_reason), '') else null end,
+    updated_by = auth.uid()
+  where o.organization_id = target_organization and o.id = target_opportunity;
+
+  insert into public.crm_opportunity_stage_commands(
+    organization_id, opportunity_id, command_key, target_stage_id,
+    loss_reason_id, manual_win_reason, actor_user_id
+  ) values (
+    target_organization, target_opportunity, request_key, target_stage,
+    selected_loss_reason, nullif(trim(selected_manual_win_reason), ''), auth.uid()
+  );
+
+  return query select target_opportunity, target_stage, false;
+end;
+$$;
+revoke all on function public.move_crm_opportunity_stage(uuid, uuid, uuid, text, uuid, text)
+  from public, anon;
+grant execute on function public.move_crm_opportunity_stage(uuid, uuid, uuid, text, uuid, text)
+  to authenticated, service_role;
+
 create function public.read_crm_pipeline_board(target_organization uuid)
 returns jsonb language sql stable security definer
 set search_path = pg_catalog, public as $$
@@ -922,7 +1028,8 @@ begin
     'crm_pipelines', 'crm_pipeline_stages', 'crm_loss_reasons', 'crm_lead_sources',
     'crm_referral_sources', 'crm_leads', 'crm_opportunities', 'crm_walkthroughs',
     'crm_tasks', 'crm_site_work_packages', 'crm_opportunity_stage_history',
-    'crm_attribution_touches', 'crm_qualification_responses'
+    'crm_opportunity_stage_commands', 'crm_attribution_touches',
+    'crm_qualification_responses'
   ] loop
     execute format('alter table public.%I enable row level security', table_name);
     execute format('revoke all on public.%I from public, anon', table_name);
@@ -1127,7 +1234,8 @@ grant all on
   public.crm_loss_reasons, public.crm_lead_sources, public.crm_referral_sources,
   public.crm_leads, public.crm_opportunities, public.crm_walkthroughs,
   public.crm_tasks, public.crm_site_work_packages,
-  public.crm_opportunity_stage_history, public.crm_attribution_touches,
+  public.crm_opportunity_stage_history, public.crm_opportunity_stage_commands,
+  public.crm_attribution_touches,
   public.crm_qualification_responses
 to service_role;
 
