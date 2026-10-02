@@ -24,6 +24,7 @@ const tenantTables = [
   'crm_opportunity_stage_history',
   'crm_opportunity_stage_commands',
   'crm_task_commands',
+  'crm_assignment_commands',
   'crm_attribution_touches',
   'crm_qualification_responses',
 ];
@@ -41,7 +42,7 @@ describe('R3-1 CRM migration contract', () => {
 
   it('requires tenant ownership and enables RLS for all CRM tables', () => {
     expect(migration.match(/organization_id uuid not null references public\.organizations/g))
-      .toHaveLength(19);
+      .toHaveLength(20);
     expect(migration).toContain("execute format('alter table public.%I enable row level security'");
     expect(migration).toContain("execute format('revoke all on public.%I from public, anon'");
     expect(migration).toContain('public.can_access_crm_opportunity');
@@ -106,6 +107,17 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain("status = 'completed', completed_at = now()");
     expect(migration).toContain('idempotency key was already used for another task command');
     expect(migration).toContain('revoke all on function public.command_crm_task');
+  });
+
+  it('restricts assignment and optional task transfer to organization managers', () => {
+    expect(migration).toContain('create table public.crm_assignment_commands (');
+    expect(migration).toContain('create function public.assign_crm_opportunity(');
+    expect(migration).toContain('not public.can_manage_organization(p_organization)');
+    expect(migration).toContain("m.role in ('owner', 'admin', 'estimator')");
+    expect(migration).toContain('p_transfer_open_tasks and p_estimator is not null');
+    expect(migration).toContain('assignee_user_id = p_estimator');
+    expect(migration).toContain('idempotency key was already used for another assignment');
+    expect(migration).toContain('revoke all on function public.assign_crm_opportunity');
   });
 
   it('projects the board through a caller-bound redacted RPC', () => {
