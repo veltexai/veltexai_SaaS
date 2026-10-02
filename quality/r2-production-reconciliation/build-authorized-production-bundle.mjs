@@ -22,6 +22,11 @@ const manifest = JSON.parse(manifestBytes);
 const reviewed = JSON.parse(reviewedBytes);
 const final = JSON.parse(finalBytes);
 const authorization = JSON.parse(authorizationBytes);
+const expectedStateBytes = readFileSync(resolve(here, 'expected-state/expected-state.v1.json'));
+const expectedState = JSON.parse(expectedStateBytes);
+const invariantExpressionBytes = readFileSync(resolve(here, 'expected-state/data-invariants-expression.sql'));
+const invariantExpression = invariantExpressionBytes.toString('utf8').trim();
+const generatorBytes = readFileSync(fileURLToPath(import.meta.url));
 
 if (manifest.contract_version !== 2 || manifest.target !== 'production iwoaaljitifloolszxlu' || manifest.armed !== false || manifest.productionAuthorized !== false) {
   throw new Error('unarmed manifest contract mismatch');
@@ -47,6 +52,7 @@ function comparableFingerprint(value) {
 if (JSON.stringify(comparableFingerprint(reviewed)) !== JSON.stringify(comparableFingerprint(final))) {
   throw new Error('final production fingerprint drifted from reviewed state');
 }
+if (final.classification?.expected_state_sha256 !== sha(expectedStateBytes)) throw new Error('final fingerprint does not bind current expected state');
 
 const reviewedSources = readJson(resolve(here, 'reviewed-source-sha256.json'));
 if (manifest.steps.length !== 35 || JSON.stringify(Object.keys(reviewedSources)) !== JSON.stringify(manifest.steps.map((step) => step.file))) {
@@ -101,6 +107,9 @@ const artifactBinding = {
   reviewed_fingerprint_sha256: sha(reviewedBytes),
   final_fingerprint_sha256: sha(finalBytes),
   authorization_sha256: sha(authorizationBytes),
+  generator_sha256: sha(generatorBytes),
+  expected_state_sha256: sha(expectedStateBytes),
+  data_invariants_expression_sha256: sha(invariantExpressionBytes),
   steps: manifest.steps.map(({ file, version, source_sha256, mode }) => ({ file, version, source_sha256, mode })),
 };
 const bindingBase64 = Buffer.from(JSON.stringify(artifactBinding)).toString('base64');
@@ -184,6 +193,9 @@ begin
   end if;
   if client_maintain_remains then
     raise exception 'R2 release postcondition failed: client MAINTAIN remains';
+  end if;
+  if (${invariantExpression}) is distinct from $expected_invariants$${JSON.stringify(expectedState.prerequisite_checkpoint.data_invariants)}$expected_invariants$::jsonb then
+    raise exception 'R2 release postcondition failed: protected data invariants differ';
   end if;
 end $$;
 
