@@ -6,11 +6,15 @@ import { dirname, resolve } from 'node:path';
 const here=dirname(new URL(import.meta.url).pathname);
 const input=resolve(process.argv[2]??'');
 const output=resolve(process.argv[3]??'/private/tmp/veltex-r2-preview-compatibility.json');
+const productionPostflight=process.argv.includes('--production-postflight');
 if(!input)throw new Error('isolated-preview capture required');
 if(!output.startsWith('/private/tmp/'))throw new Error('output must remain under /private/tmp');
 const captureBytes=readFileSync(input); const contractBytes=readFileSync(resolve(here,'expected-state.v1.json'));
 const capture=JSON.parse(captureBytes); const contract=JSON.parse(contractBytes);
-if(capture.project_ref!=='ynzkwctwlssjcsjmahey'||capture.environment!=='isolated-preview'||capture.read_only!==true)throw new Error('wrong isolated-preview identity');
+const expectedIdentity=productionPostflight
+  ? {project_ref:'iwoaaljitifloolszxlu',environment:'production'}
+  : {project_ref:'ynzkwctwlssjcsjmahey',environment:'isolated-preview'};
+if(capture.project_ref!==expectedIdentity.project_ref||capture.environment!==expectedIdentity.environment||capture.read_only!==true)throw new Error('wrong hosted capture identity');
 if(capture.contract_version!==3||capture.canonicalization_version!==2)throw new Error('unsupported capture contract/canonicalization version');
 if(!/^(16|17)\./.test(capture.postgres_version??''))throw new Error('unsupported PostgreSQL major');
 const binding=capture.contract_binding;
@@ -83,7 +87,7 @@ const clientRoles=new Set(['anon','authenticated','service_role']);
 // Provider principals inheriting a client role do not grant clients privileges.
 const roleMembershipSafe=Array.isArray(roleMembership)&&roleMembership.every(x=>!clientRoles.has(x.member));
 const sha=b=>createHash('sha256').update(b).digest('hex');
-const report={contract_version:3,canonicalization_version:2,capture_sha256:sha(captureBytes),expected_state_sha256:sha(contractBytes),compatible:false,migration_acl_provenance:[...securityAclKeys].sort(),required_runtime_allows:requiredRuntimeAllows,application_semantics_exact:semanticMismatch.length===0&&unexpectedSemantic.length===0,direct_migration_acl_exact:securityMismatch.length===0,effective_privilege_exact:effectivePrivilegeExact,role_membership:capture.platform_capabilities?.role_membership??null,pgcrypto:{compatible:pgcryptoCompatible,schema:pgcrypto?.schema??null,version:pgcrypto?.version??null,callable:pgcrypto?.digest_callable??false},history_exact:exactFullHistory,effect_history_state:effectHistoryState,history_reconciliation_required:effectHistoryState==='effect-complete/history-absent',platform_acl_variance:platformAclVariance,more_restrictive_direct_acl:restrictiveDirectAcl,more_restrictive_effective_privileges:restrictiveEffectivePrivileges.filter(x=>!requiredRuntimeAllows.includes(x.key)),failures:{semanticMismatch,unexpectedSemantic,securityMismatch,effectivePrivileges:unsafeEffectiveAllows,requiredRuntimeAllows:missingRequiredRuntimeAllows,privilegeShape:privilegeShapeExact?[]:['effective privilege inventory keys are missing, duplicated, or unexpected']}};
+const report={contract_version:3,canonicalization_version:2,target:productionPostflight?'production-postflight':'isolated-preview',capture_sha256:sha(captureBytes),expected_state_sha256:sha(contractBytes),compatible:false,migration_acl_provenance:[...securityAclKeys].sort(),required_runtime_allows:requiredRuntimeAllows,application_semantics_exact:semanticMismatch.length===0&&unexpectedSemantic.length===0,direct_migration_acl_exact:securityMismatch.length===0,effective_privilege_exact:effectivePrivilegeExact,role_membership:capture.platform_capabilities?.role_membership??null,pgcrypto:{compatible:pgcryptoCompatible,schema:pgcrypto?.schema??null,version:pgcrypto?.version??null,callable:pgcrypto?.digest_callable??false},history_exact:exactFullHistory,effect_history_state:effectHistoryState,history_reconciliation_required:effectHistoryState==='effect-complete/history-absent',platform_acl_variance:platformAclVariance,more_restrictive_direct_acl:restrictiveDirectAcl,more_restrictive_effective_privileges:restrictiveEffectivePrivileges.filter(x=>!requiredRuntimeAllows.includes(x.key)),failures:{semanticMismatch,unexpectedSemantic,securityMismatch,effectivePrivileges:unsafeEffectiveAllows,requiredRuntimeAllows:missingRequiredRuntimeAllows,privilegeShape:privilegeShapeExact?[]:['effective privilege inventory keys are missing, duplicated, or unexpected']}};
 report.role_membership_safe=roleMembershipSafe;
 report.unexpected_direct_acl=unexpectedDirectAcl;
 if(report.application_semantics_exact&&report.direct_migration_acl_exact&&unexpectedDirectAcl.length===0&&effectivePrivilegeExact&&roleMembershipSafe&&pgcryptoCompatible&&exactFullHistory)report.compatible=true;
