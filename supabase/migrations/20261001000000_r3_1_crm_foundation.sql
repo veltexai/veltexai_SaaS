@@ -1473,6 +1473,190 @@ grant execute on function public.update_crm_opportunity_details(
   uuid, uuid, timestamptz, text, text, date, bigint, text, text, timestamptz
 ) to authenticated, service_role;
 
+create function public.save_crm_customer_record(
+  p_organization uuid, p_customer uuid, p_expected_updated_at timestamptz,
+  p_customer_type text, p_name text
+)
+returns table(customer_id uuid, updated_at timestamptz, created boolean)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare current_record public.crm_customers%rowtype; changed_at timestamptz; was_created boolean := false;
+begin
+  if auth.uid() is null or not public.can_edit_organization_work(p_organization)
+     or p_customer_type not in ('commercial', 'household')
+     or nullif(trim(p_name), '') is null or length(trim(p_name)) > 200 then
+    raise exception 'customer record unavailable' using errcode = '23514';
+  end if;
+  select c.* into current_record from public.crm_customers c
+    where c.organization_id = p_organization and c.id = p_customer and c.deleted_at is null for update;
+  changed_at := clock_timestamp();
+  if current_record.id is null then
+    if p_expected_updated_at is not null then
+      raise exception 'customer record changed since it was loaded' using errcode = '40001';
+    end if;
+    insert into public.crm_customers(id, organization_id, customer_type, name, created_by, updated_by,
+      created_at, updated_at) values (p_customer, p_organization, p_customer_type, trim(p_name),
+      auth.uid(), auth.uid(), changed_at, changed_at);
+    was_created := true;
+  else
+    if current_record.updated_at is distinct from p_expected_updated_at then
+      raise exception 'customer record changed since it was loaded' using errcode = '40001';
+    end if;
+    update public.crm_customers set customer_type = p_customer_type, name = trim(p_name),
+      updated_by = auth.uid(), updated_at = changed_at
+      where organization_id = p_organization and id = p_customer;
+  end if;
+  return query select p_customer, changed_at, was_created;
+end;
+$$;
+revoke all on function public.save_crm_customer_record(uuid, uuid, timestamptz, text, text)
+  from public, anon;
+grant execute on function public.save_crm_customer_record(uuid, uuid, timestamptz, text, text)
+  to authenticated, service_role;
+
+create function public.save_crm_contact_record(
+  p_organization uuid, p_contact uuid, p_expected_updated_at timestamptz,
+  p_first_name text default null, p_last_name text default null,
+  p_email text default null, p_phone text default null,
+  p_preferred_channel text default null, p_timezone text default null,
+  p_do_not_contact boolean default false, p_do_not_contact_reason text default null
+)
+returns table(contact_id uuid, updated_at timestamptz, created boolean)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare current_record public.crm_contacts%rowtype; changed_at timestamptz; was_created boolean := false;
+begin
+  if auth.uid() is null or not public.can_edit_organization_work(p_organization)
+     or (nullif(trim(coalesce(p_first_name,'')), '') is null
+       and nullif(trim(coalesce(p_last_name,'')), '') is null
+       and nullif(trim(coalesce(p_email,'')), '') is null
+       and nullif(trim(coalesce(p_phone,'')), '') is null)
+     or length(coalesce(p_email,'')) > 320 or length(coalesce(p_phone,'')) > 40
+     or (p_preferred_channel is not null and p_preferred_channel not in ('email','phone','sms'))
+     or (p_do_not_contact and nullif(trim(coalesce(p_do_not_contact_reason,'')), '') is null) then
+    raise exception 'contact record unavailable' using errcode = '23514';
+  end if;
+  select c.* into current_record from public.crm_contacts c
+    where c.organization_id = p_organization and c.id = p_contact and c.deleted_at is null for update;
+  changed_at := clock_timestamp();
+  if current_record.id is null then
+    if p_expected_updated_at is not null then raise exception 'contact changed' using errcode = '40001'; end if;
+    insert into public.crm_contacts(id, organization_id, first_name, last_name, email, phone,
+      preferred_channel, timezone, do_not_contact, do_not_contact_reason, created_by, updated_by,
+      created_at, updated_at) values (p_contact, p_organization, nullif(trim(p_first_name),''),
+      nullif(trim(p_last_name),''), nullif(trim(p_email),''), nullif(trim(p_phone),''),
+      p_preferred_channel, nullif(trim(p_timezone),''), p_do_not_contact,
+      case when p_do_not_contact then nullif(trim(p_do_not_contact_reason),'') else null end,
+      auth.uid(), auth.uid(), changed_at, changed_at);
+    was_created := true;
+  else
+    if current_record.updated_at is distinct from p_expected_updated_at then raise exception 'contact changed' using errcode = '40001'; end if;
+    update public.crm_contacts set first_name=nullif(trim(p_first_name),''), last_name=nullif(trim(p_last_name),''),
+      email=nullif(trim(p_email),''), phone=nullif(trim(p_phone),''), preferred_channel=p_preferred_channel,
+      timezone=nullif(trim(p_timezone),''), do_not_contact=p_do_not_contact,
+      do_not_contact_reason=case when p_do_not_contact then nullif(trim(p_do_not_contact_reason),'') else null end,
+      updated_by=auth.uid(), updated_at=changed_at where organization_id=p_organization and id=p_contact;
+  end if;
+  return query select p_contact, changed_at, was_created;
+end;
+$$;
+revoke all on function public.save_crm_contact_record(
+  uuid, uuid, timestamptz, text, text, text, text, text, text, boolean, text
+) from public, anon;
+grant execute on function public.save_crm_contact_record(
+  uuid, uuid, timestamptz, text, text, text, text, text, text, boolean, text
+) to authenticated, service_role;
+
+create function public.save_crm_property_record(
+  p_organization uuid, p_property uuid, p_expected_updated_at timestamptz,
+  p_customer uuid, p_name text, p_address_line_1 text default null,
+  p_address_line_2 text default null, p_city text default null, p_region text default null,
+  p_postal_code text default null, p_country_code text default 'US', p_timezone text default null,
+  p_owner_name text default null
+)
+returns table(property_id uuid, updated_at timestamptz, created boolean)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare current_record public.crm_properties%rowtype; changed_at timestamptz; was_created boolean := false;
+begin
+  if auth.uid() is null or not public.can_edit_organization_work(p_organization)
+     or nullif(trim(p_name), '') is null or length(trim(p_name)) > 200
+     or p_country_code !~ '^[A-Z]{2}$'
+     or (p_customer is not null and not exists (select 1 from public.crm_customers c
+       where c.organization_id=p_organization and c.id=p_customer and c.deleted_at is null)) then
+    raise exception 'property record unavailable' using errcode = '23514';
+  end if;
+  select p.* into current_record from public.crm_properties p
+    where p.organization_id=p_organization and p.id=p_property and p.deleted_at is null for update;
+  changed_at := clock_timestamp();
+  if current_record.id is null then
+    if p_expected_updated_at is not null then raise exception 'property changed' using errcode = '40001'; end if;
+    insert into public.crm_properties(id,organization_id,customer_id,name,address_line_1,address_line_2,
+      city,region,postal_code,country_code,timezone,owner_name,created_by,updated_by,created_at,updated_at)
+    values (p_property,p_organization,p_customer,trim(p_name),nullif(trim(p_address_line_1),''),
+      nullif(trim(p_address_line_2),''),nullif(trim(p_city),''),nullif(trim(p_region),''),
+      nullif(trim(p_postal_code),''),p_country_code,nullif(trim(p_timezone),''),
+      nullif(trim(p_owner_name),''),auth.uid(),auth.uid(),changed_at,changed_at);
+    was_created := true;
+  else
+    if current_record.updated_at is distinct from p_expected_updated_at then raise exception 'property changed' using errcode = '40001'; end if;
+    update public.crm_properties set customer_id=p_customer,name=trim(p_name),
+      address_line_1=nullif(trim(p_address_line_1),''),address_line_2=nullif(trim(p_address_line_2),''),
+      city=nullif(trim(p_city),''),region=nullif(trim(p_region),''),postal_code=nullif(trim(p_postal_code),''),
+      country_code=p_country_code,timezone=nullif(trim(p_timezone),''),owner_name=nullif(trim(p_owner_name),''),
+      updated_by=auth.uid(),updated_at=changed_at where organization_id=p_organization and id=p_property;
+  end if;
+  return query select p_property, changed_at, was_created;
+end;
+$$;
+revoke all on function public.save_crm_property_record(
+  uuid, uuid, timestamptz, uuid, text, text, text, text, text, text, text, text, text
+) from public, anon;
+grant execute on function public.save_crm_property_record(
+  uuid, uuid, timestamptz, uuid, text, text, text, text, text, text, text, text, text
+) to authenticated, service_role;
+
+create function public.create_crm_account_bundle(
+  p_organization uuid, p_customer uuid, p_contact uuid, p_property uuid,
+  p_customer_type text, p_customer_name text,
+  p_contact_first_name text default null, p_contact_last_name text default null,
+  p_contact_email text default null, p_contact_phone text default null,
+  p_property_name text default null, p_address_line_1 text default null,
+  p_city text default null, p_region text default null, p_postal_code text default null,
+  p_timezone text default null
+)
+returns table(customer_id uuid, contact_id uuid, property_id uuid)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+begin
+  if p_customer = p_contact or p_customer = p_property or p_contact = p_property
+     or nullif(trim(p_property_name), '') is null then
+    raise exception 'account bundle unavailable' using errcode = '23514';
+  end if;
+  perform * from public.save_crm_customer_record(
+    p_organization, p_customer, null, p_customer_type, p_customer_name
+  );
+  perform * from public.save_crm_contact_record(
+    p_organization, p_contact, null, p_contact_first_name, p_contact_last_name,
+    p_contact_email, p_contact_phone, null, p_timezone, false, null
+  );
+  perform * from public.save_crm_property_record(
+    p_organization, p_property, null, p_customer, p_property_name,
+    p_address_line_1, null, p_city, p_region, p_postal_code, 'US', p_timezone, null
+  );
+  insert into public.crm_customer_contacts(
+    organization_id, customer_id, contact_id, contact_role, is_primary, created_by
+  ) values (p_organization, p_customer, p_contact, 'decision_maker', true, auth.uid());
+  return query select p_customer, p_contact, p_property;
+end;
+$$;
+revoke all on function public.create_crm_account_bundle(
+  uuid, uuid, uuid, uuid, text, text, text, text, text, text, text, text, text, text, text, text
+) from public, anon;
+grant execute on function public.create_crm_account_bundle(
+  uuid, uuid, uuid, uuid, text, text, text, text, text, text, text, text, text, text, text, text
+) to authenticated, service_role;
+
 create function public.read_crm_pipeline_board(target_organization uuid)
 returns jsonb language sql stable security definer
 set search_path = pg_catalog, public as $$

@@ -52,6 +52,7 @@ export function CrmBoard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [showNewAccount, setShowNewAccount] = useState(false);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [view, setView] = useState<'board' | 'list'>('board');
@@ -332,6 +333,29 @@ export function CrmBoard() {
     if (!duplicateReview) formElement.reset();
   }
 
+  async function submitAccount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!organizationId) return;
+    const form = new FormData(event.currentTarget);
+    const response = await fetch(`/api/orgs/${organizationId}/crm/records/account`, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+        customerId: crypto.randomUUID(), contactId: crypto.randomUUID(), propertyId: crypto.randomUUID(),
+        customerType: String(form.get('customerType')), customerName: String(form.get('customerName')),
+        contactFirstName: String(form.get('contactFirstName') || '') || null,
+        contactLastName: String(form.get('contactLastName') || '') || null,
+        contactEmail: String(form.get('contactEmail') || '') || null,
+        contactPhone: String(form.get('contactPhone') || '') || null,
+        propertyName: String(form.get('propertyName')), addressLine1: String(form.get('addressLine1') || '') || null,
+        city: String(form.get('city') || '') || null, region: String(form.get('region') || '') || null,
+        postalCode: String(form.get('postalCode') || '') || null,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      }),
+    });
+    const payload = await response.json();
+    if (!response.ok) { setNotice(payload.error ?? 'Unable to create the customer account.'); return; }
+    setShowNewAccount(false); setNotice('Customer, primary contact, and property created.');
+  }
+
   if (loading) return <p role="status" className="text-sm text-gray-600">Loading CRM…</p>;
   if (error || !board || !activePipeline) {
     return (
@@ -352,10 +376,35 @@ export function CrmBoard() {
           <h1 id="crm-heading" className="text-3xl font-bold text-gray-900">Sales pipeline</h1>
           <p className="mt-1 text-sm text-gray-600">{activePipeline.name}. Values stay separated by billing basis.</p>
         </div>
-        <Button className="min-h-11" onClick={() => setShowQuickAdd((open) => !open)} aria-expanded={showQuickAdd}>
-          <Plus className="mr-2 h-4 w-4" />Quick-add lead
-        </Button>
+        {board.caller_role !== 'viewer' && <div className="flex flex-wrap gap-2"><Button variant="outline" className="min-h-11"
+          onClick={() => setShowNewAccount((open) => !open)} aria-expanded={showNewAccount}>
+          <Plus className="mr-2 h-4 w-4" />New customer</Button>
+          <Button className="min-h-11" onClick={() => setShowQuickAdd((open) => !open)} aria-expanded={showQuickAdd}>
+            <Plus className="mr-2 h-4 w-4" />Quick-add lead
+          </Button></div>}
       </div>
+
+      {showNewAccount && (
+        <Card>
+          <CardHeader><CardTitle>New customer account</CardTitle></CardHeader>
+          <CardContent><form className="grid gap-4 sm:grid-cols-2" onSubmit={submitAccount}>
+            <div className="space-y-2"><Label htmlFor="customer-type">Customer type</Label><select id="customer-type" name="customerType"
+              className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3"><option value="commercial">Commercial</option><option value="household">Household</option></select></div>
+            <div className="space-y-2"><Label htmlFor="customer-name">Customer name</Label><Input id="customer-name" name="customerName" required maxLength={200} /></div>
+            <div className="space-y-2"><Label htmlFor="contact-first">Contact first name</Label><Input id="contact-first" name="contactFirstName" /></div>
+            <div className="space-y-2"><Label htmlFor="contact-last">Contact last name</Label><Input id="contact-last" name="contactLastName" /></div>
+            <div className="space-y-2"><Label htmlFor="contact-email">Contact email</Label><Input id="contact-email" name="contactEmail" type="email" /></div>
+            <div className="space-y-2"><Label htmlFor="contact-phone">Contact phone</Label><Input id="contact-phone" name="contactPhone" type="tel" /></div>
+            <div className="space-y-2"><Label htmlFor="property-name">Property name</Label><Input id="property-name" name="propertyName" required maxLength={200} /></div>
+            <div className="space-y-2"><Label htmlFor="property-address">Street address</Label><Input id="property-address" name="addressLine1" /></div>
+            <div className="space-y-2"><Label htmlFor="property-city">City</Label><Input id="property-city" name="city" /></div>
+            <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label htmlFor="property-region">State</Label><Input id="property-region" name="region" /></div>
+              <div className="space-y-2"><Label htmlFor="property-postal">Postal code</Label><Input id="property-postal" name="postalCode" /></div></div>
+            <div className="flex gap-3 sm:col-span-2"><Button type="submit" className="min-h-11">Create account</Button>
+              <Button type="button" variant="outline" className="min-h-11" onClick={() => setShowNewAccount(false)}>Cancel</Button></div>
+          </form></CardContent>
+        </Card>
+      )}
 
       {showQuickAdd && (
         <Card>

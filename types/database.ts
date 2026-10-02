@@ -1147,6 +1147,39 @@ export interface Database {
         };
         Returns: { opportunity_id: string; updated_at: string }[];
       };
+      save_crm_customer_record: {
+        Args: { p_organization: string; p_customer: string; p_expected_updated_at?: string | null; p_customer_type: string; p_name: string };
+        Returns: { customer_id: string; updated_at: string; created: boolean }[];
+      };
+      save_crm_contact_record: {
+        Args: {
+          p_organization: string; p_contact: string; p_expected_updated_at?: string | null;
+          p_first_name?: string | null; p_last_name?: string | null; p_email?: string | null;
+          p_phone?: string | null; p_preferred_channel?: string | null; p_timezone?: string | null;
+          p_do_not_contact?: boolean; p_do_not_contact_reason?: string | null;
+        };
+        Returns: { contact_id: string; updated_at: string; created: boolean }[];
+      };
+      save_crm_property_record: {
+        Args: {
+          p_organization: string; p_property: string; p_expected_updated_at?: string | null;
+          p_customer?: string | null; p_name: string; p_address_line_1?: string | null;
+          p_address_line_2?: string | null; p_city?: string | null; p_region?: string | null;
+          p_postal_code?: string | null; p_country_code?: string; p_timezone?: string | null;
+          p_owner_name?: string | null;
+        };
+        Returns: { property_id: string; updated_at: string; created: boolean }[];
+      };
+      create_crm_account_bundle: {
+        Args: {
+          p_organization: string; p_customer: string; p_contact: string; p_property: string;
+          p_customer_type: string; p_customer_name: string; p_contact_first_name?: string | null;
+          p_contact_last_name?: string | null; p_contact_email?: string | null; p_contact_phone?: string | null;
+          p_property_name?: string | null; p_address_line_1?: string | null; p_city?: string | null;
+          p_region?: string | null; p_postal_code?: string | null; p_timezone?: string | null;
+        };
+        Returns: { customer_id: string; contact_id: string; property_id: string }[];
+      };
     };
     Enums: {
       [_ in never]: never;

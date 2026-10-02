@@ -45,7 +45,7 @@ describe('R3-1 CRM board', () => {
     expect(screen.getByRole('columnheader', { name: 'Stage' })).toBeInTheDocument();
   });
 
-  it('exposes labelled quick-add controls and respects a viewer-redacted payload', async () => {
+  it('respects a viewer-redacted payload and removes mutation controls', async () => {
     fetchMock
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
       .mockResolvedValueOnce({
@@ -64,12 +64,35 @@ describe('R3-1 CRM board', () => {
     render(<CrmBoard />);
     await screen.findByRole('heading', { name: 'Sales pipeline' });
     expect(screen.getByText('Pricing is hidden for read-only viewers.')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Quick-add lead' }));
-    expect(screen.getByLabelText('Contact name')).toBeInTheDocument();
-    expect(screen.getByLabelText('Email')).toHaveAttribute('type', 'email');
-    expect(screen.getByLabelText('Phone')).toHaveAttribute('type', 'tel');
-    expect(screen.getByRole('button', { name: 'Add lead' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Quick-add lead' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'New customer' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Move Turnover to stage' })).not.toBeInTheDocument();
+  });
+
+  it('creates a customer, primary contact, and property through one account command', async () => {
+    jest.spyOn(global.crypto, 'randomUUID')
+      .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1')
+      .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2')
+      .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3');
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'owner', loss_reasons: [], assignable_members: [],
+        viewer_price_redacted: false, pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [] }], opportunities: [],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: { customer_id: 'customer' } }) });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'Sales pipeline' });
+    fireEvent.click(screen.getByRole('button', { name: 'New customer' }));
+    fireEvent.change(screen.getByLabelText('Customer name'), { target: { value: 'North Campus' } });
+    fireEvent.change(screen.getByLabelText('Contact email'), { target: { value: 'manager@example.test' } });
+    fireEvent.change(screen.getByLabelText('Property name'), { target: { value: 'Building A' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls[2][0]).toBe(`/api/orgs/${ORG_ID}/crm/records/account`);
+    expect(fetchMock.mock.calls[2][1].body).toContain('"customerName":"North Campus"');
+    expect(fetchMock.mock.calls[2][1].body).toContain('"contactEmail":"manager@example.test"');
+    expect(await screen.findByText('Customer, primary contact, and property created.')).toBeInTheDocument();
   });
 
   it('announces load failures and offers a retry', async () => {

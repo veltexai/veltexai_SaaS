@@ -147,6 +147,18 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain('grant execute on function public.update_crm_opportunity_details(');
   });
 
+  it('saves manual customer, contact, and property records with retry-safe IDs', () => {
+    for (const name of ['customer', 'contact', 'property']) {
+      expect(migration).toContain(`create function public.save_crm_${name}_record(`);
+      expect(migration).toContain(`grant execute on function public.save_crm_${name}_record(`);
+    }
+    expect(migration).toContain('not public.can_edit_organization_work(p_organization)');
+    expect(migration).toContain('current_record.updated_at is distinct from p_expected_updated_at');
+    expect(migration).toContain('c.organization_id=p_organization and c.id=p_customer');
+    expect(migration).toContain('create function public.create_crm_account_bundle(');
+    expect(migration).toContain("p_customer, p_contact, 'decision_maker', true, auth.uid()");
+  });
+
   it('projects the board through a caller-bound redacted RPC', () => {
     expect(migration).toContain('create function public.read_crm_pipeline_board(target_organization uuid)');
     expect(migration).toContain("public.organization_role(target_organization) as role");
