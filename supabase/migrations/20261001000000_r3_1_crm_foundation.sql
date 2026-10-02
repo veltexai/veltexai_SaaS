@@ -204,6 +204,8 @@ create table public.crm_leads (
     check (jsonb_typeof(raw_payload) = 'object' and octet_length(raw_payload::text) <= 16384),
   dedupe_hint jsonb not null default '{}'::jsonb check (jsonb_typeof(dedupe_hint) = 'object'),
   junk_reason text,
+  merged_into_lead_id uuid,
+  disqualification_reason_id uuid,
   assigned_to_user_id uuid,
   converted_customer_id uuid,
   converted_contact_id uuid,
@@ -228,7 +230,14 @@ create table public.crm_leads (
   foreign key (organization_id, converted_contact_id)
     references public.crm_contacts(organization_id, id) on delete restrict,
   foreign key (organization_id, converted_property_id)
-    references public.crm_properties(organization_id, id) on delete restrict
+    references public.crm_properties(organization_id, id) on delete restrict,
+  foreign key (organization_id, merged_into_lead_id)
+    references public.crm_leads(organization_id, id) on delete restrict,
+  foreign key (organization_id, disqualification_reason_id)
+    references public.crm_loss_reasons(organization_id, id) on delete restrict,
+  check (status <> 'merged' or merged_into_lead_id is not null),
+  check (status <> 'disqualified' or disqualification_reason_id is not null),
+  check (status <> 'junk' or nullif(trim(coalesce(junk_reason,'')), '') is not null)
 );
 create index crm_leads_org_status_idx on public.crm_leads(organization_id, status, created_at desc)
   where deleted_at is null;
@@ -486,6 +495,23 @@ create table public.crm_assignment_commands (
     references public.organization_memberships(organization_id, user_id) on delete restrict,
   foreign key (organization_id, estimator_user_id)
     references public.organization_memberships(organization_id, user_id) on delete restrict
+);
+
+create table public.crm_lead_commands (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete restrict,
+  lead_id uuid not null,
+  command_key text not null check (length(command_key) between 8 and 200),
+  action text not null check (action in ('contacted','junk','merged','disqualified')),
+  merged_into_lead_id uuid,
+  disqualification_reason_id uuid,
+  note text,
+  actor_user_id uuid not null references public.profiles(id) on delete restrict,
+  completed_at timestamptz not null default now(),
+  unique (organization_id, command_key),
+  foreign key (organization_id, lead_id) references public.crm_leads(organization_id, id) on delete cascade,
+  foreign key (organization_id, merged_into_lead_id) references public.crm_leads(organization_id, id) on delete restrict,
+  foreign key (organization_id, disqualification_reason_id) references public.crm_loss_reasons(organization_id, id) on delete restrict
 );
 
 create table public.crm_attribution_touches (
@@ -1716,6 +1742,72 @@ grant execute on function public.qualify_crm_opportunity(
   uuid, uuid, uuid, text, text, jsonb, text, boolean, uuid
 ) to authenticated, service_role;
 
+create function public.command_crm_lead(
+  p_organization uuid, p_lead uuid, p_request_key text, p_action text,
+  p_merged_into_lead uuid default null, p_disqualification_reason uuid default null,
+  p_note text default null
+)
+returns table(lead_id uuid, status text, replayed boolean)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare current_lead public.crm_leads%rowtype; existing_command public.crm_lead_commands%rowtype; reason_applies text;
+begin
+  if auth.uid() is null or length(p_request_key) not between 8 and 200
+     or p_action not in ('contacted','junk','merged','disqualified') then
+    raise exception 'lead command unavailable' using errcode = '42501';
+  end if;
+  select l.* into current_lead from public.crm_leads l where l.organization_id=p_organization
+    and l.id=p_lead and l.deleted_at is null for update;
+  if current_lead.id is null or not (public.can_manage_organization(p_organization)
+    or (public.organization_role(p_organization)='estimator'
+      and (current_lead.assigned_to_user_id=auth.uid() or current_lead.created_by=auth.uid()))) then
+    raise exception 'lead command unavailable' using errcode = '42501';
+  end if;
+  select c.* into existing_command from public.crm_lead_commands c
+    where c.organization_id=p_organization and c.command_key=p_request_key;
+  if existing_command.id is not null then
+    if existing_command.lead_id is distinct from p_lead or existing_command.action is distinct from p_action
+       or existing_command.merged_into_lead_id is distinct from p_merged_into_lead
+       or existing_command.disqualification_reason_id is distinct from p_disqualification_reason
+       or existing_command.note is distinct from nullif(trim(p_note),'') then
+      raise exception 'lead command key already used' using errcode = '23514';
+    end if;
+    return query select p_lead,p_action,true; return;
+  end if;
+  if current_lead.status not in ('new','contacted') then
+    raise exception 'closed leads cannot change lifecycle' using errcode = '23514';
+  end if;
+  if p_action='junk' and nullif(trim(coalesce(p_note,'')),'') is null then
+    raise exception 'junk requires a reason' using errcode = '23514';
+  end if;
+  if p_action='merged' and (p_merged_into_lead is null or p_merged_into_lead=p_lead or not exists (
+    select 1 from public.crm_leads l where l.organization_id=p_organization
+      and l.id=p_merged_into_lead and l.deleted_at is null and l.status not in ('junk','merged')
+  )) then raise exception 'merge target unavailable' using errcode = '23514'; end if;
+  if p_action='disqualified' then
+    select r.applies_to into reason_applies from public.crm_loss_reasons r
+      where r.organization_id=p_organization and r.id=p_disqualification_reason and r.active;
+    if reason_applies is null or reason_applies not in ('both','disqualified') then
+      raise exception 'disqualification reason unavailable' using errcode = '23514';
+    end if;
+  end if;
+  update public.crm_leads set status=p_action,
+    merged_into_lead_id=case when p_action='merged' then p_merged_into_lead else null end,
+    disqualification_reason_id=case when p_action='disqualified' then p_disqualification_reason else null end,
+    junk_reason=case when p_action='junk' then nullif(trim(p_note),'') else null end,
+    updated_by=auth.uid(),updated_at=now()
+  where organization_id=p_organization and id=p_lead;
+  insert into public.crm_lead_commands(organization_id,lead_id,command_key,action,
+    merged_into_lead_id,disqualification_reason_id,note,actor_user_id)
+  values(p_organization,p_lead,p_request_key,p_action,p_merged_into_lead,
+    p_disqualification_reason,nullif(trim(p_note),''),auth.uid());
+  return query select p_lead,p_action,false;
+end;
+$$;
+revoke all on function public.command_crm_lead(uuid,uuid,text,text,uuid,uuid,text) from public,anon;
+grant execute on function public.command_crm_lead(uuid,uuid,text,text,uuid,uuid,text)
+  to authenticated,service_role;
+
 create function public.read_crm_pipeline_board(target_organization uuid)
 returns jsonb language sql stable security definer
 set search_path = pg_catalog, public as $$
@@ -1802,6 +1894,18 @@ set search_path = pg_catalog, public as $$
     where m.organization_id = target_organization
       and m.role in ('owner', 'admin', 'estimator')
       and c.role in ('owner', 'admin')
+  ), leads as (
+    select coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
+      'id',l.id,'status',l.status,'customer_name',l.customer_name,
+      'contact_name',l.contact_name,'email',l.email,'phone',l.phone,
+      'property_name',l.property_name,'assigned_to_user_id',l.assigned_to_user_id,
+      'created_at',l.created_at
+    )) order by l.created_at desc,l.id),'[]'::jsonb) as value
+    from public.crm_leads l cross join caller c
+    where l.organization_id=target_organization and l.deleted_at is null
+      and c.role <> 'viewer'
+      and (c.role in ('owner','admin') or (c.role='estimator'
+        and (l.assigned_to_user_id=auth.uid() or l.created_by=auth.uid())))
   )
   select case when (select role from caller) is null then null else jsonb_build_object(
     'organization_id', target_organization,
@@ -1810,6 +1914,7 @@ set search_path = pg_catalog, public as $$
     'opportunities', (select value from opportunities),
     'loss_reasons', (select value from loss_reasons),
     'assignable_members', (select value from assignable_members),
+    'leads', (select value from leads),
     'viewer_price_redacted', (select role = 'viewer' from caller)
   ) end;
 $$;
@@ -1940,6 +2045,7 @@ begin
     'crm_referral_sources', 'crm_leads', 'crm_opportunities', 'crm_walkthroughs',
     'crm_tasks', 'crm_site_work_packages', 'crm_opportunity_stage_history',
     'crm_opportunity_stage_commands', 'crm_task_commands', 'crm_assignment_commands',
+    'crm_lead_commands',
     'crm_attribution_touches',
     'crm_qualification_responses'
   ] loop
@@ -2147,7 +2253,7 @@ grant all on
   public.crm_leads, public.crm_opportunities, public.crm_walkthroughs,
   public.crm_tasks, public.crm_site_work_packages,
   public.crm_opportunity_stage_history, public.crm_opportunity_stage_commands,
-  public.crm_task_commands, public.crm_assignment_commands,
+  public.crm_task_commands, public.crm_assignment_commands, public.crm_lead_commands,
   public.crm_attribution_touches,
   public.crm_qualification_responses
 to service_role;

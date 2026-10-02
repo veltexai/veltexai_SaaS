@@ -25,6 +25,7 @@ const tenantTables = [
   'crm_opportunity_stage_commands',
   'crm_task_commands',
   'crm_assignment_commands',
+  'crm_lead_commands',
   'crm_attribution_touches',
   'crm_qualification_responses',
 ];
@@ -42,7 +43,7 @@ describe('R3-1 CRM migration contract', () => {
 
   it('requires tenant ownership and enables RLS for all CRM tables', () => {
     expect(migration.match(/organization_id uuid not null references public\.organizations/g))
-      .toHaveLength(20);
+      .toHaveLength(21);
     expect(migration).toContain("execute format('alter table public.%I enable row level security'");
     expect(migration).toContain("execute format('revoke all on public.%I from public, anon'");
     expect(migration).toContain('public.can_access_crm_opportunity');
@@ -165,6 +166,14 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain("s.category='disqualified' and not s.hidden");
     expect(migration).toContain('perform * from public.move_crm_opportunity_stage(');
     expect(migration).toContain("'needs_follow_up', (");
+  });
+
+  it('runs lead lifecycle changes through private idempotent receipts', () => {
+    expect(migration).toContain('create table public.crm_lead_commands (');
+    expect(migration).toContain('create function public.command_crm_lead(');
+    expect(migration).toContain("p_action='merged' and (p_merged_into_lead is null");
+    expect(migration).toContain("p_action='disqualified' then");
+    expect(migration).toContain("'leads', (select value from leads)");
   });
 
   it('projects the board through a caller-bound redacted RPC', () => {

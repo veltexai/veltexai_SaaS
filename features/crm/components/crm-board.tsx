@@ -27,11 +27,20 @@ type Opportunity = {
   owner_user_id?: string;
   estimator_user_id?: string;
 };
+type Lead = {
+  id: string;
+  status: 'new' | 'contacted' | 'junk' | 'merged' | 'disqualified';
+  contact_name?: string;
+  email?: string;
+  phone?: string;
+  property_name?: string;
+};
 type Board = {
   organization_id: string;
   caller_role: 'owner' | 'admin' | 'estimator' | 'viewer';
   pipelines: Pipeline[];
   opportunities: Opportunity[];
+  leads?: Lead[];
   loss_reasons: { id: string; label: string; applies_to: 'lost' | 'disqualified' | 'both' }[];
   assignable_members: { user_id: string; role: 'owner' | 'admin' | 'estimator'; label: string }[];
   viewer_price_redacted: boolean;
@@ -63,6 +72,8 @@ export function CrmBoard() {
   const [walkthroughFor, setWalkthroughFor] = useState<Opportunity | null>(null);
   const [assigningOpportunity, setAssigningOpportunity] = useState<Opportunity | null>(null);
   const [qualifyingOpportunity, setQualifyingOpportunity] = useState<Opportunity | null>(null);
+  const [managingLead, setManagingLead] = useState<Lead | null>(null);
+  const [leadAction, setLeadAction] = useState<Lead['status']>('contacted');
   const [followUpOnly, setFollowUpOnly] = useState(false);
   const [duplicateReview, setDuplicateReview] = useState<{
     candidates: DuplicateCandidate[]; draft: LeadDraft; key: string;
@@ -280,6 +291,28 @@ export function CrmBoard() {
     if (outcome === 'not_fit') void loadBoard();
   }
 
+  async function submitLeadAction(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!organizationId || !managingLead) return;
+    const form = new FormData(event.currentTarget);
+    const response = await fetch(`/api/orgs/${organizationId}/crm/leads/${managingLead.id}/lifecycle`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() },
+      body: JSON.stringify({
+        action: leadAction,
+        note: leadAction === 'junk' ? String(form.get('note') || '') : undefined,
+        mergedIntoLeadId: leadAction === 'merged' ? String(form.get('mergedIntoLeadId') || '') : undefined,
+        lossReasonId: leadAction === 'disqualified' ? String(form.get('lossReasonId') || '') : undefined,
+      }),
+    });
+    const payload = await response.json();
+    if (!response.ok) { setNotice(payload.error ?? 'Unable to update the lead.'); return; }
+    setBoard((current) => current ? { ...current, leads: (current.leads ?? []).map((lead) =>
+      lead.id === managingLead.id ? { ...lead, status: leadAction } : lead) } : current);
+    setManagingLead(null);
+    setNotice('Lead updated.');
+  }
+
   function stageMove(opportunity: Opportunity) {
     return (
       <div className="mt-3">
@@ -444,6 +477,38 @@ export function CrmBoard() {
         </Card>
       )}
       {notice && <p role="status" aria-live="polite" className="text-sm text-blue-800">{notice}</p>}
+      {managingLead && (
+        <Card role="dialog" aria-modal="true" aria-labelledby="lead-action-heading">
+          <CardHeader><CardTitle id="lead-action-heading">Manage lead</CardTitle></CardHeader>
+          <CardContent><form className="space-y-4" onSubmit={submitLeadAction}>
+            <p className="text-sm text-gray-700">Update {managingLead.contact_name || managingLead.email || 'this lead'}.</p>
+            <div className="space-y-2"><Label htmlFor="lead-action">Action</Label>
+              <select id="lead-action" name="action" value={leadAction}
+                onChange={(event) => setLeadAction(event.target.value as Lead['status'])}
+                className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                <option value="contacted">Mark contacted</option><option value="junk">Mark junk</option>
+                <option value="merged">Merge into lead</option><option value="disqualified">Disqualify</option>
+              </select></div>
+            {leadAction === 'junk' && <div className="space-y-2"><Label htmlFor="lead-junk-note">Junk reason</Label>
+              <textarea id="lead-junk-note" name="note" required maxLength={1000}
+                className="min-h-24 w-full rounded-md border border-gray-300 p-3" /></div>}
+            {leadAction === 'merged' && <div className="space-y-2"><Label htmlFor="merge-lead">Merge into</Label>
+              <select id="merge-lead" name="mergedIntoLeadId" required
+                className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                <option value="">Choose a lead</option>{(board.leads ?? []).filter((lead) => lead.id !== managingLead.id
+                  && ['new', 'contacted'].includes(lead.status)).map((lead) =>
+                  <option key={lead.id} value={lead.id}>{lead.contact_name || lead.email || lead.id}</option>)}</select></div>}
+            {leadAction === 'disqualified' && <div className="space-y-2"><Label htmlFor="lead-loss-reason">Disqualification reason</Label>
+              <select id="lead-loss-reason" name="lossReasonId" required
+                className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                <option value="">Choose a reason</option>{board.loss_reasons.filter((reason) => reason.applies_to === 'both'
+                  || reason.applies_to === 'disqualified').map((reason) =>
+                  <option key={reason.id} value={reason.id}>{reason.label}</option>)}</select></div>}
+            <div className="flex gap-3"><Button type="submit" className="min-h-11">Save lead</Button>
+              <Button type="button" variant="outline" className="min-h-11" onClick={() => setManagingLead(null)}>Cancel</Button></div>
+          </form></CardContent>
+        </Card>
+      )}
       {outcome && (
         <Card role="dialog" aria-modal="true" aria-labelledby="outcome-heading">
           <CardHeader><CardTitle id="outcome-heading">Record {outcome.stage.label}</CardTitle></CardHeader>
@@ -629,6 +694,20 @@ export function CrmBoard() {
         <Button className="min-h-11" type="button" variant={followUpOnly ? 'default' : 'outline'}
           aria-pressed={followUpOnly} onClick={() => setFollowUpOnly((value) => !value)}>Needs follow-up</Button>
       </div>
+
+      {(board.leads ?? []).length > 0 && <Card>
+        <CardHeader><CardTitle>Open leads</CardTitle></CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {(board.leads ?? []).map((lead) => <article key={lead.id} className="rounded-md border p-4">
+            <h3 className="font-medium">{lead.contact_name || lead.email || lead.phone || 'Unnamed lead'}</h3>
+            {lead.property_name && <p className="mt-1 text-sm text-gray-600">{lead.property_name}</p>}
+            <p className="mt-1 text-xs capitalize text-gray-500">{lead.status}</p>
+            {board.caller_role !== 'viewer' && ['new', 'contacted'].includes(lead.status) &&
+              <Button type="button" variant="outline" className="mt-3 min-h-11"
+                onClick={() => { setLeadAction('contacted'); setManagingLead(lead); }}>Manage lead</Button>}
+          </article>)}
+        </CardContent>
+      </Card>}
 
       {view === 'board' ? <div className="overflow-x-auto pb-4" aria-label={`${activePipeline.name} pipeline`}>
         <div className="flex min-w-max gap-4">

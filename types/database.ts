@@ -1188,6 +1188,11 @@ export interface Database {
         };
         Returns: { response_id: string; replayed: boolean }[];
       };
+      command_crm_lead: {
+        Args: { p_organization: string; p_lead: string; p_request_key: string; p_action: string;
+          p_merged_into_lead?: string | null; p_disqualification_reason?: string | null; p_note?: string | null };
+        Returns: { lead_id: string; status: string; replayed: boolean }[];
+      };
     };
     Enums: {
       [_ in never]: never;

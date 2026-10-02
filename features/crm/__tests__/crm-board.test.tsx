@@ -102,6 +102,30 @@ describe('R3-1 CRM board', () => {
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
 
+  it('records a lead lifecycle action from the open-leads queue', async () => {
+    jest.spyOn(global.crypto, 'randomUUID').mockReturnValue('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], assignable_members: [],
+        viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [] }],
+        opportunities: [], leads: [{ id: 'lead-1', status: 'new', contact_name: 'Morgan Lee', email: 'morgan@example.test' }],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { action: 'contacted' }, replayed: false }) });
+
+    render(<CrmBoard />);
+    expect(await screen.findByRole('heading', { name: 'Open leads' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Morgan Lee' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Manage lead' }));
+    expect(screen.getByRole('dialog', { name: 'Manage lead' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Save lead' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls[2][0]).toBe(`/api/orgs/${ORG_ID}/crm/leads/lead-1/lifecycle`);
+    expect(fetchMock.mock.calls[2][1].body).toBe('{"action":"contacted"}');
+    expect(await screen.findByText('Lead updated.')).toBeInTheDocument();
+  });
+
   it('requires an explicit duplicate decision and reuses the original command key', async () => {
     const commandKey = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
     jest.spyOn(global.crypto, 'randomUUID').mockReturnValue(commandKey);
