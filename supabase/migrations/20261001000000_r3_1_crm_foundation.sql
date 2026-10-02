@@ -1353,6 +1353,78 @@ revoke all on function public.reactivate_crm_opportunity(uuid, uuid, text, text)
 grant execute on function public.reactivate_crm_opportunity(uuid, uuid, text, text)
   to authenticated, service_role;
 
+create function public.configure_crm_pipeline_stage(
+  p_organization uuid,
+  p_pipeline uuid,
+  p_stage uuid,
+  p_label text,
+  p_category text,
+  p_position integer,
+  p_hidden boolean default false,
+  p_pipeline_name text default null
+)
+returns table(stage_id uuid, created boolean)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare
+  current_stage public.crm_pipeline_stages%rowtype;
+  stage_created boolean := false;
+begin
+  if auth.uid() is null or not public.can_manage_organization(p_organization) then
+    raise exception 'pipeline configuration unavailable' using errcode = '42501';
+  end if;
+  if length(trim(p_label)) not between 1 and 120
+     or p_position < 0
+     or p_category not in (
+       'new', 'qualifying', 'walkthrough', 'estimating', 'proposing', 'negotiating',
+       'won', 'handed_off', 'lost', 'disqualified', 'nurture'
+     )
+     or (p_hidden and p_category in ('won', 'lost', 'disqualified')) then
+    raise exception 'invalid pipeline stage configuration' using errcode = '23514';
+  end if;
+  perform 1 from public.crm_pipelines p
+  where p.organization_id = p_organization and p.id = p_pipeline and not p.archived
+  for update;
+  if not found then
+    raise exception 'pipeline configuration unavailable' using errcode = '42501';
+  end if;
+  if p_pipeline_name is not null then
+    if length(trim(p_pipeline_name)) not between 1 and 120 then
+      raise exception 'invalid pipeline name' using errcode = '23514';
+    end if;
+    update public.crm_pipelines set name = trim(p_pipeline_name),
+      updated_by = auth.uid(), updated_at = now()
+    where organization_id = p_organization and id = p_pipeline;
+  end if;
+  select s.* into current_stage from public.crm_pipeline_stages s
+  where s.organization_id = p_organization and s.id = p_stage
+  for update;
+  if current_stage.id is null then
+    insert into public.crm_pipeline_stages(
+      id, organization_id, pipeline_id, label, category, position, hidden, created_by
+    ) values (
+      p_stage, p_organization, p_pipeline, trim(p_label), p_category,
+      p_position, p_hidden, auth.uid()
+    );
+    stage_created := true;
+  else
+    if current_stage.pipeline_id is distinct from p_pipeline then
+      raise exception 'pipeline stage belongs to another pipeline' using errcode = '42501';
+    end if;
+    update public.crm_pipeline_stages set label = trim(p_label), category = p_category,
+      position = p_position, hidden = p_hidden, updated_at = now()
+    where organization_id = p_organization and id = p_stage;
+  end if;
+  return query select p_stage, stage_created;
+end;
+$$;
+revoke all on function public.configure_crm_pipeline_stage(
+  uuid, uuid, uuid, text, text, integer, boolean, text
+) from public, anon;
+grant execute on function public.configure_crm_pipeline_stage(
+  uuid, uuid, uuid, text, text, integer, boolean, text
+) to authenticated, service_role;
+
 create function public.read_crm_pipeline_board(target_organization uuid)
 returns jsonb language sql stable security definer
 set search_path = pg_catalog, public as $$

@@ -131,6 +131,14 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain('revoke all on function public.reactivate_crm_opportunity');
   });
 
+  it('configures stages only through the manager-bound absolute-state RPC', () => {
+    expect(migration).toContain('create function public.configure_crm_pipeline_stage(');
+    expect(migration).toContain('not public.can_manage_organization(p_organization)');
+    expect(migration).toContain("p_hidden and p_category in ('won', 'lost', 'disqualified')");
+    expect(migration).toContain('current_stage.pipeline_id is distinct from p_pipeline');
+    expect(migration).toContain('grant execute on function public.configure_crm_pipeline_stage(');
+  });
+
   it('projects the board through a caller-bound redacted RPC', () => {
     expect(migration).toContain('create function public.read_crm_pipeline_board(target_organization uuid)');
     expect(migration).toContain("public.organization_role(target_organization) as role");
