@@ -1,0 +1,92 @@
+# R3-1 founder acceptance — synthetic CRM workflow
+
+Status: **PENDING FOUNDER REVIEW**. This packet does not authorize a deployment
+or production data creation. Run it only on the approved isolated preview after
+the exact R3-1 migration and app commit are deployed there.
+
+## Bound identity and build
+
+Record before testing:
+
+- Preview project ref:
+- App deployment URL:
+- Git commit:
+- Migration history includes `20261001000000` exactly once: PASS / FAIL
+- Tester and Pacific timestamp:
+
+Use only fictitious `.test` contact data. Do not enter a real customer's name,
+address, phone, email, pricing, access instructions, or cleaning scope.
+
+## Synthetic fixtures
+
+Commercial:
+
+- Contact: `Morgan Preview`
+- Email: `morgan.crm-r3@example.test`
+- Phone: `+12065550191`
+- Property / opportunity: `North Campus Preview`
+- Manual win reason: `Founder synthetic acceptance walkthrough`
+
+Residential/turnover:
+
+- Contact: `Riley Preview`
+- Email: `riley.crm-r3@example.test`
+- Phone: `+12065550192`
+- Property / opportunity: `Turnover Unit Preview`
+- Loss reason: choose an active organization-configured reason
+
+## Desktop workflow
+
+Use a signed-in owner or admin at a desktop viewport.
+
+1. Open `/dashboard/crm`. Confirm both Board and List controls are keyboard reachable.
+2. Quick-add the commercial synthetic lead using the three captured fields.
+3. If duplicate review appears, confirm no automatic merge occurs; deliberately choose the correct explicit action.
+4. Confirm the lead appears in Open leads as `new`.
+5. Choose **Convert lead**. Before confirming, verify no opportunity was created.
+6. Confirm conversion into the Commercial pipeline. Verify the captured contact/property text is prefilled and not retyped.
+7. Move the opportunity through one permitted non-terminal stage using the keyboard-accessible stage control. Confirm the live status announcement.
+8. Move it to Won. Confirm a manual reason is required and that only owner/admin can complete the action.
+9. Switch to List. Confirm the same opportunity/stage appears and values are labelled by billing basis rather than combined.
+
+Desktop result: PASS / FAIL
+
+Evidence notes or screenshot filenames:
+
+## 390 px workflow
+
+Use a genuine 390 CSS-pixel browser viewport; record both `window.innerWidth`
+and `document.documentElement.scrollWidth`. They must each be 390.
+
+1. Open `/dashboard/crm`; confirm no horizontal page overflow outside the intentionally scrollable Kanban region.
+2. Quick-add the residential synthetic lead. After completing the fields, adding it must take no more than two deliberate taps.
+3. Confirm the lead appears in Open leads and open **Convert lead**.
+4. Select the Residential and turnover pipeline plus `turnover`; confirm conversion.
+5. Move the resulting opportunity to Lost and verify an active loss reason is required.
+6. Confirm all primary controls are usable by touch and no required action is hidden behind hover.
+
+390 px result: PASS / FAIL
+
+- `window.innerWidth`:
+- `document.documentElement.scrollWidth`:
+- Tap count after lead fields:
+- Evidence notes or screenshot filenames:
+
+## Permission and truthfulness checks
+
+1. As viewer, confirm quick-add, conversion, stage, task, and assignment controls are absent; opportunity identity is generic and pricing is hidden.
+2. As estimator, confirm only assigned/created opportunities and their scoped customer/property choices are available.
+3. Confirm no AI suggestion, autonomous stage move, email/SMS send, customer acceptance, signature claim, or handoff-complete claim appears in R3-1.
+4. Confirm Handed off remains unavailable and explains that the reviewed R3-6 workflow is required.
+
+Permission/truthfulness result: PASS / FAIL
+
+## Decision
+
+- Overall: ACCEPTED / REJECTED / NEEDS FIX
+- Founder name:
+- Pacific timestamp:
+- Defects or required follow-up:
+
+Acceptance covers only the bounded R3-1 CRM foundation. It does not mark full
+R3 complete; R3-2 through R3-8 remain required.
