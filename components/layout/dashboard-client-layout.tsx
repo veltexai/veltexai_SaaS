@@ -16,6 +16,7 @@ import {
   Shield,
   ArrowLeftIcon,
   CreditCard,
+  KanbanSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { signOut } from "@/features/auth/actions/password";
@@ -34,6 +35,7 @@ interface DashboardClientLayoutProps {
 const baseNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
   { name: "Proposals", href: "/dashboard/proposals", icon: FileText },
+  { name: "CRM", href: "/dashboard/crm", icon: KanbanSquare },
   { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
