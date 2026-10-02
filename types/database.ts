@@ -1138,6 +1138,15 @@ export interface Database {
         };
         Returns: { stage_id: string; created: boolean }[];
       };
+      update_crm_opportunity_details: {
+        Args: {
+          p_organization: string; p_opportunity: string; p_expected_updated_at: string;
+          p_name: string; p_service_family?: string | null; p_expected_close_date?: string | null;
+          p_value_amount_minor?: number | null; p_value_basis?: string | null;
+          p_currency?: string | null; p_next_action_due_at?: string | null;
+        };
+        Returns: { opportunity_id: string; updated_at: string }[];
+      };
     };
     Enums: {
       [_ in never]: never;

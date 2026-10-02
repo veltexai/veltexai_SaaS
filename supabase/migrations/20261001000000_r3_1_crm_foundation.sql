@@ -1425,6 +1425,54 @@ grant execute on function public.configure_crm_pipeline_stage(
   uuid, uuid, uuid, text, text, integer, boolean, text
 ) to authenticated, service_role;
 
+create function public.update_crm_opportunity_details(
+  p_organization uuid, p_opportunity uuid, p_expected_updated_at timestamptz,
+  p_name text, p_service_family text default null, p_expected_close_date date default null,
+  p_value_amount_minor bigint default null, p_value_basis text default null,
+  p_currency text default null, p_next_action_due_at timestamptz default null
+)
+returns table(opportunity_id uuid, updated_at timestamptz)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare current_opportunity public.crm_opportunities%rowtype; changed_at timestamptz;
+begin
+  if auth.uid() is null or not public.can_access_crm_opportunity(p_opportunity)
+     or nullif(trim(p_name), '') is null or length(trim(p_name)) > 200
+     or (p_service_family is not null and length(trim(p_service_family)) > 120)
+     or ((p_value_amount_minor is null)::integer + (p_value_basis is null)::integer
+       + (p_currency is null)::integer) not in (0, 3)
+     or (p_value_amount_minor is not null and (p_value_amount_minor < 0
+       or p_value_basis not in ('one_time','per_visit','weekly','monthly','annual')
+       or p_currency !~ '^[A-Z]{3}$')) then
+    raise exception 'opportunity update unavailable' using errcode = '23514';
+  end if;
+  select o.* into current_opportunity from public.crm_opportunities o
+  where o.organization_id = p_organization and o.id = p_opportunity
+    and o.deleted_at is null for update;
+  if current_opportunity.id is null then
+    raise exception 'opportunity update unavailable' using errcode = '42501';
+  end if;
+  if current_opportunity.updated_at is distinct from p_expected_updated_at then
+    raise exception 'opportunity changed since it was loaded' using errcode = '40001';
+  end if;
+  changed_at := clock_timestamp();
+  update public.crm_opportunities set name = trim(p_name),
+    service_family = nullif(trim(p_service_family), ''),
+    expected_close_date = p_expected_close_date,
+    value_amount_minor = p_value_amount_minor, value_basis = p_value_basis,
+    currency = p_currency, next_action_due_at = p_next_action_due_at,
+    updated_by = auth.uid(), updated_at = changed_at
+  where organization_id = p_organization and id = p_opportunity;
+  return query select p_opportunity, changed_at;
+end;
+$$;
+revoke all on function public.update_crm_opportunity_details(
+  uuid, uuid, timestamptz, text, text, date, bigint, text, text, timestamptz
+) from public, anon;
+grant execute on function public.update_crm_opportunity_details(
+  uuid, uuid, timestamptz, text, text, date, bigint, text, text, timestamptz
+) to authenticated, service_role;
+
 create function public.read_crm_pipeline_board(target_organization uuid)
 returns jsonb language sql stable security definer
 set search_path = pg_catalog, public as $$
@@ -1459,10 +1507,12 @@ set search_path = pg_catalog, public as $$
       'name', o.name,
       'pipeline_id', o.pipeline_id,
       'stage_id', o.stage_id,
+      'property_id', o.property_id,
       'category', s.category,
       'segment', o.segment,
       'service_family', o.service_family,
       'expected_close_date', o.expected_close_date,
+      'updated_at', o.updated_at,
       'owner_user_id', o.owner_user_id,
       'estimator_user_id', o.estimator_user_id,
       'next_action_due_at', o.next_action_due_at,
@@ -1489,6 +1539,18 @@ set search_path = pg_catalog, public as $$
     ) order by r.label, r.id), '[]'::jsonb) as value
     from public.crm_loss_reasons r
     where r.organization_id = target_organization and r.active
+  ), assignable_members as (
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'user_id', m.user_id,
+      'role', m.role,
+      'label', coalesce(nullif(trim(pr.full_name), ''), pr.email)
+    ) order by coalesce(nullif(trim(pr.full_name), ''), pr.email), m.user_id), '[]'::jsonb) as value
+    from public.organization_memberships m
+    join public.profiles pr on pr.id = m.user_id
+    cross join caller c
+    where m.organization_id = target_organization
+      and m.role in ('owner', 'admin', 'estimator')
+      and c.role in ('owner', 'admin')
   )
   select case when (select role from caller) is null then null else jsonb_build_object(
     'organization_id', target_organization,
@@ -1496,6 +1558,7 @@ set search_path = pg_catalog, public as $$
     'pipelines', (select value from pipelines),
     'opportunities', (select value from opportunities),
     'loss_reasons', (select value from loss_reasons),
+    'assignable_members', (select value from assignable_members),
     'viewer_price_redacted', (select role = 'viewer' from caller)
   ) end;
 $$;

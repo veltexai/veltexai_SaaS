@@ -14,11 +14,15 @@ type Opportunity = {
   name: string;
   pipeline_id: string;
   stage_id: string;
+  property_id?: string;
   category: string;
   value_amount_minor?: number;
   value_basis?: string;
   currency?: string;
   next_action_due_at?: string;
+  service_family?: string;
+  expected_close_date?: string;
+  updated_at: string;
   owner_user_id?: string;
   estimator_user_id?: string;
 };
@@ -28,6 +32,7 @@ type Board = {
   pipelines: Pipeline[];
   opportunities: Opportunity[];
   loss_reasons: { id: string; label: string; applies_to: 'lost' | 'disqualified' | 'both' }[];
+  assignable_members: { user_id: string; role: 'owner' | 'admin' | 'estimator'; label: string }[];
   viewer_price_redacted: boolean;
 };
 type DuplicateCandidate = { entity_type: string; entity_id: string; matched_on: string };
@@ -52,6 +57,9 @@ export function CrmBoard() {
   const [view, setView] = useState<'board' | 'list'>('board');
   const [outcome, setOutcome] = useState<{ opportunity: Opportunity; stage: Stage } | null>(null);
   const [taskFor, setTaskFor] = useState<Opportunity | null>(null);
+  const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
+  const [walkthroughFor, setWalkthroughFor] = useState<Opportunity | null>(null);
+  const [assigningOpportunity, setAssigningOpportunity] = useState<Opportunity | null>(null);
   const [duplicateReview, setDuplicateReview] = useState<{
     candidates: DuplicateCandidate[]; draft: LeadDraft; key: string;
   } | null>(null);
@@ -154,6 +162,97 @@ export function CrmBoard() {
     }
     setTaskFor(null);
     setNotice('Next action added.');
+  }
+
+  async function submitOpportunity(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!organizationId || !editingOpportunity) return;
+    const form = new FormData(event.currentTarget);
+    const amountText = String(form.get('valueAmount') || '').trim();
+    const closeDate = String(form.get('expectedCloseDate') || '');
+    const response = await fetch(
+      `/api/orgs/${organizationId}/crm/opportunities/${editingOpportunity.id}`,
+      {
+        method: 'PATCH', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          expectedUpdatedAt: editingOpportunity.updated_at,
+          name: String(form.get('name') || ''),
+          serviceFamily: String(form.get('serviceFamily') || '') || null,
+          expectedCloseDate: closeDate || null,
+          valueAmountMinor: amountText ? Math.round(Number(amountText) * 100) : null,
+          valueBasis: amountText ? String(form.get('valueBasis') || '') : null,
+          currency: amountText ? 'USD' : null,
+          nextActionDueAt: editingOpportunity.next_action_due_at ?? null,
+        }),
+      },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      setNotice(payload.error ?? 'Unable to update the opportunity.');
+      return;
+    }
+    const name = String(form.get('name') || '');
+    const serviceFamily = String(form.get('serviceFamily') || '') || undefined;
+    const valueAmountMinor = amountText ? Math.round(Number(amountText) * 100) : undefined;
+    const valueBasis = amountText ? String(form.get('valueBasis') || '') : undefined;
+    setBoard((current) => current ? { ...current, opportunities: current.opportunities.map((item) =>
+      item.id === editingOpportunity.id ? { ...item, name, service_family: serviceFamily,
+        expected_close_date: closeDate || undefined, value_amount_minor: valueAmountMinor,
+        value_basis: valueBasis, currency: amountText ? 'USD' : undefined,
+        updated_at: payload.data.updated_at } : item) } : current);
+    setEditingOpportunity(null);
+    setNotice('Opportunity updated.');
+  }
+
+  async function submitWalkthrough(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!organizationId || !walkthroughFor?.property_id || !walkthroughFor.estimator_user_id) return;
+    const form = new FormData(event.currentTarget);
+    const start = new Date(String(form.get('windowStart'))).toISOString();
+    const end = new Date(String(form.get('windowEnd'))).toISOString();
+    const response = await fetch(
+      `/api/orgs/${organizationId}/crm/opportunities/${walkthroughFor.id}/walkthroughs`,
+      { method: 'POST', headers: { 'content-type': 'application/json',
+        'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({
+        propertyId: walkthroughFor.property_id,
+        estimatorUserId: walkthroughFor.estimator_user_id,
+        windowStart: start, windowEnd: end,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      }) },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      setNotice(payload.error ?? 'Unable to schedule the walkthrough.');
+      return;
+    }
+    setWalkthroughFor(null);
+    setNotice('Walkthrough scheduled.');
+  }
+
+  async function submitAssignment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!organizationId || !assigningOpportunity) return;
+    const form = new FormData(event.currentTarget);
+    const ownerUserId = String(form.get('ownerUserId') || '');
+    const estimatorUserId = String(form.get('estimatorUserId') || '') || null;
+    const response = await fetch(
+      `/api/orgs/${organizationId}/crm/opportunities/${assigningOpportunity.id}/assignment`,
+      { method: 'PATCH', headers: { 'content-type': 'application/json',
+        'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({
+        ownerUserId, estimatorUserId,
+        transferOpenTasks: form.get('transferOpenTasks') === 'on',
+      }) },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      setNotice(payload.error ?? 'Unable to update the assignment.');
+      return;
+    }
+    setBoard((current) => current ? { ...current, opportunities: current.opportunities.map((item) =>
+      item.id === assigningOpportunity.id ? { ...item, owner_user_id: ownerUserId,
+        estimator_user_id: estimatorUserId ?? undefined } : item) } : current);
+    setAssigningOpportunity(null);
+    setNotice('Assignment updated.');
   }
 
   function stageMove(opportunity: Opportunity) {
@@ -329,6 +428,87 @@ export function CrmBoard() {
           </CardContent>
         </Card>
       )}
+      {editingOpportunity && (
+        <Card role="dialog" aria-modal="true" aria-labelledby="opportunity-heading">
+          <CardHeader><CardTitle id="opportunity-heading">Edit opportunity</CardTitle></CardHeader>
+          <CardContent>
+            <form className="grid gap-4 sm:grid-cols-2" onSubmit={submitOpportunity}>
+              <div className="space-y-2 sm:col-span-2"><Label htmlFor="opportunity-name">Name</Label>
+                <Input id="opportunity-name" name="name" required maxLength={200} defaultValue={editingOpportunity.name} /></div>
+              <div className="space-y-2"><Label htmlFor="service-family">Service family</Label>
+                <Input id="service-family" name="serviceFamily" maxLength={120} defaultValue={editingOpportunity.service_family} /></div>
+              <div className="space-y-2"><Label htmlFor="expected-close">Expected close date</Label>
+                <Input id="expected-close" name="expectedCloseDate" type="date" defaultValue={editingOpportunity.expected_close_date} /></div>
+              <div className="space-y-2"><Label htmlFor="opportunity-value">Value (USD)</Label>
+                <Input id="opportunity-value" name="valueAmount" type="number" min="0" step="0.01"
+                  defaultValue={editingOpportunity.value_amount_minor === undefined ? '' : editingOpportunity.value_amount_minor / 100} /></div>
+              <div className="space-y-2"><Label htmlFor="value-basis">Value basis</Label>
+                <select id="value-basis" name="valueBasis" defaultValue={editingOpportunity.value_basis ?? 'monthly'}
+                  className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                  <option value="one_time">One time</option><option value="per_visit">Per visit</option>
+                  <option value="weekly">Weekly</option><option value="monthly">Monthly</option>
+                  <option value="annual">Annual</option>
+                </select></div>
+              <div className="flex flex-wrap gap-3 sm:col-span-2">
+                <Button type="submit" className="min-h-11">Save opportunity</Button>
+                <Button type="button" variant="outline" className="min-h-11"
+                  onClick={() => setEditingOpportunity(null)}>Cancel</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+      {walkthroughFor && (
+        <Card role="dialog" aria-modal="true" aria-labelledby="walkthrough-heading">
+          <CardHeader><CardTitle id="walkthrough-heading">Schedule walkthrough</CardTitle></CardHeader>
+          <CardContent>
+            <form className="grid gap-4 sm:grid-cols-2" onSubmit={submitWalkthrough}>
+              <p className="text-sm text-gray-700 sm:col-span-2">Schedule a site window for {walkthroughFor.name}.</p>
+              <div className="space-y-2"><Label htmlFor="walkthrough-start">Starts</Label>
+                <Input id="walkthrough-start" name="windowStart" type="datetime-local" required /></div>
+              <div className="space-y-2"><Label htmlFor="walkthrough-end">Ends</Label>
+                <Input id="walkthrough-end" name="windowEnd" type="datetime-local" required /></div>
+              <div className="flex flex-wrap gap-3 sm:col-span-2">
+                <Button type="submit" className="min-h-11">Schedule walkthrough</Button>
+                <Button type="button" variant="outline" className="min-h-11"
+                  onClick={() => setWalkthroughFor(null)}>Cancel</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+      {assigningOpportunity && (
+        <Card role="dialog" aria-modal="true" aria-labelledby="assignment-heading">
+          <CardHeader><CardTitle id="assignment-heading">Assign opportunity</CardTitle></CardHeader>
+          <CardContent>
+            <form className="grid gap-4 sm:grid-cols-2" onSubmit={submitAssignment}>
+              <div className="space-y-2"><Label htmlFor="opportunity-owner">Owner</Label>
+                <select id="opportunity-owner" name="ownerUserId" required
+                  defaultValue={assigningOpportunity.owner_user_id}
+                  className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                  {board.assignable_members.map((member) => <option key={member.user_id}
+                    value={member.user_id}>{member.label} ({member.role})</option>)}
+                </select></div>
+              <div className="space-y-2"><Label htmlFor="opportunity-estimator">Estimator</Label>
+                <select id="opportunity-estimator" name="estimatorUserId"
+                  defaultValue={assigningOpportunity.estimator_user_id ?? ''}
+                  className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                  <option value="">Unassigned</option>
+                  {board.assignable_members.map((member) => <option key={member.user_id}
+                    value={member.user_id}>{member.label} ({member.role})</option>)}
+                </select></div>
+              <label className="flex min-h-11 items-center gap-3 text-sm sm:col-span-2">
+                <input type="checkbox" name="transferOpenTasks" /> Transfer matching open tasks
+              </label>
+              <div className="flex flex-wrap gap-3 sm:col-span-2">
+                <Button type="submit" className="min-h-11">Save assignment</Button>
+                <Button type="button" variant="outline" className="min-h-11"
+                  onClick={() => setAssigningOpportunity(null)}>Cancel</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
       {duplicateReview && (
         <Card aria-labelledby="duplicate-heading">
           <CardHeader><CardTitle id="duplicate-heading">Review possible duplicate</CardTitle></CardHeader>
@@ -373,8 +553,18 @@ export function CrmBoard() {
                       {opportunity.next_action_due_at && <p className="mt-2 text-xs text-gray-500">Next action {new Date(opportunity.next_action_due_at).toLocaleDateString()}</p>}
                       {board.caller_role !== 'viewer' && stageMove(opportunity)}
                       {board.caller_role !== 'viewer' && (
-                        <Button type="button" variant="outline" className="mt-2 min-h-11 w-full"
+                        <div className="mt-2 grid gap-2"><Button type="button" variant="outline" className="min-h-11 w-full"
+                          onClick={() => setEditingOpportunity(opportunity)}>Edit details</Button>
+                        <Button type="button" variant="outline" className="min-h-11 w-full"
                           onClick={() => setTaskFor(opportunity)}>Add next action</Button>
+                        {opportunity.property_id && opportunity.estimator_user_id && (
+                          <Button type="button" variant="outline" className="min-h-11 w-full"
+                            onClick={() => setWalkthroughFor(opportunity)}>Schedule walkthrough</Button>
+                        )}
+                        {['owner', 'admin'].includes(board.caller_role) && (
+                          <Button type="button" variant="outline" className="min-h-11 w-full"
+                            onClick={() => setAssigningOpportunity(opportunity)}>Change assignment</Button>
+                        )}</div>
                       )}
                     </article>
                   ))}
@@ -400,8 +590,19 @@ export function CrmBoard() {
                   <td className="px-4 py-3 text-sm">{activePipeline.stages.find((stage) => stage.id === opportunity.stage_id)?.label}</td>
                   <td className="px-4 py-3 text-sm">{valueLabel(opportunity) ?? '—'}</td>
                   <td className="px-4 py-3">{board.caller_role === 'viewer' ? 'Read only' : (
-                    <div>{stageMove(opportunity)}<Button type="button" variant="outline"
-                      className="mt-2 min-h-11" onClick={() => setTaskFor(opportunity)}>Add next action</Button></div>
+                    <div>{stageMove(opportunity)}<div className="mt-2 flex gap-2">
+                      <Button type="button" variant="outline" className="min-h-11"
+                        onClick={() => setEditingOpportunity(opportunity)}>Edit details</Button>
+                      <Button type="button" variant="outline" className="min-h-11"
+                        onClick={() => setTaskFor(opportunity)}>Add next action</Button>
+                      {opportunity.property_id && opportunity.estimator_user_id && (
+                        <Button type="button" variant="outline" className="min-h-11"
+                          onClick={() => setWalkthroughFor(opportunity)}>Schedule walkthrough</Button>
+                      )}
+                      {['owner', 'admin'].includes(board.caller_role) && (
+                        <Button type="button" variant="outline" className="min-h-11"
+                          onClick={() => setAssigningOpportunity(opportunity)}>Change assignment</Button>
+                      )}</div></div>
                   )}</td>
                 </tr>
               ))}

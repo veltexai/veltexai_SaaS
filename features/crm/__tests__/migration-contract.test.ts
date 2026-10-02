@@ -139,6 +139,14 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain('grant execute on function public.configure_crm_pipeline_stage(');
   });
 
+  it('updates opportunity details with assigned scope and optimistic concurrency', () => {
+    expect(migration).toContain('create function public.update_crm_opportunity_details(');
+    expect(migration).toContain('not public.can_access_crm_opportunity(p_opportunity)');
+    expect(migration).toContain('current_opportunity.updated_at is distinct from p_expected_updated_at');
+    expect(migration).toContain("using errcode = '40001'");
+    expect(migration).toContain('grant execute on function public.update_crm_opportunity_details(');
+  });
+
   it('projects the board through a caller-bound redacted RPC', () => {
     expect(migration).toContain('create function public.read_crm_pipeline_board(target_organization uuid)');
     expect(migration).toContain("public.organization_role(target_organization) as role");
@@ -149,6 +157,8 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain("case when c.role <> 'viewer' then o.currency end");
     expect(migration).toContain("'caller_role', (select role from caller)");
     expect(migration).toContain("'loss_reasons', (select value from loss_reasons)");
+    expect(migration).toContain("'assignable_members', (select value from assignable_members)");
+    expect(migration).toContain("and c.role in ('owner', 'admin')");
     expect(migration).toContain('revoke all on function public.read_crm_pipeline_board(uuid) from public, anon');
     expect(migration).toContain('grant execute on function public.read_crm_pipeline_board(uuid) to authenticated, service_role');
   });

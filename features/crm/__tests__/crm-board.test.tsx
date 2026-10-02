@@ -197,4 +197,87 @@ describe('R3-1 CRM board', () => {
     expect(fetchMock.mock.calls[2][1].body).toContain('"assigneeUserId":"33333333-3333-4333-8333-333333333333"');
     expect(await screen.findByText('Next action added.')).toBeInTheDocument();
   });
+
+  it('edits absolute opportunity details with the loaded concurrency timestamp', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'admin', loss_reasons: [], viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-new', category: 'new', owner_user_id: USER_ID,
+          updated_at: '2026-10-01T19:00:00Z', value_amount_minor: 120000,
+          value_basis: 'monthly', currency: 'USD' }],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        opportunity_id: 'opportunity-1', updated_at: '2026-10-01T20:00:00Z',
+      } }) });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'North Campus' });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit details' }));
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'North Campus Renewal' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save opportunity' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls[2][1].body).toContain('"expectedUpdatedAt":"2026-10-01T19:00:00Z"');
+    expect(fetchMock.mock.calls[2][1].body).toContain('"name":"North Campus Renewal"');
+    expect(await screen.findByText('Opportunity updated.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'North Campus Renewal' })).toBeInTheDocument();
+  });
+
+  it('schedules a walkthrough from scoped property and estimator identifiers', async () => {
+    jest.spyOn(global.crypto, 'randomUUID').mockReturnValue('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee');
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-new', category: 'new', owner_user_id: USER_ID, estimator_user_id: USER_ID,
+          property_id: '44444444-4444-4444-8444-444444444444', updated_at: '2026-10-01T19:00:00Z' }],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: { walkthrough_id: 'walk-1' } }) });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'North Campus' });
+    fireEvent.click(screen.getByRole('button', { name: 'Schedule walkthrough' }));
+    fireEvent.change(screen.getByLabelText('Starts'), { target: { value: '2026-10-15T09:00' } });
+    fireEvent.change(screen.getByLabelText('Ends'), { target: { value: '2026-10-15T10:00' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Schedule walkthrough' })[0]);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls[2][0]).toBe(`/api/orgs/${ORG_ID}/crm/opportunities/opportunity-1/walkthroughs`);
+    expect(fetchMock.mock.calls[2][1].body).toContain('"propertyId":"44444444-4444-4444-8444-444444444444"');
+    expect(fetchMock.mock.calls[2][1].body).toContain(`"estimatorUserId":"${USER_ID}"`);
+    expect(await screen.findByText('Walkthrough scheduled.')).toBeInTheDocument();
+  });
+
+  it('lets managers select only projected organization assignees', async () => {
+    jest.spyOn(global.crypto, 'randomUUID').mockReturnValue('ffffffff-ffff-4fff-8fff-ffffffffffff');
+    const ESTIMATOR = '44444444-4444-4444-8444-444444444444';
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'owner', loss_reasons: [], viewer_price_redacted: false,
+        assignable_members: [{ user_id: USER_ID, role: 'owner', label: 'Owner' },
+          { user_id: ESTIMATOR, role: 'estimator', label: 'Estimator' }],
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-new', category: 'new', owner_user_id: USER_ID,
+          updated_at: '2026-10-01T19:00:00Z' }],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { transferred_task_count: 0 } }) });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'North Campus' });
+    fireEvent.click(screen.getByRole('button', { name: 'Change assignment' }));
+    fireEvent.change(screen.getByLabelText('Estimator'), { target: { value: ESTIMATOR } });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Transfer matching open tasks' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save assignment' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls[2][1].body).toBe(`{"ownerUserId":"${USER_ID}","estimatorUserId":"${ESTIMATOR}","transferOpenTasks":true}`);
+    expect(await screen.findByText('Assignment updated.')).toBeInTheDocument();
+  });
 });
