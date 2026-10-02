@@ -135,6 +135,19 @@ const contentDigestExpression = `jsonb_build_object(
   'tier_access_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.template_tier_access x) q),
   'template_preferences_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.user_template_preferences x) q)
 )`;
+const postflightContentDigestExpression = `jsonb_build_object(
+  'profiles_preserved',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(((to_jsonb(x)-array['active_organization_id','updated_at'])||jsonb_build_object('active_organization_owner_id',o.created_by))::text,'sha256'),'hex') row_hash from public.profiles x left join public.organizations o on o.id=x.active_organization_id) q),
+  'proposals_preserved',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(((to_jsonb(x)-array['organization_id','updated_at'])||jsonb_build_object('organization_owner_id',o.created_by))::text,'sha256'),'hex') row_hash from public.proposals x left join public.organizations o on o.id=x.organization_id) q),
+  'tracking_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.proposal_tracking x) q),
+  'branding_preserved',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(((to_jsonb(x)-array['organization_id','updated_at'])||jsonb_build_object('organization_owner_id',o.created_by))::text,'sha256'),'hex') row_hash from public.user_branding_settings x left join public.organizations o on o.id=x.organization_id) q),
+  'subscriptions_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.subscriptions x) q),
+  'usage_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.usage x) q),
+  'addon_catalog_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.additional_service_catalog x) q),
+  'proposal_addons_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.proposal_additional_services x) q),
+  'proposal_templates_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.proposal_templates x) q),
+  'tier_access_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.template_tier_access x) q),
+  'template_preferences_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.user_template_preferences x) q)
+)`;
 const postflightEvidenceStatement = `${catalogSource.slice(0, catalogMarkerIndex)}select jsonb_build_object(
   'rollback_proof',true,
   'history_count',(select count(*)::int from supabase_migrations.schema_migrations),
@@ -142,7 +155,7 @@ const postflightEvidenceStatement = `${catalogSource.slice(0, catalogMarkerIndex
   'catalog_count',count(*)::int,
   'catalog_sha256',encode(digest(convert_to(coalesce(string_agg(jsonb_build_array(atom->>'kind',atom->>'identity',atom->>'value_sha256')::text,E'\\n' order by atom->>'kind' collate "C",atom->>'identity' collate "C"),''),'UTF8'),'sha256'),'hex'),
   'effective_privileges_sha256',encode(digest(convert_to((${effectivePrivilegesExpression})::text,'UTF8'),'sha256'),'hex'),
-  'content_digests_sha256',encode(digest(convert_to((${contentDigestExpression})::text,'UTF8'),'sha256'),'hex'),
+  'content_digests_sha256',encode(digest(convert_to((${postflightContentDigestExpression})::text,'UTF8'),'sha256'),'hex'),
   'data_invariants_sha256',encode(digest(convert_to((${invariantExpression})::text,'UTF8'),'sha256'),'hex')
 ) into rollback_evidence from hashed cross join uniqueness where uniqueness.ok=1`;
 
@@ -287,8 +300,16 @@ begin
      or to_regclass('public.pricing_source_versions') is null then
     raise exception 'R2 release postcondition failed: required tables missing';
   end if;
-  if exists (select 1 from public.profiles p where p.active_organization_id is null
-     or not exists (select 1 from public.organization_memberships m where m.user_id=p.id and m.organization_id=p.active_organization_id)) then
+  if (select count(*) from public.organizations) <> ${frozen.profiles}
+     or (select count(*) from public.organization_memberships) <> ${frozen.profiles}
+     or exists (select 1 from public.profiles p where p.active_organization_id is null
+       or (select count(*) from public.organizations o where o.created_by=p.id) <> 1
+       or not exists (select 1 from public.organizations o join public.organization_memberships m on m.organization_id=o.id
+         where o.id=p.active_organization_id and o.created_by=p.id and m.user_id=p.id and m.role='owner'))
+     or exists (select 1 from public.proposals p join public.organizations o on o.id=p.organization_id where o.created_by is distinct from p.user_id)
+     or exists (select 1 from public.proposals p where p.organization_id is null)
+     or exists (select 1 from public.user_branding_settings b join public.organizations o on o.id=b.organization_id where o.created_by is distinct from b.user_id)
+     or exists (select 1 from public.user_branding_settings b where b.organization_id is null) then
     raise exception 'R2 release postcondition failed: organization backfill mismatch';
   end if;
   if to_regprocedure('public.revoke_tracked_proposal_link(uuid,uuid,text)') is null
