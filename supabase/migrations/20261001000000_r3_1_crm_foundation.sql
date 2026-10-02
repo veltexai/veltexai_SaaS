@@ -838,6 +838,176 @@ revoke all on function public.move_crm_opportunity_stage(uuid, uuid, uuid, text,
 grant execute on function public.move_crm_opportunity_stage(uuid, uuid, uuid, text, uuid, text)
   to authenticated, service_role;
 
+create function public.convert_crm_lead(
+  p_organization uuid,
+  p_lead uuid,
+  p_request_key text,
+  p_pipeline uuid,
+  p_opportunity_name text,
+  p_segment text,
+  p_existing_customer uuid default null,
+  p_existing_contact uuid default null,
+  p_existing_property uuid default null
+)
+returns table(
+  lead_id uuid,
+  customer_id uuid,
+  contact_id uuid,
+  property_id uuid,
+  opportunity_id uuid,
+  replayed boolean
+)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare
+  source_lead public.crm_leads%rowtype;
+  v_customer uuid;
+  v_contact uuid;
+  v_property uuid;
+  v_opportunity uuid;
+  v_initial_stage uuid;
+  v_pipeline_segment text;
+begin
+  if auth.uid() is null
+     or length(p_request_key) not between 8 and 200
+     or nullif(trim(p_opportunity_name), '') is null
+     or p_segment not in ('commercial', 'residential', 'turnover', 'specialty') then
+    raise exception 'lead conversion unavailable' using errcode = '42501';
+  end if;
+
+  select l.* into source_lead
+  from public.crm_leads l
+  where l.organization_id = p_organization and l.id = p_lead and l.deleted_at is null
+  for update;
+  if source_lead.id is null or not (
+    public.can_manage_organization(p_organization)
+    or (public.organization_role(p_organization) = 'estimator'
+      and (source_lead.created_by = auth.uid() or source_lead.assigned_to_user_id = auth.uid()))
+  ) then
+    raise exception 'lead conversion unavailable' using errcode = '42501';
+  end if;
+
+  if source_lead.status = 'converted' then
+    select o.id into v_opportunity from public.crm_opportunities o
+    where o.organization_id = p_organization
+      and o.id = source_lead.converted_opportunity_id
+      and o.idempotency_key = p_request_key;
+    if v_opportunity is null then
+      raise exception 'lead was already converted by another command' using errcode = '23514';
+    end if;
+    return query select source_lead.id, source_lead.converted_customer_id,
+      source_lead.converted_contact_id, source_lead.converted_property_id,
+      source_lead.converted_opportunity_id, true;
+    return;
+  end if;
+  if source_lead.status in ('junk', 'merged', 'disqualified') then
+    raise exception 'closed leads cannot be converted' using errcode = '23514';
+  end if;
+
+  select p.segment into v_pipeline_segment from public.crm_pipelines p
+  where p.organization_id = p_organization and p.id = p_pipeline and not p.archived;
+  if v_pipeline_segment is null
+     or (v_pipeline_segment = 'commercial' and p_segment not in ('commercial', 'specialty'))
+     or (v_pipeline_segment = 'residential_turnover' and p_segment not in ('residential', 'turnover')) then
+    raise exception 'pipeline and opportunity segment do not match' using errcode = '23514';
+  end if;
+  select s.id into v_initial_stage from public.crm_pipeline_stages s
+  where s.organization_id = p_organization and s.pipeline_id = p_pipeline
+    and s.category = 'new' and not s.hidden
+  order by s.position, s.id limit 1;
+  if v_initial_stage is null then
+    raise exception 'pipeline has no active new stage' using errcode = '23514';
+  end if;
+
+  if p_existing_customer is not null then
+    select c.id into v_customer from public.crm_customers c
+    where c.organization_id = p_organization and c.id = p_existing_customer and c.deleted_at is null;
+    if v_customer is null then
+      raise exception 'selected customer is unavailable' using errcode = '23514';
+    end if;
+  else
+    insert into public.crm_customers(
+      organization_id, customer_type, name, source, created_by, updated_by
+    ) values (
+      p_organization,
+      case when p_segment in ('commercial', 'specialty') then 'commercial' else 'household' end,
+      coalesce(nullif(trim(source_lead.customer_name), ''),
+        nullif(trim(source_lead.property_name), ''), nullif(trim(source_lead.contact_name), ''),
+        nullif(trim(source_lead.email), ''), 'Lead ' || left(source_lead.id::text, 8)),
+      'lead_conversion', auth.uid(), auth.uid()
+    ) returning id into v_customer;
+  end if;
+
+  if p_existing_contact is not null then
+    select c.id into v_contact from public.crm_contacts c
+    where c.organization_id = p_organization and c.id = p_existing_contact and c.deleted_at is null;
+    if v_contact is null then
+      raise exception 'selected contact is unavailable' using errcode = '23514';
+    end if;
+  elsif nullif(trim(coalesce(source_lead.contact_name, '')), '') is not null
+     or nullif(trim(coalesce(source_lead.email, '')), '') is not null
+     or nullif(trim(coalesce(source_lead.phone, '')), '') is not null then
+    insert into public.crm_contacts(
+      organization_id, first_name, email, phone, source, created_by, updated_by
+    ) values (
+      p_organization, nullif(trim(source_lead.contact_name), ''),
+      nullif(lower(trim(source_lead.email)), ''), nullif(trim(source_lead.phone), ''),
+      'lead_conversion', auth.uid(), auth.uid()
+    ) returning id into v_contact;
+  end if;
+  if v_contact is not null then
+    insert into public.crm_customer_contacts(
+      organization_id, customer_id, contact_id, contact_role, is_primary, created_by
+    ) values (p_organization, v_customer, v_contact, 'decision_maker', true, auth.uid())
+    on conflict on constraint crm_customer_contacts_pkey do nothing;
+  end if;
+
+  if p_existing_property is not null then
+    select p.id into v_property from public.crm_properties p
+    where p.organization_id = p_organization and p.id = p_existing_property
+      and p.deleted_at is null and (p.customer_id is null or p.customer_id = v_customer);
+    if v_property is null then
+      raise exception 'selected property is unavailable' using errcode = '23514';
+    end if;
+    update public.crm_properties set customer_id = v_customer, updated_by = auth.uid()
+    where organization_id = p_organization and id = v_property and customer_id is null;
+  elsif nullif(trim(coalesce(source_lead.property_name, '')), '') is not null
+     or nullif(trim(coalesce(source_lead.service_location, '')), '') is not null then
+    insert into public.crm_properties(
+      organization_id, customer_id, name, address_line_1, source, created_by, updated_by
+    ) values (
+      p_organization, v_customer,
+      coalesce(nullif(trim(source_lead.property_name), ''), 'Primary service location'),
+      nullif(trim(source_lead.service_location), ''), 'lead_conversion', auth.uid(), auth.uid()
+    ) returning id into v_property;
+  end if;
+
+  insert into public.crm_opportunities(
+    organization_id, customer_id, property_id, pipeline_id, stage_id, lead_id,
+    idempotency_key, name, owner_user_id, estimator_user_id, segment, source,
+    created_by, updated_by
+  ) values (
+    p_organization, v_customer, v_property, p_pipeline, v_initial_stage, source_lead.id,
+    p_request_key, trim(p_opportunity_name),
+    coalesce(source_lead.assigned_to_user_id, auth.uid()), source_lead.assigned_to_user_id,
+    p_segment, 'lead_conversion', auth.uid(), auth.uid()
+  ) returning id into v_opportunity;
+
+  update public.crm_leads set
+    status = 'converted', converted_customer_id = v_customer,
+    converted_contact_id = v_contact, converted_property_id = v_property,
+    converted_opportunity_id = v_opportunity, updated_by = auth.uid()
+  where organization_id = p_organization and id = source_lead.id;
+
+  return query select source_lead.id, v_customer, v_contact, v_property,
+    v_opportunity, false;
+end;
+$$;
+revoke all on function public.convert_crm_lead(uuid, uuid, text, uuid, text, text, uuid, uuid, uuid)
+  from public, anon;
+grant execute on function public.convert_crm_lead(uuid, uuid, text, uuid, text, text, uuid, uuid, uuid)
+  to authenticated, service_role;
+
 create function public.read_crm_pipeline_board(target_organization uuid)
 returns jsonb language sql stable security definer
 set search_path = pg_catalog, public as $$

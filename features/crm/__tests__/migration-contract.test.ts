@@ -73,6 +73,19 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain('revoke all on function public.move_crm_opportunity_stage');
   });
 
+  it('converts a lead atomically without retyping or duplicating selected records', () => {
+    expect(migration).toContain('create function public.convert_crm_lead(');
+    expect(migration).toContain('for update;');
+    expect(migration).toContain("if source_lead.status = 'converted' then");
+    expect(migration).toContain("p_segment, 'lead_conversion', auth.uid(), auth.uid()");
+    expect(migration).toContain('p_existing_customer is not null');
+    expect(migration).toContain('p_existing_contact is not null');
+    expect(migration).toContain('p_existing_property is not null');
+    expect(migration).toContain("and s.category = 'new' and not s.hidden");
+    expect(migration).toContain("status = 'converted', converted_customer_id = v_customer");
+    expect(migration).toContain('revoke all on function public.convert_crm_lead');
+  });
+
   it('projects the board through a caller-bound redacted RPC', () => {
     expect(migration).toContain('create function public.read_crm_pipeline_board(target_organization uuid)');
     expect(migration).toContain("public.organization_role(target_organization) as role");
