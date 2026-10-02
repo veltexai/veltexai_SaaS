@@ -2198,6 +2198,79 @@ create trigger bootstrap_crm_after_organization_trigger
 
 -- Auditing/outbox: reuse the R2 transactional infrastructure. Stage history is
 -- separately append-only and receives no client insert/update/delete grant.
+create function public.record_crm_change()
+returns trigger language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare row_data jsonb; old_data jsonb; new_data jsonb; tenant_id uuid; record_id text;
+  event_names text[] := array[]::text[];
+  event_name text; stage_category text;
+begin
+  old_data := case when tg_op='INSERT' then '{}'::jsonb else to_jsonb(old) end;
+  new_data := case when tg_op='DELETE' then '{}'::jsonb else to_jsonb(new) end;
+  row_data := case when tg_op='DELETE' then old_data else new_data end;
+  tenant_id := (row_data->>'organization_id')::uuid;
+  record_id := row_data->>'id';
+  insert into public.organization_audit_log(
+    organization_id,actor_user_id,action,entity_type,entity_id,metadata
+  ) values(tenant_id,auth.uid(),tg_table_name||'.'||lower(tg_op),tg_table_name,record_id,
+    jsonb_build_object('operation',tg_op));
+
+  if tg_table_name='crm_customers' and tg_op='INSERT' then event_names:=array['customer.created'];
+  elsif tg_table_name='crm_customers' and tg_op='UPDATE' then event_names:=array['customer.updated'];
+  elsif tg_table_name='crm_contacts' and tg_op='INSERT' then event_names:=array['contact.created'];
+  elsif tg_table_name='crm_contacts' and tg_op='UPDATE' then event_names:=array['contact.updated'];
+  elsif tg_table_name='crm_properties' and tg_op='INSERT' then event_names:=array['property.created'];
+  elsif tg_table_name='crm_properties' and tg_op='UPDATE' then event_names:=array['property.updated'];
+  elsif tg_table_name='crm_leads' and tg_op='INSERT' then
+    event_names:=array['lead.created'];
+    if new_data->>'status'='converted' then event_names:=array_append(event_names,'lead.converted'); end if;
+  elsif tg_table_name='crm_leads' and tg_op='UPDATE'
+      and new_data->>'status' is distinct from old_data->>'status' then
+    event_names:=array[case new_data->>'status' when 'converted' then 'lead.converted'
+      when 'disqualified' then 'lead.disqualified' when 'junk' then 'lead.junked'
+      when 'merged' then 'lead.merged' else null end];
+  elsif tg_table_name='crm_opportunities' and tg_op='INSERT' then
+    event_names:=array['opportunity.created'];
+    if new_data->>'reactivated_from_id' is not null then event_names:=array_append(event_names,'opportunity.reactivated'); end if;
+  elsif tg_table_name='crm_opportunities' and tg_op='UPDATE' then
+    if new_data->>'stage_id' is distinct from old_data->>'stage_id' then
+      event_names:=array_append(event_names,'opportunity.stage_changed');
+      select s.category into stage_category from public.crm_pipeline_stages s
+        where s.organization_id=(new_data->>'organization_id')::uuid
+          and s.id=(new_data->>'stage_id')::uuid;
+      if stage_category='won' and new_data->>'acceptance_method'='manual' then event_names:=array_append(event_names,'opportunity.won');
+      elsif stage_category='lost' then event_names:=array_append(event_names,'opportunity.lost');
+      elsif stage_category='disqualified' then event_names:=array_append(event_names,'opportunity.disqualified'); end if;
+    end if;
+    if new_data->>'owner_user_id' is distinct from old_data->>'owner_user_id' then event_names:=array_append(event_names,'opportunity.owner_changed'); end if;
+    if new_data->>'estimator_user_id' is distinct from old_data->>'estimator_user_id' then event_names:=array_append(event_names,'opportunity.estimator_changed'); end if;
+  elsif tg_table_name='crm_site_work_packages' and (tg_op='INSERT'
+      or new_data->>'status' is distinct from old_data->>'status') then
+    event_names:=array['work_package.status_changed'];
+  elsif tg_table_name='crm_walkthroughs' and tg_op='INSERT' then event_names:=array['walkthrough.scheduled'];
+  elsif tg_table_name='crm_walkthroughs' and tg_op='UPDATE'
+      and new_data->>'status' is distinct from old_data->>'status' then
+    event_names:=array[case new_data->>'status' when 'rescheduled' then 'walkthrough.rescheduled'
+      when 'cancelled' then 'walkthrough.cancelled' else null end];
+  elsif tg_table_name='crm_tasks' and tg_op='INSERT' then event_names:=array['task.created'];
+  elsif tg_table_name='crm_tasks' and tg_op='UPDATE' and new_data->>'status'='completed'
+      and old_data->>'status'<>'completed' then
+    event_names:=array['task.completed'];
+  end if;
+
+  foreach event_name in array event_names loop
+    if event_name is not null then
+      insert into public.organization_event_outbox(
+        organization_id,event_type,aggregate_type,aggregate_id,payload
+      ) values(tenant_id,event_name,tg_table_name,record_id,
+        jsonb_build_object('record_id',record_id));
+    end if;
+  end loop;
+  return case when tg_op='DELETE' then old else new end;
+end;
+$$;
+revoke all on function public.record_crm_change() from public,anon,authenticated,service_role;
+
 do $crm_audit_triggers$
 declare table_name text;
 begin
@@ -2208,7 +2281,7 @@ begin
     'crm_tasks', 'crm_site_work_packages', 'crm_qualification_responses'
   ] loop
     execute format(
-      'create trigger %I after insert or update or delete on public.%I for each row execute function public.record_organization_change()',
+      'create trigger %I after insert or update or delete on public.%I for each row execute function public.record_crm_change()',
       table_name || '_audit', table_name
     );
   end loop;

@@ -194,6 +194,21 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain("'properties', (select value from properties)");
   });
 
+  it('emits reviewed ID-only CRM domain events through the shared outbox', () => {
+    expect(migration).toContain('create function public.record_crm_change()');
+    for (const event of [
+      'lead.created', 'lead.converted', 'lead.disqualified', 'lead.junked', 'lead.merged',
+      'customer.created', 'contact.created', 'property.created', 'opportunity.created',
+      'opportunity.stage_changed', 'opportunity.owner_changed', 'opportunity.estimator_changed',
+      'opportunity.won', 'opportunity.lost', 'opportunity.disqualified',
+      'opportunity.reactivated', 'work_package.status_changed', 'walkthrough.scheduled',
+      'walkthrough.rescheduled', 'walkthrough.cancelled', 'task.created', 'task.completed',
+    ]) expect(migration).toContain(`'${event}'`);
+    expect(migration).toContain("jsonb_build_object('record_id',record_id)");
+    expect(migration).toContain('execute function public.record_crm_change()');
+    expect(migration).not.toContain('execute function public.record_organization_change()');
+  });
+
   it('projects the board through a caller-bound redacted RPC', () => {
     expect(migration).toContain('create function public.read_crm_pipeline_board(target_organization uuid)');
     expect(migration).toContain("public.organization_role(target_organization) as role");
