@@ -124,7 +124,7 @@ const postflightEvidenceQuery = `${catalogSource.slice(0, catalogMarkerIndex)}se
 const stepSql = manifest.steps.map((step, index) => {
   const body = sourceBody(step);
   const apply = body ? `\n${body}\n` : '\n-- Reviewed terminal equivalence: history reconciliation only.\n';
-  return `-- STEP ${index + 1}/35 ${step.file}\n-- MODE ${step.mode}; SOURCE SHA-256 ${step.source_sha256}\n+do $$ begin
+  return `-- STEP ${index + 1}/35 ${step.file}\n-- MODE ${step.mode}; SOURCE SHA-256 ${step.source_sha256}\ndo $$ begin
   if exists (select 1 from supabase_migrations.schema_migrations where version='${step.version}') then
     raise exception 'R2 release refused: history appeared early for ${step.version}';
   end if;

@@ -49,6 +49,7 @@ assert.match(sqlA, /organization backfill mismatch/);
 assert.match(sqlA, /private routine exposed to service_role/);
 assert.match(sqlA, /client MAINTAIN remains/);
 assert.doesNotMatch(sqlA, /UNARMED G3 ARTIFACT/);
+assert.doesNotMatch(sqlA, /^\+/m,'generated SQL must not contain diff-marker prefixes');
 assert.ok(sqlA.indexOf('apply-normalize-equivalent-drift') < sqlA.indexOf('20260925013000_production_schema_compatibility.sql'));
 assert.equal(createHash('sha256').update(sqlA).digest('hex').length, 64);
 const rollbackPath=resolve(work,'rollback.sql');
@@ -59,6 +60,7 @@ assert.equal((rollbackSql.match(/^commit;$/gim)??[]).length,0);
 assert.equal((rollbackSql.match(/^rollback;$/gim)??[]).length,1);
 assert.match(rollbackSql,/R2_ROLLBACK_PROOF_COMPLETE/);
 assert.match(rollbackSql,/'rollback_proof',true/);
+assert.doesNotMatch(rollbackSql,/^\+/m,'rollback SQL must not contain diff-marker prefixes');
 
 expectFailure('bad-approval', ({ authorization: path }) => { const x=JSON.parse(readFileSync(path)); x.status='PENDING'; writeFileSync(path, JSON.stringify(x)); });
 expectFailure('wrong-project', ({ authorization: path }) => { const x=JSON.parse(readFileSync(path)); x.project_ref='ynzkwctwlssjcsjmahey'; writeFileSync(path, JSON.stringify(x)); });
