@@ -20,6 +20,7 @@ describe('R3-1 CRM board', () => {
         ok: true,
         json: async () => ({ data: {
           organization_id: ORG_ID,
+          caller_role: 'owner', loss_reasons: [],
           viewer_price_redacted: false,
           pipelines: [{
             id: 'pipeline-1', name: 'Commercial facility', is_default: true,
@@ -50,6 +51,7 @@ describe('R3-1 CRM board', () => {
         ok: true,
         json: async () => ({ data: {
           organization_id: ORG_ID,
+          caller_role: 'viewer', loss_reasons: [],
           viewer_price_redacted: true,
           pipelines: [{
             id: 'pipeline-1', name: 'Residential and turnover', is_default: true,
@@ -66,6 +68,7 @@ describe('R3-1 CRM board', () => {
     expect(screen.getByLabelText('Email')).toHaveAttribute('type', 'email');
     expect(screen.getByLabelText('Phone')).toHaveAttribute('type', 'tel');
     expect(screen.getByRole('button', { name: 'Add lead' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Move Turnover to stage' })).not.toBeInTheDocument();
   });
 
   it('announces load failures and offers a retry', async () => {
@@ -81,7 +84,7 @@ describe('R3-1 CRM board', () => {
     fetchMock
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
-        organization_id: ORG_ID, viewer_price_redacted: false,
+        organization_id: ORG_ID, caller_role: 'owner', loss_reasons: [], viewer_price_redacted: false,
         pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [] }],
         opportunities: [],
       } }) })
@@ -111,7 +114,7 @@ describe('R3-1 CRM board', () => {
     fetchMock
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
-        organization_id: ORG_ID, viewer_price_redacted: false,
+        organization_id: ORG_ID, caller_role: 'owner', loss_reasons: [], viewer_price_redacted: false,
         pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
           { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
           { id: 'stage-qualifying', label: 'Qualification', category: 'qualifying', position: 20, hidden: false },
@@ -122,10 +125,51 @@ describe('R3-1 CRM board', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { replayed: false } }) });
     render(<CrmBoard />);
     const move = await screen.findByRole('combobox', { name: 'Move North Campus to stage' });
-    expect(screen.getByRole('option', { name: 'Won' })).toBeDisabled();
+    expect(screen.getByRole('option', { name: 'Won' })).toBeEnabled();
     fireEvent.change(move, { target: { value: 'stage-qualifying' } });
     expect(await screen.findByText('Opportunity moved.')).toBeInTheDocument();
     expect(fetchMock.mock.calls[2][0]).toBe(`/api/orgs/${ORG_ID}/crm/opportunities/opportunity-1/stage`);
     expect(fetchMock.mock.calls[2][1].body).toBe('{"stageId":"stage-qualifying"}');
+  });
+
+  it('collects a required loss reason before a terminal stage move', async () => {
+    jest.spyOn(global.crypto, 'randomUUID').mockReturnValue('cccccccc-cccc-4ccc-8ccc-cccccccccccc');
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'estimator', viewer_price_redacted: false,
+        loss_reasons: [{ id: 'reason-1', label: 'Price', applies_to: 'lost' }],
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+          { id: 'stage-lost', label: 'Lost', category: 'lost', position: 90, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1', stage_id: 'stage-new', category: 'new' }],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { replayed: false } }) });
+    render(<CrmBoard />);
+    const move = await screen.findByRole('combobox', { name: 'Move North Campus to stage' });
+    fireEvent.change(move, { target: { value: 'stage-lost' } });
+    expect(screen.getByRole('dialog', { name: 'Record Lost' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Reason'), { target: { value: 'reason-1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm outcome' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls[2][1].body).toBe('{"stageId":"stage-lost","lossReasonId":"reason-1"}');
+  });
+
+  it('requires a manual reason for an owner-recorded win', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'owner', loss_reasons: [], viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+          { id: 'stage-won', label: 'Won', category: 'won', position: 70, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1', stage_id: 'stage-new', category: 'new' }],
+      } }) });
+    render(<CrmBoard />);
+    const move = await screen.findByRole('combobox', { name: 'Move North Campus to stage' });
+    fireEvent.change(move, { target: { value: 'stage-won' } });
+    expect(screen.getByLabelText('Manual win reason')).toBeRequired();
   });
 });

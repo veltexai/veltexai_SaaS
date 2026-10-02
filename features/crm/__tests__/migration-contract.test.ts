@@ -147,6 +147,8 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain("case when c.role <> 'viewer' then o.value_amount_minor end");
     expect(migration).toContain("case when c.role <> 'viewer' then o.value_basis end");
     expect(migration).toContain("case when c.role <> 'viewer' then o.currency end");
+    expect(migration).toContain("'caller_role', (select role from caller)");
+    expect(migration).toContain("'loss_reasons', (select value from loss_reasons)");
     expect(migration).toContain('revoke all on function public.read_crm_pipeline_board(uuid) from public, anon');
     expect(migration).toContain('grant execute on function public.read_crm_pipeline_board(uuid) to authenticated, service_role');
   });

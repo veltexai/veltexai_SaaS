@@ -22,8 +22,10 @@ type Opportunity = {
 };
 type Board = {
   organization_id: string;
+  caller_role: 'owner' | 'admin' | 'estimator' | 'viewer';
   pipelines: Pipeline[];
   opportunities: Opportunity[];
+  loss_reasons: { id: string; label: string; applies_to: 'lost' | 'disqualified' | 'both' }[];
   viewer_price_redacted: boolean;
 };
 type DuplicateCandidate = { entity_type: string; entity_id: string; matched_on: string };
@@ -46,6 +48,7 @@ export function CrmBoard() {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [view, setView] = useState<'board' | 'list'>('board');
+  const [outcome, setOutcome] = useState<{ opportunity: Opportunity; stage: Stage } | null>(null);
   const [duplicateReview, setDuplicateReview] = useState<{
     candidates: DuplicateCandidate[]; draft: LeadDraft; key: string;
   } | null>(null);
@@ -77,7 +80,11 @@ export function CrmBoard() {
     [board],
   );
 
-  async function moveOpportunity(opportunity: Opportunity, stageId: string) {
+  async function moveOpportunity(
+    opportunity: Opportunity,
+    stageId: string,
+    details?: { lossReasonId?: string; manualWinReason?: string },
+  ) {
     if (!organizationId || stageId === opportunity.stage_id) return;
     setNotice('Moving opportunity…');
     const response = await fetch(
@@ -85,7 +92,7 @@ export function CrmBoard() {
       {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() },
-        body: JSON.stringify({ stageId }),
+        body: JSON.stringify({ stageId, ...details }),
       },
     );
     const payload = await response.json();
@@ -100,7 +107,18 @@ export function CrmBoard() {
         ? { ...item, stage_id: stageId, category: target?.category ?? item.category }
         : item),
     } : current);
+    setOutcome(null);
     setNotice('Opportunity moved.');
+  }
+
+  async function submitOutcome(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!outcome) return;
+    const form = new FormData(event.currentTarget);
+    await moveOpportunity(outcome.opportunity, outcome.stage.id, {
+      lossReasonId: String(form.get('lossReasonId') || '') || undefined,
+      manualWinReason: String(form.get('manualWinReason') || '') || undefined,
+    });
   }
 
   function stageMove(opportunity: Opportunity) {
@@ -110,7 +128,15 @@ export function CrmBoard() {
         <select
           id={`move-${opportunity.id}`}
           value={opportunity.stage_id}
-          onChange={(event) => void moveOpportunity(opportunity, event.target.value)}
+          onChange={(event) => {
+            const target = activePipeline?.stages.find((stage) => stage.id === event.target.value);
+            if (!target) return;
+            if (['won', 'lost', 'disqualified'].includes(target.category)) {
+              setOutcome({ opportunity, stage: target });
+              return;
+            }
+            void moveOpportunity(opportunity, target.id);
+          }}
           className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
           aria-label={`Move ${opportunity.name} to stage`}
         >
@@ -118,7 +144,8 @@ export function CrmBoard() {
             <option
               key={stage.id}
               value={stage.id}
-              disabled={['won', 'lost', 'disqualified', 'handed_off'].includes(stage.category)}
+              disabled={stage.category === 'handed_off'
+                || (stage.category === 'won' && !['owner', 'admin'].includes(board.caller_role))}
             >{stage.label}</option>
           ))}
         </select>
@@ -210,6 +237,40 @@ export function CrmBoard() {
         </Card>
       )}
       {notice && <p role="status" aria-live="polite" className="text-sm text-blue-800">{notice}</p>}
+      {outcome && (
+        <Card role="dialog" aria-modal="true" aria-labelledby="outcome-heading">
+          <CardHeader><CardTitle id="outcome-heading">Record {outcome.stage.label}</CardTitle></CardHeader>
+          <CardContent>
+            <form className="space-y-4" onSubmit={submitOutcome}>
+              <p className="text-sm text-gray-700">Confirm the outcome for {outcome.opportunity.name}.</p>
+              {outcome.stage.category === 'won' ? (
+                <div className="space-y-2">
+                  <Label htmlFor="manual-win-reason">Manual win reason</Label>
+                  <textarea id="manual-win-reason" name="manualWinReason" required maxLength={1000}
+                    className="min-h-24 w-full rounded-md border border-gray-300 p-3" />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="loss-reason">Reason</Label>
+                  <select id="loss-reason" name="lossReasonId" required
+                    className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                    <option value="">Choose a reason</option>
+                    {board.loss_reasons.filter((reason) => reason.applies_to === 'both'
+                      || reason.applies_to === outcome.stage.category).map((reason) => (
+                      <option key={reason.id} value={reason.id}>{reason.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-3">
+                <Button type="submit" className="min-h-11">Confirm outcome</Button>
+                <Button type="button" variant="outline" className="min-h-11"
+                  onClick={() => setOutcome(null)}>Cancel</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
       {duplicateReview && (
         <Card aria-labelledby="duplicate-heading">
           <CardHeader><CardTitle id="duplicate-heading">Review possible duplicate</CardTitle></CardHeader>
@@ -252,7 +313,7 @@ export function CrmBoard() {
                       <h3 className="font-medium text-gray-900">{opportunity.name}</h3>
                       {valueLabel(opportunity) && <p className="mt-2 text-sm text-gray-600">{valueLabel(opportunity)}</p>}
                       {opportunity.next_action_due_at && <p className="mt-2 text-xs text-gray-500">Next action {new Date(opportunity.next_action_due_at).toLocaleDateString()}</p>}
-                      {stageMove(opportunity)}
+                      {board.caller_role !== 'viewer' && stageMove(opportunity)}
                     </article>
                   ))}
                 </div>
@@ -276,7 +337,7 @@ export function CrmBoard() {
                   <th scope="row" className="px-4 py-3 text-left text-sm font-medium">{opportunity.name}</th>
                   <td className="px-4 py-3 text-sm">{activePipeline.stages.find((stage) => stage.id === opportunity.stage_id)?.label}</td>
                   <td className="px-4 py-3 text-sm">{valueLabel(opportunity) ?? '—'}</td>
-                  <td className="px-4 py-3">{stageMove(opportunity)}</td>
+                  <td className="px-4 py-3">{board.caller_role === 'viewer' ? 'Read only' : stageMove(opportunity)}</td>
                 </tr>
               ))}
             </tbody>

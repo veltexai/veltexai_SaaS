@@ -1481,11 +1481,21 @@ set search_path = pg_catalog, public as $$
           o.created_by = auth.uid() or o.owner_user_id = auth.uid() or o.estimator_user_id = auth.uid()
         ))
       )
+  ), loss_reasons as (
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'id', r.id,
+      'label', r.label,
+      'applies_to', r.applies_to
+    ) order by r.label, r.id), '[]'::jsonb) as value
+    from public.crm_loss_reasons r
+    where r.organization_id = target_organization and r.active
   )
   select case when (select role from caller) is null then null else jsonb_build_object(
     'organization_id', target_organization,
+    'caller_role', (select role from caller),
     'pipelines', (select value from pipelines),
     'opportunities', (select value from opportunities),
+    'loss_reasons', (select value from loss_reasons),
     'viewer_price_redacted', (select role = 'viewer' from caller)
   ) end;
 $$;
