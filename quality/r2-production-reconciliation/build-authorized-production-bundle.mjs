@@ -1,0 +1,209 @@
+#!/usr/bin/env node
+
+import { createHash } from 'node:crypto';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { basename, dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const root = resolve(here, '../..');
+const [manifestPath, reviewedFingerprintPath, finalFingerprintPath, authorizationPath, outputPath] = process.argv.slice(2).map((value) => value ? resolve(value) : value);
+if (!manifestPath || !reviewedFingerprintPath || !finalFingerprintPath || !authorizationPath || !outputPath) {
+  throw new Error('usage: build-authorized-production-bundle.mjs <manifest> <reviewed-fingerprint> <final-fingerprint> <authorization> <output>');
+}
+
+const sha = (value) => createHash('sha256').update(value).digest('hex');
+const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
+const manifestBytes = readFileSync(manifestPath);
+const reviewedBytes = readFileSync(reviewedFingerprintPath);
+const finalBytes = readFileSync(finalFingerprintPath);
+const authorizationBytes = readFileSync(authorizationPath);
+const manifest = JSON.parse(manifestBytes);
+const reviewed = JSON.parse(reviewedBytes);
+const final = JSON.parse(finalBytes);
+const authorization = JSON.parse(authorizationBytes);
+
+if (manifest.contract_version !== 2 || manifest.target !== 'production iwoaaljitifloolszxlu' || manifest.armed !== false || manifest.productionAuthorized !== false) {
+  throw new Error('unarmed manifest contract mismatch');
+}
+if (manifest.fingerprint_sha256 !== sha(reviewedBytes)) throw new Error('manifest does not bind reviewed fingerprint');
+if (authorization.status !== 'APPROVED' || authorization.scope !== 'R2 production release sequence' || authorization.project_ref !== 'iwoaaljitifloolszxlu') {
+  throw new Error('production authorization contract mismatch');
+}
+if (authorization.manifest_sha256 !== sha(manifestBytes) || authorization.reviewed_fingerprint_sha256 !== sha(reviewedBytes) || authorization.final_fingerprint_sha256 !== sha(finalBytes)) {
+  throw new Error('production authorization does not bind both fingerprints');
+}
+if (!authorization.approved_by || !authorization.approved_at || authorization.gates !== 'G0-G4 VERIFIED') {
+  throw new Error('production authorization metadata incomplete');
+}
+
+function comparableFingerprint(value) {
+  const copy = structuredClone(value);
+  delete copy.captured_at;
+  delete copy.capture_sha256;
+  if (copy.classification) delete copy.classification.classified_at;
+  return copy;
+}
+if (JSON.stringify(comparableFingerprint(reviewed)) !== JSON.stringify(comparableFingerprint(final))) {
+  throw new Error('final production fingerprint drifted from reviewed state');
+}
+
+const reviewedSources = readJson(resolve(here, 'reviewed-source-sha256.json'));
+if (manifest.steps.length !== 35 || JSON.stringify(Object.keys(reviewedSources)) !== JSON.stringify(manifest.steps.map((step) => step.file))) {
+  throw new Error('manifest is not the exact reviewed 35-step source set');
+}
+
+const applyModes = new Set(['apply', 'apply-replayable-partial', 'apply-normalize-equivalent-drift']);
+const reconcileModes = new Set(['reconcile-history', 'reconcile-absent-equivalent']);
+function sourceBody(step) {
+  const path = resolve(root, 'supabase/migrations', step.file);
+  const source = readFileSync(path, 'utf8');
+  const digest = sha(source);
+  if (digest !== step.source_sha256 || digest !== reviewedSources[step.file]) throw new Error(`source drift: ${step.file}`);
+  if (reconcileModes.has(step.mode)) return '';
+  if (!applyModes.has(step.mode)) throw new Error(`unsupported production mode: ${step.mode}`);
+  const beginMatches = source.match(/^\s*begin(?: transaction)?;\s*$/gim) ?? [];
+  const commitMatches = source.match(/^\s*commit;\s*$/gim) ?? [];
+  if (beginMatches.length !== commitMatches.length || beginMatches.length > 1) throw new Error(`unexpected transaction controls: ${step.file}`);
+  if (beginMatches.length === 0) return source.trim();
+  if (!/^\s*begin(?: transaction)?;\s*$/im.test(source) || !/^\s*commit;\s*$/im.test(source.trimEnd().split('\n').at(-1))) {
+    throw new Error(`transaction controls are not exact outer wrappers: ${step.file}`);
+  }
+  return source.replace(/^\s*begin(?: transaction)?;\s*/im, '').replace(/\s*commit;\s*$/i, '').trim();
+}
+
+const initialVersions = final.migration_history?.versions;
+if (!Array.isArray(initialVersions) || final.migration_history.count !== 29 || new Set(initialVersions).size !== 29) throw new Error('final fingerprint history is not the exact 29-version baseline');
+if (manifest.steps.some((step) => initialVersions.includes(step.version))) throw new Error('planned history already exists');
+const finalVersions = [...initialVersions, ...manifest.steps.map((step) => step.version)].sort();
+if (new Set(finalVersions).size !== 64) throw new Error('final history is not exactly 64 unique versions');
+const sqlArray = (values) => `array[${values.map((value) => `'${value.replaceAll("'", "''")}'`).join(',')}]::text[]`;
+const migrationName = (file) => file.replace(/^\d+_/, '').replace(/\.sql$/, '');
+
+const stepSql = manifest.steps.map((step, index) => {
+  const body = sourceBody(step);
+  const apply = body ? `\n${body}\n` : '\n-- Reviewed terminal equivalence: history reconciliation only.\n';
+  return `-- STEP ${index + 1}/35 ${step.file}\n-- MODE ${step.mode}; SOURCE SHA-256 ${step.source_sha256}\n+do $$ begin
+  if exists (select 1 from supabase_migrations.schema_migrations where version='${step.version}') then
+    raise exception 'R2 release refused: history appeared early for ${step.version}';
+  end if;
+end $$;${apply}
+insert into supabase_migrations.schema_migrations (version, statements, name)
+values ('${step.version}', array[]::text[], '${migrationName(step.file)}');`;
+}).join('\n\n');
+
+const artifactBinding = {
+  contract_version: 1,
+  target: 'production iwoaaljitifloolszxlu',
+  productionAuthorized: true,
+  armed: true,
+  manifest_sha256: sha(manifestBytes),
+  reviewed_fingerprint_sha256: sha(reviewedBytes),
+  final_fingerprint_sha256: sha(finalBytes),
+  authorization_sha256: sha(authorizationBytes),
+  steps: manifest.steps.map(({ file, version, source_sha256, mode }) => ({ file, version, source_sha256, mode })),
+};
+const bindingBase64 = Buffer.from(JSON.stringify(artifactBinding)).toString('base64');
+const frozen = manifest.frozen_counts;
+const sql = `-- GENERATED, HASH-BOUND R2 PRODUCTION EXECUTION ARTIFACT. DO NOT EDIT.
+-- Target: iwoaaljitifloolszxlu only. Confirm dashboard project before execution.
+-- Binding SHA-256: ${sha(bindingBase64)}
+-- One transaction; every exception rolls back schema, data, ACL and history changes.
+begin;
+set local lock_timeout = '15s';
+set local statement_timeout = '30min';
+select pg_advisory_xact_lock(hashtextextended('veltex-r2-production-release',0));
+
+do $$
+begin
+  if current_user <> 'postgres' then raise exception 'R2 release refused: current_user must be postgres'; end if;
+  if (select count(*) from supabase_migrations.schema_migrations) <> 29
+     or (select count(distinct version) from supabase_migrations.schema_migrations) <> 29
+     or (select coalesce(array_agg(version order by version),array[]::text[]) from supabase_migrations.schema_migrations) <> ${sqlArray(initialVersions.sort())} then
+    raise exception 'R2 release refused: migration history drifted';
+  end if;
+  if (select count(*) from public.profiles) <> ${frozen.profiles}
+     or (select count(*) from public.proposals) <> ${frozen.proposals}
+     or (select count(*) from public.subscriptions) <> ${frozen.subscriptions}
+     or (select count(*) from public.proposal_tracking) <> ${frozen.proposal_tracking}
+     or (select count(*) from public.user_branding_settings) <> ${frozen.user_branding_settings}
+     or (select count(*) from public.company_profiles) <> ${frozen.company_profiles} then
+    raise exception 'R2 release refused: frozen row counts drifted';
+  end if;
+  if exists (select 1 from public.proposals p left join public.profiles pr on pr.id=p.user_id where pr.id is null)
+     or exists (select 1 from public.proposal_tracking t left join public.proposals p on p.id=t.proposal_id where p.id is null) then
+    raise exception 'R2 release refused: frozen orphan boundary drifted';
+  end if;
+end $$;
+
+${stepSql}
+
+do $$
+declare v text;
+declare client_maintain_remains boolean := false;
+begin
+  if (select count(*) from supabase_migrations.schema_migrations) <> 64
+     or (select count(distinct version) from supabase_migrations.schema_migrations) <> 64
+     or (select coalesce(array_agg(version order by version),array[]::text[]) from supabase_migrations.schema_migrations) <> ${sqlArray(finalVersions)} then
+    raise exception 'R2 release postcondition failed: history is not exact';
+  end if;
+  if (select count(*) from public.profiles) <> ${frozen.profiles}
+     or (select count(*) from public.proposals) <> ${frozen.proposals}
+     or (select count(*) from public.subscriptions) <> ${frozen.subscriptions}
+     or (select count(*) from public.proposal_tracking) <> ${frozen.proposal_tracking}
+     or (select count(*) from public.user_branding_settings) <> ${frozen.user_branding_settings} then
+    raise exception 'R2 release postcondition failed: protected row counts changed';
+  end if;
+  if to_regclass('public.organizations') is null or to_regclass('public.organization_memberships') is null
+     or to_regclass('public.organization_audit_log') is null or to_regclass('public.business_service_profiles') is null
+     or to_regclass('public.pricing_source_versions') is null then
+    raise exception 'R2 release postcondition failed: required tables missing';
+  end if;
+  if exists (select 1 from public.profiles p where p.active_organization_id is null
+     or not exists (select 1 from public.organization_memberships m where m.user_id=p.id and m.organization_id=p.active_organization_id)) then
+    raise exception 'R2 release postcondition failed: organization backfill mismatch';
+  end if;
+  if to_regprocedure('public.revoke_tracked_proposal_link(uuid,uuid,text)') is null
+     or to_regprocedure('public.read_tracked_proposal_print(text)') is null
+     or has_function_privilege('anon','public.revoke_tracked_proposal_link(uuid,uuid,text)','EXECUTE')
+     or not has_function_privilege('authenticated','public.revoke_tracked_proposal_link(uuid,uuid,text)','EXECUTE') then
+    raise exception 'R2 release postcondition failed: tracked-link boundary mismatch';
+  end if;
+  foreach v in array array['_r0_get_user_current_usage_impl(uuid)','_r0_can_user_create_proposal_impl(uuid)','_r0_get_user_usage_info_impl(uuid)','_r0_increment_user_usage_impl(uuid)','_r0_can_user_access_template_impl(uuid,uuid)','_r0_user_has_active_access_impl(uuid)','_r0_get_user_accessible_templates_impl(uuid)'] loop
+    if has_function_privilege('service_role',('public.'||v)::regprocedure,'EXECUTE') then
+      raise exception 'R2 release postcondition failed: private routine exposed to service_role: %',v;
+    end if;
+  end loop;
+  if current_setting('server_version_num')::int >= 170000 then
+    execute $maintain$select exists (
+      select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+      cross join (values('anon'),('authenticated')) r(role_name)
+      where n.nspname='public' and c.relkind in ('r','p','v','m','f')
+        and not exists (select 1 from pg_depend d where d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e')
+        and has_table_privilege(r.role_name,c.oid,'MAINTAIN'))$maintain$ into client_maintain_remains;
+  end if;
+  if client_maintain_remains then
+    raise exception 'R2 release postcondition failed: client MAINTAIN remains';
+  end if;
+end $$;
+
+commit;
+
+select 'R2_PRODUCTION_RELEASE_COMMITTED'::text evidence_key,
+  (select count(*) from supabase_migrations.schema_migrations)::bigint migration_history_count,
+  (select count(*) from public.organizations)::bigint organization_count,
+  (select count(*) from public.organization_memberships)::bigint membership_count;
+
+-- ARTIFACT_BINDING_BASE64:${bindingBase64}
+`;
+
+writeFileSync(outputPath, sql, { encoding: 'utf8', mode: 0o600 });
+console.log(JSON.stringify({
+  output: outputPath,
+  bytes: Buffer.byteLength(sql),
+  sha256: sha(sql),
+  steps: manifest.steps.length,
+  applySteps: manifest.steps.filter((step) => applyModes.has(step.mode)).length,
+  reconciliationSteps: manifest.steps.filter((step) => reconcileModes.has(step.mode)).length,
+  authorization: basename(authorizationPath),
+}, null, 2));

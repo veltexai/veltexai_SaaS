@@ -26,6 +26,7 @@
     "r2:test-hosted-preview": "node quality/r2-production-reconciliation/expected-state/test-hosted-preview-compatibility.mjs",
     "r2:test-pg17-maintain-repair": "node quality/r2-production-reconciliation/expected-state/test-pg17-maintain-repair.mjs",
     "r2:test-production-schema-compatibility": "node quality/r2-production-reconciliation/expected-state/test-production-schema-compatibility.mjs",
+    "r2:test-authorized-production-bundle": "node quality/r2-production-reconciliation/test-authorized-production-bundle.mjs",
     "100s:operator": "node 100X/100S/operator/cli.mjs",
     "test:100s": "jest 100X/100S/tests --runInBand"
   },
