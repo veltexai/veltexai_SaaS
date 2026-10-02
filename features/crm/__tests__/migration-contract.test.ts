@@ -23,6 +23,7 @@ const tenantTables = [
   'crm_site_work_packages',
   'crm_opportunity_stage_history',
   'crm_opportunity_stage_commands',
+  'crm_task_commands',
   'crm_attribution_touches',
   'crm_qualification_responses',
 ];
@@ -40,7 +41,7 @@ describe('R3-1 CRM migration contract', () => {
 
   it('requires tenant ownership and enables RLS for all CRM tables', () => {
     expect(migration.match(/organization_id uuid not null references public\.organizations/g))
-      .toHaveLength(18);
+      .toHaveLength(19);
     expect(migration).toContain("execute format('alter table public.%I enable row level security'");
     expect(migration).toContain("execute format('revoke all on public.%I from public, anon'");
     expect(migration).toContain('public.can_access_crm_opportunity');
@@ -94,6 +95,17 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain("using errcode = '23P01'");
     expect(migration).toContain('idempotency key was already used for another walkthrough');
     expect(migration).toContain('revoke all on function public.schedule_crm_walkthrough');
+  });
+
+  it('records idempotent task completion and snooze commands', () => {
+    expect(migration).toContain('create table public.crm_task_commands (');
+    expect(migration).toContain("action text not null check (action in ('complete', 'snooze'))");
+    expect(migration).toContain('create function public.command_crm_task(');
+    expect(migration).toContain("current_task.assignee_user_id = auth.uid()");
+    expect(migration).toContain("if current_task.status <> 'open' then");
+    expect(migration).toContain("status = 'completed', completed_at = now()");
+    expect(migration).toContain('idempotency key was already used for another task command');
+    expect(migration).toContain('revoke all on function public.command_crm_task');
   });
 
   it('projects the board through a caller-bound redacted RPC', () => {
