@@ -7,7 +7,10 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
-const [manifestPath, reviewedFingerprintPath, finalFingerprintPath, authorizationPath, outputPath] = process.argv.slice(2).map((value) => value ? resolve(value) : value);
+const rawArgs = process.argv.slice(2);
+const rollbackProof = rawArgs.includes('--rollback-proof');
+const positionalArgs = rawArgs.filter((value) => value !== '--rollback-proof');
+const [manifestPath, reviewedFingerprintPath, finalFingerprintPath, authorizationPath, outputPath] = positionalArgs.map((value) => value ? resolve(value) : value);
 if (!manifestPath || !reviewedFingerprintPath || !finalFingerprintPath || !authorizationPath || !outputPath) {
   throw new Error('usage: build-authorized-production-bundle.mjs <manifest> <reviewed-fingerprint> <final-fingerprint> <authorization> <output>');
 }
@@ -26,6 +29,10 @@ const expectedStateBytes = readFileSync(resolve(here, 'expected-state/expected-s
 const expectedState = JSON.parse(expectedStateBytes);
 const invariantExpressionBytes = readFileSync(resolve(here, 'expected-state/data-invariants-expression.sql'));
 const invariantExpression = invariantExpressionBytes.toString('utf8').trim();
+const effectivePrivilegesExpressionBytes = readFileSync(resolve(here, 'expected-state/effective-privileges-expression.sql'));
+const effectivePrivilegesExpression = effectivePrivilegesExpressionBytes.toString('utf8').trim();
+const catalogSourceBytes = readFileSync(resolve(here, 'expected-state/catalog.sql'));
+const catalogSource = catalogSourceBytes.toString('utf8');
 const generatorBytes = readFileSync(fileURLToPath(import.meta.url));
 
 if (manifest.contract_version !== 2 || manifest.target !== 'production iwoaaljitifloolszxlu' || manifest.armed !== false || manifest.productionAuthorized !== false) {
@@ -84,7 +91,35 @@ if (manifest.steps.some((step) => initialVersions.includes(step.version))) throw
 const finalVersions = [...initialVersions, ...manifest.steps.map((step) => step.version)].sort();
 if (new Set(finalVersions).size !== 64) throw new Error('final history is not exactly 64 unique versions');
 const sqlArray = (values) => `array[${values.map((value) => `'${value.replaceAll("'", "''")}'`).join(',')}]::text[]`;
+const sqlLiteral = (value) => `'${String(value).replaceAll("'", "''")}'`;
 const migrationName = (file) => file.replace(/^\d+_/, '').replace(/\.sql$/, '');
+const catalogMarker = '-- CATALOG_TERMINAL_QUERY';
+const catalogMarkerIndex = catalogSource.indexOf(catalogMarker);
+if (catalogMarkerIndex < 0) throw new Error('catalog terminal marker missing');
+const liveCatalogQuery = `${catalogSource.slice(0, catalogMarkerIndex)}select atom->>'kind' kind,atom->>'identity' identity,atom->>'value_sha256' value_sha256 from hashed cross join uniqueness where uniqueness.ok=1`;
+const expectedCatalogValues = final.catalog_atoms.map((atom) => `(${sqlLiteral(atom.kind)},${sqlLiteral(atom.identity)},${sqlLiteral(atom.value_sha256)})`).join(',\n');
+const contentDigestExpression = `jsonb_build_object(
+  'profiles_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.profiles x) q),
+  'proposals_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.proposals x) q),
+  'tracking_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.proposal_tracking x) q),
+  'branding_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.user_branding_settings x) q),
+  'subscriptions_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.subscriptions x) q),
+  'usage_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.usage x) q),
+  'addon_catalog_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.additional_service_catalog x) q),
+  'proposal_addons_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.proposal_additional_services x) q),
+  'proposal_templates_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.proposal_templates x) q),
+  'tier_access_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.template_tier_access x) q),
+  'template_preferences_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.user_template_preferences x) q)
+)`;
+const postflightEvidenceQuery = `${catalogSource.slice(0, catalogMarkerIndex)}select jsonb_build_object(
+  'rollback_proof',true,
+  'migration_history',(select jsonb_build_object('count',count(*)::int,'versions',jsonb_agg(version order by version)) from supabase_migrations.schema_migrations),
+  'row_counts',jsonb_build_object('profiles',(select count(*)::int from public.profiles),'proposals',(select count(*)::int from public.proposals),'subscriptions',(select count(*)::int from public.subscriptions),'proposal_tracking',(select count(*)::int from public.proposal_tracking),'company_profiles',(select count(*)::int from public.company_profiles),'user_branding_settings',(select count(*)::int from public.user_branding_settings)),
+  'content_digests',${contentDigestExpression},
+  'data_invariants',${invariantExpression},
+  'effective_privileges',${effectivePrivilegesExpression},
+  'catalog_atoms',coalesce(jsonb_agg(jsonb_build_object('kind',atom->>'kind','identity',atom->>'identity','value_sha256',atom->>'value_sha256') order by atom->>'kind',atom->>'identity'),'[]'::jsonb)
+)::text from hashed cross join uniqueness where uniqueness.ok=1`;
 
 const stepSql = manifest.steps.map((step, index) => {
   const body = sourceBody(step);
@@ -110,11 +145,17 @@ const artifactBinding = {
   generator_sha256: sha(generatorBytes),
   expected_state_sha256: sha(expectedStateBytes),
   data_invariants_expression_sha256: sha(invariantExpressionBytes),
+  effective_privileges_expression_sha256: sha(effectivePrivilegesExpressionBytes),
+  catalog_expression_sha256: sha(catalogSourceBytes),
+  rollback_proof: rollbackProof,
   steps: manifest.steps.map(({ file, version, source_sha256, mode }) => ({ file, version, source_sha256, mode })),
 };
 const bindingBase64 = Buffer.from(JSON.stringify(artifactBinding)).toString('base64');
 const frozen = manifest.frozen_counts;
-const sql = `-- GENERATED, HASH-BOUND R2 PRODUCTION EXECUTION ARTIFACT. DO NOT EDIT.
+const terminalSql = rollbackProof
+  ? `-- Emit hashes-only postflight evidence while every change is still visible, then roll it all back.\n${postflightEvidenceQuery};\nrollback;\nselect 'R2_ROLLBACK_PROOF_COMPLETE'::text evidence_key;`
+  : `commit;\n\nselect 'R2_PRODUCTION_RELEASE_COMMITTED'::text evidence_key,\n  (select count(*) from supabase_migrations.schema_migrations)::bigint migration_history_count,\n  (select count(*) from public.organizations)::bigint organization_count,\n  (select count(*) from public.organization_memberships)::bigint membership_count;`;
+const sql = `-- GENERATED, HASH-BOUND R2 PRODUCTION ${rollbackProof ? 'ROLLBACK-PROOF' : 'EXECUTION'} ARTIFACT. DO NOT EDIT.
 -- Target: iwoaaljitifloolszxlu only. Confirm dashboard project before execution.
 -- Binding SHA-256: ${sha(bindingBase64)}
 -- One transaction; every exception rolls back schema, data, ACL and history changes.
@@ -122,6 +163,46 @@ begin;
 set local lock_timeout = '15s';
 set local statement_timeout = '30min';
 select pg_advisory_xact_lock(hashtextextended('veltex-r2-production-release',0));
+
+-- Block application writes and concurrent migration/history writes before the
+-- exact live-state comparison. Ordinary SELECT traffic remains available.
+lock table supabase_migrations.schema_migrations in share row exclusive mode;
+do $$
+declare relation_name text;
+begin
+  for relation_name in
+    select format('%I.%I',n.nspname,c.relname)
+    from pg_class c join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public' and c.relkind in ('r','p')
+      and not exists (select 1 from pg_depend d where d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e')
+    order by c.relname collate "C"
+  loop
+    execute 'lock table '||relation_name||' in share row exclusive mode';
+  end loop;
+end $$;
+
+create temporary table r2_authorized_catalog(kind text not null,identity text not null,value_sha256 text not null,primary key(kind,identity)) on commit drop;
+insert into r2_authorized_catalog(kind,identity,value_sha256) values
+${expectedCatalogValues};
+create temporary table r2_live_catalog on commit drop as
+${liveCatalogQuery};
+
+do $$
+begin
+  if exists (select kind,identity,value_sha256 from r2_authorized_catalog except select kind,identity,value_sha256 from r2_live_catalog)
+     or exists (select kind,identity,value_sha256 from r2_live_catalog except select kind,identity,value_sha256 from r2_authorized_catalog) then
+    raise exception 'R2 release refused: exact live catalog differs from authorized fingerprint';
+  end if;
+  if (${effectivePrivilegesExpression}) is distinct from $authorized_privileges$${JSON.stringify(final.effective_privileges)}$authorized_privileges$::jsonb then
+    raise exception 'R2 release refused: effective privileges differ from authorized fingerprint';
+  end if;
+  if (${contentDigestExpression}) is distinct from $authorized_digests$${JSON.stringify(manifest.frozen_content_digests)}$authorized_digests$::jsonb then
+    raise exception 'R2 release refused: protected content digests differ from authorized fingerprint';
+  end if;
+  if (${invariantExpression}) is distinct from $authorized_invariants$${JSON.stringify(final.data_invariants)}$authorized_invariants$::jsonb then
+    raise exception 'R2 release refused: protected data invariants differ from authorized fingerprint';
+  end if;
+end $$;
 
 do $$
 begin
@@ -199,12 +280,7 @@ begin
   end if;
 end $$;
 
-commit;
-
-select 'R2_PRODUCTION_RELEASE_COMMITTED'::text evidence_key,
-  (select count(*) from supabase_migrations.schema_migrations)::bigint migration_history_count,
-  (select count(*) from public.organizations)::bigint organization_count,
-  (select count(*) from public.organization_memberships)::bigint membership_count;
+${terminalSql}
 
 -- ARTIFACT_BINDING_BASE64:${bindingBase64}
 `;
@@ -218,4 +294,5 @@ console.log(JSON.stringify({
   applySteps: manifest.steps.filter((step) => applyModes.has(step.mode)).length,
   reconciliationSteps: manifest.steps.filter((step) => reconcileModes.has(step.mode)).length,
   authorization: basename(authorizationPath),
+  rollbackProof,
 }, null, 2));
