@@ -1891,6 +1891,78 @@ grant execute on function public.save_crm_site_work_package(
   uuid,uuid,uuid,uuid,text,text,uuid,uuid,uuid,timestamptz
 ) to authenticated,service_role;
 
+create function public.create_crm_direct_opportunity(
+  p_organization uuid, p_opportunity uuid, p_lead uuid, p_request_key text,
+  p_customer uuid, p_property uuid, p_pipeline uuid, p_name text,
+  p_owner uuid, p_estimator uuid default null
+)
+returns table(opportunity_id uuid, lead_id uuid, replayed boolean)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare pipeline_segment text; first_stage uuid; existing_opportunity uuid; existing_lead uuid;
+begin
+  if auth.uid() is null or length(p_request_key) not between 8 and 200
+     or length(trim(coalesce(p_name,''))) not between 1 and 200 then
+    raise exception 'opportunity creation unavailable' using errcode='42501';
+  end if;
+  select o.id,o.lead_id into existing_opportunity,existing_lead from public.crm_opportunities o
+    where o.organization_id=p_organization and o.idempotency_key=p_request_key;
+  if existing_opportunity is not null then
+    if existing_opportunity<>p_opportunity or existing_lead<>p_lead then
+      raise exception 'opportunity command key already used' using errcode='23514';
+    end if;
+    return query select existing_opportunity,existing_lead,true; return;
+  end if;
+  if not (public.can_manage_organization(p_organization)
+      or (public.organization_role(p_organization)='estimator' and p_owner=auth.uid()
+        and (p_estimator is null or p_estimator=auth.uid()))) then
+    raise exception 'opportunity creation unavailable' using errcode='42501';
+  end if;
+  if not exists (select 1 from public.crm_customers c where c.organization_id=p_organization
+      and c.id=p_customer and c.deleted_at is null)
+     or (p_property is not null and not exists (select 1 from public.crm_properties p
+       where p.organization_id=p_organization and p.id=p_property and p.customer_id=p_customer
+         and p.deleted_at is null))
+     or not exists (select 1 from public.organization_memberships m where m.organization_id=p_organization
+       and m.user_id=p_owner and m.role in ('owner','admin','estimator'))
+     or (p_estimator is not null and not exists (select 1 from public.organization_memberships m
+       where m.organization_id=p_organization and m.user_id=p_estimator
+         and m.role in ('owner','admin','estimator'))) then
+    raise exception 'opportunity relationship unavailable' using errcode='23514';
+  end if;
+  select p.segment into pipeline_segment from public.crm_pipelines p
+    where p.organization_id=p_organization and p.id=p_pipeline and not p.archived;
+  select s.id into first_stage from public.crm_pipeline_stages s
+    where s.organization_id=p_organization and s.pipeline_id=p_pipeline
+      and s.category='new' and not s.hidden order by s.position,s.id limit 1;
+  if pipeline_segment is null or first_stage is null then
+    raise exception 'pipeline is unavailable' using errcode='23514';
+  end if;
+  insert into public.crm_leads(id,organization_id,status,intake_method,idempotency_key,
+    customer_name,property_name,converted_customer_id,converted_property_id,
+    source,created_by,updated_by)
+  select p_lead,p_organization,'converted','direct_opportunity',p_request_key,c.name,p.name,
+    p_customer,p_property,'direct_opportunity',auth.uid(),auth.uid()
+  from public.crm_customers c left join public.crm_properties p on p.organization_id=c.organization_id
+    and p.id=p_property where c.organization_id=p_organization and c.id=p_customer;
+  insert into public.crm_opportunities(id,organization_id,customer_id,property_id,pipeline_id,
+    stage_id,lead_id,idempotency_key,name,owner_user_id,estimator_user_id,segment,source,created_by,updated_by)
+  values(p_opportunity,p_organization,p_customer,p_property,p_pipeline,first_stage,p_lead,
+    p_request_key,trim(p_name),p_owner,p_estimator,
+    case when pipeline_segment='commercial' then 'commercial' else 'turnover' end,
+    'manual',auth.uid(),auth.uid());
+  update public.crm_leads set converted_opportunity_id=p_opportunity
+    where organization_id=p_organization and id=p_lead;
+  return query select p_opportunity,p_lead,false;
+end;
+$$;
+revoke all on function public.create_crm_direct_opportunity(
+  uuid,uuid,uuid,text,uuid,uuid,uuid,text,uuid,uuid
+) from public,anon;
+grant execute on function public.create_crm_direct_opportunity(
+  uuid,uuid,uuid,text,uuid,uuid,uuid,text,uuid,uuid
+) to authenticated,service_role;
+
 create function public.read_crm_pipeline_board(target_organization uuid)
 returns jsonb language sql stable security definer
 set search_path = pg_catalog, public as $$
@@ -1977,6 +2049,16 @@ set search_path = pg_catalog, public as $$
     where m.organization_id = target_organization
       and m.role in ('owner', 'admin', 'estimator')
       and c.role in ('owner', 'admin')
+  ), customers as (
+    select coalesce(jsonb_agg(jsonb_build_object('id',x.id,'name',x.name)
+      order by x.name,x.id),'[]'::jsonb) as value
+    from public.crm_customers x cross join caller c
+    where x.organization_id=target_organization and x.deleted_at is null and c.role<>'viewer'
+  ), properties as (
+    select coalesce(jsonb_agg(jsonb_build_object('id',p.id,'customer_id',p.customer_id,'name',p.name)
+      order by p.name,p.id),'[]'::jsonb) as value
+    from public.crm_properties p cross join caller c
+    where p.organization_id=target_organization and p.deleted_at is null and c.role<>'viewer'
   ), leads as (
     select coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
       'id',l.id,'status',l.status,'customer_name',l.customer_name,
@@ -2009,6 +2091,8 @@ set search_path = pg_catalog, public as $$
     'opportunities', (select value from opportunities),
     'loss_reasons', (select value from loss_reasons),
     'assignable_members', (select value from assignable_members),
+    'customers', (select value from customers),
+    'properties', (select value from properties),
     'leads', (select value from leads),
     'work_packages', (select value from work_packages),
     'viewer_price_redacted', (select role = 'viewer' from caller)

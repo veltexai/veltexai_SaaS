@@ -1202,6 +1202,14 @@ export interface Database {
         };
         Returns: { package_id: string; updated_at: string; created: boolean; replayed: boolean }[];
       };
+      create_crm_direct_opportunity: {
+        Args: {
+          p_organization: string; p_opportunity: string; p_lead: string; p_request_key: string;
+          p_customer: string; p_property?: string | null; p_pipeline: string; p_name: string;
+          p_owner: string; p_estimator?: string | null;
+        };
+        Returns: { opportunity_id: string; lead_id: string; replayed: boolean }[];
+      };
     };
     Enums: {
       [_ in never]: never;

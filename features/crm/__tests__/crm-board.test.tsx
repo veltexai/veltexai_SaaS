@@ -156,6 +156,36 @@ describe('R3-1 CRM board', () => {
     expect(screen.getByRole('button', { name: 'Manage work package' })).toBeInTheDocument();
   });
 
+  it('creates a direct opportunity without exposing attribution-lead internals', async () => {
+    jest.spyOn(global.crypto, 'randomUUID')
+      .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1')
+      .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2')
+      .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3');
+    const board = { organization_id: ORG_ID, caller_role: 'owner', loss_reasons: [], viewer_price_redacted: false,
+      assignable_members: [{ user_id: USER_ID, role: 'owner', label: 'Morgan Lee' }],
+      customers: [{ id: 'customer-1', name: 'North Campus' }], properties: [{ id: 'property-1', customer_id: 'customer-1', name: 'Building A' }],
+      pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [] }], opportunities: [] };
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: board }) })
+      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: { opportunity_id: 'opportunity-1', replayed: false } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: board }) });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'Sales pipeline' });
+    fireEvent.click(screen.getByRole('button', { name: 'New opportunity' }));
+    fireEvent.change(screen.getByLabelText('Opportunity name'), { target: { value: 'North Campus Renewal' } });
+    fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'customer-1' } });
+    fireEvent.change(screen.getByLabelText('Property'), { target: { value: 'property-1' } });
+    fireEvent.change(screen.getByLabelText('Owner'), { target: { value: USER_ID } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create opportunity' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(5));
+    expect(fetchMock.mock.calls[2][0]).toBe(`/api/orgs/${ORG_ID}/crm/opportunities/direct`);
+    expect(fetchMock.mock.calls[2][1].body).toContain('"name":"North Campus Renewal"');
+    expect(fetchMock.mock.calls[2][1].body).toContain('"leadId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3"');
+    expect(await screen.findByText('Opportunity created.')).toBeInTheDocument();
+  });
+
   it('requires an explicit duplicate decision and reuses the original command key', async () => {
     const commandKey = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
     jest.spyOn(global.crypto, 'randomUUID').mockReturnValue(commandKey);

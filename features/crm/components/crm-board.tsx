@@ -52,6 +52,8 @@ type Board = {
   opportunities: Opportunity[];
   leads?: Lead[];
   work_packages?: WorkPackage[];
+  customers?: { id: string; name: string }[];
+  properties?: { id: string; customer_id?: string; name: string }[];
   loss_reasons: { id: string; label: string; applies_to: 'lost' | 'disqualified' | 'both' }[];
   assignable_members: { user_id: string; role: 'owner' | 'admin' | 'estimator'; label: string }[];
   viewer_price_redacted: boolean;
@@ -74,6 +76,7 @@ export function CrmBoard() {
   const [error, setError] = useState<string | null>(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [showNewAccount, setShowNewAccount] = useState(false);
+  const [showNewOpportunity, setShowNewOpportunity] = useState(false);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [view, setView] = useState<'board' | 'list'>('board');
@@ -451,6 +454,24 @@ export function CrmBoard() {
     setShowNewAccount(false); setNotice('Customer, primary contact, and property created.');
   }
 
+  async function submitDirectOpportunity(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!organizationId) return;
+    const form = new FormData(event.currentTarget);
+    const ownerUserId = String(form.get('ownerUserId') || '') || undefined;
+    const estimatorUserId = String(form.get('estimatorUserId') || '') || undefined;
+    const response = await fetch(`/api/orgs/${organizationId}/crm/opportunities/direct`, {
+      method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() },
+      body: JSON.stringify({ opportunityId: crypto.randomUUID(), leadId: crypto.randomUUID(),
+        customerId: String(form.get('customerId')), propertyId: String(form.get('propertyId') || '') || null,
+        pipelineId: String(form.get('pipelineId')), name: String(form.get('name')),
+        ownerUserId, estimatorUserId }),
+    });
+    const payload = await response.json();
+    if (!response.ok) { setNotice(payload.error ?? 'Unable to create the opportunity.'); return; }
+    setShowNewOpportunity(false); setNotice('Opportunity created.'); void loadBoard();
+  }
+
   if (loading) return <p role="status" className="text-sm text-gray-600">Loading CRM…</p>;
   if (error || !board || !activePipeline) {
     return (
@@ -474,10 +495,37 @@ export function CrmBoard() {
         {board.caller_role !== 'viewer' && <div className="flex flex-wrap gap-2"><Button variant="outline" className="min-h-11"
           onClick={() => setShowNewAccount((open) => !open)} aria-expanded={showNewAccount}>
           <Plus className="mr-2 h-4 w-4" />New customer</Button>
+          <Button variant="outline" className="min-h-11" onClick={() => setShowNewOpportunity((open) => !open)}
+            aria-expanded={showNewOpportunity}><Plus className="mr-2 h-4 w-4" />New opportunity</Button>
           <Button className="min-h-11" onClick={() => setShowQuickAdd((open) => !open)} aria-expanded={showQuickAdd}>
             <Plus className="mr-2 h-4 w-4" />Quick-add lead
           </Button></div>}
       </div>
+
+      {showNewOpportunity && (
+        <Card><CardHeader><CardTitle>New opportunity</CardTitle></CardHeader>
+          <CardContent><form className="grid gap-4 sm:grid-cols-2" onSubmit={submitDirectOpportunity}>
+            <div className="space-y-2 sm:col-span-2"><Label htmlFor="direct-opportunity-name">Opportunity name</Label>
+              <Input id="direct-opportunity-name" name="name" required maxLength={200} /></div>
+            <div className="space-y-2"><Label htmlFor="direct-customer">Customer</Label><select id="direct-customer" name="customerId" required
+              className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3"><option value="">Choose a customer</option>
+              {(board.customers ?? []).map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></div>
+            <div className="space-y-2"><Label htmlFor="direct-property">Property</Label><select id="direct-property" name="propertyId"
+              className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3"><option value="">No property yet</option>
+              {(board.properties ?? []).map((property) => <option key={property.id} value={property.id}>{property.name}</option>)}</select></div>
+            <div className="space-y-2"><Label htmlFor="direct-pipeline">Pipeline</Label><select id="direct-pipeline" name="pipelineId" required
+              className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+              {board.pipelines.map((pipeline) => <option key={pipeline.id} value={pipeline.id}>{pipeline.name}</option>)}</select></div>
+            {['owner','admin'].includes(board.caller_role) && <><div className="space-y-2"><Label htmlFor="direct-owner">Owner</Label>
+              <select id="direct-owner" name="ownerUserId" required className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                <option value="">Choose an owner</option>{board.assignable_members.map((member) => <option key={member.user_id} value={member.user_id}>{member.label}</option>)}</select></div>
+              <div className="space-y-2"><Label htmlFor="direct-estimator">Estimator</Label><select id="direct-estimator" name="estimatorUserId"
+                className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3"><option value="">Unassigned</option>
+                {board.assignable_members.map((member) => <option key={member.user_id} value={member.user_id}>{member.label}</option>)}</select></div></>}
+            <div className="flex gap-3 sm:col-span-2"><Button type="submit" className="min-h-11">Create opportunity</Button>
+              <Button type="button" variant="outline" className="min-h-11" onClick={() => setShowNewOpportunity(false)}>Cancel</Button></div>
+          </form></CardContent></Card>
+      )}
 
       {showNewAccount && (
         <Card>

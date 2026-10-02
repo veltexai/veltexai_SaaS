@@ -185,6 +185,15 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain('revoke all on function public.save_crm_site_work_package(');
   });
 
+  it('creates direct opportunities with a hidden converted attribution lead', () => {
+    expect(migration).toContain('create function public.create_crm_direct_opportunity(');
+    expect(migration).toContain("'converted','direct_opportunity'");
+    expect(migration).toContain('update public.crm_leads set converted_opportunity_id=p_opportunity');
+    expect(migration).toContain("s.category='new' and not s.hidden");
+    expect(migration).toContain("'customers', (select value from customers)");
+    expect(migration).toContain("'properties', (select value from properties)");
+  });
+
   it('projects the board through a caller-bound redacted RPC', () => {
     expect(migration).toContain('create function public.read_crm_pipeline_board(target_organization uuid)');
     expect(migration).toContain("public.organization_role(target_organization) as role");
