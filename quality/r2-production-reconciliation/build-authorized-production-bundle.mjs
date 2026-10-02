@@ -111,15 +111,16 @@ const contentDigestExpression = `jsonb_build_object(
   'tier_access_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.template_tier_access x) q),
   'template_preferences_all',(select encode(digest(coalesce(string_agg(row_hash,',' order by row_hash),''),'sha256'),'hex') from (select encode(digest(to_jsonb(x)::text,'sha256'),'hex') row_hash from public.user_template_preferences x) q)
 )`;
-const postflightEvidenceQuery = `${catalogSource.slice(0, catalogMarkerIndex)}select jsonb_build_object(
+const postflightEvidenceStatement = `${catalogSource.slice(0, catalogMarkerIndex)}select jsonb_build_object(
   'rollback_proof',true,
-  'migration_history',(select jsonb_build_object('count',count(*)::int,'versions',jsonb_agg(version order by version)) from supabase_migrations.schema_migrations),
-  'row_counts',jsonb_build_object('profiles',(select count(*)::int from public.profiles),'proposals',(select count(*)::int from public.proposals),'subscriptions',(select count(*)::int from public.subscriptions),'proposal_tracking',(select count(*)::int from public.proposal_tracking),'company_profiles',(select count(*)::int from public.company_profiles),'user_branding_settings',(select count(*)::int from public.user_branding_settings)),
-  'content_digests',${contentDigestExpression},
-  'data_invariants',${invariantExpression},
-  'effective_privileges',${effectivePrivilegesExpression},
-  'catalog_atoms',coalesce(jsonb_agg(jsonb_build_object('kind',atom->>'kind','identity',atom->>'identity','value_sha256',atom->>'value_sha256') order by atom->>'kind',atom->>'identity'),'[]'::jsonb)
-)::text from hashed cross join uniqueness where uniqueness.ok=1`;
+  'history_count',(select count(*)::int from supabase_migrations.schema_migrations),
+  'history_sha256',(select encode(digest(convert_to(coalesce(string_agg(version,E'\\n' order by version collate "C"),''),'UTF8'),'sha256'),'hex') from supabase_migrations.schema_migrations),
+  'catalog_count',count(*)::int,
+  'catalog_sha256',encode(digest(convert_to(coalesce(string_agg((atom->>'kind')||E'\\000'||(atom->>'identity')||E'\\000'||(atom->>'value_sha256'),E'\\n' order by atom->>'kind' collate "C",atom->>'identity' collate "C"),''),'UTF8'),'sha256'),'hex'),
+  'effective_privileges_sha256',encode(digest(convert_to((${effectivePrivilegesExpression})::text,'UTF8'),'sha256'),'hex'),
+  'content_digests_sha256',encode(digest(convert_to((${contentDigestExpression})::text,'UTF8'),'sha256'),'hex'),
+  'data_invariants_sha256',encode(digest(convert_to((${invariantExpression})::text,'UTF8'),'sha256'),'hex')
+) into rollback_evidence from hashed cross join uniqueness where uniqueness.ok=1`;
 
 const stepSql = manifest.steps.map((step, index) => {
   const body = sourceBody(step);
@@ -153,7 +154,7 @@ const artifactBinding = {
 const bindingBase64 = Buffer.from(JSON.stringify(artifactBinding)).toString('base64');
 const frozen = manifest.frozen_counts;
 const terminalSql = rollbackProof
-  ? `-- Emit hashes-only postflight evidence while every change is still visible, then roll it all back.\n${postflightEvidenceQuery};\nrollback;\nselect 'R2_ROLLBACK_PROOF_COMPLETE'::text evidence_key;`
+  ? `-- Raise hashes-only postflight evidence as a deliberate error. The error aborts\n-- the transaction; the explicit ROLLBACK below is a defensive unreachable boundary.\ndo $rollback_proof$\ndeclare rollback_evidence jsonb;\nbegin\n${postflightEvidenceStatement};\n  raise exception using errcode='P0001',message='R2_ROLLBACK_PROOF:'||rollback_evidence::text;\nend\n$rollback_proof$;\nrollback;`
   : `commit;\n\nselect 'R2_PRODUCTION_RELEASE_COMMITTED'::text evidence_key,\n  (select count(*) from supabase_migrations.schema_migrations)::bigint migration_history_count,\n  (select count(*) from public.organizations)::bigint organization_count,\n  (select count(*) from public.organization_memberships)::bigint membership_count;`;
 const sql = `-- GENERATED, HASH-BOUND R2 PRODUCTION ${rollbackProof ? 'ROLLBACK-PROOF' : 'EXECUTION'} ARTIFACT. DO NOT EDIT.
 -- Target: iwoaaljitifloolszxlu only. Confirm dashboard project before execution.

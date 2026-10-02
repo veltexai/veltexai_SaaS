@@ -58,8 +58,10 @@ const rollbackSql=readFileSync(rollbackPath,'utf8');
 assert.equal((rollbackSql.match(/^begin;$/gim)??[]).length,1);
 assert.equal((rollbackSql.match(/^commit;$/gim)??[]).length,0);
 assert.equal((rollbackSql.match(/^rollback;$/gim)??[]).length,1);
-assert.match(rollbackSql,/R2_ROLLBACK_PROOF_COMPLETE/);
+assert.match(rollbackSql,/R2_ROLLBACK_PROOF:/);
 assert.match(rollbackSql,/'rollback_proof',true/);
+assert.match(rollbackSql,/catalog_sha256/);
+assert.match(rollbackSql,/effective_privileges_sha256/);
 assert.doesNotMatch(rollbackSql,/^\+/m,'rollback SQL must not contain diff-marker prefixes');
 
 expectFailure('bad-approval', ({ authorization: path }) => { const x=JSON.parse(readFileSync(path)); x.status='PENDING'; writeFileSync(path, JSON.stringify(x)); });
