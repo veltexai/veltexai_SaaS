@@ -38,6 +38,9 @@ describe('R3-1 CRM board', () => {
     expect(screen.getByRole('heading', { name: 'North Campus' })).toBeInTheDocument();
     expect(screen.getByText(/\$1,250\.00 · monthly/)).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(2, `/api/orgs/${ORG_ID}/crm/opportunities`, { cache: 'no-store' });
+    fireEvent.click(screen.getByRole('button', { name: 'List' }));
+    expect(screen.getByRole('table', { name: 'Commercial facility opportunities' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Stage' })).toBeInTheDocument();
   });
 
   it('exposes labelled quick-add controls and respects a viewer-redacted payload', async () => {
@@ -101,5 +104,28 @@ describe('R3-1 CRM board', () => {
     expect(fetchMock.mock.calls[2][1].headers['idempotency-key']).toBe(commandKey);
     expect(fetchMock.mock.calls[3][1].headers['idempotency-key']).toBe(commandKey);
     expect(fetchMock.mock.calls[3][1].body).toContain('"duplicateDecision":"link_existing"');
+  });
+
+  it('offers a keyboard stage menu and announces a successful move', async () => {
+    jest.spyOn(global.crypto, 'randomUUID').mockReturnValue('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+          { id: 'stage-qualifying', label: 'Qualification', category: 'qualifying', position: 20, hidden: false },
+          { id: 'stage-won', label: 'Won', category: 'won', position: 30, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1', stage_id: 'stage-new', category: 'new' }],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { replayed: false } }) });
+    render(<CrmBoard />);
+    const move = await screen.findByRole('combobox', { name: 'Move North Campus to stage' });
+    expect(screen.getByRole('option', { name: 'Won' })).toBeDisabled();
+    fireEvent.change(move, { target: { value: 'stage-qualifying' } });
+    expect(await screen.findByText('Opportunity moved.')).toBeInTheDocument();
+    expect(fetchMock.mock.calls[2][0]).toBe(`/api/orgs/${ORG_ID}/crm/opportunities/opportunity-1/stage`);
+    expect(fetchMock.mock.calls[2][1].body).toBe('{"stageId":"stage-qualifying"}');
   });
 });

@@ -45,6 +45,7 @@ export function CrmBoard() {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [view, setView] = useState<'board' | 'list'>('board');
   const [duplicateReview, setDuplicateReview] = useState<{
     candidates: DuplicateCandidate[]; draft: LeadDraft; key: string;
   } | null>(null);
@@ -75,6 +76,55 @@ export function CrmBoard() {
     () => board?.pipelines.find((pipeline) => pipeline.is_default) ?? board?.pipelines[0],
     [board],
   );
+
+  async function moveOpportunity(opportunity: Opportunity, stageId: string) {
+    if (!organizationId || stageId === opportunity.stage_id) return;
+    setNotice('Moving opportunity…');
+    const response = await fetch(
+      `/api/orgs/${organizationId}/crm/opportunities/${opportunity.id}/stage`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() },
+        body: JSON.stringify({ stageId }),
+      },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      setNotice(payload.error ?? 'Unable to move the opportunity.');
+      return;
+    }
+    const target = activePipeline?.stages.find((stage) => stage.id === stageId);
+    setBoard((current) => current ? {
+      ...current,
+      opportunities: current.opportunities.map((item) => item.id === opportunity.id
+        ? { ...item, stage_id: stageId, category: target?.category ?? item.category }
+        : item),
+    } : current);
+    setNotice('Opportunity moved.');
+  }
+
+  function stageMove(opportunity: Opportunity) {
+    return (
+      <div className="mt-3">
+        <Label className="sr-only" htmlFor={`move-${opportunity.id}`}>Move {opportunity.name}</Label>
+        <select
+          id={`move-${opportunity.id}`}
+          value={opportunity.stage_id}
+          onChange={(event) => void moveOpportunity(opportunity, event.target.value)}
+          className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+          aria-label={`Move ${opportunity.name} to stage`}
+        >
+          {activePipeline?.stages.filter((stage) => !stage.hidden).map((stage) => (
+            <option
+              key={stage.id}
+              value={stage.id}
+              disabled={['won', 'lost', 'disqualified', 'handed_off'].includes(stage.category)}
+            >{stage.label}</option>
+          ))}
+        </select>
+      </div>
+    );
+  }
 
   async function createLead(
     draft: LeadDraft,
@@ -141,7 +191,7 @@ export function CrmBoard() {
           <h1 id="crm-heading" className="text-3xl font-bold text-gray-900">Sales pipeline</h1>
           <p className="mt-1 text-sm text-gray-600">{activePipeline.name}. Values stay separated by billing basis.</p>
         </div>
-        <Button onClick={() => setShowQuickAdd((open) => !open)} aria-expanded={showQuickAdd}>
+        <Button className="min-h-11" onClick={() => setShowQuickAdd((open) => !open)} aria-expanded={showQuickAdd}>
           <Plus className="mr-2 h-4 w-4" />Quick-add lead
         </Button>
       </div>
@@ -180,7 +230,12 @@ export function CrmBoard() {
         </Card>
       )}
 
-      <div className="overflow-x-auto pb-4" aria-label={`${activePipeline.name} pipeline`}>
+      <div className="flex gap-2" aria-label="Pipeline view">
+        <Button className="min-h-11" type="button" variant={view === 'board' ? 'default' : 'outline'} aria-pressed={view === 'board'} onClick={() => setView('board')}>Board</Button>
+        <Button className="min-h-11" type="button" variant={view === 'list' ? 'default' : 'outline'} aria-pressed={view === 'list'} onClick={() => setView('list')}>List</Button>
+      </div>
+
+      {view === 'board' ? <div className="overflow-x-auto pb-4" aria-label={`${activePipeline.name} pipeline`}>
         <div className="flex min-w-max gap-4">
           {activePipeline.stages.filter((stage) => !stage.hidden).map((stage) => {
             const opportunities = board.opportunities.filter((item) => item.stage_id === stage.id);
@@ -197,6 +252,7 @@ export function CrmBoard() {
                       <h3 className="font-medium text-gray-900">{opportunity.name}</h3>
                       {valueLabel(opportunity) && <p className="mt-2 text-sm text-gray-600">{valueLabel(opportunity)}</p>}
                       {opportunity.next_action_due_at && <p className="mt-2 text-xs text-gray-500">Next action {new Date(opportunity.next_action_due_at).toLocaleDateString()}</p>}
+                      {stageMove(opportunity)}
                     </article>
                   ))}
                 </div>
@@ -204,7 +260,29 @@ export function CrmBoard() {
             );
           })}
         </div>
-      </div>
+      </div> : (
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200">
+            <caption className="sr-only">{activePipeline.name} opportunities</caption>
+            <thead className="bg-gray-50"><tr>
+              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Opportunity</th>
+              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Stage</th>
+              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Value</th>
+              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Move</th>
+            </tr></thead>
+            <tbody className="divide-y divide-gray-200 bg-white">
+              {board.opportunities.map((opportunity) => (
+                <tr key={opportunity.id}>
+                  <th scope="row" className="px-4 py-3 text-left text-sm font-medium">{opportunity.name}</th>
+                  <td className="px-4 py-3 text-sm">{activePipeline.stages.find((stage) => stage.id === opportunity.stage_id)?.label}</td>
+                  <td className="px-4 py-3 text-sm">{valueLabel(opportunity) ?? '—'}</td>
+                  <td className="px-4 py-3">{stageMove(opportunity)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       {board.viewer_price_redacted && <p className="text-xs text-gray-500">Pricing is hidden for read-only viewers.</p>}
     </section>
   );
