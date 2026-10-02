@@ -145,7 +145,7 @@ export function CrmBoard() {
               key={stage.id}
               value={stage.id}
               disabled={stage.category === 'handed_off'
-                || (stage.category === 'won' && !['owner', 'admin'].includes(board.caller_role))}
+                || (stage.category === 'won' && !['owner', 'admin'].includes(board?.caller_role ?? 'viewer'))}
             >{stage.label}</option>
           ))}
         </select>

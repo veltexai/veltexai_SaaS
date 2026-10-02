@@ -1078,7 +1078,66 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      find_crm_duplicate_candidates: {
+        Args: { target_organization: string; candidate_email?: string | null; candidate_phone?: string | null };
+        Returns: { entity_type: string; entity_id: string; matched_on: string }[];
+      };
+      read_crm_pipeline_board: {
+        Args: { target_organization: string };
+        Returns: Json;
+      };
+      move_crm_opportunity_stage: {
+        Args: {
+          target_organization: string; target_opportunity: string; target_stage: string;
+          request_key: string; selected_loss_reason?: string | null;
+          selected_manual_win_reason?: string | null;
+        };
+        Returns: { opportunity_id: string; stage_id: string; replayed: boolean }[];
+      };
+      convert_crm_lead: {
+        Args: {
+          p_organization: string; p_lead: string; p_request_key: string; p_pipeline: string;
+          p_opportunity_name: string; p_segment: string; p_existing_customer?: string | null;
+          p_existing_contact?: string | null; p_existing_property?: string | null;
+        };
+        Returns: {
+          lead_id: string; customer_id: string; contact_id: string; property_id: string;
+          opportunity_id: string; replayed: boolean;
+        }[];
+      };
+      schedule_crm_walkthrough: {
+        Args: {
+          p_organization: string; p_opportunity: string; p_request_key: string;
+          p_property: string; p_estimator: string; p_site_contact?: string | null;
+          p_window_start: string; p_window_end: string; p_timezone: string;
+        };
+        Returns: { walkthrough_id: string; replayed: boolean }[];
+      };
+      command_crm_task: {
+        Args: {
+          p_organization: string; p_task: string; p_request_key: string;
+          p_action: string; p_snoozed_until?: string | null;
+        };
+        Returns: { task_id: string; status: string; replayed: boolean }[];
+      };
+      assign_crm_opportunity: {
+        Args: {
+          p_organization: string; p_opportunity: string; p_request_key: string;
+          p_owner: string; p_estimator?: string | null; p_transfer_open_tasks?: boolean;
+        };
+        Returns: { opportunity_id: string; transferred_task_count: number; replayed: boolean }[];
+      };
+      reactivate_crm_opportunity: {
+        Args: { p_organization: string; p_opportunity: string; p_request_key: string; p_name?: string | null };
+        Returns: { opportunity_id: string; replayed: boolean }[];
+      };
+      configure_crm_pipeline_stage: {
+        Args: {
+          p_organization: string; p_pipeline: string; p_stage: string; p_label: string;
+          p_category: string; p_position: number; p_hidden?: boolean; p_pipeline_name?: string | null;
+        };
+        Returns: { stage_id: string; created: boolean }[];
+      };
     };
     Enums: {
       [_ in never]: never;
