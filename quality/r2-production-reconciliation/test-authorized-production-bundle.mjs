@@ -63,6 +63,8 @@ assert.match(rollbackSql,/'rollback_proof',true/);
 assert.match(rollbackSql,/catalog_sha256/);
 assert.match(rollbackSql,/effective_privileges_sha256/);
 assert.doesNotMatch(rollbackSql,/^\+/m,'rollback SQL must not contain diff-marker prefixes');
+assert.doesNotMatch(rollbackSql,/E'\\000'/,"rollback SQL must not construct forbidden PostgreSQL NUL text values");
+assert.match(rollbackSql,/jsonb_build_array\(atom->>'kind',atom->>'identity',atom->>'value_sha256'\)::text/);
 
 expectFailure('bad-approval', ({ authorization: path }) => { const x=JSON.parse(readFileSync(path)); x.status='PENDING'; writeFileSync(path, JSON.stringify(x)); });
 expectFailure('wrong-project', ({ authorization: path }) => { const x=JSON.parse(readFileSync(path)); x.project_ref='ynzkwctwlssjcsjmahey'; writeFileSync(path, JSON.stringify(x)); });

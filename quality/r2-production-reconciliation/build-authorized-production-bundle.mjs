@@ -116,7 +116,7 @@ const postflightEvidenceStatement = `${catalogSource.slice(0, catalogMarkerIndex
   'history_count',(select count(*)::int from supabase_migrations.schema_migrations),
   'history_sha256',(select encode(digest(convert_to(coalesce(string_agg(version,E'\\n' order by version collate "C"),''),'UTF8'),'sha256'),'hex') from supabase_migrations.schema_migrations),
   'catalog_count',count(*)::int,
-  'catalog_sha256',encode(digest(convert_to(coalesce(string_agg((atom->>'kind')||E'\\000'||(atom->>'identity')||E'\\000'||(atom->>'value_sha256'),E'\\n' order by atom->>'kind' collate "C",atom->>'identity' collate "C"),''),'UTF8'),'sha256'),'hex'),
+  'catalog_sha256',encode(digest(convert_to(coalesce(string_agg(jsonb_build_array(atom->>'kind',atom->>'identity',atom->>'value_sha256')::text,E'\\n' order by atom->>'kind' collate "C",atom->>'identity' collate "C"),''),'UTF8'),'sha256'),'hex'),
   'effective_privileges_sha256',encode(digest(convert_to((${effectivePrivilegesExpression})::text,'UTF8'),'sha256'),'hex'),
   'content_digests_sha256',encode(digest(convert_to((${contentDigestExpression})::text,'UTF8'),'sha256'),'hex'),
   'data_invariants_sha256',encode(digest(convert_to((${invariantExpression})::text,'UTF8'),'sha256'),'hex')
