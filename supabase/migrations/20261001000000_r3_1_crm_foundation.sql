@@ -1271,6 +1271,88 @@ revoke all on function public.assign_crm_opportunity(uuid, uuid, text, uuid, uui
 grant execute on function public.assign_crm_opportunity(uuid, uuid, text, uuid, uuid, boolean)
   to authenticated, service_role;
 
+create function public.reactivate_crm_opportunity(
+  p_organization uuid,
+  p_opportunity uuid,
+  p_request_key text,
+  p_name text default null
+)
+returns table(opportunity_id uuid, replayed boolean)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare
+  prior_opportunity public.crm_opportunities%rowtype;
+  prior_category text;
+  qualifying_stage uuid;
+  new_opportunity uuid;
+begin
+  if auth.uid() is null or length(p_request_key) not between 8 and 140
+     or not public.can_access_crm_opportunity(p_opportunity) then
+    raise exception 'opportunity reactivation unavailable' using errcode = '42501';
+  end if;
+  select o.* into prior_opportunity
+  from public.crm_opportunities o
+  where o.organization_id = p_organization and o.id = p_opportunity
+    and o.deleted_at is null for update of o;
+  select s.category into prior_category from public.crm_pipeline_stages s
+  where s.organization_id = p_organization and s.id = prior_opportunity.stage_id;
+  if prior_opportunity.id is null or prior_category not in ('won', 'lost', 'disqualified', 'nurture') then
+    raise exception 'only terminal or nurtured opportunities can be reactivated'
+      using errcode = '23514';
+  end if;
+  select o.id into new_opportunity from public.crm_opportunities o
+  where o.organization_id = p_organization and o.idempotency_key = p_request_key;
+  if new_opportunity is not null then
+    if not exists (
+      select 1 from public.crm_opportunities o where o.id = new_opportunity
+        and o.reactivated_from_id = p_opportunity
+    ) then
+      raise exception 'idempotency key was already used for another opportunity'
+        using errcode = '23514';
+    end if;
+    return query select new_opportunity, true;
+    return;
+  end if;
+  select s.id into qualifying_stage from public.crm_pipeline_stages s
+  where s.organization_id = p_organization and s.pipeline_id = prior_opportunity.pipeline_id
+    and s.category = 'qualifying' and not s.hidden
+  order by s.position, s.id limit 1;
+  if qualifying_stage is null then
+    raise exception 'pipeline has no active qualifying stage' using errcode = '23514';
+  end if;
+  insert into public.crm_opportunities(
+    organization_id, customer_id, property_id, pipeline_id, stage_id, lead_id,
+    idempotency_key, name, owner_user_id, estimator_user_id, segment,
+    service_family, expected_close_date, next_action_due_at,
+    reactivated_from_id, is_parent, source, created_by, updated_by
+  ) values (
+    p_organization, prior_opportunity.customer_id, prior_opportunity.property_id,
+    prior_opportunity.pipeline_id, qualifying_stage, prior_opportunity.lead_id,
+    p_request_key,
+    coalesce(nullif(trim(p_name), ''), prior_opportunity.name || ' — reactivated'),
+    prior_opportunity.owner_user_id, prior_opportunity.estimator_user_id,
+    prior_opportunity.segment, prior_opportunity.service_family,
+    prior_opportunity.expected_close_date, prior_opportunity.next_action_due_at,
+    prior_opportunity.id, prior_opportunity.is_parent, 'reactivation', auth.uid(), auth.uid()
+  ) returning id into new_opportunity;
+  insert into public.crm_site_work_packages(
+    organization_id, opportunity_id, property_id, status, idempotency_key,
+    created_by, updated_by
+  )
+  select p_organization, new_opportunity, package.property_id, 'scoping',
+    left(p_request_key, 140) || ':package:' || package.id::text,
+    auth.uid(), auth.uid()
+  from public.crm_site_work_packages package
+  where package.organization_id = p_organization
+    and package.opportunity_id = prior_opportunity.id;
+  return query select new_opportunity, false;
+end;
+$$;
+revoke all on function public.reactivate_crm_opportunity(uuid, uuid, text, text)
+  from public, anon;
+grant execute on function public.reactivate_crm_opportunity(uuid, uuid, text, text)
+  to authenticated, service_role;
+
 create function public.read_crm_pipeline_board(target_organization uuid)
 returns jsonb language sql stable security definer
 set search_path = pg_catalog, public as $$

@@ -120,6 +120,17 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain('revoke all on function public.assign_crm_opportunity');
   });
 
+  it('reactivates a terminal cycle as a new qualifying opportunity without terminal state', () => {
+    expect(migration).toContain('create function public.reactivate_crm_opportunity(');
+    expect(migration).toContain("prior_category not in ('won', 'lost', 'disqualified', 'nurture')");
+    expect(migration).toContain("s.category = 'qualifying' and not s.hidden");
+    expect(migration).toContain("prior_opportunity.id, prior_opportunity.is_parent, 'reactivation'");
+    expect(migration).toContain("package.property_id, 'scoping'");
+    expect(migration).not.toMatch(/reactivate_crm_opportunity[\s\S]*prior_opportunity\.acceptance_method/);
+    expect(migration).not.toMatch(/reactivate_crm_opportunity[\s\S]*prior_opportunity\.value_amount_minor/);
+    expect(migration).toContain('revoke all on function public.reactivate_crm_opportunity');
+  });
+
   it('projects the board through a caller-bound redacted RPC', () => {
     expect(migration).toContain('create function public.read_crm_pipeline_board(target_organization uuid)');
     expect(migration).toContain("public.organization_role(target_organization) as role");
