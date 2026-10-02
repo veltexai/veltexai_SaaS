@@ -126,6 +126,36 @@ describe('R3-1 CRM board', () => {
     expect(await screen.findByText('Lead updated.')).toBeInTheDocument();
   });
 
+  it('creates a scoped site work package from a property-bound opportunity', async () => {
+    jest.spyOn(global.crypto, 'randomUUID')
+      .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1')
+      .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2');
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], assignable_members: [],
+        viewer_price_redacted: false, leads: [], work_packages: [],
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true,
+          stages: [{ id: 'stage-1', label: 'Scoping', category: 'qualifying', position: 10, hidden: false }] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-1', category: 'qualifying', property_id: 'property-1' }],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: {
+        package_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1', created: true, replayed: false,
+        updated_at: '2026-10-02T01:00:00Z',
+      } }) });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'North Campus' });
+    fireEvent.click(screen.getByRole('button', { name: 'Add work package' }));
+    expect(screen.getByRole('dialog', { name: 'Site work package' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Save work package' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls[2][0]).toContain('/opportunities/opportunity-1/packages/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1');
+    expect(fetchMock.mock.calls[2][1].body).toBe('{"propertyId":"property-1","status":"scoping","expectedUpdatedAt":null}');
+    expect(await screen.findByText('Work package saved.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Manage work package' })).toBeInTheDocument();
+  });
+
   it('requires an explicit duplicate decision and reuses the original command key', async () => {
     const commandKey = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
     jest.spyOn(global.crypto, 'randomUUID').mockReturnValue(commandKey);

@@ -1808,6 +1808,89 @@ revoke all on function public.command_crm_lead(uuid,uuid,text,text,uuid,uuid,tex
 grant execute on function public.command_crm_lead(uuid,uuid,text,text,uuid,uuid,text)
   to authenticated,service_role;
 
+create function public.save_crm_site_work_package(
+  p_organization uuid, p_opportunity uuid, p_package uuid, p_property uuid,
+  p_request_key text, p_status text default 'scoping', p_walkthrough uuid default null,
+  p_proposal uuid default null, p_loss_reason uuid default null,
+  p_expected_updated_at timestamptz default null
+)
+returns table(package_id uuid, updated_at timestamptz, created boolean, replayed boolean)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare current_package public.crm_site_work_packages%rowtype;
+  current_opportunity public.crm_opportunities%rowtype; next_updated timestamptz;
+begin
+  if auth.uid() is null or length(p_request_key) not between 8 and 200
+     or p_status not in ('scoping','walkthrough_scheduled','estimated','proposed','accepted','declined') then
+    raise exception 'site work package unavailable' using errcode='42501';
+  end if;
+  select o.* into current_opportunity from public.crm_opportunities o
+    where o.organization_id=p_organization and o.id=p_opportunity and o.deleted_at is null for update;
+  if current_opportunity.id is null or not (public.can_manage_organization(p_organization)
+    or (public.organization_role(p_organization)='estimator'
+      and (current_opportunity.created_by=auth.uid() or current_opportunity.owner_user_id=auth.uid()
+        or current_opportunity.estimator_user_id=auth.uid()))) then
+    raise exception 'site work package unavailable' using errcode='42501';
+  end if;
+  if not exists (select 1 from public.crm_properties p where p.organization_id=p_organization
+      and p.id=p_property and p.deleted_at is null)
+     or (current_opportunity.property_id is not null and current_opportunity.property_id<>p_property) then
+    raise exception 'property is unavailable' using errcode='23514';
+  end if;
+  if p_walkthrough is not null and not exists (select 1 from public.crm_walkthroughs w
+    where w.organization_id=p_organization and w.id=p_walkthrough
+      and w.opportunity_id=p_opportunity and w.property_id=p_property) then
+    raise exception 'walkthrough is unavailable' using errcode='23514';
+  end if;
+  if p_proposal is not null and not exists (select 1 from public.proposals p
+    where p.organization_id=p_organization and p.id=p_proposal and p.crm_opportunity_id=p_opportunity) then
+    raise exception 'proposal is unavailable' using errcode='23514';
+  end if;
+  if p_loss_reason is not null and not exists (select 1 from public.crm_loss_reasons r
+    where r.organization_id=p_organization and r.id=p_loss_reason and r.active
+      and r.applies_to in ('lost','both')) then
+    raise exception 'loss reason is unavailable' using errcode='23514';
+  end if;
+  if p_status='walkthrough_scheduled' and p_walkthrough is null
+     or p_status in ('proposed','accepted') and p_proposal is null
+     or p_status='accepted' and not exists (select 1 from public.proposals p
+       where p.organization_id=p_organization and p.id=p_proposal and p.status='accepted')
+     or p_status='declined' and p_loss_reason is null then
+    raise exception 'site work package status evidence is incomplete' using errcode='23514';
+  end if;
+  select p.* into current_package from public.crm_site_work_packages p
+    where p.organization_id=p_organization and p.id=p_package for update;
+  if current_package.id is null then
+    insert into public.crm_site_work_packages(id,organization_id,opportunity_id,property_id,status,
+      walkthrough_id,proposal_id,idempotency_key,loss_reason_id,created_by,updated_by)
+    values(p_package,p_organization,p_opportunity,p_property,p_status,p_walkthrough,p_proposal,
+      p_request_key,p_loss_reason,auth.uid(),auth.uid()) returning crm_site_work_packages.updated_at into next_updated;
+    return query select p_package,next_updated,true,false; return;
+  end if;
+  if current_package.opportunity_id<>p_opportunity or current_package.property_id<>p_property then
+    raise exception 'site work package unavailable' using errcode='42501';
+  end if;
+  if current_package.status=p_status and current_package.walkthrough_id is not distinct from p_walkthrough
+     and current_package.proposal_id is not distinct from p_proposal
+     and current_package.loss_reason_id is not distinct from p_loss_reason then
+    return query select p_package,current_package.updated_at,false,true; return;
+  end if;
+  if p_expected_updated_at is null or current_package.updated_at<>p_expected_updated_at then
+    raise exception 'site work package changed' using errcode='40001';
+  end if;
+  update public.crm_site_work_packages set status=p_status,walkthrough_id=p_walkthrough,
+    proposal_id=p_proposal,loss_reason_id=p_loss_reason,updated_by=auth.uid()
+    where organization_id=p_organization and id=p_package returning crm_site_work_packages.updated_at into next_updated;
+  return query select p_package,next_updated,false,false;
+end;
+$$;
+revoke all on function public.save_crm_site_work_package(
+  uuid,uuid,uuid,uuid,text,text,uuid,uuid,uuid,timestamptz
+) from public,anon;
+grant execute on function public.save_crm_site_work_package(
+  uuid,uuid,uuid,uuid,text,text,uuid,uuid,uuid,timestamptz
+) to authenticated,service_role;
+
 create function public.read_crm_pipeline_board(target_organization uuid)
 returns jsonb language sql stable security definer
 set search_path = pg_catalog, public as $$
@@ -1906,6 +1989,18 @@ set search_path = pg_catalog, public as $$
       and c.role <> 'viewer'
       and (c.role in ('owner','admin') or (c.role='estimator'
         and (l.assigned_to_user_id=auth.uid() or l.created_by=auth.uid())))
+  ), work_packages as (
+    select coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
+      'id',p.id,'opportunity_id',p.opportunity_id,'property_id',p.property_id,
+      'status',p.status,'walkthrough_id',p.walkthrough_id,'proposal_id',p.proposal_id,
+      'loss_reason_id',p.loss_reason_id,'updated_at',p.updated_at
+    )) order by p.created_at,p.id),'[]'::jsonb) as value
+    from public.crm_site_work_packages p
+    join public.crm_opportunities o on o.organization_id=p.organization_id and o.id=p.opportunity_id
+    cross join caller c
+    where p.organization_id=target_organization and c.role<>'viewer'
+      and (c.role in ('owner','admin') or (c.role='estimator'
+        and (o.created_by=auth.uid() or o.owner_user_id=auth.uid() or o.estimator_user_id=auth.uid())))
   )
   select case when (select role from caller) is null then null else jsonb_build_object(
     'organization_id', target_organization,
@@ -1915,6 +2010,7 @@ set search_path = pg_catalog, public as $$
     'loss_reasons', (select value from loss_reasons),
     'assignable_members', (select value from assignable_members),
     'leads', (select value from leads),
+    'work_packages', (select value from work_packages),
     'viewer_price_redacted', (select role = 'viewer' from caller)
   ) end;
 $$;

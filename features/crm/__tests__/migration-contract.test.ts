@@ -176,6 +176,15 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain("'leads', (select value from leads)");
   });
 
+  it('implements a caller-bound site work package state machine', () => {
+    expect(migration).toContain('create function public.save_crm_site_work_package(');
+    expect(migration).toContain("p_status not in ('scoping','walkthrough_scheduled','estimated','proposed','accepted','declined')");
+    expect(migration).toContain("p_status='accepted' and not exists");
+    expect(migration).toContain('current_package.updated_at<>p_expected_updated_at');
+    expect(migration).toContain("'work_packages', (select value from work_packages)");
+    expect(migration).toContain('revoke all on function public.save_crm_site_work_package(');
+  });
+
   it('projects the board through a caller-bound redacted RPC', () => {
     expect(migration).toContain('create function public.read_crm_pipeline_board(target_organization uuid)');
     expect(migration).toContain("public.organization_role(target_organization) as role");

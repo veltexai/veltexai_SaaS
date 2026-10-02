@@ -35,12 +35,23 @@ type Lead = {
   phone?: string;
   property_name?: string;
 };
+type WorkPackage = {
+  id: string;
+  opportunity_id: string;
+  property_id: string;
+  status: 'scoping' | 'walkthrough_scheduled' | 'estimated' | 'proposed' | 'accepted' | 'declined';
+  walkthrough_id?: string;
+  proposal_id?: string;
+  loss_reason_id?: string;
+  updated_at: string;
+};
 type Board = {
   organization_id: string;
   caller_role: 'owner' | 'admin' | 'estimator' | 'viewer';
   pipelines: Pipeline[];
   opportunities: Opportunity[];
   leads?: Lead[];
+  work_packages?: WorkPackage[];
   loss_reasons: { id: string; label: string; applies_to: 'lost' | 'disqualified' | 'both' }[];
   assignable_members: { user_id: string; role: 'owner' | 'admin' | 'estimator'; label: string }[];
   viewer_price_redacted: boolean;
@@ -74,6 +85,7 @@ export function CrmBoard() {
   const [qualifyingOpportunity, setQualifyingOpportunity] = useState<Opportunity | null>(null);
   const [managingLead, setManagingLead] = useState<Lead | null>(null);
   const [leadAction, setLeadAction] = useState<Lead['status']>('contacted');
+  const [packageFor, setPackageFor] = useState<{ opportunity: Opportunity; item?: WorkPackage } | null>(null);
   const [followUpOnly, setFollowUpOnly] = useState(false);
   const [duplicateReview, setDuplicateReview] = useState<{
     candidates: DuplicateCandidate[]; draft: LeadDraft; key: string;
@@ -313,6 +325,32 @@ export function CrmBoard() {
     setNotice('Lead updated.');
   }
 
+  async function submitWorkPackage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!organizationId || !packageFor?.opportunity.property_id) return;
+    const form = new FormData(event.currentTarget);
+    const packageId = packageFor.item?.id ?? crypto.randomUUID();
+    const status = String(form.get('status')) as WorkPackage['status'];
+    const response = await fetch(`/api/orgs/${organizationId}/crm/opportunities/${packageFor.opportunity.id}/packages/${packageId}`, {
+      method: 'PUT', headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() },
+      body: JSON.stringify({ propertyId: packageFor.opportunity.property_id, status,
+        expectedUpdatedAt: packageFor.item?.updated_at ?? null }),
+    });
+    const payload = await response.json();
+    if (!response.ok) { setNotice(payload.error ?? 'Unable to save the work package.'); return; }
+    const updatedAt = payload.data.updated_at as string;
+    setBoard((current) => {
+      if (!current) return current;
+      const item: WorkPackage = { id: packageId, opportunity_id: packageFor.opportunity.id,
+        property_id: packageFor.opportunity.property_id!, status, updated_at: updatedAt };
+      const existing = current.work_packages ?? [];
+      return { ...current, work_packages: existing.some((entry) => entry.id === packageId)
+        ? existing.map((entry) => entry.id === packageId ? { ...entry, status, updated_at: updatedAt } : entry)
+        : [...existing, item] };
+    });
+    setPackageFor(null); setNotice('Work package saved.');
+  }
+
   function stageMove(opportunity: Opportunity) {
     return (
       <div className="mt-3">
@@ -506,6 +544,22 @@ export function CrmBoard() {
                   <option key={reason.id} value={reason.id}>{reason.label}</option>)}</select></div>}
             <div className="flex gap-3"><Button type="submit" className="min-h-11">Save lead</Button>
               <Button type="button" variant="outline" className="min-h-11" onClick={() => setManagingLead(null)}>Cancel</Button></div>
+          </form></CardContent>
+        </Card>
+      )}
+      {packageFor && (
+        <Card role="dialog" aria-modal="true" aria-labelledby="package-heading">
+          <CardHeader><CardTitle id="package-heading">Site work package</CardTitle></CardHeader>
+          <CardContent><form className="space-y-4" onSubmit={submitWorkPackage}>
+            <p className="text-sm text-gray-700">Track scoped work for {packageFor.opportunity.name}.</p>
+            <div className="space-y-2"><Label htmlFor="package-status">Status</Label>
+              <select id="package-status" name="status" defaultValue={packageFor.item?.status ?? 'scoping'}
+                className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                <option value="scoping">Scoping</option><option value="estimated">Estimated</option>
+              </select></div>
+            <p className="text-xs text-gray-600">Walkthrough, proposal, acceptance, and decline states become available only with their required linked evidence.</p>
+            <div className="flex gap-3"><Button type="submit" className="min-h-11">Save work package</Button>
+              <Button type="button" variant="outline" className="min-h-11" onClick={() => setPackageFor(null)}>Cancel</Button></div>
           </form></CardContent>
         </Card>
       )}
@@ -736,6 +790,11 @@ export function CrmBoard() {
                           <Button type="button" variant="outline" className="min-h-11 w-full"
                             onClick={() => setWalkthroughFor(opportunity)}>Schedule walkthrough</Button>
                         )}
+                        {opportunity.property_id && <Button type="button" variant="outline" className="min-h-11 w-full"
+                          onClick={() => setPackageFor({ opportunity, item: (board.work_packages ?? [])
+                            .find((entry) => entry.opportunity_id === opportunity.id) })}>
+                          {(board.work_packages ?? []).some((entry) => entry.opportunity_id === opportunity.id)
+                            ? 'Manage work package' : 'Add work package'}</Button>}
                         {['owner', 'admin'].includes(board.caller_role) && (
                           <Button type="button" variant="outline" className="min-h-11 w-full"
                             onClick={() => setAssigningOpportunity(opportunity)}>Change assignment</Button>

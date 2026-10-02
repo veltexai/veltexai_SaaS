@@ -1193,6 +1193,15 @@ export interface Database {
           p_merged_into_lead?: string | null; p_disqualification_reason?: string | null; p_note?: string | null };
         Returns: { lead_id: string; status: string; replayed: boolean }[];
       };
+      save_crm_site_work_package: {
+        Args: {
+          p_organization: string; p_opportunity: string; p_package: string; p_property: string;
+          p_request_key: string; p_status?: string; p_walkthrough?: string | null;
+          p_proposal?: string | null; p_loss_reason?: string | null;
+          p_expected_updated_at?: string | null;
+        };
+        Returns: { package_id: string; updated_at: string; created: boolean; replayed: boolean }[];
+      };
     };
     Enums: {
       [_ in never]: never;
