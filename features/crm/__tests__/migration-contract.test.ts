@@ -86,6 +86,16 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain('revoke all on function public.convert_crm_lead');
   });
 
+  it('serializes walkthrough scheduling and refuses estimator overlap', () => {
+    expect(migration).toContain('create function public.schedule_crm_walkthrough(');
+    expect(migration).toContain('pg_catalog.pg_advisory_xact_lock(');
+    expect(migration).toContain("w.status in ('scheduled', 'rescheduled')");
+    expect(migration).toContain('w.window_start < p_window_end and w.window_end > p_window_start');
+    expect(migration).toContain("using errcode = '23P01'");
+    expect(migration).toContain('idempotency key was already used for another walkthrough');
+    expect(migration).toContain('revoke all on function public.schedule_crm_walkthrough');
+  });
+
   it('projects the board through a caller-bound redacted RPC', () => {
     expect(migration).toContain('create function public.read_crm_pipeline_board(target_organization uuid)');
     expect(migration).toContain("public.organization_role(target_organization) as role");

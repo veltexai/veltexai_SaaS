@@ -1008,6 +1008,91 @@ revoke all on function public.convert_crm_lead(uuid, uuid, text, uuid, text, tex
 grant execute on function public.convert_crm_lead(uuid, uuid, text, uuid, text, text, uuid, uuid, uuid)
   to authenticated, service_role;
 
+create function public.schedule_crm_walkthrough(
+  p_organization uuid,
+  p_opportunity uuid,
+  p_property uuid,
+  p_estimator uuid,
+  p_site_contact uuid,
+  p_request_key text,
+  p_window_start timestamptz,
+  p_window_end timestamptz,
+  p_timezone text
+)
+returns table(walkthrough_id uuid, replayed boolean)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare
+  existing_walkthrough public.crm_walkthroughs%rowtype;
+  created_walkthrough uuid;
+begin
+  if auth.uid() is null
+     or length(p_request_key) not between 8 and 200
+     or p_window_end <= p_window_start
+     or length(trim(p_timezone)) not between 1 and 80
+     or not public.can_access_crm_opportunity(p_opportunity) then
+    raise exception 'walkthrough scheduling unavailable' using errcode = '42501';
+  end if;
+  if not exists (
+    select 1 from public.crm_opportunities o
+    where o.organization_id = p_organization and o.id = p_opportunity
+      and o.property_id = p_property and o.deleted_at is null
+  ) or not exists (
+    select 1 from public.organization_memberships m
+    where m.organization_id = p_organization and m.user_id = p_estimator
+      and m.role in ('owner', 'admin', 'estimator')
+  ) or (p_site_contact is not null and not exists (
+    select 1 from public.crm_contacts c
+    where c.organization_id = p_organization and c.id = p_site_contact and c.deleted_at is null
+  )) then
+    raise exception 'walkthrough scheduling unavailable' using errcode = '42501';
+  end if;
+
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(p_organization::text || ':' || p_estimator::text, 0)
+  );
+  select w.* into existing_walkthrough from public.crm_walkthroughs w
+  where w.organization_id = p_organization and w.idempotency_key = p_request_key;
+  if existing_walkthrough.id is not null then
+    if existing_walkthrough.opportunity_id is distinct from p_opportunity
+       or existing_walkthrough.property_id is distinct from p_property
+       or existing_walkthrough.estimator_user_id is distinct from p_estimator
+       or existing_walkthrough.site_contact_id is distinct from p_site_contact
+       or existing_walkthrough.window_start is distinct from p_window_start
+       or existing_walkthrough.window_end is distinct from p_window_end
+       or existing_walkthrough.timezone is distinct from trim(p_timezone) then
+      raise exception 'idempotency key was already used for another walkthrough'
+        using errcode = '23514';
+    end if;
+    return query select existing_walkthrough.id, true;
+    return;
+  end if;
+  if exists (
+    select 1 from public.crm_walkthroughs w
+    where w.organization_id = p_organization and w.estimator_user_id = p_estimator
+      and w.status in ('scheduled', 'rescheduled')
+      and w.window_start < p_window_end and w.window_end > p_window_start
+  ) then
+    raise exception 'estimator already has an overlapping walkthrough' using errcode = '23P01';
+  end if;
+
+  insert into public.crm_walkthroughs(
+    organization_id, opportunity_id, property_id, estimator_user_id,
+    site_contact_id, idempotency_key, window_start, window_end, timezone,
+    status, created_by, updated_by
+  ) values (
+    p_organization, p_opportunity, p_property, p_estimator,
+    p_site_contact, p_request_key, p_window_start, p_window_end, trim(p_timezone),
+    'scheduled', auth.uid(), auth.uid()
+  ) returning id into created_walkthrough;
+  return query select created_walkthrough, false;
+end;
+$$;
+revoke all on function public.schedule_crm_walkthrough(uuid, uuid, uuid, uuid, uuid, text, timestamptz, timestamptz, text)
+  from public, anon;
+grant execute on function public.schedule_crm_walkthrough(uuid, uuid, uuid, uuid, uuid, text, timestamptz, timestamptz, text)
+  to authenticated, service_role;
+
 create function public.read_crm_pipeline_board(target_organization uuid)
 returns jsonb language sql stable security definer
 set search_path = pg_catalog, public as $$
