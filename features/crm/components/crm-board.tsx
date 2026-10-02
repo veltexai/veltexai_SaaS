@@ -23,6 +23,7 @@ type Opportunity = {
   service_family?: string;
   expected_close_date?: string;
   updated_at: string;
+  needs_follow_up?: boolean;
   owner_user_id?: string;
   estimator_user_id?: string;
 };
@@ -61,6 +62,8 @@ export function CrmBoard() {
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [walkthroughFor, setWalkthroughFor] = useState<Opportunity | null>(null);
   const [assigningOpportunity, setAssigningOpportunity] = useState<Opportunity | null>(null);
+  const [qualifyingOpportunity, setQualifyingOpportunity] = useState<Opportunity | null>(null);
+  const [followUpOnly, setFollowUpOnly] = useState(false);
   const [duplicateReview, setDuplicateReview] = useState<{
     candidates: DuplicateCandidate[]; draft: LeadDraft; key: string;
   } | null>(null);
@@ -91,6 +94,8 @@ export function CrmBoard() {
     () => board?.pipelines.find((pipeline) => pipeline.is_default) ?? board?.pipelines[0],
     [board],
   );
+  const shownOpportunities = useMemo(() => board?.opportunities.filter((opportunity) =>
+    !followUpOnly || opportunity.needs_follow_up) ?? [], [board, followUpOnly]);
 
   async function moveOpportunity(
     opportunity: Opportunity,
@@ -254,6 +259,25 @@ export function CrmBoard() {
         estimator_user_id: estimatorUserId ?? undefined } : item) } : current);
     setAssigningOpportunity(null);
     setNotice('Assignment updated.');
+  }
+
+  async function submitQualification(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!organizationId || !qualifyingOpportunity) return;
+    const form = new FormData(event.currentTarget);
+    const outcome = String(form.get('outcome'));
+    const key = crypto.randomUUID();
+    const response = await fetch(`/api/orgs/${organizationId}/crm/opportunities/${qualifyingOpportunity.id}/qualification`, {
+      method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': key },
+      body: JSON.stringify({ responseId: crypto.randomUUID(), outcome,
+        operatorNotes: String(form.get('operatorNotes') || ''),
+        specialistReview: form.get('specialistReview') === 'on',
+        lossReasonId: outcome === 'not_fit' ? String(form.get('lossReasonId') || '') || null : null }),
+    });
+    const payload = await response.json();
+    if (!response.ok) { setNotice(payload.error ?? 'Unable to record qualification.'); return; }
+    setQualifyingOpportunity(null); setNotice('Qualification recorded.');
+    if (outcome === 'not_fit') void loadBoard();
   }
 
   function stageMove(opportunity: Opportunity) {
@@ -558,6 +582,27 @@ export function CrmBoard() {
           </CardContent>
         </Card>
       )}
+      {qualifyingOpportunity && (
+        <Card role="dialog" aria-modal="true" aria-labelledby="qualification-heading">
+          <CardHeader><CardTitle id="qualification-heading">Record qualification</CardTitle></CardHeader>
+          <CardContent><form className="space-y-4" onSubmit={submitQualification}>
+            <p className="text-sm text-amber-800">The default checklist is not operator-validated yet. Record the reviewed outcome and notes only.</p>
+            <div className="space-y-2"><Label htmlFor="qualification-outcome">Outcome</Label><select id="qualification-outcome" name="outcome"
+              className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+              <option value="fit">Fit</option><option value="needs_review">Needs specialist review</option><option value="not_fit">Not a fit</option>
+            </select></div>
+            <div className="space-y-2"><Label htmlFor="qualification-notes">Qualification notes</Label><textarea id="qualification-notes"
+              name="operatorNotes" maxLength={5000} className="min-h-24 w-full rounded-md border border-gray-300 p-3" /></div>
+            <div className="space-y-2"><Label htmlFor="qualification-loss">Disqualification reason (required for Not a fit)</Label>
+              <select id="qualification-loss" name="lossReasonId" className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                <option value="">Choose a reason</option>{board.loss_reasons.filter((reason) => reason.applies_to === 'both' || reason.applies_to === 'disqualified')
+                  .map((reason) => <option key={reason.id} value={reason.id}>{reason.label}</option>)}</select></div>
+            <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" name="specialistReview" /> Flag for specialist review</label>
+            <div className="flex gap-3"><Button type="submit" className="min-h-11">Save qualification</Button>
+              <Button type="button" variant="outline" className="min-h-11" onClick={() => setQualifyingOpportunity(null)}>Cancel</Button></div>
+          </form></CardContent>
+        </Card>
+      )}
       {duplicateReview && (
         <Card aria-labelledby="duplicate-heading">
           <CardHeader><CardTitle id="duplicate-heading">Review possible duplicate</CardTitle></CardHeader>
@@ -581,12 +626,14 @@ export function CrmBoard() {
       <div className="flex gap-2" aria-label="Pipeline view">
         <Button className="min-h-11" type="button" variant={view === 'board' ? 'default' : 'outline'} aria-pressed={view === 'board'} onClick={() => setView('board')}>Board</Button>
         <Button className="min-h-11" type="button" variant={view === 'list' ? 'default' : 'outline'} aria-pressed={view === 'list'} onClick={() => setView('list')}>List</Button>
+        <Button className="min-h-11" type="button" variant={followUpOnly ? 'default' : 'outline'}
+          aria-pressed={followUpOnly} onClick={() => setFollowUpOnly((value) => !value)}>Needs follow-up</Button>
       </div>
 
       {view === 'board' ? <div className="overflow-x-auto pb-4" aria-label={`${activePipeline.name} pipeline`}>
         <div className="flex min-w-max gap-4">
           {activePipeline.stages.filter((stage) => !stage.hidden).map((stage) => {
-            const opportunities = board.opportunities.filter((item) => item.stage_id === stage.id);
+            const opportunities = shownOpportunities.filter((item) => item.stage_id === stage.id);
             return (
               <section key={stage.id} aria-labelledby={`stage-${stage.id}`} className="w-72 rounded-lg bg-gray-100 p-3">
                 <div className="mb-3 flex items-center justify-between">
@@ -613,7 +660,8 @@ export function CrmBoard() {
                         {['owner', 'admin'].includes(board.caller_role) && (
                           <Button type="button" variant="outline" className="min-h-11 w-full"
                             onClick={() => setAssigningOpportunity(opportunity)}>Change assignment</Button>
-                        )}</div>
+                        )}<Button type="button" variant="outline" className="min-h-11 w-full"
+                          onClick={() => setQualifyingOpportunity(opportunity)}>Record qualification</Button></div>
                       )}
                     </article>
                   ))}
@@ -633,7 +681,7 @@ export function CrmBoard() {
               <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Move</th>
             </tr></thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {board.opportunities.map((opportunity) => (
+              {shownOpportunities.map((opportunity) => (
                 <tr key={opportunity.id}>
                   <th scope="row" className="px-4 py-3 text-left text-sm font-medium">{opportunity.name}</th>
                   <td className="px-4 py-3 text-sm">{activePipeline.stages.find((stage) => stage.id === opportunity.stage_id)?.label}</td>
@@ -651,7 +699,8 @@ export function CrmBoard() {
                       {['owner', 'admin'].includes(board.caller_role) && (
                         <Button type="button" variant="outline" className="min-h-11"
                           onClick={() => setAssigningOpportunity(opportunity)}>Change assignment</Button>
-                      )}</div></div>
+                      )}<Button type="button" variant="outline" className="min-h-11"
+                        onClick={() => setQualifyingOpportunity(opportunity)}>Record qualification</Button></div></div>
                   )}</td>
                 </tr>
               ))}

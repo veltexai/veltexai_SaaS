@@ -1180,6 +1180,14 @@ export interface Database {
         };
         Returns: { customer_id: string; contact_id: string; property_id: string }[];
       };
+      qualify_crm_opportunity: {
+        Args: {
+          p_organization: string; p_opportunity: string; p_response: string; p_request_key: string;
+          p_checklist_version: string; p_answers: Json; p_outcome: string;
+          p_specialist_review_flag?: boolean; p_loss_reason?: string | null;
+        };
+        Returns: { response_id: string; replayed: boolean }[];
+      };
     };
     Enums: {
       [_ in never]: never;

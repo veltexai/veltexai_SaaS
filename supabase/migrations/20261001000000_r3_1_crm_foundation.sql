@@ -1657,6 +1657,65 @@ grant execute on function public.create_crm_account_bundle(
   uuid, uuid, uuid, uuid, text, text, text, text, text, text, text, text, text, text, text, text
 ) to authenticated, service_role;
 
+create function public.qualify_crm_opportunity(
+  p_organization uuid, p_opportunity uuid, p_response uuid, p_request_key text,
+  p_checklist_version text, p_answers jsonb, p_outcome text,
+  p_specialist_review_flag boolean default false, p_loss_reason uuid default null
+)
+returns table(response_id uuid, replayed boolean)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare existing_response public.crm_qualification_responses%rowtype; target_stage uuid;
+begin
+  if auth.uid() is null or not public.can_access_crm_opportunity(p_opportunity)
+     or length(p_request_key) not between 8 and 200
+     or length(trim(p_checklist_version)) not between 1 and 80
+     or jsonb_typeof(p_answers) <> 'object' or octet_length(p_answers::text) > 20000
+     or p_outcome not in ('fit','not_fit','needs_review')
+     or (p_outcome = 'not_fit' and p_loss_reason is null) then
+    raise exception 'qualification unavailable' using errcode = '23514';
+  end if;
+  perform 1 from public.crm_opportunities o where o.organization_id=p_organization
+    and o.id=p_opportunity and o.deleted_at is null for update;
+  if not found then raise exception 'qualification unavailable' using errcode = '42501'; end if;
+  select q.* into existing_response from public.crm_qualification_responses q
+    where q.organization_id=p_organization and q.id=p_response;
+  if existing_response.id is not null then
+    if existing_response.opportunity_id is distinct from p_opportunity
+       or existing_response.checklist_version is distinct from p_checklist_version
+       or existing_response.answers is distinct from p_answers
+       or existing_response.outcome is distinct from p_outcome
+       or existing_response.specialist_review_flag is distinct from p_specialist_review_flag then
+      raise exception 'qualification response identifier already used' using errcode = '23514';
+    end if;
+    return query select p_response, true; return;
+  end if;
+  insert into public.crm_qualification_responses(
+    id,organization_id,opportunity_id,checklist_version,answers,outcome,
+    specialist_review_flag,created_by
+  ) values (p_response,p_organization,p_opportunity,trim(p_checklist_version),p_answers,
+    p_outcome,p_specialist_review_flag,auth.uid());
+  if p_outcome = 'not_fit' then
+    select s.id into target_stage from public.crm_opportunities o
+    join public.crm_pipeline_stages s on s.organization_id=o.organization_id
+      and s.pipeline_id=o.pipeline_id and s.category='disqualified' and not s.hidden
+    where o.organization_id=p_organization and o.id=p_opportunity
+    order by s.position,s.id limit 1;
+    if target_stage is null then raise exception 'disqualified stage unavailable' using errcode = '23514'; end if;
+    perform * from public.move_crm_opportunity_stage(
+      p_organization,p_opportunity,target_stage,p_request_key,p_loss_reason,null
+    );
+  end if;
+  return query select p_response, false;
+end;
+$$;
+revoke all on function public.qualify_crm_opportunity(
+  uuid, uuid, uuid, text, text, jsonb, text, boolean, uuid
+) from public, anon;
+grant execute on function public.qualify_crm_opportunity(
+  uuid, uuid, uuid, text, text, jsonb, text, boolean, uuid
+) to authenticated, service_role;
+
 create function public.read_crm_pipeline_board(target_organization uuid)
 returns jsonb language sql stable security definer
 set search_path = pg_catalog, public as $$
@@ -1700,6 +1759,14 @@ set search_path = pg_catalog, public as $$
       'owner_user_id', o.owner_user_id,
       'estimator_user_id', o.estimator_user_id,
       'next_action_due_at', o.next_action_due_at,
+      'needs_follow_up', (
+        s.category not in ('won','lost','disqualified','handed_off')
+        and not (o.next_action_due_at > now() or exists (
+          select 1 from public.crm_tasks t where t.organization_id=o.organization_id
+            and t.opportunity_id=o.id and t.status='open'
+            and coalesce(t.snoozed_until,t.due_at) > now()
+        ))
+      ),
       'value_amount_minor', case when c.role <> 'viewer' then o.value_amount_minor end,
       'value_basis', case when c.role <> 'viewer' then o.value_basis end,
       'currency', case when c.role <> 'viewer' then o.currency end

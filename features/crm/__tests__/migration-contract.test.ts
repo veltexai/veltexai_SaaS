@@ -159,6 +159,14 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).toContain("p_customer, p_contact, 'decision_maker', true, auth.uid()");
   });
 
+  it('records append-only qualification and atomically disqualifies not-fit opportunities', () => {
+    expect(migration).toContain('create function public.qualify_crm_opportunity(');
+    expect(migration).toContain("p_outcome = 'not_fit' and p_loss_reason is null");
+    expect(migration).toContain("s.category='disqualified' and not s.hidden");
+    expect(migration).toContain('perform * from public.move_crm_opportunity_stage(');
+    expect(migration).toContain("'needs_follow_up', (");
+  });
+
   it('projects the board through a caller-bound redacted RPC', () => {
     expect(migration).toContain('create function public.read_crm_pipeline_board(target_organization uuid)');
     expect(migration).toContain("public.organization_role(target_organization) as role");

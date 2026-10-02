@@ -303,4 +303,24 @@ describe('R3-1 CRM board', () => {
     expect(fetchMock.mock.calls[2][1].body).toBe(`{"ownerUserId":"${USER_ID}","estimatorUserId":"${ESTIMATOR}","transferOpenTasks":true}`);
     expect(await screen.findByText('Assignment updated.')).toBeInTheDocument();
   });
+
+  it('filters needs-follow-up and records a reviewed qualification outcome', async () => {
+    jest.spyOn(global.crypto, 'randomUUID')
+      .mockReturnValueOnce('66666666-6666-4666-8666-666666666666')
+      .mockReturnValueOnce('77777777-7777-4777-8777-777777777777');
+    fetchMock.mockResolvedValueOnce({ok:true,json:async()=>({data:ORG_ID})})
+      .mockResolvedValueOnce({ok:true,json:async()=>({data:{organization_id:ORG_ID,caller_role:'estimator',viewer_price_redacted:false,
+        loss_reasons:[],assignable_members:[],pipelines:[{id:'pipeline-1',name:'Commercial',is_default:true,stages:[{id:'stage-new',label:'Lead',category:'new',position:10,hidden:false}]}],
+        opportunities:[{id:'opp-1',name:'Needs Call',pipeline_id:'pipeline-1',stage_id:'stage-new',category:'new',owner_user_id:USER_ID,updated_at:'2026-10-01T19:00:00Z',needs_follow_up:true},{id:'opp-2',name:'Has Task',pipeline_id:'pipeline-1',stage_id:'stage-new',category:'new',owner_user_id:USER_ID,updated_at:'2026-10-01T19:00:00Z',needs_follow_up:false}]}})})
+      .mockResolvedValueOnce({ok:true,status:201,json:async()=>({data:{response_id:'response'}})});
+    render(<CrmBoard/>); await screen.findByRole('heading',{name:'Needs Call'});
+    fireEvent.click(screen.getByRole('button',{name:'Needs follow-up'}));
+    expect(screen.queryByRole('heading',{name:'Has Task'})).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button',{name:'Record qualification'}));
+    fireEvent.change(screen.getByLabelText('Qualification notes'),{target:{value:'Reviewed with estimator'}});
+    fireEvent.click(screen.getByRole('button',{name:'Save qualification'}));
+    await waitFor(()=>expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls[2][1].body).toContain('"outcome":"fit"');
+    expect(await screen.findByText('Qualification recorded.')).toBeInTheDocument();
+  });
 });
