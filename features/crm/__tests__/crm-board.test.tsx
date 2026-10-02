@@ -5,6 +5,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { CrmBoard } from '@/features/crm/components/crm-board';
 
 const ORG_ID = '11111111-1111-4111-8111-111111111111';
+const USER_ID = '33333333-3333-4333-8333-333333333333';
 const fetchMock = jest.fn();
 
 describe('R3-1 CRM board', () => {
@@ -171,5 +172,29 @@ describe('R3-1 CRM board', () => {
     const move = await screen.findByRole('combobox', { name: 'Move North Campus to stage' });
     fireEvent.change(move, { target: { value: 'stage-won' } });
     expect(screen.getByLabelText('Manual win reason')).toBeRequired();
+  });
+
+  it('creates an assigned next action without asking for a user id', async () => {
+    jest.spyOn(global.crypto, 'randomUUID').mockReturnValue('dddddddd-dddd-4ddd-8ddd-dddddddddddd');
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-new', category: 'new', owner_user_id: 'owner-1', estimator_user_id: USER_ID }],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: { id: 'task-1' } }) });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'North Campus' });
+    fireEvent.click(screen.getByRole('button', { name: 'Add next action' }));
+    fireEvent.change(screen.getByLabelText('Task'), { target: { value: 'Call facilities manager' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Add next action' })[0]);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls[2][0]).toBe(`/api/orgs/${ORG_ID}/crm/opportunities/opportunity-1/tasks`);
+    expect(fetchMock.mock.calls[2][1].body).toContain('"assigneeUserId":"33333333-3333-4333-8333-333333333333"');
+    expect(await screen.findByText('Next action added.')).toBeInTheDocument();
   });
 });

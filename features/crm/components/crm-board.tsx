@@ -19,6 +19,8 @@ type Opportunity = {
   value_basis?: string;
   currency?: string;
   next_action_due_at?: string;
+  owner_user_id?: string;
+  estimator_user_id?: string;
 };
 type Board = {
   organization_id: string;
@@ -49,6 +51,7 @@ export function CrmBoard() {
   const [notice, setNotice] = useState<string | null>(null);
   const [view, setView] = useState<'board' | 'list'>('board');
   const [outcome, setOutcome] = useState<{ opportunity: Opportunity; stage: Stage } | null>(null);
+  const [taskFor, setTaskFor] = useState<Opportunity | null>(null);
   const [duplicateReview, setDuplicateReview] = useState<{
     candidates: DuplicateCandidate[]; draft: LeadDraft; key: string;
   } | null>(null);
@@ -119,6 +122,38 @@ export function CrmBoard() {
       lossReasonId: String(form.get('lossReasonId') || '') || undefined,
       manualWinReason: String(form.get('manualWinReason') || '') || undefined,
     });
+  }
+
+  async function submitTask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!organizationId || !taskFor) return;
+    const assignee = taskFor.estimator_user_id ?? taskFor.owner_user_id;
+    if (!assignee) {
+      setNotice('Assign an owner or estimator before adding a next action.');
+      return;
+    }
+    const form = new FormData(event.currentTarget);
+    const localDue = String(form.get('dueAt') || '');
+    const response = await fetch(
+      `/api/orgs/${organizationId}/crm/opportunities/${taskFor.id}/tasks`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() },
+        body: JSON.stringify({
+          title: String(form.get('title') || ''),
+          dueAt: localDue ? new Date(localDue).toISOString() : null,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          assigneeUserId: assignee,
+        }),
+      },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      setNotice(payload.error ?? 'Unable to add the next action.');
+      return;
+    }
+    setTaskFor(null);
+    setNotice('Next action added.');
   }
 
   function stageMove(opportunity: Opportunity) {
@@ -271,6 +306,29 @@ export function CrmBoard() {
           </CardContent>
         </Card>
       )}
+      {taskFor && (
+        <Card role="dialog" aria-modal="true" aria-labelledby="task-heading">
+          <CardHeader><CardTitle id="task-heading">Add next action</CardTitle></CardHeader>
+          <CardContent>
+            <form className="space-y-4" onSubmit={submitTask}>
+              <p className="text-sm text-gray-700">Create a task for {taskFor.name}.</p>
+              <div className="space-y-2">
+                <Label htmlFor="task-title">Task</Label>
+                <Input id="task-title" name="title" required maxLength={240} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="task-due">Due date and time</Label>
+                <Input id="task-due" name="dueAt" type="datetime-local" />
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button type="submit" className="min-h-11">Add next action</Button>
+                <Button type="button" variant="outline" className="min-h-11"
+                  onClick={() => setTaskFor(null)}>Cancel</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
       {duplicateReview && (
         <Card aria-labelledby="duplicate-heading">
           <CardHeader><CardTitle id="duplicate-heading">Review possible duplicate</CardTitle></CardHeader>
@@ -314,6 +372,10 @@ export function CrmBoard() {
                       {valueLabel(opportunity) && <p className="mt-2 text-sm text-gray-600">{valueLabel(opportunity)}</p>}
                       {opportunity.next_action_due_at && <p className="mt-2 text-xs text-gray-500">Next action {new Date(opportunity.next_action_due_at).toLocaleDateString()}</p>}
                       {board.caller_role !== 'viewer' && stageMove(opportunity)}
+                      {board.caller_role !== 'viewer' && (
+                        <Button type="button" variant="outline" className="mt-2 min-h-11 w-full"
+                          onClick={() => setTaskFor(opportunity)}>Add next action</Button>
+                      )}
                     </article>
                   ))}
                 </div>
@@ -337,7 +399,10 @@ export function CrmBoard() {
                   <th scope="row" className="px-4 py-3 text-left text-sm font-medium">{opportunity.name}</th>
                   <td className="px-4 py-3 text-sm">{activePipeline.stages.find((stage) => stage.id === opportunity.stage_id)?.label}</td>
                   <td className="px-4 py-3 text-sm">{valueLabel(opportunity) ?? '—'}</td>
-                  <td className="px-4 py-3">{board.caller_role === 'viewer' ? 'Read only' : stageMove(opportunity)}</td>
+                  <td className="px-4 py-3">{board.caller_role === 'viewer' ? 'Read only' : (
+                    <div>{stageMove(opportunity)}<Button type="button" variant="outline"
+                      className="mt-2 min-h-11" onClick={() => setTaskFor(opportunity)}>Add next action</Button></div>
+                  )}</td>
                 </tr>
               ))}
             </tbody>
