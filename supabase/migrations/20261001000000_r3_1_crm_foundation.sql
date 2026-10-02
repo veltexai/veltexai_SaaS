@@ -732,6 +732,73 @@ revoke all on function public.find_crm_duplicate_candidates(uuid, text, text)
 grant execute on function public.find_crm_duplicate_candidates(uuid, text, text)
   to authenticated, service_role;
 
+create function public.read_crm_pipeline_board(target_organization uuid)
+returns jsonb language sql stable security definer
+set search_path = pg_catalog, public as $$
+  with caller as (
+    select public.organization_role(target_organization) as role
+  ), pipelines as (
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'id', p.id,
+      'name', p.name,
+      'template_key', p.template_key,
+      'segment', p.segment,
+      'is_default', p.is_default,
+      'archived', p.archived,
+      'stages', coalesce((
+        select jsonb_agg(jsonb_build_object(
+          'id', s.id,
+          'label', s.label,
+          'category', s.category,
+          'position', s.position,
+          'hidden', s.hidden,
+          'stale_after_seconds', extract(epoch from s.stale_after)
+        ) order by s.position, s.id)
+        from public.crm_pipeline_stages s
+        where s.organization_id = p.organization_id and s.pipeline_id = p.id
+      ), '[]'::jsonb)
+    ) order by p.name, p.id), '[]'::jsonb) as value
+    from public.crm_pipelines p
+    where p.organization_id = target_organization
+  ), opportunities as (
+    select coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
+      'id', o.id,
+      'name', o.name,
+      'pipeline_id', o.pipeline_id,
+      'stage_id', o.stage_id,
+      'category', s.category,
+      'segment', o.segment,
+      'service_family', o.service_family,
+      'expected_close_date', o.expected_close_date,
+      'owner_user_id', o.owner_user_id,
+      'estimator_user_id', o.estimator_user_id,
+      'next_action_due_at', o.next_action_due_at,
+      'value_amount_minor', case when c.role <> 'viewer' then o.value_amount_minor end,
+      'value_basis', case when c.role <> 'viewer' then o.value_basis end,
+      'currency', case when c.role <> 'viewer' then o.currency end
+    )) order by o.created_at desc, o.id), '[]'::jsonb) as value
+    from public.crm_opportunities o
+    join public.crm_pipeline_stages s
+      on s.organization_id = o.organization_id and s.id = o.stage_id
+    cross join caller c
+    where o.organization_id = target_organization and o.deleted_at is null
+      and (
+        c.role in ('owner', 'admin', 'viewer')
+        or (c.role = 'estimator' and (
+          o.created_by = auth.uid() or o.owner_user_id = auth.uid() or o.estimator_user_id = auth.uid()
+        ))
+      )
+  )
+  select case when (select role from caller) is null then null else jsonb_build_object(
+    'organization_id', target_organization,
+    'pipelines', (select value from pipelines),
+    'opportunities', (select value from opportunities),
+    'viewer_price_redacted', (select role = 'viewer' from caller)
+  ) end;
+$$;
+revoke all on function public.read_crm_pipeline_board(uuid) from public, anon;
+grant execute on function public.read_crm_pipeline_board(uuid) to authenticated, service_role;
+
 create function public.bootstrap_crm_for_organization(target_organization uuid, actor uuid)
 returns void language plpgsql security definer
 set search_path = pg_catalog, public as $$

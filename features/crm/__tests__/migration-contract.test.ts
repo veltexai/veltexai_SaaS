@@ -62,6 +62,18 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration.match(/unique \(organization_id, idempotency_key\)/g)).toHaveLength(5);
   });
 
+  it('projects the board through a caller-bound redacted RPC', () => {
+    expect(migration).toContain('create function public.read_crm_pipeline_board(target_organization uuid)');
+    expect(migration).toContain("public.organization_role(target_organization) as role");
+    expect(migration).toContain("c.role in ('owner', 'admin', 'viewer')");
+    expect(migration).toContain("c.role = 'estimator'");
+    expect(migration).toContain("case when c.role <> 'viewer' then o.value_amount_minor end");
+    expect(migration).toContain("case when c.role <> 'viewer' then o.value_basis end");
+    expect(migration).toContain("case when c.role <> 'viewer' then o.currency end");
+    expect(migration).toContain('revoke all on function public.read_crm_pipeline_board(uuid) from public, anon');
+    expect(migration).toContain('grant execute on function public.read_crm_pipeline_board(uuid) to authenticated, service_role');
+  });
+
   it('seeds both templates and all eleven canonical categories', () => {
     expect(migration).toContain("'commercial_facility_v1'");
     expect(migration).toContain("'residential_turnover_v1'");
