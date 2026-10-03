@@ -2011,3 +2011,19 @@ After any material action, append or revise the relevant section with:
   history remained 67 with the R3-2 version exactly once and the receipt table
   intact. The disposable server was stopped. This local executable proof does
   not authorize hosted preview execution.
+- **INDEPENDENT REMEDIATION VERDICT — PASS:** Claude verified the exact
+  replacement ZIP/manifest and every bound source hash, reran the full
+  PostgreSQL 16 `CHECK_DEFINERS=1` harness, 107-suite/889-test Jest run,
+  TypeScript, 67-version validation and the deterministic preview artifact on
+  an exact 66-migration database with second-apply refusal. It independently
+  proved direct note/whole-row/filter/sort reads denied while ordinary columns
+  remain readable; opportunity-scoped unassigned estimators retain the
+  walkthrough row with evidence redacted; managers and assigned estimators see
+  evidence; other roles/tenants remain denied; and completion with unchanged
+  notes emits ID-only saved/completed events. Verdict is `PASS` for bounded
+  R3-2 with no Critical/High/Medium blocker. Low follow-ups—whitespace parity,
+  direct-call null retry guard, restricted UI affordance, lock ordering/retry
+  key resilience and README rerun wording—are recorded but do not justify
+  invalidating the accepted first-build boundary. Hosted PostgreSQL 17,
+  desktop/390 px workflow and founder acceptance remain required; preview apply
+  is not authorized by this PASS.

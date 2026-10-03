@@ -1,6 +1,6 @@
 # R3-2 persisted walkthrough evidence
 
-Status: **LOCAL CANDIDATE / DATABASE RUNTIME VERIFIED**
+Status: **INDEPENDENT PASS / ISOLATED PREVIEW PENDING**
 
 This is the second bounded increment of the approved R3 Bid-to-Won stage. It
 starts only after founder acceptance of R3-1 and reuses the accepted CRM,
@@ -56,9 +56,12 @@ organization, membership, audit and outbox foundations.
   SELECT, redaction for an unassigned opportunity-scoped estimator,
   completion-with-unchanged-text event delivery, maximum-length notes and
   audit/outbox note-privacy checks.
-- Independent review, genuine responsive preview acceptance and founder
-  acceptance remain required before this increment is complete. No hosted or
-  production state was changed by the local verification.
+- Independent Claude remediation review is `PASS`: the direct evidence-read
+  bypass, redacted opportunity projection and unchanged-note completion event
+  were independently reproduced and verified closed. Genuine responsive
+  preview acceptance and founder acceptance remain required before this
+  increment is complete. No hosted or production state was changed by the
+  local verification or independent review.
 
 The exact independent-review scope is frozen in
 `INDEPENDENT_REVIEW_ASSIGNMENT.md`. Preparing that packet does not authorize
