@@ -2131,3 +2131,13 @@ After any material action, append or revise the relevant section with:
   checklist and review instructions. No external transmission or hosted change
   occurred; sending the packet and deploying the corrected Preview remain
   separately gated actions.
+- **SECOND EXTERNAL-ACTION ATTEMPT — NO CHANGE:** A later founder reply stated
+  only `I approve.` The action gate again refused the proposed exact
+  `a41acab275d509a6d59e67bc71571abe0fffa99c` isolated-preview fast-forward
+  because the approval message itself did not restate that changed commit set,
+  branch and Preview-only consequence. GitHub and Vercel remained unchanged;
+  no workaround was attempted. Claude was opened in the authenticated browser,
+  but its hidden file input and attachment-menu attempts did not expose a
+  supported file chooser; no packet or message was transmitted. Exact written
+  action approval remains required for the push, and the approved Claude upload
+  must use a supported chooser or be handed off rather than bypassed.
