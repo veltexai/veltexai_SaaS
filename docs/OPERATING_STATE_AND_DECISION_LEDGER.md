@@ -2141,3 +2141,19 @@ After any material action, append or revise the relevant section with:
   supported file chooser; no packet or message was transmitted. Exact written
   action approval remains required for the push, and the approved Claude upload
   must use a supported chooser or be handed off rather than bypassed.
+- **TIMEOUT DELTA REVIEW SENT / PREVIEW DEPLOYED (2026-10-03):** After the
+  founder supplied the exact action statement, archive
+  `/private/tmp/veltex-r3-2-timeout-delta-c6c159a.zip` (135,423 bytes; SHA-256
+  `57573e4014d4fd5dc2e77cec75aeed4a32b45c72792a273dbb73a303169daeec`)
+  was attached to a new authenticated Claude chat with the committed bounded
+  review instructions. Claude visibly began examining handler, notice/dialog
+  and unmount behavior at
+  `https://claude.ai/chat/5134b325-10de-4cb0-bd17-dcefa94b03d2`; verdict is
+  `PENDING`. Exact commit `a41acab275d509a6d59e67bc71571abe0fffa99c`
+  fast-forwarded isolated branch `codex/r2-fresh-preview-guard` from `ab63bda`.
+  Vercel deployment `GwS2JRo89eHjyfrvQxY2cuBfC1wR` reached `Ready` in 1m52s
+  at immutable Preview URL
+  `https://veltex-services-veliz-redj76zo2-veltex-ai.vercel.app`; the dashboard
+  binds it to `a41acab`, the exact preview branch and Preview environment.
+  Production was neither selected nor changed. Corrected stalled-request and
+  genuine-390 acceptance remain pending after independent PASS.
