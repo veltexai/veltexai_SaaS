@@ -49,3 +49,7 @@ organization, membership, audit and outbox foundations.
 - Independent review, genuine responsive preview acceptance and founder
   acceptance remain required before this increment is complete. No hosted or
   production state was changed by the local verification.
+
+The exact independent-review scope is frozen in
+`INDEPENDENT_REVIEW_ASSIGNMENT.md`. Preparing that packet does not authorize
+uploading it or accessing a hosted environment.
