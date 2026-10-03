@@ -1988,3 +1988,14 @@ After any material action, append or revise the relevant section with:
   manifest binds the corrected migration, role matrix, preview builder/test and
   founder checklist. External transmission has not occurred and requires
   action-time confirmation; preparing these bytes does not authorize preview.
+- **REMEDIATION RE-REVIEW SENT:** after explicit action-time founder approval,
+  all four exact replacement parts plus the manifest were uploaded to the
+  existing Claude task. The handoff message requires bytewise reassembly and
+  verification of commit `e08f13e9dd4fcddd6975ed4811d68aa9001eb481`, ZIP
+  SHA-256 `82014e78…029cb`, size 91,410,933, and manifest SHA-256
+  `6bb3bbe2…ed1e`; it marks `2936a35` rejected, binds the committed read-only
+  assignment and calls out the prior direct-read bypass, redacted projection
+  and unchanged-note completion-event regressions. Claude visibly entered
+  `Picking up where you left off`; verdict is `PENDING`. No product hosting,
+  database, deployment or production state was accessed or changed by this
+  external review handoff.
