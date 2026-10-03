@@ -2157,3 +2157,24 @@ After any material action, append or revise the relevant section with:
   binds it to `a41acab`, the exact preview branch and Preview environment.
   Production was neither selected nor changed. Corrected stalled-request and
   genuine-390 acceptance remain pending after independent PASS.
+- **TIMEOUT DELTA INDEPENDENT VERDICT — PASS:** Claude verified the exact
+  archive SHA/comment and reviewed the supplied handler/regression. It found no
+  blocking correctness, data-loss, essential-workflow, security or
+  accessibility regression: the controller is scoped to the one evidence
+  command, all paths clear the timer and restore Save, timeout cannot claim
+  success or close/discard the note, and the regression genuinely depends on
+  `AbortSignal`. Review URL:
+  `https://claude.ai/chat/5134b325-10de-4cb0-bd17-dcefa94b03d2`.
+  Claude could not prove Git ancestry or execute repository-wide gates from the
+  selected-source ZIP. Codex closed that evidence gap against the authoritative
+  repository: `f8728c3` is a commit whose exact parent is `7ec8655`; the
+  `ab63bda..7ec8655` delta is ledger-only; the `7ec8655..f8728c3` delta is
+  exactly the ledger, CRM component and CRM test; and the complete deployed
+  `ab63bda..a41acab` name set adds only the reconciled founder checklist and
+  review assignment. The remote branch resolves exactly to `a41acab`.
+  Previously recorded fresh gates remain 107/107 suites, 890/890 tests, five
+  snapshots, TypeScript, 67-version validation and diff hygiene PASS.
+  Nonblocking follow-ups are test timer-cleanup hygiene, a 14,999ms boundary
+  assertion, explicit textarea-value assertion and optional unmount abort; they
+  do not justify another first-build redeploy. Corrected authenticated Preview
+  retest remains the only R3-2 acceptance gate.

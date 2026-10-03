@@ -1,7 +1,6 @@
 # R3-2 founder acceptance — persisted walkthrough evidence
 
-Status: **PENDING TIMEOUT-DELTA REVIEW, ISOLATED-PREVIEW REDEPLOYMENT AND
-FAILURE-RECOVERY RETEST**.
+Status: **PENDING ISOLATED-PREVIEW FAILURE-RECOVERY RETEST**.
 
 This packet does not authorize a production deployment or production data
 creation. Run it only after an independent `PASS`, on the approved isolated
@@ -15,7 +14,7 @@ Record before testing:
 - App deployment URL:
   `https://veltex-services-veliz-git-codex-r2-fresh-previ-e45636-veltex-ai.vercel.app`
 - Independently reviewed database/application base: `e08f13e9dd4fcddd6975ed4811d68aa9001eb481`
-- Corrected client commit pending delta review/redeployment:
+- Corrected client commit independently reviewed and deployed:
   `f8728c3983775914dbc685acca94201a1cf9e7b0`
 - Migration `20261003000000` appears exactly once: yes
 - Migration source SHA-256:
@@ -121,8 +120,9 @@ does not alter authorization, privacy, schema or truthfulness behavior.
   `Saving walkthrough evidence…` when a request never settles. Exact corrected
   commit `f8728c3` adds a 15-second abort, preserves the dialog/note, announces
   retry guidance and restores Save. Local regression and full gates pass; the
-  exact corrected client must be independently checked, deployed to the
-  isolated Preview and retested before founder acceptance.
+  exact corrected client received bounded independent PASS and is deployed to
+  the isolated Preview; the failure-recovery retest remains required before
+  founder acceptance.
 
 Acceptance covers only bounded R3-2 persisted text evidence. It does not mark
 full R3 complete; R3-3 through R3-8 remain required.
