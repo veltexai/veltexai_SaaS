@@ -12,6 +12,8 @@ Record before testing:
 - App deployment URL:
 - Git commit:
 - Migration history includes `20261001000000` exactly once: PASS / FAIL
+- Migration history includes `20261002000000` exactly once: PASS / FAIL
+- Server CRM flag is enabled for this isolated preview: PASS / FAIL
 - Tester and Pacific timestamp:
 
 Use only fictitious `.test` contact data. Do not enter a real customer's name,
@@ -35,6 +37,13 @@ Residential/turnover:
 - Property / opportunity: `Turnover Unit Preview`
 - Loss reason: choose an active organization-configured reason
 
+Account and walkthrough:
+
+- Customer: `North Campus Account Preview`
+- Primary contact: `Taylor Preview` / `taylor.crm-r3@example.test`
+- Property: `Building A Preview`
+- Walkthrough: use a future one-hour synthetic window; do not enter access instructions
+
 ## Desktop workflow
 
 Use a signed-in owner or admin at a desktop viewport.
@@ -48,6 +57,9 @@ Use a signed-in owner or admin at a desktop viewport.
 7. Move the opportunity through one permitted non-terminal stage using the keyboard-accessible stage control. Confirm the live status announcement.
 8. Move it to Won. Confirm a manual reason is required and that only owner/admin can complete the action.
 9. Switch to List. Confirm the same opportunity/stage appears and values are labelled by billing basis rather than combined.
+10. Create the synthetic customer/contact/property account. Without reloading the page, open **New opportunity** and confirm the new customer and property are selectable.
+11. Create a property-bound opportunity with an estimator. Schedule its walkthrough and confirm the affordance immediately becomes **Manage walkthrough** without reloading.
+12. Reschedule the walkthrough, then cancel it. Confirm each operation announces success and the cancelled item returns to **Schedule walkthrough**.
 
 Desktop result: PASS / FAIL
 
@@ -63,7 +75,11 @@ and `document.documentElement.scrollWidth`. They must each be 390.
 3. Confirm the lead appears in Open leads and open **Convert lead**.
 4. Select the Residential and turnover pipeline plus `turnover`; confirm conversion.
 5. Move the resulting opportunity to Lost and verify an active loss reason is required.
-6. Confirm all primary controls are usable by touch and no required action is hidden behind hover.
+6. Create the synthetic account and verify the new customer/property are immediately selectable from **New opportunity** without a browser reload.
+7. Exercise walkthrough create → Manage → reschedule → cancel. Confirm every action and its error/status message remain visible and reachable.
+8. Open one inline workflow dialog with the keyboard: confirm initial focus, Escape close, and focus return. Confirm the background remains intentionally operable because the workflow surface is nonmodal.
+9. Switch Board → List → Board and confirm no required action becomes clipped or unreachable.
+10. Confirm all primary controls are at least 44 CSS pixels high, usable by touch, and no required action is hidden behind hover.
 
 390 px result: PASS / FAIL
 
@@ -78,6 +94,7 @@ and `document.documentElement.scrollWidth`. They must each be 390.
 2. As estimator, confirm only assigned/created opportunities and their scoped customer/property choices are available.
 3. Confirm no AI suggestion, autonomous stage move, email/SMS send, customer acceptance, signature claim, or handoff-complete claim appears in R3-1.
 4. Confirm Handed off remains unavailable and explains that the reviewed R3-6 workflow is required.
+5. With the server CRM flag disabled in a non-production acceptance build, confirm the navigation item is absent, `/dashboard/crm` redirects, and CRM APIs return the same not-found response before authentication. Re-enable it before the workflow checks above.
 
 Permission/truthfulness result: PASS / FAIL
 
