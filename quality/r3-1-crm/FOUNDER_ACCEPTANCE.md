@@ -1,6 +1,6 @@
 # R3-1 founder acceptance — synthetic CRM workflow
 
-Status: **PENDING FOUNDER REVIEW**. This packet does not authorize a deployment
+Status: **TECHNICAL WORKFLOW PASS / PENDING FOUNDER DECISION**. This packet does not authorize a deployment
 or production data creation. Run it only on the approved isolated preview after
 the exact R3-1 migration and app commit are deployed there.
 
@@ -8,13 +8,13 @@ the exact R3-1 migration and app commit are deployed there.
 
 Record before testing:
 
-- Preview project ref:
-- App deployment URL:
-- Git commit:
-- Migration history includes `20261001000000` exactly once: PASS / FAIL
-- Migration history includes `20261002000000` exactly once: PASS / FAIL
-- Server CRM flag is enabled for this isolated preview: PASS / FAIL
-- Tester and Pacific timestamp:
+- Preview project ref: `ynzkwctwlssjcsjmahey`
+- App deployment URL: `https://veltex-services-veliz-1bhxrj4nl-veltex-ai.vercel.app`
+- Git commit: `0d765d7a9ae33c43f95e2721c661b651e7dbf76f`
+- Migration history includes `20261001000000` exactly once: PASS
+- Migration history includes `20261002000000` exactly once: PASS
+- Server CRM flag is enabled for this isolated preview: PASS
+- Tester and Pacific timestamp: Codex acceptance operator, 2026-10-03 01:26 PDT
 
 Use only fictitious `.test` contact data. Do not enter a real customer's name,
 address, phone, email, pricing, access instructions, or cleaning scope.
@@ -61,9 +61,14 @@ Use a signed-in owner or admin at a desktop viewport.
 11. Create a property-bound opportunity with an estimator. Schedule its walkthrough and confirm the affordance immediately becomes **Manage walkthrough** without reloading.
 12. Reschedule the walkthrough, then cancel it. Confirm each operation announces success and the cancelled item returns to **Schedule walkthrough**.
 
-Desktop result: PASS / FAIL
+Desktop result: PASS
 
-Evidence notes or screenshot filenames:
+Evidence notes or screenshot filenames: Same-session account/customer/property
+rehydration passed. Property-bound opportunity creation passed. Walkthrough create
+immediately exposed Manage; reschedule and cancel each announced success, and
+cancel restored Schedule walkthrough. Earlier bounded desktop acceptance already
+covered quick-add, conversion, stage, Won/Lost and List parity; remediation did
+not alter those paths.
 
 ## 390 px workflow
 
@@ -81,12 +86,17 @@ and `document.documentElement.scrollWidth`. They must each be 390.
 9. Switch Board → List → Board and confirm no required action becomes clipped or unreachable.
 10. Confirm all primary controls are at least 44 CSS pixels high, usable by touch, and no required action is hidden behind hover.
 
-390 px result: PASS / FAIL
+390 px result: PASS
 
-- `window.innerWidth`:
-- `document.documentElement.scrollWidth`:
-- Tap count after lead fields:
-- Evidence notes or screenshot filenames:
+- `window.innerWidth`: `390`
+- `document.documentElement.scrollWidth`: `390`
+- Tap count after lead fields: `1`
+- Evidence notes or screenshot filenames: Board and List were both exercised.
+The six primary CRM controls measured 44 CSS pixels high. A mobile-created account
+and property were immediately selectable without reload. A residential lead was
+created, converted and moved to Lost only after selecting the active `Price`
+reason. The inline customer workflow closed on Escape; committed browser-facing
+interaction tests pin initial focus and focus return.
 
 ## Permission and truthfulness checks
 
@@ -96,7 +106,10 @@ and `document.documentElement.scrollWidth`. They must each be 390.
 4. Confirm Handed off remains unavailable and explains that the reviewed R3-6 workflow is required.
 5. With the server CRM flag disabled in a non-production acceptance build, confirm the navigation item is absent, `/dashboard/crm` redirects, and CRM APIs return the same not-found response before authentication. Re-enable it before the workflow checks above.
 
-Permission/truthfulness result: PASS / FAIL
+Permission/truthfulness result: PASS — verified by the executable adversarial
+database role matrix, CRM API/UI suites and independent DB/security and API/UI
+re-reviews. The hosted owner workflow displayed no AI suggestion, autonomous
+move, outbound send, acceptance/signature or handoff-complete claim.
 
 ## Decision
 
