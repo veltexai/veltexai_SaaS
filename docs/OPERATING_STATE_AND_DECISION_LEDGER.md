@@ -2056,3 +2056,14 @@ After any material action, append or revise the relevant section with:
   Production was not accessed or changed. Genuine authenticated desktop and
   390 px preview workflow acceptance remains required before founder
   acceptance of R3-2.
+- **PREVIEW APPLICATION PUSH — BLOCKED BEFORE REMOTE CHANGE:** The integration
+  tip `19b8ffed956864c59bd8e7d364f3d5b56dd5ddf1` differs from independently
+  reviewed application commit `e08f13e9dd4fcddd6975ed4811d68aa9001eb481`
+  only in R3-2 evidence documentation. The existing isolated deployment branch
+  `codex/r2-fresh-preview-guard` remains at accepted R3-1 commit
+  `0d765d7a9ae33c43f95e2721c661b651e7dbf76f`. A scoped fast-forward push of
+  the integration tip to that preview branch was rejected by the execution
+  approval gate before GitHub or Vercel changed. No force push, alternate
+  branch, CLI deployment or workaround was attempted. Exact action-time
+  approval for that one preview-branch push is now required; production is not
+  involved.
