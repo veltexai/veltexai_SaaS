@@ -60,7 +60,27 @@ describe('R3-2 walkthrough evidence route', () => {
     state = client({ role: 'estimator' });
     expect((await POST(request(undefined, ''), context)).status).toBe(400);
     expect(state.rpc).not.toHaveBeenCalled();
+    state = client({ role: 'admin' });
+    expect((await POST(request({ expectedUpdatedAt: '2026-10-03T08:00:00.000Z',
+      notes: ' '.repeat(5), markComplete: false }), context)).status).toBe(400);
+    expect(state.rpc).not.toHaveBeenCalled();
+    state = client({ role: 'admin' });
+    expect((await POST(request({ expectedUpdatedAt: '2026-10-03T08:00:00.000Z',
+      notes: 'x'.repeat(5001), markComplete: false }), context)).status).toBe(400);
+    expect(state.rpc).not.toHaveBeenCalled();
   });
+
+  it.each(['x', 'x'.repeat(5000), 'Unicode observation: café — 清掃']) (
+    'accepts a valid bounded note payload (%#)', async (notes) => {
+      const state = client({ role: 'admin', data: [{ walkthrough_id: WALKTHROUGH_ID,
+        evidence_notes: notes, evidence_completed_at: null,
+        updated_at: '2026-10-03T09:00:00.000Z', replayed: false }] });
+      const { POST } = await import('../opportunities/[opportunityId]/walkthroughs/[walkthroughId]/evidence/route');
+      expect((await POST(request({ expectedUpdatedAt: '2026-10-03T08:00:00.000Z',
+        notes, markComplete: false }), context)).status).toBe(200);
+      expect(state.rpc).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it('binds the URL opportunity and walkthrough to one caller-bound RPC', async () => {
     const state = client({ role: 'estimator', data: [{ walkthrough_id: WALKTHROUGH_ID,

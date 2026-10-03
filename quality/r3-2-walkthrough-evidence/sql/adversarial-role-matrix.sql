@@ -44,7 +44,8 @@ select v.id,p.active_organization_id,'73000000-0000-4000-8000-000000000003',
   v.command_key,v.starts_at,v.starts_at+interval '1 hour','UTC','scheduled',p.id,p.id
 from public.profiles p cross join (values
   ('73000000-0000-4000-8000-000000000004'::uuid,'r3-2-owner-evidence','2026-11-02 17:00:00+00'::timestamptz,'11111111-1111-4111-8111-111111111111'::uuid),
-  ('73000000-0000-4000-8000-000000000005'::uuid,'r3-2-estimator-evidence','2026-11-03 17:00:00+00'::timestamptz,'75555555-5555-4555-8555-555555555555'::uuid)
+  ('73000000-0000-4000-8000-000000000005'::uuid,'r3-2-estimator-evidence','2026-11-03 17:00:00+00'::timestamptz,'75555555-5555-4555-8555-555555555555'::uuid),
+  ('73000000-0000-4000-8000-000000000006'::uuid,'r3-2-admin-evidence','2026-11-04 17:00:00+00'::timestamptz,'75555555-5555-4555-8555-555555555555'::uuid)
 ) v(id,command_key,starts_at,estimator_id)
 where p.id='11111111-1111-4111-8111-111111111111';
 
@@ -90,11 +91,23 @@ begin
     perform 1 from public.crm_walkthrough_evidence_commands limit 1;
     raise exception 'authenticated caller read private evidence receipts';
   exception when insufficient_privilege then null; end;
+  begin
+    update public.crm_walkthrough_evidence_commands set command_key='blocked';
+    raise exception 'authenticated caller updated private evidence receipts';
+  exception when insufficient_privilege then null; end;
+  begin
+    delete from public.crm_walkthrough_evidence_commands;
+    raise exception 'authenticated caller deleted private evidence receipts';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into public.crm_walkthrough_evidence_commands default values;
+    raise exception 'authenticated caller inserted private evidence receipts';
+  exception when insufficient_privilege then null; end;
 end $$;
 
 select set_config('request.jwt.claim.sub','75555555-5555-4555-8555-555555555555',true);
 do $$
-declare owner_org uuid; token timestamptz; saved record;
+declare owner_org uuid; token timestamptz; saved record; completed record;
 begin
   select organization_id into owner_org from public.organization_memberships
     where user_id=auth.uid() and role='estimator';
@@ -106,7 +119,7 @@ begin
   if saved.replayed or saved.evidence_completed_at is not null then
     raise exception 'assigned estimator could not save draft evidence';
   end if;
-  if (select count(*) from public.read_crm_walkthroughs(owner_org))<>1
+  if (select count(*) from public.read_crm_walkthroughs(owner_org))<>2
      or not exists(select 1 from public.read_crm_walkthroughs(owner_org)
        where id='73000000-0000-4000-8000-000000000005'
          and evidence_notes='Estimator observation.') then
@@ -114,9 +127,45 @@ begin
   end if;
   begin
     perform * from public.command_crm_walkthrough_evidence(
+      owner_org,'73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000005',
+      'r3-2-estimator-stale',token,'Stale estimator update.',false);
+    raise exception 'stale evidence token was accepted';
+  exception when serialization_failure then null; end;
+  select * into completed from public.command_crm_walkthrough_evidence(
+    owner_org,'73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000005',
+    'r3-2-estimator-complete',saved.updated_at,'Estimator observation complete.',true);
+  if completed.replayed or completed.evidence_completed_at is null
+     or completed.updated_at is distinct from (select updated_at from public.crm_walkthroughs
+       where id='73000000-0000-4000-8000-000000000005') then
+    raise exception 'assigned estimator could not complete saved evidence with returned token';
+  end if;
+  begin
+    perform * from public.command_crm_walkthrough_evidence(
       owner_org,'73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000004',
       'r3-2-unrelated-estimator',saved.updated_at,'Blocked.',false);
     raise exception 'unrelated estimator changed owner evidence';
+  exception when insufficient_privilege then null; end;
+end $$;
+
+select set_config('request.jwt.claim.sub','74444444-4444-4444-8444-444444444444',true);
+do $$
+declare owner_org uuid; token timestamptz; saved record;
+begin
+  select organization_id into owner_org from public.organization_memberships
+    where user_id=auth.uid() and role='admin';
+  select updated_at into token from public.crm_walkthroughs
+    where id='73000000-0000-4000-8000-000000000006';
+  select * into saved from public.command_crm_walkthrough_evidence(
+    owner_org,'73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000006',
+    'r3-2-admin-command',token,repeat('x',5000),false);
+  if saved.replayed or length(saved.evidence_notes)<>5000 then
+    raise exception 'admin could not save maximum-length evidence';
+  end if;
+  begin
+    perform * from public.command_crm_walkthrough_evidence(
+      owner_org,'73000000-0000-4000-8000-000000000099','73000000-0000-4000-8000-000000000006',
+      'r3-2-mismatched-opportunity',saved.updated_at,'Blocked mismatch.',false);
+    raise exception 'opportunity/walkthrough identity mismatch was accepted';
   exception when insufficient_privilege then null; end;
 end $$;
 
@@ -153,6 +202,17 @@ begin
 end $$;
 
 reset role;
+set local role anon;
+do $$
+begin
+  begin
+    perform * from public.command_crm_walkthrough_evidence(
+      '00000000-0000-4000-8000-000000000001','73000000-0000-4000-8000-000000000003',
+      '73000000-0000-4000-8000-000000000006','r3-2-anonymous-command',now(),'Blocked.',false);
+    raise exception 'anonymous caller changed walkthrough evidence';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
 do $$
 begin
   if exists(select 1 from public.organization_event_outbox e
@@ -160,7 +220,13 @@ begin
       and (e.payload-'record_id')<>'{}'::jsonb) then
     raise exception 'walkthrough evidence outbox leaked note contents';
   end if;
-  if (select count(*) from public.crm_walkthrough_evidence_commands)<>2 then
+  if exists(select 1 from public.organization_audit_log a
+    where a.entity_type='crm_walkthroughs'
+      and (a.metadata::text ilike '%restrooms%'
+        or a.metadata::text ilike '%estimator observation%')) then
+    raise exception 'walkthrough evidence audit metadata leaked note contents';
+  end if;
+  if (select count(*) from public.crm_walkthrough_evidence_commands)<>4 then
     raise exception 'unexpected evidence receipt count';
   end if;
 end $$;

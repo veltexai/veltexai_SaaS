@@ -39,13 +39,17 @@ organization, membership, audit and outbox foundations.
 
 ## Local verification
 
-- Focused schema/API/UI tests pass 56 cases; the full repository suite passes
-  106 suites / 877 tests / five snapshots.
+- Focused schema/API/UI tests pass 59 cases; the full repository suite passes
+  106 suites / 880 tests / five snapshots.
 - TypeScript, the 67-version migration validator and diff hygiene pass.
 - A fresh disposable PostgreSQL 16 cluster applied all 67 migrations with
   `CHECK_DEFINERS=1`. The R3-1 and R3-2 adversarial role matrices, full catalog
   assertions, injection/dirty/rerun checks and the 40-way concurrency test all
   passed. The cluster was stopped after verification.
+- The strengthened R3-2 matrix additionally executes admin and assigned-
+  estimator writes, stale-token refusal, draft-to-complete progression,
+  opportunity/walkthrough mismatch refusal, anonymous denial, all four receipt
+  DML denials, maximum-length notes and audit/outbox note-privacy checks.
 - Independent review, genuine responsive preview acceptance and founder
   acceptance remain required before this increment is complete. No hosted or
   production state was changed by the local verification.
