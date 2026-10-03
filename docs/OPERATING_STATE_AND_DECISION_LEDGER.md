@@ -1909,6 +1909,17 @@ After any material action, append or revise the relevant section with:
 - **EXECUTION TRACKER AND ENTRY DECISIONS:** `MULTIMODAL_AND_PROFITABILITY_EXECUTION_PLAN.md` records the exact dependency sequence and completion evidence. The R3-3 entry questions are resolved from the current repository: use a server-validated CRM entry route; pin `service_catalog`/`2026-09-22.2` and its strict `jobSchema`; permit package-less residential/turnover estimate runs while requiring the linked package for commercial; require a completed R3-2 walkthrough for every first commercial estimate while preserving the committed residential optional path. R3-3 coding remains blocked until R3-2 acceptance.
 - **M0 CONTRACT DRAFTED / ACCEPTANCE PENDING:** `M0_MEDIA_PRIVACY_AND_AI_OUTPUT_CONTRACT.md` freezes the proposed photo-first boundary, tenant roles, signed-object access, quarantine/scan/derivative lifecycle, consent notice, prohibited-content language, retention/deletion behavior, schema-controlled suggestion envelope, append-only operator decisions, provenance and the first two lower-risk service packs. It creates no bucket, credential, upload route, migration or AI call. Founder decisions on limits, retention, provider region/subprocessors and cost ceiling remain required before M1/M2 provider configuration.
 - **NEXT UNFINISHED OUTCOME:** finish R3-2's independent review, isolated-preview workflow and founder acceptance. The exact packet remains prepared and staged but external transmission still requires its action-time send confirmation. No external message was sent by this approval record.
+- **R3-2 INDEPENDENT REVIEW SENT:** after explicit action-time founder confirmation,
+  the four byte-preserving parts of exact packet `veltex-r3-2-review-2936a35.zip`
+  plus its JSON manifest were sent to the existing Claude task `Veltex AI R2
+  Organization & Tenancy Review`. The message binds source commit
+  `2936a351ff0fd9f63bb9da5207cb545bd50f6f04`, canonical ZIP size 91,373,308,
+  ZIP SHA-256 `b6fd44994d70eff9353e682c900f2b5763e76f50f3af9d27a14ef1c4d6ac79fd`
+  and manifest SHA-256 `721514e1fde4d1bad4529b0af09ac9dfcce26d73b8bd054aa910f0a88eea9a8e`.
+  Claude was instructed to reassemble and verify exact bytes, follow the
+  committed read-only assignment, avoid every hosted system and stop after a
+  bounded PASS/FAIL verdict. The UI shows `Working on it`; review is `PENDING`,
+  not PASS.
 
 ### R3-1 controlled production release — READ-ONLY PREFLIGHT PASS / EXECUTION NOT AUTHORIZED (2026-10-03 Pacific)
 
@@ -1917,3 +1928,9 @@ After any material action, append or revise the relevant section with:
 - **ACCEPTED BYTES ISOLATED:** accepted application commit remains `0d765d7a9ae33c43f95e2721c661b651e7dbf76f`. Current R3-1 migration files are byte-identical to that commit: `20261001000000` SHA-256 `526b56f0bd32c542f77b89e61df79eed18304e7cccd4b06d5c458fa3273ea795`; `20261002000000` SHA-256 `85fac17469510408ab777a04101c585850fd5774874e0fb01c663c8fddd3cf18`. Current application files differ from the accepted commit because they include R3-2; deployment must therefore use a clean checkout/build of exact commit `0d765d7`, not current HEAD.
 - **ROLLBACK-PROOF CANDIDATE PREPARED / NOT EXECUTED:** `quality/r3-1-crm/build-production-rollback-proof.mjs` deterministically emits a single-transaction, non-committing proof bound to the exact capture, source hashes and accepted app commit. It obtains advisory and write-conflicting table/history locks, exact-compares the 64-version history, all 2,527 catalog atoms, the 1,323-row privilege matrix, protected content digests and data invariants before writes; strips only the two migrations' outer transaction wrappers; applies both exact bodies; writes the two history rows; checks 66 history rows, all 22 RLS CRM tables, authenticated direct-DML denial and anonymous CRM-routine denial; emits hashes-only postflight evidence via deliberate `P0001`; and cannot commit. Candidate `/private/tmp/veltex-r3-1-production-rollback-proof-v1.sql` is 701,235 bytes with SHA-256 `66753c9e38c1b4fcda2f84da0aa6025f55669af9a5a2d2b60b88c2604b2bde8f`. Deterministic/refusal/static tests pass. This artifact has not been pasted or executed.
 - **NEXT GATES:** independent exact-byte review of the rollback proof; explicit founder approval for its production rollback-only execution; capture and independently compare postflight evidence; generate a commit artifact bound to that evidence; separately approve database execution; verify production environment has `CRM_WORKSPACE_ENABLED=false` before deploying exact commit `0d765d7`; run synthetic smoke checks, then separately enable/monitor CRM with the disable switch preserved. No database migration, production deploy, environment change or feature enable occurred during this preflight.
+- **FOUNDER ENVIRONMENT CONFIRMATION:** the founder explicitly confirmed
+  `CRM_WORKSPACE_ENABLED=false` before deployment of exact application commit
+  `0d765d7a9ae33c43f95e2721c661b651e7dbf76f`. This is founder-confirmed release
+  input, not an independently read-back provider verification. The deployment
+  gate must still verify the production environment and exact build at action
+  time; no environment value or deployment was changed by this record.
