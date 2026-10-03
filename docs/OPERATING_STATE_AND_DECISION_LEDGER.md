@@ -2067,3 +2067,17 @@ After any material action, append or revise the relevant section with:
   branch, CLI deployment or workaround was attempted. Exact action-time
   approval for that one preview-branch push is now required; production is not
   involved.
+- **R3-2 ISOLATED PREVIEW APPLICATION — DEPLOYED / AUTHENTICATED ACCEPTANCE
+  PENDING:** After explicit founder approval, commit
+  `ab63bda3de7e4fd32d76a77473de2e7809b8d5da` was pushed as a clean
+  fast-forward from `0d765d7` to the existing isolated branch
+  `codex/r2-fresh-preview-guard`. Vercel deployment
+  `JBmRMTFRWanB3DjxASgUMxb2ZDKc` reached `Ready` after 2m04s at immutable URL
+  `https://veltex-services-veliz-qcgkdfgqs-veltex-ai.vercel.app`; the dashboard
+  binds it to exact commit `ab63bda` and labels it `Preview`. Opening
+  `/dashboard/crm` correctly redirected to Veltex `/auth/login`. The prior
+  synthetic preview credential remains retired, so no authenticated workflow
+  was attempted and no credential changed. A separately approved temporary
+  rotation of only that synthetic preview user, followed by immediate
+  retirement, is required for desktop/390 px acceptance. Production was not
+  selected or changed.
