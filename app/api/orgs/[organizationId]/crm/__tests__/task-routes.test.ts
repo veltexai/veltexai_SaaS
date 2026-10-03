@@ -37,10 +37,8 @@ describe('R3-1 task routes', () => {
   it('creates one assigned task through an explicit organization path', async () => {
     const state = client({
       role: 'estimator',
-      queries: [
-        { data: null, error: null },
-        { data: { id: TASK_ID, status: 'open', title: 'Call customer' }, error: null },
-      ],
+      rpcData: [{ task_id: TASK_ID, task_status: 'open', title: 'Call customer',
+        due_at: null, snoozed_until: null, replayed: false }],
     });
     const { POST } = await import('../opportunities/[opportunityId]/tasks/route');
     const response = await POST(new NextRequest('http://local/tasks', {
@@ -48,14 +46,15 @@ describe('R3-1 task routes', () => {
       body: JSON.stringify({ title: 'Call customer', assigneeUserId: USER_ID }),
     }), createContext);
     expect(response.status).toBe(201);
-    expect(state.builders[2].insert).toHaveBeenCalledWith(expect.objectContaining({
-      organization_id: ORG_ID, opportunity_id: OPPORTUNITY_ID,
-      idempotency_key: 'task-create-0001', assignee_user_id: USER_ID,
+    expect(state.rpc).toHaveBeenCalledWith('create_crm_opportunity_task', expect.objectContaining({
+      p_organization: ORG_ID, p_opportunity: OPPORTUNITY_ID,
+      p_request_key: 'task-create-0001', p_assignee: USER_ID,
     }));
   });
 
   it('replays task creation by organization and command key', async () => {
-    client({ role: 'owner', queries: [{ data: { id: TASK_ID, status: 'open' }, error: null }] });
+    client({ role: 'owner', rpcData: [{ task_id: TASK_ID, task_status: 'open',
+      title: 'Call customer', due_at: null, snoozed_until: null, replayed: true }] });
     const { POST } = await import('../opportunities/[opportunityId]/tasks/route');
     const response = await POST(new NextRequest('http://local/tasks', {
       method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'task-create-0001' },

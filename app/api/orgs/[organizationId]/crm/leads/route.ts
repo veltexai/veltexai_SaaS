@@ -41,36 +41,34 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
   const { data: existingByKey, error: keyError } = await context.supabase
     .from('crm_leads')
-    .select('id,status,created_at')
+    .select('id')
     .eq('organization_id', context.organizationId)
     .eq('idempotency_key', idempotencyKey)
     .maybeSingle();
   if (keyError) {
     return NextResponse.json({ error: 'CRM is unavailable. Please try again.' }, { status: 503 });
   }
-  if (existingByKey) {
-    return NextResponse.json({ data: existingByKey, replayed: true }, { status: 200 });
-  }
 
-  const { data: duplicates, error: duplicateError } = await context.supabase.rpc(
-    'find_crm_duplicate_candidates',
-    {
+  let duplicates: { entity_type: string; entity_id: string; matched_on: string }[] = [];
+  if (!existingByKey) {
+    const duplicateResult = await context.supabase.rpc('find_crm_duplicate_candidates', {
       target_organization: context.organizationId,
       candidate_email: parsed.data.email ?? null,
       candidate_phone: parsed.data.phone ?? null,
-    },
-  );
-  if (duplicateError || !Array.isArray(duplicates)) {
-    return NextResponse.json({ error: 'CRM is unavailable. Please try again.' }, { status: 503 });
-  }
-  if (duplicates.length > 0 && !parsed.data.duplicateDecision) {
-    return NextResponse.json(
-      {
-        error: 'A possible existing contact or lead needs review.',
-        duplicateCandidates: duplicates,
-      },
-      { status: 409 },
-    );
+    });
+    if (duplicateResult.error || !Array.isArray(duplicateResult.data)) {
+      return NextResponse.json({ error: 'CRM is unavailable. Please try again.' }, { status: 503 });
+    }
+    duplicates = duplicateResult.data;
+    if (duplicates.length > 0 && !parsed.data.duplicateDecision) {
+      return NextResponse.json(
+        {
+          error: 'A possible existing contact or lead needs review.',
+          duplicateCandidates: duplicates,
+        },
+        { status: 409 },
+      );
+    }
   }
 
   const dedupeHint = duplicates.length === 0
@@ -80,40 +78,30 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         linked_entity_id: parsed.data.linkedEntityId ?? null,
         candidates: duplicates,
       };
-  const { data: lead, error: insertError } = await context.supabase
-    .from('crm_leads')
-    .insert({
-      organization_id: context.organizationId,
-      status: 'new',
-      intake_method: 'manual',
-      idempotency_key: idempotencyKey,
-      customer_name: parsed.data.customerName ?? null,
-      contact_name: parsed.data.contactName ?? null,
-      email: parsed.data.email?.toLowerCase() ?? null,
-      phone: parsed.data.phone ?? null,
-      property_name: parsed.data.propertyName ?? null,
-      service_location: parsed.data.serviceLocation ?? null,
-      assigned_to_user_id: parsed.data.assignedToUserId ?? context.user.id,
-      dedupe_hint: dedupeHint,
-      source: 'manual',
-      created_by: context.user.id,
-      updated_by: context.user.id,
-    })
-    .select('id,status,created_at')
-    .single();
-  if (insertError || !lead) {
-    if (insertError?.code === '23505') {
-      const { data: replay } = await context.supabase
-        .from('crm_leads')
-        .select('id,status,created_at')
-        .eq('organization_id', context.organizationId)
-        .eq('idempotency_key', idempotencyKey)
-        .maybeSingle();
-      if (replay) return NextResponse.json({ data: replay, replayed: true });
+  const { data, error } = await context.supabase.rpc('create_crm_manual_lead', {
+    p_organization: context.organizationId,
+    p_request_key: idempotencyKey,
+    p_customer_name: parsed.data.customerName ?? null,
+    p_contact_name: parsed.data.contactName ?? null,
+    p_email: parsed.data.email ?? null,
+    p_phone: parsed.data.phone ?? null,
+    p_property_name: parsed.data.propertyName ?? null,
+    p_service_location: parsed.data.serviceLocation ?? null,
+    p_assigned_to: parsed.data.assignedToUserId ?? context.user.id,
+    p_dedupe_hint: dedupeHint,
+  });
+  const row = Array.isArray(data) ? data[0] : null;
+  if (error || !row) {
+    if (error?.code === '42501') {
+      return NextResponse.json({ error: 'CRM workspace not found.' }, { status: 404 });
+    }
+    if (error?.code === '23514') {
+      return NextResponse.json({ error: 'That retry does not match the original lead.' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Unable to create lead.' }, { status: 422 });
   }
-
-  return NextResponse.json({ data: lead, replayed: false }, { status: 201 });
+  return NextResponse.json({
+    data: { id: row.lead_id, status: row.lead_status, created_at: row.created_at },
+    replayed: row.replayed,
+  }, { status: row.replayed ? 200 : 201 });
 }
-

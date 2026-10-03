@@ -86,6 +86,8 @@ export function CrmBoard() {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [view, setView] = useState<'board' | 'list'>('board');
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
+  const [linkedContactsByLead, setLinkedContactsByLead] = useState<Record<string, string>>({});
   const [outcome, setOutcome] = useState<{ opportunity: Opportunity; stage: Stage } | null>(null);
   const [taskFor, setTaskFor] = useState<Opportunity | null>(null);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
@@ -114,6 +116,9 @@ export function CrmBoard() {
       if (!response.ok) throw new Error('Unable to load CRM right now.');
       const payload = await response.json() as { data: Board };
       setBoard(payload.data);
+      setSelectedPipelineId((current) => current && payload.data.pipelines.some((item) => item.id === current)
+        ? current
+        : payload.data.pipelines.find((item) => item.is_default)?.id ?? payload.data.pipelines[0]?.id ?? null);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Unable to load CRM right now.');
     } finally {
@@ -124,11 +129,13 @@ export function CrmBoard() {
   useEffect(() => { void loadBoard(); }, [loadBoard]);
 
   const activePipeline = useMemo(
-    () => board?.pipelines.find((pipeline) => pipeline.is_default) ?? board?.pipelines[0],
-    [board],
+    () => board?.pipelines.find((pipeline) => pipeline.id === selectedPipelineId)
+      ?? board?.pipelines.find((pipeline) => pipeline.is_default) ?? board?.pipelines[0],
+    [board, selectedPipelineId],
   );
   const shownOpportunities = useMemo(() => board?.opportunities.filter((opportunity) =>
-    !followUpOnly || opportunity.needs_follow_up) ?? [], [board, followUpOnly]);
+    opportunity.pipeline_id === activePipeline?.id && (!followUpOnly || opportunity.needs_follow_up)) ?? [],
+  [activePipeline?.id, board, followUpOnly]);
 
   async function moveOpportunity(
     opportunity: Opportunity,
@@ -360,6 +367,7 @@ export function CrmBoard() {
         opportunityName: String(form.get('opportunityName') || ''),
         segment,
         existingCustomerId: String(form.get('existingCustomerId') || '') || null,
+        existingContactId: linkedContactsByLead[convertingLead.id] ?? null,
         existingPropertyId: String(form.get('existingPropertyId') || '') || null,
       }),
     });
@@ -461,8 +469,14 @@ export function CrmBoard() {
       setNotice(payload.error ?? 'Unable to add the lead.');
     } else {
       setNotice('Lead added. Open it to confirm customer and property details.');
+      if (duplicateDecision === 'link_existing' && linkedEntityId
+        && duplicateReview?.candidates.some((candidate) => candidate.entity_type === 'contact'
+          && candidate.entity_id === linkedEntityId)) {
+        setLinkedContactsByLead((current) => ({ ...current, [payload.data.id]: linkedEntityId }));
+      }
       setDuplicateReview(null);
       setShowQuickAdd(false);
+      await loadBoard();
     }
     setSaving(false);
   }
@@ -533,7 +547,7 @@ export function CrmBoard() {
   }
 
   return (
-    <section aria-labelledby="crm-heading" className="space-y-6">
+    <section aria-labelledby="crm-heading" className="min-w-0 space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 id="crm-heading" className="text-3xl font-bold text-gray-900">Sales pipeline</h1>
@@ -875,7 +889,15 @@ export function CrmBoard() {
         </Card>
       )}
 
-      <div className="flex gap-2" aria-label="Pipeline view">
+      <div className="flex flex-wrap items-end gap-3" aria-label="Pipeline controls">
+        <div className="min-w-56 space-y-1">
+          <Label htmlFor="active-pipeline">Pipeline</Label>
+          <select id="active-pipeline" value={activePipeline.id}
+            onChange={(event) => setSelectedPipelineId(event.target.value)}
+            className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+            {board.pipelines.map((pipeline) => <option key={pipeline.id} value={pipeline.id}>{pipeline.name}</option>)}
+          </select>
+        </div>
         <Button className="min-h-11" type="button" variant={view === 'board' ? 'default' : 'outline'} aria-pressed={view === 'board'} onClick={() => setView('board')}>Board</Button>
         <Button className="min-h-11" type="button" variant={view === 'list' ? 'default' : 'outline'} aria-pressed={view === 'list'} onClick={() => setView('list')}>List</Button>
         <Button className="min-h-11" type="button" variant={followUpOnly ? 'default' : 'outline'}
@@ -897,8 +919,8 @@ export function CrmBoard() {
         </CardContent>
       </Card>}
 
-      {view === 'board' ? <div className="overflow-x-auto pb-4" aria-label={`${activePipeline.name} pipeline`}>
-        <div className="flex min-w-max gap-4">
+      {view === 'board' ? <div className="w-full min-w-0 max-w-full overflow-x-auto pb-4" aria-label={`${activePipeline.name} pipeline`}>
+        <div className="flex w-max gap-4">
           {activePipeline.stages.filter((stage) => !stage.hidden).map((stage) => {
             const opportunities = shownOpportunities.filter((item) => item.stage_id === stage.id);
             return (

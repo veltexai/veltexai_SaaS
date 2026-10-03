@@ -158,9 +158,36 @@ describe('R3-1 CRM board', () => {
     expect(fetchMock.mock.calls[2][1].headers['idempotency-key']).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
     expect(fetchMock.mock.calls[2][1].body).toBe(JSON.stringify({
       pipelineId, opportunityName: 'North Campus', segment: 'commercial',
-      existingCustomerId: null, existingPropertyId: null,
+      existingCustomerId: null, existingContactId: null, existingPropertyId: null,
     }));
     expect(await screen.findByText('Lead converted to an opportunity.')).toBeInTheDocument();
+  });
+
+  it('switches pipelines without rendering opportunities from another pipeline', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'viewer', loss_reasons: [], assignable_members: [],
+        viewer_price_redacted: false,
+        pipelines: [
+          { id: 'commercial', name: 'Commercial', is_default: true,
+            stages: [{ id: 'commercial-new', label: 'Commercial lead', category: 'new', position: 10, hidden: false }] },
+          { id: 'residential', name: 'Residential', is_default: false,
+            stages: [{ id: 'residential-new', label: 'Residential inquiry', category: 'new', position: 10, hidden: false }] },
+        ],
+        opportunities: [
+          { id: 'commercial-opp', name: 'Office park', pipeline_id: 'commercial', stage_id: 'commercial-new', category: 'new' },
+          { id: 'residential-opp', name: 'Lake house', pipeline_id: 'residential', stage_id: 'residential-new', category: 'new' },
+        ],
+      } }) });
+
+    render(<CrmBoard />);
+    expect(await screen.findByRole('heading', { name: 'Office park' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Lake house' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Pipeline'), { target: { value: 'residential' } });
+    expect(screen.getByRole('heading', { name: 'Lake house' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Office park' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Residential pipeline')).toHaveClass('max-w-full', 'overflow-x-auto');
   });
 
   it('creates a scoped site work package from a property-bound opportunity', async () => {
@@ -225,6 +252,14 @@ describe('R3-1 CRM board', () => {
 
   it('requires an explicit duplicate decision and reuses the original command key', async () => {
     const commandKey = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const contactId = '44444444-4444-4444-8444-444444444444';
+    const leadId = '55555555-5555-4555-8555-555555555555';
+    const boardAfterLink = {
+      organization_id: ORG_ID, caller_role: 'owner', loss_reasons: [], assignable_members: [],
+      viewer_price_redacted: false,
+      pipelines: [{ id: 'pipeline-1', name: 'Commercial', segment: 'commercial', is_default: true, stages: [] }],
+      opportunities: [], leads: [{ id: leadId, status: 'new', email: 'person@example.test' }],
+    };
     jest.spyOn(global.crypto, 'randomUUID').mockReturnValue(commandKey);
     fetchMock
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
@@ -235,10 +270,15 @@ describe('R3-1 CRM board', () => {
       } }) })
       .mockResolvedValueOnce({
         ok: false, status: 409, json: async () => ({ duplicateCandidates: [{
-          entity_type: 'contact', entity_id: 'candidate-1', matched_on: 'email',
+          entity_type: 'contact', entity_id: contactId, matched_on: 'email',
         }] }),
       })
-      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: { id: 'lead-1' } }) });
+      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: { id: leadId } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: boardAfterLink }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { opportunity_id: 'opportunity-1' } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { ...boardAfterLink, leads: [] } }) });
 
     render(<CrmBoard />);
     await screen.findByRole('heading', { name: 'Sales pipeline' });
@@ -248,10 +288,15 @@ describe('R3-1 CRM board', () => {
     expect(await screen.findByRole('heading', { name: 'Review possible duplicate' })).toBeInTheDocument();
     expect(screen.getByText('Matching contact by email')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Link existing' }));
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(6));
     expect(fetchMock.mock.calls[2][1].headers['idempotency-key']).toBe(commandKey);
     expect(fetchMock.mock.calls[3][1].headers['idempotency-key']).toBe(commandKey);
     expect(fetchMock.mock.calls[3][1].body).toContain('"duplicateDecision":"link_existing"');
+    fireEvent.click(screen.getByRole('button', { name: 'Convert lead' }));
+    fireEvent.change(screen.getByLabelText('Opportunity name'), { target: { value: 'Linked opportunity' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm conversion' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(9));
+    expect(fetchMock.mock.calls[6][1].body).toContain(`"existingContactId":"${contactId}"`);
   });
 
   it('offers a keyboard stage menu and announces a successful move', async () => {

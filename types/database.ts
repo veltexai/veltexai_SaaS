@@ -1078,6 +1078,38 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      can_access_crm_customer: {
+        Args: { target_organization: string; target_customer: string };
+        Returns: boolean;
+      };
+      can_access_crm_contact: {
+        Args: { target_organization: string; target_contact: string };
+        Returns: boolean;
+      };
+      can_access_crm_property: {
+        Args: { target_organization: string; target_property: string };
+        Returns: boolean;
+      };
+      create_crm_manual_lead: {
+        Args: {
+          p_organization: string; p_request_key: string; p_customer_name?: string | null;
+          p_contact_name?: string | null; p_email?: string | null; p_phone?: string | null;
+          p_property_name?: string | null; p_service_location?: string | null;
+          p_assigned_to?: string | null; p_dedupe_hint?: Json;
+        };
+        Returns: { lead_id: string; lead_status: string; created_at: string; replayed: boolean }[];
+      };
+      create_crm_opportunity_task: {
+        Args: {
+          p_organization: string; p_opportunity: string; p_request_key: string;
+          p_title: string; p_due_at?: string | null; p_timezone?: string | null;
+          p_assignee?: string | null;
+        };
+        Returns: {
+          task_id: string; task_status: string; title: string; due_at: string | null;
+          snoozed_until: string | null; replayed: boolean;
+        }[];
+      };
       find_crm_duplicate_candidates: {
         Args: { target_organization: string; candidate_email?: string | null; candidate_phone?: string | null };
         Returns: { entity_type: string; entity_id: string; matched_on: string }[];

@@ -23,32 +23,31 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   if (!parsed.success) return NextResponse.json(
     { error: 'Invalid task.', issues: parsed.error.flatten() }, { status: 400 },
   );
-  const existingQuery = () => context.supabase.from('crm_tasks').select('id,status,title,due_at,snoozed_until')
-    .eq('organization_id', context.organizationId).eq('idempotency_key', key).maybeSingle();
-  const { data: existing, error: existingError } = await existingQuery();
-  if (existingError) return NextResponse.json({ error: 'CRM is unavailable. Please try again.' }, { status: 503 });
-  if (existing) return NextResponse.json({ data: existing, replayed: true });
-  const { data, error } = await context.supabase.from('crm_tasks').insert({
-    organization_id: context.organizationId,
-    opportunity_id: opportunityId,
-    lead_id: null,
-    idempotency_key: key,
-    title: parsed.data.title,
-    due_at: parsed.data.dueAt ?? null,
-    timezone: parsed.data.timezone ?? null,
-    assignee_user_id: parsed.data.assigneeUserId,
-    status: 'open',
-    created_from: 'manual',
-    created_by: context.user.id,
-    updated_by: context.user.id,
-  }).select('id,status,title,due_at,snoozed_until').single();
-  if (error || !data) {
-    if (error?.code === '23505') {
-      const replay = await existingQuery();
-      if (replay.data) return NextResponse.json({ data: replay.data, replayed: true });
-    }
+  const { data, error } = await context.supabase.rpc('create_crm_opportunity_task', {
+    p_organization: context.organizationId,
+    p_opportunity: opportunityId,
+    p_request_key: key,
+    p_title: parsed.data.title,
+    p_due_at: parsed.data.dueAt ?? null,
+    p_timezone: parsed.data.timezone ?? null,
+    p_assignee: parsed.data.assigneeUserId,
+  });
+  const row = Array.isArray(data) ? data[0] : null;
+  if (error || !row) {
     if (error?.code === '42501') return NextResponse.json({ error: 'CRM workspace not found.' }, { status: 404 });
+    if (error?.code === '23514') {
+      return NextResponse.json({ error: 'That retry does not match the original task.' }, { status: 409 });
+    }
     return NextResponse.json({ error: 'Unable to create task.' }, { status: 422 });
   }
-  return NextResponse.json({ data, replayed: false }, { status: 201 });
+  return NextResponse.json({
+    data: {
+      id: row.task_id,
+      status: row.task_status,
+      title: row.title,
+      due_at: row.due_at,
+      snoozed_until: row.snoozed_until,
+    },
+    replayed: row.replayed,
+  }, { status: row.replayed ? 200 : 201 });
 }

@@ -238,13 +238,18 @@ do $$ declare bad text; begin
       -- R3-1 caller-bound CRM commands derive identity from auth.uid(), bind
       -- every record to an explicit organization, and expose no admin bypass.
       'assign_crm_opportunity(uuid,uuid,text,uuid,uuid,boolean)',
+      'can_access_crm_contact(uuid,uuid)',
+      'can_access_crm_customer(uuid,uuid)',
       'can_access_crm_opportunity(uuid)',
+      'can_access_crm_property(uuid,uuid)',
       'command_crm_lead(uuid,uuid,text,text,uuid,uuid,text)',
       'command_crm_task(uuid,uuid,text,text,timestamp with time zone)',
       'configure_crm_pipeline_stage(uuid,uuid,uuid,text,text,integer,boolean,text)',
       'convert_crm_lead(uuid,uuid,text,uuid,text,text,uuid,uuid,uuid)',
       'create_crm_account_bundle(uuid,uuid,uuid,uuid,text,text,text,text,text,text,text,text,text,text,text,text)',
       'create_crm_direct_opportunity(uuid,uuid,uuid,text,uuid,uuid,uuid,text,uuid,uuid)',
+      'create_crm_manual_lead(uuid,text,text,text,text,text,text,text,uuid,jsonb)',
+      'create_crm_opportunity_task(uuid,uuid,text,text,timestamp with time zone,text,uuid)',
       'find_crm_duplicate_candidates(uuid,text,text)',
       'move_crm_opportunity_stage(uuid,uuid,uuid,text,uuid,text)',
       'qualify_crm_opportunity(uuid,uuid,uuid,text,text,jsonb,text,boolean,uuid)',

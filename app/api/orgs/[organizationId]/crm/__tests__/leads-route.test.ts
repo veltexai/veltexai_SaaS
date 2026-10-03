@@ -30,12 +30,20 @@ function client(options: {
     error: null,
   });
   const existing = query({ data: options.existing ?? null, error: null });
-  const inserted = query({ data: options.inserted ?? null, error: options.insertError ?? null });
   const from = jest.fn()
     .mockReturnValueOnce(membership)
-    .mockReturnValueOnce(existing)
-    .mockReturnValueOnce(inserted);
-  const rpc = jest.fn().mockResolvedValue({ data: options.duplicates ?? [], error: null });
+    .mockReturnValueOnce(existing);
+  const rpc = jest.fn((name: string) => name === 'find_crm_duplicate_candidates'
+    ? Promise.resolve({ data: options.duplicates ?? [], error: null })
+    : Promise.resolve({
+        data: options.inserted ? [{
+          lead_id: (options.inserted as { id: string }).id,
+          lead_status: (options.inserted as { status: string }).status,
+          created_at: (options.inserted as { created_at?: string }).created_at ?? '2026-10-01T00:00:00Z',
+          replayed: Boolean(options.existing),
+        }] : null,
+        error: options.insertError ?? null,
+      }));
   createClient.mockResolvedValue({
     auth: {
       getUser: jest.fn().mockResolvedValue({
@@ -46,7 +54,7 @@ function client(options: {
     from,
     rpc,
   });
-  return { membership, existing, inserted, from, rpc };
+  return { membership, existing, from, rpc };
 }
 
 function request(body: unknown, idempotencyKey = 'quick-add-0001') {
@@ -94,6 +102,7 @@ describe('R3-1 quick-add lead route', () => {
     const state = client({
       role: 'estimator',
       existing: { id: '44444444-4444-4444-8444-444444444444', status: 'new' },
+      inserted: { id: '44444444-4444-4444-8444-444444444444', status: 'new' },
     });
     const { POST } = await import('../leads/route');
     const response = await POST(request({ email: 'person@example.test' }), routeContext);
@@ -102,7 +111,7 @@ describe('R3-1 quick-add lead route', () => {
       data: expect.objectContaining({ id: '44444444-4444-4444-8444-444444444444' }),
       replayed: true,
     });
-    expect(state.rpc).not.toHaveBeenCalled();
+    expect(state.rpc).toHaveBeenCalledWith('create_crm_manual_lead', expect.any(Object));
   });
 
   it('prompts for duplicate review and never auto-merges', async () => {
@@ -118,7 +127,7 @@ describe('R3-1 quick-add lead route', () => {
     await expect(response.json()).resolves.toEqual(expect.objectContaining({
       duplicateCandidates: [candidate],
     }));
-    expect(state.inserted.insert).not.toHaveBeenCalled();
+    expect(state.rpc).not.toHaveBeenCalledWith('create_crm_manual_lead', expect.any(Object));
   });
 
   it('creates a manual lead only after validation and explicit duplicate choice', async () => {
@@ -142,12 +151,10 @@ describe('R3-1 quick-add lead route', () => {
       duplicateDecision: 'create_new',
     }), routeContext);
     expect(response.status).toBe(201);
-    expect(state.inserted.insert).toHaveBeenCalledWith(expect.objectContaining({
-      organization_id: ORG_ID,
-      intake_method: 'manual',
-      idempotency_key: 'quick-add-0001',
-      created_by: USER_ID,
-      source: 'manual',
+    expect(state.rpc).toHaveBeenCalledWith('create_crm_manual_lead', expect.objectContaining({
+      p_organization: ORG_ID,
+      p_request_key: 'quick-add-0001',
+      p_assigned_to: USER_ID,
     }));
   });
 });
