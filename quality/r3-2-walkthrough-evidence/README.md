@@ -57,3 +57,13 @@ organization, membership, audit and outbox foundations.
 The exact independent-review scope is frozen in
 `INDEPENDENT_REVIEW_ASSIGNMENT.md`. Preparing that packet does not authorize
 uploading it or accessing a hosted environment.
+
+`build-preview-apply.mjs` deterministically produces a single-transaction,
+source-hash-bound preview artifact. It requires the exact 66-version predecessor
+history and absent R3-2 schema; preserves count and canonical content hashes for
+every existing CRM table; applies one exact migration body; checks the receipt
+table, routines, trigger, privileges, columns and 67th history row; and only then
+commits. `npm run r3-2:test-preview-artifact` pins its deterministic structure.
+The current artifact was executed successfully against an exact disposable
+66-migration PostgreSQL 16 state. This local proof does not authorize running it
+on the isolated preview.
