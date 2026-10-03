@@ -40,9 +40,34 @@ bounded R3-1 foundation and must not claim full R3 completion.
    signature, completed handoff, import, migration or other later-stage behavior
    is falsely shipped or claimed.
 10. Independently run or inspect the full Jest/type/migration/diff gates, the
-    65-migration disposable database harness with `CHECK_DEFINERS=1`, and the
+    66-migration disposable database harness with `CHECK_DEFINERS=1`, and the
     rollback-only performance benchmark. Distinguish local evidence from hosted
     PostgreSQL 17/operator evidence that remains pending.
+
+## Prior FAIL and required remediation re-review
+
+The first review of commit `10e7ea5` returned `FAIL`. Preserve that verdict and
+specifically verify the later remediation rather than assuming a green test run
+closes it:
+
+- authenticated direct CRM table mutations must be denied, including from
+  inside unrelated security-definer paths;
+- customer, property, contact, lead and opportunity writes must enforce the
+  caller's organization role and estimator record scope at the database layer;
+- same-stage writes, cross-pipeline moves, illegal terminal reopening and
+  erasure/remapping of required terminal categories must fail;
+- lead and task creation must use caller-bound commands with changed-payload
+  replay refusal rather than route-level direct inserts;
+- `quality/r3-1-crm/sql/adversarial-role-matrix.sql` must execute in the normal
+  disposable harness and prove the claimed role, tenant, replay, transition and
+  ID-only-event outcomes;
+- Board and List must switch and filter by the selected pipeline, the Kanban
+  scroller must not expand a 390px page, and a reviewed contact link must be
+  passed as `existingContactId` during confirmed conversion.
+
+Do not return `PASS` merely because the High findings above are closed. Recheck
+every unresolved Medium finding from the first review and identify any remaining
+acceptance gap explicitly.
 
 ## Mandatory adversarial checks
 
