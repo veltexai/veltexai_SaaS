@@ -1,5 +1,29 @@
 # R3-1 CRM performance evidence
 
+## Production release preflight
+
+`build-production-rollback-proof.mjs` is the first non-committing production
+release gate. It accepts only the exact reviewed read-only production capture,
+the accepted R3-1 migration hashes, and application commit `0d765d7`. It emits
+one transaction that locks the current application tables, revalidates the
+complete captured catalog/privilege/content/invariant state, executes both
+R3-1 migrations, emits hashes-only postflight evidence through a deliberate
+exception, and therefore cannot commit.
+
+Generate and statically verify the reviewed candidate with:
+
+```sh
+node quality/r3-1-crm/build-production-rollback-proof.mjs \
+  /private/tmp/veltex-r3-1-production-preflight.json \
+  /private/tmp/veltex-r3-1-production-rollback-proof-v1.sql
+npm run r3-1:test-production-rollback-proof
+```
+
+Running the generated SQL against production is a separately approved action.
+Its evidence must be independently matched before any commit-capable artifact
+is generated. Never deploy the current integration branch for R3-1; it contains
+unaccepted R3-2 work. Build the application from the exact accepted commit.
+
 `crm-performance-benchmark.sql` is a rollback-only PostgreSQL benchmark for the
 six query families required by the R3-1 release contract. It expects the fresh
 65-migration disposable catalog harness plus its synthetic `.test` fixtures.
