@@ -1,6 +1,6 @@
 # R3-2 founder acceptance — persisted walkthrough evidence
 
-Status: **PENDING ISOLATED-PREVIEW FAILURE-RECOVERY RETEST**.
+Status: **ALL TECHNICAL AND PREVIEW GATES PASS; PENDING FOUNDER DECISION**.
 
 This packet does not authorize a production deployment or production data
 creation. Run it only after an independent `PASS`, on the approved isolated
@@ -62,8 +62,15 @@ Use a signed-in owner or admin at a desktop viewport.
    Confirm the workflow remains open and announces a retry message without
    claiming success.
 
-Desktop result: **WORKFLOW PASS; STALLED-REQUEST RECOVERY REQUIRES CORRECTED
-PREVIEW RETEST**
+Desktop result: **PASS**
+
+Corrected Preview failure-path retest used two authenticated synthetic sessions
+with the same loaded concurrency token. After session B saved a newer draft,
+session A's stale command reached the bounded 15-second client timeout. The UI
+announced `Unable to save walkthrough evidence. Check your connection and try
+again.`, retained the exact typed draft and open dialog, restored Save, and did
+not claim success. Reload confirmed session B's winner remained stored and the
+stale attempt did not overwrite it.
 
 ## Genuine 390 px workflow
 
@@ -82,7 +89,7 @@ Set a real browser viewport to exactly 390 CSS pixels wide. Record both
 5. Switch to List and repeat the read-only review. No essential action may be
    hover-only or outside the viewport.
 
-390 px result: **PASS ON DEPLOYED BASE**
+390 px result: **PASS ON CORRECTED DEPLOYMENT**
 
 - `window.innerWidth`: `390`
 - `document.documentElement.scrollWidth`: `390`
@@ -113,16 +120,14 @@ does not alter authorization, privacy, schema or truthfulness behavior.
 
 ## Decision
 
-- Overall: **PENDING FOUNDER REVIEW**
+- Overall: **PENDING FOUNDER DECISION — ALL REQUIRED EVIDENCE PASS**
 - Founder decision: pending
 - Pacific timestamp: pending
-- Defects or required follow-up: the deployed base can remain indefinitely in
-  `Saving walkthrough evidence…` when a request never settles. Exact corrected
-  commit `f8728c3` adds a 15-second abort, preserves the dialog/note, announces
-  retry guidance and restores Save. Local regression and full gates pass; the
-  exact corrected client received bounded independent PASS and is deployed to
-  the isolated Preview; the failure-recovery retest remains required before
-  founder acceptance.
+- Defects or required follow-up: no launch blocker. Exact corrected commit
+  `f8728c3` adds a 15-second abort, preserves the dialog/note, announces retry
+  guidance and restores Save. Local regression/full gates, bounded independent
+  review and authenticated corrected-Preview retest all pass. Nonblocking
+  follow-ups are recorded in the operating ledger.
 
 Acceptance covers only bounded R3-2 persisted text evidence. It does not mark
 full R3 complete; R3-3 through R3-8 remain required.

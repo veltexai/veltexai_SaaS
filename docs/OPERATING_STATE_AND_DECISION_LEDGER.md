@@ -2178,3 +2178,25 @@ After any material action, append or revise the relevant section with:
   assertion, explicit textarea-value assertion and optional unmount abort; they
   do not justify another first-build redeploy. Corrected authenticated Preview
   retest remains the only R3-2 acceptance gate.
+- **CORRECTED AUTHENTICATED PREVIEW RETEST — PASS / CREDENTIAL RETIRED:** Under
+  exact founder approval, only existing synthetic preview user
+  `r2-ui-signup-20260930@veltex.test` in project `ynzkwctwlssjcsjmahey` received
+  a temporary random password. Two authenticated sessions loaded the same
+  evidence token. Session B saved a new synthetic draft; session A submitted a
+  stale token. On exact deployed commit `a41acab`, session A exited the stalled
+  request at the bounded 15-second timeout, announced generic retry guidance,
+  retained `Synthetic stale attempt retained for retry.`, kept the dialog open
+  and restored enabled Save. Reload proved session B's winner remained stored,
+  so the stale attempt did not overwrite evidence. At an actual `390x844`
+  viewport, `innerWidth`, client width and document scroll width were all 390;
+  the dialog occupied x=16..374, Save/Close/Record were each 44px high, initial
+  focus entered the textarea, and Escape closed the inline workflow and
+  restored focus to Record. Immediately afterward the temporary password was
+  replaced with a fresh unknown random value, the app session signed out to
+  `/auth/login`, the temporary viewport was reset and the browser runtime was
+  cleared. Production credentials/state were not accessed or changed.
+- **R3-2 STATUS:** all required local, database/security, independent-review,
+  PostgreSQL 17 Preview, desktop, corrected failure-recovery and genuine-390
+  gates are `PASS`. The founder checklist is fully evidenced and awaits only an
+  explicit founder `ACCEPTED` or `REJECTED` decision. R3-3 must not be treated
+  as accepted or deployed until that decision is recorded.
