@@ -2040,3 +2040,19 @@ After any material action, append or revise the relevant section with:
   `/private/tmp/veltex-r3-2-preview-apply-remediation.sql` (17,213 bytes,
   SHA-256 `9b242439d7dc2035f4f5f0b73fea4f46842975ffaf87c6c664f274b33ecbd6a8`),
   but does not authorize or perform that hosted mutation.
+- **ISOLATED PREVIEW APPLY + POSTFLIGHT — COMPLETE / VERIFIED (2026-10-03):**
+  The exact frozen artifact
+  `/private/tmp/veltex-r3-2-preview-apply-remediation.sql` (17,213 bytes,
+  SHA-256 `9b242439d7dc2035f4f5f0b73fea4f46842975ffaf87c6c664f274b33ecbd6a8`)
+  ran once against exact preview project `ynzkwctwlssjcsjmahey` after its
+  read-only predicate returned true. The atomic transaction returned
+  `R3_2_PREVIEW_APPLY_PASS`, history `67`, CRM tables `23`, receipts `0` and
+  committed. A separate read-only PostgreSQL 17.6 postflight confirmed the
+  R3-2 history version exactly once, all three evidence columns, receipt table,
+  command/read routines and evidence outbox trigger present, zero receipt
+  rows, anonymous command execution denied, authenticated command execution
+  allowed, authenticated direct receipt SELECT denied, authenticated direct
+  evidence-note SELECT denied and ordinary walkthrough-ID SELECT preserved.
+  Production was not accessed or changed. Genuine authenticated desktop and
+  390 px preview workflow acceptance remains required before founder
+  acceptance of R3-2.
