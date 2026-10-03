@@ -8,9 +8,22 @@ Date: 2026-09-22 Pacific
 
 Veltex AI will serve the full cleaning industry. It will not be positioned or architected as janitorial-only software.
 
+The approved progressive brand architecture uses `Veltex` as the primary
+customer-facing master brand, `The cleaning business operating system` as the
+category, and `AI-assisted` as an honest supporting capability. Existing
+Veltex AI legal/operational references, domain and accounts remain unchanged
+until the bounded cleaning-owner validation and trademark gates in
+`platform-build/VELTEX_BRAND_ARCHITECTURE_AND_VALIDATION_PLAN.md` produce a
+separate rollout decision.
+
 The product promise is:
 
 > Veltex AI helps cleaning businesses capture the job, build the right scope, understand the financial assumptions, and create a professional, defensible proposal.
+
+Customer-facing message direction:
+
+> Veltex helps cleaning businesses run from walkthrough to profit. AI assists
+> where it saves time; the operator controls the scope, price and final decision.
 
 Veltex AI must not claim that one number is the perfect or universally correct bid. Every calculated amount is an editable suggested price supported by visible labor, materials, equipment, overhead, margin, frequency, condition, access, and risk assumptions.
 

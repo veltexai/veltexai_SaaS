@@ -11,6 +11,45 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
 - Preserve both successful work and trial-and-error history so rejected or failed paths are not repeated.
 - When a new check conflicts with a prior verified completion, diagnose execution context and permissions before changing anything.
 
+## Brand architecture — APPROVED / CONTROLLED VALIDATION ACTIVE (2026-10-03 Pacific)
+
+- **FOUNDER DECISION:** do not perform a full rebrand now. Present `Veltex` as
+  the primary master brand, `The cleaning business operating system` as the
+  category and AI as an honest, operator-controlled supporting capability.
+  Keep `veltexai.com`, existing email/accounts, legal/product references and
+  provider identifiers unchanged unless a later gated decision explicitly
+  changes them.
+- **MESSAGE BOUNDARY:** lead with cleaning-business outcomes, transparent
+  deterministic pricing, private information and operator control. Do not claim
+  perfect AI pricing, guaranteed profit/success, autonomous business operation,
+  employee replacement or accounting/tax/legal/safety authority. Veltex must
+  remain useful without an AI provider.
+- **VALIDATION PROGRAM:** test three identical-offer presentations—`Veltex AI —
+  AI Operating System for Cleaning Companies`, `Veltex — Cleaning Business
+  Operating System`, and `Veltex — Cleaning Business Software with AI-Assisted
+  Estimating`—with real commercial, residential, turnover, specialty and small
+  multi-crew operators. Measure trust, correct understanding, qualified intent,
+  willingness to upload photos, pricing confidence, objections, recall and
+  qualified conversion; clicks alone are insufficient.
+- **DECISION RULE:** retain `Veltex AI` if equivalent/better without recurring
+  trust objections; prefer public `Veltex` when qualified conversion improves
+  at least 10–15% relative and interviews attribute the difference to the AI
+  name; use prominent `Veltex` with retained operational `Veltex AI` when mixed.
+  Professional trademark clearance precedes material Veltex-only investment.
+- **AUTHORITY:** `docs/product/platform-build/VELTEX_BRAND_ARCHITECTURE_AND_VALIDATION_PLAN.md` is the implementation plan. This approval authorizes planning,
+  inventory and local message-system preparation only. It does not authorize a
+  production copy experiment, external research recruitment, incentive spend,
+  domain/email/provider rename, trademark filing, campaign mutation or public
+  rollout. Those remain separate action gates.
+- **B0 INVENTORY IMPLEMENTED:** `quality/brand-architecture/inventory-brand-references.mjs`
+  deterministically classifies references without replacing them. The initial
+  local run found 270 references: 152 customer-facing candidates, 81 historical/
+  governance references, four legal/operational/provider-bound references and
+  33 requiring manual review. The deterministic inventory test passes. Output
+  `/private/tmp/veltex-brand-reference-inventory.json` is local evidence only;
+  no application copy, domain, provider configuration, campaign or public page
+  changed.
+
 ## Current commercial workstream
 
 ### Workstream separation — mandatory

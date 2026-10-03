@@ -29,6 +29,7 @@
     "r2:test-authorized-production-bundle": "node quality/r2-production-reconciliation/test-authorized-production-bundle.mjs",
     "r3-1:test-production-rollback-proof": "node quality/r3-1-crm/test-production-rollback-proof.mjs",
     "r3-2:test-preview-artifact": "node quality/r3-2-walkthrough-evidence/test-preview-apply.mjs",
+    "brand:test-inventory": "node quality/brand-architecture/test-brand-inventory.mjs",
     "100s:operator": "node 100X/100S/operator/cli.mjs",
     "test:100s": "jest 100X/100S/tests --runInBand"
   },

@@ -52,3 +52,14 @@ The seven-stage dependency and release gates are canonical in
 `SEVEN_STAGE_RELEASE_GATE_MATRIX.md`. A downstream lane may prepare read-only
 research, contracts and tests, but it may not create implementation commits
 until that matrix's entry gate is satisfied.
+
+## Cross-cutting brand-validation track
+
+The founder-approved brand architecture is governed by
+`VELTEX_BRAND_ARCHITECTURE_AND_VALIDATION_PLAN.md`. It may inventory references,
+prepare shared message constants and design a bounded cleaning-owner test in
+parallel with product stages. It must not bulk-rename the application, change
+domains/accounts/legal identifiers, launch research, spend incentives, mutate
+campaigns or deploy production variants without the named gates. Product-stage
+claims remain authoritative: brand work cannot advertise a capability before
+that capability passes its own release gate.
