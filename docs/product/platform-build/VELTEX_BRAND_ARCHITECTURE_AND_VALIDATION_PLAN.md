@@ -70,6 +70,11 @@ Prohibited themes:
 - Existing contractual documents retain their current legal identity until a
   separate legal/trademark decision.
 
+Implementation status: the typed, currently non-rendered dictionary is
+`features/brand/messaging.ts`. It pins the master/operational identities, trust
+points, prohibited claims and the exact A/B/C variant copy. It must not be wired
+into production surfaces before B2 instrumentation and release approval.
+
 ### B2 — bounded buyer validation
 
 Test identical features, pricing, screenshots and calls to action with only the

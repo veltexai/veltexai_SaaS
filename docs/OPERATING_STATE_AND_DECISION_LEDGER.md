@@ -49,6 +49,13 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
   `/private/tmp/veltex-brand-reference-inventory.json` is local evidence only;
   no application copy, domain, provider configuration, campaign or public page
   changed.
+- **B1 MESSAGE CONTRACT IMPLEMENTED LOCALLY:** `features/brand/messaging.ts`
+  pins the `Veltex` master brand, retained `Veltex AI` operational identity,
+  category, promise, operator-control/privacy/manual-fallback trust points,
+  exact A/B/C validation copy and prohibited-claim patterns. It is deliberately
+  not imported by a production surface before B2 instrumentation and rollout
+  approval. Focused tests pass 8/8, TypeScript and diff hygiene pass. No public
+  copy or production behavior changed.
 
 ## Current commercial workstream
 
