@@ -89,6 +89,10 @@ The proposal generator composes the selected property profile and service packag
 
 Create a secure walkthrough workspace where the operator can upload and label photos or short videos by room, area, surface or issue. AI may identify visible conditions and suggest questions or scope items, but it must label observations as suggestions and require operator confirmation before changing quantities, risk classification, scope or price.
 
+The implementation sequence, OpenAI boundary, privacy gates and profitability
+connection are defined in
+`platform-build/MULTIMODAL_WALKTHROUGH_AND_PROFITABILITY_STRATEGY.md`.
+
 ### 6. Admin-managed expansion
 
 Authorized administrators must be able to add or revise facilities, services, questions, units, assumptions, proposal text and pricing factors without rewriting the main proposal form. Published proposals retain the catalog version used when they were generated.
@@ -204,4 +208,3 @@ Start Release 1 with a read-only implementation audit and schema proposal, then 
 8. Claude independent review;
 9. Mohamed production-readiness review if needed;
 10. founder approval before deployment or marketing.
-
