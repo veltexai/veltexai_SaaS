@@ -53,11 +53,11 @@ All R3-1 tables:
 4. prevent changing `organization_id` in place;
 5. expose no service-role credential or bypass through browser responses.
 
-Direct authenticated access is intentionally narrower than the product read
-model. Owner/admin may manage organization rows. Estimators may create rows and
-may read/update only rows they created or opportunities/tasks/walkthroughs to
-which their membership is assigned. Viewer access is served later through an
-explicit redacted server read model; viewers receive no direct CRM-table grant.
+Direct authenticated writes are revoked from the CRM tables; product mutations
+run only through the reviewed caller-bound commands. Any remaining direct reads
+are constrained by the table policies: managers see the organization, estimators
+see their scoped records, and the viewer experience is served through the
+explicit redacted server read model. Anonymous callers receive no CRM grant.
 
 `opportunity_stage_history` is append-only and may be written only by the
 reviewed stage-move command/trigger. Audit and domain events reuse
@@ -85,4 +85,3 @@ R3-1 consumes the production R2 organization, membership, audit, outbox/inbox,
 tenantized proposal, and active-organization contracts. It does not edit
 organization/team UI, invitations, pricing, proposal bytes, tracking, Stripe,
 trial usage, marketing attribution, or 100D.
-

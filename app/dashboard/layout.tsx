@@ -5,6 +5,7 @@ import { getUserBrandingSettings } from "@/features/settings";
 import { applyTheme } from "@/lib/theme";
 import { ProfileUserBrandingProvider } from "@/providers/profile-user-branding-provider";
 import type { Metadata } from "next";
+import { isCrmWorkspaceEnabled } from "@/features/crm/rollout";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -24,7 +25,7 @@ export default async function DashboardLayout({
   const brandingSettings = await getUserBrandingSettings(user.id);
   return (
     <ProfileUserBrandingProvider value={{ brandingSettings, user, profile }}>
-      <DashboardClientLayout>{children}</DashboardClientLayout>
+      <DashboardClientLayout crmEnabled={isCrmWorkspaceEnabled()}>{children}</DashboardClientLayout>
     </ProfileUserBrandingProvider>
   );
 }

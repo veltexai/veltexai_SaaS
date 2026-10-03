@@ -44,8 +44,11 @@ and receive the target-specific approval required by the operating ledger.
 
 R3-1 is additive. After CRM data exists, the safe rollback is application-first:
 
-1. Disable CRM navigation and all CRM command endpoints while leaving the
-   existing proposal product available.
+1. Set the server-only `CRM_WORKSPACE_ENABLED=false` and redeploy the application.
+   This hides CRM navigation, redirects `/dashboard/crm` to `/dashboard`, and
+   makes CRM API context resolution return a uniform 404 while leaving the
+   existing proposal product available. This flag is an application kill switch,
+   not a schema rollback.
 2. Roll the application back to the recorded R2 production deployment.
 3. Preserve CRM tables, stage history, command receipts, organization audit rows
    and outbox rows for diagnosis and a forward fix.

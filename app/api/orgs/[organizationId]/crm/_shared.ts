@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import type { OrganizationRole } from '@/features/organizations/domain';
+import { isCrmWorkspaceEnabled } from '@/features/crm/rollout';
 
 const organizationIdSchema = z.string().uuid();
 const CRM_UNAVAILABLE = 'CRM is unavailable. Please try again.';
 
 export async function authenticatedCrmContext(rawOrganizationId: string) {
+  if (!isCrmWorkspaceEnabled()) return { kind: 'not_found' as const };
   const organization = organizationIdSchema.safeParse(rawOrganizationId);
   if (!organization.success) return { kind: 'invalid' as const };
 
@@ -51,4 +53,3 @@ export function requireIdempotencyKey(request: Request) {
   if (!value || value.length < 8 || value.length > 200) return null;
   return value;
 }
-

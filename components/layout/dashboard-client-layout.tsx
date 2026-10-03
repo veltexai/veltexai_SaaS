@@ -30,6 +30,7 @@ import { identifySentryUser, resetSentryUser } from "@/lib/monitoring";
 
 interface DashboardClientLayoutProps {
   children: React.ReactNode;
+  crmEnabled?: boolean;
 }
 
 const baseNavigation = [
@@ -44,6 +45,7 @@ const adminNavigation = [{ name: "Admin", href: "/admin", icon: Shield }];
 
 export function DashboardClientLayout({
   children,
+  crmEnabled = true,
 }: DashboardClientLayoutProps) {
   const { profile, user, brandingSettings } = useProfileUserBranding();
   useEffect(() => {
@@ -63,10 +65,13 @@ export function DashboardClientLayout({
   };
 
   // Combine navigation based on user role
+  const visibleNavigation = crmEnabled
+    ? baseNavigation
+    : baseNavigation.filter((item) => item.href !== "/dashboard/crm");
   const navigation =
     profile?.role === "admin"
-      ? [...baseNavigation, ...adminNavigation]
-      : baseNavigation;
+      ? [...visibleNavigation, ...adminNavigation]
+      : visibleNavigation;
 
   return (
     <div className="min-h-screen bg-gray-50">

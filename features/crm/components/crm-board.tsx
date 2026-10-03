@@ -40,6 +40,7 @@ type Lead = {
   email?: string;
   phone?: string;
   property_name?: string;
+  existing_contact_id?: string;
 };
 type WorkPackage = {
   id: string;
@@ -51,6 +52,11 @@ type WorkPackage = {
   loss_reason_id?: string;
   updated_at: string;
 };
+type Walkthrough = {
+  id: string; opportunity_id: string; property_id: string; estimator_user_id: string;
+  site_contact_id?: string; status: 'scheduled' | 'rescheduled'; window_start: string;
+  window_end: string; timezone: string; updated_at: string;
+};
 type Board = {
   organization_id: string;
   caller_role: 'owner' | 'admin' | 'estimator' | 'viewer';
@@ -58,6 +64,7 @@ type Board = {
   opportunities: Opportunity[];
   leads?: Lead[];
   work_packages?: WorkPackage[];
+  walkthroughs?: Walkthrough[];
   customers?: { id: string; name: string }[];
   properties?: { id: string; customer_id?: string; name: string }[];
   loss_reasons: { id: string; label: string; applies_to: 'lost' | 'disqualified' | 'both' }[];
@@ -87,11 +94,14 @@ export function CrmBoard() {
   const [notice, setNotice] = useState<string | null>(null);
   const [view, setView] = useState<'board' | 'list'>('board');
   const [selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
+  const [pendingStageByOpportunity, setPendingStageByOpportunity] = useState<Record<string, string>>({});
   const [linkedContactsByLead, setLinkedContactsByLead] = useState<Record<string, string>>({});
   const [outcome, setOutcome] = useState<{ opportunity: Opportunity; stage: Stage } | null>(null);
   const [taskFor, setTaskFor] = useState<Opportunity | null>(null);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
-  const [walkthroughFor, setWalkthroughFor] = useState<Opportunity | null>(null);
+  const [walkthroughFor, setWalkthroughFor] = useState<{
+    opportunity: Opportunity; item?: Walkthrough;
+  } | null>(null);
   const [assigningOpportunity, setAssigningOpportunity] = useState<Opportunity | null>(null);
   const [qualifyingOpportunity, setQualifyingOpportunity] = useState<Opportunity | null>(null);
   const [managingLead, setManagingLead] = useState<Lead | null>(null);
@@ -102,6 +112,32 @@ export function CrmBoard() {
   const [duplicateReview, setDuplicateReview] = useState<{
     candidates: DuplicateCandidate[]; draft: LeadDraft; key: string;
   } | null>(null);
+  const activeDialog = managingLead || convertingLead || packageFor || outcome || taskFor
+    || editingOpportunity || walkthroughFor || assigningOpportunity || qualifyingOpportunity
+    || duplicateReview;
+
+  useEffect(() => {
+    if (!activeDialog) return;
+    const returnTarget = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+    const firstControl = dialog?.querySelector<HTMLElement>(
+      'input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])',
+    );
+    firstControl?.focus();
+    const close = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      setManagingLead(null); setConvertingLead(null); setPackageFor(null); setOutcome(null);
+      setTaskFor(null); setEditingOpportunity(null); setWalkthroughFor(null);
+      setAssigningOpportunity(null); setQualifyingOpportunity(null);
+      setDuplicateReview(null);
+    };
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('keydown', close);
+      returnTarget?.focus();
+    };
+  }, [activeDialog]);
 
   const loadBoard = useCallback(async () => {
     setLoading(true);
@@ -116,9 +152,10 @@ export function CrmBoard() {
       if (!response.ok) throw new Error('Unable to load CRM right now.');
       const payload = await response.json() as { data: Board };
       setBoard(payload.data);
-      setSelectedPipelineId((current) => current && payload.data.pipelines.some((item) => item.id === current)
+      const pipelines = payload.data.pipelines ?? [];
+      setSelectedPipelineId((current) => current && pipelines.some((item) => item.id === current)
         ? current
-        : payload.data.pipelines.find((item) => item.is_default)?.id ?? payload.data.pipelines[0]?.id ?? null);
+        : pipelines.find((item) => item.is_default)?.id ?? pipelines[0]?.id ?? null);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Unable to load CRM right now.');
     } finally {
@@ -129,18 +166,18 @@ export function CrmBoard() {
   useEffect(() => { void loadBoard(); }, [loadBoard]);
 
   const activePipeline = useMemo(
-    () => board?.pipelines.find((pipeline) => pipeline.id === selectedPipelineId)
-      ?? board?.pipelines.find((pipeline) => pipeline.is_default) ?? board?.pipelines[0],
+    () => board?.pipelines?.find((pipeline) => pipeline.id === selectedPipelineId)
+      ?? board?.pipelines?.find((pipeline) => pipeline.is_default) ?? board?.pipelines?.[0],
     [board, selectedPipelineId],
   );
-  const shownOpportunities = useMemo(() => board?.opportunities.filter((opportunity) =>
+  const shownOpportunities = useMemo(() => board?.opportunities?.filter((opportunity) =>
     opportunity.pipeline_id === activePipeline?.id && (!followUpOnly || opportunity.needs_follow_up)) ?? [],
   [activePipeline?.id, board, followUpOnly]);
 
   async function moveOpportunity(
     opportunity: Opportunity,
     stageId: string,
-    details?: { lossReasonId?: string; manualWinReason?: string },
+    details?: { lossReasonId?: string; manualWinReason?: string; nextActionDueAt?: string },
   ) {
     if (!organizationId || stageId === opportunity.stage_id) return;
     setNotice('Moving opportunity…');
@@ -172,9 +209,11 @@ export function CrmBoard() {
     event.preventDefault();
     if (!outcome) return;
     const form = new FormData(event.currentTarget);
+    const nextActionDue = String(form.get('nextActionDueAt') || '');
     await moveOpportunity(outcome.opportunity, outcome.stage.id, {
       lossReasonId: String(form.get('lossReasonId') || '') || undefined,
       manualWinReason: String(form.get('manualWinReason') || '') || undefined,
+      nextActionDueAt: nextActionDue ? new Date(nextActionDue).toISOString() : undefined,
     });
   }
 
@@ -216,6 +255,7 @@ export function CrmBoard() {
     const form = new FormData(event.currentTarget);
     const amountText = String(form.get('valueAmount') || '').trim();
     const closeDate = String(form.get('expectedCloseDate') || '');
+    const nextActionDue = String(form.get('nextActionDueAt') || '');
     const response = await fetch(
       `/api/orgs/${organizationId}/crm/opportunities/${editingOpportunity.id}`,
       {
@@ -228,7 +268,7 @@ export function CrmBoard() {
           valueAmountMinor: amountText ? Math.round(Number(amountText) * 100) : null,
           valueBasis: amountText ? String(form.get('valueBasis') || '') : null,
           currency: amountText ? 'USD' : null,
-          nextActionDueAt: editingOpportunity.next_action_due_at ?? null,
+          nextActionDueAt: nextActionDue ? new Date(nextActionDue).toISOString() : null,
         }),
       },
     );
@@ -252,27 +292,72 @@ export function CrmBoard() {
 
   async function submitWalkthrough(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!organizationId || !walkthroughFor?.property_id || !walkthroughFor.estimator_user_id) return;
+    if (!organizationId || !walkthroughFor?.opportunity.property_id
+        || !walkthroughFor.opportunity.estimator_user_id) return;
     const form = new FormData(event.currentTarget);
     const start = new Date(String(form.get('windowStart'))).toISOString();
     const end = new Date(String(form.get('windowEnd'))).toISOString();
-    const response = await fetch(
-      `/api/orgs/${organizationId}/crm/opportunities/${walkthroughFor.id}/walkthroughs`,
-      { method: 'POST', headers: { 'content-type': 'application/json',
-        'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({
-        propertyId: walkthroughFor.property_id,
-        estimatorUserId: walkthroughFor.estimator_user_id,
-        windowStart: start, windowEnd: end,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      }) },
-    );
-    const payload = await response.json();
-    if (!response.ok) {
-      setNotice(payload.error ?? 'Unable to schedule the walkthrough.');
+    let response: Response;
+    let payload: { data?: { updated_at?: string }; error?: string } = {};
+    try {
+      response = await fetch(
+        walkthroughFor.item
+          ? `/api/orgs/${organizationId}/crm/opportunities/${walkthroughFor.opportunity.id}/walkthroughs/${walkthroughFor.item.id}`
+          : `/api/orgs/${organizationId}/crm/opportunities/${walkthroughFor.opportunity.id}/walkthroughs`,
+        { method: walkthroughFor.item ? 'PATCH' : 'POST', headers: { 'content-type': 'application/json',
+          'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({
+          ...(walkthroughFor.item ? { expectedUpdatedAt: walkthroughFor.item.updated_at } : {
+            propertyId: walkthroughFor.opportunity.property_id,
+            estimatorUserId: walkthroughFor.opportunity.estimator_user_id,
+          }),
+          windowStart: start, windowEnd: end,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }) },
+      );
+      try { payload = await response.json(); } catch { payload = {}; }
+    } catch {
+      setNotice('Unable to schedule the walkthrough. Check your connection and try again.');
       return;
     }
+    if (!response.ok) {
+      setNotice(payload.error ?? 'Unable to schedule the walkthrough. Check your connection and try again.');
+      return;
+    }
+    if (walkthroughFor.item) {
+      setBoard((current) => current ? { ...current,
+        walkthroughs: (current.walkthroughs ?? []).map((item) => item.id === walkthroughFor.item?.id
+          ? { ...item, status: 'rescheduled', window_start: start, window_end: end,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            updated_at: payload.data?.updated_at ?? item.updated_at }
+          : item) } : current);
+    } else {
+      await loadBoard();
+    }
     setWalkthroughFor(null);
-    setNotice('Walkthrough scheduled.');
+    setNotice(walkthroughFor.item ? 'Walkthrough rescheduled.' : 'Walkthrough scheduled.');
+  }
+
+  async function cancelWalkthrough() {
+    if (!organizationId || !walkthroughFor?.item) return;
+    const item = walkthroughFor.item;
+    let response: Response;
+    let payload: { error?: string } = {};
+    try {
+      response = await fetch(
+        `/api/orgs/${organizationId}/crm/opportunities/${walkthroughFor.opportunity.id}/walkthroughs/${item.id}/cancel`,
+        { method: 'POST', headers: { 'content-type': 'application/json',
+          'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ expectedUpdatedAt: item.updated_at }) },
+      );
+      try { payload = await response.json(); } catch { payload = {}; }
+    } catch {
+      setNotice('Unable to cancel the walkthrough. Check your connection and try again.');
+      return;
+    }
+    if (!response.ok) { setNotice(payload.error ?? 'Unable to cancel the walkthrough.'); return; }
+    setBoard((current) => current ? { ...current,
+      walkthroughs: (current.walkthroughs ?? []).filter((entry) => entry.id !== item.id) } : current);
+    setWalkthroughFor(null);
+    setNotice('Walkthrough cancelled.');
   }
 
   async function submitAssignment(event: FormEvent<HTMLFormElement>) {
@@ -367,7 +452,8 @@ export function CrmBoard() {
         opportunityName: String(form.get('opportunityName') || ''),
         segment,
         existingCustomerId: String(form.get('existingCustomerId') || '') || null,
-        existingContactId: linkedContactsByLead[convertingLead.id] ?? null,
+          existingContactId: convertingLead.existing_contact_id
+            ?? linkedContactsByLead[convertingLead.id] ?? null,
         existingPropertyId: String(form.get('existingPropertyId') || '') || null,
       }),
     });
@@ -410,21 +496,26 @@ export function CrmBoard() {
   }
 
   function stageMove(opportunity: Opportunity) {
+    const selectedStageId = pendingStageByOpportunity[opportunity.id] ?? opportunity.stage_id;
+    const source = activePipeline?.stages.find((stage) => stage.id === opportunity.stage_id);
+    const allowedTargets: Record<string, string[]> = {
+      new: ['new', 'qualifying', 'lost', 'disqualified', 'nurture'],
+      qualifying: ['qualifying', 'walkthrough', 'estimating', 'lost', 'disqualified', 'nurture'],
+      walkthrough: ['walkthrough', 'estimating', 'lost', 'disqualified', 'nurture'],
+      estimating: ['estimating', 'proposing', 'lost', 'disqualified', 'nurture'],
+      proposing: ['proposing', 'negotiating', 'won', 'lost', 'disqualified', 'nurture'],
+      negotiating: ['negotiating', 'proposing', 'won', 'lost', 'disqualified', 'nurture'],
+      nurture: ['nurture', 'qualifying', 'lost', 'disqualified'],
+    };
     return (
-      <div className="mt-3">
+      <div className="mt-3 flex items-end gap-2">
         <Label className="sr-only" htmlFor={`move-${opportunity.id}`}>Move {opportunity.name}</Label>
         <select
           id={`move-${opportunity.id}`}
-          value={opportunity.stage_id}
-          onChange={(event) => {
-            const target = activePipeline?.stages.find((stage) => stage.id === event.target.value);
-            if (!target) return;
-            if (['won', 'lost', 'disqualified'].includes(target.category)) {
-              setOutcome({ opportunity, stage: target });
-              return;
-            }
-            void moveOpportunity(opportunity, target.id);
-          }}
+          value={selectedStageId}
+          onChange={(event) => setPendingStageByOpportunity((current) => ({
+            ...current, [opportunity.id]: event.target.value,
+          }))}
           className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
           aria-label={`Move ${opportunity.name} to stage`}
         >
@@ -433,10 +524,19 @@ export function CrmBoard() {
               key={stage.id}
               value={stage.id}
               disabled={stage.category === 'handed_off'
+                || (stage.id !== opportunity.stage_id
+                  && !allowedTargets[source?.category ?? '']?.includes(stage.category))
                 || (stage.category === 'won' && !['owner', 'admin'].includes(board?.caller_role ?? 'viewer'))}
             >{stage.label}</option>
           ))}
         </select>
+        <Button type="button" variant="outline" className="min-h-11" disabled={selectedStageId === opportunity.stage_id}
+          onClick={() => {
+            const target = activePipeline?.stages.find((stage) => stage.id === selectedStageId);
+            if (!target) return;
+            if (['won', 'lost', 'disqualified', 'nurture'].includes(target.category)) setOutcome({ opportunity, stage: target });
+            else void moveOpportunity(opportunity, target.id);
+          }}>Move</Button>
       </div>
     );
   }
@@ -512,7 +612,9 @@ export function CrmBoard() {
     });
     const payload = await response.json();
     if (!response.ok) { setNotice(payload.error ?? 'Unable to create the customer account.'); return; }
-    setShowNewAccount(false); setNotice('Customer, primary contact, and property created.');
+    setShowNewAccount(false);
+    await loadBoard();
+    setNotice('Customer, primary contact, and property created.');
   }
 
   async function submitDirectOpportunity(event: FormEvent<HTMLFormElement>) {
@@ -540,7 +642,7 @@ export function CrmBoard() {
         <CardHeader><CardTitle>CRM unavailable</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <p role="alert" className="text-sm text-red-700">{error ?? 'No pipeline is configured.'}</p>
-          <Button variant="outline" onClick={() => void loadBoard()}><RefreshCw className="mr-2 h-4 w-4" />Try again</Button>
+          <Button variant="outline" className="min-h-11" onClick={() => void loadBoard()}><RefreshCw className="mr-2 h-4 w-4" />Try again</Button>
         </CardContent>
       </Card>
     );
@@ -618,14 +720,14 @@ export function CrmBoard() {
               <div className="space-y-2"><Label htmlFor="lead-name">Contact name</Label><Input id="lead-name" name="contactName" autoComplete="name" /></div>
               <div className="space-y-2"><Label htmlFor="lead-email">Email</Label><Input id="lead-email" name="email" type="email" autoComplete="email" /></div>
               <div className="space-y-2"><Label htmlFor="lead-phone">Phone</Label><Input id="lead-phone" name="phone" type="tel" autoComplete="tel" /></div>
-              <div className="sm:col-span-3"><Button type="submit" disabled={saving}>{saving ? 'Adding…' : 'Add lead'}</Button></div>
+              <div className="sm:col-span-3"><Button type="submit" className="min-h-11" disabled={saving}>{saving ? 'Adding…' : 'Add lead'}</Button></div>
             </form>
           </CardContent>
         </Card>
       )}
-      {notice && <p role="status" aria-live="polite" className="text-sm text-blue-800">{notice}</p>}
+      <p role="status" aria-live="polite" className="min-h-5 text-sm text-blue-800">{notice ?? ''}</p>
       {managingLead && (
-        <Card role="dialog" aria-modal="true" aria-labelledby="lead-action-heading">
+        <Card role="dialog" aria-labelledby="lead-action-heading">
           <CardHeader><CardTitle id="lead-action-heading">Manage lead</CardTitle></CardHeader>
           <CardContent><form className="space-y-4" onSubmit={submitLeadAction}>
             <p className="text-sm text-gray-700">Update {managingLead.contact_name || managingLead.email || 'this lead'}.</p>
@@ -657,7 +759,7 @@ export function CrmBoard() {
         </Card>
       )}
       {convertingLead && (
-        <Card role="dialog" aria-modal="true" aria-labelledby="lead-conversion-heading">
+        <Card role="dialog" aria-labelledby="lead-conversion-heading">
           <CardHeader><CardTitle id="lead-conversion-heading">Convert lead</CardTitle></CardHeader>
           <CardContent><form className="grid gap-4 sm:grid-cols-2" onSubmit={submitLeadConversion}>
             <p className="text-sm text-gray-700 sm:col-span-2">
@@ -695,7 +797,7 @@ export function CrmBoard() {
         </Card>
       )}
       {packageFor && (
-        <Card role="dialog" aria-modal="true" aria-labelledby="package-heading">
+        <Card role="dialog" aria-labelledby="package-heading">
           <CardHeader><CardTitle id="package-heading">Site work package</CardTitle></CardHeader>
           <CardContent><form className="space-y-4" onSubmit={submitWorkPackage}>
             <p className="text-sm text-gray-700">Track scoped work for {packageFor.opportunity.name}.</p>
@@ -711,7 +813,7 @@ export function CrmBoard() {
         </Card>
       )}
       {outcome && (
-        <Card role="dialog" aria-modal="true" aria-labelledby="outcome-heading">
+        <Card role="dialog" aria-labelledby="outcome-heading">
           <CardHeader><CardTitle id="outcome-heading">Record {outcome.stage.label}</CardTitle></CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={submitOutcome}>
@@ -721,6 +823,12 @@ export function CrmBoard() {
                   <Label htmlFor="manual-win-reason">Manual win reason</Label>
                   <textarea id="manual-win-reason" name="manualWinReason" required maxLength={1000}
                     className="min-h-24 w-full rounded-md border border-gray-300 p-3" />
+                </div>
+              ) : outcome.stage.category === 'nurture' ? (
+                <div className="space-y-2">
+                  <Label htmlFor="nurture-revisit">Revisit date and time</Label>
+                  <Input id="nurture-revisit" name="nextActionDueAt" type="datetime-local" required
+                    min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)} />
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -745,7 +853,7 @@ export function CrmBoard() {
         </Card>
       )}
       {taskFor && (
-        <Card role="dialog" aria-modal="true" aria-labelledby="task-heading">
+        <Card role="dialog" aria-labelledby="task-heading">
           <CardHeader><CardTitle id="task-heading">Add next action</CardTitle></CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={submitTask}>
@@ -768,7 +876,7 @@ export function CrmBoard() {
         </Card>
       )}
       {editingOpportunity && (
-        <Card role="dialog" aria-modal="true" aria-labelledby="opportunity-heading">
+        <Card role="dialog" aria-labelledby="opportunity-heading">
           <CardHeader><CardTitle id="opportunity-heading">Edit opportunity</CardTitle></CardHeader>
           <CardContent>
             <form className="grid gap-4 sm:grid-cols-2" onSubmit={submitOpportunity}>
@@ -778,6 +886,9 @@ export function CrmBoard() {
                 <Input id="service-family" name="serviceFamily" maxLength={120} defaultValue={editingOpportunity.service_family} /></div>
               <div className="space-y-2"><Label htmlFor="expected-close">Expected close date</Label>
                 <Input id="expected-close" name="expectedCloseDate" type="date" defaultValue={editingOpportunity.expected_close_date} /></div>
+              <div className="space-y-2"><Label htmlFor="next-action-due">Next action due</Label>
+                <Input id="next-action-due" name="nextActionDueAt" type="datetime-local"
+                  defaultValue={editingOpportunity.next_action_due_at?.slice(0, 16) ?? ''} /></div>
               <div className="space-y-2"><Label htmlFor="opportunity-value">Value (USD)</Label>
                 <Input id="opportunity-value" name="valueAmount" type="number" min="0" step="0.01"
                   defaultValue={editingOpportunity.value_amount_minor === undefined ? '' : editingOpportunity.value_amount_minor / 100} /></div>
@@ -798,17 +909,21 @@ export function CrmBoard() {
         </Card>
       )}
       {walkthroughFor && (
-        <Card role="dialog" aria-modal="true" aria-labelledby="walkthrough-heading">
-          <CardHeader><CardTitle id="walkthrough-heading">Schedule walkthrough</CardTitle></CardHeader>
+        <Card role="dialog" aria-labelledby="walkthrough-heading">
+          <CardHeader><CardTitle id="walkthrough-heading">{walkthroughFor.item ? 'Manage walkthrough' : 'Schedule walkthrough'}</CardTitle></CardHeader>
           <CardContent>
             <form className="grid gap-4 sm:grid-cols-2" onSubmit={submitWalkthrough}>
-              <p className="text-sm text-gray-700 sm:col-span-2">Schedule a site window for {walkthroughFor.name}.</p>
+              <p className="text-sm text-gray-700 sm:col-span-2">Schedule a site window for {walkthroughFor.opportunity.name}.</p>
               <div className="space-y-2"><Label htmlFor="walkthrough-start">Starts</Label>
-                <Input id="walkthrough-start" name="windowStart" type="datetime-local" required /></div>
+                <Input id="walkthrough-start" name="windowStart" type="datetime-local" required
+                  defaultValue={walkthroughFor.item?.window_start.slice(0, 16) ?? ''} /></div>
               <div className="space-y-2"><Label htmlFor="walkthrough-end">Ends</Label>
-                <Input id="walkthrough-end" name="windowEnd" type="datetime-local" required /></div>
+                <Input id="walkthrough-end" name="windowEnd" type="datetime-local" required
+                  defaultValue={walkthroughFor.item?.window_end.slice(0, 16) ?? ''} /></div>
               <div className="flex flex-wrap gap-3 sm:col-span-2">
-                <Button type="submit" className="min-h-11">Schedule walkthrough</Button>
+                <Button type="submit" className="min-h-11">{walkthroughFor.item ? 'Reschedule walkthrough' : 'Schedule walkthrough'}</Button>
+                {walkthroughFor.item && <Button type="button" variant="outline" className="min-h-11"
+                  onClick={() => void cancelWalkthrough()}>Cancel scheduled walkthrough</Button>}
                 <Button type="button" variant="outline" className="min-h-11"
                   onClick={() => setWalkthroughFor(null)}>Cancel</Button>
               </div>
@@ -817,7 +932,7 @@ export function CrmBoard() {
         </Card>
       )}
       {assigningOpportunity && (
-        <Card role="dialog" aria-modal="true" aria-labelledby="assignment-heading">
+        <Card role="dialog" aria-labelledby="assignment-heading">
           <CardHeader><CardTitle id="assignment-heading">Assign opportunity</CardTitle></CardHeader>
           <CardContent>
             <form className="grid gap-4 sm:grid-cols-2" onSubmit={submitAssignment}>
@@ -849,7 +964,7 @@ export function CrmBoard() {
         </Card>
       )}
       {qualifyingOpportunity && (
-        <Card role="dialog" aria-modal="true" aria-labelledby="qualification-heading">
+        <Card role="dialog" aria-labelledby="qualification-heading">
           <CardHeader><CardTitle id="qualification-heading">Record qualification</CardTitle></CardHeader>
           <CardContent><form className="space-y-4" onSubmit={submitQualification}>
             <p className="text-sm text-amber-800">The default checklist is not operator-validated yet. Record the reviewed outcome and notes only.</p>
@@ -870,7 +985,7 @@ export function CrmBoard() {
         </Card>
       )}
       {duplicateReview && (
-        <Card aria-labelledby="duplicate-heading">
+        <Card role="dialog" aria-labelledby="duplicate-heading">
           <CardHeader><CardTitle id="duplicate-heading">Review possible duplicate</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-gray-700">Choose whether to link this lead to a matching record or keep it separate. Nothing is merged automatically.</p>
@@ -879,12 +994,12 @@ export function CrmBoard() {
                 <span className="text-sm text-gray-700">Matching {candidate.entity_type} by {candidate.matched_on}</span>
                 <Button type="button" variant="outline" disabled={saving} onClick={() => void createLead(
                   duplicateReview.draft, duplicateReview.key, 'link_existing', candidate.entity_id,
-                )}>Link existing</Button>
+                )} className="min-h-11">Link existing</Button>
               </div>
             ))}
             <Button type="button" disabled={saving} onClick={() => void createLead(
               duplicateReview.draft, duplicateReview.key, 'create_new',
-            )}>Create separate lead</Button>
+            )} className="min-h-11">Create separate lead</Button>
           </CardContent>
         </Card>
       )}
@@ -944,7 +1059,10 @@ export function CrmBoard() {
                           onClick={() => setTaskFor(opportunity)}>Add next action</Button>
                         {opportunity.property_id && opportunity.estimator_user_id && (
                           <Button type="button" variant="outline" className="min-h-11 w-full"
-                            onClick={() => setWalkthroughFor(opportunity)}>Schedule walkthrough</Button>
+                            onClick={() => setWalkthroughFor({ opportunity, item: (board.walkthroughs ?? [])
+                              .find((entry) => entry.opportunity_id === opportunity.id) })}>
+                            {(board.walkthroughs ?? []).some((entry) => entry.opportunity_id === opportunity.id)
+                              ? 'Manage walkthrough' : 'Schedule walkthrough'}</Button>
                         )}
                         {opportunity.property_id && <Button type="button" variant="outline" className="min-h-11 w-full"
                           onClick={() => setPackageFor({ opportunity, item: (board.work_packages ?? [])
@@ -988,7 +1106,18 @@ export function CrmBoard() {
                         onClick={() => setTaskFor(opportunity)}>Add next action</Button>
                       {opportunity.property_id && opportunity.estimator_user_id && (
                         <Button type="button" variant="outline" className="min-h-11"
-                          onClick={() => setWalkthroughFor(opportunity)}>Schedule walkthrough</Button>
+                          onClick={() => setWalkthroughFor({ opportunity, item: (board.walkthroughs ?? [])
+                            .find((entry) => entry.opportunity_id === opportunity.id) })}>
+                          {(board.walkthroughs ?? []).some((entry) => entry.opportunity_id === opportunity.id)
+                            ? 'Manage walkthrough' : 'Schedule walkthrough'}</Button>
+                      )}
+                      {opportunity.property_id && (
+                        <Button type="button" variant="outline" className="min-h-11"
+                          onClick={() => setPackageFor({ opportunity, item: (board.work_packages ?? [])
+                            .find((entry) => entry.opportunity_id === opportunity.id) })}>
+                          {(board.work_packages ?? []).some((entry) => entry.opportunity_id === opportunity.id)
+                            ? 'Manage work package' : 'Add work package'}
+                        </Button>
                       )}
                       {['owner', 'admin'].includes(board.caller_role) && (
                         <Button type="button" variant="outline" className="min-h-11"

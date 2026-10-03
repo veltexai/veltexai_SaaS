@@ -7,6 +7,7 @@ const ORG_ID = '11111111-1111-4111-8111-111111111111';
 const USER_ID = '33333333-3333-4333-8333-333333333333';
 const OPPORTUNITY_ID = '44444444-4444-4444-8444-444444444444';
 const PROPERTY_ID = '55555555-5555-4555-8555-555555555555';
+const WALKTHROUGH_ID = '66666666-6666-4666-8666-666666666666';
 
 function query(result: unknown) {
   const value: Record<string, jest.Mock> & { then?: unknown } = {};
@@ -39,6 +40,8 @@ function request(payload: unknown = body, key = 'walkthrough-0001') {
   });
 }
 const context = { params: Promise.resolve({ organizationId: ORG_ID, opportunityId: OPPORTUNITY_ID }) };
+const commandContext = { params: Promise.resolve({ organizationId: ORG_ID,
+  opportunityId: OPPORTUNITY_ID, walkthroughId: WALKTHROUGH_ID }) };
 
 describe('R3-1 walkthrough scheduling route', () => {
   beforeEach(() => jest.clearAllMocks());
@@ -82,4 +85,35 @@ describe('R3-1 walkthrough scheduling route', () => {
       expect(JSON.stringify(await response.json())).not.toContain('private detail');
     },
   );
+
+  it('reschedules with optimistic concurrency and a retry key', async () => {
+    const state = client({ role: 'estimator', data: [{ walkthrough_id: WALKTHROUGH_ID,
+      walkthrough_status: 'rescheduled', updated_at: '2026-10-02T19:00:00Z', replayed: false }] });
+    const { PATCH } = await import('../opportunities/[opportunityId]/walkthroughs/[walkthroughId]/route');
+    const response = await PATCH(new NextRequest('http://local/walkthroughs/id', {
+      method: 'PATCH', headers: { 'content-type': 'application/json', 'idempotency-key': 'reschedule-0001' },
+      body: JSON.stringify({ windowStart: body.windowStart, windowEnd: body.windowEnd,
+        timezone: body.timezone, expectedUpdatedAt: '2026-10-02T16:00:00.000Z' }),
+    }), commandContext);
+    expect(response.status).toBe(200);
+    expect(state.rpc).toHaveBeenCalledWith('command_crm_walkthrough', expect.objectContaining({
+      p_walkthrough: WALKTHROUGH_ID, p_action: 'reschedule',
+      p_expected_updated_at: '2026-10-02T16:00:00.000Z', p_request_key: 'reschedule-0001',
+    }));
+  });
+
+  it('cancels without accepting a replacement window', async () => {
+    const state = client({ role: 'admin', data: [{ walkthrough_id: WALKTHROUGH_ID,
+      walkthrough_status: 'cancelled', updated_at: '2026-10-02T19:00:00Z', replayed: false }] });
+    const { POST } = await import('../opportunities/[opportunityId]/walkthroughs/[walkthroughId]/cancel/route');
+    const response = await POST(new NextRequest('http://local/walkthroughs/id/cancel', {
+      method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'cancel-walkthrough-1' },
+      body: JSON.stringify({ expectedUpdatedAt: '2026-10-02T16:00:00.000Z' }),
+    }), commandContext);
+    expect(response.status).toBe(200);
+    expect(state.rpc).toHaveBeenCalledWith('command_crm_walkthrough', expect.objectContaining({
+      p_walkthrough: WALKTHROUGH_ID, p_action: 'cancel', p_window_start: null,
+      p_window_end: null, p_timezone: null,
+    }));
+  });
 });

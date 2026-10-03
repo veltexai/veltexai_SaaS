@@ -41,7 +41,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
   const { data: existingByKey, error: keyError } = await context.supabase
     .from('crm_leads')
-    .select('id')
+    .select('id,dedupe_hint')
     .eq('organization_id', context.organizationId)
     .eq('idempotency_key', idempotencyKey)
     .maybeSingle();
@@ -71,8 +71,10 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     }
   }
 
-  const dedupeHint = duplicates.length === 0
-    ? {}
+  const dedupeHint = existingByKey
+    ? existingByKey.dedupe_hint
+    : duplicates.length === 0
+      ? {}
     : {
         decision: parsed.data.duplicateDecision,
         linked_entity_id: parsed.data.linkedEntityId ?? null,

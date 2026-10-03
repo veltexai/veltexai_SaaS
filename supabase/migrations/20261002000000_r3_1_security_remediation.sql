@@ -16,6 +16,146 @@ revoke insert, update, delete, truncate on
   public.crm_attribution_touches, public.crm_qualification_responses
 from authenticated;
 
+-- The foundation commands return the timestamp they explicitly write. The
+-- shared legacy trigger overwrote that value with transaction_timestamp(), so
+-- the returned optimistic-concurrency token could never be reused. Preserve
+-- an explicitly changed token while still stamping ordinary CRM updates.
+create function public.handle_crm_updated_at()
+returns trigger language plpgsql set search_path = pg_catalog, public as $$
+begin
+  if new.updated_at is not distinct from old.updated_at then
+    new.updated_at := now();
+  end if;
+  return new;
+end;
+$$;
+revoke all on function public.handle_crm_updated_at() from public, anon, authenticated;
+
+drop trigger crm_customers_updated_at on public.crm_customers;
+drop trigger crm_contacts_updated_at on public.crm_contacts;
+drop trigger crm_properties_updated_at on public.crm_properties;
+drop trigger crm_opportunities_updated_at on public.crm_opportunities;
+drop trigger crm_walkthroughs_updated_at on public.crm_walkthroughs;
+create trigger crm_customers_updated_at before update on public.crm_customers
+  for each row execute function public.handle_crm_updated_at();
+create trigger crm_contacts_updated_at before update on public.crm_contacts
+  for each row execute function public.handle_crm_updated_at();
+create trigger crm_properties_updated_at before update on public.crm_properties
+  for each row execute function public.handle_crm_updated_at();
+create trigger crm_opportunities_updated_at before update on public.crm_opportunities
+  for each row execute function public.handle_crm_updated_at();
+create trigger crm_walkthroughs_updated_at before update on public.crm_walkthroughs
+  for each row execute function public.handle_crm_updated_at();
+
+-- Bind lead-conversion and reactivation retries to the complete semantic
+-- request. The canonical JSON arrays remain internal and are never projected.
+alter table public.crm_opportunities
+  add column conversion_request_payload jsonb
+    check (conversion_request_payload is null or jsonb_typeof(conversion_request_payload)='array'),
+  add column reactivation_request_payload jsonb
+    check (reactivation_request_payload is null or jsonb_typeof(reactivation_request_payload)='array');
+alter table public.crm_opportunity_stage_commands
+  add column requested_next_action_due_at timestamptz;
+
+alter function public.convert_crm_lead(uuid,uuid,text,uuid,text,text,uuid,uuid,uuid)
+  rename to _r3_1_convert_crm_lead_impl;
+revoke all on function public._r3_1_convert_crm_lead_impl(
+  uuid,uuid,text,uuid,text,text,uuid,uuid,uuid
+) from public,anon,authenticated,service_role;
+
+create function public.convert_crm_lead(
+  p_organization uuid, p_lead uuid, p_request_key text, p_pipeline uuid,
+  p_opportunity_name text, p_segment text, p_existing_customer uuid default null,
+  p_existing_contact uuid default null, p_existing_property uuid default null
+)
+returns table(lead_id uuid,customer_id uuid,contact_id uuid,property_id uuid,
+  opportunity_id uuid,replayed boolean)
+language plpgsql security definer set search_path=pg_catalog,public as $$
+declare
+  request_payload jsonb;
+  existing_payload jsonb;
+  result_row record;
+begin
+  if auth.uid() is null or not exists (
+    select 1 from public.crm_leads l where l.organization_id=p_organization
+      and l.id=p_lead and l.deleted_at is null and (
+        public.can_manage_organization(p_organization)
+        or (public.organization_role(p_organization)='estimator'
+          and (l.created_by=auth.uid() or l.assigned_to_user_id=auth.uid()))
+      )
+  ) then
+    raise exception 'lead conversion unavailable' using errcode='42501';
+  end if;
+  request_payload := jsonb_build_array(
+    p_lead,p_pipeline,trim(p_opportunity_name),p_segment,p_existing_customer,
+    p_existing_contact,p_existing_property
+  );
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(p_organization::text||':convert:'||p_request_key,0));
+  select o.conversion_request_payload into existing_payload
+    from public.crm_opportunities o
+    where o.organization_id=p_organization and o.idempotency_key=p_request_key;
+  if found and existing_payload is distinct from request_payload then
+    raise exception 'lead conversion command key already used' using errcode='23514';
+  end if;
+  select * into result_row from public._r3_1_convert_crm_lead_impl(
+    p_organization,p_lead,p_request_key,p_pipeline,p_opportunity_name,p_segment,
+    p_existing_customer,p_existing_contact,p_existing_property);
+  if not result_row.replayed then
+    update public.crm_opportunities set conversion_request_payload=request_payload
+      where organization_id=p_organization and id=result_row.opportunity_id;
+  end if;
+  return query select result_row.lead_id,result_row.customer_id,result_row.contact_id,
+    result_row.property_id,result_row.opportunity_id,result_row.replayed;
+end;
+$$;
+revoke all on function public.convert_crm_lead(
+  uuid,uuid,text,uuid,text,text,uuid,uuid,uuid
+) from public,anon;
+grant execute on function public.convert_crm_lead(
+  uuid,uuid,text,uuid,text,text,uuid,uuid,uuid
+) to authenticated,service_role;
+
+alter function public.reactivate_crm_opportunity(uuid,uuid,text,text)
+  rename to _r3_1_reactivate_crm_opportunity_impl;
+revoke all on function public._r3_1_reactivate_crm_opportunity_impl(uuid,uuid,text,text)
+  from public,anon,authenticated,service_role;
+
+create function public.reactivate_crm_opportunity(
+  p_organization uuid,p_opportunity uuid,p_request_key text,p_name text default null
+)
+returns table(opportunity_id uuid,replayed boolean)
+language plpgsql security definer set search_path=pg_catalog,public as $$
+declare request_payload jsonb; existing_payload jsonb; result_row record;
+begin
+  if auth.uid() is null or not public.can_access_crm_opportunity(p_opportunity) then
+    raise exception 'opportunity reactivation unavailable' using errcode='42501';
+  end if;
+  request_payload := jsonb_build_array(
+    p_opportunity,nullif(trim(p_name),'')
+  );
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(p_organization::text||':reactivate:'||p_request_key,0));
+  select o.reactivation_request_payload into existing_payload
+    from public.crm_opportunities o
+    where o.organization_id=p_organization and o.idempotency_key=p_request_key;
+  if found and existing_payload is distinct from request_payload then
+    raise exception 'reactivation command key already used' using errcode='23514';
+  end if;
+  select * into result_row from public._r3_1_reactivate_crm_opportunity_impl(
+    p_organization,p_opportunity,p_request_key,p_name);
+  if not result_row.replayed then
+    update public.crm_opportunities set reactivation_request_payload=request_payload
+      where organization_id=p_organization and id=result_row.opportunity_id;
+  end if;
+  return query select result_row.opportunity_id,result_row.replayed;
+end;
+$$;
+revoke all on function public.reactivate_crm_opportunity(uuid,uuid,text,text)
+  from public,anon;
+grant execute on function public.reactivate_crm_opportunity(uuid,uuid,text,text)
+  to authenticated,service_role;
+
 -- These helpers deliberately expose only booleans. Managers may use every
 -- record in the organization; estimators may use only records they created or
 -- records already attached to an opportunity in their caller-bound scope.
@@ -122,7 +262,10 @@ declare caller_role text;
 begin
   if auth.uid() is null then return new; end if;
   caller_role := public.organization_role(new.organization_id);
-  if caller_role is distinct from 'estimator' then return new; end if;
+  if caller_role in ('owner', 'admin') then return new; end if;
+  if caller_role is distinct from 'estimator' then
+    raise exception 'CRM record unavailable' using errcode = '42501';
+  end if;
 
   if tg_table_name = 'crm_customers' then
     if tg_op = 'INSERT' and new.created_by is distinct from auth.uid() then
@@ -157,6 +300,21 @@ begin
          and not public.can_access_crm_property(new.organization_id, new.property_id)) then
       raise exception 'opportunity relationship unavailable' using errcode = '42501';
     end if;
+  elsif tg_table_name = 'crm_walkthroughs' then
+    if not public.can_access_crm_opportunity(new.opportunity_id)
+       or not public.can_access_crm_property(new.organization_id, new.property_id)
+       or (new.site_contact_id is not null
+         and not public.can_access_crm_contact(new.organization_id, new.site_contact_id)) then
+      raise exception 'walkthrough relationship unavailable' using errcode = '42501';
+    end if;
+  elsif tg_table_name = 'crm_site_work_packages' then
+    if new.status = 'accepted' then
+      raise exception 'customer acceptance is unavailable in R3-1' using errcode = '23514';
+    end if;
+    if not public.can_access_crm_opportunity(new.opportunity_id)
+       or not public.can_access_crm_property(new.organization_id, new.property_id) then
+      raise exception 'site work package relationship unavailable' using errcode = '42501';
+    end if;
   end if;
   return new;
 end;
@@ -173,6 +331,12 @@ create trigger guard_crm_customer_contact_scope before insert or update on publi
   for each row execute function public.guard_crm_record_scope();
 create trigger guard_crm_opportunity_scope before insert or update of customer_id, property_id
   on public.crm_opportunities for each row execute function public.guard_crm_record_scope();
+create trigger guard_crm_walkthrough_scope before insert or update of
+  opportunity_id, property_id, site_contact_id on public.crm_walkthroughs
+  for each row execute function public.guard_crm_record_scope();
+create trigger guard_crm_site_work_package_scope before insert or update of
+  opportunity_id, property_id, status on public.crm_site_work_packages
+  for each row execute function public.guard_crm_record_scope();
 
 -- Do not reveal organization-wide record IDs to estimators through duplicate
 -- detection. The returned candidates use the same record scope as mutations.
@@ -250,6 +414,8 @@ begin
       raise exception 'terminal opportunities require the reactivation workflow' using errcode = '23514';
     end if;
     if not (
+      source_category = target_category
+      or
       (source_category = 'new' and target_category in ('qualifying','lost','disqualified','nurture'))
       or (source_category = 'qualifying' and target_category in ('walkthrough','estimating','lost','disqualified','nurture'))
       or (source_category = 'walkthrough' and target_category in ('estimating','lost','disqualified','nurture'))
@@ -307,6 +473,63 @@ drop trigger if exists validate_crm_opportunity_stage_trigger on public.crm_oppo
 create trigger validate_crm_opportunity_stage_trigger
   before insert or update of stage_id, pipeline_id, acceptance_method, manual_win_reason, loss_reason_id
   on public.crm_opportunities for each row execute function public.validate_crm_opportunity_stage();
+
+-- The public stage command makes the Nurture revisit date part of the same
+-- transaction and the same replay contract as the stage change.
+create function public.move_crm_opportunity_stage(
+  target_organization uuid,target_opportunity uuid,target_stage uuid,request_key text,
+  selected_loss_reason uuid,selected_manual_win_reason text,
+  selected_next_action_due_at timestamptz
+)
+returns table(opportunity_id uuid,stage_id uuid,replayed boolean)
+language plpgsql security definer set search_path=pg_catalog,public as $$
+declare target_category text; existing_due timestamptz; result_row record;
+begin
+  if auth.uid() is null or not public.can_access_crm_opportunity(target_opportunity) then
+    raise exception 'stage transition unavailable' using errcode='42501';
+  end if;
+  select s.category into target_category from public.crm_pipeline_stages s
+    join public.crm_opportunities o on o.organization_id=s.organization_id
+      and o.pipeline_id=s.pipeline_id
+    where o.organization_id=target_organization and o.id=target_opportunity
+      and s.id=target_stage;
+  if target_category is null
+     or (target_category='nurture' and (selected_next_action_due_at is null
+       or selected_next_action_due_at<=now()))
+     or (target_category<>'nurture' and selected_next_action_due_at is not null) then
+    raise exception 'invalid stage transition details' using errcode='23514';
+  end if;
+  select c.requested_next_action_due_at into existing_due
+    from public.crm_opportunity_stage_commands c
+    where c.organization_id=target_organization and c.command_key=request_key;
+  if found and existing_due is distinct from selected_next_action_due_at then
+    raise exception 'idempotency key was already used for another transition'
+      using errcode='23514';
+  end if;
+  if not found and target_category='nurture' then
+    update public.crm_opportunities set next_action_due_at=selected_next_action_due_at,
+      updated_by=auth.uid() where organization_id=target_organization and id=target_opportunity;
+  end if;
+  select * into result_row from public.move_crm_opportunity_stage(
+    target_organization,target_opportunity,target_stage,request_key,
+    selected_loss_reason,selected_manual_win_reason);
+  if not result_row.replayed then
+    update public.crm_opportunity_stage_commands
+      set requested_next_action_due_at=selected_next_action_due_at
+      where organization_id=target_organization and command_key=request_key;
+  end if;
+  return query select result_row.opportunity_id,result_row.stage_id,result_row.replayed;
+end;
+$$;
+revoke all on function public.move_crm_opportunity_stage(
+  uuid,uuid,uuid,text,uuid,text
+) from public,anon,authenticated,service_role;
+revoke all on function public.move_crm_opportunity_stage(
+  uuid,uuid,uuid,text,uuid,text,timestamptz
+) from public,anon;
+grant execute on function public.move_crm_opportunity_stage(
+  uuid,uuid,uuid,text,uuid,text,timestamptz
+) to authenticated,service_role;
 
 -- A required terminal category cannot be removed by recategorising its final
 -- stage. This still permits additional intermediate stages within categories.
@@ -451,5 +674,243 @@ revoke all on function public.create_crm_opportunity_task(uuid,uuid,text,text,ti
   from public,anon;
 grant execute on function public.create_crm_opportunity_task(uuid,uuid,text,text,timestamptz,text,uuid)
   to authenticated,service_role;
+
+-- Re-project the operator-reviewed contact choice after reload without exposing
+-- arbitrary IDs from the stored JSON hint.
+create function public.read_crm_lead_contact_links(p_organization uuid)
+returns table(lead_id uuid, contact_id uuid)
+language sql stable security definer
+set search_path = pg_catalog, public as $$
+  select l.id, c.id
+  from public.crm_leads l
+  join public.crm_contacts c
+    on c.organization_id=l.organization_id
+   and c.id::text=l.dedupe_hint->>'linked_entity_id'
+   and c.deleted_at is null
+  where l.organization_id=p_organization and l.deleted_at is null
+    and l.dedupe_hint->>'decision'='link_existing'
+    and exists (
+      select 1 from jsonb_array_elements(coalesce(l.dedupe_hint->'candidates','[]'::jsonb)) item
+      where item->>'entity_type'='contact' and item->>'entity_id'=c.id::text
+    )
+    and (public.can_manage_organization(p_organization)
+      or (public.organization_role(p_organization)='estimator'
+        and (l.created_by=auth.uid() or l.assigned_to_user_id=auth.uid())))
+    and public.can_access_crm_contact(p_organization,c.id)
+  order by l.id;
+$$;
+revoke all on function public.read_crm_lead_contact_links(uuid) from public,anon;
+grant execute on function public.read_crm_lead_contact_links(uuid) to authenticated,service_role;
+
+-- Minimal walkthrough lifecycle receipts support retry-safe reschedule/cancel
+-- without introducing field-service notes, notifications, or calendar sync.
+create table public.crm_walkthrough_commands(
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete restrict,
+  walkthrough_id uuid not null,
+  command_key text not null check(length(command_key) between 8 and 200),
+  action text not null check(action in ('reschedule','cancel')),
+  window_start timestamptz,
+  window_end timestamptz,
+  timezone text,
+  expected_updated_at timestamptz not null,
+  resulting_updated_at timestamptz not null,
+  actor_user_id uuid not null references public.profiles(id) on delete restrict,
+  completed_at timestamptz not null default now(),
+  unique(organization_id,command_key),
+  foreign key(organization_id,walkthrough_id)
+    references public.crm_walkthroughs(organization_id,id) on delete cascade,
+  check((action='reschedule')=(window_start is not null and window_end is not null and timezone is not null))
+);
+alter table public.crm_walkthrough_commands enable row level security;
+revoke all on public.crm_walkthrough_commands from public,anon,authenticated;
+grant all on public.crm_walkthrough_commands to service_role;
+
+create function public.command_crm_walkthrough(
+  p_organization uuid,p_walkthrough uuid,p_request_key text,p_action text,
+  p_expected_updated_at timestamptz,p_window_start timestamptz default null,
+  p_window_end timestamptz default null,p_timezone text default null
+)
+returns table(walkthrough_id uuid,walkthrough_status text,updated_at timestamptz,replayed boolean)
+language plpgsql security definer set search_path=pg_catalog,public as $$
+declare current_row public.crm_walkthroughs%rowtype;
+  existing public.crm_walkthrough_commands%rowtype; changed_at timestamptz;
+begin
+  if auth.uid() is null or length(p_request_key) not between 8 and 200
+     or p_action not in ('reschedule','cancel') then
+    raise exception 'walkthrough command unavailable' using errcode='42501';
+  end if;
+  select w.* into current_row from public.crm_walkthroughs w
+    where w.organization_id=p_organization and w.id=p_walkthrough for update;
+  if current_row.id is null or not public.can_access_crm_opportunity(current_row.opportunity_id) then
+    raise exception 'walkthrough command unavailable' using errcode='42501';
+  end if;
+  select c.* into existing from public.crm_walkthrough_commands c
+    where c.organization_id=p_organization and c.command_key=p_request_key;
+  if existing.id is not null then
+    if existing.walkthrough_id is distinct from p_walkthrough
+       or existing.action is distinct from p_action
+       or existing.expected_updated_at is distinct from p_expected_updated_at
+       or existing.window_start is distinct from p_window_start
+       or existing.window_end is distinct from p_window_end
+       or existing.timezone is distinct from nullif(trim(p_timezone),'') then
+      raise exception 'walkthrough command key already used' using errcode='23514';
+    end if;
+    return query select existing.walkthrough_id,
+      case existing.action when 'cancel' then 'cancelled' else 'rescheduled' end,
+      existing.resulting_updated_at,true;
+    return;
+  end if;
+  if current_row.updated_at is distinct from p_expected_updated_at then
+    raise exception 'walkthrough changed since it was loaded' using errcode='40001';
+  end if;
+  if current_row.status not in ('scheduled','rescheduled') then
+    raise exception 'walkthrough is no longer active' using errcode='23514';
+  end if;
+  changed_at:=clock_timestamp();
+  if p_action='reschedule' then
+    if p_window_start is null or p_window_end<=p_window_start
+       or length(trim(coalesce(p_timezone,''))) not between 1 and 80 then
+      raise exception 'invalid walkthrough window' using errcode='23514';
+    end if;
+    perform pg_catalog.pg_advisory_xact_lock(
+      pg_catalog.hashtextextended(p_organization::text||':'||current_row.estimator_user_id::text,0));
+    if exists(select 1 from public.crm_walkthroughs w
+      where w.organization_id=p_organization and w.id<>p_walkthrough
+        and w.estimator_user_id=current_row.estimator_user_id
+        and w.status in ('scheduled','rescheduled')
+        and w.window_start<p_window_end and w.window_end>p_window_start) then
+      raise exception 'estimator already has an overlapping walkthrough' using errcode='23P01';
+    end if;
+    update public.crm_walkthroughs set status='rescheduled',window_start=p_window_start,
+      window_end=p_window_end,timezone=trim(p_timezone),updated_by=auth.uid(),updated_at=changed_at
+      where organization_id=p_organization and id=p_walkthrough;
+  else
+    if p_window_start is not null or p_window_end is not null or p_timezone is not null then
+      raise exception 'cancel does not accept a walkthrough window' using errcode='23514';
+    end if;
+    update public.crm_walkthroughs set status='cancelled',updated_by=auth.uid(),updated_at=changed_at
+      where organization_id=p_organization and id=p_walkthrough;
+  end if;
+  insert into public.crm_walkthrough_commands(organization_id,walkthrough_id,command_key,
+    action,window_start,window_end,timezone,expected_updated_at,resulting_updated_at,actor_user_id)
+  values(p_organization,p_walkthrough,p_request_key,p_action,p_window_start,p_window_end,
+    nullif(trim(p_timezone),''),p_expected_updated_at,changed_at,auth.uid());
+  return query select p_walkthrough,
+    case p_action when 'cancel' then 'cancelled' else 'rescheduled' end,changed_at,false;
+end;
+$$;
+revoke all on function public.command_crm_walkthrough(
+  uuid,uuid,text,text,timestamptz,timestamptz,timestamptz,text
+) from public,anon;
+grant execute on function public.command_crm_walkthrough(
+  uuid,uuid,text,text,timestamptz,timestamptz,timestamptz,text
+) to authenticated,service_role;
+
+create function public.read_crm_walkthroughs(p_organization uuid)
+returns table(id uuid,opportunity_id uuid,property_id uuid,estimator_user_id uuid,
+  site_contact_id uuid,status text,window_start timestamptz,window_end timestamptz,
+  timezone text,updated_at timestamptz)
+language sql stable security definer set search_path=pg_catalog,public as $$
+  select w.id,w.opportunity_id,w.property_id,w.estimator_user_id,w.site_contact_id,
+    w.status,w.window_start,w.window_end,w.timezone,w.updated_at
+  from public.crm_walkthroughs w
+  where w.organization_id=p_organization and w.status in ('scheduled','rescheduled')
+    and public.can_access_crm_opportunity(w.opportunity_id)
+  order by w.window_start,w.id;
+$$;
+revoke all on function public.read_crm_walkthroughs(uuid) from public,anon;
+grant execute on function public.read_crm_walkthroughs(uuid) to authenticated,service_role;
+
+-- Authenticate and bind the full command payload before revealing whether an
+-- idempotency key exists. This removes the cross-tenant replay oracle.
+create or replace function public.create_crm_direct_opportunity(
+  p_organization uuid, p_opportunity uuid, p_lead uuid, p_request_key text,
+  p_customer uuid, p_property uuid, p_pipeline uuid, p_name text,
+  p_owner uuid, p_estimator uuid default null
+)
+returns table(opportunity_id uuid, lead_id uuid, replayed boolean)
+language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare
+  pipeline_segment text;
+  first_stage uuid;
+  existing public.crm_opportunities%rowtype;
+begin
+  if auth.uid() is null or length(p_request_key) not between 8 and 200
+     or length(trim(coalesce(p_name,''))) not between 1 and 200 then
+    raise exception 'opportunity creation unavailable' using errcode='42501';
+  end if;
+  if not coalesce((public.can_manage_organization(p_organization)
+      or (public.organization_role(p_organization)='estimator' and p_owner=auth.uid()
+        and (p_estimator is null or p_estimator=auth.uid()))),false) then
+    raise exception 'opportunity creation unavailable' using errcode='42501';
+  end if;
+  if not public.can_access_crm_customer(p_organization,p_customer)
+     or (p_property is not null
+       and not public.can_access_crm_property(p_organization,p_property))
+     or (p_property is not null and not exists (
+       select 1 from public.crm_properties p where p.organization_id=p_organization
+         and p.id=p_property and p.customer_id=p_customer and p.deleted_at is null))
+     or not exists (select 1 from public.organization_memberships m
+       where m.organization_id=p_organization and m.user_id=p_owner
+         and m.role in ('owner','admin','estimator'))
+     or (p_estimator is not null and not exists (
+       select 1 from public.organization_memberships m
+       where m.organization_id=p_organization and m.user_id=p_estimator
+         and m.role in ('owner','admin','estimator'))) then
+    raise exception 'opportunity relationship unavailable' using errcode='23514';
+  end if;
+  select o.* into existing from public.crm_opportunities o
+    where o.organization_id=p_organization and o.idempotency_key=p_request_key
+    for update;
+  if existing.id is not null then
+    if existing.id is distinct from p_opportunity
+       or existing.lead_id is distinct from p_lead
+       or existing.customer_id is distinct from p_customer
+       or existing.property_id is distinct from p_property
+       or existing.pipeline_id is distinct from p_pipeline
+       or existing.name is distinct from trim(p_name)
+       or existing.owner_user_id is distinct from p_owner
+       or existing.estimator_user_id is distinct from p_estimator then
+      raise exception 'opportunity command key already used' using errcode='23514';
+    end if;
+    return query select existing.id,existing.lead_id,true;
+    return;
+  end if;
+  select p.segment into pipeline_segment from public.crm_pipelines p
+    where p.organization_id=p_organization and p.id=p_pipeline and not p.archived;
+  select s.id into first_stage from public.crm_pipeline_stages s
+    where s.organization_id=p_organization and s.pipeline_id=p_pipeline
+      and s.category='new' and not s.hidden order by s.position,s.id limit 1;
+  if pipeline_segment is null or first_stage is null then
+    raise exception 'pipeline is unavailable' using errcode='23514';
+  end if;
+  insert into public.crm_leads(id,organization_id,status,intake_method,idempotency_key,
+    customer_name,property_name,converted_customer_id,converted_property_id,
+    source,created_by,updated_by)
+  select p_lead,p_organization,'converted','direct_opportunity',p_request_key,c.name,p.name,
+    p_customer,p_property,'direct_opportunity',auth.uid(),auth.uid()
+  from public.crm_customers c left join public.crm_properties p
+    on p.organization_id=c.organization_id and p.id=p_property
+  where c.organization_id=p_organization and c.id=p_customer;
+  insert into public.crm_opportunities(id,organization_id,customer_id,property_id,pipeline_id,
+    stage_id,lead_id,idempotency_key,name,owner_user_id,estimator_user_id,segment,source,
+    created_by,updated_by)
+  values(p_opportunity,p_organization,p_customer,p_property,p_pipeline,first_stage,p_lead,
+    p_request_key,trim(p_name),p_owner,p_estimator,
+    case when pipeline_segment='commercial' then 'commercial' else 'turnover' end,
+    'manual',auth.uid(),auth.uid());
+  update public.crm_leads set converted_opportunity_id=p_opportunity
+    where organization_id=p_organization and id=p_lead;
+  return query select p_opportunity,p_lead,false;
+end;
+$$;
+revoke all on function public.create_crm_direct_opportunity(
+  uuid,uuid,uuid,text,uuid,uuid,uuid,text,uuid,uuid
+) from public,anon;
+grant execute on function public.create_crm_direct_opportunity(
+  uuid,uuid,uuid,text,uuid,uuid,uuid,text,uuid,uuid
+) to authenticated,service_role;
 
 commit;

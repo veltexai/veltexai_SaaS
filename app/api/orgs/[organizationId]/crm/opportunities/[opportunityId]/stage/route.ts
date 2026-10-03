@@ -51,6 +51,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     request_key: idempotencyKey,
     selected_loss_reason: parsed.data.lossReasonId ?? null,
     selected_manual_win_reason: parsed.data.manualWinReason ?? null,
+    selected_next_action_due_at: parsed.data.nextActionDueAt ?? null,
   });
   if (error) {
     if (error.code === '42501') {

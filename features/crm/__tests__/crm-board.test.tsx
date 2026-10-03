@@ -80,7 +80,14 @@ describe('R3-1 CRM board', () => {
         organization_id: ORG_ID, caller_role: 'owner', loss_reasons: [], assignable_members: [],
         viewer_price_redacted: false, pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [] }], opportunities: [],
       } }) })
-      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: { customer_id: 'customer' } }) });
+      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: { customer_id: 'customer' } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'owner', loss_reasons: [], assignable_members: [],
+        viewer_price_redacted: false, pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [] }],
+        opportunities: [], customers: [{ id: 'customer', name: 'North Campus' }],
+        properties: [{ id: 'property', customer_id: 'customer', name: 'Building A' }],
+      } }) });
     render(<CrmBoard />);
     await screen.findByRole('heading', { name: 'Sales pipeline' });
     fireEvent.click(screen.getByRole('button', { name: 'New customer' }));
@@ -93,6 +100,9 @@ describe('R3-1 CRM board', () => {
     expect(fetchMock.mock.calls[2][1].body).toContain('"customerName":"North Campus"');
     expect(fetchMock.mock.calls[2][1].body).toContain('"contactEmail":"manager@example.test"');
     expect(await screen.findByText('Customer, primary contact, and property created.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'New opportunity' }));
+    expect(screen.getByRole('option', { name: 'North Campus' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Building A' })).toBeInTheDocument();
   });
 
   it('announces load failures and offers a retry', async () => {
@@ -218,6 +228,8 @@ describe('R3-1 CRM board', () => {
     expect(fetchMock.mock.calls[2][1].body).toBe('{"propertyId":"property-1","status":"scoping","expectedUpdatedAt":null}');
     expect(await screen.findByText('Work package saved.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Manage work package' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'List' }));
+    expect(screen.getByRole('button', { name: 'Manage work package' })).toBeInTheDocument();
   });
 
   it('creates a direct opportunity without exposing attribution-lead internals', async () => {
@@ -258,7 +270,8 @@ describe('R3-1 CRM board', () => {
       organization_id: ORG_ID, caller_role: 'owner', loss_reasons: [], assignable_members: [],
       viewer_price_redacted: false,
       pipelines: [{ id: 'pipeline-1', name: 'Commercial', segment: 'commercial', is_default: true, stages: [] }],
-      opportunities: [], leads: [{ id: leadId, status: 'new', email: 'person@example.test' }],
+      opportunities: [], leads: [{ id: leadId, status: 'new', email: 'person@example.test',
+        existing_contact_id: contactId }],
     };
     jest.spyOn(global.crypto, 'randomUUID').mockReturnValue(commandKey);
     fetchMock
@@ -315,8 +328,10 @@ describe('R3-1 CRM board', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { replayed: false } }) });
     render(<CrmBoard />);
     const move = await screen.findByRole('combobox', { name: 'Move North Campus to stage' });
-    expect(screen.getByRole('option', { name: 'Won' })).toBeEnabled();
+    expect(screen.getByRole('option', { name: 'Won' })).toBeDisabled();
     fireEvent.change(move, { target: { value: 'stage-qualifying' } });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Move' }));
     expect(await screen.findByText('Opportunity moved.')).toBeInTheDocument();
     expect(fetchMock.mock.calls[2][0]).toBe(`/api/orgs/${ORG_ID}/crm/opportunities/opportunity-1/stage`);
     expect(fetchMock.mock.calls[2][1].body).toBe('{"stageId":"stage-qualifying"}');
@@ -339,11 +354,38 @@ describe('R3-1 CRM board', () => {
     render(<CrmBoard />);
     const move = await screen.findByRole('combobox', { name: 'Move North Campus to stage' });
     fireEvent.change(move, { target: { value: 'stage-lost' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Move' }));
     expect(screen.getByRole('dialog', { name: 'Record Lost' })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Reason'), { target: { value: 'reason-1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Confirm outcome' }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
     expect(fetchMock.mock.calls[2][1].body).toBe('{"stageId":"stage-lost","lossReasonId":"reason-1"}');
+  });
+
+  it('collects a future revisit date before moving to Nurture', async () => {
+    jest.spyOn(global.crypto, 'randomUUID').mockReturnValue('edededed-eded-4ded-8ded-edededededed');
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+          { id: 'stage-nurture', label: 'Nurture', category: 'nurture', position: 80, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-new', category: 'new', estimator_user_id: USER_ID,
+          property_id: '44444444-4444-4444-8444-444444444444' }],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { replayed: false } }) });
+    render(<CrmBoard />);
+    const move = await screen.findByRole('combobox', { name: 'Move North Campus to stage' });
+    fireEvent.change(move, { target: { value: 'stage-nurture' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Move' }));
+    expect(screen.getByRole('dialog', { name: 'Record Nurture' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Revisit date and time'), { target: { value: '2099-01-02T09:30' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm outcome' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls[2][1].body).toContain('"nextActionDueAt":"2099-01-02T');
   });
 
   it('requires a manual reason for an owner-recorded win', async () => {
@@ -352,14 +394,15 @@ describe('R3-1 CRM board', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
         organization_id: ORG_ID, caller_role: 'owner', loss_reasons: [], viewer_price_redacted: false,
         pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
-          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+          { id: 'stage-proposing', label: 'Proposal', category: 'proposing', position: 60, hidden: false },
           { id: 'stage-won', label: 'Won', category: 'won', position: 70, hidden: false },
         ] }],
-        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1', stage_id: 'stage-new', category: 'new' }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1', stage_id: 'stage-proposing', category: 'proposing' }],
       } }) });
     render(<CrmBoard />);
     const move = await screen.findByRole('combobox', { name: 'Move North Campus to stage' });
     fireEvent.change(move, { target: { value: 'stage-won' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Move' }));
     expect(screen.getByLabelText('Manual win reason')).toBeRequired();
   });
 
@@ -428,7 +471,20 @@ describe('R3-1 CRM board', () => {
           stage_id: 'stage-new', category: 'new', owner_user_id: USER_ID, estimator_user_id: USER_ID,
           property_id: '44444444-4444-4444-8444-444444444444', updated_at: '2026-10-01T19:00:00Z' }],
       } }) })
-      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: { walkthrough_id: 'walk-1' } }) });
+      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: { walkthrough_id: 'walk-1' } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-new', category: 'new', owner_user_id: USER_ID, estimator_user_id: USER_ID,
+          property_id: '44444444-4444-4444-8444-444444444444', updated_at: '2026-10-01T19:00:00Z' }],
+        walkthroughs: [{ id: 'walk-1', opportunity_id: 'opportunity-1', status: 'scheduled',
+          window_start: '2026-10-15T16:00:00.000Z', window_end: '2026-10-15T17:00:00.000Z',
+          timezone: 'America/Los_Angeles', updated_at: '2026-10-01T20:00:00.000Z' }],
+      } }) });
     render(<CrmBoard />);
     await screen.findByRole('heading', { name: 'North Campus' });
     fireEvent.click(screen.getByRole('button', { name: 'Schedule walkthrough' }));
@@ -440,6 +496,111 @@ describe('R3-1 CRM board', () => {
     expect(fetchMock.mock.calls[2][1].body).toContain('"propertyId":"44444444-4444-4444-8444-444444444444"');
     expect(fetchMock.mock.calls[2][1].body).toContain(`"estimatorUserId":"${USER_ID}"`);
     expect(await screen.findByText('Walkthrough scheduled.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Manage walkthrough' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Schedule walkthrough' })).not.toBeInTheDocument();
+  });
+
+  it('reschedules and cancels an existing walkthrough with its concurrency token', async () => {
+    jest.spyOn(global.crypto, 'randomUUID')
+      .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1')
+      .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2');
+    const walkthrough = {
+      id: 'walk-1', opportunity_id: 'opportunity-1',
+      window_start: '2026-10-15T16:00:00.000Z', window_end: '2026-10-15T17:00:00.000Z',
+      timezone: 'America/Los_Angeles', status: 'scheduled', updated_at: '2026-10-01T19:00:00.000Z',
+    };
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-new', category: 'new', owner_user_id: USER_ID, estimator_user_id: USER_ID,
+          property_id: '44444444-4444-4444-8444-444444444444', updated_at: '2026-10-01T19:00:00Z' }],
+        walkthroughs: [walkthrough],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        walkthrough_id: 'walk-1', walkthrough_status: 'rescheduled',
+        updated_at: '2026-10-01T20:00:00.000Z', replayed: false,
+      } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        walkthrough_id: 'walk-1', walkthrough_status: 'cancelled',
+        updated_at: '2026-10-01T21:00:00.000Z', replayed: false,
+      } }) });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'North Campus' });
+    fireEvent.click(screen.getByRole('button', { name: 'Manage walkthrough' }));
+    expect(screen.getByRole('dialog', { name: 'Manage walkthrough' })).not.toHaveAttribute('aria-modal');
+    fireEvent.change(screen.getByLabelText('Starts'), { target: { value: '2026-10-16T09:00' } });
+    fireEvent.change(screen.getByLabelText('Ends'), { target: { value: '2026-10-16T10:00' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Reschedule walkthrough' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls[2][0]).toBe(
+      `/api/orgs/${ORG_ID}/crm/opportunities/opportunity-1/walkthroughs/walk-1`,
+    );
+    expect(fetchMock.mock.calls[2][1]).toEqual(expect.objectContaining({ method: 'PATCH' }));
+    expect(fetchMock.mock.calls[2][1].body).toContain('"expectedUpdatedAt":"2026-10-01T19:00:00.000Z"');
+    expect(await screen.findByText('Walkthrough rescheduled.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Manage walkthrough' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel scheduled walkthrough' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
+    expect(fetchMock.mock.calls[3][0]).toBe(
+      `/api/orgs/${ORG_ID}/crm/opportunities/opportunity-1/walkthroughs/walk-1/cancel`,
+    );
+    expect(fetchMock.mock.calls[3][1].body).toBe('{"expectedUpdatedAt":"2026-10-01T20:00:00.000Z"}');
+    expect(await screen.findByText('Walkthrough cancelled.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Schedule walkthrough' })).toBeInTheDocument();
+  });
+
+  it('keeps the walkthrough form open and announces a network failure', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-new', category: 'new', estimator_user_id: USER_ID,
+          property_id: '44444444-4444-4444-8444-444444444444' }],
+      } }) })
+      .mockRejectedValueOnce(new Error('offline'));
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'North Campus' });
+    fireEvent.click(screen.getByRole('button', { name: 'Schedule walkthrough' }));
+    fireEvent.change(screen.getByLabelText('Starts'), { target: { value: '2026-10-15T09:00' } });
+    fireEvent.change(screen.getByLabelText('Ends'), { target: { value: '2026-10-15T10:00' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Schedule walkthrough' })[0]);
+    expect(await screen.findByText('Unable to schedule the walkthrough. Check your connection and try again.'))
+      .toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Schedule walkthrough' })).toBeInTheDocument();
+  });
+
+  it('keeps an existing walkthrough open when cancellation returns malformed data', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'admin', loss_reasons: [], viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-new', category: 'new', estimator_user_id: USER_ID,
+          property_id: '44444444-4444-4444-8444-444444444444' }],
+        walkthroughs: [{ id: 'walk-1', opportunity_id: 'opportunity-1', status: 'scheduled',
+          window_start: '2026-10-15T16:00:00.000Z', window_end: '2026-10-15T17:00:00.000Z',
+          timezone: 'UTC', updated_at: '2026-10-01T20:00:00.000Z' }],
+      } }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => { throw new Error('not json'); } });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'North Campus' });
+    fireEvent.click(screen.getByRole('button', { name: 'Manage walkthrough' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel scheduled walkthrough' }));
+    expect(await screen.findByText('Unable to cancel the walkthrough.')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Manage walkthrough' })).toBeInTheDocument();
   });
 
   it('lets managers select only projected organization assignees', async () => {

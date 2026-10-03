@@ -101,6 +101,7 @@ describe('R3-1 stage transition route', () => {
       request_key: 'stage-command-0001',
       selected_loss_reason: null,
       selected_manual_win_reason: null,
+      selected_next_action_due_at: null,
     });
     await expect(response.json()).resolves.toEqual({
       data: expect.objectContaining({ opportunity_id: OPPORTUNITY_ID }),

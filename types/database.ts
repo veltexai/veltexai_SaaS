@@ -1118,11 +1118,24 @@ export interface Database {
         Args: { target_organization: string };
         Returns: Json;
       };
+      read_crm_lead_contact_links: {
+        Args: { p_organization: string };
+        Returns: { lead_id: string; contact_id: string }[];
+      };
+      read_crm_walkthroughs: {
+        Args: { p_organization: string };
+        Returns: {
+          id: string; opportunity_id: string; property_id: string; estimator_user_id: string;
+          site_contact_id: string | null; status: string; window_start: string;
+          window_end: string; timezone: string; updated_at: string;
+        }[];
+      };
       move_crm_opportunity_stage: {
         Args: {
           target_organization: string; target_opportunity: string; target_stage: string;
           request_key: string; selected_loss_reason?: string | null;
           selected_manual_win_reason?: string | null;
+          selected_next_action_due_at?: string | null;
         };
         Returns: { opportunity_id: string; stage_id: string; replayed: boolean }[];
       };
@@ -1144,6 +1157,16 @@ export interface Database {
           p_window_start: string; p_window_end: string; p_timezone: string;
         };
         Returns: { walkthrough_id: string; replayed: boolean }[];
+      };
+      command_crm_walkthrough: {
+        Args: {
+          p_organization: string; p_walkthrough: string; p_request_key: string;
+          p_action: string; p_expected_updated_at: string; p_window_start?: string | null;
+          p_window_end?: string | null; p_timezone?: string | null;
+        };
+        Returns: {
+          walkthrough_id: string; walkthrough_status: string; updated_at: string; replayed: boolean;
+        }[];
       };
       command_crm_task: {
         Args: {
