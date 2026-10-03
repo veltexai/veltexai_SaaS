@@ -1,8 +1,12 @@
 # Multimodal walkthrough and profitability strategy
 
-Status: **APPROVED PRODUCT DIRECTION / IMPLEMENTATION DEPENDENCY-GATED**  
+Status: **APPROVED / ACTIVE DELIVERY / IMPLEMENTATION DEPENDENCY-GATED**
 Owner: Anthony Veliz  
 Research date: 2026-10-03 Pacific
+
+Founder implementation approval: 2026-10-03 Pacific. This program is part of
+the active seven-stage product roadmap and is not a separate experimental
+branch. Delivery must follow M0–M5 and the existing R3 dependency gates.
 
 ## Decision
 
@@ -207,6 +211,11 @@ Do not claim:
   gate.
 
 ## Delivery plan
+
+The authoritative implementation tracker for this program is
+`MULTIMODAL_AND_PROFITABILITY_EXECUTION_PLAN.md`. A later milestone may be
+designed while an earlier release gate is pending, but code may not bypass the
+dependency order below.
 
 ### M0 — product/privacy contract
 

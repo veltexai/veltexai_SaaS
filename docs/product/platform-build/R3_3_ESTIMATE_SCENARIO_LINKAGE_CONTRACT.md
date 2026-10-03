@@ -1,6 +1,6 @@
 # R3-3 estimate and scenario linkage contract
 
-Status: **DRAFT / DEPENDENCY-BLOCKED**  
+Status: **ENTRY DECISIONS RESOLVED / DEPENDENCY-BLOCKED ON R3-2 ACCEPTANCE**
 Implementation may begin only after bounded R3-2 is independently reviewed,
 accepted on isolated preview and founder accepted.
 
@@ -206,17 +206,34 @@ These are preserved downstream requirements, not discarded scope.
 - guarded isolated-preview migration and authenticated operator evidence; and
 - founder acceptance limited to R3-3.
 
-## 9. Open questions that must be resolved from evidence, not guessed
+## 9. Resolved entry decisions
 
-1. Confirm which existing workbench route should receive CRM context without
-   exposing organization or record identifiers to a different tenant.
-2. Confirm the exact JSON output schema committed for engine version
-   `2026-09-22.2`; pin it before migration implementation.
-3. Decide whether an opportunity without a site package may save an estimate.
-   The proposed nullable package supports this, but the operator workflow must
-   demonstrate the need before implementation.
-4. Confirm whether a completed walkthrough is mandatory for every commercial
-   estimate or only for packages whose pipeline path includes walkthrough.
+Repository evidence resolves the four entry questions without changing the
+existing engine or proposal records:
 
-None of these questions authorizes changing the existing engine or proposal
-records. Resolve them during R3-3 entry review after R3-2 acceptance.
+1. The existing `/dashboard/proposals/category` page accepts general proposal
+   query parameters but does not validate CRM tenant context. R3-3 must add a
+   server-validated CRM estimate entry route that loads the authenticated user,
+   explicit organization, opportunity, property and optional package through
+   the caller-bound CRM projection, then passes an internal typed context into
+   `CatalogWorkbench`. Raw query identifiers alone are never authority.
+2. The first supported engine is exactly `service_catalog` version
+   `2026-09-22.2`, validated by the committed strict `jobSchema` in
+   `features/service-catalog/versions/v2/schema.ts`. The stored output is the
+   direct `estimateJob` result for that validated input. Adding another engine
+   or version requires a new reviewed allowlist entry and fixtures.
+3. A package remains nullable because R3-1 deliberately supports direct
+   opportunities and residential/turnover estimating before a package exists.
+   The first commercial estimate requires the exact linked work package; a
+   residential or turnover estimate may be opportunity/property scoped without
+   one. A later package may select that same-organization estimate only through
+   its concurrency-controlled command.
+4. Every first commercial estimate requires a completed R3-2 walkthrough. This
+   matches the commercial starter pipeline's `requires_walkthrough` rule before
+   estimating. Residential/turnover retains its committed
+   `walkthrough_optional` path; when a walkthrough exists and is selected as
+   evidence, it must be completed.
+
+These decisions are approved contract inputs, not permission to start R3-3
+before R3-2 receives independent review, isolated-preview acceptance and
+founder acceptance.
