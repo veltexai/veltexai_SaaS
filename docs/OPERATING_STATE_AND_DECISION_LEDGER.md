@@ -1999,3 +1999,15 @@ After any material action, append or revise the relevant section with:
   `Picking up where you left off`; verdict is `PENDING`. No product hosting,
   database, deployment or production state was accessed or changed by this
   external review handoff.
+- **CORRECTED PREVIEW ARTIFACT RUNTIME PASS:** the remediated deterministic
+  artifact is `/private/tmp/veltex-r3-2-preview-apply-remediation.sql`, 17,213
+  bytes, SHA-256 `9b242439d7dc2035f4f5f0b73fea4f46842975ffaf87c6c664f274b33ecbd6a8`,
+  binding migration SHA-256 `62b9f4c1…d1632`. A fresh socket-only PostgreSQL
+  16 database applied the exact first 66 migrations and a matching 66-row
+  history fixture; executing the exact artifact returned
+  `R3_2_PREVIEW_APPLY_PASS`, history `67`, CRM tables `23`, receipts `0` and
+  committed. Replaying the same artifact then failed before migration DDL with
+  the expected history mismatch (`extra=20261003000000`, exit 3); post-refusal
+  history remained 67 with the R3-2 version exactly once and the receipt table
+  intact. The disposable server was stopped. This local executable proof does
+  not authorize hosted preview execution.
