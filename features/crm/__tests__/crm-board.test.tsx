@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 
 import '@testing-library/jest-dom';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { CrmBoard } from '@/features/crm/components/crm-board';
 
 const ORG_ID = '11111111-1111-4111-8111-111111111111';
@@ -621,6 +621,37 @@ describe('R3-1 CRM board', () => {
     expect(await screen.findByText('Unable to save walkthrough evidence. Check your connection and try again.'))
       .toBeInTheDocument();
     expect(screen.getByRole('dialog', { name: 'Record walkthrough evidence' })).toBeInTheDocument();
+  });
+
+  it('times out a stalled walkthrough evidence request and restores retry controls', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'admin', loss_reasons: [], viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+        ] }], opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-new', category: 'new', estimator_user_id: USER_ID,
+          property_id: '44444444-4444-4444-8444-444444444444' }],
+        walkthroughs: [{ id: 'walk-1', opportunity_id: 'opportunity-1', status: 'scheduled',
+          window_start: '2026-10-15T16:00:00.000Z', window_end: '2026-10-15T17:00:00.000Z',
+          timezone: 'UTC', updated_at: '2026-10-03T08:00:00.000Z' }],
+      } }) });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'North Campus' });
+    jest.useFakeTimers();
+    fetchMock.mockImplementationOnce((_url, init: RequestInit) => new Promise((_resolve, reject) => {
+      init.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+    }));
+    fireEvent.click(screen.getByRole('button', { name: 'Record walkthrough evidence' }));
+    fireEvent.change(screen.getByLabelText('Walkthrough notes'), { target: { value: 'Observed floors.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save evidence' }));
+    await act(async () => { jest.advanceTimersByTime(15_000); });
+    expect(screen.getByText('Unable to save walkthrough evidence. Check your connection and try again.'))
+      .toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Record walkthrough evidence' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save evidence' })).toBeEnabled();
+    jest.useRealTimers();
   });
 
   it('keeps the walkthrough form open and announces a network failure', async () => {

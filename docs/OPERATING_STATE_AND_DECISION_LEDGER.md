@@ -2081,3 +2081,32 @@ After any material action, append or revise the relevant section with:
   rotation of only that synthetic preview user, followed by immediate
   retirement, is required for desktop/390 px acceptance. Production was not
   selected or changed.
+- **R3-2 AUTHENTICATED PREVIEW ACCEPTANCE — WORKFLOWS PASS / FAILURE RECOVERY
+  REMEDIATED LOCALLY (2026-10-03):** A separately approved temporary password
+  was installed only for the existing synthetic preview owner, used against the
+  branch Preview deployment, and then replaced with a fresh unknown random
+  value; the browser session was signed out. Production credentials were not
+  accessed. Desktop and genuine `390x844` acceptance passed the evidence
+  draft/save/reopen/complete/read-only-finality workflow, board/list parity,
+  initial focus, Escape/focus return, 44px controls, live-region guidance and
+  absence of page-level horizontal overflow. The intentionally scrollable list
+  table kept its Review action reachable without widening the document.
+  Evidence screenshots are `/private/tmp/veltex-r3-2-390-board.png` (32,467
+  bytes) and `/private/tmp/veltex-r3-2-390-list-review.png` (39,410 bytes).
+- **DISCOVERED PREVIEW DEFECT / BOUNDED FIX:** A deliberate two-session stale
+  concurrency exercise exposed a client-side failure-recovery defect: when the
+  evidence request never settled, the dialog remained indefinitely at
+  `Saving walkthrough evidence…` with its action disabled. The smallest fix
+  adds a 15-second `AbortController` timeout only to the walkthrough-evidence
+  command. Timeout/network failure retains the dialog and notes, announces a
+  generic retry message and restores the Save control. A regression advances
+  the exact timer and proves those outcomes. Fresh verification passes the
+  focused CRM board suite (25/25), full Jest suite (107 suites / 890 tests / 5
+  snapshots), TypeScript, 67-version migration-chain validation and diff
+  hygiene. Database migrations and the accepted R3-2 authorization model are
+  unchanged.
+- **STATUS:** R3-2 remains `PENDING PREVIEW RE-ACCEPTANCE`, not founder-
+  accepted. The hosted Preview still serves the superseded client without this
+  bounded timeout. The corrected commit must be independently checked,
+  deployed only to the isolated Preview, and the stalled-request recovery
+  retested before final R3-2 acceptance. No production state changed.

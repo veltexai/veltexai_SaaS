@@ -76,6 +76,8 @@ type Board = {
 type DuplicateCandidate = { entity_type: string; entity_id: string; matched_on: string };
 type LeadDraft = { contactName: FormDataEntryValue | null; email: FormDataEntryValue | null; phone: FormDataEntryValue | null };
 
+const WALKTHROUGH_EVIDENCE_SAVE_TIMEOUT_MS = 15_000;
+
 function valueLabel(opportunity: Opportunity) {
   if (opportunity.value_amount_minor === undefined) return null;
   const amount = new Intl.NumberFormat(undefined, {
@@ -370,6 +372,8 @@ export function CrmBoard() {
     event.preventDefault();
     if (!organizationId || !evidenceFor || evidenceFor.item.status === 'completed') return;
     const form = new FormData(event.currentTarget);
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), WALKTHROUGH_EVIDENCE_SAVE_TIMEOUT_MS);
     setSaving(true);
     setNotice('Saving walkthrough evidence…');
     try {
@@ -377,7 +381,7 @@ export function CrmBoard() {
         `/api/orgs/${organizationId}/crm/opportunities/${evidenceFor.opportunity.id}`
           + `/walkthroughs/${evidenceFor.item.id}/evidence`,
         { method: 'POST', headers: { 'content-type': 'application/json',
-          'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({
+          'idempotency-key': crypto.randomUUID() }, signal: controller.signal, body: JSON.stringify({
           expectedUpdatedAt: evidenceFor.item.updated_at,
           notes: String(form.get('notes') || ''),
           markComplete: form.get('markComplete') === 'on',
@@ -402,6 +406,7 @@ export function CrmBoard() {
     } catch {
       setNotice('Unable to save walkthrough evidence. Check your connection and try again.');
     } finally {
+      window.clearTimeout(timeout);
       setSaving(false);
     }
   }
