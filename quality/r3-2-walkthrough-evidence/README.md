@@ -67,3 +67,7 @@ commits. `npm run r3-2:test-preview-artifact` pins its deterministic structure.
 The current artifact was executed successfully against an exact disposable
 66-migration PostgreSQL 16 state. This local proof does not authorize running it
 on the isolated preview.
+
+`FOUNDER_ACCEPTANCE.md` freezes the exact desktop and genuine-390px operator
+workflow that follows independent review and preview deployment. Its current
+status is pending; the checklist itself is not acceptance evidence.
