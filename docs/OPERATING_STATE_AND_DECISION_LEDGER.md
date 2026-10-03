@@ -2110,3 +2110,15 @@ After any material action, append or revise the relevant section with:
   bounded timeout. The corrected commit must be independently checked,
   deployed only to the isolated Preview, and the stalled-request recovery
   retested before final R3-2 acceptance. No production state changed.
+- **CORRECTED CLIENT COMMIT / PREVIEW PUSH REFUSED:** The bounded timeout fix
+  and its regression/evidence were committed as exact commit
+  `f8728c3983775914dbc685acca94201a1cf9e7b0`. A read-only remote check proved
+  isolated branch `codex/r2-fresh-preview-guard` still points to expected
+  predecessor `ab63bda3de7e4fd32d76a77473de2e7809b8d5da`; the proposed update is a
+  clean two-commit fast-forward (`7ec8655`, then `f8728c3`). The execution gate
+  rejected the push before GitHub or Vercel changed because the prior exact
+  deployment approval covered `ab63bda`, not the new timeout-fix commit.
+  No workaround was attempted. A new action-specific approval naming exact
+  commit `f8728c3983775914dbc685acca94201a1cf9e7b0`, the isolated preview branch
+  and the resulting Vercel Preview deployment is required. Production remains
+  unchanged and out of scope.
