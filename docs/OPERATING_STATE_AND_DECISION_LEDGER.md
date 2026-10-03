@@ -2122,3 +2122,12 @@ After any material action, append or revise the relevant section with:
   commit `f8728c3983775914dbc685acca94201a1cf9e7b0`, the isolated preview branch
   and the resulting Vercel Preview deployment is required. Production remains
   unchanged and out of scope.
+- **TIMEOUT DELTA REVIEW PACKET PREPARED / NOT SENT:** The corrected acceptance
+  checklist and bounded independent-review assignment are committed at
+  `c6c159a95c9ff399e3765ef8bff7017b7c64c930`. Exact selected-source archive
+  `/private/tmp/veltex-r3-2-timeout-delta-c6c159a.zip` is 135,423 bytes with
+  SHA-256 `57573e4014d4fd5dc2e77cec75aeed4a32b45c72792a273dbb73a303169daeec`.
+  It binds the timeout implementation/regression, ledger, reconciled founder
+  checklist and review instructions. No external transmission or hosted change
+  occurred; sending the packet and deploying the corrected Preview remain
+  separately gated actions.
