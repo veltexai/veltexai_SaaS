@@ -2027,3 +2027,16 @@ After any material action, append or revise the relevant section with:
   invalidating the accepted first-build boundary. Hosted PostgreSQL 17,
   desktop/390 px workflow and founder acceptance remain required; preview apply
   is not authorized by this PASS.
+- **ISOLATED PREVIEW READ-ONLY PREFLIGHT — PASS (2026-10-03):** The Supabase
+  SQL editor for exact preview project `ynzkwctwlssjcsjmahey`
+  (`r2-fresh-verification-20260926`, explicitly labelled `Preview`) reported
+  PostgreSQL `17.6`, database `postgres`, exactly 66 migration-history rows,
+  no missing or extra versions against the signed pre-R3-2 chain and zero
+  occurrences of `20261003000000`. `public.crm_walkthroughs` exists while the
+  three R3-2 evidence columns, evidence receipt table and command routine are
+  all absent. The combined read-only predicate returned
+  `exact_preflight=true`. This proves the hosted target is in the exact state
+  expected by preview artifact
+  `/private/tmp/veltex-r3-2-preview-apply-remediation.sql` (17,213 bytes,
+  SHA-256 `9b242439d7dc2035f4f5f0b73fea4f46842975ffaf87c6c664f274b33ecbd6a8`),
+  but does not authorize or perform that hosted mutation.
