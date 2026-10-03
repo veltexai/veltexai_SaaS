@@ -15,7 +15,7 @@ Record before testing:
 - Reviewed Git commit: pending independent review result
 - Migration `20261003000000` appears exactly once: pending
 - Migration source SHA-256:
-  `561ffe46d1039d8a7691e537a6af63a72142f6a3afc448f4dc58d78d0e0db59b`
+  `62b9f4c11386cb99249b41ff07930467824976b49bf75510127e6d36846d1632`
 - Guarded SQL artifact SHA-256:
   `e6888af4d84cdd114135d77e40b1ae540265f91d28efd00ffffc464b2b746859`
 - PostgreSQL major and history count: pending (`17` and `67` expected)

@@ -20,7 +20,8 @@ try {
     'begin;', 'commit;', 'R3_2_PREVIEW_APPLY_PASS',
     'R3-2 preview history mismatch', 'protected CRM table changed',
     'crm_walkthrough_evidence_commands', 'command_crm_walkthrough_evidence',
-    'source_sha256:561ffe46d1039d8a7691e537a6af63a72142f6a3afc448f4dc58d78d0e0db59b',
+    'source_sha256:62b9f4c11386cb99249b41ff07930467824976b49bf75510127e6d36846d1632',
+    "has_column_privilege('authenticated','public.crm_walkthroughs','evidence_notes','SELECT')",
   ];
   for (const fragment of required) if (!sql.includes(fragment)) throw new Error(`missing ${fragment}`);
   if ((sql.match(/^begin;$/gmu) || []).length !== 1

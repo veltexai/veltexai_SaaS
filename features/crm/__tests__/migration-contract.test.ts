@@ -299,4 +299,19 @@ describe('R3-2 walkthrough evidence migration contract', () => {
     expect(walkthroughEvidenceMigration).toContain("jsonb_build_object('record_id',new.id::text)");
     expect(walkthroughEvidenceMigration).not.toMatch(/jsonb_build_object\([^)]*evidence_notes/);
   });
+
+  it('removes direct evidence-column reads while preserving the guarded operational projection', () => {
+    expect(walkthroughEvidenceMigration).toContain(
+      'revoke select on public.crm_walkthroughs from authenticated',
+    );
+    expect(walkthroughEvidenceMigration).toContain('grant select (');
+    expect(walkthroughEvidenceMigration).toContain('created_at,updated_at');
+    expect(walkthroughEvidenceMigration).toContain(
+      'and public.can_access_crm_opportunity(w.opportunity_id)',
+    );
+    expect(walkthroughEvidenceMigration).toContain('then w.evidence_notes else null end');
+    expect(walkthroughEvidenceMigration).toContain(
+      'or new.evidence_completed_at is distinct from old.evidence_completed_at',
+    );
+  });
 });

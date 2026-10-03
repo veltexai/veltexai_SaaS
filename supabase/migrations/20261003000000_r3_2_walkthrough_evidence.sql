@@ -5,6 +5,16 @@ alter table public.crm_walkthroughs
   add column if not exists evidence_completed_at timestamptz,
   add column if not exists evidence_recorded_by uuid references public.profiles(id) on delete set null;
 
+-- Evidence is deliberately available only through the guarded projection below.
+-- Keep the R3-1 operational columns readable without exposing the three evidence
+-- columns through PostgREST's direct table path.
+revoke select on public.crm_walkthroughs from authenticated;
+grant select (
+  id,organization_id,opportunity_id,property_id,estimator_user_id,site_contact_id,
+  idempotency_key,window_start,window_end,timezone,status,created_by,updated_by,
+  created_at,updated_at
+) on public.crm_walkthroughs to authenticated;
+
 alter table public.crm_walkthroughs
   drop constraint if exists crm_walkthroughs_status_check,
   add constraint crm_walkthroughs_status_check
@@ -113,14 +123,18 @@ returns table(id uuid,opportunity_id uuid,property_id uuid,estimator_user_id uui
 language sql stable security definer set search_path=pg_catalog,public as $$
   select w.id,w.opportunity_id,w.property_id,w.estimator_user_id,w.site_contact_id,
     w.status,w.window_start,w.window_end,w.timezone,w.updated_at,
-    w.evidence_notes,w.evidence_completed_at
+    case when public.can_manage_organization(p_organization)
+           or (public.organization_role(p_organization)='estimator'
+             and w.estimator_user_id=auth.uid())
+      then w.evidence_notes else null end,
+    case when public.can_manage_organization(p_organization)
+           or (public.organization_role(p_organization)='estimator'
+             and w.estimator_user_id=auth.uid())
+      then w.evidence_completed_at else null end
   from public.crm_walkthroughs w
   where w.organization_id=p_organization
     and w.status in ('scheduled','rescheduled','completed')
-    and (public.can_manage_organization(p_organization)
-      or (public.organization_role(p_organization)='estimator'
-        and w.estimator_user_id=auth.uid()
-        and public.can_access_crm_opportunity(w.opportunity_id)))
+    and public.can_access_crm_opportunity(w.opportunity_id)
   order by w.window_start,w.id;
 $$;
 revoke all on function public.read_crm_walkthroughs(uuid) from public,anon;
@@ -130,7 +144,8 @@ create function public.record_crm_walkthrough_evidence_event()
 returns trigger language plpgsql security definer
 set search_path=pg_catalog,public as $$
 begin
-  if new.evidence_notes is distinct from old.evidence_notes then
+  if new.evidence_notes is distinct from old.evidence_notes
+     or new.evidence_completed_at is distinct from old.evidence_completed_at then
     insert into public.organization_event_outbox(
       organization_id,event_type,aggregate_type,aggregate_id,payload
     ) values(new.organization_id,

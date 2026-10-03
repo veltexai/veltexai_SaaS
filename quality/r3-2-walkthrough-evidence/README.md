@@ -14,9 +14,13 @@ organization, membership, audit and outbox foundations.
 - Make command replay idempotent and bind every mutation to the walkthrough's
   loaded `updated_at` value.
 - Keep completed evidence readable to the same scoped CRM operators.
+- Preserve the existing opportunity-scoped walkthrough projection while
+  redacting evidence from operators who are not managers or the walkthrough's
+  assigned estimator.
 - Emit audit/outbox evidence containing record identifiers only, never note
   contents.
-- Deny direct client writes to the evidence fields and receipt table.
+- Deny direct client reads and writes to the evidence fields, and all direct
+  client access to the receipt table.
 
 ## Explicit exclusions
 
@@ -39,8 +43,7 @@ organization, membership, audit and outbox foundations.
 
 ## Local verification
 
-- Focused schema/API/UI tests pass 59 cases; the full repository suite passes
-  106 suites / 880 tests / five snapshots.
+- The full repository suite passes 107 suites / 889 tests / five snapshots.
 - TypeScript, the 67-version migration validator and diff hygiene pass.
 - A fresh disposable PostgreSQL 16 cluster applied all 67 migrations with
   `CHECK_DEFINERS=1`. The R3-1 and R3-2 adversarial role matrices, full catalog
@@ -49,7 +52,10 @@ organization, membership, audit and outbox foundations.
 - The strengthened R3-2 matrix additionally executes admin and assigned-
   estimator writes, stale-token refusal, draft-to-complete progression,
   opportunity/walkthrough mismatch refusal, anonymous denial, all four receipt
-  DML denials, maximum-length notes and audit/outbox note-privacy checks.
+  DML denials, direct evidence-column SELECT denial, safe operational-column
+  SELECT, redaction for an unassigned opportunity-scoped estimator,
+  completion-with-unchanged-text event delivery, maximum-length notes and
+  audit/outbox note-privacy checks.
 - Independent review, genuine responsive preview acceptance and founder
   acceptance remain required before this increment is complete. No hosted or
   production state was changed by the local verification.

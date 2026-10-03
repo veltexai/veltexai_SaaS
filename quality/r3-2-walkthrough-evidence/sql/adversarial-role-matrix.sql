@@ -88,6 +88,13 @@ begin
     raise exception 'authenticated direct evidence update was accepted';
   exception when insufficient_privilege then null; end;
   begin
+    perform evidence_notes from public.crm_walkthroughs where id=first_result.walkthrough_id;
+    raise exception 'authenticated direct evidence read was accepted';
+  exception when insufficient_privilege then null; end;
+  if not exists(select 1 from public.crm_walkthroughs where id=first_result.walkthrough_id) then
+    raise exception 'authenticated operational walkthrough projection was removed';
+  end if;
+  begin
     perform 1 from public.crm_walkthrough_evidence_commands limit 1;
     raise exception 'authenticated caller read private evidence receipts';
   exception when insufficient_privilege then null; end;
@@ -119,10 +126,13 @@ begin
   if saved.replayed or saved.evidence_completed_at is not null then
     raise exception 'assigned estimator could not save draft evidence';
   end if;
-  if (select count(*) from public.read_crm_walkthroughs(owner_org))<>2
+  if (select count(*) from public.read_crm_walkthroughs(owner_org))<>3
      or not exists(select 1 from public.read_crm_walkthroughs(owner_org)
        where id='73000000-0000-4000-8000-000000000005'
-         and evidence_notes='Estimator observation.') then
+         and evidence_notes='Estimator observation.')
+     or not exists(select 1 from public.read_crm_walkthroughs(owner_org)
+       where id='73000000-0000-4000-8000-000000000004'
+         and evidence_notes is null and evidence_completed_at is null) then
     raise exception 'assigned estimator evidence projection is incorrect';
   end if;
   begin
@@ -133,7 +143,7 @@ begin
   exception when serialization_failure then null; end;
   select * into completed from public.command_crm_walkthrough_evidence(
     owner_org,'73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000005',
-    'r3-2-estimator-complete',saved.updated_at,'Estimator observation complete.',true);
+    'r3-2-estimator-complete',saved.updated_at,'Estimator observation.',true);
   if completed.replayed or completed.evidence_completed_at is null
      or completed.updated_at is distinct from (select updated_at from public.crm_walkthroughs
        where id='73000000-0000-4000-8000-000000000005') then
@@ -219,6 +229,12 @@ begin
     where e.event_type in ('walkthrough.completed','walkthrough.evidence_saved')
       and (e.payload-'record_id')<>'{}'::jsonb) then
     raise exception 'walkthrough evidence outbox leaked note contents';
+  end if;
+  if (select count(*) from public.organization_event_outbox e
+      where e.event_type='walkthrough.completed'
+        and e.aggregate_id in ('73000000-0000-4000-8000-000000000004',
+          '73000000-0000-4000-8000-000000000005'))<>2 then
+    raise exception 'completion event was not emitted for unchanged evidence text';
   end if;
   if exists(select 1 from public.organization_audit_log a
     where a.entity_type='crm_walkthroughs'

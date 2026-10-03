@@ -8,7 +8,7 @@ const root = resolve(here, '../..');
 const migrationsDir = join(root, 'supabase/migrations');
 const migrationName = '20261003000000_r3_2_walkthrough_evidence.sql';
 const migrationVersion = '20261003000000';
-const expectedSourceSha = '561ffe46d1039d8a7691e537a6af63a72142f6a3afc448f4dc58d78d0e0db59b';
+const expectedSourceSha = '62b9f4c11386cb99249b41ff07930467824976b49bf75510127e6d36846d1632';
 const output = process.argv[2] || '/private/tmp/veltex-r3-2-preview-apply.sql';
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 
@@ -120,7 +120,11 @@ begin
      or has_table_privilege('authenticated','public.crm_walkthrough_evidence_commands','SELECT')
      or has_table_privilege('authenticated','public.crm_walkthrough_evidence_commands','INSERT')
      or has_table_privilege('authenticated','public.crm_walkthrough_evidence_commands','UPDATE')
-     or has_table_privilege('authenticated','public.crm_walkthrough_evidence_commands','DELETE') then
+     or has_table_privilege('authenticated','public.crm_walkthrough_evidence_commands','DELETE')
+     or has_column_privilege('authenticated','public.crm_walkthroughs','evidence_notes','SELECT')
+     or has_column_privilege('authenticated','public.crm_walkthroughs','evidence_completed_at','SELECT')
+     or has_column_privilege('authenticated','public.crm_walkthroughs','evidence_recorded_by','SELECT')
+     or not has_column_privilege('authenticated','public.crm_walkthroughs','id','SELECT') then
     raise exception 'R3-2 privilege postcondition failed';
   end if;
   select string_agg(column_name,',' order by column_name collate "C") into unexpected

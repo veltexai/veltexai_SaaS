@@ -1941,3 +1941,38 @@ After any material action, append or revise the relevant section with:
   input, not an independently read-back provider verification. The deployment
   gate must still verify the production environment and exact build at action
   time; no environment value or deployment was changed by this record.
+
+### R3-2 first independent review — FAIL / REMEDIATION VERIFIED LOCALLY (2026-10-03 Pacific)
+
+- **EXACT REVIEW VERDICT:** Claude reassembled the four uploaded parts, verified
+  canonical ZIP SHA-256 `b6fd44994d70eff9353e682c900f2b5763e76f50f3af9d27a14ef1c4d6ac79fd`
+  and manifest SHA-256 `721514e1fde4d1bad4529b0af09ac9dfcce26d73b8bd054aa910f0a88eea9a8e`,
+  and returned `FAIL` on source commit `2936a351ff0fd9f63bb9da5207cb545bd50f6f04`.
+  That packet is now `REJECTED / SUPERSEDED` and must not be used for preview.
+- **HIGH AUTHORIZATION FINDING:** R3-1 had granted authenticated table-level
+  `SELECT` on `crm_walkthroughs`; adding `evidence_notes` therefore exposed the
+  note through direct PostgREST/table reads even when the R3-2 RPC correctly
+  denied an unassigned estimator. Viewer, unrelated-tenant and anonymous
+  boundaries remained closed, but this assigned-opportunity bypass was a launch
+  blocker.
+- **BOUNDED REMEDIATION:** the unshipped R3-2 migration now revokes table-level
+  authenticated `SELECT`, re-grants only the fifteen pre-R3-2 operational
+  columns and leaves all three evidence columns unavailable through direct
+  reads. The guarded read projection preserves R3-1 opportunity visibility but
+  returns evidence only to managers or the walkthrough's assigned estimator.
+  The evidence event trigger also fires when completion changes without a note
+  edit, closing Claude's related workflow finding.
+- **FRESH LOCAL EVIDENCE:** the committed rollback-only role matrix now proves
+  direct note SELECT denial, continued operational-column SELECT, redaction for
+  an unassigned but opportunity-scoped estimator, unchanged-text completion
+  event delivery and the prior replay/concurrency/privacy boundaries. A fresh
+  disposable PostgreSQL 16 run applied all 67 migrations with
+  `CHECK_DEFINERS=1`, returned both R3 role-matrix PASS markers, passed catalog,
+  injection, dirty/rerun and 40-way concurrency gates, and ended
+  `HARNESS COMPLETE`; the cluster was stopped. The full repository suite passes
+  107 suites / 889 tests / five snapshots; TypeScript, 67-version validation,
+  deterministic preview generation and diff hygiene pass.
+- **STATUS:** remediation is `LOCAL VERIFIED`, not independently accepted. A
+  new exact committed packet and Claude re-review are required before any R3-2
+  isolated-preview mutation. No hosted database, deployment, credential or
+  production state changed during remediation.
