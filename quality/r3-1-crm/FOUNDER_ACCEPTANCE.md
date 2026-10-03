@@ -1,6 +1,6 @@
 # R3-1 founder acceptance — synthetic CRM workflow
 
-Status: **TECHNICAL WORKFLOW PASS / PENDING FOUNDER DECISION**. This packet does not authorize a deployment
+Status: **ACCEPTED**. This packet does not authorize a production deployment
 or production data creation. Run it only on the approved isolated preview after
 the exact R3-1 migration and app commit are deployed there.
 
@@ -113,10 +113,13 @@ move, outbound send, acceptance/signature or handoff-complete claim.
 
 ## Decision
 
-- Overall: ACCEPTED / REJECTED / NEEDS FIX
-- Founder name:
-- Pacific timestamp:
-- Defects or required follow-up:
+- Overall: ACCEPTED
+- Founder name: Founder approval recorded in the authoritative task
+- Pacific timestamp: 2026-10-03
+- Defects or required follow-up: Membership removal remains required before a
+  removal UI/API ships. Successful-2xx walkthrough response-shape validation is
+  a nonblocking resilience follow-up. Neither item blocks this bounded R3-1
+  acceptance.
 
 Acceptance covers only the bounded R3-1 CRM foundation. It does not mark full
 R3 complete; R3-2 through R3-8 remain required.

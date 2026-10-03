@@ -1128,6 +1128,7 @@ export interface Database {
           id: string; opportunity_id: string; property_id: string; estimator_user_id: string;
           site_contact_id: string | null; status: string; window_start: string;
           window_end: string; timezone: string; updated_at: string;
+          evidence_notes: string | null; evidence_completed_at: string | null;
         }[];
       };
       move_crm_opportunity_stage: {
@@ -1166,6 +1167,17 @@ export interface Database {
         };
         Returns: {
           walkthrough_id: string; walkthrough_status: string; updated_at: string; replayed: boolean;
+        }[];
+      };
+      command_crm_walkthrough_evidence: {
+        Args: {
+          p_organization: string; p_opportunity: string; p_walkthrough: string;
+          p_request_key: string; p_expected_updated_at: string;
+          p_evidence_notes: string; p_mark_complete: boolean;
+        };
+        Returns: {
+          walkthrough_id: string; evidence_notes: string;
+          evidence_completed_at: string | null; updated_at: string; replayed: boolean;
         }[];
       };
       command_crm_task: {

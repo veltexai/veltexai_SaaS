@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 type Stage = { id: string; label: string; category: string; position: number; hidden: boolean };
 type Pipeline = {
@@ -54,8 +55,9 @@ type WorkPackage = {
 };
 type Walkthrough = {
   id: string; opportunity_id: string; property_id: string; estimator_user_id: string;
-  site_contact_id?: string; status: 'scheduled' | 'rescheduled'; window_start: string;
-  window_end: string; timezone: string; updated_at: string;
+  site_contact_id?: string; status: 'scheduled' | 'rescheduled' | 'completed'; window_start: string;
+  window_end: string; timezone: string; updated_at: string; evidence_notes?: string;
+  evidence_completed_at?: string;
 };
 type Board = {
   organization_id: string;
@@ -102,6 +104,9 @@ export function CrmBoard() {
   const [walkthroughFor, setWalkthroughFor] = useState<{
     opportunity: Opportunity; item?: Walkthrough;
   } | null>(null);
+  const [evidenceFor, setEvidenceFor] = useState<{
+    opportunity: Opportunity; item: Walkthrough;
+  } | null>(null);
   const [assigningOpportunity, setAssigningOpportunity] = useState<Opportunity | null>(null);
   const [qualifyingOpportunity, setQualifyingOpportunity] = useState<Opportunity | null>(null);
   const [managingLead, setManagingLead] = useState<Lead | null>(null);
@@ -113,7 +118,7 @@ export function CrmBoard() {
     candidates: DuplicateCandidate[]; draft: LeadDraft; key: string;
   } | null>(null);
   const activeDialog = managingLead || convertingLead || packageFor || outcome || taskFor
-    || editingOpportunity || walkthroughFor || assigningOpportunity || qualifyingOpportunity
+    || editingOpportunity || walkthroughFor || evidenceFor || assigningOpportunity || qualifyingOpportunity
     || duplicateReview;
 
   useEffect(() => {
@@ -129,6 +134,7 @@ export function CrmBoard() {
       event.preventDefault();
       setManagingLead(null); setConvertingLead(null); setPackageFor(null); setOutcome(null);
       setTaskFor(null); setEditingOpportunity(null); setWalkthroughFor(null);
+      setEvidenceFor(null);
       setAssigningOpportunity(null); setQualifyingOpportunity(null);
       setDuplicateReview(null);
     };
@@ -358,6 +364,46 @@ export function CrmBoard() {
       walkthroughs: (current.walkthroughs ?? []).filter((entry) => entry.id !== item.id) } : current);
     setWalkthroughFor(null);
     setNotice('Walkthrough cancelled.');
+  }
+
+  async function submitWalkthroughEvidence(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!organizationId || !evidenceFor || evidenceFor.item.status === 'completed') return;
+    const form = new FormData(event.currentTarget);
+    setSaving(true);
+    setNotice('Saving walkthrough evidence…');
+    try {
+      const response = await fetch(
+        `/api/orgs/${organizationId}/crm/opportunities/${evidenceFor.opportunity.id}`
+          + `/walkthroughs/${evidenceFor.item.id}/evidence`,
+        { method: 'POST', headers: { 'content-type': 'application/json',
+          'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({
+          expectedUpdatedAt: evidenceFor.item.updated_at,
+          notes: String(form.get('notes') || ''),
+          markComplete: form.get('markComplete') === 'on',
+        }) },
+      );
+      let payload: { data?: { evidence_notes?: string; evidence_completed_at?: string; updated_at?: string }; error?: string } = {};
+      try { payload = await response.json(); } catch { payload = {}; }
+      if (!response.ok || !payload.data?.updated_at) {
+        setNotice(payload.error ?? 'Unable to save walkthrough evidence. Try again.');
+        return;
+      }
+      const completed = Boolean(payload.data.evidence_completed_at);
+      setBoard((current) => current ? { ...current,
+        walkthroughs: (current.walkthroughs ?? []).map((item) => item.id === evidenceFor.item.id
+          ? { ...item, evidence_notes: payload.data?.evidence_notes,
+            evidence_completed_at: payload.data?.evidence_completed_at,
+            status: completed ? 'completed' : item.status,
+            updated_at: payload.data?.updated_at ?? item.updated_at }
+          : item) } : current);
+      setEvidenceFor(null);
+      setNotice(completed ? 'Walkthrough evidence completed.' : 'Walkthrough evidence saved.');
+    } catch {
+      setNotice('Unable to save walkthrough evidence. Check your connection and try again.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function submitAssignment(event: FormEvent<HTMLFormElement>) {
@@ -931,6 +977,39 @@ export function CrmBoard() {
           </CardContent>
         </Card>
       )}
+      {evidenceFor && (
+        <Card role="dialog" aria-labelledby="walkthrough-evidence-heading">
+          <CardHeader><CardTitle id="walkthrough-evidence-heading">
+            {evidenceFor.item.status === 'completed' ? 'Walkthrough evidence' : 'Record walkthrough evidence'}
+          </CardTitle></CardHeader>
+          <CardContent>
+            <form className="grid gap-4" onSubmit={submitWalkthroughEvidence}>
+              <p className="text-sm text-gray-700">
+                Record factual site observations for {evidenceFor.opportunity.name}. Do not enter door codes,
+                alarm codes or other access credentials.
+              </p>
+              <div className="space-y-2"><Label htmlFor="walkthrough-evidence-notes">Walkthrough notes</Label>
+                <Textarea id="walkthrough-evidence-notes" name="notes" required maxLength={5000}
+                  disabled={evidenceFor.item.status === 'completed'}
+                  defaultValue={evidenceFor.item.evidence_notes ?? ''} /></div>
+              {evidenceFor.item.status !== 'completed' && (
+                <label className="flex min-h-11 items-center gap-3 text-sm">
+                  <input type="checkbox" name="markComplete" /> Mark walkthrough evidence complete
+                </label>
+              )}
+              {evidenceFor.item.evidence_completed_at && <p className="text-sm text-gray-600">
+                Completed {new Date(evidenceFor.item.evidence_completed_at).toLocaleString()}.
+              </p>}
+              <div className="flex flex-wrap gap-3">
+                {evidenceFor.item.status !== 'completed' && <Button type="submit" className="min-h-11"
+                  disabled={saving}>{saving ? 'Saving…' : 'Save evidence'}</Button>}
+                <Button type="button" variant="outline" className="min-h-11"
+                  onClick={() => setEvidenceFor(null)}>Close</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
       {assigningOpportunity && (
         <Card role="dialog" aria-labelledby="assignment-heading">
           <CardHeader><CardTitle id="assignment-heading">Assign opportunity</CardTitle></CardHeader>
@@ -1057,12 +1136,23 @@ export function CrmBoard() {
                           onClick={() => setEditingOpportunity(opportunity)}>Edit details</Button>
                         <Button type="button" variant="outline" className="min-h-11 w-full"
                           onClick={() => setTaskFor(opportunity)}>Add next action</Button>
-                        {opportunity.property_id && opportunity.estimator_user_id && (
+                        {opportunity.property_id && opportunity.estimator_user_id
+                          && (board.walkthroughs ?? []).find((entry) => entry.opportunity_id === opportunity.id)?.status !== 'completed' && (
                           <Button type="button" variant="outline" className="min-h-11 w-full"
                             onClick={() => setWalkthroughFor({ opportunity, item: (board.walkthroughs ?? [])
                               .find((entry) => entry.opportunity_id === opportunity.id) })}>
                             {(board.walkthroughs ?? []).some((entry) => entry.opportunity_id === opportunity.id)
                               ? 'Manage walkthrough' : 'Schedule walkthrough'}</Button>
+                        )}
+                        {(board.walkthroughs ?? []).some((entry) => entry.opportunity_id === opportunity.id) && (
+                          <Button type="button" variant="outline" className="min-h-11 w-full"
+                            onClick={() => {
+                              const item = (board.walkthroughs ?? []).find((entry) => entry.opportunity_id === opportunity.id);
+                              if (item) setEvidenceFor({ opportunity, item });
+                            }}>
+                            {(board.walkthroughs ?? []).find((entry) => entry.opportunity_id === opportunity.id)?.status === 'completed'
+                              ? 'Review walkthrough evidence' : 'Record walkthrough evidence'}
+                          </Button>
                         )}
                         {opportunity.property_id && <Button type="button" variant="outline" className="min-h-11 w-full"
                           onClick={() => setPackageFor({ opportunity, item: (board.work_packages ?? [])
@@ -1104,12 +1194,23 @@ export function CrmBoard() {
                         onClick={() => setEditingOpportunity(opportunity)}>Edit details</Button>
                       <Button type="button" variant="outline" className="min-h-11"
                         onClick={() => setTaskFor(opportunity)}>Add next action</Button>
-                      {opportunity.property_id && opportunity.estimator_user_id && (
+                      {opportunity.property_id && opportunity.estimator_user_id
+                        && (board.walkthroughs ?? []).find((entry) => entry.opportunity_id === opportunity.id)?.status !== 'completed' && (
                         <Button type="button" variant="outline" className="min-h-11"
                           onClick={() => setWalkthroughFor({ opportunity, item: (board.walkthroughs ?? [])
                             .find((entry) => entry.opportunity_id === opportunity.id) })}>
                           {(board.walkthroughs ?? []).some((entry) => entry.opportunity_id === opportunity.id)
                             ? 'Manage walkthrough' : 'Schedule walkthrough'}</Button>
+                      )}
+                      {(board.walkthroughs ?? []).some((entry) => entry.opportunity_id === opportunity.id) && (
+                        <Button type="button" variant="outline" className="min-h-11"
+                          onClick={() => {
+                            const item = (board.walkthroughs ?? []).find((entry) => entry.opportunity_id === opportunity.id);
+                            if (item) setEvidenceFor({ opportunity, item });
+                          }}>
+                          {(board.walkthroughs ?? []).find((entry) => entry.opportunity_id === opportunity.id)?.status === 'completed'
+                            ? 'Review walkthrough evidence' : 'Record walkthrough evidence'}
+                        </Button>
                       )}
                       {opportunity.property_id && (
                         <Button type="button" variant="outline" className="min-h-11"

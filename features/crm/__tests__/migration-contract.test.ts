@@ -5,6 +5,10 @@ const migration = readFileSync(
   resolve(process.cwd(), 'supabase/migrations/20261001000000_r3_1_crm_foundation.sql'),
   'utf8',
 );
+const walkthroughEvidenceMigration = readFileSync(
+  resolve(process.cwd(), 'supabase/migrations/20261003000000_r3_2_walkthrough_evidence.sql'),
+  'utf8',
+);
 
 const tenantTables = [
   'crm_customers',
@@ -259,5 +263,40 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).not.toMatch(/(?:create|alter|drop|insert into|update|delete from)\s+(?:table\s+)?public\.(?:organization_invitations|ai_suggestions)/i);
     expect(migration).not.toMatch(/100d/i);
     expect(migration).not.toMatch(/sales_manager/);
+  });
+});
+
+describe('R3-2 walkthrough evidence migration contract', () => {
+  it('is atomic, additive, bounded, and keeps photos out pending privacy review', () => {
+    expect(walkthroughEvidenceMigration.match(/^begin;$/gim)).toHaveLength(1);
+    expect(walkthroughEvidenceMigration.match(/^commit;$/gim)).toHaveLength(1);
+    expect(walkthroughEvidenceMigration).toContain('add column if not exists evidence_notes text');
+    expect(walkthroughEvidenceMigration).toContain("'completed'" );
+    expect(walkthroughEvidenceMigration).not.toMatch(/storage\.objects|storage\.buckets|photo|attachment/i);
+    expect(walkthroughEvidenceMigration).not.toMatch(/access_code|door_code|alarm_code/i);
+  });
+
+  it('uses an authorization-first idempotent command with optimistic concurrency', () => {
+    expect(walkthroughEvidenceMigration).toContain('create table public.crm_walkthrough_evidence_commands(');
+    expect(walkthroughEvidenceMigration).toContain('create function public.command_crm_walkthrough_evidence(');
+    expect(walkthroughEvidenceMigration.indexOf('select w.* into current_row'))
+      .toBeLessThan(walkthroughEvidenceMigration.indexOf('select c.* into existing'));
+    expect(walkthroughEvidenceMigration).toContain("current_row.estimator_user_id=auth.uid()");
+    expect(walkthroughEvidenceMigration).toContain('current_row.updated_at is distinct from p_expected_updated_at');
+    expect(walkthroughEvidenceMigration).toContain("using errcode='40001'");
+    expect(walkthroughEvidenceMigration).toContain('walkthrough evidence key already used');
+    expect(walkthroughEvidenceMigration).toContain('walkthrough evidence is already final');
+    expect(walkthroughEvidenceMigration).toContain("public.organization_role(p_organization)='estimator'");
+    expect(walkthroughEvidenceMigration).toContain('w.estimator_user_id=auth.uid()');
+  });
+
+  it('keeps receipts private and emits only ID-only evidence events', () => {
+    expect(walkthroughEvidenceMigration).toContain(
+      'revoke all on public.crm_walkthrough_evidence_commands from public,anon,authenticated',
+    );
+    expect(walkthroughEvidenceMigration).toContain("'walkthrough.completed'");
+    expect(walkthroughEvidenceMigration).toContain("'walkthrough.evidence_saved'");
+    expect(walkthroughEvidenceMigration).toContain("jsonb_build_object('record_id',new.id::text)");
+    expect(walkthroughEvidenceMigration).not.toMatch(/jsonb_build_object\([^)]*evidence_notes/);
   });
 });

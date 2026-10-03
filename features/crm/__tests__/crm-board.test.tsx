@@ -555,6 +555,74 @@ describe('R3-1 CRM board', () => {
     expect(screen.getByRole('button', { name: 'Schedule walkthrough' })).toBeInTheDocument();
   });
 
+  it('records and completes walkthrough evidence with the loaded concurrency token', async () => {
+    jest.spyOn(global.crypto, 'randomUUID').mockReturnValue('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+        ] }],
+        opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-new', category: 'new', estimator_user_id: USER_ID,
+          property_id: '44444444-4444-4444-8444-444444444444' }],
+        walkthroughs: [{ id: 'walk-1', opportunity_id: 'opportunity-1', status: 'scheduled',
+          window_start: '2026-10-15T16:00:00.000Z', window_end: '2026-10-15T17:00:00.000Z',
+          timezone: 'UTC', updated_at: '2026-10-03T08:00:00.000Z' }],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        walkthrough_id: 'walk-1', evidence_notes: 'Two restrooms and resilient flooring observed.',
+        evidence_completed_at: '2026-10-03T09:00:00.000Z',
+        updated_at: '2026-10-03T09:00:00.000Z', replayed: false,
+      } }) });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'North Campus' });
+    fireEvent.click(screen.getByRole('button', { name: 'Record walkthrough evidence' }));
+    expect(screen.getByText(/Do not enter door codes/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Walkthrough notes'), {
+      target: { value: 'Two restrooms and resilient flooring observed.' },
+    });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Mark walkthrough evidence complete' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save evidence' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls[2][0]).toBe(
+      `/api/orgs/${ORG_ID}/crm/opportunities/opportunity-1/walkthroughs/walk-1/evidence`,
+    );
+    expect(fetchMock.mock.calls[2][1].body).toBe(JSON.stringify({
+      expectedUpdatedAt: '2026-10-03T08:00:00.000Z',
+      notes: 'Two restrooms and resilient flooring observed.', markComplete: true,
+    }));
+    expect(await screen.findByText('Walkthrough evidence completed.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Review walkthrough evidence' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Manage walkthrough' })).not.toBeInTheDocument();
+  });
+
+  it('keeps walkthrough evidence open and announces a network failure', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        organization_id: ORG_ID, caller_role: 'admin', loss_reasons: [], viewer_price_redacted: false,
+        pipelines: [{ id: 'pipeline-1', name: 'Commercial', is_default: true, stages: [
+          { id: 'stage-new', label: 'Lead', category: 'new', position: 10, hidden: false },
+        ] }], opportunities: [{ id: 'opportunity-1', name: 'North Campus', pipeline_id: 'pipeline-1',
+          stage_id: 'stage-new', category: 'new', estimator_user_id: USER_ID,
+          property_id: '44444444-4444-4444-8444-444444444444' }],
+        walkthroughs: [{ id: 'walk-1', opportunity_id: 'opportunity-1', status: 'scheduled',
+          window_start: '2026-10-15T16:00:00.000Z', window_end: '2026-10-15T17:00:00.000Z',
+          timezone: 'UTC', updated_at: '2026-10-03T08:00:00.000Z' }],
+      } }) })
+      .mockRejectedValueOnce(new Error('offline'));
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'North Campus' });
+    fireEvent.click(screen.getByRole('button', { name: 'Record walkthrough evidence' }));
+    fireEvent.change(screen.getByLabelText('Walkthrough notes'), { target: { value: 'Observed floors.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save evidence' }));
+    expect(await screen.findByText('Unable to save walkthrough evidence. Check your connection and try again.'))
+      .toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Record walkthrough evidence' })).toBeInTheDocument();
+  });
+
   it('keeps the walkthrough form open and announces a network failure', async () => {
     fetchMock
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
