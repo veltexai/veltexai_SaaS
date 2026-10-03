@@ -1976,3 +1976,15 @@ After any material action, append or revise the relevant section with:
   new exact committed packet and Claude re-review are required before any R3-2
   isolated-preview mutation. No hosted database, deployment, credential or
   production state changed during remediation.
+- **SUPERSEDING PACKET PREPARED / NOT SENT:** exact remediation source commit
+  `e08f13e9dd4fcddd6975ed4811d68aa9001eb481` is archived as
+  `/private/tmp/veltex-r3-2-remediation-review-e08f13e.zip`, 91,410,933 bytes,
+  SHA-256 `82014e78d9316bd996a977339720787080d62e79b640d80f580e3a4b3ab029cb`.
+  Manifest SHA-256 is
+  `6bb3bbe286bba1df60321feff6ecbcfd46af90d3ce2f83d2c185be1d4307ed1e`.
+  The four byte-preserving upload parts are pinned respectively to SHA-256
+  `5879c9d7…f36a3`, `3732c4a8…fdf0`, `804b6b6d…fe13`, and
+  `d0887d83…d19`. The ZIP comment resolves to the exact source commit and the
+  manifest binds the corrected migration, role matrix, preview builder/test and
+  founder checklist. External transmission has not occurred and requires
+  action-time confirmation; preparing these bytes does not authorize preview.
