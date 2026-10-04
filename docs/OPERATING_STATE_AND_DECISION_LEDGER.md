@@ -2223,3 +2223,21 @@ After any material action, append or revise the relevant section with:
 - No second pricing engine, proposal delivery, acceptance, handoff, billing,
   photo/video, hosted migration, preview deployment, or production mutation is
   authorized by this status change.
+
+### 2026-10-03 — R3-3 local candidate implemented and verified
+
+- Status: **LOCAL VERIFIED / INDEPENDENT REVIEW PENDING**.
+- The bounded candidate adds migration `20261004000000`, append-only estimate
+  snapshots and private receipts, a caller-bound command, scoped summary and
+  history reads, an authenticated API, a server-validated CRM entry route, and
+  a save mode in the existing deterministic workbench.
+- Local gates pass: 68 unique migrations; 108 Jest suites / 901 tests / 5
+  snapshots; TypeScript; production build; and a fresh socket-only PostgreSQL
+  16 full harness covering all prior gates plus R3-3 role/replay/DML/engine/
+  walkthrough checks and a true two-session package-token race with exactly one
+  winner and one `40001` refusal.
+- The harness exposed and closed an optimistic-token trigger mismatch before
+  freeze. Service-role estimate table/RPC access is explicitly denied.
+- No hosted, preview, production, credential, proposal-send, acceptance,
+  handoff, billing or attachment action occurred. Independent exact-packet
+  review is the next gate; isolated-preview mutation remains separately gated.
