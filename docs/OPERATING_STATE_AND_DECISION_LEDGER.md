@@ -2262,3 +2262,13 @@ After any material action, append or revise the relevant section with:
   external reviewer received it, and no hosted environment changed. The next
   permissible action is to freeze a replacement exact-source packet after the
   final local gates pass; sending that packet remains separately gated.
+- **REPLACEMENT PACKET PREPARED / NOT SENT:** the corrected candidate is exact
+  commit `e0d3849ee08f914c04deafced9fff1dc95ffbffe`. Selected-source archive
+  `/private/tmp/veltex-r3-3-estimate-linkage-e0d3849.zip` is 308,225 bytes with
+  SHA-256 `38673ef589b152bc0d155cc2a23c4722d7932851c429ae63c22104b31d146500`;
+  archive integrity passes and every invariant-fix file matches the committed
+  bytes. Full Jest remains 108 suites / 901 tests / five snapshots; TypeScript,
+  production build, 68-version validation, diff hygiene and the fresh full
+  PostgreSQL harness pass. The archive has not been transmitted. Independent
+  review is the next gate and requires action-specific approval to send this
+  exact file/hash; isolated Preview remains a later, separate authorization.
