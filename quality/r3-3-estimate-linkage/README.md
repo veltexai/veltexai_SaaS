@@ -24,7 +24,9 @@ Local evidence:
   authenticated direct-DML denial, exact replay, changed replay refusal, stale
   token refusal, commercial completed-walkthrough requirement, engine/version
   allowlisting, package-pointer/token agreement, ID-only outbox payloads and
-  explicit service-role denial; and
+  explicit service-role denial;
+- a two-session race from one package token produces exactly one committed
+  estimate/pointer update and one `40001` refusal (`R3_3_CONCURRENCY_PASS`); and
 - production build requires ordinary build-time Supabase public variables; no
   hosted database or production mutation is part of this local gate.
 

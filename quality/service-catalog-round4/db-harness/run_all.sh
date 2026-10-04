@@ -20,5 +20,6 @@ psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$OWNER_MATRIX" \
 psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$HERE/sql/30_assertions.sql" ${CHECK_DEFINERS:+-v check_definers=1}
 psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$HERE/../tracked-link-revocation-assertions.sql"
 "$HERE/injection_tests.sh" ${1:-}
+"$HERE/../../r3-3-estimate-linkage/concurrency.sh"
 "$HERE/concurrency.sh"
 echo "HARNESS COMPLETE"
