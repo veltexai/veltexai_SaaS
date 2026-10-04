@@ -59,6 +59,18 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
   `4a9db0732b780b7509631a10248293c1345a0d587f7acbe3f386f5d96b9ceea2`.
   Earlier local Preview artifact hashes are **SUPERSEDED / MUST NOT BE USED**.
   No Preview or production action occurred.
+- **R3-3 FINAL REVIEW ARCHIVE AFTER PREVIEW-IDENTITY AUDIT:** Because the
+  acceptance checklist and guarded Preview generator are review evidence, the
+  unsent `f5a1f941...` archive is also **SUPERSEDED / MUST NOT BE SENT**. The
+  final comprehensive archive, including exact application/database candidate
+  `631fdb4`, mandatory-review instructions `0a6e900`, and corrected local
+  Preview evidence commit `eaf5156`, is
+  `/private/tmp/veltex-r3-3-final-remediation-eaf5156-review.zip`: 1,655,051
+  bytes, SHA-256
+  `99840f2bf8a4504ba0ef0d26a5d5a510edf484d55bcf835774132a1809d4821f`.
+  ZIP integrity and embedded identity/case inspection pass. It has not been
+  transmitted, and exact action-specific approval is required to send it. No
+  hosted state changed.
 - **B1 MESSAGE CONTRACT IMPLEMENTED LOCALLY:** `features/brand/messaging.ts`
   pins the `Veltex` master brand, retained `Veltex AI` operational identity,
   category, promise, operator-control/privacy/manual-fallback trust points,
