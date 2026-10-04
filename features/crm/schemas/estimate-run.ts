@@ -20,7 +20,7 @@ export const estimateRunSchema = z.object({
   workPackageId: z.string().uuid().nullable().optional(),
   expectedPackageUpdatedAt: z.string().datetime({ offset: true }).nullable().optional(),
   selectedScenario: z.enum(['low', 'base', 'high', 'override']),
-  pricingBasis: z.enum(['per_visit', 'per_turn', 'one_time', 'monthly']),
+  pricingBasis: z.enum(['per_visit', 'per_turn', 'one_time']),
   job: jobSchema,
 }).strict().superRefine((value, context) => {
   if (Boolean(value.workPackageId) !== Boolean(value.expectedPackageUpdatedAt)) {

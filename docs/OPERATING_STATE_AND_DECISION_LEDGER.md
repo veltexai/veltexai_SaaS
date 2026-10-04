@@ -2282,3 +2282,39 @@ After any material action, append or revise the relevant section with:
   Independent verdict is `PENDING`. No Preview deployment, hosted database
   migration, credential operation, production change, or other external action
   occurred.
+- **INDEPENDENT REVIEW VERDICT — FAIL / REMEDIATION REQUIRED:** Claude verified
+  the exact archive hash and returned `FAIL` at
+  `https://claude.ai/chat/2b747b79-195b-4b51-b52b-215926f48212` after source
+  inspection and disposable PostgreSQL probes. Launch blockers are: commercial
+  opportunities can be saved through the residential-only v2 engine; a package
+  pointer is not relationally bound to its exact package run; estimate saves can
+  regress proposed/accepted/declined package states; and direct authenticated
+  RPC calls can bypass API schema/engine integrity. It also found retry-key,
+  fractional-cent rounding, append-only access-note retention, Board/List
+  parity, viewer-entry, timezone-sensitive replay and evidence-coverage gaps.
+  Packet `38673ef5...` and candidate `e0d3849` are **REJECTED / SUPERSEDED** for
+  release. No Preview or hosted state changed. Remediation stays bounded to the
+  existing deterministic residential/turnover engine; commercial save must be
+  honestly disabled rather than replaced by a new pricing engine.
+- **BOUNDED REMEDIATION — LOCAL VERIFIED / RE-REVIEW PACKET PENDING:** The
+  rejected candidate has been remediated without adding a commercial pricing
+  engine. Commercial estimating is consistently and truthfully unavailable in
+  Board, List, server entry, API and database paths. Estimate mutation is now a
+  server-only `service_role` RPC which independently authorizes the real actor;
+  `anon` and `authenticated` cannot execute it or write either estimate table.
+  The selected run is bound by a composite FK to the exact organization,
+  package, opportunity and property; later package lifecycle states cannot be
+  regressed; private access notes are excluded before transport and rejected at
+  the SQL boundary; pricing basis and override cents are strict; replay hashes
+  use timezone-independent epochs; and history no longer exposes raw snapshots.
+  The UI retains one idempotency key across failed retries and displays the
+  exact selected scenario/amount it will save.
+- Fresh local evidence passes: 68-version validation; 108 Jest suites / 902
+  tests / five snapshots; TypeScript; production build; diff hygiene; and a
+  newly initialized socket-only PostgreSQL 16 full harness covering all R3
+  matrices, owner/definer/injection/dirty/rerun gates, the expanded actor/
+  tenant/private-note/amount checks, and the two-session race with exactly one
+  winner and one `40001`. No hosted or external mutation occurred. The next
+  action is to freeze a replacement exact commit and comprehensive reproducible
+  packet for a new independent Claude review; the rejected packet must not be
+  reused.

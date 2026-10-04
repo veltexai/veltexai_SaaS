@@ -282,9 +282,14 @@ describe('R3-3 estimate linkage migration contract', () => {
     expect(estimateLinkageMigration).toContain('from public,anon,authenticated,service_role');
     expect(estimateLinkageMigration).not.toMatch(/grant\s+(insert|update|delete).*crm_estimate_runs.*authenticated/i);
   });
-  it('guards commercial walkthroughs, scenario values, replay, concurrency, and ID-only events', () => {
+  it('refuses unsupported commercial estimates and guards values, replay, concurrency, and ID-only events', () => {
     expect(estimateLinkageMigration).toContain("opportunity_row.segment='commercial'");
-    expect(estimateLinkageMigration).toContain("w.status='completed' and w.evidence_completed_at is not null");
+    expect(estimateLinkageMigration).toContain("raise exception 'commercial estimating is not supported by this engine'");
+    expect(estimateLinkageMigration).toContain('create function public.command_crm_estimate_run_internal(');
+    expect(estimateLinkageMigration).toContain(') from public,anon,authenticated;');
+    expect(estimateLinkageMigration).toContain(') to service_role;');
+    expect(estimateLinkageMigration).toContain("p_input_snapshot ? 'access'");
+    expect(estimateLinkageMigration).toContain('foreign key(organization_id,id,opportunity_id,property_id,estimate_run_id)');
     expect(estimateLinkageMigration).toContain('round(selected_value*100)::bigint<>p_selected_amount_minor');
     expect(estimateLinkageMigration).toContain("raise exception 'estimate key already used'");
     expect(estimateLinkageMigration).toContain("raise exception 'site work package changed'");

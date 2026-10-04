@@ -100,10 +100,8 @@ function estimateLabel(summary?: EstimateSummary) {
 
 function estimateHref(board: Board, opportunity: Opportunity, organizationId: string | null) {
   if (!organizationId || !opportunity.property_id) return null;
+  if (opportunity.segment === 'commercial') return null;
   const workPackage = (board.work_packages ?? []).find((item) => item.opportunity_id === opportunity.id);
-  const walkthroughComplete = (board.walkthroughs ?? []).some((item) =>
-    item.opportunity_id === opportunity.id && item.status === 'completed');
-  if (opportunity.segment === 'commercial' && (!workPackage || !walkthroughComplete)) return null;
   return { pathname: `/dashboard/crm/estimate/${opportunity.id}`,
     query: { organizationId, ...(workPackage ? { packageId: workPackage.id } : {}) } };
 }
@@ -877,7 +875,7 @@ export function CrmBoard() {
             <div className="space-y-2"><Label htmlFor="package-status">Status</Label>
               <select id="package-status" name="status" defaultValue={packageFor.item?.status ?? 'scoping'}
                 className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
-                <option value="scoping">Scoping</option><option value="estimated">Estimated</option>
+                <option value="scoping">Scoping</option>
               </select></div>
             <p className="text-xs text-gray-600">Walkthrough, proposal, acceptance, and decline states become available only with their required linked evidence.</p>
             <div className="flex gap-3"><Button type="submit" className="min-h-11">Save work package</Button>
@@ -1189,8 +1187,8 @@ export function CrmBoard() {
                           {(board.work_packages ?? []).some((entry) => entry.opportunity_id === opportunity.id)
                             ? 'Manage work package' : 'Add work package'}</Button>}
                         {estimateHref(board,opportunity,organizationId) && <Button asChild variant="outline" className="min-h-11 w-full"><Link href={estimateHref(board,opportunity,organizationId)!}>Estimate</Link></Button>}
-                        {opportunity.segment==='commercial' && !estimateHref(board,opportunity,organizationId)
-                          && <p className="text-xs text-gray-600">Complete the walkthrough and work package before estimating.</p>}
+                        {opportunity.segment==='commercial'
+                          && <p className="text-xs text-gray-600">Commercial estimating is not yet supported by the current pricing model.</p>}
                         {['owner', 'admin'].includes(board.caller_role) && (
                           <Button type="button" variant="outline" className="min-h-11 w-full"
                             onClick={() => setAssigningOpportunity(opportunity)}>Change assignment</Button>
@@ -1254,6 +1252,8 @@ export function CrmBoard() {
                         </Button>
                       )}
                       {estimateHref(board,opportunity,organizationId) && <Button asChild variant="outline" className="min-h-11"><Link href={estimateHref(board,opportunity,organizationId)!}>Estimate</Link></Button>}
+                      {opportunity.segment==='commercial'
+                        && <p className="text-xs text-gray-600">Commercial estimating is not yet supported by the current pricing model.</p>}
                       {['owner', 'admin'].includes(board.caller_role) && (
                         <Button type="button" variant="outline" className="min-h-11"
                           onClick={() => setAssigningOpportunity(opportunity)}>Change assignment</Button>

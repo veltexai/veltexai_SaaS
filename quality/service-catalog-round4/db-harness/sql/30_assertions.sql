@@ -246,7 +246,6 @@ do $$ declare bad text; begin
       'command_crm_task(uuid,uuid,text,text,timestamp with time zone)',
       'command_crm_walkthrough(uuid,uuid,text,text,timestamp with time zone,timestamp with time zone,timestamp with time zone,text)',
       'command_crm_walkthrough_evidence(uuid,uuid,uuid,text,timestamp with time zone,text,boolean)',
-      'command_crm_estimate_run(uuid,uuid,uuid,uuid,text,text,text,jsonb,jsonb,text,bigint,text,text,timestamp with time zone)',
       'configure_crm_pipeline_stage(uuid,uuid,uuid,text,text,integer,boolean,text)',
       'convert_crm_lead(uuid,uuid,text,uuid,text,text,uuid,uuid,uuid)',
       'create_crm_account_bundle(uuid,uuid,uuid,uuid,text,text,text,text,text,text,text,text,text,text,text,text)',

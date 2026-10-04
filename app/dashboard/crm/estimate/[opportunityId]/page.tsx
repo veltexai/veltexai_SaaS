@@ -3,6 +3,7 @@ import { CatalogWorkbench } from '@/features/service-catalog/components/workbenc
 import { getUser } from '@/features/auth/services/get-user';
 import { createClient } from '@/lib/supabase/server';
 import { isCrmWorkspaceEnabled } from '@/features/crm/rollout';
+import Link from 'next/link';
 
 type Props = { params: Promise<{ opportunityId: string }>;
   searchParams: Promise<{ organizationId?: string; packageId?: string }> };
@@ -17,12 +18,21 @@ export default async function CrmEstimatePage({ params, searchParams }: Props) {
     target_organization: query.organizationId,
   });
   if (error || !data || typeof data !== 'object') notFound();
-  const board = data as { opportunities?: Array<{ id: string; name: string; property_id?: string }>;
+  const board = data as { caller_role?: string;
+    opportunities?: Array<{ id: string; name: string; property_id?: string; segment?: string }>;
     work_packages?: Array<{ id: string; opportunity_id: string; property_id: string; updated_at: string }>;
     properties?: Array<{ id: string; customer_id?: string; name: string }>;
     customers?: Array<{ id: string; name: string }> };
+  if (!['owner', 'admin', 'estimator'].includes(board.caller_role ?? '')) notFound();
   const opportunity = board.opportunities?.find((item) => item.id === opportunityId);
   if (!opportunity?.property_id) notFound();
+  if (opportunity.segment === 'commercial') {
+    return <main className="mx-auto max-w-2xl space-y-4 rounded-xl border bg-white p-6">
+      <h1 className="text-2xl font-semibold">Commercial estimating is not yet supported</h1>
+      <p>The current deterministic pricing model is limited to residential and short-term-rental work. Your commercial walkthrough and work package remain available in CRM, but Veltex will not disguise the facility as a residential job or save a misleading price.</p>
+      <Link className="underline" href="/dashboard/crm">Return to CRM</Link>
+    </main>;
+  }
   const workPackage = query.packageId
     ? board.work_packages?.find((item) => item.id === query.packageId
       && item.opportunity_id === opportunityId && item.property_id === opportunity.property_id)

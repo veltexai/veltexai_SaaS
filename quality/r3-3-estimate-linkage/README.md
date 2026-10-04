@@ -2,8 +2,9 @@
 
 Status: **LOCAL CANDIDATE — INDEPENDENT/HOSTED GATES PENDING**
 
-The bounded R3-3 candidate adds migration `20261004000000`, an append-only
-estimate snapshot/receipt boundary, one caller-bound command, scoped summary
+The bounded R3-3 remediation candidate adds migration `20261004000000`, an append-only
+estimate snapshot/receipt boundary, one server-only command that independently
+authorizes the authenticated actor, scoped summary
 and history projections, a server-validated CRM entry route, and a CRM save
 mode in the existing deterministic service-catalog workbench.
 
@@ -22,10 +23,10 @@ Local evidence:
   definer allowlist, injection, dirty/rerun and 40-way concurrency gates;
 - R3-3 proves owner and exact assigned-estimator access, viewer denial,
   authenticated direct-DML denial, exact replay, changed replay refusal, stale
-  token refusal, commercial completed-walkthrough requirement, engine/version
-  allowlisting, package-pointer/token agreement, the invariant that an
-  `estimated` package must reference its immutable selected estimate, ID-only
-  outbox payloads and explicit service-role denial;
+  token refusal, honest commercial-estimating refusal, engine/version
+  allowlisting, exact composite package/run binding, package-pointer/token agreement, the invariant that an
+  `estimated` package must reference its immutable newly selected estimate, private
+  access-note exclusion, ID-only outbox payloads and authenticated direct-command denial;
 - a two-session race from one package token produces exactly one committed
   estimate/pointer update and one `40001` refusal (`R3_3_CONCURRENCY_PASS`); and
 - production build requires ordinary build-time Supabase public variables; no

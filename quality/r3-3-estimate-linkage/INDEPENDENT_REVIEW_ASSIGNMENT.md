@@ -22,8 +22,8 @@ contract, acceptance, handoff, invoice, payment, attachment, or AI price.
 
 1. Audit migration `20261004000000_r3_3_estimate_scenario_linkage.sql` for
    organization-bound foreign keys, append-only behavior, authorization before
-   receipt lookup, exact assigned-estimator checks, commercial completed-
-   walkthrough enforcement, engine/version allowlisting, canonical hashes,
+   receipt lookup, exact assigned-estimator checks, explicit refusal of
+   commercial estimates until a dedicated engine exists, engine/version allowlisting, canonical hashes,
    scenario/amount/basis agreement, package locking, exact replay, changed
    replay, stale-token behavior, ID-only events and explicit service-role denial.
 2. Audit the API for strict v2 input/output validation, direct imported
@@ -35,17 +35,23 @@ contract, acceptance, handoff, invoice, payment, attachment, or AI price.
    low/base/high and reasoned override selection, truthful internal-estimate
    labeling, error preservation, immediate reconciliation, append-only history,
    keyboard/touch semantics and likely 390px behavior.
-5. Explicitly assess the commercial boundary: the database requires a package
-   and completed walkthrough, while the first allowlisted engine remains the
-   existing strict `service_catalog` v2 input model. Report any misleading or
-   unusable commercial operator path; do not invent a new engine in review.
+5. Explicitly assess the commercial boundary: Board, List, server entry route,
+   API and database must consistently refuse commercial estimates while the
+   only allowlisted engine is the residential/turnover v2 model. Do not invent
+   a new engine in review.
 6. Inspect executable evidence rather than trusting prose: route/workbench/CRM
    tests, the 68-version validator, R3-3 adversarial matrix, definer allowlist,
    and the two-session package-token race.
 7. Confirm no proposal bytes, sends, acceptances, handoffs, billing, photos,
    videos, access credentials, or hosted systems are mutated by this increment.
 
-Local evidence reported by the implementer: 108 Jest suites / 901 tests / 5
-snapshots; TypeScript; production build; 68-version migration validation; and a
+Also verify the command is callable only by the server service role, still
+authorizes the supplied real actor inside the database, strips private access
+notes, cannot regress later package states, and binds a package pointer to the
+exact opportunity/property/package/run tuple.
+
+Local evidence reported by the implementer will be frozen with the replacement
+packet after remediation: full Jest, TypeScript, production build, 68-version
+migration validation, and a
 fresh disposable PostgreSQL 16 full harness including
 `R3_3_ADVERSARIAL_ROLE_MATRIX_PASS` and `R3_3_CONCURRENCY_PASS`.

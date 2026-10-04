@@ -36,7 +36,7 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
       service_location: crmEstimateContext.propertyName ?? '' } : blankClient));
   const [preview, setPreview] = useState<ProposalFormData>();
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [profileNotice, setProfileNotice] = useState('');
-  const revision = useRef(0), inFlight = useRef(false);
+  const revision = useRef(0), inFlight = useRef(false), estimateRequestKey = useRef(crypto.randomUUID());
   const [hazard, setHazard] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState<'low' | 'base' | 'high' | 'override'>('base');
   const [estimateHistory, setEstimateHistory] = useState<Array<{ id: string; selected_scenario: string;
@@ -76,6 +76,9 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
   }, [job.jobType, Boolean(estimate), hazard]);
   const service = getService(job.jobType, job.catalogVersion);
   const locationPricing = estimate && 'locationPricing' in estimate ? estimate.locationPricing : undefined;
+  const chosenScenario = job.override ? 'override' : selectedScenario;
+  const chosenPrice = estimate ? (job.override?.pricePerVisit
+    ?? estimate[chosenScenario === 'override' ? 'base' : chosenScenario].suggestedPrice) : undefined;
   function switchType(id: JobType) {
     const defaults = job.catalogVersion === '2026-09-22.1' ? defaultLegacyJob(id) : defaultJob(id);
     changeJob({ ...job, jobType: id, segment: defaults.segment, frequency: defaults.frequency,
@@ -109,19 +112,21 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
   }
   async function saveCrmEstimate() {
     if (!crmEstimateContext || !estimate || inFlight.current || hazard) return;
-    const scenario = job.override ? 'override' : selectedScenario;
+    const scenario = chosenScenario;
     const pricingBasis = job.turnover ? 'per_turn' : job.frequency === 'one-time' ? 'one_time' : 'per_visit';
     inFlight.current = true; setBusy(true); setError('');
+    const { access: _privateAccess, ...persistableJob } = job;
     try {
       const response = await fetch(`/api/orgs/${crmEstimateContext.organizationId}/crm/opportunities/${crmEstimateContext.opportunityId}/estimates`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': estimateRequestKey.current },
         body: JSON.stringify({ propertyId: crmEstimateContext.propertyId,
           workPackageId: crmEstimateContext.workPackageId ?? null,
           expectedPackageUpdatedAt: crmEstimateContext.expectedPackageUpdatedAt ?? null,
-          selectedScenario: scenario, pricingBasis, job }),
+          selectedScenario: scenario, pricingBasis, job: persistableJob }),
       });
       const payload = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) throw new Error(payload.error ?? 'Unable to save the estimate.');
+      estimateRequestKey.current = crypto.randomUUID();
       router.push('/dashboard/crm'); router.refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Unable to save the estimate. Your inputs remain here.');
@@ -131,11 +136,11 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
   return <div className="mx-auto max-w-6xl space-y-6">
     {source === 'signup' && <QualificationCard />}
     <header><h1 className="text-3xl font-bold">{crmEstimateContext ? `Estimate ${crmEstimateContext.opportunityName}` : 'Residential and turnover proposal'}</h1><p className="mt-2 text-gray-600">Capture the job, review the suggested price, then {crmEstimateContext ? 'save the internal planning estimate' : 'prepare your proposal'}. All costs are editable planning assumptions.</p><p className="mt-2 text-sm text-gray-600">{crmEstimateContext ? 'Internal planning estimate — not a sent proposal, contract, or guaranteed margin.' : 'Catalog proposals use the standard complete-scope layout with your company branding.'}</p>
-      <div className="mt-3 flex flex-wrap gap-4 text-sm underline"><Link href="/dashboard/proposals/quick">Commercial quick flow</Link><Link href="/dashboard/proposals/new">Existing service builder</Link><Link href="/dashboard/settings#business-services">Business markets and costs</Link></div>
+      <div className="mt-3 flex flex-wrap gap-4 text-sm underline">{!crmEstimateContext && <Link href="/dashboard/proposals/quick">Commercial quick flow</Link>}<Link href="/dashboard/proposals/new">Existing service builder</Link><Link href="/dashboard/settings#business-services">Business markets and costs</Link></div>
       {demo && <p className="mt-3 rounded border border-amber-300 p-3">Sample job. Saving is disabled for sample jobs. <Link className="underline" href={`/dashboard/proposals/category?job=${job.jobType}`}>Start a real job</Link> to prepare a customer proposal.</p>}
     </header>
     <div className="sticky top-0 z-10 rounded-xl border bg-white p-4 shadow-sm" aria-live="polite">
-      {hazard ? <p role="alert">Stop: hazardous work requires a qualified assessment.</p> : estimate ? <><p className="text-xl font-bold">Suggested price: {usd(estimate.selectedPrice)} / {perTurn ? 'turn' : 'visit'}</p><p className="text-sm">{job.bedrooms} bedrooms · {job.bathrooms} bathrooms · {estimate.base.laborHours} person-hours · {estimate.effectiveMarginPercent}% margin</p>{initialPrice !== undefined && <p className="text-sm">Initial detailed clean: {usd(initialPrice)} once; replaces the first standard visit.</p>}{initialPrice !== undefined && initialPrice < estimate.selectedPrice && <p role="alert" className="mt-2 text-sm font-medium text-amber-900">Initial clean is priced below the ongoing visit. Review its scope and price before preparing the proposal; ongoing hours and price overrides do not apply to the initial clean.</p>}</> : <p role="alert">Review your inputs: {validation}</p>}
+      {hazard ? <p role="alert">Stop: hazardous work requires a qualified assessment.</p> : estimate && chosenPrice !== undefined ? <><p className="text-xl font-bold">Selected planning price: {usd(chosenPrice)} / {perTurn ? 'turn' : 'visit'}</p><p className="text-sm">{job.bedrooms} bedrooms · {job.bathrooms} bathrooms · {estimate.base.laborHours} person-hours · {estimate.effectiveMarginPercent}% margin</p>{initialPrice !== undefined && <p className="text-sm">Initial detailed clean: {usd(initialPrice)} once; replaces the first standard visit.</p>}{initialPrice !== undefined && initialPrice < chosenPrice && <p role="alert" className="mt-2 text-sm font-medium text-amber-900">Initial clean is priced below the ongoing visit. Review its scope and price before preparing the proposal; ongoing hours and price overrides do not apply to the initial clean.</p>}</> : <p role="alert">Review your inputs: {validation}</p>}
     </div>
     <fieldset disabled={busy} className="grid min-w-0 gap-6 lg:grid-cols-2">
       <section className="min-w-0 space-y-4 rounded-xl border bg-white p-5">
@@ -151,7 +156,7 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
         <div className="grid gap-3 sm:grid-cols-2"><label className="text-sm">Occupancy<select className="mt-1 w-full rounded border p-2" value={job.occupancy} onChange={e => changeJob({ ...job, occupancy: e.target.value as CatalogJob['occupancy'] })}><option value="occupied">Occupied</option><option value="vacant">Vacant</option></select></label>
         <label className="text-sm">Condition<select className="mt-1 w-full rounded border p-2" value={job.condition} onChange={e => changeJob({ ...job, condition: e.target.value as CatalogJob['condition'] })}>{['light', 'normal', 'heavy'].map(c => <option key={c}>{c}</option>)}</select></label></div>
         <div className="flex flex-wrap gap-4">{(['pets', 'suppliesProvided'] as const).map(key => <label className="text-sm" key={key}><input type="checkbox" checked={job[key]} onChange={e => changeJob({ ...job, [key]: e.target.checked })} /> {key === 'pets' ? 'Pets present' : 'Customer supplies cleaning products'}</label>)}</div>
-        <label className="block text-sm">Internal access notes (never shown to customer)<Input value={job.access} onChange={e => changeJob({ ...job, access: e.target.value })} /></label>
+        <label className="block text-sm">Private access note (used for this calculation only; never stored with a CRM estimate)<Input value={job.access} onChange={e => changeJob({ ...job, access: e.target.value })} /></label>
         {/(?:code|lockbox|gate|alarm|entry).{0,30}\d{3,8}|\d{3,8}.{0,30}(?:code|lockbox|gate|alarm|entry)/i.test(job.access) && <p role="status" className="text-sm text-amber-900">Entry code detected. Keep this only in internal access notes.</p>}
         <label className="block text-sm">Customer scheduling (optional; no entry details)<Input value={job.scheduling ?? ''} onChange={e => changeJob({ ...job, scheduling: e.target.value })} /></label>
         <div hidden={!isCurrent} className="grid gap-3 sm:grid-cols-2">{numberField('levels', 'Levels / stairs')}{numberField('hardFloorPercent', 'Hard flooring (%)')}{numberField('monthsSinceClean', 'Months since professional clean')}{numberField('occupants', 'Occupants')}</div>
@@ -166,7 +171,7 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
           {(['restocking', 'inspection', 'damageDocumentation'] as const).map(key => <label className="block text-sm" key={key}><input type="checkbox" checked={job.turnover![key]} onChange={e => changeJob({ ...job, turnover: { ...job.turnover!, [key]: e.target.checked } })} /> {{ restocking: 'Restock customer inventory', inspection: 'Departure inspection', damageDocumentation: 'Document visible damage' }[key]}</label>)}
         </fieldset>}
         <details><summary>Included scope — uncheck items to omit (price does not automatically change)</summary>{service.inclusions.map(line => <label key={line} className="block text-sm"><input type="checkbox" checked={!job.scopeOmissions?.includes(line)} onChange={e => changeJob({ ...job, scopeOmissions: e.target.checked ? job.scopeOmissions?.filter(s => s !== line) : [...(job.scopeOmissions ?? []), line] })} /> {line}</label>)}</details>
-        {(['companyName', 'coverLetter', 'scopeAdditions'] as const).map(key => <label key={key} className="block text-sm">{{ companyName: 'Cleaning company name / signature', coverLetter: 'Custom cover letter (optional)', scopeAdditions: 'Additional agreed scope (optional)' }[key]}<Textarea value={job[key] ?? ''} onChange={e => changeJob({ ...job, [key]: e.target.value })} /></label>)}
+        {((crmEstimateContext ? ['scopeAdditions'] : ['companyName', 'coverLetter', 'scopeAdditions']) as Array<'companyName'|'coverLetter'|'scopeAdditions'>).map(key => <label key={key} className="block text-sm">{{ companyName: 'Cleaning company name / signature', coverLetter: 'Custom cover letter (optional)', scopeAdditions: 'Additional agreed scope (optional)' }[key]}<Textarea value={job[key] ?? ''} onChange={e => changeJob({ ...job, [key]: e.target.value })} /></label>)}
         {[job.scheduling, job.operatorNotes, job.scopeAdditions, job.coverLetter, job.turnover?.restockList].some(value => hasPossibleEntryCode(value ?? '')) && <p role="status" className="text-sm text-amber-900">Possible entry code in customer-facing text. Move it to internal access notes before sharing.</p>}
         <label className="block text-sm">Customer-facing scope notes and agreed terms<Textarea value={job.operatorNotes} onChange={e => changeJob({ ...job, operatorNotes: e.target.value })} /></label>
       </section>
@@ -177,15 +182,15 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
           <p className="text-sm text-gray-600">{job.catalogVersion === '2026-09-22.1' ? 'Original model: greater of area / production rate or room minimum, then condition and frequency factors.' : 'Labor model: 65% of area / production rate + 0.2 hours per bedroom + 0.5 per bathroom + 0.2 per extra level + 0.2 × hard-floor share + 0.08 per occupant above two + 0.04 per month since cleaning (up to 12). Multiply by soil, clutter and frequency factors, then add appliance, pet and turnover tasks.'} Production: {estimate.drivers.squareFeetPerPersonHour} sq ft/person-hour; room workload: {estimate.drivers.roomMinimumHours} hours; soil factor: {estimate.drivers.conditionMultiplier}; frequency factor: {estimate.drivers.recurrenceMultiplier}; extra tasks: {estimate.drivers.additionalHours} hours. {job.costs.laborHours !== undefined ? 'Your person-hour override replaces that model.' : ''}</p>
           <dl className="grid grid-cols-2 gap-2 text-sm">{Object.entries({ 'Person-hours': estimate.base.laborHours, 'Elapsed crew hours': estimate.base.elapsedCrewHours, 'Burdened labor': usd(estimate.base.labor), Supplies: usd(estimate.base.supplies), Equipment: usd(estimate.base.equipment), Travel: usd(estimate.base.travel), Overhead: usd(estimate.base.overhead), 'Modeled cost': usd(estimate.base.cost), 'Minimum adjustment': usd(estimate.base.minimumAdjustment), 'Margin amount': usd(estimate.base.marginAmount) }).map(([key, value]) => <div key={key}><dt className="text-gray-600">{key}</dt><dd className="font-medium">{value}</dd></div>)}</dl>
           <div className="overflow-x-auto"><table className="w-full text-sm"><caption className="text-left font-semibold">Planning scenarios per {perTurn ? 'turn' : 'visit'}</caption><thead><tr><th className="text-left">Low</th><th className="text-left">Base</th><th className="text-left">High</th></tr></thead><tbody><tr>{([['low', estimate.low], ['base', estimate.base], ['high', estimate.high]] as const).map(([key,s]) => <td key={key}>{crmEstimateContext ? <button type="button" className="min-h-11 rounded border px-3" aria-pressed={!job.override && selectedScenario===key} onClick={() => { setSelectedScenario(key); if(job.override) changeJob({...job,override:undefined}); }}>{usd(s.suggestedPrice)}</button> : usd(s.suggestedPrice)}</td>)}</tr></tbody></table></div>
-          <p className="text-lg font-semibold">Working price: {usd(estimate.selectedPrice)} / {perTurn ? 'turn' : 'visit'}</p><p className="text-sm">{job.frequency === 'one-time' && !perTurn ? 'One-time job' : `Monthly planning amount: ${usd(estimate.periodPrice)}`}. Effective margin after overhead: {estimate.effectiveMarginPercent}%.</p>
+          <p className="text-lg font-semibold">Working price: {usd(chosenPrice ?? estimate.selectedPrice)} / {perTurn ? 'turn' : 'visit'}</p><p className="text-sm">{job.frequency === 'one-time' && !perTurn ? 'One-time job' : `Monthly planning amount: ${usd(estimate.periodPrice)}`}. Effective margin after overhead: {estimate.effectiveMarginPercent}%.</p>
           {locationPricing && <div className="rounded border border-blue-200 bg-blue-50 p-3 text-sm"><p className="font-semibold">Location-aware planning check: {locationPricing.marketName}</p><p>Confidence {locationPricing.confidence} · {locationPricing.resolution} benchmark · selected wage {usd(locationPricing.selectedWage)}/hour</p><p className="text-xs text-gray-600">Dataset {locationPricing.datasetVersion}. Your entered wage is never reduced; travel and any regional nonlabor adjustment are shown separately.</p></div>}
           <ul className="list-disc space-y-1 pl-5 text-sm text-amber-900">{estimate.warnings.map(w => <li key={w}>{w}</li>)}</ul>
         </div>}
         <label className="block text-sm"><input type="checkbox" checked={Boolean(job.override)} onChange={e => changeJob({ ...job, override: e.target.checked ? { pricePerVisit: estimate?.base.suggestedPrice ?? 120, reason: '' } : undefined })} /> Override suggested price</label>
-        {job.override && <><label className="block text-sm">Operator price per {perTurn ? 'turn' : 'visit'} ($)<Input type="number" value={job.override.pricePerVisit} onChange={e => changeJob({ ...job, override: { ...job.override!, pricePerVisit: Number(e.target.value) } })} /></label><label className="block text-sm">Override reason (internal)<Textarea value={job.override.reason} onChange={e => changeJob({ ...job, override: { ...job.override!, reason: e.target.value } })} /></label></>}
-<details className="rounded border p-3"><summary>Customer details — needed when preparing your proposal</summary>        <div className="grid gap-3 sm:grid-cols-2">{(['client_name', 'client_email', 'contact_phone', 'service_location'] as const).map((key, i) => <label key={key} className="text-sm">{['Client name', 'Client email', 'Client phone', 'Service location'][i]}<Input required type={key === 'client_email' ? 'email' : 'text'} value={client[key]} onChange={e => changeClient(key, e.target.value)} /></label>)}</div></details>
+        {job.override && <><label className="block text-sm">Operator price per {perTurn ? 'turn' : 'visit'} ($)<Input type="number" min="0.01" step="0.01" value={job.override.pricePerVisit} onChange={e => changeJob({ ...job, override: { ...job.override!, pricePerVisit: Number(e.target.value) } })} /></label><label className="block text-sm">Override reason (internal)<Textarea value={job.override.reason} onChange={e => changeJob({ ...job, override: { ...job.override!, reason: e.target.value } })} /></label></>}
+        {!crmEstimateContext && <details className="rounded border p-3"><summary>Customer details — needed when preparing your proposal</summary>        <div className="grid gap-3 sm:grid-cols-2">{(['client_name', 'client_email', 'contact_phone', 'service_location'] as const).map((key, i) => <label key={key} className="text-sm">{['Client name', 'Client email', 'Client phone', 'Service location'][i]}<Input required type={key === 'client_email' ? 'email' : 'text'} value={client[key]} onChange={e => changeClient(key, e.target.value)} /></label>)}</div></details>}
         <p className="text-sm text-amber-900">Review costs, scope and scheduling before saving. These unvalidated planning assumptions require your approval.</p>
-        {crmEstimateContext ? <Button onClick={() => void saveCrmEstimate()} disabled={busy || hazard || !estimate}>{busy ? 'Saving…' : 'Save internal estimate'}</Button>
+        {crmEstimateContext ? <Button onClick={() => void saveCrmEstimate()} disabled={busy || hazard || !estimate || chosenPrice === undefined}>{busy ? 'Saving…' : `Save ${chosenScenario} estimate${chosenPrice === undefined ? '' : ` — ${usd(chosenPrice)}`}`}</Button>
           : <Button onClick={prepare} disabled={busy || hazard}>{busy ? 'Working…' : 'Prepare / regenerate draft'}</Button>}
       </section>
     </fieldset>

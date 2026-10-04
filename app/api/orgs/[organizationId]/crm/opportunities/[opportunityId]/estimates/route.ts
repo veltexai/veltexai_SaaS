@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { crmRoleHasPermission } from '@/features/crm/domain';
 import { estimateOutputSchema, estimateRunSchema } from '@/features/crm/schemas/estimate-run';
 import { estimateJob } from '@/features/service-catalog/pricing';
+import { createServiceClient } from '@/lib/supabase/server';
 import { authenticatedCrmContext, crmContextError, requireIdempotencyKey } from '../../../_shared';
 
 type Context = { params: Promise<{ organizationId: string; opportunityId: string }> };
@@ -35,17 +36,22 @@ export async function POST(request: NextRequest, { params }: Context) {
   const parsed = estimateRunSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: 'Invalid estimate.', issues: parsed.error.flatten() }, { status: 400 });
   const value = parsed.data;
-  const output = estimateOutputSchema.parse(estimateJob(value.job));
+  if (value.job.segment === 'commercial' || value.job.segment === 'specialty')
+    return NextResponse.json({ error: 'Commercial estimating is not yet supported by this pricing model.' }, { status: 422 });
+  const { access: _excludedAccess, ...safeInputSnapshot } = value.job;
+  const output = estimateOutputSchema.parse(estimateJob({ ...value.job, access: '' }));
   const selected = value.selectedScenario === 'override'
     ? value.job.override!.pricePerVisit : output[value.selectedScenario].suggestedPrice;
   const selectedAmountMinor = Math.round(selected * 100);
   if (!Number.isSafeInteger(selectedAmountMinor) || selectedAmountMinor < 0)
     return NextResponse.json({ error: 'Invalid estimate amount.' }, { status: 400 });
-  const { data, error } = await context.supabase.rpc('command_crm_estimate_run', {
+  const serviceClient = createServiceClient();
+  const { data, error } = await serviceClient.rpc('command_crm_estimate_run_internal', {
+    p_actor: context.user.id,
     p_organization: context.organizationId, p_opportunity: opportunityId,
     p_package: value.workPackageId ?? null, p_property: value.propertyId,
     p_request_key: key, p_engine_key: 'service_catalog', p_engine_version: '2026-09-22.2',
-    p_input_snapshot: value.job, p_output_snapshot: output,
+    p_input_snapshot: safeInputSnapshot, p_output_snapshot: output,
     p_selected_scenario: value.selectedScenario, p_selected_amount_minor: selectedAmountMinor,
     p_currency: 'USD', p_pricing_basis: value.pricingBasis,
     p_expected_package_updated_at: value.expectedPackageUpdatedAt ?? null,

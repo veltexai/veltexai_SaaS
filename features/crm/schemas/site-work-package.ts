@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const siteWorkPackageSchema = z.object({
   propertyId: z.string().uuid(),
-  status: z.enum(['scoping', 'walkthrough_scheduled', 'estimated', 'proposed', 'accepted', 'declined']),
+  status: z.enum(['scoping', 'walkthrough_scheduled', 'proposed', 'accepted', 'declined']),
   walkthroughId: z.string().uuid().nullable().optional(),
   proposalId: z.string().uuid().nullable().optional(),
   lossReasonId: z.string().uuid().nullable().optional(),

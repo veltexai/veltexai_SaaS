@@ -24,12 +24,12 @@ values('74000000-0000-4000-8000-000000000004','$ORG','74000000-0000-4000-8000-00
 alter table public.organization_memberships enable trigger guard_organization_membership_changes;
 commit;"
 TOKEN=$(q "select updated_at from public.crm_site_work_packages where id='74000000-0000-4000-8000-000000000004'")
-INPUT='{"catalogVersion":"2026-09-22.2","jobType":"recurring_standard","frequency":"weekly"}'
+INPUT='{"catalogVersion":"2026-09-22.2","segment":"residential","jobType":"recurring_standard","frequency":"weekly"}'
 OUTPUT='{"version":"2026-09-22.2","unit":"per_visit","low":{"suggestedPrice":100},"base":{"suggestedPrice":125},"high":{"suggestedPrice":150}}'
 run_command(){
   local key="$1" scenario="$2" amount="$3"
-  q "set role authenticated; select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
-  select * from public.command_crm_estimate_run('$ORG','74000000-0000-4000-8000-000000000003',
+  q "set role service_role;
+  select * from public.command_crm_estimate_run_internal('11111111-1111-4111-8111-111111111111','$ORG','74000000-0000-4000-8000-000000000003',
    '74000000-0000-4000-8000-000000000004','74000000-0000-4000-8000-000000000002','$key',
    'service_catalog','2026-09-22.2','${INPUT}'::jsonb,'${OUTPUT}'::jsonb,'$scenario',$amount,'USD','per_visit','$TOKEN');" >/dev/null
 }

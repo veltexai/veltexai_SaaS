@@ -14,12 +14,13 @@ create table public.crm_estimate_runs (
   selected_scenario text not null check(selected_scenario in ('low','base','high','override')),
   selected_amount_minor bigint not null check(selected_amount_minor >= 0),
   currency text not null default 'USD' check(currency = 'USD'),
-  pricing_basis text not null check(pricing_basis in ('per_visit','per_turn','one_time','monthly')),
+  pricing_basis text not null check(pricing_basis in ('per_visit','per_turn','one_time')),
   input_sha256 text not null check(input_sha256 ~ '^[a-f0-9]{64}$'),
   output_sha256 text not null check(output_sha256 ~ '^[a-f0-9]{64}$'),
   created_by uuid not null references public.profiles(id) on delete restrict,
   created_at timestamptz not null default now(),
   unique(organization_id,id),
+  unique(organization_id,work_package_id,opportunity_id,property_id,id),
   unique(organization_id,request_key),
   foreign key(organization_id,opportunity_id)
     references public.crm_opportunities(organization_id,id) on delete cascade,
@@ -31,8 +32,10 @@ create table public.crm_estimate_runs (
 
 alter table public.crm_site_work_packages add column estimate_run_id uuid;
 alter table public.crm_site_work_packages add constraint crm_site_work_packages_estimate_run_fk
-  foreign key(organization_id,estimate_run_id)
-  references public.crm_estimate_runs(organization_id,id) on delete restrict;
+  foreign key(organization_id,id,opportunity_id,property_id,estimate_run_id)
+  references public.crm_estimate_runs(
+    organization_id,work_package_id,opportunity_id,property_id,id
+  ) on delete restrict;
 alter table public.crm_site_work_packages add constraint crm_site_work_packages_estimated_evidence_check
   check(status<>'estimated' or estimate_run_id is not null);
 
@@ -42,6 +45,25 @@ alter table public.crm_site_work_packages add constraint crm_site_work_packages_
 drop trigger crm_site_work_packages_updated_at on public.crm_site_work_packages;
 create trigger crm_site_work_packages_updated_at before update on public.crm_site_work_packages
   for each row execute function public.handle_crm_updated_at();
+
+create function public.guard_crm_estimate_selection()
+returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
+begin
+  if new.status='estimated' and (
+    new.estimate_run_id is null
+    or (tg_op='UPDATE' and old.status<>'estimated'
+      and old.estimate_run_id is not distinct from new.estimate_run_id)
+  ) then
+    raise exception 'estimated package requires a newly selected estimate' using errcode='23514';
+  end if;
+  return new;
+end;
+$$;
+revoke all on function public.guard_crm_estimate_selection()
+  from public,anon,authenticated,service_role;
+create trigger guard_crm_estimate_selection before insert or update
+  on public.crm_site_work_packages for each row
+  execute function public.guard_crm_estimate_selection();
 
 create table public.crm_estimate_run_commands (
   id uuid primary key default gen_random_uuid(),
@@ -78,8 +100,8 @@ end;
 $$;
 revoke all on function public.crm_estimate_sha256(jsonb) from public,anon,authenticated,service_role;
 
-create function public.command_crm_estimate_run(
-  p_organization uuid,p_opportunity uuid,p_package uuid,p_property uuid,
+create function public.command_crm_estimate_run_internal(
+  p_actor uuid,p_organization uuid,p_opportunity uuid,p_package uuid,p_property uuid,
   p_request_key text,p_engine_key text,p_engine_version text,
   p_input_snapshot jsonb,p_output_snapshot jsonb,p_selected_scenario text,
   p_selected_amount_minor bigint,p_currency text,p_pricing_basis text,
@@ -90,17 +112,19 @@ language plpgsql security definer set search_path=pg_catalog,public as $$
 declare opportunity_row public.crm_opportunities%rowtype;
   package_row public.crm_site_work_packages%rowtype;
   existing public.crm_estimate_run_commands%rowtype;
+  actor_role text;
   new_run_id uuid:=gen_random_uuid(); input_hash text; output_hash text;
   payload_hash text; changed_at timestamptz; selected_value numeric;
 begin
-  if auth.uid() is null or length(p_request_key) not between 8 and 200 then
+  if p_actor is null or length(p_request_key) not between 8 and 200 then
     raise exception 'estimate unavailable' using errcode='42501';
   end if;
+  select m.role into actor_role from public.organization_memberships m
+    where m.organization_id=p_organization and m.user_id=p_actor;
   select o.* into opportunity_row from public.crm_opportunities o
     where o.organization_id=p_organization and o.id=p_opportunity and o.deleted_at is null for update;
-  if opportunity_row.id is null or not coalesce((public.can_manage_organization(p_organization)
-    or (public.organization_role(p_organization)='estimator'
-      and opportunity_row.estimator_user_id=auth.uid())),false) then
+  if opportunity_row.id is null or not coalesce((actor_role in ('owner','admin')
+    or (actor_role='estimator' and opportunity_row.estimator_user_id=p_actor)),false) then
     raise exception 'estimate unavailable' using errcode='42501';
   end if;
   if opportunity_row.property_id is distinct from p_property or not exists(
@@ -115,22 +139,28 @@ begin
        or package_row.property_id<>p_property then
       raise exception 'estimate context unavailable' using errcode='23514';
     end if;
-  elsif opportunity_row.segment='commercial' then
-    raise exception 'commercial estimate requires a work package' using errcode='23514';
   end if;
-  if opportunity_row.segment='commercial' and not exists(
-    select 1 from public.crm_walkthroughs w where w.organization_id=p_organization
-      and w.opportunity_id=p_opportunity and w.property_id=p_property
-      and w.status='completed' and w.evidence_completed_at is not null) then
-    raise exception 'commercial walkthrough evidence is incomplete' using errcode='23514';
+  if opportunity_row.segment='commercial' then
+    raise exception 'commercial estimating is not supported by this engine' using errcode='23514';
+  end if;
+  if exists(select 1 from public.crm_pipeline_stages s
+    where s.organization_id=p_organization and s.id=opportunity_row.stage_id
+      and s.category in ('won','lost','disqualified','handed_off')) then
+    raise exception 'closed opportunity cannot be estimated' using errcode='23514';
+  end if;
+  if p_package is not null and package_row.status not in ('scoping','walkthrough_scheduled','estimated') then
+    raise exception 'package lifecycle cannot be regressed by an estimate' using errcode='23514';
   end if;
   if p_engine_key<>'service_catalog' or p_engine_version<>'2026-09-22.2'
      or p_selected_scenario not in ('low','base','high','override')
      or p_selected_amount_minor<0 or p_currency<>'USD'
-     or p_pricing_basis not in ('per_visit','per_turn','one_time','monthly')
+     or p_pricing_basis not in ('per_visit','per_turn','one_time')
      or jsonb_typeof(p_input_snapshot)<>'object' or jsonb_typeof(p_output_snapshot)<>'object'
-     or p_input_snapshot->>'catalogVersion'<>'2026-09-22.2'
-     or p_output_snapshot->>'version'<>'2026-09-22.2' then
+     or p_input_snapshot->>'catalogVersion' is distinct from '2026-09-22.2'
+     or p_output_snapshot->>'version' is distinct from '2026-09-22.2'
+     or p_output_snapshot->>'unit' is distinct from 'per_visit'
+     or p_input_snapshot ? 'access'
+     or p_input_snapshot->>'segment' not in ('residential','short_term_rental') then
     raise exception 'estimate snapshot unavailable' using errcode='23514';
   end if;
   if p_pricing_basis<>(case
@@ -144,7 +174,7 @@ begin
     else (p_output_snapshot#>>array[p_selected_scenario,'suggestedPrice'])::numeric end;
   if selected_value is null or round(selected_value*100)::bigint<>p_selected_amount_minor
      or (p_selected_scenario='override' and length(trim(coalesce(p_input_snapshot#>>'{override,reason}',''))) not between 5 and 1000)
-     or (p_output_snapshot->>'unit')<>'per_visit' then
+     or (p_selected_scenario<>'override' and jsonb_typeof(p_output_snapshot->p_selected_scenario->'suggestedPrice') is distinct from 'number') then
     raise exception 'selected estimate does not match snapshot' using errcode='23514';
   end if;
   input_hash:=public.crm_estimate_sha256(p_input_snapshot);
@@ -155,7 +185,8 @@ begin
     'input_sha256',input_hash,'output_sha256',output_hash,
     'selected_scenario',p_selected_scenario,'selected_amount_minor',p_selected_amount_minor,
     'currency',p_currency,'pricing_basis',p_pricing_basis,
-    'expected_package_updated_at',p_expected_package_updated_at));
+    'expected_package_updated_at_epoch',case when p_expected_package_updated_at is null then null
+      else extract(epoch from p_expected_package_updated_at) end));
   select c.* into existing from public.crm_estimate_run_commands c
     where c.organization_id=p_organization and c.command_key=p_request_key;
   if existing.id is not null then
@@ -174,18 +205,18 @@ begin
     selected_scenario,selected_amount_minor,currency,pricing_basis,input_sha256,output_sha256,created_by)
   values(new_run_id,p_organization,p_opportunity,p_package,p_property,p_request_key,p_engine_key,
     p_engine_version,p_input_snapshot,p_output_snapshot,p_selected_scenario,p_selected_amount_minor,
-    p_currency,p_pricing_basis,input_hash,output_hash,auth.uid());
+    p_currency,p_pricing_basis,input_hash,output_hash,p_actor);
   if p_package is not null then
     changed_at:=clock_timestamp();
     update public.crm_site_work_packages set estimate_run_id=new_run_id,status='estimated',
-      updated_by=auth.uid(),updated_at=changed_at
+      updated_by=p_actor,updated_at=changed_at
     where organization_id=p_organization and id=p_package;
   end if;
   insert into public.crm_estimate_run_commands(organization_id,estimate_run_id,command_key,
     payload_sha256,resulting_package_updated_at,actor_user_id)
-  values(p_organization,new_run_id,p_request_key,payload_hash,changed_at,auth.uid());
+  values(p_organization,new_run_id,p_request_key,payload_hash,changed_at,p_actor);
   insert into public.organization_audit_log(organization_id,actor_user_id,action,entity_type,entity_id,metadata)
-  values(p_organization,auth.uid(),'crm_estimate_runs.insert','crm_estimate_runs',new_run_id::text,
+  values(p_organization,p_actor,'crm_estimate_runs.insert','crm_estimate_runs',new_run_id::text,
     jsonb_build_object('operation','INSERT'));
   insert into public.organization_event_outbox(organization_id,event_type,aggregate_type,aggregate_id,payload)
   values(p_organization,'estimate.saved','crm_estimate_runs',new_run_id::text,
@@ -193,12 +224,12 @@ begin
   return query select new_run_id,changed_at,false;
 end;
 $$;
-revoke all on function public.command_crm_estimate_run(
-  uuid,uuid,uuid,uuid,text,text,text,jsonb,jsonb,text,bigint,text,text,timestamptz
-) from public,anon,service_role;
-grant execute on function public.command_crm_estimate_run(
-  uuid,uuid,uuid,uuid,text,text,text,jsonb,jsonb,text,bigint,text,text,timestamptz
-) to authenticated;
+revoke all on function public.command_crm_estimate_run_internal(
+  uuid,uuid,uuid,uuid,uuid,text,text,text,jsonb,jsonb,text,bigint,text,text,timestamptz
+) from public,anon,authenticated;
+grant execute on function public.command_crm_estimate_run_internal(
+  uuid,uuid,uuid,uuid,uuid,text,text,text,jsonb,jsonb,text,bigint,text,text,timestamptz
+) to service_role;
 
 create function public.read_crm_estimate_summaries(p_organization uuid)
 returns table(estimate_run_id uuid,opportunity_id uuid,work_package_id uuid,engine_version text,
@@ -217,15 +248,16 @@ revoke all on function public.read_crm_estimate_summaries(uuid) from public,anon
 grant execute on function public.read_crm_estimate_summaries(uuid) to authenticated;
 
 create function public.read_crm_estimate_runs(p_organization uuid,p_opportunity uuid)
-returns table(id uuid,work_package_id uuid,engine_version text,input_snapshot jsonb,
-  output_snapshot jsonb,selected_scenario text,selected_amount_minor bigint,currency text,
+returns table(id uuid,work_package_id uuid,engine_version text,
+  selected_scenario text,selected_amount_minor bigint,currency text,
   pricing_basis text,created_at timestamptz)
 language sql stable security definer set search_path=pg_catalog,public as $$
-  select e.id,e.work_package_id,e.engine_version,e.input_snapshot,e.output_snapshot,
+  select e.id,e.work_package_id,e.engine_version,
     e.selected_scenario,e.selected_amount_minor,e.currency,e.pricing_basis,e.created_at
   from public.crm_estimate_runs e join public.crm_opportunities o
     on o.organization_id=e.organization_id and o.id=e.opportunity_id
   where e.organization_id=p_organization and e.opportunity_id=p_opportunity
+    and o.deleted_at is null and public.can_access_crm_opportunity(e.opportunity_id)
     and (public.can_manage_organization(p_organization)
       or (public.organization_role(p_organization)='estimator' and o.estimator_user_id=auth.uid()))
   order by e.created_at desc,e.id desc;

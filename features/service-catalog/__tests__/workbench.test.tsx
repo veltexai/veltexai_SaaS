@@ -48,8 +48,8 @@ it('retains inputs on network failure and permits retry', async () => {
 it.each(['recurring_standard', 'standard', 'first_deep', 'move_in_out', 'airbnb_turnover'] as const)('non-demo %s shows a first-load price', async initialJobType => {
   global.fetch = jest.fn(async () => ({ ok: true, json: async () => ({ profile: null }) } as Response));
   render(<CatalogWorkbench initialJobType={initialJobType} />);
-  expect(screen.getByText(/Suggested price: \$/)).toBeInTheDocument();
-  expect(screen.getByLabelText('Internal access notes (never shown to customer)')).toHaveValue('');
+  expect(screen.getByText(/Selected planning price: \$/)).toBeInTheDocument();
+  expect(screen.getByLabelText(/Private access note/)).toHaveValue('');
   await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
 });
 it('keeps transient validation visible and preserves property inputs when switching services', () => {
@@ -88,32 +88,32 @@ it('ordinary names and prose preserve the visible price; codes produce advisory 
  render(<CatalogWorkbench demo />);
  for (const value of ['Keystone Cleaning', 'Pinnacle Maids', 'Door to Door Cleaning']) {
    fireEvent.change(screen.getByLabelText('Cleaning company name / signature'), { target: { value } });
-   expect(screen.getByText(/Suggested price: \$/)).toBeInTheDocument();
+   expect(screen.getByText(/Selected planning price: \$/)).toBeInTheDocument();
  }
  fireEvent.change(screen.getByLabelText('Customer-facing scope notes and agreed terms'), { target: { value: 'sweeping and mopping interior doors' } });
- expect(screen.getByText(/Suggested price: \$/)).toBeInTheDocument();
+ expect(screen.getByText(/Selected planning price: \$/)).toBeInTheDocument();
  fireEvent.change(screen.getByLabelText('Customer-facing scope notes and agreed terms'), { target: { value: 'Garage opener 7391' } });
  expect(screen.getByText(/Possible entry code in customer-facing text/)).toBeInTheDocument();
- expect(screen.getByText(/Suggested price: \$/)).toBeInTheDocument();
+ expect(screen.getByText(/Selected planning price: \$/)).toBeInTheDocument();
 });
 it('seeds the signature from the company profile even without cost defaults', async () => {
  global.fetch = jest.fn(async () => ({ ok: true, json: async () => ({ profile: null, companyName: 'Keystone Cleaning' }) } as Response));
  render(<CatalogWorkbench />);
  await waitFor(() => expect(screen.getByLabelText('Cleaning company name / signature')).toHaveValue('Keystone Cleaning'));
- expect(screen.getByText(/Suggested price: \$/)).toBeInTheDocument();
+ expect(screen.getByText(/Selected planning price: \$/)).toBeInTheDocument();
 });
 
 it('ongoing hours overrides leave the separately modeled initial-clean amount visible', () => {
  render(<CatalogWorkbench demo />);
  fireEvent.change(screen.getByLabelText('Override person-hours (optional)'), { target: { value: '3' } });
  expect(screen.getByText(/Initial detailed clean: \$310.00 once/)).toBeInTheDocument();
- expect(screen.getByText(/Suggested price: \$205.00/)).toBeInTheDocument();
+ expect(screen.getByText(/Selected planning price: \$205.00/)).toBeInTheDocument();
 });
 
 it('warns when an ongoing override exceeds the separately modeled initial clean', () => {
  render(<CatalogWorkbench demo />);
  fireEvent.change(screen.getByLabelText('Override person-hours (optional)'), { target: { value: '12' } });
- expect(screen.getByText(/Suggested price: \$635.00/)).toBeInTheDocument();
+ expect(screen.getByText(/Selected planning price: \$635.00/)).toBeInTheDocument();
  expect(screen.getByText(/Initial detailed clean: \$310.00 once/)).toBeInTheDocument();
  expect(screen.getByRole('alert')).toHaveTextContent('Initial clean is priced below the ongoing visit. Review its scope and price');
  fireEvent.change(screen.getByLabelText('Override person-hours (optional)'), { target: { value: '3' } });
@@ -130,11 +130,14 @@ it('saves a selected CRM scenario through the scoped estimate route without gene
  expect(screen.getByText('Internal planning estimate — not a sent proposal, contract, or guaranteed margin.')).toBeInTheDocument();
  const high=screen.getAllByRole('button').find(button=>button.getAttribute('aria-pressed')==='false' && button.textContent?.startsWith('$'))!;
  fireEvent.click(high);
- fireEvent.click(screen.getByRole('button',{name:'Save internal estimate'}));
+ const saveButton=screen.getByRole('button',{name:/Save (low|base|high) estimate — \$/});
+ expect(saveButton).toHaveTextContent(high.textContent!);
+ fireEvent.click(saveButton);
  await waitFor(()=>expect(global.fetch).toHaveBeenCalledWith('/api/orgs/org-1/crm/opportunities/opp-1/estimates',expect.objectContaining({method:'POST'})));
  const estimateCall=jest.mocked(global.fetch).mock.calls.find(([url,init])=>String(url).includes('/estimates') && init?.method==='POST')!;
  const body=JSON.parse(estimateCall[1]?.body as string);
  expect(body).toMatchObject({propertyId:'property-1',workPackageId:'package-1'});
+ expect(body.job).not.toHaveProperty('access');
  expect(['low','base','high']).toContain(body.selectedScenario);
  await waitFor(()=>expect(push).toHaveBeenCalledWith('/dashboard/crm'));
 });
