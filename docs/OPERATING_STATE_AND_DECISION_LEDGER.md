@@ -2272,3 +2272,13 @@ After any material action, append or revise the relevant section with:
   PostgreSQL harness pass. The archive has not been transmitted. Independent
   review is the next gate and requires action-specific approval to send this
   exact file/hash; isolated Preview remains a later, separate authorization.
+- **REPLACEMENT PACKET SENT / REVIEW PENDING:** after exact founder approval,
+  `/private/tmp/veltex-r3-3-estimate-linkage-e0d3849.zip` (308,225 bytes;
+  SHA-256 `38673ef589b152bc0d155cc2a23c4722d7932851c429ae63c22104b31d146500`)
+  was attached to a new authenticated Claude chat with the committed bounded
+  review instructions. Claude visibly accepted the archive, began by verifying
+  the hash and reading the assignment, and is responding at
+  `https://claude.ai/chat/2b747b79-195b-4b51-b52b-215926f48212`.
+  Independent verdict is `PENDING`. No Preview deployment, hosted database
+  migration, credential operation, production change, or other external action
+  occurred.
