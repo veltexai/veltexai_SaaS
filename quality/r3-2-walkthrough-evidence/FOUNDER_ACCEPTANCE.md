@@ -1,6 +1,6 @@
 # R3-2 founder acceptance — persisted walkthrough evidence
 
-Status: **ALL TECHNICAL AND PREVIEW GATES PASS; PENDING FOUNDER DECISION**.
+Status: **COMPLETE / VERIFIED / ACCEPTED**.
 
 This packet does not authorize a production deployment or production data
 creation. Run it only after an independent `PASS`, on the approved isolated
@@ -120,9 +120,10 @@ does not alter authorization, privacy, schema or truthfulness behavior.
 
 ## Decision
 
-- Overall: **PENDING FOUNDER DECISION — ALL REQUIRED EVIDENCE PASS**
-- Founder decision: pending
-- Pacific timestamp: pending
+- Overall: **ACCEPTED**
+- Founder decision: `R3-2 is ACCEPTED. Proceed to the bounded R3-3
+  estimate-scenario linkage gate.`
+- Pacific timestamp: 2026-10-03 20:07 PDT
 - Defects or required follow-up: no launch blocker. Exact corrected commit
   `f8728c3` adds a 15-second abort, preserves the dialog/note, announces retry
   guidance and restores Save. Local regression/full gates, bounded independent

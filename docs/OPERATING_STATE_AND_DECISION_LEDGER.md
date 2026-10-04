@@ -2200,3 +2200,13 @@ After any material action, append or revise the relevant section with:
   gates are `PASS`. The founder checklist is fully evidenced and awaits only an
   explicit founder `ACCEPTED` or `REJECTED` decision. R3-3 must not be treated
   as accepted or deployed until that decision is recorded.
+- **R3-2 FOUNDER DECISION — COMPLETE / VERIFIED / ACCEPTED (2026-10-03 PDT):**
+  After reviewing the fully evidenced local, security, independent-review,
+  PostgreSQL 17 Preview, desktop, failure-recovery and genuine-390 results, the
+  founder stated: `R3-2 is ACCEPTED. Proceed to the bounded R3-3
+  estimate-scenario linkage gate.` R3-2 is closed at the intentionally narrow
+  persisted-text-evidence boundary. This does not imply acceptance of photos,
+  attachments, estimate linkage, proposal versioning, customer acceptance,
+  handoff or later roadmap stages. R3-3 is now the next unfinished dependency;
+  no production deployment or production mutation is authorized by this
+  acceptance.
