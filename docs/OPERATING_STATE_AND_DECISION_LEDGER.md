@@ -49,6 +49,16 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
   `/private/tmp/veltex-brand-reference-inventory.json` is local evidence only;
   no application copy, domain, provider configuration, campaign or public page
   changed.
+- **R3-3 PREVIEW CHECKLIST IDENTITY AUDIT:** Before external transmission or
+  hosted use, the local Preview checklist/generator was found to retain the
+  superseded `c4aa331` identity and to omit explicit specialty/NULL and
+  replay-after-lifecycle operator cases. Those local-only materials now bind
+  application/database candidate `631fdb4`, review-instruction commit
+  `0a6e900`, and the expanded acceptance cases. The regenerated deterministic
+  guarded SQL is 24,527 bytes with SHA-256
+  `4a9db0732b780b7509631a10248293c1345a0d587f7acbe3f386f5d96b9ceea2`.
+  Earlier local Preview artifact hashes are **SUPERSEDED / MUST NOT BE USED**.
+  No Preview or production action occurred.
 - **B1 MESSAGE CONTRACT IMPLEMENTED LOCALLY:** `features/brand/messaging.ts`
   pins the `Veltex` master brand, retained `Veltex AI` operational identity,
   category, promise, operator-control/privacy/manual-fallback trust points,

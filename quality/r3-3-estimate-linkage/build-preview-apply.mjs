@@ -31,7 +31,8 @@ const expectedValues = previous.map((version) => `('${version}')`).join(',');
 
 const sql = `-- ISOLATED PREVIEW ONLY: exact R3-3 atomic apply candidate.
 -- Target project must be confirmed in the Supabase UI as ynzkwctwlssjcsjmahey.
--- Reviewed application/database candidate: c4aa33165f2f086e97fcce34a0c903f060039de3
+-- Reviewed application/database candidate: 631fdb4
+-- Review-instruction commit: 0a6e900
 -- Migration SHA-256: ${expectedSourceSha}
 begin;
 select pg_advisory_xact_lock(hashtextextended('veltex-r3-3-preview-apply',0));

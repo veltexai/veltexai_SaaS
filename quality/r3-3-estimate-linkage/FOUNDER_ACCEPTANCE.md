@@ -10,7 +10,8 @@ customer, address, scope, price, access instruction, photograph or attachment.
 ## Bound identity
 
 - Preview project ref: `ynzkwctwlssjcsjmahey`
-- Reviewed candidate: `c4aa33165f2f086e97fcce34a0c903f060039de3`
+- Reviewed application/database candidate: `631fdb4`
+- Review-instruction commit: `0a6e900`
 - Migration: `20261004000000_r3_3_estimate_scenario_linkage.sql`
 - Migration SHA-256:
   `f1c34282cb12094888215fcc029a213cc78eca2cbc28a2e3f152cba74c09b1a8`
@@ -22,9 +23,9 @@ customer, address, scope, price, access instruction, photograph or attachment.
 
 1. Sign in as the approved synthetic owner/admin and open `/dashboard/crm`.
 2. In Board and List views, confirm a residential or turnover opportunity with
-   a property-bound scoping package offers **Estimate**, while a commercial
-   opportunity states that commercial estimating is not yet supported and
-   offers no save path.
+   a property-bound scoping package offers **Estimate**, while commercial,
+   specialty and missing-segment opportunities state that the current
+   estimator is unavailable and offer no save path.
 3. Open the residential workbench. Confirm customer, property, opportunity and
    package context are visible; proposal-send, acceptance, billing, attachment,
    photo and video controls are absent.
@@ -45,6 +46,14 @@ customer, address, scope, price, access instruction, photograph or attachment.
 9. Confirm a later-state package (`proposed`, `accepted` or `declined`) cannot be
    regressed by estimate save. Confirm no access notes or credentials appear in
    stored estimate history, audit metadata or outbox payloads.
+10. Advance a saved package to a later lifecycle state, then retry the exact
+    original request key and payload. Confirm it returns the original result
+    without creating another run or regressing the package. Reuse the key with
+    a changed payload and confirm refusal.
+11. Attempt to include synthetic access-adjacent free text in scheduling, scope
+    additions, cover letter, company name, operator notes and turnover restock
+    text. Confirm the request is refused or the private fields are removed
+    before persistence; none may appear in immutable history.
 
 ## Genuine 390 px acceptance
 
