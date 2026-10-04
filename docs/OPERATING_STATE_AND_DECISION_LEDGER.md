@@ -2392,3 +2392,19 @@ After any material action, append or revise the relevant section with:
   which was sent and rejected; this replacement exact file/hash requires its
   own action-specific external-send approval. No Preview or production action
   occurred.
+- **R3-3 PACKET-INSTRUCTION AUDIT / FINAL REPLACEMENT PREPARED:** Before any
+  transmission, the embedded independent assignment was found to understate the
+  second verdict by emphasizing commercial refusal without explicitly requiring
+  specialty/NULL, privacy-shape, selected-scenario and replay-after-lifecycle
+  regressions. The unsent `c37f4ca3...` archive is therefore **SUPERSEDED / MUST
+  NOT BE SENT**. Review-instruction commit `0a6e900` now mandates source and
+  executable rechecks of all ten prior-finding classes. The final replacement
+  archive is
+  `/private/tmp/veltex-r3-3-second-remediation-0a6e900-review.zip`: 1,654,110
+  bytes, SHA-256
+  `f5a1f9411fa0df898a1ad99ba7bd97318b0ee5a7a377123880bd3816059c21fc`;
+  ZIP integrity and embedded-instruction inspection pass. It has not been sent.
+  Its application/database bytes remain exact candidate commit `631fdb4`; the
+  later commits change only ledger/review instructions. External transmission
+  requires approval for this exact replacement file and hash. No hosted state
+  changed.
