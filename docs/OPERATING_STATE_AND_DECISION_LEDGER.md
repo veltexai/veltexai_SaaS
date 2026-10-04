@@ -2241,3 +2241,24 @@ After any material action, append or revise the relevant section with:
 - No hosted, preview, production, credential, proposal-send, acceptance,
   handoff, billing or attachment action occurred. Independent exact-packet
   review is the next gate; isolated-preview mutation remains separately gated.
+
+### 2026-10-03 — R3-3 final invariant audit closed before external review
+
+- Status: **LOCAL VERIFIED / REPLACEMENT REVIEW PACKET REQUIRED**.
+- A final internal audit found that the legacy site-work-package command could
+  still request `status='estimated'` without selecting immutable estimate
+  evidence. Migration `20261004000000` now enforces the missing database
+  invariant: every estimated package must have a non-null `estimate_run_id`
+  protected by the existing tenant-bound composite foreign key.
+- The executable adversarial matrix calls the actual legacy
+  `save_crm_site_work_package` security-definer surface and proves that the
+  unsupported transition fails with `23514`; this is not a direct-table test
+  hidden behind an ACL denial. A fresh 68-migration PostgreSQL 16 replay passes
+  the R3-1/R3-2/R3-3 adversarial matrices, owner and definer gates,
+  injection/dirty/rerun checks, the true two-session R3-3 race with exactly one
+  winner and one `40001`, and the existing 40-way concurrency suite.
+- The previously prepared local archive for commit `c9cd1d6` is
+  **SUPERSEDED / MUST NOT BE SENT** because it predates this invariant. No
+  external reviewer received it, and no hosted environment changed. The next
+  permissible action is to freeze a replacement exact-source packet after the
+  final local gates pass; sending that packet remains separately gated.

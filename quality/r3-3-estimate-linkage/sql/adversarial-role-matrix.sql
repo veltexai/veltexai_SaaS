@@ -104,6 +104,11 @@ begin
     '73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000002','direct-denied',
     'service_catalog','2026-09-22.2','{}','{}','base',1,'per_visit',repeat('0',64),repeat('0',64),auth.uid());
     raise exception 'direct estimate insert accepted'; exception when insufficient_privilege then null; end;
+  begin perform * from public.save_crm_site_work_package(
+    org,'73000000-0000-4000-8000-000000000005','73000000-0000-4000-8000-000000000006',
+    '73000000-0000-4000-8000-000000000002','estimate-without-evidence','estimated',null,null,null,
+    (select updated_at from public.crm_site_work_packages where id='73000000-0000-4000-8000-000000000006'));
+    raise exception 'package became estimated without selected evidence'; exception when check_violation then null; end;
   if (select count(*) from public.read_crm_estimate_runs(org,'73000000-0000-4000-8000-000000000003'))<>1
     then raise exception 'owner estimate history unavailable'; end if;
 end $$;

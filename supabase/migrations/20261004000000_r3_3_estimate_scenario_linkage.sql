@@ -33,6 +33,8 @@ alter table public.crm_site_work_packages add column estimate_run_id uuid;
 alter table public.crm_site_work_packages add constraint crm_site_work_packages_estimate_run_fk
   foreign key(organization_id,estimate_run_id)
   references public.crm_estimate_runs(organization_id,id) on delete restrict;
+alter table public.crm_site_work_packages add constraint crm_site_work_packages_estimated_evidence_check
+  check(status<>'estimated' or estimate_run_id is not null);
 
 -- Estimate selection returns the package's next optimistic token. Preserve the
 -- explicit clock_timestamp exactly as the accepted customer/contact/property/

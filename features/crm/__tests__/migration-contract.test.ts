@@ -278,6 +278,7 @@ describe('R3-3 estimate linkage migration contract', () => {
     expect(estimateLinkageMigration).toContain('unique(organization_id,request_key)');
     expect(estimateLinkageMigration).toContain("p_engine_key<>'service_catalog'");
     expect(estimateLinkageMigration).toContain("p_engine_version<>'2026-09-22.2'");
+    expect(estimateLinkageMigration).toContain("check(status<>'estimated' or estimate_run_id is not null)");
     expect(estimateLinkageMigration).toContain('from public,anon,authenticated,service_role');
     expect(estimateLinkageMigration).not.toMatch(/grant\s+(insert|update|delete).*crm_estimate_runs.*authenticated/i);
   });
