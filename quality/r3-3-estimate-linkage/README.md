@@ -35,3 +35,18 @@ Local evidence:
 Next: bind a committed candidate into an exact independent-review packet. Only
 after exact-candidate PASS may a separately authorized guarded isolated-preview
 apply and genuine desktop/390px operator acceptance occur.
+
+The local preview gate is prepared but not authorized or applied:
+
+- `build-preview-apply.mjs` binds the exact migration SHA, exact 67-version
+  predecessor history, absent R3-3 schema, protected CRM row hashes, one outer
+  transaction and one history insertion;
+- its postflight requires history 68, empty R3-3 append-only tables, RLS,
+  package/run constraints, the guard trigger, client denial and server-only
+  command execution;
+- `test-preview-apply.mjs` proves deterministic generation and structural
+  refusal properties; and
+- `FOUNDER_ACCEPTANCE.md` defines desktop and genuine-390px operator checks.
+
+This tooling does not grant permission to mutate Preview and must not be used
+before the independent remediation verdict is `PASS`.

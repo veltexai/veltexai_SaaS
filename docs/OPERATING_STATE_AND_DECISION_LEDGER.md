@@ -2329,3 +2329,15 @@ After any material action, append or revise the relevant section with:
   reading the bounded assignment. The independent verdict is **PENDING**. No
   Preview deployment, hosted database mutation, credential operation,
   production change or other external action occurred.
+- **R3-3 PREVIEW GATE PREPARED LOCALLY / NOT APPLIED:** While independent review
+  remains pending, deterministic release tooling was prepared without changing
+  the reviewed migration or application bytes. The generator binds exact
+  migration SHA `a6bd7e47...`, exact 67-version predecessor history, absent
+  R3-3 schema, protected CRM row hashes, one transaction and one history write;
+  postflight requires history 68, empty append-only estimate tables, RLS,
+  package/run constraints, the guard trigger, client denial and server-only
+  command execution. Its static determinism test passes with generated artifact
+  SHA-256 `a34f9bc5a6a0e34bd221d47c01dd3469321c73565602e0c761845c16df503338`.
+  A desktop/genuine-390px acceptance checklist is also frozen. No hosted
+  Preview or production action occurred; execution remains contingent on an
+  independent `PASS` and the applicable exact-action authorization.
