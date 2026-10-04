@@ -1,8 +1,10 @@
 # R3-3 estimate and scenario linkage contract
 
-Status: **ENTRY DECISIONS RESOLVED / DEPENDENCY-BLOCKED ON R3-2 ACCEPTANCE**
-Implementation may begin only after bounded R3-2 is independently reviewed,
-accepted on isolated preview and founder accepted.
+Status: **IN PROGRESS / ENTRY GATE SATISFIED**
+
+R3-2 completed independent review, isolated-preview acceptance and founder
+acceptance on 2026-10-03. R3-3 implementation is authorized within this
+bounded contract; no production or isolated-preview mutation is implied.
 
 ## 1. Purpose and authoritative boundary
 

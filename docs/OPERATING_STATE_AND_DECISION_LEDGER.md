@@ -2210,3 +2210,16 @@ After any material action, append or revise the relevant section with:
   handoff or later roadmap stages. R3-3 is now the next unfinished dependency;
   no production deployment or production mutation is authorized by this
   acceptance.
+### 2026-10-03 — R3-3 estimate-scenario linkage entry gate opened
+
+- Status: **IN PROGRESS**.
+- Founder explicitly accepted R3-2 and directed work to proceed to the bounded
+  R3-3 estimate-scenario linkage gate.
+- The dependency gate in
+  `docs/product/platform-build/R3_3_ESTIMATE_SCENARIO_LINKAGE_CONTRACT.md` is
+  satisfied. Implementation remains limited to the existing deterministic
+  `service_catalog` engine, append-only internal estimate evidence, scoped CRM
+  linkage, and the specified security/operator gates.
+- No second pricing engine, proposal delivery, acceptance, handoff, billing,
+  photo/video, hosted migration, preview deployment, or production mutation is
+  authorized by this status change.
