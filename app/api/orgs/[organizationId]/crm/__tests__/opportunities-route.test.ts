@@ -21,6 +21,7 @@ function client(options: {
   board?: unknown;
   links?: { lead_id: string; contact_id: string }[];
   walkthroughs?: unknown[];
+  estimates?: unknown[];
   rpcError?: unknown;
 }) {
   const membership = membershipQuery({
@@ -34,6 +35,9 @@ function client(options: {
     }
     if (name === 'read_crm_walkthroughs') {
       return { data: options.walkthroughs ?? [], error: options.rpcError ?? null };
+    }
+    if (name === 'read_crm_estimate_summaries') {
+      return { data: options.estimates ?? [], error: options.rpcError ?? null };
     }
     return { data: options.board ?? null, error: options.rpcError ?? null };
   });
@@ -96,7 +100,7 @@ describe('R3-1 pipeline board route', () => {
     expect(state.rpc).toHaveBeenCalledWith('read_crm_pipeline_board', {
       target_organization: ORG_ID,
     });
-    await expect(response.json()).resolves.toEqual({ data: { ...board, walkthroughs: [] } });
+    await expect(response.json()).resolves.toEqual({ data: { ...board, walkthroughs: [], estimate_summaries: [] } });
   });
 
   it('projects an operator-reviewed contact link without exposing the stored hint', async () => {
@@ -105,7 +109,7 @@ describe('R3-1 pipeline board route', () => {
     const { GET } = await import('../opportunities/route');
     const response = await GET(new Request('http://local'), routeContext);
     await expect(response.json()).resolves.toEqual({ data: {
-      ...board, leads: [{ id: 'lead-1', existing_contact_id: 'contact-1' }], walkthroughs: [],
+      ...board, leads: [{ id: 'lead-1', existing_contact_id: 'contact-1' }], walkthroughs: [], estimate_summaries: [],
     } });
   });
 

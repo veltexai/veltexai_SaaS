@@ -29,6 +29,12 @@ export async function GET(_request: Request, { params }: RouteContext) {
   if (walkthroughs.error) {
     return NextResponse.json({ error: 'CRM is unavailable. Please try again.' }, { status: 503 });
   }
+  const estimates = await context.supabase.rpc('read_crm_estimate_summaries', {
+    p_organization: context.organizationId,
+  });
+  if (estimates.error) {
+    return NextResponse.json({ error: 'CRM is unavailable. Please try again.' }, { status: 503 });
+  }
   const board = data as Record<string, unknown>;
   const contacts = new Map((links.data ?? []).map((link: { lead_id: string; contact_id: string }) =>
     [link.lead_id, link.contact_id]));
@@ -38,5 +44,6 @@ export async function GET(_request: Request, { params }: RouteContext) {
     const linked = typeof row.id === 'string' ? contacts.get(row.id) : undefined;
     return linked ? { ...row, existing_contact_id: linked } : row;
   }) : board.leads;
-  return NextResponse.json({ data: { ...board, leads, walkthroughs: walkthroughs.data ?? [] } });
+  return NextResponse.json({ data: { ...board, leads, walkthroughs: walkthroughs.data ?? [],
+    estimate_summaries: estimates.data ?? [] } });
 }

@@ -21,16 +21,26 @@ import { CostFields } from './cost-fields';
 type Client = ProposalFormData['global_inputs'];
 const blankClient: Client = { client_name: '', client_email: '', contact_phone: '', service_location: '', facility_size: 1500, service_frequency: 'bi-weekly' };
 const usd = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
-export function CatalogWorkbench({ initialProposal, proposalId, templateId, initialJobType, source, demoType, demo = false }: {
+export function CatalogWorkbench({ initialProposal, proposalId, templateId, initialJobType, source, demoType,
+  demo = false, crmEstimateContext }: {
   initialProposal?: ProposalFormData; proposalId?: string; templateId?: string; initialJobType?: JobType; source?: string; demoType?: string; demo?: boolean;
+  crmEstimateContext?: { organizationId: string; opportunityId: string; propertyId: string;
+    workPackageId?: string; expectedPackageUpdatedAt?: string; opportunityName: string;
+    customerName?: string; propertyName?: string };
 }) {
   const router = useRouter();
   const [job, setJob] = useState<CatalogJob>(() => initialProposal?.service_specific_data.catalogJob ?? { ...defaultJob(initialJobType), ...(demo ? { demo: true } : {}) });
-  const [client, setClient] = useState<Client>(initialProposal?.global_inputs ?? (demo ? { ...blankClient, client_name: 'Sample customer', client_email: 'sample@example.com', contact_phone: '555-0100', service_location: 'Example property — replace before saving' } : blankClient));
+  const [client, setClient] = useState<Client>(initialProposal?.global_inputs ?? (demo
+    ? { ...blankClient, client_name: 'Sample customer', client_email: 'sample@example.com', contact_phone: '555-0100', service_location: 'Example property — replace before saving' }
+    : crmEstimateContext ? { ...blankClient, client_name: crmEstimateContext.customerName ?? '',
+      service_location: crmEstimateContext.propertyName ?? '' } : blankClient));
   const [preview, setPreview] = useState<ProposalFormData>();
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [profileNotice, setProfileNotice] = useState('');
   const revision = useRef(0), inFlight = useRef(false);
   const [hazard, setHazard] = useState(false);
+  const [selectedScenario, setSelectedScenario] = useState<'low' | 'base' | 'high' | 'override'>('base');
+  const [estimateHistory, setEstimateHistory] = useState<Array<{ id: string; selected_scenario: string;
+    selected_amount_minor: number; currency: string; pricing_basis: string; created_at: string }>>([]);
   const isCurrent = job.catalogVersion !== '2026-09-22.1';
   const perTurn = isCurrent && Boolean(job.turnover);
   const selectedTemplate = initialProposal?.template_id ?? templateId;
@@ -42,6 +52,15 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
     }).catch(() => { if (active) setProfileNotice('Business defaults unavailable. Review the example costs below.'); });
     return () => { active = false; };
   }, [initialProposal, demo]);
+  useEffect(() => {
+    if (!crmEstimateContext) return;
+    let active = true;
+    fetch(`/api/orgs/${crmEstimateContext.organizationId}/crm/opportunities/${crmEstimateContext.opportunityId}/estimates`, { cache: 'no-store' })
+      .then(async response => { if (!response.ok) throw new Error(); return response.json(); })
+      .then(payload => { if (active && Array.isArray(payload.data)) setEstimateHistory(payload.data); })
+      .catch(() => { if (active) setError('Prior estimate history is unavailable. Your current inputs remain available.'); });
+    return () => { active = false; };
+  }, [crmEstimateContext]);
   function changeJob(next: CatalogJob) { revision.current++; setJob(next); setPreview(undefined); setError(''); }
   function changeClient(key: keyof Client, value: string) { revision.current++; setClient(c => ({ ...c, [key]: value })); setPreview(undefined); }
   let estimate: ReturnType<typeof estimateJob> | undefined;
@@ -88,10 +107,30 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
     } catch (e) { setError(e instanceof Error ? e.message : 'Unable to save. Your inputs remain here.'); }
     finally { inFlight.current = false; setBusy(false); }
   }
+  async function saveCrmEstimate() {
+    if (!crmEstimateContext || !estimate || inFlight.current || hazard) return;
+    const scenario = job.override ? 'override' : selectedScenario;
+    const pricingBasis = job.turnover ? 'per_turn' : job.frequency === 'one-time' ? 'one_time' : 'per_visit';
+    inFlight.current = true; setBusy(true); setError('');
+    try {
+      const response = await fetch(`/api/orgs/${crmEstimateContext.organizationId}/crm/opportunities/${crmEstimateContext.opportunityId}/estimates`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
+        body: JSON.stringify({ propertyId: crmEstimateContext.propertyId,
+          workPackageId: crmEstimateContext.workPackageId ?? null,
+          expectedPackageUpdatedAt: crmEstimateContext.expectedPackageUpdatedAt ?? null,
+          selectedScenario: scenario, pricingBasis, job }),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) throw new Error(payload.error ?? 'Unable to save the estimate.');
+      router.push('/dashboard/crm'); router.refresh();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Unable to save the estimate. Your inputs remain here.');
+    } finally { inFlight.current = false; setBusy(false); }
+  }
   const numberField = (key: 'squareFeet' | 'bedrooms' | 'bathrooms' | 'applianceInteriors' | 'levels' | 'hardFloorPercent' | 'monthsSinceClean' | 'occupants', label: string) => <label className="space-y-1 text-sm">{label}<Input type="number" min="0" step={key === 'bathrooms' ? '0.5' : '1'} value={typeof job[key] === 'number' && Number.isNaN(job[key]) ? '' : job[key] ?? ''} onChange={e => changeJob({ ...job, [key]: e.target.value === '' ? NaN : Number(e.target.value) })} /></label>;
   return <div className="mx-auto max-w-6xl space-y-6">
     {source === 'signup' && <QualificationCard />}
-    <header><h1 className="text-3xl font-bold">Residential and turnover proposal</h1><p className="mt-2 text-gray-600">Capture the job, review the suggested price, then prepare your proposal. All costs are editable planning assumptions.</p><p className="mt-2 text-sm text-gray-600">Catalog proposals use the standard complete-scope layout with your company branding.</p>
+    <header><h1 className="text-3xl font-bold">{crmEstimateContext ? `Estimate ${crmEstimateContext.opportunityName}` : 'Residential and turnover proposal'}</h1><p className="mt-2 text-gray-600">Capture the job, review the suggested price, then {crmEstimateContext ? 'save the internal planning estimate' : 'prepare your proposal'}. All costs are editable planning assumptions.</p><p className="mt-2 text-sm text-gray-600">{crmEstimateContext ? 'Internal planning estimate — not a sent proposal, contract, or guaranteed margin.' : 'Catalog proposals use the standard complete-scope layout with your company branding.'}</p>
       <div className="mt-3 flex flex-wrap gap-4 text-sm underline"><Link href="/dashboard/proposals/quick">Commercial quick flow</Link><Link href="/dashboard/proposals/new">Existing service builder</Link><Link href="/dashboard/settings#business-services">Business markets and costs</Link></div>
       {demo && <p className="mt-3 rounded border border-amber-300 p-3">Sample job. Saving is disabled for sample jobs. <Link className="underline" href={`/dashboard/proposals/category?job=${job.jobType}`}>Start a real job</Link> to prepare a customer proposal.</p>}
     </header>
@@ -137,7 +176,7 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
         {estimate && !hazard && <div className="space-y-3">
           <p className="text-sm text-gray-600">{job.catalogVersion === '2026-09-22.1' ? 'Original model: greater of area / production rate or room minimum, then condition and frequency factors.' : 'Labor model: 65% of area / production rate + 0.2 hours per bedroom + 0.5 per bathroom + 0.2 per extra level + 0.2 × hard-floor share + 0.08 per occupant above two + 0.04 per month since cleaning (up to 12). Multiply by soil, clutter and frequency factors, then add appliance, pet and turnover tasks.'} Production: {estimate.drivers.squareFeetPerPersonHour} sq ft/person-hour; room workload: {estimate.drivers.roomMinimumHours} hours; soil factor: {estimate.drivers.conditionMultiplier}; frequency factor: {estimate.drivers.recurrenceMultiplier}; extra tasks: {estimate.drivers.additionalHours} hours. {job.costs.laborHours !== undefined ? 'Your person-hour override replaces that model.' : ''}</p>
           <dl className="grid grid-cols-2 gap-2 text-sm">{Object.entries({ 'Person-hours': estimate.base.laborHours, 'Elapsed crew hours': estimate.base.elapsedCrewHours, 'Burdened labor': usd(estimate.base.labor), Supplies: usd(estimate.base.supplies), Equipment: usd(estimate.base.equipment), Travel: usd(estimate.base.travel), Overhead: usd(estimate.base.overhead), 'Modeled cost': usd(estimate.base.cost), 'Minimum adjustment': usd(estimate.base.minimumAdjustment), 'Margin amount': usd(estimate.base.marginAmount) }).map(([key, value]) => <div key={key}><dt className="text-gray-600">{key}</dt><dd className="font-medium">{value}</dd></div>)}</dl>
-          <div className="overflow-x-auto"><table className="w-full text-sm"><caption className="text-left font-semibold">Planning scenarios per {perTurn ? 'turn' : 'visit'}</caption><thead><tr><th className="text-left">Low</th><th className="text-left">Base</th><th className="text-left">High</th></tr></thead><tbody><tr>{[estimate.low, estimate.base, estimate.high].map((s, i) => <td key={i}>{usd(s.suggestedPrice)}</td>)}</tr></tbody></table></div>
+          <div className="overflow-x-auto"><table className="w-full text-sm"><caption className="text-left font-semibold">Planning scenarios per {perTurn ? 'turn' : 'visit'}</caption><thead><tr><th className="text-left">Low</th><th className="text-left">Base</th><th className="text-left">High</th></tr></thead><tbody><tr>{([['low', estimate.low], ['base', estimate.base], ['high', estimate.high]] as const).map(([key,s]) => <td key={key}>{crmEstimateContext ? <button type="button" className="min-h-11 rounded border px-3" aria-pressed={!job.override && selectedScenario===key} onClick={() => { setSelectedScenario(key); if(job.override) changeJob({...job,override:undefined}); }}>{usd(s.suggestedPrice)}</button> : usd(s.suggestedPrice)}</td>)}</tr></tbody></table></div>
           <p className="text-lg font-semibold">Working price: {usd(estimate.selectedPrice)} / {perTurn ? 'turn' : 'visit'}</p><p className="text-sm">{job.frequency === 'one-time' && !perTurn ? 'One-time job' : `Monthly planning amount: ${usd(estimate.periodPrice)}`}. Effective margin after overhead: {estimate.effectiveMarginPercent}%.</p>
           {locationPricing && <div className="rounded border border-blue-200 bg-blue-50 p-3 text-sm"><p className="font-semibold">Location-aware planning check: {locationPricing.marketName}</p><p>Confidence {locationPricing.confidence} · {locationPricing.resolution} benchmark · selected wage {usd(locationPricing.selectedWage)}/hour</p><p className="text-xs text-gray-600">Dataset {locationPricing.datasetVersion}. Your entered wage is never reduced; travel and any regional nonlabor adjustment are shown separately.</p></div>}
           <ul className="list-disc space-y-1 pl-5 text-sm text-amber-900">{estimate.warnings.map(w => <li key={w}>{w}</li>)}</ul>
@@ -146,10 +185,19 @@ export function CatalogWorkbench({ initialProposal, proposalId, templateId, init
         {job.override && <><label className="block text-sm">Operator price per {perTurn ? 'turn' : 'visit'} ($)<Input type="number" value={job.override.pricePerVisit} onChange={e => changeJob({ ...job, override: { ...job.override!, pricePerVisit: Number(e.target.value) } })} /></label><label className="block text-sm">Override reason (internal)<Textarea value={job.override.reason} onChange={e => changeJob({ ...job, override: { ...job.override!, reason: e.target.value } })} /></label></>}
 <details className="rounded border p-3"><summary>Customer details — needed when preparing your proposal</summary>        <div className="grid gap-3 sm:grid-cols-2">{(['client_name', 'client_email', 'contact_phone', 'service_location'] as const).map((key, i) => <label key={key} className="text-sm">{['Client name', 'Client email', 'Client phone', 'Service location'][i]}<Input required type={key === 'client_email' ? 'email' : 'text'} value={client[key]} onChange={e => changeClient(key, e.target.value)} /></label>)}</div></details>
         <p className="text-sm text-amber-900">Review costs, scope and scheduling before saving. These unvalidated planning assumptions require your approval.</p>
-        <Button onClick={prepare} disabled={busy || hazard}>{busy ? 'Working…' : 'Prepare / regenerate draft'}</Button>
+        {crmEstimateContext ? <Button onClick={() => void saveCrmEstimate()} disabled={busy || hazard || !estimate}>{busy ? 'Saving…' : 'Save internal estimate'}</Button>
+          : <Button onClick={prepare} disabled={busy || hazard}>{busy ? 'Working…' : 'Prepare / regenerate draft'}</Button>}
       </section>
     </fieldset>
     {error && <p role="alert" className="rounded border border-red-300 bg-red-50 p-4 text-sm">{error}</p>}
+    {crmEstimateContext && estimateHistory.length > 0 && <section className="rounded-xl border bg-white p-5">
+      <h2 className="text-xl font-semibold">Prior internal estimates</h2>
+      <p className="mt-1 text-sm text-gray-600">Append-only history. Prior runs cannot be edited or deleted.</p>
+      <ul className="mt-3 space-y-2">{estimateHistory.map(run => <li key={run.id} className="rounded border p-3 text-sm">
+        <span className="font-medium">{new Intl.NumberFormat(undefined,{style:'currency',currency:run.currency}).format(run.selected_amount_minor/100)}</span>
+        {' · '}{run.selected_scenario}{' · '}{run.pricing_basis.replaceAll('_',' ')}{' · '}{new Date(run.created_at).toLocaleString()}
+      </li>)}</ul>
+    </section>}
     {preview && <section className="space-y-4 rounded-xl border bg-white p-5"><h2 className="text-xl font-semibold">Review proposal</h2><p className="text-sm">Edit the inputs and customer-facing notes above, then regenerate. Prices and scope remain tied to the saved assumptions.</p><CatalogDocument content={preview.generated_content ?? ''} /><Button disabled={busy || demo || job.demo} onClick={save}>{busy ? 'Saving…' : proposalId ? 'Save revised proposal' : 'Save proposal'}</Button></section>}
   </div>;
 }

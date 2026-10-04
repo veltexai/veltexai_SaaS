@@ -9,6 +9,10 @@ const walkthroughEvidenceMigration = readFileSync(
   resolve(process.cwd(), 'supabase/migrations/20261003000000_r3_2_walkthrough_evidence.sql'),
   'utf8',
 );
+const estimateLinkageMigration = readFileSync(
+  resolve(process.cwd(), 'supabase/migrations/20261004000000_r3_3_estimate_scenario_linkage.sql'),
+  'utf8',
+);
 
 const tenantTables = [
   'crm_customers',
@@ -263,6 +267,27 @@ describe('R3-1 CRM migration contract', () => {
     expect(migration).not.toMatch(/(?:create|alter|drop|insert into|update|delete from)\s+(?:table\s+)?public\.(?:organization_invitations|ai_suggestions)/i);
     expect(migration).not.toMatch(/100d/i);
     expect(migration).not.toMatch(/sales_manager/);
+  });
+});
+
+describe('R3-3 estimate linkage migration contract', () => {
+  it('is atomic, additive, append-only, tenant-bound, and engine-version allowlisted', () => {
+    expect(estimateLinkageMigration.match(/^begin;$/gim)).toHaveLength(1);
+    expect(estimateLinkageMigration.match(/^commit;$/gim)).toHaveLength(1);
+    expect(estimateLinkageMigration).toContain('create table public.crm_estimate_runs (');
+    expect(estimateLinkageMigration).toContain('unique(organization_id,request_key)');
+    expect(estimateLinkageMigration).toContain("p_engine_key<>'service_catalog'");
+    expect(estimateLinkageMigration).toContain("p_engine_version<>'2026-09-22.2'");
+    expect(estimateLinkageMigration).toContain('from public,anon,authenticated,service_role');
+    expect(estimateLinkageMigration).not.toMatch(/grant\s+(insert|update|delete).*crm_estimate_runs.*authenticated/i);
+  });
+  it('guards commercial walkthroughs, scenario values, replay, concurrency, and ID-only events', () => {
+    expect(estimateLinkageMigration).toContain("opportunity_row.segment='commercial'");
+    expect(estimateLinkageMigration).toContain("w.status='completed' and w.evidence_completed_at is not null");
+    expect(estimateLinkageMigration).toContain('round(selected_value*100)::bigint<>p_selected_amount_minor');
+    expect(estimateLinkageMigration).toContain("raise exception 'estimate key already used'");
+    expect(estimateLinkageMigration).toContain("raise exception 'site work package changed'");
+    expect(estimateLinkageMigration).toContain("jsonb_build_object('record_id',new_run_id::text)");
   });
 });
 

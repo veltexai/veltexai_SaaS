@@ -32,7 +32,7 @@ current evidence.
 | # | Founder-approved stage | Canonical Prompt 14 mapping | Entry gate | Required exit evidence | Current status / next unfinished outcome |
 |---|---|---|---|---|---|
 | 1 | R2 organization and tenancy | R2a foundations plus the R2b C0 security dependency needed by Bid-to-Won | Verified Release 1/R0 base and exact migration-chain reconciliation | Organizations and memberships; owner/admin/estimator/viewer authorization; single-user backfill; active-org semantics; immutable audit; outbox/inbox; U1 benchmark; U8 decision; C0-compatible token boundary; exact migrations/rollback; cross-tenant and concurrency matrices; hosted preview; responsive/operator checks; independent Claude PASS; founder acceptance | **COMPLETE / VERIFIED IN PRODUCTION.** The exact 64-migration reconciliation committed with stable catalog, effective-privilege, invariant and normalized-content hashes; the postflight production capture matched the reviewed contract. R2 is the frozen release base and must not be rebuilt. |
-| 2 | R3 Bid-to-Won | R3 Slice 1 plus the preserved later R3 increments required for the full approved stage | Stage 1 accepted; Release 1 truthfulness gates closed; U1 evidence and U8 runtime decision recorded | Customers/contacts/properties; opportunities, configurable pipelines, site packages, append-only stage history and tasks; walkthrough evidence; estimate/scenario links; immutable proposal versions; secure C0 acceptance/receipt; provider-neutral handoff; A0–A8 activation instrumentation; operator notification; role/RLS and IDOR proof; accessibility; real-format handoff/operator evidence; Claude PASS; founder acceptance | **IN PROGRESS.** R3-1 CRM foundation is `COMPLETE / VERIFIED / ACCEPTED`. R3-2 persisted text walkthrough evidence is a database-runtime-verified local candidate with an exact review packet and locally executed guarded preview artifact; independent review, isolated-preview/operator evidence and founder acceptance are next. R3-3 entry decisions are resolved but implementation remains dependency-blocked. The approved multimodal M0–M5 track follows R3-2/R3-3 without replacing deterministic pricing or widening the current release. R3-3 through R3-8 remain required. |
+| 2 | R3 Bid-to-Won | R3 Slice 1 plus the preserved later R3 increments required for the full approved stage | Stage 1 accepted; Release 1 truthfulness gates closed; U1 evidence and U8 runtime decision recorded | Customers/contacts/properties; opportunities, configurable pipelines, site packages, append-only stage history and tasks; walkthrough evidence; estimate/scenario links; immutable proposal versions; secure C0 acceptance/receipt; provider-neutral handoff; A0–A8 activation instrumentation; operator notification; role/RLS and IDOR proof; accessibility; real-format handoff/operator evidence; Claude PASS; founder acceptance | **IN PROGRESS.** R3-1 and bounded R3-2 are `COMPLETE / VERIFIED / ACCEPTED`. R3-3 estimate/scenario linkage is the active increment: its additive 68th migration, deterministic-engine API linkage, scoped CRM entry route, Board/List summary, append-only history and local adversarial harness are implemented; independent review and isolated-preview/operator/founder gates remain. The multimodal M0–M5 track follows R3-3 without replacing deterministic pricing. R3-4 through R3-8 remain required. |
 | 3 | Onboarding and migration | R4 companion onboarding/import/export and the deferred Release 1 segment-onboarding obligations | Stage 2 domain contracts stable; organization ownership and customer/property keys accepted | Segment-aware organization onboarding for commercial, residential/turnover and ordinary specialty operators; CSV import with preview, validation, dedupe, resumability and audit; legacy user/proposal mapping preserving bytes/prices/links; organization export/deletion handling; truthful plan/capability seeding; accessibility; representative import fixtures and operator completion evidence; Claude PASS; founder acceptance | **PLANNED / NOT IMPLEMENTED.** Prompt 12 and R3 contract retain this scope; it must not be folded into R3-1 or silently omitted. |
 | 4 | Invoicing and payments | Contract-boundary bridge → finance handoff F2 → native invoicing F3 and hosted payments F4 only through their explicit gates | Stage 3 accepted; organization/customer/proposal/acceptance ownership stable; accounting decisions recorded | Immutable agreement/version and change-order ownership bridge; invoice lifecycle, numbering, taxes/discounts/deposits/credits/refunds, immutable financial events, reconciliation and dunning; role separation; accounting export; Stripe/webhook idempotency if payments are enabled; PCI and counsel/accountant review; hosted sandbox evidence; accessibility; operator validation; Claude PASS; founder acceptance | **PLANNED / GATED.** Minimal agreements/change orders are a cross-stage prerequisite ordered before finance, not an authorization for scheduling. Native invoicing/payments remain gated. Do not implement against legacy single-user records or reuse Veltex subscription billing. |
 | 5 | Scheduling and field execution | Service plans/jobs/visits after the accepted agreement boundary, followed by workforce/time and evidence-gated offline field work | Accepted customers/properties/agreements; finance ownership/mode decisions (not necessarily native finance); operator evidence that native FSM is needed | Recurring and one-off service plans; jobs/visits; assignment, availability and conflict handling; mobile/offline-safe field workflow; time, proof and exception capture; access-note privacy; audit/idempotency; timezone/DST and recurrence proof; 390 px/accessibility checks; field operator validation; Claude PASS; founder acceptance | **PLANNED / EVIDENCE-GATED.** Prompt 14 places native scheduling after Bid-to-Won and only when FSM-less demand is proven. “Offline-safe” means local drafts/idempotent retry first; it does not pre-authorize a full offline-first system. |
@@ -41,17 +41,18 @@ current evidence.
 
 ## Immediate critical path
 
-1. Obtain action-specific approval and submit only the exact R3-2 packet bound
-   to commit `5db4700` for independent read-only review.
-2. Accept only an exact-candidate `PASS`, or remediate findings locally and
-   regenerate the packet.
-3. After PASS and separate hosted authorization, execute the exact guarded
-   R3-2 artifact on isolated preview `ynzkwctwlssjcsjmahey`; stop on any failed
-   precondition or postcondition.
-4. Deploy the exact reviewed app commit to preview and execute the desktop plus
-   genuine-390px walkthrough-evidence checklist using synthetic data only.
-5. Record founder acceptance of bounded R3-2. Only then freeze the R3-3
-   estimate/scenario-linkage contract from the accepted R3-2 head.
+1. Freeze and commit the exact bounded R3-3 candidate after full local tests,
+   TypeScript, production build, 68-version validation and the fresh disposable
+   PostgreSQL role/concurrency harness pass.
+2. Build an exact-hash independent-review packet and obtain action-specific
+   approval before sending it to Claude.
+3. Accept only an exact-candidate `PASS`, or remediate locally and regenerate
+   the packet.
+4. After PASS and separate hosted authorization, apply only the guarded R3-3
+   migration to isolated preview, then deploy the exact reviewed app commit.
+5. Execute authenticated desktop and genuine-390px opportunity → estimate →
+   saved-summary/history acceptance with synthetic data, then record the
+   founder's bounded R3-3 decision.
 
 ## No-duplication references
 

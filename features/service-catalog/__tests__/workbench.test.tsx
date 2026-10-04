@@ -119,3 +119,22 @@ it('warns when an ongoing override exceeds the separately modeled initial clean'
  fireEvent.change(screen.getByLabelText('Override person-hours (optional)'), { target: { value: '3' } });
  expect(screen.queryByText(/Initial clean is priced below/)).not.toBeInTheDocument();
 });
+
+it('saves a selected CRM scenario through the scoped estimate route without generating a proposal', async () => {
+ const push=jest.fn(),refresh=jest.fn();
+ jest.requireMock('next/navigation').useRouter=()=>({push,refresh});
+ global.fetch=jest.fn(async()=>({ok:true,status:201,json:async()=>({data:{estimate_run_id:'run-1'}})} as Response));
+ render(<CatalogWorkbench crmEstimateContext={{organizationId:'org-1',opportunityId:'opp-1',
+   propertyId:'property-1',workPackageId:'package-1',expectedPackageUpdatedAt:'2026-10-03T08:00:00.000Z',
+   opportunityName:'North Campus'}} />);
+ expect(screen.getByText('Internal planning estimate — not a sent proposal, contract, or guaranteed margin.')).toBeInTheDocument();
+ const high=screen.getAllByRole('button').find(button=>button.getAttribute('aria-pressed')==='false' && button.textContent?.startsWith('$'))!;
+ fireEvent.click(high);
+ fireEvent.click(screen.getByRole('button',{name:'Save internal estimate'}));
+ await waitFor(()=>expect(global.fetch).toHaveBeenCalledWith('/api/orgs/org-1/crm/opportunities/opp-1/estimates',expect.objectContaining({method:'POST'})));
+ const estimateCall=jest.mocked(global.fetch).mock.calls.find(([url,init])=>String(url).includes('/estimates') && init?.method==='POST')!;
+ const body=JSON.parse(estimateCall[1]?.body as string);
+ expect(body).toMatchObject({propertyId:'property-1',workPackageId:'package-1'});
+ expect(['low','base','high']).toContain(body.selectedScenario);
+ await waitFor(()=>expect(push).toHaveBeenCalledWith('/dashboard/crm'));
+});

@@ -69,6 +69,22 @@ describe('R3-1 CRM board', () => {
     expect(screen.queryByRole('combobox', { name: 'Move Turnover to stage' })).not.toBeInTheDocument();
   });
 
+  it('shows the same internal estimate summary and Estimate action on Board and List', async () => {
+    fetchMock.mockResolvedValueOnce({ok:true,json:async()=>({data:ORG_ID})}).mockResolvedValueOnce({ok:true,json:async()=>({data:{
+      organization_id:ORG_ID,caller_role:'estimator',loss_reasons:[],viewer_price_redacted:false,
+      pipelines:[{id:'pipeline-1',name:'Residential',is_default:true,stages:[{id:'stage-1',label:'Quote',category:'estimating',position:40,hidden:false}]}],
+      opportunities:[{id:'opportunity-1',name:'Turnover',pipeline_id:'pipeline-1',stage_id:'stage-1',category:'estimating',property_id:'property-1',updated_at:'2026-10-03T08:00:00Z'}],
+      work_packages:[{id:'package-1',opportunity_id:'opportunity-1',property_id:'property-1',status:'estimated',updated_at:'2026-10-03T08:00:00Z'}],
+      estimate_summaries:[{estimate_run_id:'run-1',opportunity_id:'opportunity-1',work_package_id:'package-1',engine_version:'2026-09-22.2',selected_amount_minor:18500,currency:'USD',pricing_basis:'per_visit',created_at:'2026-10-03T08:00:00Z'}],
+    }})});
+    render(<CrmBoard/>);await screen.findByRole('heading',{name:'Turnover'});
+    expect(screen.getByText(/Internal planning estimate:.*185\.00/)).toBeInTheDocument();
+    expect(screen.getByRole('link',{name:'Estimate'})).toHaveAttribute('href',expect.stringContaining('/dashboard/crm/estimate/opportunity-1'));
+    fireEvent.click(screen.getByRole('button',{name:'List'}));
+    expect(screen.getByText(/Internal estimate:.*185\.00/)).toBeInTheDocument();
+    expect(screen.getByRole('link',{name:'Estimate'})).toBeInTheDocument();
+  });
+
   it('creates a customer, primary contact, and property through one account command', async () => {
     jest.spyOn(global.crypto, 'randomUUID')
       .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1')

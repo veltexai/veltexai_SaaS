@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import Link from 'next/link';
 
 type Stage = { id: string; label: string; category: string; position: number; hidden: boolean };
 type Pipeline = {
@@ -28,6 +29,7 @@ type Opportunity = {
   currency?: string;
   next_action_due_at?: string;
   service_family?: string;
+  segment?: 'commercial' | 'residential' | 'turnover' | 'specialty';
   expected_close_date?: string;
   updated_at: string;
   needs_follow_up?: boolean;
@@ -59,6 +61,9 @@ type Walkthrough = {
   window_end: string; timezone: string; updated_at: string; evidence_notes?: string;
   evidence_completed_at?: string;
 };
+type EstimateSummary = { estimate_run_id: string; opportunity_id: string; work_package_id?: string;
+  engine_version: string; selected_amount_minor: number; currency: string; pricing_basis: string;
+  created_at: string };
 type Board = {
   organization_id: string;
   caller_role: 'owner' | 'admin' | 'estimator' | 'viewer';
@@ -67,6 +72,7 @@ type Board = {
   leads?: Lead[];
   work_packages?: WorkPackage[];
   walkthroughs?: Walkthrough[];
+  estimate_summaries?: EstimateSummary[];
   customers?: { id: string; name: string }[];
   properties?: { id: string; customer_id?: string; name: string }[];
   loss_reasons: { id: string; label: string; applies_to: 'lost' | 'disqualified' | 'both' }[];
@@ -84,6 +90,22 @@ function valueLabel(opportunity: Opportunity) {
     style: 'currency', currency: opportunity.currency ?? 'USD',
   }).format(opportunity.value_amount_minor / 100);
   return `${amount} · ${opportunity.value_basis?.replaceAll('_', ' ') ?? 'value'}`;
+}
+
+function estimateLabel(summary?: EstimateSummary) {
+  if (!summary) return null;
+  return `${new Intl.NumberFormat(undefined, { style: 'currency', currency: summary.currency })
+    .format(summary.selected_amount_minor / 100)} · ${summary.pricing_basis.replaceAll('_', ' ')}`;
+}
+
+function estimateHref(board: Board, opportunity: Opportunity, organizationId: string | null) {
+  if (!organizationId || !opportunity.property_id) return null;
+  const workPackage = (board.work_packages ?? []).find((item) => item.opportunity_id === opportunity.id);
+  const walkthroughComplete = (board.walkthroughs ?? []).some((item) =>
+    item.opportunity_id === opportunity.id && item.status === 'completed');
+  if (opportunity.segment === 'commercial' && (!workPackage || !walkthroughComplete)) return null;
+  return { pathname: `/dashboard/crm/estimate/${opportunity.id}`,
+    query: { organizationId, ...(workPackage ? { packageId: workPackage.id } : {}) } };
 }
 
 export function CrmBoard() {
@@ -1134,6 +1156,8 @@ export function CrmBoard() {
                     <article key={opportunity.id} className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
                       <h3 className="font-medium text-gray-900">{opportunity.name}</h3>
                       {valueLabel(opportunity) && <p className="mt-2 text-sm text-gray-600">{valueLabel(opportunity)}</p>}
+                      {estimateLabel((board.estimate_summaries ?? []).find((entry) => entry.opportunity_id === opportunity.id))
+                        && <p className="mt-2 text-sm font-medium">Internal planning estimate: {estimateLabel((board.estimate_summaries ?? []).find((entry) => entry.opportunity_id === opportunity.id))}</p>}
                       {opportunity.next_action_due_at && <p className="mt-2 text-xs text-gray-500">Next action {new Date(opportunity.next_action_due_at).toLocaleDateString()}</p>}
                       {board.caller_role !== 'viewer' && stageMove(opportunity)}
                       {board.caller_role !== 'viewer' && (
@@ -1164,6 +1188,9 @@ export function CrmBoard() {
                             .find((entry) => entry.opportunity_id === opportunity.id) })}>
                           {(board.work_packages ?? []).some((entry) => entry.opportunity_id === opportunity.id)
                             ? 'Manage work package' : 'Add work package'}</Button>}
+                        {estimateHref(board,opportunity,organizationId) && <Button asChild variant="outline" className="min-h-11 w-full"><Link href={estimateHref(board,opportunity,organizationId)!}>Estimate</Link></Button>}
+                        {opportunity.segment==='commercial' && !estimateHref(board,opportunity,organizationId)
+                          && <p className="text-xs text-gray-600">Complete the walkthrough and work package before estimating.</p>}
                         {['owner', 'admin'].includes(board.caller_role) && (
                           <Button type="button" variant="outline" className="min-h-11 w-full"
                             onClick={() => setAssigningOpportunity(opportunity)}>Change assignment</Button>
@@ -1192,7 +1219,8 @@ export function CrmBoard() {
                 <tr key={opportunity.id}>
                   <th scope="row" className="px-4 py-3 text-left text-sm font-medium">{opportunity.name}</th>
                   <td className="px-4 py-3 text-sm">{activePipeline.stages.find((stage) => stage.id === opportunity.stage_id)?.label}</td>
-                  <td className="px-4 py-3 text-sm">{valueLabel(opportunity) ?? '—'}</td>
+                  <td className="px-4 py-3 text-sm"><p>{valueLabel(opportunity) ?? '—'}</p>{estimateLabel((board.estimate_summaries ?? []).find((entry) => entry.opportunity_id === opportunity.id))
+                    && <p className="mt-1 font-medium">Internal estimate: {estimateLabel((board.estimate_summaries ?? []).find((entry) => entry.opportunity_id === opportunity.id))}</p>}</td>
                   <td className="px-4 py-3">{board.caller_role === 'viewer' ? 'Read only' : (
                     <div>{stageMove(opportunity)}<div className="mt-2 flex gap-2">
                       <Button type="button" variant="outline" className="min-h-11"
@@ -1225,6 +1253,7 @@ export function CrmBoard() {
                             ? 'Manage work package' : 'Add work package'}
                         </Button>
                       )}
+                      {estimateHref(board,opportunity,organizationId) && <Button asChild variant="outline" className="min-h-11"><Link href={estimateHref(board,opportunity,organizationId)!}>Estimate</Link></Button>}
                       {['owner', 'admin'].includes(board.caller_role) && (
                         <Button type="button" variant="outline" className="min-h-11"
                           onClick={() => setAssigningOpportunity(opportunity)}>Change assignment</Button>
