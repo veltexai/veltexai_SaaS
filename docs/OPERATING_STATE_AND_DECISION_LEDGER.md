@@ -2376,3 +2376,19 @@ After any material action, append or revise the relevant section with:
   two-session race. No hosted or external mutation occurred. The next action is
   to commit and freeze a replacement packet; external transmission remains
   separately gated.
+- **R3-3 SECOND-CORRECTION PACKET PREPARED / NOT SENT:** The corrected
+  application/database candidate is exact commit
+  `631fdb4` (`fix(r3-3): close independent review gaps`). A bounded but
+  comprehensive tracked-source archive was generated directly from that commit
+  at `/private/tmp/veltex-r3-3-second-remediation-631fdb4-review.zip`: 1,652,826
+  bytes, SHA-256
+  `c37f4ca3cca62fbf5f2949eedc9bc95d56e2f99ca386a23e656774b2d92d6aec`,
+  1,172 entries, ZIP integrity `PASS`. Unlike the superseded packet, it includes
+  the Jest configuration, relevant application/components, the full migration
+  chain, all R3 matrices, the executable database harness, migration validator,
+  package/lock/configuration files, contract and ledger while excluding large
+  unrelated public media and R2 reconciliation artifacts. It has not been
+  transmitted. The earlier approval applied to exact packet `fa99cad8...`,
+  which was sent and rejected; this replacement exact file/hash requires its
+  own action-specific external-send approval. No Preview or production action
+  occurred.
