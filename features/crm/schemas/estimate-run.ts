@@ -15,13 +15,21 @@ export const estimateOutputSchema = z.object({
   effectiveMarginPercent: finite, warnings: z.array(z.string()),
 }).strict();
 
+const crmEstimateJobSchema = z.preprocess((input) => {
+  if (input && typeof input === 'object' && !Array.isArray(input)
+      && !Object.prototype.hasOwnProperty.call(input, 'access')) {
+    return { ...input, access: '' };
+  }
+  return input;
+}, jobSchema);
+
 export const estimateRunSchema = z.object({
   propertyId: z.string().uuid(),
   workPackageId: z.string().uuid().nullable().optional(),
   expectedPackageUpdatedAt: z.string().datetime({ offset: true }).nullable().optional(),
   selectedScenario: z.enum(['low', 'base', 'high', 'override']),
   pricingBasis: z.enum(['per_visit', 'per_turn', 'one_time']),
-  job: jobSchema,
+  job: crmEstimateJobSchema,
 }).strict().superRefine((value, context) => {
   if (Boolean(value.workPackageId) !== Boolean(value.expectedPackageUpdatedAt)) {
     context.addIssue({ code: 'custom', path: ['expectedPackageUpdatedAt'],
@@ -34,6 +42,14 @@ export const estimateRunSchema = z.object({
   if (value.selectedScenario !== 'override' && value.job.override) {
     context.addIssue({ code: 'custom', path: ['selectedScenario'],
       message: 'Select override when an operator price is present.' });
+  }
+  if (value.job.override) {
+    const cents = value.job.override.pricePerVisit * 100;
+    if (!Number.isSafeInteger(Math.round(cents))
+        || Math.abs(cents - Math.round(cents)) > 1e-6) {
+      context.addIssue({ code: 'custom', path: ['job', 'override', 'pricePerVisit'],
+        message: 'Use a whole-cent override amount.' });
+    }
   }
 });
 

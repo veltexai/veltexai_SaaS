@@ -16,23 +16,32 @@ Local evidence:
 
 - migration validation: 68 unique executable versions;
 - focused Jest: CRM migration/API/Board/workbench suites pass;
-- full Jest: 108 suites, 901 tests and 5 snapshots pass;
+- full Jest: 108 suites, 906 tests and 5 snapshots pass before the final
+  entry-page source guard was added; that guard is also covered by the focused
+  CRM contract suite;
 - TypeScript passes;
 - fresh socket-only PostgreSQL 16 replay applies all 68 migrations and passes
   the R3-1, R3-2 and R3-3 adversarial matrices, the owner matrix, complete
   definer allowlist, injection, dirty/rerun and 40-way concurrency gates;
 - R3-3 proves owner and exact assigned-estimator access, viewer denial,
   authenticated direct-DML denial, exact replay, changed replay refusal, stale
-  token refusal, honest commercial-estimating refusal, engine/version
+  token refusal, honest commercial and specialty-estimating refusal,
+  engine/version
   allowlisting, exact composite package/run binding, package-pointer/token agreement, the invariant that an
   `estimated` package must reference its immutable newly selected estimate, private
-  access-note exclusion, ID-only outbox payloads and authenticated direct-command denial;
+  access-adjacent free-text exclusion, ID-only outbox payloads, authenticated
+  direct-command denial, exact replay after later lifecycle movement, and
+  later-state package regression refusal;
 - a two-session race from one package token produces exactly one committed
   estimate/pointer update and one `40001` refusal (`R3_3_CONCURRENCY_PASS`); and
 - production build requires ordinary build-time Supabase public variables; no
   hosted database or production mutation is part of this local gate.
 
-Next: bind a committed candidate into an exact independent-review packet. Only
+The first two independent packets are rejected and superseded. The corrected
+candidate closes the workbench/route privacy-shape mismatch, specialty-segment
+disguise, later-state package demotion, selected-scenario display, replay-order,
+NULL-segment, fractional-cent and generic service-failure findings. Next: bind
+the corrected commit into a comprehensive exact independent-review packet. Only
 after exact-candidate PASS may a separately authorized guarded isolated-preview
 apply and genuine desktop/390px operator acceptance occur.
 

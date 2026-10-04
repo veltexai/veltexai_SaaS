@@ -8,7 +8,7 @@ const root = resolve(here, '../..');
 const migrationsDir = join(root, 'supabase/migrations');
 const migrationName = '20261004000000_r3_3_estimate_scenario_linkage.sql';
 const migrationVersion = '20261004000000';
-const expectedSourceSha = 'a6bd7e47ee1fb2747af523a6bb281390b05939290d5e0ea8ec4c953fabf312d8';
+const expectedSourceSha = 'f1c34282cb12094888215fcc029a213cc78eca2cbc28a2e3f152cba74c09b1a8';
 const output = process.argv[2] || '/private/tmp/veltex-r3-3-preview-apply.sql';
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 

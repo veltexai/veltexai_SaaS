@@ -130,8 +130,11 @@ it('saves a selected CRM scenario through the scoped estimate route without gene
  expect(screen.getByText('Internal planning estimate — not a sent proposal, contract, or guaranteed margin.')).toBeInTheDocument();
  const high=screen.getAllByRole('button').find(button=>button.getAttribute('aria-pressed')==='false' && button.textContent?.startsWith('$'))!;
  fireEvent.click(high);
+ const selectedPrice=high.textContent!;
  const saveButton=screen.getByRole('button',{name:/Save (low|base|high) estimate — \$/});
- expect(saveButton).toHaveTextContent(high.textContent!);
+ expect(saveButton).toHaveTextContent(selectedPrice);
+ expect(screen.getByText(`Working price: ${selectedPrice} / visit`)).toBeInTheDocument();
+ expect(screen.getByText(/Monthly planning amount:/)).not.toHaveTextContent('NaN');
  fireEvent.click(saveButton);
  await waitFor(()=>expect(global.fetch).toHaveBeenCalledWith('/api/orgs/org-1/crm/opportunities/opp-1/estimates',expect.objectContaining({method:'POST'})));
  const estimateCall=jest.mocked(global.fetch).mock.calls.find(([url,init])=>String(url).includes('/estimates') && init?.method==='POST')!;

@@ -2341,3 +2341,38 @@ After any material action, append or revise the relevant section with:
   A desktop/genuine-390px acceptance checklist is also frozen. No hosted
   Preview or production action occurred; execution remains contingent on an
   independent `PASS` and the applicable exact-action authorization.
+- **R3-3 REMEDIATION RE-REVIEW — FAIL / SECOND CORRECTION REQUIRED:** Claude
+  verified exact packet SHA `fa99cad8...`, reproduced the complete 68-migration
+  PostgreSQL 16 harness with definer checks and returned `FAIL` in the existing
+  review chat. Critical: the workbench removed `access` before transport while
+  the route schema still required it, making every real CRM estimate save return
+  `400`. High: specialty opportunities could still be disguised as residential.
+  Medium: opening and saving a later-state package could silently demote it to
+  scoping, and the committed matrix did not directly prove several claimed
+  invariants. Lower findings covered selected-scenario derived figures, exact
+  replay after lifecycle movement, NULL segment logic, immutable free text,
+  generic recovery errors and a compatibility-risking change to the frozen v2
+  schema. Candidate `c4aa331` and packet `fa99cad8...` are **REJECTED /
+  SUPERSEDED FOR RELEASE**. No hosted Preview or production state changed.
+- **R3-3 SECOND CORRECTION — LOCAL VERIFIED / PACKET FREEZE PENDING:** The
+  second bounded correction closes every launch-significant re-review finding
+  without adding another pricing engine. The CRM workbench's privacy-stripped
+  payload is accepted and independently validated by the route; specialty and
+  NULL segments are refused across UI/API/database boundaries; proposed,
+  accepted and declined packages are read-only and cannot be demoted; selected
+  scenario price/cost/margin are displayed consistently; exact replay remains
+  available after later lifecycle movement while new commands remain blocked;
+  access-adjacent free text is removed before storage and rejected in SQL; the
+  frozen v2 schema is unchanged; route-level fractional-cent checks and generic
+  service-failure recovery are covered. Migration SHA-256 is
+  `f1c34282cb12094888215fcc029a213cc78eca2cbc28a2e3f152cba74c09b1a8`.
+  Local gates pass: 68-version validation; 108 Jest suites / 906 tests / five
+  snapshots before the final entry-page source guard; TypeScript; production
+  build using the repository's documented inert local public variables; diff
+  hygiene; deterministic guarded Preview artifact (24,522 bytes, SHA-256
+  `3e50183b09ba35abcd6f5b5dc1868b98b1cbd65de01b7189f71f77f95baa9472`);
+  and a fresh socket-only PostgreSQL 16 full harness covering all prior gates
+  plus the expanded specialty/privacy/replay/lifecycle/role matrix and the
+  two-session race. No hosted or external mutation occurred. The next action is
+  to commit and freeze a replacement packet; external transmission remains
+  separately gated.

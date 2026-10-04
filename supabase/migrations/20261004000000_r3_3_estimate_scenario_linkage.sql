@@ -140,17 +140,6 @@ begin
       raise exception 'estimate context unavailable' using errcode='23514';
     end if;
   end if;
-  if opportunity_row.segment='commercial' then
-    raise exception 'commercial estimating is not supported by this engine' using errcode='23514';
-  end if;
-  if exists(select 1 from public.crm_pipeline_stages s
-    where s.organization_id=p_organization and s.id=opportunity_row.stage_id
-      and s.category in ('won','lost','disqualified','handed_off')) then
-    raise exception 'closed opportunity cannot be estimated' using errcode='23514';
-  end if;
-  if p_package is not null and package_row.status not in ('scoping','walkthrough_scheduled','estimated') then
-    raise exception 'package lifecycle cannot be regressed by an estimate' using errcode='23514';
-  end if;
   if p_engine_key<>'service_catalog' or p_engine_version<>'2026-09-22.2'
      or p_selected_scenario not in ('low','base','high','override')
      or p_selected_amount_minor<0 or p_currency<>'USD'
@@ -159,8 +148,12 @@ begin
      or p_input_snapshot->>'catalogVersion' is distinct from '2026-09-22.2'
      or p_output_snapshot->>'version' is distinct from '2026-09-22.2'
      or p_output_snapshot->>'unit' is distinct from 'per_visit'
-     or p_input_snapshot ? 'access'
-     or p_input_snapshot->>'segment' not in ('residential','short_term_rental') then
+     or coalesce(opportunity_row.segment,'') not in ('residential','turnover')
+     or p_input_snapshot->>'segment' is distinct from
+       (case opportunity_row.segment when 'residential' then 'residential'
+         when 'turnover' then 'short_term_rental' end)
+     or p_input_snapshot ?| array['access','scheduling','scopeAdditions','coverLetter','companyName','operatorNotes']
+     or coalesce((p_input_snapshot#>'{turnover}') ? 'restockList',false) then
     raise exception 'estimate snapshot unavailable' using errcode='23514';
   end if;
   if p_pricing_basis<>(case
@@ -195,6 +188,14 @@ begin
     end if;
     return query select existing.estimate_run_id,existing.resulting_package_updated_at,true;
     return;
+  end if;
+  if exists(select 1 from public.crm_pipeline_stages s
+    where s.organization_id=p_organization and s.id=opportunity_row.stage_id
+      and s.category in ('won','lost','disqualified','handed_off')) then
+    raise exception 'closed opportunity cannot be estimated' using errcode='23514';
+  end if;
+  if p_package is not null and package_row.status not in ('scoping','walkthrough_scheduled','estimated') then
+    raise exception 'package lifecycle cannot be regressed by an estimate' using errcode='23514';
   end if;
   if p_package is not null and (p_expected_package_updated_at is null
      or package_row.updated_at is distinct from p_expected_package_updated_at) then

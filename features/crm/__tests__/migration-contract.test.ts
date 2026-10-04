@@ -13,6 +13,10 @@ const estimateLinkageMigration = readFileSync(
   resolve(process.cwd(), 'supabase/migrations/20261004000000_r3_3_estimate_scenario_linkage.sql'),
   'utf8',
 );
+const estimateEntryPage = readFileSync(
+  resolve(process.cwd(), 'app/dashboard/crm/estimate/[opportunityId]/page.tsx'),
+  'utf8',
+);
 
 const tenantTables = [
   'crm_customers',
@@ -271,6 +275,12 @@ describe('R3-1 CRM migration contract', () => {
 });
 
 describe('R3-3 estimate linkage migration contract', () => {
+  it('keeps unsupported segments and later package states out of the estimator entry page', () => {
+    expect(estimateEntryPage).toContain("!['residential', 'turnover'].includes(opportunity.segment ?? '')");
+    expect(estimateEntryPage).toContain("!['scoping', 'walkthrough_scheduled', 'estimated'].includes(workPackage.status)");
+    expect(estimateEntryPage).toContain('Proposed, accepted and declined packages are locked');
+  });
+
   it('is atomic, additive, append-only, tenant-bound, and engine-version allowlisted', () => {
     expect(estimateLinkageMigration.match(/^begin;$/gim)).toHaveLength(1);
     expect(estimateLinkageMigration.match(/^commit;$/gim)).toHaveLength(1);
@@ -282,13 +292,15 @@ describe('R3-3 estimate linkage migration contract', () => {
     expect(estimateLinkageMigration).toContain('from public,anon,authenticated,service_role');
     expect(estimateLinkageMigration).not.toMatch(/grant\s+(insert|update|delete).*crm_estimate_runs.*authenticated/i);
   });
-  it('refuses unsupported commercial estimates and guards values, replay, concurrency, and ID-only events', () => {
-    expect(estimateLinkageMigration).toContain("opportunity_row.segment='commercial'");
-    expect(estimateLinkageMigration).toContain("raise exception 'commercial estimating is not supported by this engine'");
+  it('allowlists supported opportunity/snapshot pairs and guards values, replay, concurrency, and ID-only events', () => {
+    expect(estimateLinkageMigration).toContain("coalesce(opportunity_row.segment,'') not in ('residential','turnover')");
+    expect(estimateLinkageMigration).toContain("when 'turnover' then 'short_term_rental'");
+    expect(estimateLinkageMigration).toContain("p_input_snapshot->>'segment' is distinct from");
     expect(estimateLinkageMigration).toContain('create function public.command_crm_estimate_run_internal(');
     expect(estimateLinkageMigration).toContain(') from public,anon,authenticated;');
     expect(estimateLinkageMigration).toContain(') to service_role;');
-    expect(estimateLinkageMigration).toContain("p_input_snapshot ? 'access'");
+    expect(estimateLinkageMigration).toContain("p_input_snapshot ?| array['access','scheduling','scopeAdditions','coverLetter','companyName','operatorNotes']");
+    expect(estimateLinkageMigration).toContain("(p_input_snapshot#>'{turnover}') ? 'restockList'");
     expect(estimateLinkageMigration).toContain('foreign key(organization_id,id,opportunity_id,property_id,estimate_run_id)');
     expect(estimateLinkageMigration).toContain('round(selected_value*100)::bigint<>p_selected_amount_minor');
     expect(estimateLinkageMigration).toContain("raise exception 'estimate key already used'");

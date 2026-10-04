@@ -80,7 +80,7 @@ export const jobInputSchema = z.object({
   }).strict().optional(),
   costs: costAssumptionsSchema,
   locationPricing: locationPricingSnapshotSchema.optional(),
-  override: z.object({ pricePerVisit: amount.positive().multipleOf(0.01), reason: z.string().trim().min(5).max(1000) }).strict().optional(),
+  override: z.object({ pricePerVisit: amount.positive(), reason: z.string().trim().min(5).max(1000) }).strict().optional(),
   operatorNotes: z.string().max(4000),
 }).strict();
 export const jobSchema = jobInputSchema.superRefine((job, ctx) => {

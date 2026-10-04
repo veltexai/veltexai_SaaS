@@ -13,7 +13,7 @@ customer, address, scope, price, access instruction, photograph or attachment.
 - Reviewed candidate: `c4aa33165f2f086e97fcce34a0c903f060039de3`
 - Migration: `20261004000000_r3_3_estimate_scenario_linkage.sql`
 - Migration SHA-256:
-  `a6bd7e47ee1fb2747af523a6bb281390b05939290d5e0ea8ec4c953fabf312d8`
+  `f1c34282cb12094888215fcc029a213cc78eca2cbc28a2e3f152cba74c09b1a8`
 - Expected PostgreSQL history after apply: `68`
 - Guarded SQL artifact path, SHA-256 and Preview deployment URL: record after
   the independent verdict and before mutation.

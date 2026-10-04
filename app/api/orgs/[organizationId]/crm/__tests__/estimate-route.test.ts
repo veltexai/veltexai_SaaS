@@ -35,14 +35,35 @@ describe('R3-3 estimate route',()=>{
       p_selected_amount_minor:Math.round(output.base.suggestedPrice*100),p_currency:'USD',
     }));
   });
+  it('accepts the exact privacy-stripped job sent by the workbench',async()=>{
+    const rpc=client();const {POST}=await import('../opportunities/[opportunityId]/estimates/route');
+    const body=JSON.parse(await req().text());delete body.job.access;
+    expect((await POST(req(body),context)).status).toBe(201);
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rpc.mock.calls[0][1].p_input_snapshot).not.toHaveProperty('access');
+  });
   it('strips private access notes before persistence and rejects unsupported commercial estimates',async()=>{
     const rpc=client();const {POST}=await import('../opportunities/[opportunityId]/estimates/route');
     const privateJob={...job,access:'Gate 4815'};
     expect((await POST(req({...JSON.parse(await req().text()),job:privateJob}),context)).status).toBe(201);
     expect(rpc.mock.calls[0][1].p_input_snapshot).not.toHaveProperty('access');
+    expect(rpc.mock.calls[0][1].p_input_snapshot).not.toHaveProperty('operatorNotes');
     rpc.mockClear();
     expect((await POST(req({...JSON.parse(await req().text()),job:{...job,segment:'commercial'}}),context)).status).toBe(400);
     expect(rpc).not.toHaveBeenCalled();
+  });
+  it('maps a missing service credential to a bounded unavailable response',async()=>{
+    client();createServiceClient.mockImplementationOnce(()=>{throw new Error('missing secret');});
+    const {POST}=await import('../opportunities/[opportunityId]/estimates/route');
+    const response=await POST(req(),context);
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({error:'CRM is unavailable. Please try again.'});
+  });
+  it('rejects fractional-cent overrides without tightening the frozen v2 job schema',async()=>{
+    const rpc=client();const {POST}=await import('../opportunities/[opportunityId]/estimates/route');
+    const response=await POST(req({...JSON.parse(await req().text()),selectedScenario:'override',
+      job:{...job,override:{pricePerVisit:1.005,reason:'Reviewed operator exception'}}}),context);
+    expect(response.status).toBe(400);expect(rpc).not.toHaveBeenCalled();
   });
   it('rejects viewers, missing retry keys, mismatched package tokens, and invalid overrides before RPC',async()=>{
     let rpc=client('viewer');const {POST}=await import('../opportunities/[opportunityId]/estimates/route');

@@ -100,8 +100,10 @@ function estimateLabel(summary?: EstimateSummary) {
 
 function estimateHref(board: Board, opportunity: Opportunity, organizationId: string | null) {
   if (!organizationId || !opportunity.property_id) return null;
-  if (opportunity.segment === 'commercial') return null;
+  if (!['residential', 'turnover'].includes(opportunity.segment ?? '')
+      || ['won', 'lost', 'disqualified', 'handed_off'].includes(opportunity.category)) return null;
   const workPackage = (board.work_packages ?? []).find((item) => item.opportunity_id === opportunity.id);
+  if (workPackage && !['scoping', 'walkthrough_scheduled', 'estimated'].includes(workPackage.status)) return null;
   return { pathname: `/dashboard/crm/estimate/${opportunity.id}`,
     query: { organizationId, ...(workPackage ? { packageId: workPackage.id } : {}) } };
 }
@@ -543,6 +545,10 @@ export function CrmBoard() {
   async function submitWorkPackage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!organizationId || !packageFor?.opportunity.property_id) return;
+    if (packageFor.item && packageFor.item.status !== 'scoping') {
+      setNotice('This package state is read-only here.');
+      return;
+    }
     const form = new FormData(event.currentTarget);
     const packageId = packageFor.item?.id ?? crypto.randomUUID();
     const status = String(form.get('status')) as WorkPackage['status'];
@@ -870,7 +876,10 @@ export function CrmBoard() {
       {packageFor && (
         <Card role="dialog" aria-labelledby="package-heading">
           <CardHeader><CardTitle id="package-heading">Site work package</CardTitle></CardHeader>
-          <CardContent><form className="space-y-4" onSubmit={submitWorkPackage}>
+          <CardContent>{packageFor.item && packageFor.item.status !== 'scoping' ? <div className="space-y-4">
+            <p className="text-sm text-gray-700">This package is <strong>{packageFor.item.status.replaceAll('_', ' ')}</strong>. Its linked evidence and lifecycle state are read-only in this editor.</p>
+            <Button type="button" variant="outline" className="min-h-11" onClick={() => setPackageFor(null)}>Close</Button>
+          </div> : <form className="space-y-4" onSubmit={submitWorkPackage}>
             <p className="text-sm text-gray-700">Track scoped work for {packageFor.opportunity.name}.</p>
             <div className="space-y-2"><Label htmlFor="package-status">Status</Label>
               <select id="package-status" name="status" defaultValue={packageFor.item?.status ?? 'scoping'}
@@ -880,7 +889,7 @@ export function CrmBoard() {
             <p className="text-xs text-gray-600">Walkthrough, proposal, acceptance, and decline states become available only with their required linked evidence.</p>
             <div className="flex gap-3"><Button type="submit" className="min-h-11">Save work package</Button>
               <Button type="button" variant="outline" className="min-h-11" onClick={() => setPackageFor(null)}>Cancel</Button></div>
-          </form></CardContent>
+          </form>}</CardContent>
         </Card>
       )}
       {outcome && (
@@ -1184,11 +1193,12 @@ export function CrmBoard() {
                         {opportunity.property_id && <Button type="button" variant="outline" className="min-h-11 w-full"
                           onClick={() => setPackageFor({ opportunity, item: (board.work_packages ?? [])
                             .find((entry) => entry.opportunity_id === opportunity.id) })}>
-                          {(board.work_packages ?? []).some((entry) => entry.opportunity_id === opportunity.id)
-                            ? 'Manage work package' : 'Add work package'}</Button>}
+                          {(board.work_packages ?? []).find((entry) => entry.opportunity_id === opportunity.id)?.status === 'scoping'
+                            ? 'Manage work package' : (board.work_packages ?? []).some((entry) => entry.opportunity_id === opportunity.id)
+                              ? 'Review work package' : 'Add work package'}</Button>}
                         {estimateHref(board,opportunity,organizationId) && <Button asChild variant="outline" className="min-h-11 w-full"><Link href={estimateHref(board,opportunity,organizationId)!}>Estimate</Link></Button>}
-                        {opportunity.segment==='commercial'
-                          && <p className="text-xs text-gray-600">Commercial estimating is not yet supported by the current pricing model.</p>}
+                        {!['residential','turnover'].includes(opportunity.segment ?? '')
+                          && <p className="text-xs text-gray-600">Commercial and specialty estimating are not yet supported by the current pricing model.</p>}
                         {['owner', 'admin'].includes(board.caller_role) && (
                           <Button type="button" variant="outline" className="min-h-11 w-full"
                             onClick={() => setAssigningOpportunity(opportunity)}>Change assignment</Button>
@@ -1247,13 +1257,14 @@ export function CrmBoard() {
                         <Button type="button" variant="outline" className="min-h-11"
                           onClick={() => setPackageFor({ opportunity, item: (board.work_packages ?? [])
                             .find((entry) => entry.opportunity_id === opportunity.id) })}>
-                          {(board.work_packages ?? []).some((entry) => entry.opportunity_id === opportunity.id)
-                            ? 'Manage work package' : 'Add work package'}
+                          {(board.work_packages ?? []).find((entry) => entry.opportunity_id === opportunity.id)?.status === 'scoping'
+                            ? 'Manage work package' : (board.work_packages ?? []).some((entry) => entry.opportunity_id === opportunity.id)
+                              ? 'Review work package' : 'Add work package'}
                         </Button>
                       )}
                       {estimateHref(board,opportunity,organizationId) && <Button asChild variant="outline" className="min-h-11"><Link href={estimateHref(board,opportunity,organizationId)!}>Estimate</Link></Button>}
-                      {opportunity.segment==='commercial'
-                        && <p className="text-xs text-gray-600">Commercial estimating is not yet supported by the current pricing model.</p>}
+                      {!['residential','turnover'].includes(opportunity.segment ?? '')
+                        && <p className="text-xs text-gray-600">Commercial and specialty estimating are not yet supported by the current pricing model.</p>}
                       {['owner', 'admin'].includes(board.caller_role) && (
                         <Button type="button" variant="outline" className="min-h-11"
                           onClick={() => setAssigningOpportunity(opportunity)}>Change assignment</Button>

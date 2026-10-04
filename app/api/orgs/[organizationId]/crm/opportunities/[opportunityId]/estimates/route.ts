@@ -38,15 +38,25 @@ export async function POST(request: NextRequest, { params }: Context) {
   const value = parsed.data;
   if (value.job.segment === 'commercial' || value.job.segment === 'specialty')
     return NextResponse.json({ error: 'Commercial estimating is not yet supported by this pricing model.' }, { status: 422 });
-  const { access: _excludedAccess, ...safeInputSnapshot } = value.job;
+  const { access: _excludedAccess, scheduling: _excludedScheduling,
+    scopeAdditions: _excludedScopeAdditions, coverLetter: _excludedCoverLetter,
+    companyName: _excludedCompanyName, operatorNotes: _excludedOperatorNotes,
+    ...safeJob } = value.job;
+  const safeTurnover = safeJob.turnover
+    ? (({ restockList: _excludedRestockList, ...turnover }) => turnover)(safeJob.turnover)
+    : undefined;
+  const safeInputSnapshot = { ...safeJob,
+    ...(safeTurnover ? { turnover: safeTurnover } : {}) };
   const output = estimateOutputSchema.parse(estimateJob({ ...value.job, access: '' }));
   const selected = value.selectedScenario === 'override'
     ? value.job.override!.pricePerVisit : output[value.selectedScenario].suggestedPrice;
   const selectedAmountMinor = Math.round(selected * 100);
   if (!Number.isSafeInteger(selectedAmountMinor) || selectedAmountMinor < 0)
     return NextResponse.json({ error: 'Invalid estimate amount.' }, { status: 400 });
-  const serviceClient = createServiceClient();
-  const { data, error } = await serviceClient.rpc('command_crm_estimate_run_internal', {
+  let commandResult: Awaited<ReturnType<ReturnType<typeof createServiceClient>['rpc']>>;
+  try {
+    const serviceClient = createServiceClient();
+    commandResult = await serviceClient.rpc('command_crm_estimate_run_internal', {
     p_actor: context.user.id,
     p_organization: context.organizationId, p_opportunity: opportunityId,
     p_package: value.workPackageId ?? null, p_property: value.propertyId,
@@ -55,7 +65,11 @@ export async function POST(request: NextRequest, { params }: Context) {
     p_selected_scenario: value.selectedScenario, p_selected_amount_minor: selectedAmountMinor,
     p_currency: 'USD', p_pricing_basis: value.pricingBasis,
     p_expected_package_updated_at: value.expectedPackageUpdatedAt ?? null,
-  });
+    });
+  } catch {
+    return NextResponse.json({ error: 'CRM is unavailable. Please try again.' }, { status: 503 });
+  }
+  const { data, error } = commandResult;
   if (error?.code === '42501') return NextResponse.json({ error: 'CRM workspace not found.' }, { status: 404 });
   if (error?.code === '40001') return NextResponse.json({ error: 'This package changed. Reload and try again.' }, { status: 409 });
   if (error?.code === '23514' || error?.code === '22P02')

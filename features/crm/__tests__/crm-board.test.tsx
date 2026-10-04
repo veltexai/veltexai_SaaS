@@ -73,7 +73,7 @@ describe('R3-1 CRM board', () => {
     fetchMock.mockResolvedValueOnce({ok:true,json:async()=>({data:ORG_ID})}).mockResolvedValueOnce({ok:true,json:async()=>({data:{
       organization_id:ORG_ID,caller_role:'estimator',loss_reasons:[],viewer_price_redacted:false,
       pipelines:[{id:'pipeline-1',name:'Residential',is_default:true,stages:[{id:'stage-1',label:'Quote',category:'estimating',position:40,hidden:false}]}],
-      opportunities:[{id:'opportunity-1',name:'Turnover',pipeline_id:'pipeline-1',stage_id:'stage-1',category:'estimating',property_id:'property-1',updated_at:'2026-10-03T08:00:00Z'}],
+      opportunities:[{id:'opportunity-1',name:'Turnover',pipeline_id:'pipeline-1',stage_id:'stage-1',category:'estimating',segment:'residential',property_id:'property-1',updated_at:'2026-10-03T08:00:00Z'}],
       work_packages:[{id:'package-1',opportunity_id:'opportunity-1',property_id:'property-1',status:'estimated',updated_at:'2026-10-03T08:00:00Z'}],
       estimate_summaries:[{estimate_run_id:'run-1',opportunity_id:'opportunity-1',work_package_id:'package-1',engine_version:'2026-09-22.2',selected_amount_minor:18500,currency:'USD',pricing_basis:'per_visit',created_at:'2026-10-03T08:00:00Z'}],
     }})});
@@ -83,6 +83,23 @@ describe('R3-1 CRM board', () => {
     fireEvent.click(screen.getByRole('button',{name:'List'}));
     expect(screen.getByText(/Internal estimate:.*185\.00/)).toBeInTheDocument();
     expect(screen.getByRole('link',{name:'Estimate'})).toBeInTheDocument();
+  });
+
+  it('blocks specialty estimates and makes non-scoping packages read-only',async()=>{
+    fetchMock.mockResolvedValueOnce({ok:true,json:async()=>({data:ORG_ID})}).mockResolvedValueOnce({ok:true,json:async()=>({data:{
+      organization_id:ORG_ID,caller_role:'owner',loss_reasons:[],viewer_price_redacted:false,
+      pipelines:[{id:'pipeline-1',name:'Commercial',is_default:true,stages:[{id:'stage-1',label:'Quote',category:'estimating',position:40,hidden:false}]}],
+      opportunities:[{id:'opportunity-1',name:'Specialty floor',pipeline_id:'pipeline-1',stage_id:'stage-1',category:'estimating',segment:'specialty',property_id:'property-1',updated_at:'2026-10-03T08:00:00Z'}],
+      work_packages:[{id:'package-1',opportunity_id:'opportunity-1',property_id:'property-1',status:'accepted',updated_at:'2026-10-03T08:00:00Z'}],
+    }})});
+    render(<CrmBoard/>);await screen.findByRole('heading',{name:'Specialty floor'});
+    expect(screen.queryByRole('link',{name:'Estimate'})).not.toBeInTheDocument();
+    expect(screen.getByText(/Commercial and specialty estimating are not yet supported/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button',{name:'Review work package'}));
+    expect(screen.getByText('accepted')).toBeInTheDocument();
+    expect(screen.queryByRole('button',{name:'Save work package'})).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button',{name:'Close'}));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('creates a customer, primary contact, and property through one account command', async () => {
