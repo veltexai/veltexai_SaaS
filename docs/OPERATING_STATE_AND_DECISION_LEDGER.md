@@ -118,6 +118,26 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
   or production. Cursor's complementary operator audit is still running; its
   evidence must be reconciled before the smallest shared correction is frozen.
   No hosted state changed.
+- **COMPLEMENTARY CURSOR VERDICT — FAIL / SHARED FINDINGS CONFIRMED:** Cursor
+  verified the final packet SHA, exact bound source bytes and guarded Preview
+  artifact, ran 88 focused tests, and returned `FAIL` against application
+  candidate `631fdb4`. Its operator audit independently confirms Claude's two
+  Medium findings: turnover opens as residential instead of being pinned to
+  `short_term_rental`, and the selected Low/Base/High scenario updates headline
+  price/margin while detail cost and person-hours remain Base. Cursor also
+  found the new CRM Save button remains the shared 36 px default instead of the
+  required 44 px target. Lower findings are non-wrapping List actions at 390 px
+  and locked-state copy promising estimate history that Board/List do not show.
+  Cursor confirmed the privacy-stripped payload, commercial/specialty/NULL
+  refusal, later-state UI/page locks, stable retry key, bounded route responses,
+  packet identity and Preview artifact identity. It did not duplicate Claude's
+  SQL/RLS/definer/concurrency lane, edit repository files or access hosted
+  systems. The smallest shared correction is therefore bounded to: server/SQL
+  lifecycle enforcement on the legacy package command, turnover CRM prefill
+  and market lock, one selected-scenario detail source, 44 px CRM Save, the
+  missing executable regressions, and narrowly related recovery/copy fixes.
+  Genuine 390 px Preview acceptance remains a later gate. R3-3 stays
+  **INDEPENDENT FAIL / DO NOT DEPLOY**. No hosted state changed.
 - **B1 MESSAGE CONTRACT IMPLEMENTED LOCALLY:** `features/brand/messaging.ts`
   pins the `Veltex` master brand, retained `Veltex AI` operational identity,
   category, promise, operator-control/privacy/manual-fallback trust points,
