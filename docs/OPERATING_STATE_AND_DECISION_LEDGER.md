@@ -2533,10 +2533,12 @@ After any material action, append or revise the relevant section with:
   migration source SHA-256 is
   `3067e9f9349efefda93a5ee30fc4629d9ec7a7d7e74662c80204d7b6a082b902`.
 - **STATUS / NEXT GATE:** R3-3 remains `LOCAL VERIFIED / INDEPENDENT RE-REVIEW
-  PENDING`, not accepted or deployable. Next is one exact commit and one
-  checksum-bound packet containing the expanded final-audit instructions.
-  Sending that new packet externally remains action-specific. No Preview,
-  production, credential, customer-data or paid-service change occurred.
+  IN PROGRESS`, not accepted or deployable. After exact founder authorization,
+  the checksum-bound final-audit packet was attached once to the established
+  authenticated Claude review chat at
+  `https://claude.ai/chat/2b747b79-195b-4b51-b52b-215926f48212`. Claude visibly
+  accepted the message and began responding. No Preview, production,
+  credential, customer-data or paid-service change occurred.
 - **EXACT FINAL-AUDIT CANDIDATE FROZEN:** Application, database, executable
   evidence and mandatory review instructions are committed as exact candidate
   `4c758e48924ad930b24bbb4a22f61eaa634a71c0`. The comprehensive replacement
@@ -2544,10 +2546,12 @@ After any material action, append or revise the relevant section with:
   1,699,361 bytes, 1,172 entries, SHA-256
   `ed786a747ee18fd59e02ed85b48d8adf73ed08fe342a5ca4706f8e55ff195f8a`;
   ZIP integrity and presence of every changed route, UI, migration, matrix,
-  test, ledger and assignment surface pass. It has **not** been transmitted.
-  All earlier R3-3 packets remain superseded. Sending this exact new file/hash
-  to Claude is the next action-specific gate; a `PASS` is still required before
-  any isolated Preview mutation or deployment.
+  test, ledger and assignment surface pass. Its exact hash was reverified
+  immediately before transmission and ZIP integrity passed. The approved file
+  was transmitted once to Claude with read-only, local-disposable-only review
+  instructions. All earlier R3-3 packets remain superseded. Claude's independent
+  `PASS` or actionable `FAIL` is now the next gate; a `PASS` is still required
+  before any isolated Preview mutation or deployment.
 - **R3-4 ENTRY CONTRACT PREPARED / IMPLEMENTATION NOT STARTED:** While the
   R3-3 external-send gate waits, the next dependency was advanced without
   crossing it. `R3_4_IMMUTABLE_PROPOSAL_VERSION_CONTRACT.md` freezes an
