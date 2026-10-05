@@ -2570,3 +2570,12 @@ After any material action, append or revise the relevant section with:
   expanded portal for Stage 6. Status is `ENTRY CONTRACT PREPARED /
   IMPLEMENTATION DEPENDENCY-BLOCKED`; no token, acceptance, customer message,
   notification or hosted state was created.
+- **R3-6 HANDOFF ENTRY CONTRACT PREPARED / IMPLEMENTATION NOT STARTED:**
+  `R3_6_PROVIDER_NEUTRAL_HANDOFF_CONTRACT.md` defines the first bounded
+  provider-neutral delivery: an immutable accepted-source chain, deterministic
+  JSON/CSV/proposal-PDF/checksum bundle, private object storage, append-only
+  delivery receipt and atomic lifecycle movement only after verified operator
+  download. Generation alone cannot claim handoff. Webhook/email adapters,
+  scheduling, billing and access-note export remain excluded. Status is `ENTRY
+  CONTRACT PREPARED / IMPLEMENTATION DEPENDENCY-BLOCKED`; no artifact, storage
+  object, download, lifecycle mutation or hosted action occurred.
