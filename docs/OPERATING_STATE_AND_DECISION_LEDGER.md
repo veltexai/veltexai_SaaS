@@ -2537,3 +2537,14 @@ After any material action, append or revise the relevant section with:
   checksum-bound packet containing the expanded final-audit instructions.
   Sending that new packet externally remains action-specific. No Preview,
   production, credential, customer-data or paid-service change occurred.
+- **EXACT FINAL-AUDIT CANDIDATE FROZEN:** Application, database, executable
+  evidence and mandatory review instructions are committed as exact candidate
+  `4c758e48924ad930b24bbb4a22f61eaa634a71c0`. The comprehensive replacement
+  archive is `/private/tmp/veltex-r3-3-final-audit-4c758e4-review.zip`,
+  1,699,361 bytes, 1,172 entries, SHA-256
+  `ed786a747ee18fd59e02ed85b48d8adf73ed08fe342a5ca4706f8e55ff195f8a`;
+  ZIP integrity and presence of every changed route, UI, migration, matrix,
+  test, ledger and assignment surface pass. It has **not** been transmitted.
+  All earlier R3-3 packets remain superseded. Sending this exact new file/hash
+  to Claude is the next action-specific gate; a `PASS` is still required before
+  any isolated Preview mutation or deployment.
