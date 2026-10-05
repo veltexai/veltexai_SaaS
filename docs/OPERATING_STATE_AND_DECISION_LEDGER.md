@@ -82,6 +82,19 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
   read-only re-review. Status is **PENDING**; this dispatch is not a PASS and
   does not unlock Preview or production. No hosted application/database,
   credential, deployment, billing, campaign, or production state changed.
+- **COMPLEMENTARY CURSOR AUDIT ACTIVE:** After the founder confirmed that all
+  three build tools should remain active, Cursor received a separate bounded
+  read-only assignment against application candidate `631fdb4`, instructions
+  `0a6e900`, Preview evidence `eaf5156`, and final packet SHA-256
+  `99840f2bf8a4504ba0ef0d26a5d5a510edf484d55bcf835774132a1809d4821f`.
+  Its scope is operator workflow, privacy-stripped request integration,
+  supported-segment and lifecycle affordances, selected-scenario figures,
+  retry/reload behavior, Board/List parity, accessibility and genuine 390 px
+  evidence. Claude retains the independent database/security and mandatory
+  prior-finding re-review; Codex retains integration, evidence reconciliation
+  and release-gate ownership. Cursor is visibly running and may inspect or run
+  safe local tests only; edits, commits, hosted access and deployment are
+  prohibited. Status is **PENDING**, not PASS. No hosted state changed.
 - **B1 MESSAGE CONTRACT IMPLEMENTED LOCALLY:** `features/brand/messaging.ts`
   pins the `Veltex` master brand, retained `Veltex AI` operational identity,
   category, promise, operator-control/privacy/manual-fallback trust points,
