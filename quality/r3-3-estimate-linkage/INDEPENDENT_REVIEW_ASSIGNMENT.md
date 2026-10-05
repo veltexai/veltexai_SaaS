@@ -132,6 +132,22 @@ source plus executable evidence closes every remaining finding:
    `quality/location-pricing/operator-results.csv`; do not accept a partial
    suite as reproduction of the implementer's full-suite claim.
 
+## Mandatory regression of packet `0e5d897f...fdf46e1`
+
+That exact final-pointer candidate returned `FAIL` even though its direct
+behavior probes passed. Do not return `PASS` unless the committed executable
+matrix itself closes both evidence defects:
+
+1. The proposed-package pointer test must use otherwise-valid evidence and
+   reach the exact evidence-pointer guard; generic proposed-status input
+   validation is not proof. The matrix must also perform a valid
+   proposed-to-declined transition and assert the original walkthrough,
+   proposal and estimate pointers remain intact.
+2. The estimate-command lifecycle regression must run while the opportunity is
+   still open and assert the exact package-lifecycle refusal. Only afterward may
+   a separately established lost-stage fixture prove the exact
+   closed-opportunity refusal. One refusal must not stand in for the other.
+
 Local evidence reported by the implementer will be frozen with the replacement
 packet after remediation: full Jest, TypeScript, production build, 68-version
 migration validation, and a
