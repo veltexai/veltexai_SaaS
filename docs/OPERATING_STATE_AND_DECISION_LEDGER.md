@@ -2548,3 +2548,14 @@ After any material action, append or revise the relevant section with:
   All earlier R3-3 packets remain superseded. Sending this exact new file/hash
   to Claude is the next action-specific gate; a `PASS` is still required before
   any isolated Preview mutation or deployment.
+- **R3-4 ENTRY CONTRACT PREPARED / IMPLEMENTATION NOT STARTED:** While the
+  R3-3 external-send gate waits, the next dependency was advanced without
+  crossing it. `R3_4_IMMUTABLE_PROPOSAL_VERSION_CONTRACT.md` freezes an
+  additive append-only child of the existing mutable Release 1 proposal,
+  exact R3-3 estimate/package/opportunity/property binding, strict
+  customer-visible privacy allowlist, canonical content/rendered hashes,
+  concurrency/idempotency rules and the boundary that publishing is neither
+  delivery nor acceptance. It preserves existing proposal/edit/send/tracking
+  paths and explicitly leaves C0 acceptance to R3-5. Status is `ENTRY CONTRACT
+  PREPARED / IMPLEMENTATION DEPENDENCY-BLOCKED`; no R3-4 migration, route, UI,
+  proposal bytes or hosted state were created.
