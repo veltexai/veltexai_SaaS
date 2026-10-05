@@ -42,14 +42,15 @@ export default async function CrmEstimatePage({ params, searchParams }: Props) {
   if (workPackage && !['scoping', 'walkthrough_scheduled', 'estimated'].includes(workPackage.status)) {
     return <main className="mx-auto max-w-2xl space-y-4 rounded-xl border bg-white p-6">
       <h1 className="text-2xl font-semibold">This work package cannot be estimated</h1>
-      <p>Proposed, accepted and declined packages are locked against estimate regression. Return to CRM to review the current package and estimate history.</p>
+      <p>Proposed, accepted and declined packages are locked against estimate regression. Return to CRM to review the current package status and latest estimate summary.</p>
       <Link className="underline" href="/dashboard/crm">Return to CRM</Link>
     </main>;
   }
   const property = board.properties?.find((item) => item.id === opportunity.property_id);
   const customer = property?.customer_id
     ? board.customers?.find((item) => item.id === property.customer_id) : undefined;
-  return <CatalogWorkbench crmEstimateContext={{ organizationId: query.organizationId,
+  return <CatalogWorkbench initialJobType={opportunity.segment === 'turnover'
+    ? 'airbnb_turnover' : 'recurring_standard'} crmEstimateContext={{ organizationId: query.organizationId,
     opportunityId, propertyId: opportunity.property_id, opportunityName: opportunity.name,
     customerName: customer?.name, propertyName: property?.name,
     ...(workPackage ? { workPackageId: workPackage.id,

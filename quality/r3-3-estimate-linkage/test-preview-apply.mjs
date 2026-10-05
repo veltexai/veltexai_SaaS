@@ -21,7 +21,7 @@ try {
     'R3-3 preview history mismatch', 'protected CRM table changed',
     'crm_estimate_runs', 'crm_estimate_run_commands',
     'command_crm_estimate_run_internal', 'guard_crm_estimate_selection',
-    'source_sha256:f1c34282cb12094888215fcc029a213cc78eca2cbc28a2e3f152cba74c09b1a8',
+    'source_sha256:3067e9f9349efefda93a5ee30fc4629d9ec7a7d7e74662c80204d7b6a082b902',
     "has_function_privilege('authenticated','public.command_crm_estimate_run_internal",
     "not has_function_privilege('service_role','public.command_crm_estimate_run_internal",
   ];

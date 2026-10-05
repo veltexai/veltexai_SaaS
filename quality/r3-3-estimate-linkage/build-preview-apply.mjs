@@ -8,7 +8,7 @@ const root = resolve(here, '../..');
 const migrationsDir = join(root, 'supabase/migrations');
 const migrationName = '20261004000000_r3_3_estimate_scenario_linkage.sql';
 const migrationVersion = '20261004000000';
-const expectedSourceSha = 'f1c34282cb12094888215fcc029a213cc78eca2cbc28a2e3f152cba74c09b1a8';
+const expectedSourceSha = '3067e9f9349efefda93a5ee30fc4629d9ec7a7d7e74662c80204d7b6a082b902';
 const output = process.argv[2] || '/private/tmp/veltex-r3-3-preview-apply.sql';
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 
@@ -31,8 +31,8 @@ const expectedValues = previous.map((version) => `('${version}')`).join(',');
 
 const sql = `-- ISOLATED PREVIEW ONLY: exact R3-3 atomic apply candidate.
 -- Target project must be confirmed in the Supabase UI as ynzkwctwlssjcsjmahey.
--- Reviewed application/database candidate: 631fdb4
--- Review-instruction commit: 0a6e900
+-- Candidate commit and packet SHA must be supplied with independent review.
+-- The migration source hash below is the authoritative database-byte binding.
 -- Migration SHA-256: ${expectedSourceSha}
 begin;
 select pg_advisory_xact_lock(hashtextextended('veltex-r3-3-preview-apply',0));

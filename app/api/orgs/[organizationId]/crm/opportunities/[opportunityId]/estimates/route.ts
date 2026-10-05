@@ -47,7 +47,12 @@ export async function POST(request: NextRequest, { params }: Context) {
     : undefined;
   const safeInputSnapshot = { ...safeJob,
     ...(safeTurnover ? { turnover: safeTurnover } : {}) };
-  const output = estimateOutputSchema.parse(estimateJob({ ...value.job, access: '' }));
+  let output: ReturnType<(typeof estimateOutputSchema)['parse']>;
+  try {
+    output = estimateOutputSchema.parse(estimateJob({ ...value.job, access: '' }));
+  } catch {
+    return NextResponse.json({ error: 'That estimate cannot be calculated. Review the job inputs.' }, { status: 422 });
+  }
   const selected = value.selectedScenario === 'override'
     ? value.job.override!.pricePerVisit : output[value.selectedScenario].suggestedPrice;
   const selectedAmountMinor = Math.round(selected * 100);

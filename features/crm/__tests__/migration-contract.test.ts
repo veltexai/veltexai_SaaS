@@ -279,6 +279,15 @@ describe('R3-3 estimate linkage migration contract', () => {
     expect(estimateEntryPage).toContain("!['residential', 'turnover'].includes(opportunity.segment ?? '')");
     expect(estimateEntryPage).toContain("!['scoping', 'walkthrough_scheduled', 'estimated'].includes(workPackage.status)");
     expect(estimateEntryPage).toContain('Proposed, accepted and declined packages are locked');
+    expect(estimateEntryPage).toContain("opportunity.segment === 'turnover'");
+    expect(estimateEntryPage).toContain("? 'airbnb_turnover' : 'recurring_standard'");
+  });
+
+  it('prevents the legacy package command from regressing estimate and terminal lifecycle state', () => {
+    expect(estimateLinkageMigration).toContain("old.status='estimated' and new.status not in ('estimated','proposed','declined')");
+    expect(estimateLinkageMigration).toContain("old.status='proposed' and new.status not in ('proposed','accepted','declined')");
+    expect(estimateLinkageMigration).toContain("old.status in ('accepted','declined') and new.status<>old.status");
+    expect(estimateLinkageMigration).toContain("package lifecycle cannot be regressed");
   });
 
   it('is atomic, additive, append-only, tenant-bound, and engine-version allowlisted', () => {

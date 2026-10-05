@@ -83,6 +83,31 @@ Do not return `PASS` unless source plus executable evidence closes each item:
 10. The server entry page itself enforces the supported segment and package
     lifecycle allowlists; Board affordance hiding alone is insufficient.
 
+## Mandatory regression of the final independent and operator audits
+
+The replacement candidate also must close the findings reported against packet
+`99840f2b...4821f`. Do not return `PASS` unless source and executable evidence
+show all of the following:
+
+1. The legacy authenticated package command cannot move an `estimated` package
+   back to scoping, move a `proposed` package backward, or reopen an `accepted`
+   or `declined` package. Existing evidence pointers remain intact.
+2. A turnover opportunity opens the turnover estimator and can persist a
+   correctly mapped `short_term_rental` / `airbnb_turnover` / `per_turn`
+   snapshot; the matrix proves both the valid path and residential mismatch
+   refusal.
+3. The selected scenario controls every displayed derived figure, including
+   person-hours, elapsed crew hours, labor, modeled cost and margin—not only the
+   headline price.
+4. A thrown pricing-engine or output-validation failure returns a bounded 422
+   response before any persistence call.
+5. CRM does not present scheduling, restock, scope-addition or operator-note
+   fields as editable when those fields are intentionally excluded from the
+   immutable R3-3 snapshot.
+6. The CRM Save action remains at least 44 CSS pixels high, List actions wrap
+   rather than forcing avoidable horizontal overflow, and locked-package copy
+   promises only the summary actually available after returning to CRM.
+
 Local evidence reported by the implementer will be frozen with the replacement
 packet after remediation: full Jest, TypeScript, production build, 68-version
 migration validation, and a

@@ -4,6 +4,8 @@ import '@testing-library/jest-dom';
 import fs from 'node:fs';
 import { CatalogWorkbench } from '../components/workbench';
 import { composeCatalogProposal } from '../proposal';
+import { defaultJob } from '../catalog';
+import { estimateJob } from '../pricing';
 jest.mock('@/lib/analytics/client', () => ({ captureEvent: jest.fn() }));
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), refresh: jest.fn() }) }));
 jest.mock('../components/catalog-document', () => ({ CatalogDocument: ({ content }: { content: string }) => <div>{content}</div> }));
@@ -143,4 +145,31 @@ it('saves a selected CRM scenario through the scoped estimate route without gene
  expect(body.job).not.toHaveProperty('access');
  expect(['low','base','high']).toContain(body.selectedScenario);
  await waitFor(()=>expect(push).toHaveBeenCalledWith('/dashboard/crm'));
+});
+
+it('does not offer CRM fields that the bounded estimate snapshot intentionally does not persist', () => {
+ render(<CatalogWorkbench crmEstimateContext={{organizationId:'org-1',opportunityId:'opp-1',
+   propertyId:'property-1',opportunityName:'North Campus'}} />);
+ expect(screen.queryByLabelText('Customer scheduling (optional; no entry details)')).not.toBeInTheDocument();
+ expect(screen.queryByLabelText('Additional agreed scope (optional)')).not.toBeInTheDocument();
+ expect(screen.queryByLabelText('Customer-facing scope notes and agreed terms')).not.toBeInTheDocument();
+});
+
+it('pins a turnover CRM estimate to the turnover market', () => {
+ render(<CatalogWorkbench initialJobType="airbnb_turnover" crmEstimateContext={{
+   organizationId:'org-1',opportunityId:'opp-1',propertyId:'property-1',opportunityName:'Lake Cabin'}} />);
+ expect(screen.getByLabelText('Market')).toHaveValue('short_term_rental');
+ expect(screen.getByLabelText('Market')).toBeDisabled();
+ expect(screen.getByLabelText('Job type')).toHaveValue('airbnb_turnover');
+});
+
+it('shows cost and hours from the selected CRM scenario', () => {
+ const expected=estimateJob(defaultJob()).high;
+ render(<CatalogWorkbench crmEstimateContext={{organizationId:'org-1',opportunityId:'opp-1',
+   propertyId:'property-1',opportunityName:'North Campus'}} />);
+ const high=screen.getByRole('button',{name:new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(expected.suggestedPrice)});
+ fireEvent.click(high);
+ expect(screen.getAllByText(expected.laborHours.toString()).length).toBeGreaterThan(0);
+ expect(screen.getByText(new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(expected.cost))).toBeInTheDocument();
+ expect(screen.getByRole('button',{name:/Save high estimate/})).toHaveClass('min-h-11');
 });

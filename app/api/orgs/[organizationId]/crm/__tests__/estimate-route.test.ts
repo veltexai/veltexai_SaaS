@@ -5,6 +5,10 @@ import { estimateJob } from '@/features/service-catalog/pricing';
 const createClient = jest.fn();
 const createServiceClient = jest.fn();
 jest.mock('@/lib/supabase/server', () => ({ createClient, createServiceClient }));
+jest.mock('@/features/service-catalog/pricing', () => {
+  const actual = jest.requireActual('@/features/service-catalog/pricing');
+  return { ...actual, estimateJob: jest.fn(actual.estimateJob) };
+});
 const ORG='11111111-1111-4111-8111-111111111111', USER='33333333-3333-4333-8333-333333333333';
 const OPP='44444444-4444-4444-8444-444444444444', PROPERTY='55555555-5555-4555-8555-555555555555';
 const PACKAGE='66666666-6666-4666-8666-666666666666';
@@ -58,6 +62,15 @@ describe('R3-3 estimate route',()=>{
     const response=await POST(req(),context);
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({error:'CRM is unavailable. Please try again.'});
+  });
+  it('maps an engine failure to a bounded response before persistence',async()=>{
+    const rpc=client();
+    jest.mocked(estimateJob).mockImplementationOnce(()=>{throw new Error('private engine detail');});
+    const {POST}=await import('../opportunities/[opportunityId]/estimates/route');
+    const response=await POST(req(),context);
+    expect(response.status).toBe(422);
+    expect(await response.json()).toEqual({error:'That estimate cannot be calculated. Review the job inputs.'});
+    expect(rpc).not.toHaveBeenCalled();
   });
   it('rejects fractional-cent overrides without tightening the frozen v2 job schema',async()=>{
     const rpc=client();const {POST}=await import('../opportunities/[opportunityId]/estimates/route');

@@ -1230,7 +1230,7 @@ export function CrmBoard() {
                   <td className="px-4 py-3 text-sm"><p>{valueLabel(opportunity) ?? '—'}</p>{estimateLabel((board.estimate_summaries ?? []).find((entry) => entry.opportunity_id === opportunity.id))
                     && <p className="mt-1 font-medium">Internal estimate: {estimateLabel((board.estimate_summaries ?? []).find((entry) => entry.opportunity_id === opportunity.id))}</p>}</td>
                   <td className="px-4 py-3">{board.caller_role === 'viewer' ? 'Read only' : (
-                    <div>{stageMove(opportunity)}<div className="mt-2 flex gap-2">
+                    <div>{stageMove(opportunity)}<div className="mt-2 flex flex-wrap gap-2">
                       <Button type="button" variant="outline" className="min-h-11"
                         onClick={() => setEditingOpportunity(opportunity)}>Edit details</Button>
                       <Button type="button" variant="outline" className="min-h-11"

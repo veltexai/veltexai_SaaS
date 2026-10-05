@@ -2497,3 +2497,43 @@ After any material action, append or revise the relevant section with:
   later commits change only ledger/review instructions. External transmission
   requires approval for this exact replacement file and hash. No hosted state
   changed.
+
+### R3-3 final independent/operator audit remediation — LOCAL VERIFIED / PACKET FREEZE NEXT (2026-10-05 Pacific)
+
+- **FINAL REPLACEMENT REVIEW — FAIL / SUPERSEDED:** The later exact packet
+  `/private/tmp/veltex-r3-3-final-remediation-eaf5156-review.zip`, SHA-256
+  `99840f2bf8a4504ba0ef0d26a5d5a510edf484d55bcf835774132a1809d4821f`,
+  was independently reviewed and returned `FAIL`. Launch-significant findings
+  were lifecycle regression through the legacy package command, turnover entry
+  defaulting to residential, and selected-scenario detail figures remaining on
+  the base scenario. Complementary operator/accessibility review also reported
+  the turnover/default and scenario-detail defects plus a sub-44px CRM Save
+  action, non-wrapping List actions and overpromising locked-package copy. That
+  packet is `REJECTED / SUPERSEDED FOR RELEASE`.
+- **BOUNDED REMEDIATION COMPLETE LOCALLY:** The database trigger now forbids
+  backward movement from estimated/proposed and any reopening of accepted or
+  declined packages, including through the legacy command. Turnover
+  opportunities enter the turnover catalog; the selected scenario drives
+  displayed labor, hours, cost and margin; engine/output failures return a
+  bounded `422`; CRM-only fields intentionally excluded from the immutable
+  snapshot are no longer presented as persistable inputs; Save is 44px high;
+  List actions wrap; and locked-package copy describes only the available CRM
+  summary. The adversarial matrix now proves assigned-estimator success, viewer
+  denial, valid turnover persistence, turnover mismatch refusal, closed-stage
+  refusal and declined-package reopening refusal.
+- **LOCAL GATES PASS:** focused route/workbench/migration suites pass 66 tests;
+  the full repository passes 108 suites / 912 tests / five snapshots;
+  TypeScript passes without incremental-cache output; the 68-version migration
+  validator and production build pass; and a fresh disposable PostgreSQL 16
+  run with definer checks returns all R3 role-matrix passes,
+  `R3_3_CONCURRENCY_PASS (1/0)`, the 40-way legacy concurrency pass and
+  `HARNESS COMPLETE`. The guarded Preview artifact is deterministic at 24,970
+  bytes with SHA-256
+  `7dceba4345e0992007e63edc0a3103c7027da8ab8382fff04fe6b07dcea7ba43`;
+  migration source SHA-256 is
+  `3067e9f9349efefda93a5ee30fc4629d9ec7a7d7e74662c80204d7b6a082b902`.
+- **STATUS / NEXT GATE:** R3-3 remains `LOCAL VERIFIED / INDEPENDENT RE-REVIEW
+  PENDING`, not accepted or deployable. Next is one exact commit and one
+  checksum-bound packet containing the expanded final-audit instructions.
+  Sending that new packet externally remains action-specific. No Preview,
+  production, credential, customer-data or paid-service change occurred.

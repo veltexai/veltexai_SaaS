@@ -67,6 +67,21 @@ insert into public.crm_site_work_packages(id,organization_id,opportunity_id,prop
 select '73000000-0000-4000-8000-000000000008',active_organization_id,
   '73000000-0000-4000-8000-000000000007','73000000-0000-4000-8000-000000000002',
   'estimate-specialty-package',id from public.profiles where id='11111111-1111-4111-8111-111111111111';
+insert into public.crm_opportunities(id,organization_id,customer_id,pipeline_id,stage_id,property_id,
+  idempotency_key,name,owner_user_id,estimator_user_id,segment,source,created_by)
+select '73000000-0000-4000-8000-000000000009',p.organization_id,
+  '73000000-0000-4000-8000-000000000001',p.id,s.id,'73000000-0000-4000-8000-000000000002',
+  'estimate-turnover-opportunity','Turnover estimate fixture','11111111-1111-4111-8111-111111111111',
+  '75555555-5555-4555-8555-555555555555','turnover','manual','11111111-1111-4111-8111-111111111111'
+from public.crm_pipelines p join public.crm_pipeline_stages s
+  on s.organization_id=p.organization_id and s.pipeline_id=p.id and s.category='new'
+join public.profiles pr on pr.active_organization_id=p.organization_id
+where pr.id='11111111-1111-4111-8111-111111111111'
+  and p.template_key='residential_turnover_v1' order by s.position limit 1;
+insert into public.crm_site_work_packages(id,organization_id,opportunity_id,property_id,idempotency_key,created_by)
+select '73000000-0000-4000-8000-000000000010',active_organization_id,
+  '73000000-0000-4000-8000-000000000009','73000000-0000-4000-8000-000000000002',
+  'estimate-turnover-package',id from public.profiles where id='11111111-1111-4111-8111-111111111111';
 select set_config('r3.estimate_org',(select active_organization_id::text from public.profiles
   where id='11111111-1111-4111-8111-111111111111'),true);
 
@@ -173,6 +188,46 @@ do $$ declare org uuid; token timestamptz; replay_result record;
   output jsonb:='{"version":"2026-09-22.2","unit":"per_visit","low":{"suggestedPrice":100},"base":{"suggestedPrice":125},"high":{"suggestedPrice":150}}'::jsonb;
 begin
   org:=current_setting('r3.estimate_org')::uuid;
+  begin
+    perform * from public.command_crm_estimate_run_internal('75555555-5555-4555-8555-555555555555',org,
+      '73000000-0000-4000-8000-000000000003',null,'73000000-0000-4000-8000-000000000002',
+      'estimate-assigned-estimator','service_catalog','2026-09-22.2',input,output,'base',12500,'USD','per_visit',null);
+    raise exception using errcode='P0002',message='rollback assigned-estimator success probe';
+  exception when sqlstate 'P0002' then null; end;
+  begin
+    perform * from public.command_crm_estimate_run_internal('11111111-1111-4111-8111-111111111111',org,
+      '73000000-0000-4000-8000-000000000009','73000000-0000-4000-8000-000000000010',
+      '73000000-0000-4000-8000-000000000002','estimate-turnover-success','service_catalog','2026-09-22.2',
+      '{"catalogVersion":"2026-09-22.2","segment":"short_term_rental","jobType":"airbnb_turnover","frequency":"one-time","turnover":{}}'::jsonb,
+      '{"version":"2026-09-22.2","unit":"per_visit","low":{"suggestedPrice":100},"base":{"suggestedPrice":125},"high":{"suggestedPrice":150}}'::jsonb,
+      'base',12500,'USD','per_turn',
+      (select updated_at from public.crm_site_work_packages where id='73000000-0000-4000-8000-000000000010'));
+    raise exception using errcode='P0002',message='rollback turnover success probe';
+  exception when sqlstate 'P0002' then null; end;
+  begin
+    perform * from public.command_crm_estimate_run_internal('76666666-6666-4666-8666-666666666666',org,
+      '73000000-0000-4000-8000-000000000003',null,'73000000-0000-4000-8000-000000000002',
+      'estimate-viewer-command-blocked','service_catalog','2026-09-22.2',input,output,'base',12500,'USD','per_visit',null);
+    raise exception 'viewer estimate command accepted';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform * from public.command_crm_estimate_run_internal('11111111-1111-4111-8111-111111111111',org,
+      '73000000-0000-4000-8000-000000000009','73000000-0000-4000-8000-000000000010',
+      '73000000-0000-4000-8000-000000000002','estimate-turnover-mismatch','service_catalog','2026-09-22.2',
+      input,output,'base',12500,'USD','per_visit',
+      (select updated_at from public.crm_site_work_packages where id='73000000-0000-4000-8000-000000000010'));
+    raise exception 'turnover opportunity accepted residential snapshot';
+  exception when check_violation then null; end;
+  begin
+    update public.crm_opportunities set stage_id=(select id from public.crm_pipeline_stages
+      where organization_id=org and pipeline_id=(select pipeline_id from public.crm_opportunities
+        where id='73000000-0000-4000-8000-000000000003') and category='lost' limit 1)
+      where id='73000000-0000-4000-8000-000000000003';
+    perform * from public.command_crm_estimate_run_internal('11111111-1111-4111-8111-111111111111',org,
+      '73000000-0000-4000-8000-000000000003',null,'73000000-0000-4000-8000-000000000002',
+      'estimate-closed-blocked','service_catalog','2026-09-22.2',input,output,'base',12500,'USD','per_visit',null);
+    raise exception 'closed opportunity estimate accepted';
+  exception when check_violation then null; end;
   select * into replay_result from public.command_crm_estimate_run_internal('11111111-1111-4111-8111-111111111111',org,
     '73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000004',
     '73000000-0000-4000-8000-000000000002','estimate-command-0001','service_catalog','2026-09-22.2',
@@ -206,6 +261,11 @@ do $$ declare org uuid; begin
     '73000000-0000-4000-8000-000000000002','estimate-without-evidence','estimated',null,null,null,
     (select updated_at from public.crm_site_work_packages where id='73000000-0000-4000-8000-000000000006'));
     raise exception 'package became estimated without selected evidence'; exception when check_violation then null; end;
+  begin perform * from public.save_crm_site_work_package(
+    org,'73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000004',
+    '73000000-0000-4000-8000-000000000002','declined-package-reopen-blocked','scoping',null,null,null,
+    (select updated_at from public.crm_site_work_packages where id='73000000-0000-4000-8000-000000000004'));
+    raise exception 'declined package reopened through legacy command'; exception when check_violation then null; end;
   if (select count(*) from public.read_crm_estimate_runs(org,'73000000-0000-4000-8000-000000000003'))<>1
     then raise exception 'owner estimate history unavailable'; end if;
 end $$;

@@ -49,6 +49,13 @@ create trigger crm_site_work_packages_updated_at before update on public.crm_sit
 create function public.guard_crm_estimate_selection()
 returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
 begin
+  if tg_op='UPDATE' and (
+    (old.status='estimated' and new.status not in ('estimated','proposed','declined'))
+    or (old.status='proposed' and new.status not in ('proposed','accepted','declined'))
+    or (old.status in ('accepted','declined') and new.status<>old.status)
+  ) then
+    raise exception 'package lifecycle cannot be regressed' using errcode='23514';
+  end if;
   if new.status='estimated' and (
     new.estimate_run_id is null
     or (tg_op='UPDATE' and old.status<>'estimated'
