@@ -71,6 +71,17 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
   ZIP integrity and embedded identity/case inspection pass. It has not been
   transmitted, and exact action-specific approval is required to send it. No
   hosted state changed.
+- **R3-3 FINAL ARCHIVE SENT / INDEPENDENT VERDICT PENDING:** After the founder
+  explicitly authorized this exact file and hash, Codex reverified SHA-256
+  `99840f2bf8a4504ba0ef0d26a5d5a510edf484d55bcf835774132a1809d4821f`
+  and ZIP integrity, attached
+  `/private/tmp/veltex-r3-3-final-remediation-eaf5156-review.zip` once to the
+  authenticated Claude R3-3 review chat, and sent the bounded assignment for
+  application candidate `631fdb4`, instructions `0a6e900`, and Preview
+  evidence `eaf5156`. Claude visibly received the archive and began the
+  read-only re-review. Status is **PENDING**; this dispatch is not a PASS and
+  does not unlock Preview or production. No hosted application/database,
+  credential, deployment, billing, campaign, or production state changed.
 - **B1 MESSAGE CONTRACT IMPLEMENTED LOCALLY:** `features/brand/messaging.ts`
   pins the `Veltex` master brand, retained `Veltex AI` operational identity,
   category, promise, operator-control/privacy/manual-fallback trust points,
