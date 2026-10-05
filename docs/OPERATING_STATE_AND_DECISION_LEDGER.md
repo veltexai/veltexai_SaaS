@@ -2648,3 +2648,17 @@ After any material action, append or revise the relevant section with:
   `LOCAL REMEDIATION VERIFIED / INDEPENDENT RE-REVIEW REQUIRED`; no Preview,
   production, credential, customer-data, payment or external-message mutation
   occurred.
+- **COMPLETE RE-REVIEW PACKET PREPARED / NOT SENT:** Exact source candidate
+  `bc38fc8dce1d0329b14397960eb7282254d84b35` is frozen as
+  `/private/tmp/veltex-r3-3-final-pointer-bc38fc8-review.zip`, 91,480,051 bytes,
+  1,664 tracked entries, SHA-256
+  `0e5d897fa5fc341b4b6950b1d95b31b378ce4f548ebad774198195de7fdf46e1`.
+  ZIP integrity passes and the three previously omitted fixtures are present.
+  The archive was extracted to a fresh disposable directory and its full Jest
+  suite passed 108 suites / 912 tests / five snapshots using the existing
+  checked-in dependency installation. The first reproduction invocation via
+  the package-manager shim failed closed because registry signatures could not
+  be fetched in the restricted context; invoking the existing local Jest binary
+  against the extracted bytes passed. The disposable extraction was removed.
+  The packet has not been uploaded or sent; independent review remains gated by
+  exact action-specific founder approval for this file and checksum.
