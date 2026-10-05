@@ -12,6 +12,15 @@ fi
 if [ -e "$HARNESS_PGDATA" ]; then echo 'Choose a fresh harness directory' >&2; exit 2; fi
 umask 077
 mkdir "$HARNESS_PGDATA"
-"$PG_BIN/initdb" -D "$HARNESS_PGDATA/data" -A trust -U "$(id -un)" >/dev/null
+if [ -n "${PG_SHARED_MEMORY_TYPE:-}" ]; then
+  "$PG_BIN/initdb" -D "$HARNESS_PGDATA/data" -A trust -U "$(id -un)" \
+    --set "shared_memory_type=$PG_SHARED_MEMORY_TYPE" >/dev/null
+else
+  "$PG_BIN/initdb" -D "$HARNESS_PGDATA/data" -A trust -U "$(id -un)" >/dev/null
+fi
 touch "$HARNESS_PGDATA/.veltex-disposable"
-"$PG_BIN/pg_ctl" -D "$HARNESS_PGDATA/data" -o "-p ${PGPORT:-55432} -k $HARNESS_PGDATA -c listen_addresses=''" -l "$HARNESS_PGDATA/log" start
+START_OPTIONS="-p ${PGPORT:-55432} -k $HARNESS_PGDATA -c listen_addresses=''"
+if [ -n "${PG_SHARED_MEMORY_TYPE:-}" ]; then
+  START_OPTIONS="$START_OPTIONS -c shared_memory_type=$PG_SHARED_MEMORY_TYPE"
+fi
+"$PG_BIN/pg_ctl" -D "$HARNESS_PGDATA/data" -o "$START_OPTIONS" -l "$HARNESS_PGDATA/log" start

@@ -56,6 +56,12 @@ begin
   ) then
     raise exception 'package lifecycle cannot be regressed' using errcode='23514';
   end if;
+  if tg_op='UPDATE' and (old.status<>'scoping' or new.status<>'scoping') and (
+    (old.walkthrough_id is not null and new.walkthrough_id is distinct from old.walkthrough_id)
+    or (old.proposal_id is not null and new.proposal_id is distinct from old.proposal_id)
+  ) then
+    raise exception 'package evidence pointer cannot be changed' using errcode='23514';
+  end if;
   if new.status='estimated' and (
     new.estimate_run_id is null
     or (tg_op='UPDATE' and old.status<>'estimated'

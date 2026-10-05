@@ -108,6 +108,30 @@ show all of the following:
    rather than forcing avoidable horizontal overflow, and locked-package copy
    promises only the summary actually available after returning to CRM.
 
+## Mandatory regression of packet `ed786a74...195f8a`
+
+That exact final-audit candidate returned `FAIL`. Do not return `PASS` unless
+source plus executable evidence closes every remaining finding:
+
+1. Once a package leaves `scoping`, the legacy authenticated package command
+   cannot clear or replace an existing `walkthrough_id` or `proposal_id`,
+   including a same-status update and proposed-to-declined movement. The
+   selected estimate pointer must remain bound to the same
+   organization/opportunity/property/package/run tuple.
+2. The role matrix directly proves pointer preservation for estimated and
+   proposed packages and directly exercises estimated-to-scoping and
+   proposed-to-scoping refusal. It must not treat a fixture/setup constraint
+   failure as proof of the intended command refusal.
+3. The closed-opportunity test must first prove that the opportunity actually
+   reached a lost stage with an applicable active loss reason, and only then
+   isolate and assert the estimate-command refusal.
+4. Re-run the complete Jest suite from this replacement archive. The archive
+   must include every tracked source/fixture needed by that run, specifically
+   `instrumentation-client.ts`,
+   `quality/service-catalog-remediation/legacy-golden.json`, and
+   `quality/location-pricing/operator-results.csv`; do not accept a partial
+   suite as reproduction of the implementer's full-suite claim.
+
 Local evidence reported by the implementer will be frozen with the replacement
 packet after remediation: full Jest, TypeScript, production build, 68-version
 migration validation, and a

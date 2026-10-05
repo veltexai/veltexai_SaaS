@@ -37,6 +37,24 @@ select '73000000-0000-4000-8000-000000000004',active_organization_id,
   '73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000002',
   'estimate-fixture-package',id from public.profiles
 where id='11111111-1111-4111-8111-111111111111';
+insert into public.crm_walkthroughs(id,organization_id,opportunity_id,property_id,
+  estimator_user_id,idempotency_key,window_start,window_end,timezone,status,created_by,updated_by)
+select '73000000-0000-4000-8000-000000000011',active_organization_id,
+  '73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000002',
+  '75555555-5555-4555-8555-555555555555','estimate-evidence-walkthrough',
+  '2026-11-06 17:00:00+00','2026-11-06 18:00:00+00','UTC','scheduled',id,id
+from public.profiles where id='11111111-1111-4111-8111-111111111111';
+update public.crm_site_work_packages
+set walkthrough_id='73000000-0000-4000-8000-000000000011'
+where id='73000000-0000-4000-8000-000000000004';
+insert into public.proposals(id,organization_id,user_id,title,client_name,client_email,
+  contact_phone,service_location,facility_size,service_type,service_frequency,
+  generated_content,crm_opportunity_id)
+select '73000000-0000-4000-8000-000000000012',active_organization_id,id,
+  'Estimate proposal fixture','Synthetic estimate client','estimate-client@example.test',
+  '555-0112','Synthetic estimate location',1000,'residential','weekly',
+  'Synthetic immutable proposal evidence','73000000-0000-4000-8000-000000000003'
+from public.profiles where id='11111111-1111-4111-8111-111111111111';
 insert into public.crm_opportunities(id,organization_id,customer_id,pipeline_id,stage_id,property_id,
   idempotency_key,name,owner_user_id,estimator_user_id,segment,source,created_by)
 select '73000000-0000-4000-8000-000000000005',p.organization_id,
@@ -165,6 +183,57 @@ begin
 end $$;
 
 reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+do $$ declare org uuid; token timestamptz; begin
+  org:=current_setting('r3.estimate_org')::uuid;
+  select updated_at into token from public.crm_site_work_packages
+    where id='73000000-0000-4000-8000-000000000004';
+  begin perform * from public.save_crm_site_work_package(
+    org,'73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000004',
+    '73000000-0000-4000-8000-000000000002','estimated-pointer-clear-blocked','estimated',null,null,null,token);
+    raise exception 'estimated package walkthrough pointer cleared'; exception when check_violation then null; end;
+  begin perform * from public.save_crm_site_work_package(
+    org,'73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000004',
+    '73000000-0000-4000-8000-000000000002','estimated-regression-blocked','scoping',null,null,null,token);
+    raise exception 'estimated package regressed through legacy command'; exception when check_violation then null; end;
+  if not exists(select 1 from public.crm_site_work_packages
+      where id='73000000-0000-4000-8000-000000000004'
+        and status='estimated'
+        and walkthrough_id='73000000-0000-4000-8000-000000000011'
+        and estimate_run_id is not null) then
+    raise exception 'estimated package evidence changed after refused legacy commands';
+  end if;
+end $$;
+reset role;
+update public.crm_site_work_packages
+set status='proposed',proposal_id='73000000-0000-4000-8000-000000000012'
+where id='73000000-0000-4000-8000-000000000004';
+set local role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+do $$ declare org uuid; token timestamptz; begin
+  org:=current_setting('r3.estimate_org')::uuid;
+  select updated_at into token from public.crm_site_work_packages
+    where id='73000000-0000-4000-8000-000000000004';
+  begin perform * from public.save_crm_site_work_package(
+    org,'73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000004',
+    '73000000-0000-4000-8000-000000000002','proposed-pointer-clear-blocked','proposed',
+    '73000000-0000-4000-8000-000000000011',null,null,token);
+    raise exception 'proposed package proposal pointer cleared'; exception when check_violation then null; end;
+  begin perform * from public.save_crm_site_work_package(
+    org,'73000000-0000-4000-8000-000000000003','73000000-0000-4000-8000-000000000004',
+    '73000000-0000-4000-8000-000000000002','proposed-regression-blocked','scoping',null,null,null,token);
+    raise exception 'proposed package regressed through legacy command'; exception when check_violation then null; end;
+  if not exists(select 1 from public.crm_site_work_packages
+      where id='73000000-0000-4000-8000-000000000004'
+        and status='proposed'
+        and walkthrough_id='73000000-0000-4000-8000-000000000011'
+        and proposal_id='73000000-0000-4000-8000-000000000012'
+        and estimate_run_id is not null) then
+    raise exception 'proposed package evidence changed after refused legacy commands';
+  end if;
+end $$;
+reset role;
 do $$ declare org uuid; run_id uuid; begin
   org:=current_setting('r3.estimate_org')::uuid;
   select id into run_id from public.crm_estimate_runs where request_key='estimate-command-0001';
@@ -218,11 +287,24 @@ begin
       (select updated_at from public.crm_site_work_packages where id='73000000-0000-4000-8000-000000000010'));
     raise exception 'turnover opportunity accepted residential snapshot';
   exception when check_violation then null; end;
+  update public.crm_opportunities set stage_id=(select id from public.crm_pipeline_stages
+    where organization_id=org and pipeline_id=(select pipeline_id from public.crm_opportunities
+      where id='73000000-0000-4000-8000-000000000003') and category='lost' limit 1),
+    loss_reason_id=(select id from public.crm_loss_reasons where organization_id=org
+      and active and applies_to in ('lost','both') order by created_at,id limit 1)
+    where id='73000000-0000-4000-8000-000000000003';
+  if not exists (
+    select 1
+    from public.crm_opportunities o
+    join public.crm_pipeline_stages s on s.id=o.stage_id and s.organization_id=o.organization_id
+    where o.id='73000000-0000-4000-8000-000000000003'
+      and o.organization_id=org
+      and s.category='lost'
+      and o.loss_reason_id is not null
+  ) then
+    raise exception 'closed-opportunity refusal fixture did not reach lost state';
+  end if;
   begin
-    update public.crm_opportunities set stage_id=(select id from public.crm_pipeline_stages
-      where organization_id=org and pipeline_id=(select pipeline_id from public.crm_opportunities
-        where id='73000000-0000-4000-8000-000000000003') and category='lost' limit 1)
-      where id='73000000-0000-4000-8000-000000000003';
     perform * from public.command_crm_estimate_run_internal('11111111-1111-4111-8111-111111111111',org,
       '73000000-0000-4000-8000-000000000003',null,'73000000-0000-4000-8000-000000000002',
       'estimate-closed-blocked','service_catalog','2026-09-22.2',input,output,'base',12500,'USD','per_visit',null);
