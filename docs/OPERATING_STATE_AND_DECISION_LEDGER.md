@@ -95,6 +95,29 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
   and release-gate ownership. Cursor is visibly running and may inspect or run
   safe local tests only; edits, commits, hosted access and deployment are
   prohibited. Status is **PENDING**, not PASS. No hosted state changed.
+- **R3-3 FINAL INDEPENDENT CLAUDE VERDICT — FAIL / BOUNDED REMEDIATION
+  REQUIRED:** Claude verified exact packet SHA-256
+  `99840f2bf8a4504ba0ef0d26a5d5a510edf484d55bcf835774132a1809d4821f`,
+  reproduced 68-version validation, TypeScript, 122 focused Jest tests and the
+  full disposable PostgreSQL 16 harness, then returned `FAIL`. High: the
+  authenticated legacy package command/route can still demote an `estimated`
+  package to `scoping` and reopen a `declined` package while erasing decline
+  evidence, so UI-only locking does not close mandatory regression 3. Medium:
+  the selected-scenario header follows Low/Base/High, but the detail grid and
+  person-hours remain hard-wired to Base, producing contradictory cost/margin
+  figures; turnover opportunities also default to the residential market and
+  fail generically unless the operator manually switches it. Low: an engine
+  parse throw can escape the route, CRM mode exposes fields that are silently
+  omitted from persistence, committed matrix coverage still omits several
+  actor/turnover/closed cases, and the packet omits unrelated fixtures needed
+  to reproduce four full-Jest suites. Claude confirmed the prior critical
+  privacy-stripped save-path and specialty/NULL disguise findings are closed,
+  along with replay-after-lifecycle, access-adjacent stripping, cent checks,
+  bounded service/RPC failures and entry-page allowlists. Candidate `631fdb4`
+  remains **LOCAL VERIFIED / INDEPENDENT FAIL** and must not advance to Preview
+  or production. Cursor's complementary operator audit is still running; its
+  evidence must be reconciled before the smallest shared correction is frozen.
+  No hosted state changed.
 - **B1 MESSAGE CONTRACT IMPLEMENTED LOCALLY:** `features/brand/messaging.ts`
   pins the `Veltex` master brand, retained `Veltex AI` operational identity,
   category, promise, operator-control/privacy/manual-fallback trust points,
