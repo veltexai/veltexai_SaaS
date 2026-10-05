@@ -2603,3 +2603,48 @@ After any material action, append or revise the relevant section with:
   invented; R3-7 semantics remain explicitly blocked until that source is
   restored. R3-8 preserves email/SMS/provider delivery as a later gated adapter.
   No metric, notification, provider call or hosted state was created.
+
+### R3-3 final-audit remediation — 2026-10-05 Pacific
+
+- **BOUNDED DATABASE DEFECT CORRECTED LOCALLY:** Exact implementation commit
+  `ede4b10` strengthens `guard_crm_estimate_selection()` so an existing
+  walkthrough or proposal evidence pointer cannot be cleared or replaced once
+  a package leaves `scoping`, including same-status legacy command calls. The
+  prior lifecycle regression rules remain in force.
+- **NON-VACUOUS EXECUTABLE REGRESSION:** The adversarial role matrix now creates
+  real walkthrough and proposal fixtures; proves pointer preservation for
+  estimated and proposed packages; covers estimated-to-scoping and
+  proposed-to-scoping refusal; and establishes a real lost stage plus an
+  applicable active loss reason before isolating the closed-opportunity
+  estimate-command refusal. A setup constraint failure can no longer satisfy
+  that assertion.
+- **LOCAL GATES PASS:** Full Jest passes 108 suites / 912 tests / five
+  snapshots; standalone TypeScript passes without incremental output; the
+  68-version migration validator passes; the production build passes using
+  non-secret local placeholder Supabase values; and the guarded Preview SQL is
+  deterministic at 25,342 bytes with SHA-256
+  `e42600592ac1b5f4f5d21031b2fba6951340373e8e7eadaea574dfe137983503`.
+  Migration source SHA-256 is
+  `dcc93319ca0464beab2fb5020c6042753cd01dd06975797f706ae7fa1b91fda9`.
+  A fresh disposable PostgreSQL 16 run with definer checks returns all R3 role
+  matrices, `R3_3_ADVERSARIAL_ROLE_MATRIX_PASS`,
+  `R3_3_CONCURRENCY_PASS (0/1)`, the 40-way legacy concurrency pass and
+  `HARNESS COMPLETE`.
+- **FAILED/RECOVERED CHECKS PRESERVED:** The first fresh PostgreSQL start found
+  exhausted unattached System V shared-memory segments. Read-only inspection
+  proved 32 user-owned segments with zero attachments; only those exact stale
+  segments were removed, after which the fresh cluster and full harness passed.
+  An optional `PG_SHARED_MEMORY_TYPE` harness override was retained for future
+  disposable runners, and its empty-option Bash nounset defect was corrected.
+  The first production-build attempt also failed because the local file lacked
+  Supabase build variables; the established non-secret placeholder invocation
+  passed. The first guarded-artifact test correctly rejected the changed
+  migration hash; its byte binding was updated and then passed determinism.
+- **REVIEW PACKET REQUIREMENT STRENGTHENED:** The independent assignment now
+  binds every finding from failed packet `ed786a74...195f8a`, including exact
+  evidence-pointer preservation, non-vacuous closed-state setup and a complete
+  Jest-reproducible archive containing `instrumentation-client.ts`,
+  `legacy-golden.json` and `operator-results.csv`. R3-3 remains
+  `LOCAL REMEDIATION VERIFIED / INDEPENDENT RE-REVIEW REQUIRED`; no Preview,
+  production, credential, customer-data, payment or external-message mutation
+  occurred.
