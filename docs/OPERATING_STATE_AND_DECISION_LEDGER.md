@@ -2729,3 +2729,9 @@ After any material action, append or revise the relevant section with:
   for checksum-bound credential-free review packets, this packet is ready for
   read-only transmission to the established Claude R3-3 lane; it authorizes no
   hosted, Preview or production mutation.
+- **EXACT ARCHIVE REPRODUCTION PASSED:** The frozen final-evidence ZIP was
+  extracted into a fresh disposable directory. Its commit-binding manifest and
+  all three previously omitted fixtures were checked from the extracted bytes,
+  then the archive's full Jest suite passed 108 suites / 912 tests / five
+  snapshots using the established local dependency installation. This verifies
+  the packet itself, not only the integration worktree.
