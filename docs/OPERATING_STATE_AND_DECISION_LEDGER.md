@@ -2682,3 +2682,38 @@ After any material action, append or revise the relevant section with:
   customer-data transmission, proposal delivery, acceptance, billing/payment
   action, campaigns or any other consequential action that repository rules
   gate separately.
+- **FINAL-POINTER PACKET INDEPENDENT VERDICT — `FAIL`:** Claude independently
+  reproduced the archive checksum, the complete 108-suite / 912-test Jest run,
+  the disposable PostgreSQL harness and direct behavior probes. Claude found
+  the product behavior correct, but rejected two committed matrix assertions as
+  vacuous: the proposed-pointer case stopped at generic proposed-status input
+  validation before reaching the evidence-pointer guard, and the estimate
+  lifecycle case ran only after its opportunity had been closed, so it proved
+  the closed-opportunity guard instead of the package-lifecycle guard. Claude
+  separately verified direct probes for the intended behavior. This remains a
+  test-evidence failure, not an independent `PASS`, and the verdict does not
+  authorize Preview or production action.
+- **FINAL-POINTER EVIDENCE REMEDIATION VERIFIED LOCALLY:** The R3-3 matrix now
+  creates a second valid proposal and attempts a same-status replacement so the
+  legacy authenticated command must reach the exact `package evidence pointer
+  cannot be changed` guard. It also performs a valid proposed-to-declined
+  transition with the original walkthrough/proposal pointers and asserts that
+  both pointers plus the estimate binding remain intact. The estimate lifecycle
+  refusal now runs while the opportunity is open and asserts the exact `package
+  lifecycle cannot be regressed by an estimate` message; only afterward does a
+  separately asserted lost-stage fixture exercise the exact closed-opportunity
+  refusal. Estimated pointer and lifecycle cases now assert their exact guard
+  messages as well.
+- **REMEDIATION GATES:** A fresh local-only disposable PostgreSQL 16 harness
+  passed all 68 migrations, all R3 matrices,
+  `R3_3_ADVERSARIAL_ROLE_MATRIX_PASS`, the exact-message checks,
+  `R3_3_CONCURRENCY_PASS (1/0)`, definer assertions, the legacy 40-way
+  concurrency test and `HARNESS COMPLETE`. Full Jest passes 108 suites / 912
+  tests / five snapshots; standalone TypeScript, the 68-version migration
+  validator and the production build with non-secret placeholder build values
+  pass. The first harness attempt exposed a missing PL/pgSQL declaration added
+  during remediation and stopped before a pass; it was corrected and rerun from
+  a fresh cluster. The first build attempt was blocked from writing `.next` by
+  the sandbox execution context; the identical local build passed in the
+  authorized worktree context. No hosted, Preview, production, credential,
+  payment or customer-data action occurred.
