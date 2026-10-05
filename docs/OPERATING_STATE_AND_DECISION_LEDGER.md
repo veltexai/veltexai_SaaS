@@ -2532,13 +2532,14 @@ After any material action, append or revise the relevant section with:
   `7dceba4345e0992007e63edc0a3103c7027da8ab8382fff04fe6b07dcea7ba43`;
   migration source SHA-256 is
   `3067e9f9349efefda93a5ee30fc4629d9ec7a7d7e74662c80204d7b6a082b902`.
-- **STATUS / NEXT GATE:** R3-3 remains `LOCAL VERIFIED / INDEPENDENT RE-REVIEW
-  IN PROGRESS`, not accepted or deployable. After exact founder authorization,
+- **STATUS / NEXT GATE:** R3-3 is `INDEPENDENT RE-REVIEW FAIL / REMEDIATION
+  REQUIRED`, not accepted or deployable. After exact founder authorization,
   the checksum-bound final-audit packet was attached once to the established
   authenticated Claude review chat at
   `https://claude.ai/chat/2b747b79-195b-4b51-b52b-215926f48212`. Claude visibly
-  accepted the message and began responding. No Preview, production,
-  credential, customer-data or paid-service change occurred.
+  accepted the message and completed a read-only local/disposable review. The
+  exact archive hash matched. No Preview, production, credential,
+  customer-data or paid-service change occurred.
 - **EXACT FINAL-AUDIT CANDIDATE FROZEN:** Application, database, executable
   evidence and mandatory review instructions are committed as exact candidate
   `4c758e48924ad930b24bbb4a22f61eaa634a71c0`. The comprehensive replacement
@@ -2549,9 +2550,18 @@ After any material action, append or revise the relevant section with:
   test, ledger and assignment surface pass. Its exact hash was reverified
   immediately before transmission and ZIP integrity passed. The approved file
   was transmitted once to Claude with read-only, local-disposable-only review
-  instructions. All earlier R3-3 packets remain superseded. Claude's independent
-  `PASS` or actionable `FAIL` is now the next gate; a `PASS` is still required
-  before any isolated Preview mutation or deployment.
+  instructions. Claude returned `FAIL`. The remaining high finding is that the
+  legacy package command can still null immutable evidence pointers: preserving
+  lifecycle state does not stop an authenticated same-status update from
+  clearing `walkthrough_id`, and the same update surface can clear
+  `proposal_id`. Evidence defects also remain: the closed-opportunity matrix
+  assertion passes vacuously because the setup update throws first; the matrix
+  does not cover all legacy backward-transition/pointer-preservation cases; and
+  the packet omits three unrelated repository fixtures, so its claimed full
+  Jest result is not independently reproducible. All earlier R3-3 packets and
+  this failed candidate are superseded for release. Next is a bounded local
+  correction, executable regression expansion and complete reproducible packet;
+  an independent `PASS` is still required before Preview or deployment.
 - **R3-4 ENTRY CONTRACT PREPARED / IMPLEMENTATION NOT STARTED:** While the
   R3-3 external-send gate waits, the next dependency was advanced without
   crossing it. `R3_4_IMMUTABLE_PROPOSAL_VERSION_CONTRACT.md` freezes an
