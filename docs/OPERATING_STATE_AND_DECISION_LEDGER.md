@@ -2559,3 +2559,14 @@ After any material action, append or revise the relevant section with:
   paths and explicitly leaves C0 acceptance to R3-5. Status is `ENTRY CONTRACT
   PREPARED / IMPLEMENTATION DEPENDENCY-BLOCKED`; no R3-4 migration, route, UI,
   proposal bytes or hosted state were created.
+- **R3-5 C0 ENTRY CONTRACT PREPARED / IMPLEMENTATION NOT STARTED:**
+  `R3_5_C0_ACCEPTANCE_RECEIPT_CONTRACT.md` now freezes the bounded customer
+  proposal room: hash-only purpose-bound expiring tokens, immutable
+  version/hash/consent binding, signer-entered identity, atomic multi-package
+  acceptance and parent-win movement, append-only receipt, customer-safe
+  projection, identifier-only events and non-signature truthfulness. It
+  explicitly rejects legacy tracking IDs and mutable proposal status as
+  acceptance authority, leaves notification delivery to R3-8 and preserves the
+  expanded portal for Stage 6. Status is `ENTRY CONTRACT PREPARED /
+  IMPLEMENTATION DEPENDENCY-BLOCKED`; no token, acceptance, customer message,
+  notification or hosted state was created.
