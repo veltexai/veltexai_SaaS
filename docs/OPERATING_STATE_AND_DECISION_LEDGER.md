@@ -2579,3 +2579,13 @@ After any material action, append or revise the relevant section with:
   scheduling, billing and access-note export remain excluded. Status is `ENTRY
   CONTRACT PREPARED / IMPLEMENTATION DEPENDENCY-BLOCKED`; no artifact, storage
   object, download, lifecycle mutation or hosted action occurred.
+- **R3-7/R3-8 ENTRY BOUNDARY PREPARED / A0–A8 SOURCE GAP PRESERVED:**
+  `R3_7_R3_8_ACTIVATION_AND_NOTIFICATION_CONTRACT.md` defines the reusable
+  organization activation-registry mechanics and the minimum durable in-app
+  `acceptance_received` operator notification without duplicating acquisition
+  analytics or email infrastructure. The audit found that this repository
+  references, but does not contain, the authoritative Prompt 12 meanings and
+  qualifying rules for A0–A8. No CRM-stage or marketing-event approximation was
+  invented; R3-7 semantics remain explicitly blocked until that source is
+  restored. R3-8 preserves email/SMS/provider delivery as a later gated adapter.
+  No metric, notification, provider call or hosted state was created.
