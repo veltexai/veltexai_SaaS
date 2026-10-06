@@ -3436,7 +3436,8 @@ After any material action, append or revise the relevant section with:
   base `44ca80391bd570fa5dc717686163f999529fe432` and migration SHA-256
   `eb55c73444aef2c930e7925991bedab980b44f1992e272cee500ce33b136d443`.
   Claude visibly entered `Claude is responding`; Cursor visibly entered
-  `Planning next moves`. Verdicts are `PENDING`. Both assignments prohibit
+  `Planning next moves`. The later Cursor verdict is recorded below; Claude is
+  still `PENDING`. Both assignments prohibit
   edits, commits, pushes, deployments, credentials and hosted Preview or
   Production access. No hosted state changed. Production R3-1 remains held:
   its non-committing rollback proof has
@@ -3447,6 +3448,29 @@ After any material action, append or revise the relevant section with:
   production mutations/gates and are not implied by broad roadmap approval.
   M0 founder choices and the absent Prompt 12 A0–A8 semantic source are product
   decisions, not permission requests; present them when the founder returns.
+- **R3-4 CURSOR REMEDIATION RE-REVIEW — `PASS` / CLAUDE STILL PENDING:** Cursor
+  independently recomputed the strengthened wrapper and embedded-bundle
+  hashes, verified complete Git history and every named commit, reran the R3-4
+  contract and focused Board/composer/route suites (`32/32` plus `11/11`), and
+  rendered the committed operator markup at genuine `390x844` and desktop
+  viewports. The prior blockers are closed: exact customer-visible price,
+  scope and rendered bytes are reviewable before prepare; `40001` has explicit
+  stable refresh recovery; history and the request key survive reload failure;
+  a second version requires the deliberate `Prepare another version` action;
+  and Board/List use the package-bound estimate selected by the prepare path.
+  Cursor reported no Critical, High or Medium findings. One Low condition is
+  preserved: an opportunity with an unrelated estimate summary but no eligible
+  package-bound prerequisite can show the internal-estimate label with no
+  amount; this does not expose `Prepare` or publish the wrong estimate. Cursor
+  also preserved the nonblocking inherited 390 px contained table scroll,
+  36 px dashboard hamburger, inherited Escape/focus behavior, first-package
+  Board lookup and the fact that hosted authenticated Preview proof is still a
+  later gate. Separately, Codex reran the migration contract (`PASS`), focused
+  application suites (`32/32` and `11/11`), TypeScript (`PASS`) and full Jest
+  (`110` suites / `934` tests / `5` snapshots, all PASS) on the current clean
+  worktree. Claude remains actively auditing the database/security/replay lane,
+  so R3-4 remains `INDEPENDENT CLAUDE RE-REVIEW PENDING`; Preview, founder
+  acceptance and R3-5 remain locked. No hosted state changed.
 - **ROADMAP CONSISTENCY AUDIT — CORRECTIONS APPLIED:** Independent read-only
   comparison found and corrected seven documentation ambiguities without
   changing implementation scope: R3-8 may consume accepted R3-5 events in
