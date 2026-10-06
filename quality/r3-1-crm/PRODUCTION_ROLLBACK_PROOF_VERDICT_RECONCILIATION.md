@@ -51,13 +51,23 @@ Any changed byte requires a new packet, hash, review, and decision.
    checklist and the accepted reviews.
 3. Obtain the separate action-specific authorization for the rollback-only
    production proof.
-4. Run the exact proof once in a dedicated session; never concatenate, edit or
-   append it in the SQL editor.
+4. Use a declared low-traffic window. Run the exact proof once as `postgres` in
+   one dedicated, non-pooler session that submits the whole text and stops on
+   the first error. Never split statements across autocommit connections, keep
+   executing after an error, concatenate, edit or append the file in the SQL
+   editor.
 5. Capture the complete hashes-only `P0001` evidence, explicitly close or roll
    back the aborted session, and run a separate read-only cleanup query proving
    history remains 64 and both planned versions remain absent.
 6. Independently reconcile postflight evidence before generating any
    commit-capable artifact.
+
+The reviewed bytes retain per-statement `statement_timeout='30min'` and
+`lock_timeout='15s'`; these are not estimates of normal runtime. The expected
+small production dataset makes a seconds-scale run likely, but any unexpected
+lock wait, prolonged execution, wrong project/session identity, missing
+`extensions.digest`, or client behavior that cannot prove a single session and
+stop-on-error is a refusal condition.
 
 Production database migration, application deployment, environment-variable
 changes and CRM enablement remain separate gates.

@@ -3009,3 +3009,25 @@ After any material action, append or revise the relevant section with:
   prohibit hosted access, SQL execution, deployment, environment changes,
   credentials and production mutation. Their verdicts are `PENDING`; submission
   is not execution authorization.
+- **PARALLEL EXTERNAL VERDICTS — PASS / EXECUTION STILL NOT AUTHORIZED:** Claude
+  and Cursor independently recomputed matching packet, capture, migration and
+  701,235-byte proof hashes and returned `PASS`. Both confirmed one outer
+  `BEGIN`, zero `COMMIT`, one terminal `ROLLBACK`, exactly two in-transaction
+  history writes, hashes-only evidence, 22 expected CRM RLS tables,
+  authenticated direct-DML denial, anonymous CRM-routine denial, deterministic
+  regeneration and refusal on reviewed capture/migration drift. Cursor also
+  matched the three expected-state helper inputs to the capture contract and
+  exact accepted commit. Neither accessed a hosted system or executed SQL.
+  Claude's nonblocking findings are preserved: the proof briefly takes
+  production write-blocking locks and the DDL takes an `ACCESS EXCLUSIVE` lock
+  on `proposals`; the 30-minute statement timeout is per statement; safe use
+  therefore requires a declared low-traffic window and exactly one dedicated
+  non-pooler `postgres` session that submits the whole text and stops on the
+  first error. Splitting across autocommit connections is forbidden. Lower
+  findings are generator/helper-source pinning, packet portability, shared
+  `P0001` SQLSTATE, defence-in-depth anon/column-grant checks, unqualified
+  `digest()` search-path dependency and external postflight comparison. The
+  pinned final output SHA already binds the reviewed bytes, so these do not
+  invalidate this exact proof. The verdict reconciliation gate is satisfied;
+  a separate action-specific production rollback-proof execution authorization
+  remains mandatory.
