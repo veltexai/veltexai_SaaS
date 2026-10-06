@@ -7,6 +7,8 @@ import { resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '../..');
 const migration = readFileSync(resolve(root,
   'supabase/migrations/20261005000000_r3_4_immutable_proposal_versions.sql'), 'utf8');
+const matrix = readFileSync(resolve(root,
+  'quality/r3-4-proposal-versions/sql/adversarial-role-matrix.sql'), 'utf8');
 
 for (const marker of [
   'create table public.crm_proposal_versions',
@@ -42,5 +44,20 @@ assert.match(migration, /proposal_row\.crm_customer_id is distinct from opportun
 assert.match(migration, /content_snapshot#>>'\{pricing,amountMinor\}'\)::bigint<>estimate_row\.selected_amount_minor/);
 assert.match(migration, /content_snapshot#>>'\{pricing,currency\}'<>estimate_row\.currency/);
 assert.match(migration, /content_snapshot#>>'\{pricing,basis\}'<>estimate_row\.pricing_basis/);
+
+for (const marker of [
+  'owner first publish failed', 'exact version replay failed',
+  'changed version replay accepted', 'stale package token accepted',
+  'private snapshot key accepted', 'assigned estimator publish failed',
+  'admin version allocation failed', 'viewer published a proposal version',
+  'cross-tenant actor published a proposal version',
+  'immutable version update accepted', 'immutable version delete accepted',
+  'authenticated direct version insert accepted',
+  'viewer received immutable version metadata',
+  'R3_4_ADVERSARIAL_ROLE_MATRIX_PASS',
+]) assert.ok(matrix.includes(marker), `matrix missing ${marker}`);
+assert.equal((matrix.match(/^begin;$/gm) ?? []).length, 1);
+assert.equal((matrix.match(/^rollback;$/gm) ?? []).length, 1);
+assert.equal((matrix.match(/^commit;$/gm) ?? []).length, 0);
 
 console.log('R3-4 immutable proposal-version migration contract PASS');

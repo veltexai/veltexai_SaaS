@@ -2680,6 +2680,20 @@ After any material action, append or revise the relevant section with:
   checkpoint, not R3-4 completion: executable role/binding/privacy/replay/race
   matrices, route/composer/UI, full tests, independent reviews and Preview/
   founder gates remain. No hosted state changed.
+- **R3-4 ADVERSARIAL MATRIX — LOCAL PASS:** A rollback-only fresh 69-migration
+  PostgreSQL 16 run with synthetic `.test` identities now proves owner, admin
+  and exact assigned-estimator publication; exact replay; changed replay and
+  stale-token refusal; unknown private-key refusal with the bounded content
+  error; viewer and cross-tenant denial; version 1/2/3 allocation; package
+  status remaining `estimated` while its immutable pointer advances; direct
+  authenticated insert denial; UPDATE/DELETE immutability even for the table
+  owner; scoped owner/estimator reads and viewer redaction; service-role-only
+  command execution; and ID-only audit/outbox payloads. The first runs exposed
+  and preserved three test defects—transaction ordering around auth triggers,
+  a stale property column name and forbidden service-role direct reads—before
+  the corrected matrix emitted `R3_4_ADVERSARIAL_ROLE_MATRIX_PASS` and rolled
+  back. A true two-session allocation race and broader mismatch/closed-state
+  cases remain required before database acceptance. No hosted state changed.
 - **R3-5 C0 ENTRY CONTRACT PREPARED / IMPLEMENTATION NOT STARTED:**
   `R3_5_C0_ACCEPTANCE_RECEIPT_CONTRACT.md` now freezes the bounded customer
   proposal room: hash-only purpose-bound expiring tokens, immutable
