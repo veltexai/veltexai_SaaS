@@ -1,14 +1,15 @@
-Veltex R3-4 immutable proposal-version second-remediation re-review packet
+Veltex R3-4 immutable proposal-version final matrix-confirmation packet
 
 Accepted R3-3 base: 44ca80391bd570fa5dc717686163f999529fe432
 Original R3-4 review state: 508170c
 First remediation candidate: cf5e1c3557cb05c74397279a51a751da5d3b1f96
 Second remediation implementation: aa48b5eabd03e3dd4babf313c7b473a9920467b1
-Review range: 508170c..aa48b5eabd03e3dd4babf313c7b473a9920467b1
+Final test-only matrix remediation: ecfa68a56b2ba233c838e31917340a607dce7a7f
+Review range: aa48b5eabd03e3dd4babf313c7b473a9920467b1..ecfa68a56b2ba233c838e31917340a607dce7a7f
 Migration: supabase/migrations/20261005000000_r3_4_immutable_proposal_versions.sql
 Migration SHA-256: 86f438fe3a4516093534faf45d74bff4020dc68e9e40014f912e7152685678a3
 
-Final local evidence before remediation packet freeze:
+Final local evidence before matrix-confirmation packet freeze:
 - proposal-version route: 12/12 PASS
 - full Jest: 110 suites / 935 tests / 5 snapshots PASS
 - TypeScript: PASS
@@ -18,12 +19,21 @@ Final local evidence before remediation packet freeze:
   R3-3 concurrency, explicit-overlap R3-4 concurrency, legacy 40-way
   concurrency and HARNESS COMPLETE PASS
 
-The prior Claude FAIL and Cursor PASS findings are preserved in
-docs/OPERATING_STATE_AND_DECISION_LEDGER.md. The second remediation closes
-Claude M1-M3 with authenticated INSERT/rebinding enforcement, per-candidate
-GET fault isolation, immutable command receipts and non-vacuous adversarial
-proof. This packet claims local remediation only. Claude delta PASS and a
-bounded Cursor regression verdict are still required.
+Final matrix-only evidence:
+- migration contract: PASS
+- fresh PostgreSQL harness with CHECK_DEFINERS=1: all 69 migrations,
+  R3-1/R3-2/R3-3/R3-4 matrices, owner/security/injection/dirty/rerun,
+  R3-3 concurrency, explicit-overlap R3-4 concurrency, legacy concurrency and
+  HARNESS COMPLETE PASS
+- no product migration or application source changed; migration SHA-256 is
+  unchanged
+
+The prior Claude and Cursor findings are preserved in
+docs/OPERATING_STATE_AND_DECISION_LEDGER.md. Cursor's second-remediation
+regression is `PASS`. Claude closed M1 and M2, found no source defect, and
+retained only test-only M1': the two explicitly assigned database proofs now
+added in commit ecfa68a. This packet claims local matrix remediation only.
+Claude's quick matrix-diff confirmation remains required.
 
 No Preview, Production, credential, deployment, customer-message, payment or
 campaign state changed.

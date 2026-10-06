@@ -1,6 +1,6 @@
 # R3-4 immutable proposal versions — independent review assignment
 
-Status: **LOCAL SECOND REMEDIATION VERIFIED / CLAUDE DELTA RE-REVIEW AND CURSOR REGRESSION REQUIRED**
+Status: **LOCAL FINAL MATRIX REMEDIATION VERIFIED / CLAUDE MATRIX-DIFF CONFIRMATION REQUIRED**
 
 Review the exact remediation range and candidate named in
 `PACKET_MANIFEST.txt`. Start from the prior Claude/Cursor FAIL findings in the
@@ -46,7 +46,18 @@ actually run and residual risks. Verify:
 7. the committed matrices and true two-session race genuinely prove their
    claims without vacuous catches or owner/service-role shortcuts.
 
-First confirm the three findings from Claude's immediately preceding verdict:
+The second-remediation review closed M1 and M2 and found no remaining source
+defect. Cursor's bounded regression returned `PASS`. This final confirmation is
+limited to Claude's residual test-only M1' finding. Confirm these two committed,
+message-pinned proofs are non-vacuous and reach the intended guard:
+
+- reader and publish-command refusal of an older package-less estimate, pinned
+  to `proposal version context unavailable`; and
+- old-source access before move/clear, where an unassigned estimator tries to
+  detach a proposal bound to an inaccessible opportunity, pinned to
+  `proposal binding unavailable`.
+
+For history, the three findings from Claude's earlier verdict were:
 
 - M1: proposal binding enforcement covered UPDATE but not authenticated INSERT;
 - M2: one invalid/unavailable candidate could fail the entire GET/history response;
@@ -66,9 +77,11 @@ pointer invalidation after re-estimation. Verify that changed replay and amount
 mismatch reach the intended checks rather than succeeding through an unrelated
 render mismatch.
 
-Reproduce at least the migration contract, focused Jest, TypeScript, and fresh
-PostgreSQL harness if the review environment supports them. Distinguish an
-environment limitation from a source failure.
+Reproduce the migration contract and inspect the matrix diff. The final local
+verification already reran the full fresh PostgreSQL harness with
+`CHECK_DEFINERS=1`; distinguish an environment limitation from a source
+failure. Do not reopen closed M1/M2 or the already passing Cursor lane unless
+the test-only delta creates direct contradictory evidence.
 
 ## Cursor lane — operator workflow/accessibility/truthfulness
 

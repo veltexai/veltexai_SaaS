@@ -3642,3 +3642,32 @@ After any material action, append or revise the relevant section with:
   database/security delta verdict remains active, so R3-4 remains
   `INDEPENDENT CLAUDE DELTA REVIEW PENDING`; isolated Preview, founder
   acceptance and R3-5 remain locked.
+- **R3-4 CLAUDE SECOND-REMEDIATION DELTA — NARROW `FAIL` / SOURCE DEFECTS
+  CLOSED:** Claude confirmed M1 and M2 closed, accepted the existing proofs as
+  non-vacuous and message-pinned, and found no remaining product-source defect.
+  The only Medium residual, labeled M1', was test-only: the exact assigned
+  matrix lacked (a) reader and command refusal of an older package-less
+  estimate and (b) old-source-access enforcement before an unassigned
+  estimator moves or clears an inaccessible proposal binding. Cursor's bounded
+  second-remediation regression remains `PASS`.
+- **R3-4 FINAL MATRIX REMEDIATION — LOCAL `VERIFIED`:** Commit
+  `ecfa68a56b2ba233c838e31917340a607dce7a7f` adds both missing adversarial
+  proofs without changing the migration or application source. Reader and
+  publish-command refusal of an older package-less estimate are pinned to
+  `proposal version context unavailable`; the inaccessible old-binding clear
+  attempt is pinned to `proposal binding unavailable`. The migration contract
+  passed. A fresh disposable PostgreSQL harness with `CHECK_DEFINERS=1`
+  applied all 69 migrations and passed R3-1, R3-2, R3-3 and R3-4 matrices,
+  owner/definer, injection, dirty/rerun, R3-3/R3-4 concurrency, legacy
+  concurrency and `HARNESS COMPLETE`, then stopped cleanly.
+- **FINAL-MATRIX FAILED/RECOVERED CHECKS PRESERVED:** The first fresh harness
+  attempt exposed that the synthetic package-less snapshot removed
+  `workPackageId` rather than preserving it as JSON null, so it failed strict
+  snapshot validation before reaching the assigned guard. The fixture was
+  corrected to `workPackageId: null`. The next attempt exposed that the new
+  inaccessible-source fixture was inserted before an existing exact candidate-
+  count assertion; it was moved after that assertion. Neither was a product
+  defect, and the clean third run passed the full harness. Current status is
+  `LOCAL FINAL MATRIX REMEDIATION VERIFIED / CLAUDE MATRIX-DIFF CONFIRMATION
+  REQUIRED`. No Preview, Production, credential, deployment, customer-message,
+  payment or campaign state changed.
