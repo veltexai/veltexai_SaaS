@@ -15,7 +15,7 @@ customer, address, scope, price, access instruction, photograph or attachment.
 - Independent packet SHA-256: `4389f7b673524eec39783b8c26307f70c78cba3181e0a137a8a8ec262a54f191`
 - Migration: `20261004000000_r3_3_estimate_scenario_linkage.sql`
 - Migration SHA-256:
-  `f1c34282cb12094888215fcc029a213cc78eca2cbc28a2e3f152cba74c09b1a8`
+  `dcc93319ca0464beab2fb5020c6042753cd01dd06975797f706ae7fa1b91fda9`
 - Expected PostgreSQL history after apply: `68`
 - Guarded SQL artifact path, SHA-256 and Preview deployment URL: record after
   the independent verdict and before mutation.
