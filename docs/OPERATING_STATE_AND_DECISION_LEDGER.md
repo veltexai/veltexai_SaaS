@@ -3474,3 +3474,13 @@ After any material action, append or revise the relevant section with:
   payments and complete provider-event lineage. Every choice remains marked
   `PENDING` until the predecessor and founder gates close; no implementation,
   provider, credential, payment, Preview or production action occurred.
+- **STAGE 5 / STAGE 6 ENTRY DECISIONS PREPARED:** Dependency-gated recommended
+  defaults now cover property-IANA time authority, bounded recurrence,
+  deterministic visit generation, detachment, online-first field drafts,
+  optional/manual check-in, location off by default, time-boxed access notes,
+  sourced actuals and truthful profitability separation. The portal/QA record
+  preserves separate stakeholder identity and object grants, C0 reuse,
+  conditional billing visibility, transactional-only messaging, scanned
+  attachments and the full deficiency/corrective-action/re-service/closure
+  outcome. All choices remain `PENDING`; no schema, hosted or provider action
+  occurred.
