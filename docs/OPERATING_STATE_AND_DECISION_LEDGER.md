@@ -3366,3 +3366,22 @@ After any material action, append or revise the relevant section with:
   as scope reduction. No R3-5 migration, route, token or customer action was
   created because R3-4 has not passed independent re-review and Preview/founder
   acceptance.
+- **DOWNSTREAM READINESS RECONCILED / NO IMPLEMENTATION STARTED:** Fresh
+  read-only audits of Stages 3–7 found stale planning-head labels and two
+  dependency contradictions. The readiness packets now require rebinding at
+  each exact accepted predecessor rather than treating historical audit commit
+  `fdf64ab` as current evidence. Stage 5 can no longer begin after only the
+  agreement bridge; full Stage 4 acceptance is required. Likewise Stage 6 no
+  longer suggests token code after R2 alone and instead consumes the accepted
+  R3-5 C0 foundation after R3-4's independent/Preview/founder gate.
+- **FULL SCOPE PRESERVED:** Stage 3 now carries the 10,000-row limit,
+  provenance-unknown consent, explicit merge/undo, all-plan versioned export
+  with step-up authentication, exact role and legacy-link decisions. Stage 4
+  orders F0B decisions before F0A implementation, separates immutable-document
+  idempotency from provider event/replay identity and states that external or
+  none rollout modes cannot complete native invoicing/payments. Stage 7 now
+  gates carpet, upholstery, tile/grout, bounded floor care, ground/interior
+  windows and ordinary post-construction separately; broad taxonomy labels and
+  legacy recognition are not implementation evidence. Stage 6's internal Q1
+  pilot remains an increment, not completion of portal/QA scope. No migration,
+  application feature, hosted action, provider credential or spend occurred.

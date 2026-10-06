@@ -2,7 +2,9 @@
 
 Status: READ-ONLY AUDIT COMPLETE / IMPLEMENTATION NOT STARTED
 
-Authoritative audit head: `fdf64ab`
+Planning evidence only. Rebind and re-audit this packet at the exact accepted
+Stage 2 predecessor before implementation; do not treat a historical audit
+commit as current entry evidence.
 
 Stage 3 is founder-approved, but its implementation gate is not open. It must
 start from the founder-accepted R3 head because it consumes organization,
@@ -16,7 +18,9 @@ migration implementation.
 - R2 organization, membership, active-organization, audit and outbox/inbox
   contracts after their hosted acceptance.
 - R3 customer/contact/property keys, opportunity lifecycle, immutable proposal
-  versions, C0 acceptance and A0–A8 activation registry after R3 acceptance.
+  versions, C0 acceptance and A0–A8 activation registry only after their exact
+  meanings, implementations and full R3 acceptance exist. References to A0–A8
+  are not an implementation source while Prompt 12 semantics remain missing.
 - Existing qualification route/card as input primitives, not as a completed
   segment router:
   `app/api/onboarding/qualification/route.ts` and
@@ -53,14 +57,16 @@ export, deletion or grace-period portability.
 
 - Canonical schemas for customers, contacts, properties, leads and
   opportunities.
-- File limits, encoding/malware/prohibited-field and CSV-injection defenses.
+- A maximum of 10,000 rows plus a separately frozen byte ceiling, accepted
+  encodings, malware/prohibited-field and CSV-formula-injection defenses.
 - Mapping presets, normalization, row-level errors, deterministic duplicate
   suggestions and explicit operator confirmation; never silently merge.
 - Resumable preview batches with provenance, hashes and audit.
 
 ### S3-3 — idempotent commit and legacy migration
 
-- Idempotent import commit, conflict review and documented reversal policy.
+- Idempotent import commit, conflict/merge review and operator-controlled undo
+  until an explicitly defined finalization cutoff.
 - Legacy user/proposal mapping into accepted R3 ownership using a reversible
   mapping record.
 - Hash evidence that historical proposal bytes, prices and public links do not
@@ -68,7 +74,8 @@ export, deletion or grace-period portability.
 
 ### S3-4 — organization portability and stage acceptance
 
-- Full organization export with completeness manifest.
+- Full organization export on every plan with a versioned completeness
+  manifest, step-up authentication, encryption and expiring download.
 - Cancellation, grace period, deletion, legal-hold and immutable-record rules.
 - Representative operator imports, accessibility evidence, independent Claude
   exact-candidate PASS and founder acceptance.
@@ -80,6 +87,10 @@ export, deletion or grace-period portability.
 - Release 1 truthfulness and catalog/profile semantics accepted.
 - Privacy/DPA/access-logging rules for any concierge processing.
 - Retention, deletion, legal-hold and lifecycle-email decisions recorded.
+- Exact role grants for onboarding/import/merge/reversal/export and a legacy
+  public-link preserve/revoke/expiry policy recorded.
+- Imported consent without authoritative provenance is stored as unknown, never
+  inferred as granted.
 
 ## Release gate
 
@@ -95,4 +106,3 @@ export, deletion or grace-period portability.
 - Historical proposal bytes/prices/links unchanged.
 - Operator validation, Claude PASS, founder acceptance and separately authorized
   deployment.
-

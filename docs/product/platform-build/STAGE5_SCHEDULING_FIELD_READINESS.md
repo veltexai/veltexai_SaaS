@@ -2,7 +2,8 @@
 
 Status: READ-ONLY AUDIT COMPLETE / EVIDENCE-GATED
 
-Authoritative audit head: `fdf64ab`
+Planning evidence only. Rebind and re-audit this packet at the exact accepted
+Stage 4 predecessor before implementation.
 
 No current branch or worktree contains product implementation for agreements,
 change orders, service plans, visit generation, operational workers, field time
@@ -15,12 +16,13 @@ entries, location consent or labor variance. Stage 5 is not hidden elsewhere.
 - Full R3 must provide stable organization, customer, property and site keys,
   immutable proposal/C0 acceptance and handoff ownership.
 - Stage 3 must stabilize imported ownership keys and legacy mappings.
-- Stage 4 begins with the minimal immutable agreement/version and change-order
-  bridge. Stage 5 consumes those accepted records; it does not duplicate them.
-- Finance operations mode and ownership references must be decided, but native
-  invoicing or payments need not be enabled before scheduling.
-- O0 operator evidence and a founder decision select `native`, `external` or
-  `none` for each operations capability and segment.
+- Full Stage 4 must be accepted before Stage 5 implementation begins, preserving
+  the founder-approved seven-stage dependency order. Stage 5 consumes the
+  accepted agreement/version, change-order, invoice and payment ownership
+  contracts; it does not duplicate them.
+- O0 operator evidence may sequence `native`, `external` or `none` rollout per
+  capability/segment, but `external` or `none` cannot mark the approved native
+  scheduling/field-execution stage complete.
 
 ## Reuse; do not rebuild
 
@@ -41,8 +43,8 @@ entries, location consent or labor variance. Stage 5 is not hidden elsewhere.
 - Prompt 13-compliant operator discovery after Bid-to-Won is usable.
 - Record demand, external-system coexistence and the `native`/`external`/`none`
   choice for contracts, scheduling, field work and workforce actuals.
-- Obtain counsel decisions for agreement/change-order templates before the
-  Stage 4 contract bridge is released.
+- Consume the counsel/accounting/provider decisions already accepted in Stage
+  4; Stage 5 does not reopen or precede them.
 
 ### O1 — accepted agreement boundary
 
@@ -110,4 +112,3 @@ events; it does not create a second contract model.
   validation before O3 acceptance.
 - Claude exact-candidate PASS, founder acceptance and separately authorized
   deployment/provider/spend actions.
-

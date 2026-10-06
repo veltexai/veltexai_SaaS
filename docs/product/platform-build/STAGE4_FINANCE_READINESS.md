@@ -2,7 +2,8 @@
 
 Status: READ-ONLY AUDIT COMPLETE / IMPLEMENTATION GATED
 
-Authoritative audit head: `fdf64ab`
+Planning evidence only. Rebind and re-audit this packet at the exact accepted
+Stage 3 predecessor before implementation.
 
 No customer invoicing or payment implementation exists on any current branch or
 worktree. Existing Stripe routes, webhook handling, `billing_history`, billing
@@ -48,12 +49,28 @@ Contract preparation may proceed without a database or provider integration:
   `veltex.account_mapping.v1`.
 
 Every contract must use organization and immutable source identifiers, integer
-minor units, ISO currency, source trace, generated timestamp and idempotency by
-`(organization_id, object_type, object_id, version)`.
+minor units, ISO currency, source trace and generated timestamp. Immutable
+document/version events use `(organization_id, object_type, object_id,
+version)`. Provider/payment/refund/dispute/reversal/settlement events require a
+separate command idempotency key plus provider-account and provider-event/object
+uniqueness, raw-payload hash, received/processed timestamps, ordering policy,
+retry count, terminal dead-letter state and replay lineage.
 
 ## Delivery progression
 
-### F0A — contract-boundary bridge
+### F0B — evidence and finance decisions (first)
+
+- Verify operator tools, cadence, terms, deposits, tax source and re-keying.
+- Correct unsupported finance-charge/payment language only through approved
+  copy/legal review.
+- Record segment rollout mode (`external`, `native`, `none`),
+  separation-of-duty and solo-owner fallback, retention, numbering/currency,
+  tax authority, secret-store, connected-account/PCI and accounting-map
+  decisions.
+- A segment rollout mode of `external` or `none` does not satisfy or complete
+  the founder-approved native invoicing/payments stage.
+
+### F0A — contract-boundary bridge (after F0B decisions)
 
 - Immutable agreement and agreement-version records sourced from the accepted
   R3 proposal version and C0 acceptance receipt.
@@ -63,14 +80,6 @@ minor units, ISO currency, source trace, generated timestamp and idempotency by
   through the accepted R2 outbox.
 - Explicitly excludes service plans, visits, workers, location, timekeeping and
   billing calculations.
-
-### F0B — evidence and finance decisions
-
-- Verify operator tools, cadence, terms, deposits, tax source and re-keying.
-- Correct unsupported finance-charge/payment language only through approved
-  copy/legal review.
-- Record operations mode (`external`, `native`, `none`), separation-of-duty and
-  solo-owner fallback, retention, secret-store and accounting-map decisions.
 
 ### F1 — billing foundations
 
@@ -113,3 +122,6 @@ minor units, ISO currency, source trace, generated timestamp and idempotency by
 - Payments require connected-account sandbox coverage for success, failure,
   reversal, refund and dispute plus a zero-sensitive-data scan.
 - Production deployment and provider activation remain separately authorized.
+- Stage 4 is complete only after F0B, F0A, F1, F2, F3 and F4 each satisfy its
+  applicable evidence and acceptance gate. External-mode value may ship in a
+  bounded earlier increment, but it cannot redefine completion of this stage.

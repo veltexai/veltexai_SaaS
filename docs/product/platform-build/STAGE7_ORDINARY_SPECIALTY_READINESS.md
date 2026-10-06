@@ -2,7 +2,8 @@
 
 Status: FOUNDATION PARTIAL / STAGE IMPLEMENTATION NOT STARTED
 
-Authoritative audit head: `fdf64ab`
+Planning evidence only. Rebind and re-audit this packet at the exact accepted
+Stage 6 predecessor before implementation.
 
 The all-cleaning master plan, taxonomy, Release 1 catalog/versioning pattern and
 legacy service engines exist. No branch contains an executable production pack
@@ -19,7 +20,9 @@ service engines.
   deterministic pricing and frozen-snapshot compatibility.
 - Existing document/render/public-view and save/edit/regenerate/send/download
   regression patterns.
-- Existing five-service compatibility baseline and Release 1 packs.
+- Both regression baselines: the five executable residential/turnover v2 job
+  types and the separately preserved legacy commercial/residential/service
+  adapter. Legacy recognition is not specialty implementation.
 - Versioned location-pricing inputs after their own operator evidence passes.
 
 ## Deliverables required per ordinary service
@@ -41,10 +44,13 @@ service engines.
 
 Initial candidates, each separately gated:
 
-1. Carpet/upholstery and tile/grout.
-2. Hard-floor care.
-3. Ground-level/interior window cleaning.
-4. Ordinary post-construction final cleaning with explicit exclusions.
+1. Carpet cleaning.
+2. Upholstery cleaning, independently gated after carpet.
+3. Tile/grout, independently gated after carpet.
+4. Bounded hard-floor care with strip/refinish chemistry and equipment kept in
+   a separately reviewed safety boundary.
+5. Ground-level/interior window cleaning only.
+6. Ordinary post-construction final cleaning with explicit exclusions.
 
 Height, rope access, roof work, multi-story gutters, elevated exterior work and
 chemical-heavy exterior washing require their own safety classification before
@@ -68,10 +74,12 @@ jurisdiction-specific compliance claims.
 
 ## First bounded slice
 
-After Stages 1–3 are accepted, implement one carpet/upholstery pack:
+After Stages 1–6 are accepted and the carpet-specific B18/E2+ and qualified
+operator gates pass, implement one carpet-only pack:
 
 1. Research/validation packet and clear exclusion boundary.
-2. Additive catalog version and carpet-specific input schema.
+2. Additive persisted catalog/version records and carpet-specific input schema;
+   compile-time taxonomy literals alone are not the final architecture.
 3. Measurement, equipment and deterministic pricing strategy.
 4. Proposal pack and low/normal/high fixtures.
 5. Regression across the existing five services and Release 1 packs.
@@ -83,3 +91,8 @@ Do not create a generic specialty engine or combine carpet, windows, floors,
 exterior and post-construction into one release. Each service requires its own
 evidence, pricing strategy and gate.
 
+The current broad `window-cleaning` and hard-floor/refinishing taxonomy labels
+are discovery names only. They must not be enabled as evidence of a bounded
+ordinary-safe production pack. Media/AI assistance is optional and may enter a
+pack only after M0 and the relevant service-specific media pack are accepted;
+deterministic manual pricing remains sufficient for the core pack.

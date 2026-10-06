@@ -2,7 +2,8 @@
 
 Status: READ-ONLY AUDIT COMPLETE / EXPANDED STAGE NOT STARTED
 
-Authoritative audit head: `fdf64ab`
+Planning evidence only. Rebind and re-audit this packet at the exact accepted
+Stage 5 predecessor before expanded Stage 6 implementation.
 
 No branch contains a hidden portal-identity, stakeholder-scope, inspection,
 deficiency, corrective-action or re-service implementation. Existing proposal
@@ -12,6 +13,11 @@ tracking is a prototype delivery/read model, not a secure portal foundation.
 
 The C0 proposal room is a Bid-to-Won dependency and must be completed before an
 expanded portal:
+
+- C0 follows the frozen `R3_5_C0_ACCEPTANCE_RECEIPT_CONTRACT.md` and
+  `R3_5_C0_IMPLEMENTATION_READINESS.md`. Stage 6 references that accepted
+  foundation; it does not redefine token transport, HMAC, expiry, consent,
+  designated-approver or receipt semantics.
 
 - Hash-only CSPRNG action tokens with purpose, object-version, expiry, rotation,
   revocation and an explicit legacy-link window.
@@ -62,11 +68,16 @@ C0 acceptance evidence.
 
 ## First bounded slices
 
-1. After R2 acceptance, implement only the Stage 2 token foundation: additive
-   schema/service, hash-only storage, legacy compatibility, resolution and
-   tenant/IDOR tests. Do not add acceptance UI yet.
-2. After R3 immutable proposal versions, implement C0 review/accept/receipt.
+1. After exact R3-4 independent PASS, isolated-Preview evidence and founder
+   acceptance, resolve the immutable multi-package version commitment and then
+   implement the Stage 2 R3-5 token/session foundation and C0
+   review/respond/accept/receipt flow. R2 acceptance alone does not open this
+   gate, and legacy plaintext tracking is never acceptance authority.
+2. Finish and accept R3-5 through R3-8 and the complete Bid-to-Won stage before
+   beginning expanded Stage 6 portal implementation.
 3. Only after B13 and stable visits/contracts, pilot Q1 internally for ordinary
    work with manual templates. Exclude customer publication, photos, automated
-   re-service and safety classification from the first Q1 slice.
-
+   re-service and safety classification from the first Q1 slice. This internal
+   pilot cannot by itself satisfy Stage 6 completion; deficiencies, corrective
+   action, re-service, recurrence, closure and controlled customer visibility
+   remain required exit scope.
