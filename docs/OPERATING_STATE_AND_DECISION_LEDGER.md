@@ -3733,3 +3733,11 @@ After any material action, append or revise the relevant section with:
   The independent-review assignment status was reconciled to dual `PASS`.
   These records prepare execution but do not authorize hosted mutation or
   declare founder acceptance.
+- **R3-4.1 EXECUTION CONTRACT HARDENED / IMPLEMENTATION STILL LOCKED:** The
+  existing package-set decision now fixes the additive v1/v2 database shape,
+  append-only association invariants, deterministic package-set hashing and
+  lock order, caller-bound publication/replay contract, server-authoritative
+  application boundary, Board/List review semantics and exact entry/exit
+  sequence. It expressly preserves every v1 row and byte and refuses the
+  smaller one-package substitute. No R3-4.1 code or migration was started;
+  R3-4 isolated-Preview and founder acceptance remain its entry gate.
