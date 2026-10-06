@@ -3216,9 +3216,22 @@ After any material action, append or revise the relevant section with:
   `/private/tmp/veltex-r3-4-immutable-proposal-versions-6e3345c-review.zip`
   has SHA-256
   `1f6f4e7dd57ba6e47ca16ff9a93e1392ee93c6c485ede82f9b93e86c21aec24b`;
-  `unzip -t` passes. The Claude database/security and Cursor
-  operator/accessibility assignments are prepared but **not yet submitted**.
-  Their verdicts, isolated-Preview migration/application evidence, genuine
+  `unzip -t` passes.
+- **PARALLEL INDEPENDENT REVIEW SUBMITTED:** After the founder's explicit
+  action-time confirmation, the exact archive and hashes above were submitted
+  to a new Claude review chat and a new Cursor agent lane. Claude received the
+  archive itself and the database/security scope: authorization, tenant and
+  record scope, replay/idempotency, concurrency, immutable snapshot/privacy,
+  direct-DML denial, grants/definer allowlist and migration safety. Cursor was
+  pointed to the exact local archive and assigned the complementary operator
+  and accessibility scope: Board/List parity, stable retry/recovery, immutable
+  history, truthful copy, desktop and genuine 390 px behavior, keyboard/focus,
+  44 px targets and overflow. Both were instructed to recompute hashes, return
+  `PASS` or `FAIL` first, use local read-only/disposable resources only, and
+  avoid edits, commits, pushes, hosted access, credentials, deployment or
+  external messages. Both interfaces visibly entered active analysis. Their
+  verdicts are `PENDING`; submission is not Preview or production
+  authorization. Isolated-Preview migration/application evidence, genuine
   desktop and 390 px acceptance, and explicit founder acceptance remain
   required before R3-4 may be `ACCEPTED` or unlock R3-5 implementation.
 - **SAFETY STATE:** Production and Preview were not queried or mutated for this
