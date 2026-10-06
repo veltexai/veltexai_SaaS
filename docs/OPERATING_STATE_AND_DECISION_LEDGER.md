@@ -3624,3 +3624,21 @@ After any material action, append or revise the relevant section with:
   bounded regression instructions and entered `Planning next moves`. Both
   assignments prohibit edits, commits, pushes, deployments, credentials and
   hosted Preview or Production access. No hosted state changed.
+- **R3-4 CURSOR SECOND-REMEDIATION REGRESSION — `PASS`:** Cursor recomputed
+  wrapper SHA-256
+  `5f988c9c7469c0ff840561b58e2fac790809f26b77ab85e02cfaaf4878723346`,
+  bundle SHA-256
+  `cedc347dd01682e5589b2cc4b6c43b3ace6df976bcbed0a1e9bd843a8855fa87`,
+  verified complete history at exact tip
+  `341ab970c7fc29ade1340ce5011b4a3d9488b453` and confirmed implementation
+  `aa48b5eabd03e3dd4babf313c7b473a9920467b1`. The bounded regression proved
+  one unavailable/invalid proposal candidate is omitted while valid candidates
+  and immutable history still return with HTTP 200, including the new focused
+  route case. Cursor confirmed Board/List eligibility, viewer/unsupported-
+  segment hiding and prepared/not-sent copy are byte-identical to its prior
+  passing remediation state. Verdict contains no Critical, High or Medium
+  findings and no new Low; the prior internal-estimate empty-label Low remains
+  unchanged and non-publishing. Cursor accessed no hosted state. Claude's
+  database/security delta verdict remains active, so R3-4 remains
+  `INDEPENDENT CLAUDE DELTA REVIEW PENDING`; isolated Preview, founder
+  acceptance and R3-5 remain locked.
