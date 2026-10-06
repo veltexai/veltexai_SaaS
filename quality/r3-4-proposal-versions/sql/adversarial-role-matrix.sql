@@ -153,6 +153,36 @@ begin
     get stacked diagnostics err=message_text;
     if err<>'proposal version content unavailable' then raise; end if;
   end;
+  begin
+    perform * from public.command_crm_publish_proposal_version_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
+      estimate_id,'version-publish-margin-0004','crm_proposal_version.v1',
+      jsonb_set(snapshot,'{pricing}',(snapshot->'pricing')||jsonb_build_object('margin',42)),
+      'Nested private economics leak',
+      (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
+    raise exception 'nested private pricing key accepted';
+  exception when check_violation then null; end;
+  begin
+    perform * from public.command_crm_publish_proposal_version_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
+      estimate_id,'version-publish-amount-0005','crm_proposal_version.v1',
+      jsonb_set(snapshot,'{pricing,amountMinor}','12600'::jsonb),'Mismatched amount',
+      (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
+    raise exception 'mismatched estimate amount accepted';
+  exception when check_violation then null; end;
+  begin
+    perform * from public.command_crm_publish_proposal_version_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000099',
+      estimate_id,'version-publish-context-0006','crm_proposal_version.v1',snapshot,'Wrong property',
+      (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
+    raise exception 'mismatched property context accepted';
+  exception when check_violation then null; end;
   select * into second_result from public.command_crm_publish_proposal_version_internal(
     '85555555-5555-4555-8555-555555555555',org,
     '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
@@ -165,7 +195,7 @@ end $$;
 
 do $$
 declare org uuid:=current_setting('r34.org')::uuid; estimate_id uuid:=current_setting('r34.estimate')::uuid;
-  snapshot jsonb:=current_setting('r34.snapshot')::jsonb; admin_result record;
+  snapshot jsonb:=current_setting('r34.snapshot')::jsonb; admin_result record; closed_error text;
 begin
   select * into admin_result from public.command_crm_publish_proposal_version_internal(
     '84444444-4444-4444-8444-444444444444',org,
@@ -176,6 +206,32 @@ begin
     (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
   if admin_result.replayed or admin_result.version_number<>3
     then raise exception 'admin version allocation failed'; end if;
+  update public.crm_opportunities set stage_id=(select s.id from public.crm_pipeline_stages s
+    where s.organization_id=org and s.pipeline_id=public.crm_opportunities.pipeline_id
+      and s.category='lost' order by s.position limit 1),
+    loss_reason_id=(select r.id from public.crm_loss_reasons r where r.organization_id=org
+      and r.active and r.applies_to in ('lost','both') order by r.created_at,r.id limit 1)
+    where id='83000000-0000-4000-8000-000000000003';
+  begin
+    perform * from public.command_crm_publish_proposal_version_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
+      estimate_id,'version-publish-closed-0007','crm_proposal_version.v1',snapshot,'Closed blocked',
+      (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
+    raise exception 'closed opportunity proposal version accepted';
+  exception when check_violation then
+    get stacked diagnostics closed_error=message_text;
+    if closed_error<>'closed opportunity cannot publish a proposal version' then raise; end if;
+  end;
+  if not (select replayed from public.command_crm_publish_proposal_version_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
+      estimate_id,'version-publish-owner-0001','crm_proposal_version.v1',snapshot,
+      'Exact rendered proposal v1',current_setting('r34.initial_token')::timestamptz)) then
+    raise exception 'closed-state exact replay failed';
+  end if;
   begin
     perform * from public.command_crm_publish_proposal_version_internal(
       '86666666-6666-4666-8666-666666666666',org,

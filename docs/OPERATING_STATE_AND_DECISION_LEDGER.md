@@ -2692,8 +2692,20 @@ After any material action, append or revise the relevant section with:
   and preserved three test defects—transaction ordering around auth triggers,
   a stale property column name and forbidden service-role direct reads—before
   the corrected matrix emitted `R3_4_ADVERSARIAL_ROLE_MATRIX_PASS` and rolled
-  back. A true two-session allocation race and broader mismatch/closed-state
-  cases remain required before database acceptance. No hosted state changed.
+  back. The expanded run also rejects nested internal pricing fields,
+  mismatched displayed amount, wrong property context and new publication on a
+  closed opportunity, while preserving exact replay after closure. No hosted
+  state changed.
+- **R3-4 TRUE TWO-SESSION RACE — LOCAL PASS:** Two independent service-role
+  sessions raced different request keys/rendered bytes against the same
+  proposal/package optimistic token. One committed and one failed with the
+  intended `site work package changed` serialization refusal. Postflight
+  proved exactly one version, one distinct version number (`1`), one receipt,
+  one estimated-package pointer to that exact version and one ID-only outbox
+  event, emitting `R3_4_CONCURRENCY_PASS (0/1)`. The runner sources the existing
+  disposable-cluster guard and refuses any non-harness database target. This
+  closes the required allocation/package-pointer race locally; application and
+  independent-review gates remain. No hosted state changed.
 - **R3-5 C0 ENTRY CONTRACT PREPARED / IMPLEMENTATION NOT STARTED:**
   `R3_5_C0_ACCEPTANCE_RECEIPT_CONTRACT.md` now freezes the bounded customer
   proposal room: hash-only purpose-bound expiring tokens, immutable

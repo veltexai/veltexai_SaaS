@@ -9,6 +9,8 @@ const migration = readFileSync(resolve(root,
   'supabase/migrations/20261005000000_r3_4_immutable_proposal_versions.sql'), 'utf8');
 const matrix = readFileSync(resolve(root,
   'quality/r3-4-proposal-versions/sql/adversarial-role-matrix.sql'), 'utf8');
+const concurrency = readFileSync(resolve(root,
+  'quality/r3-4-proposal-versions/concurrency.sh'), 'utf8');
 
 for (const marker of [
   'create table public.crm_proposal_versions',
@@ -54,10 +56,18 @@ for (const marker of [
   'immutable version update accepted', 'immutable version delete accepted',
   'authenticated direct version insert accepted',
   'viewer received immutable version metadata',
+  'nested private pricing key accepted', 'mismatched estimate amount accepted',
+  'mismatched property context accepted',
+  'closed opportunity proposal version accepted', 'closed-state exact replay failed',
   'R3_4_ADVERSARIAL_ROLE_MATRIX_PASS',
 ]) assert.ok(matrix.includes(marker), `matrix missing ${marker}`);
 assert.equal((matrix.match(/^begin;$/gm) ?? []).length, 1);
 assert.equal((matrix.match(/^rollback;$/gm) ?? []).length, 1);
 assert.equal((matrix.match(/^commit;$/gm) ?? []).length, 0);
+for (const marker of [
+  'version-race-a', 'version-race-b', 'R3_4_CONCURRENCY_PASS',
+  "RESULT\" = '1|1|1|1|1|1'", 'statuses $SA/$SB',
+]) assert.ok(concurrency.includes(marker), `concurrency proof missing ${marker}`);
+assert.ok(concurrency.includes('guard_local.sh'), 'concurrency proof must refuse non-disposable targets');
 
 console.log('R3-4 immutable proposal-version migration contract PASS');
