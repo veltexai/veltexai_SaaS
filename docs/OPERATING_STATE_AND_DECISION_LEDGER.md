@@ -2706,6 +2706,30 @@ After any material action, append or revise the relevant section with:
   disposable-cluster guard and refuses any non-harness database target. This
   closes the required allocation/package-pointer race locally; application and
   independent-review gates remain. No hosted state changed.
+- **R3-4 SERVER COMPOSER / API BOUNDARY — LOCAL PASS / UI NOT YET BUILT:** The
+  authenticated opportunity route now exposes scoped version-history metadata
+  and a strict publish entry point. Its request accepts only the proposal,
+  property, estimate, optional package and package-concurrency identifiers; it
+  rejects all browser-supplied rendered bytes, snapshot fields and prices. The
+  server resolves the organization-scoped working proposal, selected R3-3
+  estimate, customer, property and company identity, verifies their context,
+  composes the strict `crm_proposal_version.v1` customer-visible allowlist and
+  invokes the caller-bound service-role command. The composer carries the
+  reviewed existing Release 1 rendered bytes, selected persisted estimate
+  amount/basis and scope/exclusion lists while excluding internal scope notes,
+  margins, labor, overhead and access-adjacent fields. Bounded route errors do
+  not disclose database detail. Focused composer/route/estimate coverage passes
+  25/25; the full repository gate passes 110 suites / 931 tests / five
+  snapshots; TypeScript, the 85-page production build, diff hygiene and the
+  R3-4 migration contract pass. The first build compiled and type-checked but
+  stopped during prerender because the isolated worktree had no Supabase
+  public URL/key; the identical build then passed with non-secret loopback
+  placeholders. This is the previously documented local configuration-context
+  limitation, not a source defect. An
+  initial forged-input regression exposed Zod's default unknown-key stripping;
+  the request schema is now strict and rejects that payload before any hosted
+  client call. Board/List UI, full repository/build gates, independent review,
+  isolated Preview and founder acceptance remain. No hosted state changed.
 - **R3-5 C0 ENTRY CONTRACT PREPARED / IMPLEMENTATION NOT STARTED:**
   `R3_5_C0_ACCEPTANCE_RECEIPT_CONTRACT.md` now freezes the bounded customer
   proposal room: hash-only purpose-bound expiring tokens, immutable
