@@ -3345,7 +3345,7 @@ After any material action, append or revise the relevant section with:
   The strengthened packet
   `/private/tmp/veltex-r3-4-remediation-1883dbe-bundle-review.zip` is 87 MiB,
   passes `unzip -t`, has SHA-256
-  `65423de327c927eeec9a9265a7d1c127fd070d1a1dcb893480822d9d2e2d213c`
+  `930b4ed9e7c915434715367b68d2951e26f0f52fdfa891c95bfa993000d9a730`
   and contains a complete-history Git bundle. `git bundle verify` proves exact
   branch tip `1883dbea37235bae2d8e93c28ea2de1b73f1c00d`; bundle SHA-256 is
   `7d1478ff2a9b1a9d81093a780fbc458bc8deb46363f86497bf1124029d39376d`.
