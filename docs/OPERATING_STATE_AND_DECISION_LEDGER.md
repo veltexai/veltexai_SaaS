@@ -3484,3 +3484,13 @@ After any material action, append or revise the relevant section with:
   attachments and the full deficiency/corrective-action/re-service/closure
   outcome. All choices remain `PENDING`; no schema, hosted or provider action
   occurred.
+- **STAGE 7 CARPET-FIRST GATE / MASTER MATRIX RECONCILED:** A bounded carpet
+  packet now requires service-specific research, qualified operators,
+  measurement/equipment/productivity/cost/safety decisions, a persisted v2
+  pack, deterministic scenarios, proposal fixtures, both regression baselines,
+  accessibility, independent review and founder acceptance before enablement.
+  Upholstery, tile/grout, bounded floor, ground/interior window and ordinary
+  post-construction remain independent later gates. The seven-stage matrix now
+  points to every prepared decision record and correctly names R3-4 independent
+  re-review—not already completed remediation—as the immediate R3 gate. No
+  implementation or hosted state changed.
