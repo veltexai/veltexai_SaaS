@@ -3671,3 +3671,23 @@ After any material action, append or revise the relevant section with:
   `LOCAL FINAL MATRIX REMEDIATION VERIFIED / CLAUDE MATRIX-DIFF CONFIRMATION
   REQUIRED`. No Preview, Production, credential, deployment, customer-message,
   payment or campaign state changed.
+- **R3-4 FINAL MATRIX CONFIRMATIONS SUBMITTED / PENDING (2026-10-06
+  Pacific):** Founder supplied action-time approval for the strengthened Claude
+  and Cursor submissions. The exact complete-history packet
+  `/private/tmp/veltex-r3-4-final-matrix-1a9b86b-bundle-review.zip` passed
+  `unzip -t`, has SHA-256
+  `4b4d4a7b0d050613b8cafeac5a8fa3949e6db5c11f21e16a06f39276a93b8219`
+  and contains embedded bundle SHA-256
+  `11cb77cf175617062bb9826ef01c7c0e6cb89ac60fd589a89c78c6548c79db23`.
+  `git bundle verify` reports complete history at exact packet tip
+  `1a9b86bbc80c5304d0475f92361e6698bae67625`; a clean clone checked out that
+  exact tip. The packet binds test-only matrix remediation
+  `ecfa68a56b2ba233c838e31917340a607dce7a7f`, unchanged implementation
+  `aa48b5eabd03e3dd4babf313c7b473a9920467b1` and unchanged migration SHA-256
+  `86f438fe3a4516093534faf45d74bff4020dc68e9e40014f912e7152685678a3`.
+  Claude visibly received the attached ZIP and entered `Claude is responding`
+  on the bounded M1' matrix-diff confirmation. Cursor visibly received the
+  matching local-packet follow-up and entered `Planning next moves`; its prior
+  operator/accessibility regression `PASS` remains preserved. Both assignments
+  prohibit edits, commits, pushes, deployments, credentials and hosted Preview
+  or Production access. No hosted state changed.
