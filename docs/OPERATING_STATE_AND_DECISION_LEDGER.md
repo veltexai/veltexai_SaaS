@@ -3283,3 +3283,55 @@ After any material action, append or revise the relevant section with:
   gap, rerun the full local gates, then create a new exact delta packet for
   independent Claude and Cursor re-review. Production and Preview remain
   unchanged and excluded.
+- **R3-4 COHERENT REMEDIATION — LOCAL GATES PASS / INDEPENDENT RE-REVIEW
+  REQUIRED (2026-10-06 Pacific):** A clean branch from exact reviewed state
+  `508170c` replaces the revoked direct `service_role` estimate-table read with
+  one caller-bound source RPC that authorizes owner/admin/exact assigned
+  estimator before resolving any proposal, estimate, customer, property or
+  package row. Rendered proposal bytes are now deterministic output of the
+  strict customer-safe snapshot; both TypeScript and SQL render the same title,
+  customer, service location, service, scope and exact selected R3-3 amount,
+  and the publish command rejects any rendered/snapshot mismatch. The command
+  receipt hash now includes the actor and exact replays occur after
+  authorization but before mutable-current-state revalidation.
+- **BINDINGS AND POINTERS HARDENED:** Database triggers reject rebinding a
+  versioned proposal, require an authorized and customer/property-consistent
+  opportunity before an unversioned proposal binding changes, make the package
+  proposal-version pointer command-managed, and automatically invalidate that
+  pointer when a later R3-3 estimate replaces the selected estimate. Snapshot
+  leaf types are checked in the database rather than relying only on Zod.
+- **OPERATOR REMEDIATION:** Board and List now bind their visible internal
+  estimate to the exact package estimate used for publication. The prepare
+  dialog shows the exact customer-visible price, scope and rendered content
+  before enabling the immutable action. A `409` disables repeat submission and
+  exposes `Refresh proposal data`; successful publication preserves the same
+  receipt key/history while disabling accidental duplicate publication, and a
+  separate `Prepare another version` action deliberately mints the next key.
+  Focused UI coverage proves the exact preview, post-success lockout/deliberate
+  next-version control, stable request key and stale-package refresh path.
+- **EXECUTABLE EVIDENCE:** The final full Jest regression passed 110 suites /
+  934 tests / five snapshots, including the expanded 29/29 CRM board suite,
+  and TypeScript passed. The migration contract and 69-version validator pass.
+  A final fresh PostgreSQL 16 harness applied all 69
+  migrations and passed all R3-1 through R3-4 matrices, definer audit,
+  injection/dirty/rerun checks, explicit R3-4 lock-overlap and exact loser-path
+  proof, both R3 concurrency suites, the legacy 40-way race and `HARNESS
+  COMPLETE`. The 85-page production build passed with established non-secret
+  loopback Supabase placeholders.
+- **FAILED/RECOVERED CHECKS PRESERVED:** The package-manager shim first refused
+  to run because registry signatures were unreachable, so existing checked-in
+  dependencies were used. The first sandboxed build failed only because Google
+  Fonts were unreachable; the identical build passed in the authorized network
+  context. The first sandboxed PostgreSQL attempts could not allocate local
+  shared memory. In the guarded unrestricted harness, the first run exposed a
+  misplaced replay block in the new source function; the second exposed an
+  intentionally revoked pure-renderer call needed only by the matrix; and the
+  third exposed obsolete free-form race bytes. After the final TRUNCATE and
+  pointer tests were added, one replay showed that the initial TRUNCATE probe
+  stopped at the foreign-key boundary instead of exercising the trigger; the
+  corrected cascading probe then exposed that the command-local pointer flag
+  remained usable for a later statement in the same transaction. The command
+  now clears that flag immediately after its one authorized update, and the
+  next clean full run passed through `HARNESS COMPLETE`. Production and Preview
+  were not accessed or changed. R3-4 remains `LOCAL REMEDIATION VERIFIED / INDEPENDENT RE-REVIEW
+  REQUIRED`; it does not unlock R3-5 or authorize deployment.

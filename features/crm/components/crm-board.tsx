@@ -66,7 +66,9 @@ type Walkthrough = {
 type EstimateSummary = { estimate_run_id: string; opportunity_id: string; work_package_id?: string;
   engine_version: string; selected_amount_minor: number; currency: string; pricing_basis: string;
   created_at: string };
-type ProposalCandidate = { id: string; title: string; property_id: string; updated_at: string };
+type ProposalCandidate = { id: string; title: string; property_id: string; updated_at: string;
+  preview?: { rendered_content: string; scope_lines: string[]; amount_minor: number;
+    currency: string; pricing_basis: string } };
 type ProposalVersionSummary = { id: string; proposal_id: string; work_package_id?: string;
   estimate_run_id: string; version_number: number; display_amount_minor: number; currency: string;
   pricing_basis: string; content_sha256: string; rendered_sha256: string; schema_version: string;
@@ -165,6 +167,8 @@ export function CrmBoard() {
     selectedProposalId: string;
     requestKey: string;
     loading: boolean;
+    preparedVersionNumber?: number;
+    stale?: boolean;
   } | null>(null);
   const [followUpOnly, setFollowUpOnly] = useState(false);
   const [duplicateReview, setDuplicateReview] = useState<{
@@ -242,18 +246,17 @@ export function CrmBoard() {
     if (!organizationId || !board) return;
     const prerequisites = refreshed ?? proposalVersionPrerequisites(board, opportunity);
     if (!prerequisites) return;
-    setProposalVersionFor({
-      opportunity,
-      ...prerequisites,
-      candidates: [],
-      versions: [],
-      selectedProposalId: '',
-      requestKey: currentRequestKey,
-      loading: true,
-    });
+    setProposalVersionFor((current) => current?.opportunity.id === opportunity.id ? {
+      ...current, ...prerequisites, requestKey: currentRequestKey, loading: true,
+    } : { opportunity, ...prerequisites, candidates: [], versions: [], selectedProposalId: '',
+      requestKey: currentRequestKey, loading: true });
     try {
       const response = await fetch(
-        `/api/orgs/${organizationId}/crm/opportunities/${opportunity.id}/proposal-versions`,
+        `/api/orgs/${organizationId}/crm/opportunities/${opportunity.id}/proposal-versions?${new URLSearchParams({
+          estimateRunId: prerequisites.estimate.estimate_run_id,
+          propertyId: opportunity.property_id ?? '',
+          ...(prerequisites.workPackage ? { workPackageId: prerequisites.workPackage.id } : {}),
+        })}`,
         { cache: 'no-store' },
       );
       const payload = await response.json() as {
@@ -271,6 +274,7 @@ export function CrmBoard() {
         selectedProposalId: candidates.some((candidate) => candidate.id === current.selectedProposalId)
           ? current.selectedProposalId : candidates[0]?.id ?? '',
         loading: false,
+        stale: false,
       } : current);
     } catch (caught) {
       setProposalVersionFor((current) => current?.opportunity.id === opportunity.id
@@ -304,6 +308,10 @@ export function CrmBoard() {
         replayed?: boolean;
         error?: string;
       };
+      if (response.status === 409) {
+        setProposalVersionFor((existing) => existing ? { ...existing, stale: true } : existing);
+        throw new Error('This package changed. Refresh proposal data before trying again.');
+      }
       if (!response.ok) throw new Error(payload.error ?? 'Unable to prepare the proposal version.');
       if (current.workPackage && payload.data?.package_updated_at) {
         setBoard((existing) => existing ? { ...existing,
@@ -313,7 +321,10 @@ export function CrmBoard() {
         } : existing);
       }
       setNotice(`Proposal version ${payload.data?.version_number ?? ''} prepared. It has not been sent.`);
-      await loadProposalVersionContext(current.opportunity, crypto.randomUUID(), {
+      setProposalVersionFor((existing) => existing ? {
+        ...existing, preparedVersionNumber: payload.data?.version_number,
+      } : existing);
+      await loadProposalVersionContext(current.opportunity, current.requestKey, {
         estimate: current.estimate,
         workPackage: current.workPackage && payload.data?.package_updated_at ? {
           ...current.workPackage,
@@ -1235,13 +1246,32 @@ export function CrmBoard() {
                   <Label htmlFor="proposal-version-source">Proposal working copy</Label>
                   <select id="proposal-version-source" value={proposalVersionFor.selectedProposalId}
                     onChange={(event) => setProposalVersionFor((current) => current
-                      ? { ...current, selectedProposalId: event.target.value, requestKey: crypto.randomUUID() }
+                      ? { ...current, selectedProposalId: event.target.value, requestKey: crypto.randomUUID(),
+                        preparedVersionNumber: undefined, stale: false }
                       : current)}
                     className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
                     {proposalVersionFor.candidates.map((candidate) => (
                       <option key={candidate.id} value={candidate.id}>{candidate.title}</option>
                     ))}
                   </select>
+                  {proposalVersionFor.candidates.find((candidate) =>
+                    candidate.id === proposalVersionFor.selectedProposalId)?.preview && (() => {
+                    const preview = proposalVersionFor.candidates.find((candidate) =>
+                      candidate.id === proposalVersionFor.selectedProposalId)!.preview!;
+                    return <section aria-label="Customer-visible proposal review"
+                      className="space-y-3 rounded-md border bg-gray-50 p-4">
+                      <div><h3 className="font-medium">Customer-visible price</h3>
+                        <p>{new Intl.NumberFormat(undefined, { style: 'currency', currency: preview.currency })
+                          .format(preview.amount_minor / 100)} · {preview.pricing_basis.replaceAll('_', ' ')}</p></div>
+                      <div><h3 className="font-medium">Customer-visible scope</h3>
+                        {preview.scope_lines.length ? <ul className="list-disc pl-5">
+                          {preview.scope_lines.map((line) => <li key={line}>{line}</li>)}</ul>
+                          : <p>Scope to be confirmed</p>}</div>
+                      <div><h3 className="font-medium">Exact proposal content</h3>
+                        <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded border bg-white p-3 text-sm">
+                          {preview.rendered_content}</pre></div>
+                    </section>;
+                  })()}
                 </div> : <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                   Link a customer-facing proposal working copy to this opportunity and property before preparing a version.
                 </p>}
@@ -1265,9 +1295,18 @@ export function CrmBoard() {
             )}
             <div className="flex flex-wrap gap-3">
               <Button type="button" className="min-h-11" disabled={saving || proposalVersionFor.loading
-                || !proposalVersionFor.selectedProposalId} onClick={() => void prepareProposalVersion()}>
+                || !proposalVersionFor.selectedProposalId || proposalVersionFor.preparedVersionNumber !== undefined
+                || proposalVersionFor.stale} onClick={() => void prepareProposalVersion()}>
                 {saving ? 'Preparing…' : 'Prepare immutable version'}
               </Button>
+              {proposalVersionFor.preparedVersionNumber !== undefined && <Button type="button" variant="outline"
+                className="min-h-11" onClick={() => setProposalVersionFor((current) => current ? {
+                  ...current, requestKey: crypto.randomUUID(), preparedVersionNumber: undefined,
+                } : current)}>Prepare another version</Button>}
+              {proposalVersionFor.stale && <Button type="button" variant="outline" className="min-h-11"
+                onClick={() => { void loadBoard(); setProposalVersionFor(null); }}>
+                Refresh proposal data
+              </Button>}
               <Button type="button" variant="outline" className="min-h-11"
                 onClick={() => setProposalVersionFor(null)}>Close</Button>
             </div>
@@ -1341,7 +1380,7 @@ export function CrmBoard() {
                       <h3 className="font-medium text-gray-900">{opportunity.name}</h3>
                       {valueLabel(opportunity) && <p className="mt-2 text-sm text-gray-600">{valueLabel(opportunity)}</p>}
                       {estimateLabel((board.estimate_summaries ?? []).find((entry) => entry.opportunity_id === opportunity.id))
-                        && <p className="mt-2 text-sm font-medium">Internal planning estimate: {estimateLabel((board.estimate_summaries ?? []).find((entry) => entry.opportunity_id === opportunity.id))}</p>}
+                        && <p className="mt-2 text-sm font-medium">Internal planning estimate: {estimateLabel(proposalVersionPrerequisites(board, opportunity)?.estimate)}</p>}
                       {opportunity.next_action_due_at && <p className="mt-2 text-xs text-gray-500">Next action {new Date(opportunity.next_action_due_at).toLocaleDateString()}</p>}
                       {board.caller_role !== 'viewer' && stageMove(opportunity)}
                       {board.caller_role !== 'viewer' && (
@@ -1408,7 +1447,7 @@ export function CrmBoard() {
                   <th scope="row" className="px-4 py-3 text-left text-sm font-medium">{opportunity.name}</th>
                   <td className="px-4 py-3 text-sm">{activePipeline.stages.find((stage) => stage.id === opportunity.stage_id)?.label}</td>
                   <td className="px-4 py-3 text-sm"><p>{valueLabel(opportunity) ?? '—'}</p>{estimateLabel((board.estimate_summaries ?? []).find((entry) => entry.opportunity_id === opportunity.id))
-                    && <p className="mt-1 font-medium">Internal estimate: {estimateLabel((board.estimate_summaries ?? []).find((entry) => entry.opportunity_id === opportunity.id))}</p>}</td>
+                    && <p className="mt-1 font-medium">Internal estimate: {estimateLabel(proposalVersionPrerequisites(board, opportunity)?.estimate)}</p>}</td>
                   <td className="px-4 py-3">{board.caller_role === 'viewer' ? 'Read only' : (
                     <div>{stageMove(opportunity)}<div className="mt-2 flex flex-wrap gap-2">
                       <Button type="button" variant="outline" className="min-h-11"

@@ -4,7 +4,8 @@ alter table public.profiles disable trigger profiles_protect_entitlements;
 insert into auth.users(id,email) values
   ('84444444-4444-4444-8444-444444444444','version-admin@example.test'),
   ('85555555-5555-4555-8555-555555555555','version-estimator@example.test'),
-  ('86666666-6666-4666-8666-666666666666','version-viewer@example.test')
+  ('86666666-6666-4666-8666-666666666666','version-viewer@example.test'),
+  ('87777777-7777-4777-8777-777777777777','version-unassigned@example.test')
 on conflict(id) do nothing;
 alter table public.profiles enable trigger profiles_protect_entitlements;
 
@@ -16,7 +17,8 @@ select p.active_organization_id,v.user_id,v.role
 from public.profiles p cross join (values
   ('84444444-4444-4444-8444-444444444444'::uuid,'admin'::text),
   ('85555555-5555-4555-8555-555555555555'::uuid,'estimator'::text),
-  ('86666666-6666-4666-8666-666666666666'::uuid,'viewer'::text)
+  ('86666666-6666-4666-8666-666666666666'::uuid,'viewer'::text),
+  ('87777777-7777-4777-8777-777777777777'::uuid,'estimator'::text)
 ) v(user_id,role)
 where p.id='11111111-1111-4111-8111-111111111111';
 alter table public.organization_memberships enable trigger guard_organization_membership_changes;
@@ -28,6 +30,11 @@ where id='11111111-1111-4111-8111-111111111111';
 insert into public.crm_properties(id,organization_id,customer_id,name,address_line_1,city,region,postal_code,created_by)
 select '83000000-0000-4000-8000-000000000002',active_organization_id,
   '83000000-0000-4000-8000-000000000001','Version property','1 Test Way',
+  'Test City','CA','90000',id from public.profiles
+where id='11111111-1111-4111-8111-111111111111';
+insert into public.crm_properties(id,organization_id,customer_id,name,address_line_1,city,region,postal_code,created_by)
+select '83000000-0000-4000-8000-000000000006',active_organization_id,
+  '83000000-0000-4000-8000-000000000001','Other real property','2 Test Way',
   'Test City','CA','90000',id from public.profiles
 where id='11111111-1111-4111-8111-111111111111';
 insert into public.crm_opportunities(id,organization_id,customer_id,pipeline_id,stage_id,property_id,
@@ -107,7 +114,7 @@ begin
     '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
     '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
     estimate_id,'version-publish-owner-0001','crm_proposal_version.v1',snapshot,
-    'Exact rendered proposal v1',token);
+    public.crm_render_proposal_snapshot_v1(snapshot),token);
   if first_result.replayed or first_result.version_number<>1 or first_result.package_updated_at is null then
     raise exception 'owner first publish failed';
   end if;
@@ -119,7 +126,7 @@ begin
     '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
     '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
     estimate_id,'version-publish-owner-0001','crm_proposal_version.v1',snapshot,
-    'Exact rendered proposal v1',token);
+    public.crm_render_proposal_snapshot_v1(snapshot),token);
   if not replay_result.replayed or replay_result.proposal_version_id<>first_result.proposal_version_id
      or replay_result.version_number<>1 then raise exception 'exact version replay failed'; end if;
   begin
@@ -128,7 +135,7 @@ begin
       '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
       '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
       estimate_id,'version-publish-owner-0001','crm_proposal_version.v1',snapshot,
-      'Changed rendered proposal',token);
+      public.crm_render_proposal_snapshot_v1(snapshot)||' changed',token);
     raise exception 'changed version replay accepted';
   exception when check_violation then null; end;
   begin
@@ -137,7 +144,7 @@ begin
       '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
       '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
       estimate_id,'version-publish-stale-0002','crm_proposal_version.v1',snapshot,
-      'Exact rendered proposal stale',token);
+      public.crm_render_proposal_snapshot_v1(snapshot),token);
     raise exception 'stale package token accepted';
   exception when serialization_failure then null; end;
   begin
@@ -146,7 +153,7 @@ begin
       '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
       '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
       estimate_id,'version-publish-private-0003','crm_proposal_version.v1',
-      snapshot||jsonb_build_object('internalNotes','Gate 4815'),'Private leak',
+      snapshot||jsonb_build_object('internalNotes','Gate 4815'),public.crm_render_proposal_snapshot_v1(snapshot),
       (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
     raise exception 'private snapshot key accepted';
   exception when check_violation then
@@ -160,7 +167,7 @@ begin
       '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
       estimate_id,'version-publish-margin-0004','crm_proposal_version.v1',
       jsonb_set(snapshot,'{pricing}',(snapshot->'pricing')||jsonb_build_object('margin',42)),
-      'Nested private economics leak',
+      public.crm_render_proposal_snapshot_v1(snapshot),
       (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
     raise exception 'nested private pricing key accepted';
   exception when check_violation then null; end;
@@ -170,7 +177,7 @@ begin
       '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
       '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
       estimate_id,'version-publish-amount-0005','crm_proposal_version.v1',
-      jsonb_set(snapshot,'{pricing,amountMinor}','12600'::jsonb),'Mismatched amount',
+      jsonb_set(snapshot,'{pricing,amountMinor}','12600'::jsonb),public.crm_render_proposal_snapshot_v1(snapshot),
       (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
     raise exception 'mismatched estimate amount accepted';
   exception when check_violation then null; end;
@@ -178,8 +185,8 @@ begin
     perform * from public.command_crm_publish_proposal_version_internal(
       '11111111-1111-4111-8111-111111111111',org,
       '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
-      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000099',
-      estimate_id,'version-publish-context-0006','crm_proposal_version.v1',snapshot,'Wrong property',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000006',
+      estimate_id,'version-publish-context-0006','crm_proposal_version.v1',snapshot,public.crm_render_proposal_snapshot_v1(snapshot),
       (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
     raise exception 'mismatched property context accepted';
   exception when check_violation then null; end;
@@ -188,9 +195,19 @@ begin
     '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
     '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
     estimate_id,'version-publish-estimator-0004','crm_proposal_version.v1',snapshot,
-    'Exact rendered proposal v2',
+    public.crm_render_proposal_snapshot_v1(snapshot),
     (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
   if second_result.replayed or second_result.version_number<>2 then raise exception 'assigned estimator publish failed'; end if;
+  begin
+    perform * from public.command_crm_publish_proposal_version_internal(
+      '87777777-7777-4777-8777-777777777777',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
+      estimate_id,'version-publish-unassigned-0008','crm_proposal_version.v1',snapshot,
+      public.crm_render_proposal_snapshot_v1(snapshot),
+      (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
+    raise exception 'same-org unassigned estimator published a proposal version';
+  exception when insufficient_privilege then null; end;
 end $$;
 
 do $$
@@ -202,7 +219,7 @@ begin
     '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
     '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
     estimate_id,'version-publish-admin-0005','crm_proposal_version.v1',snapshot,
-    'Exact rendered proposal v3',
+    public.crm_render_proposal_snapshot_v1(snapshot),
     (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
   if admin_result.replayed or admin_result.version_number<>3
     then raise exception 'admin version allocation failed'; end if;
@@ -217,7 +234,7 @@ begin
       '11111111-1111-4111-8111-111111111111',org,
       '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
       '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
-      estimate_id,'version-publish-closed-0007','crm_proposal_version.v1',snapshot,'Closed blocked',
+      estimate_id,'version-publish-closed-0007','crm_proposal_version.v1',snapshot,public.crm_render_proposal_snapshot_v1(snapshot),
       (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
     raise exception 'closed opportunity proposal version accepted';
   exception when check_violation then
@@ -229,7 +246,7 @@ begin
       '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
       '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
       estimate_id,'version-publish-owner-0001','crm_proposal_version.v1',snapshot,
-      'Exact rendered proposal v1',current_setting('r34.initial_token')::timestamptz)) then
+      public.crm_render_proposal_snapshot_v1(snapshot),current_setting('r34.initial_token')::timestamptz)) then
     raise exception 'closed-state exact replay failed';
   end if;
   begin
@@ -237,7 +254,7 @@ begin
       '86666666-6666-4666-8666-666666666666',org,
       '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
       '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
-      estimate_id,'version-publish-viewer-0006','crm_proposal_version.v1',snapshot,'Blocked',
+      estimate_id,'version-publish-viewer-0006','crm_proposal_version.v1',snapshot,public.crm_render_proposal_snapshot_v1(snapshot),
       (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
     raise exception 'viewer published a proposal version';
   exception when insufficient_privilege then null; end;
@@ -246,7 +263,7 @@ begin
       '22222222-2222-4222-8222-222222222222',org,
       '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
       '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
-      estimate_id,'version-publish-cross-0007','crm_proposal_version.v1',snapshot,'Blocked',
+      estimate_id,'version-publish-cross-0007','crm_proposal_version.v1',snapshot,public.crm_render_proposal_snapshot_v1(snapshot),
       (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
     raise exception 'cross-tenant actor published a proposal version';
   exception when insufficient_privilege then null; end;
@@ -259,6 +276,17 @@ do $$ begin
   exception when sqlstate '55000' then null; end;
   begin delete from public.crm_proposal_versions;
     raise exception 'immutable version delete accepted';
+  exception when sqlstate '55000' then null; end;
+  begin truncate public.crm_proposal_versions cascade;
+    raise exception 'immutable version truncate accepted';
+  exception when sqlstate '55000' then null; end;
+  begin update public.crm_site_work_packages set proposal_version_id=null
+      where id='83000000-0000-4000-8000-000000000005';
+    raise exception 'direct package proposal-version pointer clear accepted';
+  exception when sqlstate '55000' then null; end;
+  begin update public.proposals set crm_property_id='83000000-0000-4000-8000-000000000006'
+      where id='83000000-0000-4000-8000-000000000004';
+    raise exception 'versioned proposal binding mutation accepted';
   exception when sqlstate '55000' then null; end;
   if exists(select 1 from public.organization_event_outbox where event_type='proposal.version_prepared'
       and payload<>jsonb_build_object('record_id',aggregate_id)) then

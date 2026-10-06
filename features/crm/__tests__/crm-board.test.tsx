@@ -105,7 +105,9 @@ describe('R3-1 CRM board', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: board }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
         candidates: [{ id: 'proposal-1', title: 'Taylor proposal', property_id: 'property-1',
-          updated_at: '2026-10-06T07:00:00Z' }], versions: [],
+          updated_at: '2026-10-06T07:00:00Z', preview: { rendered_content: '# Taylor proposal\n\nPrice: USD 185.00 per visit',
+            scope_lines: ['Kitchen', 'Bathrooms'], amount_minor: 18500, currency: 'USD',
+            pricing_basis: 'per_visit' } }], versions: [],
       } }) })
       .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: {
         proposal_version_id: 'version-1', version_number: 1,
@@ -113,7 +115,9 @@ describe('R3-1 CRM board', () => {
       } }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
         candidates: [{ id: 'proposal-1', title: 'Taylor proposal', property_id: 'property-1',
-          updated_at: '2026-10-06T07:00:00Z' }],
+          updated_at: '2026-10-06T07:00:00Z', preview: { rendered_content: '# Taylor proposal\n\nPrice: USD 185.00 per visit',
+            scope_lines: ['Kitchen', 'Bathrooms'], amount_minor: 18500, currency: 'USD',
+            pricing_basis: 'per_visit' } }],
         versions: [{ id: 'version-1', proposal_id: 'proposal-1', work_package_id: 'package-1',
           estimate_run_id: 'run-1', version_number: 1, display_amount_minor: 18500, currency: 'USD',
           pricing_basis: 'per_visit', content_sha256: 'a', rendered_sha256: 'b',
@@ -126,9 +130,14 @@ describe('R3-1 CRM board', () => {
     expect(await screen.findByRole('heading', { name: 'Prepare proposal version' })).toBeInTheDocument();
     expect(screen.getByText(/does not send, sign or accept/)).toBeInTheDocument();
     expect(await screen.findByRole('option', { name: 'Taylor proposal' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Customer-visible proposal review' }))
+      .toHaveTextContent('Price: USD 185.00 per visit');
+    expect(screen.getByText('Kitchen')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Prepare immutable version' }));
     expect(await screen.findByText(/Version 1/)).toBeInTheDocument();
     expect(screen.getByText(/not sent/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Prepare immutable version' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Prepare another version' })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(4,
       `/api/orgs/${ORG_ID}/crm/opportunities/opportunity-1/proposal-versions`,
       expect.objectContaining({ method: 'POST', headers: expect.objectContaining({
@@ -141,6 +150,48 @@ describe('R3-1 CRM board', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     fireEvent.click(screen.getByRole('button', { name: 'List' }));
     expect(screen.getByRole('button', { name: 'Prepare proposal version' })).toHaveClass('min-h-11');
+  });
+
+  it('recovers a stale package through an explicit board refresh', async () => {
+    jest.spyOn(global.crypto, 'randomUUID').mockReturnValue('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+    const board = {
+      organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], viewer_price_redacted: false,
+      pipelines: [{ id: 'pipeline-1', name: 'Residential', is_default: true,
+        stages: [{ id: 'stage-1', label: 'Quote', category: 'estimating', position: 40, hidden: false }] }],
+      opportunities: [{ id: 'opportunity-1', name: 'Stale package', pipeline_id: 'pipeline-1',
+        stage_id: 'stage-1', category: 'estimating', segment: 'residential', property_id: 'property-1' }],
+      work_packages: [{ id: 'package-1', opportunity_id: 'opportunity-1', property_id: 'property-1',
+        status: 'estimated', proposal_id: 'proposal-1', estimate_run_id: 'run-1',
+        updated_at: '2026-10-06T08:00:00Z' }],
+      estimate_summaries: [{ estimate_run_id: 'run-1', opportunity_id: 'opportunity-1',
+        work_package_id: 'package-1', engine_version: '2026-09-22.2', selected_amount_minor: 18500,
+        currency: 'USD', pricing_basis: 'per_visit', created_at: '2026-10-06T08:00:00Z' }],
+    };
+    const context = { data: { candidates: [{ id: 'proposal-1', title: 'Proposal', property_id: 'property-1',
+      updated_at: '2026-10-06T07:00:00Z', preview: { rendered_content: 'Price: USD 185.00 per visit',
+        scope_lines: ['Kitchen'], amount_minor: 18500, currency: 'USD', pricing_basis: 'per_visit' } }],
+      versions: [] } };
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: board }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => context })
+      .mockResolvedValueOnce({ ok: false, status: 409,
+        json: async () => ({ error: 'This package changed. Reload and try again.' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { ...board,
+        work_packages: [{ ...board.work_packages[0], updated_at: '2026-10-06T08:05:00Z' }] } }) });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'Stale package' });
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare proposal version' }));
+    await screen.findByText('Price: USD 185.00 per visit');
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare immutable version' }));
+    expect(await screen.findByRole('button', { name: 'Refresh proposal data' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Prepare immutable version' })).toBeDisabled();
+    expect(fetchMock.mock.calls[3][1].headers['idempotency-key'])
+      .toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh proposal data' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Prepare proposal version' }))
+      .not.toBeInTheDocument());
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(6));
   });
 
   it('blocks specialty estimates and makes non-scoping packages read-only',async()=>{

@@ -17,7 +17,6 @@ const source: ProposalVersionSource = {
       special_notes: 'Door code 4815 — internal only',
       operator_margin: 42,
     },
-    generated_content: '# Reviewed proposal\n\nCustomer-visible source bytes.',
     template_id: null,
   },
   companyProfile: {
@@ -47,7 +46,9 @@ const source: ProposalVersionSource = {
 describe('R3-4 proposal-version composer', () => {
   it('composes a strict customer-visible snapshot from authoritative values', () => {
     const result = composeProposalVersion(source);
-    expect(result.renderedContent).toBe(source.proposal.generated_content);
+    expect(result.renderedContent).toContain('Price: USD 245.00 per turn');
+    expect(result.renderedContent).toContain('- Kitchen');
+    expect(result.renderedContent).not.toContain('4815');
     expect(result.snapshot).toMatchObject({
       schemaVersion: 'crm_proposal_version.v1',
       organization: { displayName: 'Keystone Cleaning' },
@@ -71,15 +72,10 @@ describe('R3-4 proposal-version composer', () => {
     expect(serialized).not.toMatch(/labor|margin|overhead|access/i);
   });
 
-  it('requires existing reviewed rendered bytes and rejects invalid estimate output', () => {
-    expect(() => composeProposalVersion({
-      ...source,
-      proposal: { ...source.proposal, generated_content: '   ' },
-    })).toThrow('proposal content unavailable');
+  it('renders from the allowlisted snapshot and rejects invalid estimate output', () => {
     expect(() => composeProposalVersion({
       ...source,
       estimate: { ...source.estimate, selected_amount_minor: -1 },
     })).toThrow();
   });
 });
-

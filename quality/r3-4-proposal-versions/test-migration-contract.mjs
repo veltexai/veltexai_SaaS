@@ -18,6 +18,10 @@ for (const marker of [
   'unique(organization_id,proposal_id,version_number)',
   'unique(organization_id,request_key)',
   'create function public.crm_proposal_snapshot_v1_valid',
+  'create function public.crm_render_proposal_snapshot_v1',
+  'create function public.read_crm_proposal_version_source_internal',
+  'create function public.guard_crm_proposal_binding',
+  'create function public.guard_crm_package_proposal_version_pointer',
   'create function public.command_crm_publish_proposal_version_internal',
   'proposal versions are immutable',
   'proposal version key already used',
@@ -48,6 +52,11 @@ assert.match(migration, /proposal_row\.crm_customer_id is distinct from opportun
 assert.match(migration, /content_snapshot#>>'\{pricing,amountMinor\}'\)::bigint<>estimate_row\.selected_amount_minor/);
 assert.match(migration, /content_snapshot#>>'\{pricing,currency\}'<>estimate_row\.currency/);
 assert.match(migration, /content_snapshot#>>'\{pricing,basis\}'<>estimate_row\.pricing_basis/);
+assert.match(migration, /p_rendered_content<>public\.crm_render_proposal_snapshot_v1\(p_content_snapshot\)/);
+assert.match(migration, /'actor',p_actor,'proposal',p_proposal/);
+assert.match(migration, /new\.estimate_run_id is distinct from old\.estimate_run_id[\s\S]*new\.proposal_version_id:=null/);
+assert.match(migration, /versioned proposal binding is immutable/);
+assert.match(migration, /set_config\('veltex\.proposal_version_command','1',true\)[\s\S]*set_config\('veltex\.proposal_version_command','',true\)/);
 
 for (const marker of [
   'owner first publish failed', 'exact version replay failed',
@@ -56,6 +65,9 @@ for (const marker of [
   'admin version allocation failed', 'viewer published a proposal version',
   'cross-tenant actor published a proposal version',
   'immutable version update accepted', 'immutable version delete accepted',
+  'immutable version truncate accepted',
+  'direct package proposal-version pointer clear accepted',
+  'versioned proposal binding mutation accepted',
   'authenticated direct version insert accepted',
   'viewer received immutable version metadata',
   'owner proposal candidate projection mismatch',
@@ -63,6 +75,7 @@ for (const marker of [
   'viewer received proposal candidates',
   'nested private pricing key accepted', 'mismatched estimate amount accepted',
   'mismatched property context accepted',
+  'same-org unassigned estimator published a proposal version',
   'closed opportunity proposal version accepted', 'closed-state exact replay failed',
   'R3_4_ADVERSARIAL_ROLE_MATRIX_PASS',
 ]) assert.ok(matrix.includes(marker), `matrix missing ${marker}`);
@@ -72,6 +85,7 @@ assert.equal((matrix.match(/^commit;$/gm) ?? []).length, 0);
 for (const marker of [
   'version-race-a', 'version-race-b', 'R3_4_CONCURRENCY_PASS',
   "RESULT\" = '1|1|1|1|1|1'", 'statuses $SA/$SB',
+  "wait_event_type='Lock'", 'required 40001 path',
 ]) assert.ok(concurrency.includes(marker), `concurrency proof missing ${marker}`);
 assert.ok(concurrency.includes('guard_local.sh'), 'concurrency proof must refuse non-disposable targets');
 

@@ -14,7 +14,6 @@ export type ProposalVersionSource = {
     service_type: string;
     service_frequency: string;
     service_scope: unknown;
-    generated_content: string | null;
     template_id: string | null;
   };
   companyProfile: { company_name: string; contact_info: unknown } | null;
@@ -65,9 +64,6 @@ export function composeProposalVersion(source: ProposalVersionSource): {
   snapshot: ProposalVersionSnapshot;
   renderedContent: string;
 } {
-  const renderedContent = source.proposal.generated_content?.trim();
-  if (!renderedContent) throw new Error('proposal content unavailable');
-
   const contact = object(source.companyProfile?.contact_info);
   const scope = object(source.proposal.service_scope);
   const address = [source.property.address_line_1, source.property.address_line_2]
@@ -122,6 +118,23 @@ export function composeProposalVersion(source: ProposalVersionSource): {
     },
   }));
 
-  return { snapshot, renderedContent };
+  return { snapshot, renderedContent: renderProposalVersion(snapshot) };
 }
 
+export function renderProposalVersion(snapshot: ProposalVersionSnapshot): string {
+  const scope = snapshot.scopeLines.length
+    ? snapshot.scopeLines.map((line) => `- ${line}`).join('\n')
+    : '- Scope to be confirmed';
+  return [
+    `# ${snapshot.title}`,
+    '',
+    `Prepared for: ${snapshot.customer.name}`,
+    `Service location: ${snapshot.serviceLocation.address}`,
+    `Service: ${snapshot.service.type} (${snapshot.service.frequency})`,
+    '',
+    'Scope:',
+    scope,
+    '',
+    `Price: ${snapshot.pricing.currency} ${(snapshot.pricing.amountMinor / 100).toFixed(2)} ${snapshot.pricing.basis.replaceAll('_', ' ')}`,
+  ].join('\n');
+}

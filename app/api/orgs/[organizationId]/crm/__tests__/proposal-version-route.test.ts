@@ -19,7 +19,7 @@ const rows: Record<string, unknown> = {
     client_email: 'taylor@example.test', client_company: null, contact_phone: '555-0100',
     service_location: '10 Main St', service_type: 'residential', service_frequency: 'weekly',
     service_scope: { areas_included: ['Kitchen'], areas_excluded: ['Exterior'] },
-    generated_content: '# Reviewed proposal', template_id: null,
+    template_id: null,
     crm_opportunity_id: OPP, crm_customer_id: CUSTOMER, crm_property_id: PROPERTY,
   },
   crm_estimate_runs: {
@@ -45,14 +45,22 @@ function clients(role = 'estimator', command: any = {
   data: [{ proposal_version_id: '99999999-9999-4999-8999-999999999999', version_number: 1, replayed: false }],
   error: null,
 }) {
-  const commandRpc = jest.fn().mockResolvedValue(command);
+  const source = {
+    proposal: rows.proposals,
+    companyProfile: rows.company_profiles,
+    customer: rows.crm_customers,
+    property: rows.crm_properties,
+    estimate: rows.crm_estimate_runs,
+  };
+  const commandRpc = jest.fn((name: string, _args?: any) => Promise.resolve(
+    name === 'read_crm_proposal_version_source_internal' ? { data: source, error: null } : command,
+  ));
   createClient.mockResolvedValue({
     auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: USER } }, error: null }) },
     from: jest.fn().mockReturnValue(chain({ role })),
     rpc: jest.fn(),
   });
   createServiceClient.mockReturnValue({
-    from: jest.fn((table: string) => chain(rows[table])),
     rpc: commandRpc,
   });
   return commandRpc;
@@ -95,9 +103,11 @@ describe('R3-4 proposal-version route', () => {
         pricing: expect.objectContaining({ amountMinor: 18000, currency: 'USD', basis: 'per_visit' }),
         scopeLines: ['Kitchen'],
       }),
-      p_rendered_content: '# Reviewed proposal',
+      p_rendered_content: expect.stringContaining('Price: USD 180.00 per visit'),
     }));
-    expect(JSON.stringify(rpc.mock.calls[0][1].p_content_snapshot)).not.toMatch(/margin|labor|access/i);
+    const commandCall = rpc.mock.calls.find(([name]) =>
+      name === 'command_crm_publish_proposal_version_internal');
+    expect(JSON.stringify(commandCall?.[1]?.p_content_snapshot)).not.toMatch(/margin|labor|access/i);
   });
 
   it('returns only scoped proposal candidates and immutable history metadata', async () => {
@@ -111,10 +121,11 @@ describe('R3-4 proposal-version route', () => {
       rpc: authRpc,
     });
     const { GET } = await import('../opportunities/[opportunityId]/proposal-versions/route');
-    const response = await GET(request(), context);
+    const response = await GET(new NextRequest(`http://local/proposal-versions?estimateRunId=${ESTIMATE}&propertyId=${PROPERTY}&workPackageId=${PACKAGE}`), context);
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ data: {
-      candidates: [{ id: PROPOSAL, title: 'Residential proposal', property_id: PROPERTY }],
+      candidates: [expect.objectContaining({ id: PROPOSAL, title: 'Residential proposal',
+        property_id: PROPERTY, preview: expect.objectContaining({ amount_minor: 18000 }) })],
       versions: [{ id: '99999999-9999-4999-8999-999999999999', version_number: 1 }],
     } });
     expect(authRpc).toHaveBeenCalledWith('read_crm_proposal_candidates', {
@@ -139,10 +150,10 @@ describe('R3-4 proposal-version route', () => {
     expect(rpc).not.toHaveBeenCalled();
 
     rpc = clients();
-    rows.crm_estimate_runs = { ...(rows.crm_estimate_runs as object), property_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' };
+    createServiceClient.mockReturnValue({ rpc: jest.fn().mockResolvedValue({
+      data: null, error: { code: '23514', message: 'private context detail' },
+    }) });
     expect((await POST(request(), context)).status).toBe(422);
-    expect(rpc).not.toHaveBeenCalled();
-    rows.crm_estimate_runs = { ...(rows.crm_estimate_runs as object), property_id: PROPERTY };
   });
 
   it('rejects viewers and missing retry keys before service access', async () => {

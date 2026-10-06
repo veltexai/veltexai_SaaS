@@ -105,22 +105,30 @@ set search_path=pg_catalog,public as $$
       then value->'organization' else '{}'::jsonb end) key
       where key<>all(array['displayName','address','phone','email','website']))
     and jsonb_typeof(value->'organization'->'displayName')='string'
+    and not exists(select 1 from jsonb_each(value->'organization') entry
+      where entry.key<>'displayName' and jsonb_typeof(entry.value) not in ('string','null'))
     and jsonb_typeof(value->'customer')='object'
     and not exists(select 1 from jsonb_object_keys(case when jsonb_typeof(value->'customer')='object'
       then value->'customer' else '{}'::jsonb end) key
       where key<>all(array['name','company','email','phone']))
     and jsonb_typeof(value->'customer'->'name')='string'
+    and not exists(select 1 from jsonb_each(value->'customer') entry
+      where entry.key<>'name' and jsonb_typeof(entry.value) not in ('string','null'))
     and jsonb_typeof(value->'serviceLocation')='object'
     and not exists(select 1 from jsonb_object_keys(case when jsonb_typeof(value->'serviceLocation')='object'
       then value->'serviceLocation' else '{}'::jsonb end) key
       where key<>all(array['name','address','city','state','postalCode']))
     and jsonb_typeof(value->'serviceLocation'->'address')='string'
+    and not exists(select 1 from jsonb_each(value->'serviceLocation') entry
+      where entry.key<>'address' and jsonb_typeof(entry.value) not in ('string','null'))
     and jsonb_typeof(value->'service')='object'
     and not exists(select 1 from jsonb_object_keys(case when jsonb_typeof(value->'service')='object'
       then value->'service' else '{}'::jsonb end) key
       where key<>all(array['type','frequency','summary']))
     and jsonb_typeof(value->'service'->'type')='string'
     and jsonb_typeof(value->'service'->'frequency')='string'
+    and (not (value->'service')?'summary'
+      or jsonb_typeof(value->'service'->'summary') in ('string','null'))
     and jsonb_typeof(value->'scopeLines')='array'
     and not exists(select 1 from jsonb_array_elements(case when jsonb_typeof(value->'scopeLines')='array'
       then value->'scopeLines' else '[]'::jsonb end) item
@@ -139,10 +147,14 @@ set search_path=pg_catalog,public as $$
       then value->'pricing' else '{}'::jsonb end) key
       where key<>all(array['amountMinor','currency','basis','initialCleanAmountMinor','unitLabel']))
     and (value#>>'{pricing,amountMinor}') ~ '^[0-9]{1,18}$'
+    and jsonb_typeof(value#>'{pricing,amountMinor}')='number'
     and value#>>'{pricing,currency}'='USD'
     and value#>>'{pricing,basis}' in ('per_visit','per_turn','one_time')
     and (not (value->'pricing')?'initialCleanAmountMinor'
-      or (value#>>'{pricing,initialCleanAmountMinor}') ~ '^[0-9]{1,18}$')
+      or (jsonb_typeof(value#>'{pricing,initialCleanAmountMinor}')='number'
+        and (value#>>'{pricing,initialCleanAmountMinor}') ~ '^[0-9]{1,18}$'))
+    and (not (value->'pricing')?'unitLabel'
+      or jsonb_typeof(value->'pricing'->'unitLabel') in ('string','null'))
     and jsonb_typeof(value->'template')='object'
     and not exists(select 1 from jsonb_object_keys(case when jsonb_typeof(value->'template')='object'
       then value->'template' else '{}'::jsonb end) key
@@ -164,6 +176,100 @@ $$;
 revoke all on function public.crm_proposal_snapshot_v1_valid(jsonb)
   from public,anon,authenticated,service_role;
 
+create function public.crm_render_proposal_snapshot_v1(value jsonb)
+returns text language sql immutable security definer
+set search_path=pg_catalog,public as $$
+  select concat_ws(E'\n',
+    '# '||(value->>'title'),'',
+    'Prepared for: '||(value#>>'{customer,name}'),
+    'Service location: '||(value#>>'{serviceLocation,address}'),
+    'Service: '||(value#>>'{service,type}')||' ('||(value#>>'{service,frequency}')||')','',
+    'Scope:',coalesce((select string_agg('- '||(item#>>'{}'),E'\n' order by ordinality)
+      from jsonb_array_elements(value->'scopeLines') with ordinality as lines(item,ordinality)),
+      '- Scope to be confirmed'),'',
+    'Price: '||(value#>>'{pricing,currency}')||' '
+      ||to_char(((value#>>'{pricing,amountMinor}')::bigint::numeric/100),'FM9999999999999990.00')
+      ||' '||replace(value#>>'{pricing,basis}','_',' '));
+$$;
+revoke all on function public.crm_render_proposal_snapshot_v1(jsonb)
+  from public,anon,authenticated;
+grant execute on function public.crm_render_proposal_snapshot_v1(jsonb) to service_role;
+
+create function public.read_crm_proposal_version_source_internal(
+  p_actor uuid,p_organization uuid,p_proposal uuid,p_opportunity uuid,
+  p_package uuid,p_property uuid,p_estimate_run uuid
+)
+returns jsonb language plpgsql stable security definer set search_path=pg_catalog,public as $$
+declare actor_role text; opportunity_row public.crm_opportunities%rowtype;
+  proposal_row public.proposals%rowtype; property_row public.crm_properties%rowtype;
+  customer_row public.crm_customers%rowtype; estimate_row public.crm_estimate_runs%rowtype;
+  package_row public.crm_site_work_packages%rowtype; company_row public.company_profiles%rowtype;
+begin
+  select m.role into actor_role from public.organization_memberships m
+    where m.organization_id=p_organization and m.user_id=p_actor;
+  select o.* into opportunity_row from public.crm_opportunities o
+    where o.organization_id=p_organization and o.id=p_opportunity and o.deleted_at is null;
+  if opportunity_row.id is null or not coalesce(actor_role in ('owner','admin')
+    or (actor_role='estimator' and opportunity_row.estimator_user_id=p_actor),false) then
+    raise exception 'proposal version unavailable' using errcode='42501';
+  end if;
+  select p.* into proposal_row from public.proposals p
+    where p.organization_id=p_organization and p.id=p_proposal;
+  select p.* into property_row from public.crm_properties p
+    where p.organization_id=p_organization and p.id=p_property and p.deleted_at is null;
+  select e.* into estimate_row from public.crm_estimate_runs e
+    where e.organization_id=p_organization and e.id=p_estimate_run;
+  select c.* into customer_row from public.crm_customers c
+    where c.organization_id=p_organization and c.id=opportunity_row.customer_id and c.deleted_at is null;
+  if p_package is not null then
+    select p.* into package_row from public.crm_site_work_packages p
+      where p.organization_id=p_organization and p.id=p_package;
+  end if;
+  if proposal_row.id is null or property_row.id is null or customer_row.id is null
+     or estimate_row.id is null
+     or proposal_row.crm_opportunity_id is distinct from p_opportunity
+     or proposal_row.crm_customer_id is distinct from customer_row.id
+     or proposal_row.crm_property_id is distinct from p_property
+     or property_row.customer_id is distinct from customer_row.id
+     or opportunity_row.property_id is distinct from p_property
+     or estimate_row.opportunity_id is distinct from p_opportunity
+     or estimate_row.property_id is distinct from p_property
+     or estimate_row.work_package_id is distinct from p_package
+     or (p_package is null and exists(select 1 from public.crm_estimate_runs newer
+       where newer.organization_id=p_organization and newer.opportunity_id=p_opportunity
+         and newer.work_package_id is null
+         and (newer.created_at,newer.id)>(estimate_row.created_at,estimate_row.id)))
+     or (p_package is not null and (package_row.id is null
+       or package_row.opportunity_id is distinct from p_opportunity
+       or package_row.property_id is distinct from p_property
+       or package_row.proposal_id is distinct from p_proposal
+       or package_row.estimate_run_id is distinct from p_estimate_run)) then
+    raise exception 'proposal version context unavailable' using errcode='23514';
+  end if;
+  select c.* into company_row from public.company_profiles c
+    where c.organization_id=p_organization;
+  return jsonb_build_object(
+    'proposal',jsonb_build_object('id',proposal_row.id,'title',proposal_row.title,
+      'client_name',proposal_row.client_name,'client_email',proposal_row.client_email,
+      'client_company',proposal_row.client_company,'contact_phone',proposal_row.contact_phone,
+      'service_location',proposal_row.service_location,'service_type',proposal_row.service_type,
+      'service_frequency',proposal_row.service_frequency,'service_scope',proposal_row.service_scope,
+      'template_id',proposal_row.template_id),
+    'companyProfile',case when company_row.id is null then null else jsonb_build_object(
+      'company_name',company_row.company_name,'contact_info',company_row.contact_info) end,
+    'customer',jsonb_build_object('name',customer_row.name),
+    'property',jsonb_build_object('name',property_row.name,'address_line_1',property_row.address_line_1,
+      'address_line_2',property_row.address_line_2,'city',property_row.city,'region',property_row.region,
+      'postal_code',property_row.postal_code),
+    'estimate',jsonb_build_object('id',estimate_row.id,'selected_amount_minor',estimate_row.selected_amount_minor,
+      'currency',estimate_row.currency,'pricing_basis',estimate_row.pricing_basis));
+end;
+$$;
+revoke all on function public.read_crm_proposal_version_source_internal(uuid,uuid,uuid,uuid,uuid,uuid,uuid)
+  from public,anon,authenticated;
+grant execute on function public.read_crm_proposal_version_source_internal(uuid,uuid,uuid,uuid,uuid,uuid,uuid)
+  to service_role;
+
 create function public.guard_crm_proposal_version_immutable()
 returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
 begin
@@ -175,6 +281,55 @@ revoke all on function public.guard_crm_proposal_version_immutable()
 create trigger guard_crm_proposal_version_immutable before update or delete
   on public.crm_proposal_versions for each row
   execute function public.guard_crm_proposal_version_immutable();
+create trigger guard_crm_proposal_version_truncate before truncate
+  on public.crm_proposal_versions for each statement
+  execute function public.guard_crm_proposal_version_immutable();
+
+create function public.guard_crm_proposal_binding()
+returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
+declare opportunity_row public.crm_opportunities%rowtype;
+begin
+  if (new.crm_opportunity_id,new.crm_customer_id,new.crm_property_id) is not distinct from
+     (old.crm_opportunity_id,old.crm_customer_id,old.crm_property_id) then return new; end if;
+  if exists(select 1 from public.crm_proposal_versions v
+      where v.organization_id=old.organization_id and v.proposal_id=old.id) then
+    raise exception 'versioned proposal binding is immutable' using errcode='55000';
+  end if;
+  if new.crm_opportunity_id is not null then
+    select o.* into opportunity_row from public.crm_opportunities o
+      where o.organization_id=new.organization_id and o.id=new.crm_opportunity_id
+        and o.deleted_at is null;
+    if opportunity_row.id is null or new.crm_customer_id is distinct from opportunity_row.customer_id
+       or new.crm_property_id is distinct from opportunity_row.property_id
+       or not public.can_access_crm_opportunity(opportunity_row.id) then
+      raise exception 'proposal binding unavailable' using errcode='42501';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+revoke all on function public.guard_crm_proposal_binding()
+  from public,anon,authenticated,service_role;
+create trigger guard_crm_proposal_binding before update of crm_opportunity_id,crm_customer_id,crm_property_id
+  on public.proposals for each row execute function public.guard_crm_proposal_binding();
+
+create function public.guard_crm_package_proposal_version_pointer()
+returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
+begin
+  if new.estimate_run_id is distinct from old.estimate_run_id then
+    new.proposal_version_id:=null;
+  elsif new.proposal_version_id is distinct from old.proposal_version_id
+      and current_setting('veltex.proposal_version_command',true) is distinct from '1' then
+    raise exception 'proposal version pointer is command-managed' using errcode='55000';
+  end if;
+  return new;
+end;
+$$;
+revoke all on function public.guard_crm_package_proposal_version_pointer()
+  from public,anon,authenticated,service_role;
+create trigger guard_crm_package_proposal_version_pointer before update
+  on public.crm_site_work_packages for each row
+  execute function public.guard_crm_package_proposal_version_pointer();
 
 create function public.command_crm_publish_proposal_version_internal(
   p_actor uuid,p_organization uuid,p_proposal uuid,p_opportunity uuid,
@@ -206,50 +361,15 @@ begin
     or (actor_role='estimator' and opportunity_row.estimator_user_id=p_actor),false) then
     raise exception 'proposal version unavailable' using errcode='42501';
   end if;
-  select p.* into proposal_row from public.proposals p
-    where p.organization_id=p_organization and p.id=p_proposal for update;
-  if proposal_row.id is null or proposal_row.crm_opportunity_id is distinct from p_opportunity
-     or proposal_row.crm_customer_id is distinct from opportunity_row.customer_id
-     or proposal_row.crm_property_id is distinct from p_property
-     or opportunity_row.property_id is distinct from p_property then
-    raise exception 'proposal version context unavailable' using errcode='23514';
-  end if;
-  select e.* into estimate_row from public.crm_estimate_runs e
-    where e.organization_id=p_organization and e.id=p_estimate_run;
-  if estimate_row.id is null or estimate_row.opportunity_id<>p_opportunity
-     or estimate_row.property_id<>p_property
-     or estimate_row.work_package_id is distinct from p_package then
-    raise exception 'proposal version context unavailable' using errcode='23514';
-  end if;
-  if p_package is not null then
-    select p.* into package_row from public.crm_site_work_packages p
-      where p.organization_id=p_organization and p.id=p_package for update;
-    if package_row.id is null or package_row.opportunity_id<>p_opportunity
-       or package_row.property_id<>p_property or package_row.proposal_id is distinct from p_proposal
-       or package_row.estimate_run_id is distinct from p_estimate_run then
-      raise exception 'proposal version context unavailable' using errcode='23514';
-    end if;
-  end if;
   if not coalesce(public.crm_proposal_snapshot_v1_valid(p_content_snapshot),false)
-     or p_rendered_content is null or octet_length(p_rendered_content) not between 1 and 1048576 then
-    raise exception 'proposal version content unavailable' using errcode='23514';
-  end if;
-  if p_content_snapshot->>'schemaVersion'<>p_schema_version
-     or p_content_snapshot#>>'{provenance,proposalId}'<>p_proposal::text
-     or p_content_snapshot#>>'{provenance,opportunityId}'<>p_opportunity::text
-     or p_content_snapshot#>>'{provenance,propertyId}'<>p_property::text
-     or p_content_snapshot#>>'{provenance,estimateRunId}'<>p_estimate_run::text
-     or (p_content_snapshot#>>'{provenance,workPackageId}') is distinct from
-       (case when p_package is null then null else p_package::text end)
-     or (p_content_snapshot#>>'{pricing,amountMinor}')::bigint<>estimate_row.selected_amount_minor
-     or p_content_snapshot#>>'{pricing,currency}'<>estimate_row.currency
-     or p_content_snapshot#>>'{pricing,basis}'<>estimate_row.pricing_basis then
+     or p_rendered_content is null or octet_length(p_rendered_content) not between 1 and 1048576
+     or p_rendered_content<>public.crm_render_proposal_snapshot_v1(p_content_snapshot) then
     raise exception 'proposal version content unavailable' using errcode='23514';
   end if;
   content_hash:=public.crm_estimate_sha256(p_content_snapshot);
   rendered_hash:=public.crm_proposal_sha256(p_rendered_content);
   payload_hash:=public.crm_estimate_sha256(jsonb_build_object(
-    'proposal',p_proposal,'opportunity',p_opportunity,'package',p_package,
+    'actor',p_actor,'proposal',p_proposal,'opportunity',p_opportunity,'package',p_package,
     'property',p_property,'estimate_run',p_estimate_run,'schema_version',p_schema_version,
     'content_sha256',content_hash,'rendered_sha256',rendered_hash,
     'expected_package_updated_at_epoch',case when p_expected_package_updated_at is null then null
@@ -265,6 +385,46 @@ begin
     return query select existing_version.id,existing_version.version_number,
       existing.resulting_package_updated_at,true;
     return;
+  end if;
+  select p.* into proposal_row from public.proposals p
+    where p.organization_id=p_organization and p.id=p_proposal for update;
+  if proposal_row.id is null or proposal_row.crm_opportunity_id is distinct from p_opportunity
+     or proposal_row.crm_customer_id is distinct from opportunity_row.customer_id
+     or proposal_row.crm_property_id is distinct from p_property
+     or opportunity_row.property_id is distinct from p_property then
+    raise exception 'proposal version context unavailable' using errcode='23514';
+  end if;
+  select e.* into estimate_row from public.crm_estimate_runs e
+    where e.organization_id=p_organization and e.id=p_estimate_run;
+  if estimate_row.id is null or estimate_row.opportunity_id<>p_opportunity
+     or estimate_row.property_id<>p_property
+     or estimate_row.work_package_id is distinct from p_package
+     or (p_package is null and exists(select 1 from public.crm_estimate_runs newer
+       where newer.organization_id=p_organization and newer.opportunity_id=p_opportunity
+         and newer.work_package_id is null
+         and (newer.created_at,newer.id)>(estimate_row.created_at,estimate_row.id))) then
+    raise exception 'proposal version context unavailable' using errcode='23514';
+  end if;
+  if p_package is not null then
+    select p.* into package_row from public.crm_site_work_packages p
+      where p.organization_id=p_organization and p.id=p_package for update;
+    if package_row.id is null or package_row.opportunity_id<>p_opportunity
+       or package_row.property_id<>p_property or package_row.proposal_id is distinct from p_proposal
+       or package_row.estimate_run_id is distinct from p_estimate_run then
+      raise exception 'proposal version context unavailable' using errcode='23514';
+    end if;
+  end if;
+  if p_content_snapshot->>'schemaVersion'<>p_schema_version
+     or p_content_snapshot#>>'{provenance,proposalId}'<>p_proposal::text
+     or p_content_snapshot#>>'{provenance,opportunityId}'<>p_opportunity::text
+     or p_content_snapshot#>>'{provenance,propertyId}'<>p_property::text
+     or p_content_snapshot#>>'{provenance,estimateRunId}'<>p_estimate_run::text
+     or (p_content_snapshot#>>'{provenance,workPackageId}') is distinct from
+       (case when p_package is null then null else p_package::text end)
+     or (p_content_snapshot#>>'{pricing,amountMinor}')::bigint<>estimate_row.selected_amount_minor
+     or p_content_snapshot#>>'{pricing,currency}'<>estimate_row.currency
+     or p_content_snapshot#>>'{pricing,basis}'<>estimate_row.pricing_basis then
+    raise exception 'proposal version content unavailable' using errcode='23514';
   end if;
   if exists(select 1 from public.crm_pipeline_stages s
       where s.organization_id=p_organization and s.id=opportunity_row.stage_id
@@ -290,9 +450,11 @@ begin
     p_schema_version,p_actor);
   if p_package is not null then
     changed_at:=clock_timestamp();
+    perform set_config('veltex.proposal_version_command','1',true);
     update public.crm_site_work_packages set proposal_version_id=new_version_id,
       updated_by=p_actor,updated_at=changed_at
     where organization_id=p_organization and id=p_package;
+    perform set_config('veltex.proposal_version_command','',true);
   end if;
   insert into public.crm_proposal_version_commands(organization_id,proposal_version_id,
     command_key,payload_sha256,resulting_package_updated_at,actor_user_id)

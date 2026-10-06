@@ -53,20 +53,26 @@ SNAPSHOT=$(q "select jsonb_build_object(
   'opportunityId','84000000-0000-4000-8000-000000000003',
   'propertyId','84000000-0000-4000-8000-000000000002',
   'workPackageId','84000000-0000-4000-8000-000000000005','estimateRunId','$ESTIMATE'))::text")
+RENDERED=$(q "set role service_role; select public.crm_render_proposal_snapshot_v1('${SNAPSHOT}'::jsonb)")
 
 run_publish(){
-  local key="$1" rendered="$2"
-  q "set role service_role;
+  local key="$1"
+  q "begin; set local role service_role;
   select * from public.command_crm_publish_proposal_version_internal(
    '11111111-1111-4111-8111-111111111111','$ORG','84000000-0000-4000-8000-000000000004',
    '84000000-0000-4000-8000-000000000003','84000000-0000-4000-8000-000000000005',
    '84000000-0000-4000-8000-000000000002','$ESTIMATE','$key','crm_proposal_version.v1',
-   '${SNAPSHOT}'::jsonb,'$rendered','$VERSION_TOKEN');" >/dev/null
+   '${SNAPSHOT}'::jsonb,'$RENDERED','$VERSION_TOKEN');
+  select pg_sleep(2); commit;" >/dev/null
 }
 
 set +e
-run_publish version-race-a 'Race rendered A' & A=$!
-run_publish version-race-b 'Race rendered B' & B=$!
+run_publish version-race-a 2>"$HARNESS_PGDATA/r3-4-race-a.err" & A=$!
+run_publish version-race-b 2>"$HARNESS_PGDATA/r3-4-race-b.err" & B=$!
+sleep 0.5
+OVERLAP=$(q "select count(*) from pg_stat_activity where pid<>pg_backend_pid()
+  and wait_event_type='Lock' and query like '%command_crm_publish_proposal_version_internal%'")
+[ "$OVERLAP" -ge 1 ] || { echo 'R3-4 concurrency sessions did not overlap on a database lock' >&2; exit 1; }
 wait "$A"; SA=$?
 wait "$B"; SB=$?
 set -e
@@ -74,6 +80,12 @@ if ! { [ "$SA" -eq 0 ] && [ "$SB" -ne 0 ]; } && ! { [ "$SB" -eq 0 ] && [ "$SA" -
   echo "R3-4 concurrency failed: statuses $SA/$SB" >&2
   exit 1
 fi
+LOSER_LOG="$HARNESS_PGDATA/r3-4-race-a.err"
+[ "$SB" -ne 0 ] && LOSER_LOG="$HARNESS_PGDATA/r3-4-race-b.err"
+grep -q 'site work package changed' "$LOSER_LOG" || {
+  echo 'R3-4 concurrency loser did not return the required 40001 path' >&2
+  exit 1
+}
 
 RESULT=$(q "select
  (select count(*) from public.crm_proposal_versions where proposal_id='84000000-0000-4000-8000-000000000004')||'|'||
