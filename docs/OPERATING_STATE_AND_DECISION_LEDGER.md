@@ -3419,3 +3419,20 @@ After any material action, append or revise the relevant section with:
   mistaking a proper-subset acceptance for the full offered total. This is
   contract reconciliation only; R3-5/R3-6 implementation remains dependency-
   blocked and no hosted state changed.
+- **CURRENT ACTION-TIME QUEUE (HELD WHILE FOUNDER IS AWAY):** Ordinary local
+  planning, documentation, tests and evidence work may continue. The next
+  representational actions are the already drafted Claude database/security
+  and Cursor operator/accessibility re-review submissions for exact R3-4
+  packet
+  `/private/tmp/veltex-r3-4-remediation-1883dbe-bundle-review.zip`, SHA-256
+  `930b4ed9e7c915434715367b68d2951e26f0f52fdfa891c95bfa993000d9a730`.
+  They remain held for action-time confirmation. The independent-review bundle
+  and contained complete-history Git bundle were reverified without drift.
+  Production R3-1 also remains held: its non-committing rollback proof has
+  independent PASS, but literal Production-scoped
+  `CRM_WORKSPACE_ENABLED=false`, provider readback, exact rollback-only proof
+  execution, postflight reconciliation, commit-capable database artifact,
+  application deployment, smoke checks and later CRM enablement are distinct
+  production mutations/gates and are not implied by broad roadmap approval.
+  M0 founder choices and the absent Prompt 12 A0–A8 semantic source are product
+  decisions, not permission requests; present them when the founder returns.
