@@ -2661,6 +2661,25 @@ After any material action, append or revise the relevant section with:
   private publish command and executable binding/privacy/concurrency matrices.
   No R3-4 migration, route, UI, proposal bytes or hosted state existed at the
   time of this gate transition; Preview and Production remain separately gated.
+- **R3-4 DATABASE FOUNDATION IMPLEMENTED / NOT YET ACCEPTED:** Migration
+  `20261005000000_r3_4_immutable_proposal_versions.sql` adds the append-only
+  version and command-receipt tables, package version pointer, strict v1
+  customer-visible snapshot allowlist, dynamic-extension SHA-256 helper,
+  immutable-row trigger, service-role-only publish command and scoped metadata
+  read projection. The command reauthorizes before receipt lookup; locks the
+  opportunity, proposal and optional package; exact-binds tenant/customer/
+  property/package/estimate context; matches displayed amount/currency/basis to
+  the accepted R3-3 run; rejects closed opportunities and non-estimated/stale
+  packages; allocates versions under lock; makes exact replay harmless and
+  changed replay fail; keeps package status `estimated`; and emits ID-only
+  audit/outbox evidence. A first disposable replay found and preserved one SQL
+  parse defect, which was corrected. The hardened migration then passed a fresh
+  all-69-migration PostgreSQL 16 replay with RLS enabled and malformed array/
+  object snapshots returning `false` rather than raw type errors. The static
+  contract test and 69-version validator pass. This is an implementation
+  checkpoint, not R3-4 completion: executable role/binding/privacy/replay/race
+  matrices, route/composer/UI, full tests, independent reviews and Preview/
+  founder gates remain. No hosted state changed.
 - **R3-5 C0 ENTRY CONTRACT PREPARED / IMPLEMENTATION NOT STARTED:**
   `R3_5_C0_ACCEPTANCE_RECEIPT_CONTRACT.md` now freezes the bounded customer
   proposal room: hash-only purpose-bound expiring tokens, immutable
