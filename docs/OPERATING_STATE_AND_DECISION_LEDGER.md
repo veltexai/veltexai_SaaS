@@ -3385,3 +3385,28 @@ After any material action, append or revise the relevant section with:
   legacy recognition are not implementation evidence. Stage 6's internal Q1
   pilot remains an increment, not completion of portal/QA scope. No migration,
   application feature, hosted action, provider credential or spend occurred.
+- **R3-4.1 PACKAGE-SET BRIDGE PREPARED / IMPLEMENTATION BLOCKED:** A fresh
+  read-only audit confirmed that accepted C0 semantics cannot be represented by
+  R3-4's current one-package/one-estimate version without silently reducing the
+  approved non-empty-subset contract. `R3_4_1_PACKAGE_SET_COMMITMENT_DECISION.md`
+  now freezes the smallest additive v2 design: an ordered append-only package
+  association set, parent set hash/total commitment, deterministic atomic
+  publication, exact selected-subtotal receipt and accept-purpose issuance
+  gate. Existing v1 bytes remain unchanged. This bridge starts only after the
+  frozen R3-4 remediation passes independent re-review, isolated Preview and
+  founder acceptance; no migration or route was created.
+- **A0–A8 SOURCE SEARCH CLOSED / SEMANTICS STILL BLOCKED:** Working-tree and
+  all-ref history searches found no authoritative Prompt 12 A0–A8 map. The
+  older C1–C7 packet contains nine lightweight quick-proposal UI events, but no
+  A0–A8 labels, source citation, qualification, exclusion, ordering or
+  backfill rules. Equal cardinality is not evidence, and positional mapping is
+  explicitly rejected. R3-7 still requires the original Prompt 12 source or a
+  new founder-approved complete semantic table.
+- **MULTIMODAL TRACKER RECONCILED / M0 PREPARATION ADVANCED:** The execution
+  tracker now records R3-2 and R3-3 as accepted and R3-4 remediation as awaiting
+  independent re-review instead of carrying obsolete entry status. A bounded
+  `M0_MEDIA_DECISION_AND_THREAT_MODEL.md` records the remaining founder choices,
+  recommended first-build defaults, deletion semantics and tenant/IDOR/grant/
+  malicious-file/prompt-injection/provider/cost threat controls. M0 remains
+  `FOUNDER ACCEPTANCE PENDING`; no storage, provider, credential, upload, AI
+  call, migration, Preview or production action occurred.

@@ -28,8 +28,9 @@ accounting, payroll, tax, legal or safety-certification system.
 
 | Gate | Deliverable | Current status | Exit evidence |
 |---|---|---|---|
-| R3-2 | Persisted text walkthrough evidence | Local/database runtime verified; independent handoff pending | Independent PASS, guarded preview apply, desktop/390px flow, founder acceptance |
-| R3-3 | Deterministic estimate/scenario linkage | Entry decisions resolved; implementation blocked by R3-2 | Versioned snapshot, caller-bound command, engine parity, preview/operator/independent PASS |
+| R3-2 | Persisted text walkthrough evidence | **COMPLETE / VERIFIED / ACCEPTED** | Independent PASS, guarded Preview apply, desktop/390px flow and founder acceptance are recorded in the operating ledger |
+| R3-3 | Deterministic estimate/scenario linkage | **COMPLETE / VERIFIED / ACCEPTED** | Versioned snapshot, caller-bound command, engine parity, Preview/operator/independent PASS and founder acceptance are recorded in the operating ledger |
+| R3-4 | Immutable proposal versions | **LOCAL REMEDIATION VERIFIED / INDEPENDENT RE-REVIEW REQUIRED** | The remediated 69-migration packet must receive independent PASS, isolated-Preview proof and founder acceptance before R3-5 or M4 implementation |
 | M0 | Media privacy/product contract | Contract drafted in `M0_MEDIA_PRIVACY_AND_AI_OUTPUT_CONTRACT.md`; acceptance pending | Founder-approved retention, limits, consent, service packs, threat model and provider boundary |
 | M1 | Private photo evidence | Not started | Tenant-isolated storage, signed upload/read, deletion, audit, accessible mobile flow; no AI |
 | M2 | Reviewed photo intelligence | Not started | Structured observation suggestions, operator decisions, provenance, evals and cost cap |
@@ -39,15 +40,17 @@ accounting, payroll, tax, legal or safety-certification system.
 
 ## Immediate sequence
 
-1. Send the already prepared exact R3-2 packet for independent review after the
-   required action-time confirmation; disposition every finding against the
-   bounded MVP scope.
-2. Apply the exact R3-2 artifact only to the isolated preview after review PASS,
-   then complete its desktop/390px founder checklist with synthetic data.
-3. Begin R3-3 from the accepted R3-2 commit using the resolved decisions in
-   `R3_3_ESTIMATE_SCENARIO_LINKAGE_CONTRACT.md`.
-4. Review and accept M0 before creating storage buckets, upload credentials,
-   provider jobs or media migrations.
+1. Submit the strengthened exact R3-4 remediation packet for independent
+   Claude database/security and Cursor operator/accessibility re-review after
+   the required action-time confirmation.
+2. If both reviews pass, apply only the exact reviewed R3-4 artifact to the
+   isolated Preview and complete authenticated desktop/390px and founder
+   acceptance. Production remains separately gated.
+3. Resolve the R3-5 package-set commitment without reducing the approved
+   selected-package array to a single package, then implement C0 only from the
+   accepted R3-4 base.
+4. Complete and accept M0 before creating storage buckets, upload credentials,
+   provider jobs or media migrations. M1 remains photo-only and has no AI.
 
 ## Definition of program completion
 

@@ -28,6 +28,22 @@ record, for each code:
 Until that source is restored and independently checked, R3-7 remains blocked
 at semantics—not at schema mechanics.
 
+### Repository source reconciliation (2026-10-06)
+
+A full working-tree and all-ref Git-history search found no checked-in or
+deleted authoritative Prompt 12 A0–A8 semantic map. The older C1–C7 quick-
+proposal planning packet lists nine lightweight UI analytics events, from
+`demo_proposal_viewed` through `upgrade_or_trial_prompt_viewed`, but it never
+labels those events A0–A8, cites Prompt 12 as their source, or supplies the
+qualification, exclusion, ordering and backfill rules required above. Equal
+cardinality is not semantic evidence. Positional mapping of that list to
+A0–A8 is therefore explicitly rejected.
+
+The next acceptable source is the original approved Prompt 12 text or a new
+founder-approved semantic table containing every field listed above. This
+reconciliation closes the repository-search task; it does not unblock
+implementation.
+
 ## 2. R3-7 registry mechanics
 
 Once the exact semantics are supplied, use one organization-scoped registry:
