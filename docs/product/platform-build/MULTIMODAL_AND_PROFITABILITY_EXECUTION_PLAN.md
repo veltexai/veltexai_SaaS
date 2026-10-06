@@ -30,7 +30,7 @@ accounting, payroll, tax, legal or safety-certification system.
 |---|---|---|---|
 | R3-2 | Persisted text walkthrough evidence | **COMPLETE / VERIFIED / ACCEPTED** | Independent PASS, guarded Preview apply, desktop/390px flow and founder acceptance are recorded in the operating ledger |
 | R3-3 | Deterministic estimate/scenario linkage | **COMPLETE / VERIFIED / ACCEPTED** | Versioned snapshot, caller-bound command, engine parity, Preview/operator/independent PASS and founder acceptance are recorded in the operating ledger |
-| R3-4 | Immutable proposal versions | **CURSOR PASS / FINAL CLAUDE MATRIX CONFIRMATION REQUIRED** | Implementation `aa48b5e` has no remaining source defect; test-only matrix remediation `ecfa68a` passes the full harness. Claude must confirm the exact matrix diff before isolated-Preview proof and founder acceptance can unlock R3-5 or M4 implementation |
+| R3-4 | Immutable proposal versions | **INDEPENDENT DUAL PASS / ISOLATED PREVIEW REQUIRED** | Implementation `aa48b5e` plus test-only matrix remediation `ecfa68a` passed Claude and Cursor confirmation. Guarded isolated-Preview proof and founder acceptance remain before R3-4.1, R3-5 or M4 implementation unlocks |
 | M0 | Media privacy/product contract | Contract drafted in `M0_MEDIA_PRIVACY_AND_AI_OUTPUT_CONTRACT.md`; acceptance pending | Founder-approved retention, limits, consent, service packs, threat model and provider boundary |
 | M1 | Private photo evidence | Not started | Tenant-isolated storage, signed upload/read, deletion, audit, accessible mobile flow; no AI |
 | M2 | Reviewed photo intelligence | Not started | Structured observation suggestions, operator decisions, provenance, evals and cost cap |
@@ -40,10 +40,9 @@ accounting, payroll, tax, legal or safety-certification system.
 
 ## Immediate sequence
 
-1. Obtain Claude's quick matrix-diff confirmation for exact test-only commit
-   `ecfa68a`; Cursor's bounded regression is `PASS`. Do not reopen closed
-   source findings or substitute a superseded packet.
-2. If both reviews pass, apply only the exact reviewed R3-4 artifact to the
+1. Prepare and verify the guarded isolated-Preview artifact for the exact
+   reviewed R3-4 migration bytes; both independent confirmations are `PASS`.
+2. Apply only the exact reviewed R3-4 artifact to the
    isolated Preview and complete authenticated desktop/390px and founder
    acceptance. Production remains separately gated.
 3. Resolve the R3-5 package-set commitment without reducing the approved

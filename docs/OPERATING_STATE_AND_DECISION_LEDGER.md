@@ -3691,3 +3691,20 @@ After any material action, append or revise the relevant section with:
   operator/accessibility regression `PASS` remains preserved. Both assignments
   prohibit edits, commits, pushes, deployments, credentials and hosted Preview
   or Production access. No hosted state changed.
+- **R3-4 FINAL INDEPENDENT CONFIRMATIONS — DUAL `PASS`:** Claude recomputed the
+  wrapper, bundle, tip, commit ancestry and unchanged migration hash, verified
+  implementation bytes are unchanged since `aa48b5e`, and returned `PASS`.
+  Claude traced both final M1' blocks to their intended predicates, confirmed
+  they are non-vacuous and message-pinned, closed M1', and reported no open
+  Critical, High or Medium finding. Its remaining observations are Low and
+  nonblocking: no positive newest-null-package control, owner DML fixture
+  ordering, and the previously carried broad null-auth bypass, GUC, renderer-
+  parity, coarse candidate-error, delete-restrict and edited-in-place risks.
+  Cursor independently recomputed packet hashes, complete history and exact
+  commits, reran the migration contract, confirmed the delta touches only the
+  adversarial matrix and contract markers, and returned `PASS` with no new
+  operator finding. Board, List, composer, route, estimate page and migration
+  bytes are identical to its prior passing state. Neither reviewer accessed or
+  changed hosted state. R3-4 is now `INDEPENDENT REVIEW PASS / ISOLATED PREVIEW
+  REQUIRED`; it is not yet founder-accepted and does not yet unlock R3-4.1 or
+  R3-5.
