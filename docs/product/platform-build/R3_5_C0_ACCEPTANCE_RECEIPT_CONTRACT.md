@@ -209,6 +209,7 @@ must not claim an email or SMS was sent.
 
 ## 10. Next action
 
-Do not implement R3-5 until R3-4 is independently accepted. Preserve this
-contract as the technical and truthfulness boundary; resolve final consent copy
-before enabling any public acceptance action.
+Do not implement R3-5 until the current R3-4 remediation and the additive
+R3-4.1 package-set bridge are independently accepted. Preserve this contract as
+the technical and truthfulness boundary; resolve final consent copy before
+enabling any public acceptance action.

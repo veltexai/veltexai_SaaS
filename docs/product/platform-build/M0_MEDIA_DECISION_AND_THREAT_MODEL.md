@@ -3,8 +3,10 @@
 Status: **PREPARED / FOUNDER DECISIONS PENDING / NO IMPLEMENTATION AUTHORIZED**
 
 This record turns the approved multimodal direction into explicit first-build
-choices. Until every required decision is accepted in the operating ledger,
-M1 must not create buckets, credentials, uploads, migrations or provider jobs.
+choices. M1 cannot create buckets, credentials, uploads or migrations until the
+photo, retention/deletion, notice, initial-service-pack and private-storage/
+scanner decisions are accepted. Model-provider, AI-region/subprocessor and cost
+ceilings are later M2 gates and do not block provider-neutral M1 photo storage.
 
 ## Required decisions and recommended defaults
 
@@ -15,14 +17,17 @@ M1 must not create buckets, credentials, uploads, migrations or provider jobs.
 | Deletion | Remove normal access immediately; delete originals, derivatives and provider copies within 30 days; retry/escalate failures and retain a content-free deletion receipt | PENDING FOUNDER ACCEPTANCE |
 | Notice/prohibited content | Versioned operator authorization-and-notice attestation; prohibit intentional people, IDs, cards, screens, medical data, access codes and secrets | PENDING FOUNDER ACCEPTANCE |
 | Initial service packs | `commercial_janitorial.v1` and `residential_turnover.v1`; controlled-risk services excluded | PENDING FOUNDER ACCEPTANCE |
-| Provider boundary | Private regional storage, malware scanning and model providers selected only after region, subprocessor, retention/training, deletion API and DPA review | PENDING FOUNDER ACCEPTANCE |
-| Cost boundary | Explicit per-analysis and monthly organization ceilings before any paid AI call | PENDING FOUNDER ACCEPTANCE |
+| M1 storage/scanner boundary | Private regional storage and malware scanning selected after region, subprocessor, deletion API and DPA review | PENDING FOUNDER ACCEPTANCE |
+| M2 model boundary | Model provider selected after region, subprocessors, retention/training, deletion API and DPA review | PENDING BEFORE M2 |
+| M2 cost boundary | Explicit per-analysis and monthly organization ceilings before any paid AI call | PENDING BEFORE M2 |
 
 Policy changes apply prospectively to new captures unless an authorized
 operator explicitly shortens existing retention. A deletion request overrides
-ordinary retention. A proposal-retained customer-visible derivative is a
-separately selected record; the UI must disclose whether deleting its source
-also removes it from future access. Legal hold is excluded from the first build.
+ordinary retention. Recommended deletion policy: delete every standalone media
+object and derivative, while already-published immutable proposal bytes remain
+as the accepted business record; do not retain a separately downloadable media
+object unless that exception is explicitly accepted and disclosed. This policy
+choice remains pending. Legal hold is excluded from the first build.
 
 ## Threat model
 

@@ -2730,7 +2730,7 @@ After any material action, append or revise the relevant section with:
   the request schema is now strict and rejects that payload before any hosted
   client call. Board/List UI, full repository/build gates, independent review,
   isolated Preview and founder acceptance remain. No hosted state changed.
-- **R3-4 BOARD/LIST OPERATOR FLOW — LOCAL PASS / INDEPENDENT REVIEW NEXT:** A
+- **R3-4 BOARD/LIST OPERATOR FLOW — HISTORICAL INITIAL LOCAL PASS / FIRST REVIEW COMPLETED:** A
   shared `Prepare proposal version` action now appears in both Board and List
   only for open residential/turnover opportunities with an exact selected
   estimate and an absent or `estimated` package. The accessible dialog loads a
@@ -3163,7 +3163,7 @@ After any material action, append or revise the relevant section with:
   a separate action-specific production rollback-proof execution authorization
   remains mandatory.
 
-### R3-4 immutable proposal versions — LOCAL CANDIDATE VERIFIED / INDEPENDENT REVIEW PENDING (2026-10-06 Pacific)
+### R3-4 immutable proposal versions — HISTORICAL INITIAL CANDIDATE / SUPERSEDED BY FAIL AND REMEDIATION (2026-10-06 Pacific)
 
 - **DEPENDENCY AND SCOPE PRESERVED:** This additive candidate is based on the
   accepted R3-3 application bytes at
@@ -3273,7 +3273,7 @@ After any material action, append or revise the relevant section with:
   and genuine authenticated 390 px coverage. Its reconstructed 390 px markup
   did confirm 44 px R3-4 controls and no page-level overflow, but that is not a
   hosted or authenticated acceptance result.
-- **NEXT UNFINISHED OUTCOME:** Implement one coherent local remediation that
+- **HISTORICAL NEXT OUTCOME — SUPERSEDED / COMPLETED LOCALLY:** Implement one coherent local remediation that
   moves authorization ahead of source reads, obtains estimate data only
   through an authorized server boundary, composes or validates rendered bytes
   from the exact immutable allowlisted snapshot and selected estimate, freezes
@@ -3339,7 +3339,8 @@ After any material action, append or revise the relevant section with:
   REQUIRED`; it does not unlock R3-5 or authorize deployment.
 - **CRYPTOGRAPHIC RE-REVIEW HANDOFF PREPARED / NOT DISPATCHED:** The first
   remediation source archive
-  `/private/tmp/veltex-r3-4-remediation-1883dbe-review.zip` remains valid with
+  `/private/tmp/veltex-r3-4-remediation-1883dbe-review.zip` remains byte-valid
+  but is not the current queue target. It has
   SHA-256 `4db22ffdf4620fba3da28c61ef0283756c3055254c4cb1645008a7b86248d254`,
   but a plain Git archive cannot independently prove the claimed commit graph.
   The strengthened packet
@@ -3436,6 +3437,18 @@ After any material action, append or revise the relevant section with:
   production mutations/gates and are not implied by broad roadmap approval.
   M0 founder choices and the absent Prompt 12 A0–A8 semantic source are product
   decisions, not permission requests; present them when the founder returns.
+- **ROADMAP CONSISTENCY AUDIT — CORRECTIONS APPLIED:** Independent read-only
+  comparison found and corrected seven documentation ambiguities without
+  changing implementation scope: R3-8 may consume accepted R3-5 events in
+  parallel but cannot waive R3-6/R3-7 from full R3 acceptance; R3-5's final
+  paragraph now requires accepted R3-4.1; the matrix explicitly holds external
+  review messages for action-time confirmation; M1 storage/scanner decisions
+  are separated from M2 model/cost gates; media deletion versus immutable
+  proposal bytes has one pending recommended policy; the external Prompt 14
+  source is now bound to its verified absolute path and SHA-256 rather than
+  represented as a checked-in file; and historical
+  R3-4 “next action” headings are labeled superseded. The strengthened packet
+  remains the sole review queue target; no external or hosted action occurred.
 - **STAGES 3–5 IMPLEMENTATION REUSE MAPS VERIFIED:** Fresh read-only code/schema
   audits replaced generic reuse assumptions with exact current primitives.
   Stage 3 can reuse CRM validators, caller-bound idempotent commands, tenant

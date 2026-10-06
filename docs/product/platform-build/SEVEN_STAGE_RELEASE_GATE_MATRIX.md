@@ -45,11 +45,13 @@ current evidence.
    isolated-Preview database/application evidence and founder acceptance.
 2. Complete the separately gated R3-1 controlled production release from exact
    commit `0d765d7` before preparing a cumulative R3-2/R3-3 production artifact.
-3. Submit the exact verified R3-4 remediation bundle for independent Claude and
-   Cursor re-review. Only dual `PASS` opens isolated-Preview and responsive
-   acceptance; R3-4.1 and R3-5 remain dependency-blocked.
-4. Continue the approved multimodal M0 privacy/product decisions without
-   replacing deterministic pricing; this is not production authorization.
+3. Hold the exact verified R3-4 remediation bundle until action-time external-
+   message confirmation, then submit it for independent Claude and Cursor
+   re-review. Only dual `PASS` opens isolated-Preview and responsive acceptance;
+   R3-4.1 and R3-5 remain dependency-blocked.
+4. Continue preparing the pending multimodal M0 privacy/product decisions
+   without replacing deterministic pricing; this is not acceptance or
+   production authorization.
 
 ## No-duplication references
 
@@ -58,8 +60,10 @@ current evidence.
 - R2 hosted sequence: `R2_ISOLATED_PREVIEW_OPERATOR_EXECUTION_PACKET.md`
 - R2 Cursor preflight: `R2_CURSOR_INTEGRATION_PREFLIGHT.md`
 - R3 first increment: `CURSOR_R3_1_IMPLEMENTATION_CONTRACT.md`
-- Full product architecture and gates: the founder-provided Prompt 1–14 reports,
-  especially `CLAUDE_PROMPT14_FINAL_SYNTHESIS_AND_EXECUTABLE_RELEASE_ROADMAP.md`
+- Full product architecture and gates: founder-provided external source
+  `/Users/Antho/Downloads/CLAUDE_PROMPT14_FINAL_SYNTHESIS_AND_EXECUTABLE_RELEASE_ROADMAP.md`,
+  SHA-256 `a2d0eac0840079b4142232357aaa7d44888c78db6dfd69f935d1e8b1f8fbc25c`;
+  the operating ledger and derived reviewed contracts are the local authority.
 - Cleaning breadth: `docs/product/ALL_CLEANING_SERVICES_EXPANSION_MASTER_PLAN.md`
 - R3 package-set bridge: `R3_4_1_PACKAGE_SET_COMMITMENT_DECISION.md`
 - M0 media decisions/threat model: `M0_MEDIA_DECISION_AND_THREAT_MODEL.md`

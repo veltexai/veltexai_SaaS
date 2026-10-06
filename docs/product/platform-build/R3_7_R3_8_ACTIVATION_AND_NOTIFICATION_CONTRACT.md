@@ -3,8 +3,10 @@
 Status: **ENTRY BOUNDARY PREPARED / A0–A8 SEMANTICS SOURCE REQUIRED /
 IMPLEMENTATION DEPENDENCY-BLOCKED**
 
-These increments follow accepted R3-6. They reuse R2 audit/outbox foundations
-and do not create parallel analytics or email systems.
+R3-7 follows accepted R3-6. R3-8 consumes accepted R3-5 receipt events and may
+be implemented in parallel with R3-6/R3-7, but full R3 release acceptance still
+requires R3-6, R3-7 and R3-8 to pass their own gates. Both reuse R2 audit/outbox
+foundations and do not create parallel analytics or email systems.
 
 ## 1. Evidence audit and unresolved source
 
@@ -190,7 +192,8 @@ transactional operator event; it cannot subscribe the customer to marketing.
 
 ## 9. Next action
 
-R3-7 cannot move from boundary preparation to implementation until the exact
-approved Prompt 12 A0–A8 semantics are restored. R3-8 implementation waits for
+R3-7 cannot move from boundary preparation to implementation until accepted
+R3-6 and the exact approved Prompt 12 A0–A8 semantics exist. R3-8 waits for
 accepted R3-5 receipt events and may proceed independently of outbound email by
-shipping the durable in-app notification first.
+shipping the durable in-app notification first. That parallelism does not waive
+R3-6/R3-7 from the full R3 release gate.

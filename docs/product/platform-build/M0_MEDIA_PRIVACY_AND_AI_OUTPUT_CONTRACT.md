@@ -63,8 +63,11 @@ or quarantine, but does not replace operator responsibility or legal review.
   for permanent deletion within 30 days.
 - A legal hold is not included in the first build. If future customers require
   one, it needs a separate role, notice and release contract.
-- Proposal versions may retain only explicitly selected customer-visible
-  derivatives and their provenance; internal originals do not become proposal
+- A pending founder decision must resolve deletion versus immutable proposal
+  records. Recommended first-build rule: delete originals and every standalone
+  derivative/provider copy, while already-published immutable proposal bytes
+  remain as the accepted business record; do not preserve a separately
+  downloadable media object. Internal originals never become proposal
   attachments implicitly.
 
 ## 6. AI observation schema
@@ -125,7 +128,9 @@ other controlled-risk work remain blocked.
 - accept or revise 30/90/180/365-day policy choices and 365-day default cap;
 - accept the notice attestation and prohibited-content language;
 - accept the two initial service packs and controlled-risk exclusions;
-- approve the chosen private storage/provider regions and subprocessors before
-  account configuration; and
+- approve the chosen private storage/scanner regions and subprocessors before
+  M1 account configuration;
+- approve model-provider region, subprocessors, retention/training and deletion
+  terms before M2 configuration; and
 - approve an explicit per-analysis and monthly organization cost ceiling before
-  the first paid AI call.
+  the first paid AI call in M2.

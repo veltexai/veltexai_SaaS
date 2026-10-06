@@ -216,10 +216,10 @@ contain a second proposal renderer or pricing engine.
    dedicated deterministic estimate/service-pack support rather than relabeling
    residential output.
 
-## 10. Next action
+## 10. Current action (supersedes the historical implementation instruction)
 
-Implement only this additive R3-4 boundary on top of the accepted R3-3 bytes.
-Begin with the append-only schema, private publish command, exact binding and
-privacy/concurrency/idempotency matrices. Application composition and operator
-UI follow only after that server contract is executable. Hosted Preview remains
-a separately reviewed and approved gate; Production remains excluded.
+The additive boundary and coherent remediation are locally implemented and
+verified. Submit only the frozen complete-history remediation packet for
+independent Claude and Cursor re-review after the required action-time
+confirmation. Dual `PASS` is required before isolated Preview and founder
+acceptance. Production remains excluded.
