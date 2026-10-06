@@ -3352,3 +3352,17 @@ After any material action, append or revise the relevant section with:
   Claude and Cursor follow-ups are fully drafted against this exact packet but
   remain unsent pending the required action-time representational-message
   confirmation. No hosted system, Preview or production state changed.
+- **R3-5 READINESS AUDIT COMPLETE / IMPLEMENTATION STILL BLOCKED:**
+  `R3_5_C0_IMPLEMENTATION_READINESS.md` maps the accepted C0 contract to the
+  current immutable-version, package-lifecycle, stage-history, audit and outbox
+  primitives. It freezes the purpose vocabulary, fragment-to-HttpOnly-session
+  token exchange, server-side versioned HMAC boundary, seven-day maximum
+  expiry, disabled-by-default designated-approver policy, privacy-bounded rate
+  key, consent-version and scoped in-app receipt reader. It also records one
+  non-negotiable contract conflict: R3-4 currently commits one package/estimate
+  per version while R3-5 requires atomic acceptance of a selected package set.
+  A reviewed immutable version/package-set commitment is therefore required
+  before token issuance; silently limiting the array to one package is rejected
+  as scope reduction. No R3-5 migration, route, token or customer action was
+  created because R3-4 has not passed independent re-review and Preview/founder
+  acceptance.
