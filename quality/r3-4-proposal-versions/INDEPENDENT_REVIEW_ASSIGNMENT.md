@@ -1,6 +1,6 @@
 # R3-4 immutable proposal versions — independent review assignment
 
-Status: **LOCAL REMEDIATION VERIFIED / INDEPENDENT RE-REVIEW REQUIRED**
+Status: **LOCAL SECOND REMEDIATION VERIFIED / CLAUDE DELTA RE-REVIEW AND CURSOR REGRESSION REQUIRED**
 
 Review the exact remediation range and candidate named in
 `PACKET_MANIFEST.txt`. Start from the prior Claude/Cursor FAIL findings in the
@@ -46,12 +46,25 @@ actually run and residual risks. Verify:
 7. the committed matrices and true two-session race genuinely prove their
    claims without vacuous catches or owner/service-role shortcuts.
 
-Specifically re-test every former Claude blocker: authorized source reads,
+First confirm the three findings from Claude's immediately preceding verdict:
+
+- M1: proposal binding enforcement covered UPDATE but not authenticated INSERT;
+- M2: one invalid/unavailable candidate could fail the entire GET/history response;
+- M3: several adversarial checks were absent or could pass through vacuous catches.
+
+Then specifically re-test every former Claude blocker: authorized source reads,
 rendered-byte/selected-estimate binding, authorization before lookup, immutable
 proposal bindings, command-managed package pointer invalidation, strict JSON
 leaf types, replay order, actor-bound receipts, latest package-less estimate
 selection and UPDATE/DELETE/TRUNCATE resistance. Confirm the transaction-local
-pointer flag cannot authorize a later direct statement.
+pointer flag cannot authorize a later direct statement. For the second
+remediation, explicitly verify authenticated INSERT and rebinding denials,
+old-source access before moving/clearing a binding, immutable command-receipt
+UPDATE/DELETE/TRUNCATE resistance, actor-bound receipt reuse, strict JSON leaf
+types, latest package-less estimate selection, source-reader denials and
+pointer invalidation after re-estimation. Verify that changed replay and amount
+mismatch reach the intended checks rather than succeeding through an unrelated
+render mismatch.
 
 Reproduce at least the migration contract, focused Jest, TypeScript, and fresh
 PostgreSQL harness if the review environment supports them. Distinguish an
@@ -76,7 +89,14 @@ actually run and residual risks. Do not duplicate the deep SQL audit. Verify:
    and
 7. existing Estimate/Board/List flows do not regress.
 
-Specifically re-test every former Cursor blocker: exact price/scope/rendered
+Cursor previously returned PASS. Perform a bounded regression against the new
+implementation rather than restarting the entire review. Specifically re-test
+the GET behavior when one proposal candidate becomes invalid or unavailable:
+immutable history and remaining valid candidates must still render, without a
+false whole-screen failure. Also confirm the second-remediation database guard
+does not alter Board/List eligibility or truthful prepared/not-sent copy.
+
+Retain the former Cursor checks for exact price/scope/rendered
 content review, stable 409 recovery, history/request-key preservation,
 deliberate new-version creation, and Board/List alignment to the package-bound
 estimate.

@@ -3561,3 +3561,45 @@ After any material action, append or revise the relevant section with:
   points to every prepared decision record and correctly names R3-4 independent
   re-review—not already completed remediation—as the immediate R3 gate. No
   implementation or hosted state changed.
+- **R3-4 CLAUDE RE-REVIEW — `FAIL`; CURSOR RE-REVIEW — `PASS`:** Claude
+  verified that every prior High finding was closed, then identified three
+  Medium gaps in the strengthened packet: the proposal-binding guard covered
+  UPDATE but not authenticated INSERT; one invalid/unavailable proposal
+  candidate could fail the full GET response and hide immutable history; and
+  several required adversarial proofs were absent or could succeed through an
+  unrelated error. Cursor independently returned `PASS` with no Critical,
+  High or Medium findings after exact packet/history verification, focused
+  `32/32` plus route `11/11` tests and genuine desktop/`390x844` markup
+  rendering. Cursor preserved one Low copy condition and the later hosted
+  authenticated Preview/accessibility residuals. These verdicts do not unlock
+  Preview, founder acceptance or R3-5.
+- **R3-4 SECOND REMEDIATION — LOCAL `VERIFIED`:** Commit
+  `aa48b5eabd03e3dd4babf313c7b473a9920467b1` adds authenticated INSERT and
+  rebinding protection while preserving the trusted machine path, verifies
+  access to an old source before moving or clearing an unversioned binding,
+  makes command receipts UPDATE/DELETE/TRUNCATE immutable, and isolates GET
+  candidate hydration so an invalid candidate is omitted while immutable
+  history and other valid candidates remain available. The matrices now prove
+  changed replay at the intended key-reuse boundary, selected-amount mismatch
+  at the intended content boundary, actor-bound receipt reuse, strict JSON leaf
+  types, viewer/unassigned/cross-tenant source-reader denial, receipt
+  immutability, pointer invalidation after re-estimation and authenticated
+  INSERT/rebinding denial. Migration SHA-256 is
+  `86f438fe3a4516093534faf45d74bff4020dc68e9e40014f912e7152685678a3`.
+  Full Jest passed `110` suites / `935` tests / `5` snapshots; the focused
+  proposal-version route passed `12/12`; TypeScript and the migration contract
+  passed. A fresh PostgreSQL 16 harness with `CHECK_DEFINERS=1` applied all 69
+  migrations and passed R3-1 through R3-4 matrices, owner/definer, injection,
+  dirty/rerun, R3-3/R3-4 concurrency, legacy concurrency and `HARNESS
+  COMPLETE`, then stopped cleanly.
+- **SECOND-REMEDIATION FAILED/RECOVERED CHECKS PRESERVED:** The first fresh
+  harness exposed that applying the authenticated binding guard to the
+  established service-role fixture broke the trusted machine path. The guard
+  was narrowed so `auth.uid() is null` retains compatibility while all
+  authenticated INSERT/rebinding checks remain enforced. A later run exposed
+  a missing `contact_phone` in the synthetic unbound-proposal fixture; the
+  fixture was corrected before the clean final harness pass. Neither failure
+  was treated as evidence that existing setup was absent. Current status is
+  `LOCAL SECOND REMEDIATION VERIFIED / CLAUDE DELTA RE-REVIEW AND CURSOR
+  REGRESSION REQUIRED`. No Preview, Production, credential, deployment,
+  customer-message, payment or campaign state changed.
