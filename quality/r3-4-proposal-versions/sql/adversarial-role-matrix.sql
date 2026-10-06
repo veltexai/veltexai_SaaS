@@ -281,6 +281,8 @@ select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111'
 do $$ declare org uuid:=current_setting('r34.org')::uuid; begin
   if (select count(*) from public.read_crm_proposal_versions(org,'83000000-0000-4000-8000-000000000003'))<>3
     then raise exception 'owner version history unavailable'; end if;
+  if (select count(*) from public.read_crm_proposal_candidates(org,'83000000-0000-4000-8000-000000000003'))<>1
+    then raise exception 'owner proposal candidate projection mismatch'; end if;
   begin insert into public.crm_proposal_versions(organization_id,proposal_id,opportunity_id,
     property_id,estimate_run_id,version_number,request_key,content_snapshot,rendered_content,
     display_amount_minor,pricing_basis,content_sha256,rendered_sha256,estimate_input_sha256,
@@ -296,11 +298,15 @@ select set_config('request.jwt.claim.sub','85555555-5555-4555-8555-555555555555'
 do $$ declare org uuid:=current_setting('r34.org')::uuid; begin
   if (select count(*) from public.read_crm_proposal_versions(org,'83000000-0000-4000-8000-000000000003'))<>3
     then raise exception 'assigned estimator version history unavailable'; end if;
+  if (select count(*) from public.read_crm_proposal_candidates(org,'83000000-0000-4000-8000-000000000003'))<>1
+    then raise exception 'assigned estimator proposal candidate read failed'; end if;
 end $$;
 select set_config('request.jwt.claim.sub','86666666-6666-4666-8666-666666666666',true);
 do $$ declare org uuid:=current_setting('r34.org')::uuid; begin
   if exists(select 1 from public.read_crm_proposal_versions(org,'83000000-0000-4000-8000-000000000003'))
     then raise exception 'viewer received immutable version metadata'; end if;
+  if exists(select 1 from public.read_crm_proposal_candidates(org,'83000000-0000-4000-8000-000000000003'))
+    then raise exception 'viewer received proposal candidates'; end if;
 end $$;
 reset role;
 

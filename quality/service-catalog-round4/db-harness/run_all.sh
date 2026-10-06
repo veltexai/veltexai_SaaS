@@ -12,6 +12,7 @@ psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$HERE/sql/10_fixtures.sql"
 psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$HERE/../../r3-1-crm/sql/adversarial-role-matrix.sql"
 psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$HERE/../../r3-2-walkthrough-evidence/sql/adversarial-role-matrix.sql"
 psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$HERE/../../r3-3-estimate-linkage/sql/adversarial-role-matrix.sql"
+psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$HERE/../../r3-4-proposal-versions/sql/adversarial-role-matrix.sql"
 OWNER_MATRIX="${OWNER_MATRIX:-$HERE/sql/owner-matrix.round3.sql}"
 psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$OWNER_MATRIX" \
   -v owner_id=11111111-1111-4111-8111-111111111111 -v other_id=22222222-2222-4222-8222-222222222222 \
@@ -21,5 +22,6 @@ psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$HERE/sql/30_assertions.sql" ${CHECK_
 psql -X -q -v ON_ERROR_STOP=1 -d "$DB" -f "$HERE/../tracked-link-revocation-assertions.sql"
 "$HERE/injection_tests.sh" ${1:-}
 "$HERE/../../r3-3-estimate-linkage/concurrency.sh"
+"$HERE/../../r3-4-proposal-versions/concurrency.sh"
 "$HERE/concurrency.sh"
 echo "HARNESS COMPLETE"

@@ -261,6 +261,10 @@ do $$ declare bad text; begin
       'read_crm_walkthroughs(uuid)',
       'read_crm_estimate_summaries(uuid)',
       'read_crm_estimate_runs(uuid,uuid)',
+      -- R3-4 metadata-only projections preserve caller-bound opportunity
+      -- access and never expose rendered proposal bytes or snapshots.
+      'read_crm_proposal_candidates(uuid,uuid)',
+      'read_crm_proposal_versions(uuid,uuid)',
       'save_crm_contact_record(uuid,uuid,timestamp with time zone,text,text,text,text,text,text,boolean,text)',
       'save_crm_customer_record(uuid,uuid,timestamp with time zone,text,text)',
       'save_crm_property_record(uuid,uuid,timestamp with time zone,uuid,text,text,text,text,text,text,text,text,text)',

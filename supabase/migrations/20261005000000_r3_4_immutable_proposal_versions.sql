@@ -315,6 +315,23 @@ grant execute on function public.command_crm_publish_proposal_version_internal(
   uuid,uuid,uuid,uuid,uuid,uuid,uuid,text,text,jsonb,text,timestamptz
 ) to service_role;
 
+create function public.read_crm_proposal_candidates(p_organization uuid,p_opportunity uuid)
+returns table(id uuid,title text,property_id uuid,updated_at timestamptz)
+language sql stable security definer set search_path=pg_catalog,public as $$
+  select p.id,p.title,p.crm_property_id,p.updated_at
+  from public.proposals p join public.crm_opportunities o
+    on o.organization_id=p.organization_id and o.id=p.crm_opportunity_id
+  where p.organization_id=p_organization and p.crm_opportunity_id=p_opportunity
+    and p.crm_customer_id=o.customer_id and p.crm_property_id=o.property_id
+    and o.deleted_at is null and public.can_access_crm_opportunity(o.id)
+    and (public.can_manage_organization(p_organization)
+      or (public.organization_role(p_organization)='estimator' and o.estimator_user_id=auth.uid()))
+  order by p.updated_at desc,p.id;
+$$;
+revoke all on function public.read_crm_proposal_candidates(uuid,uuid)
+  from public,anon,service_role;
+grant execute on function public.read_crm_proposal_candidates(uuid,uuid) to authenticated;
+
 create function public.read_crm_proposal_versions(p_organization uuid,p_opportunity uuid)
 returns table(id uuid,proposal_id uuid,work_package_id uuid,estimate_run_id uuid,
   version_number integer,display_amount_minor bigint,currency text,pricing_basis text,

@@ -85,6 +85,64 @@ describe('R3-1 CRM board', () => {
     expect(screen.getByRole('link',{name:'Estimate'})).toBeInTheDocument();
   });
 
+  it('prepares the same immutable proposal-version workflow from Board and List', async () => {
+    const board = {
+      organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], viewer_price_redacted: false,
+      pipelines: [{ id: 'pipeline-1', name: 'Residential', is_default: true,
+        stages: [{ id: 'stage-1', label: 'Quote', category: 'estimating', position: 40, hidden: false }] }],
+      opportunities: [{ id: 'opportunity-1', name: 'Taylor home', pipeline_id: 'pipeline-1',
+        stage_id: 'stage-1', category: 'estimating', segment: 'residential', property_id: 'property-1',
+        updated_at: '2026-10-06T08:00:00Z' }],
+      work_packages: [{ id: 'package-1', opportunity_id: 'opportunity-1', property_id: 'property-1',
+        status: 'estimated', proposal_id: 'proposal-1', estimate_run_id: 'run-1',
+        updated_at: '2026-10-06T08:00:00Z' }],
+      estimate_summaries: [{ estimate_run_id: 'run-1', opportunity_id: 'opportunity-1',
+        work_package_id: 'package-1', engine_version: '2026-09-22.2', selected_amount_minor: 18500,
+        currency: 'USD', pricing_basis: 'per_visit', created_at: '2026-10-06T08:00:00Z' }],
+    };
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: board }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        candidates: [{ id: 'proposal-1', title: 'Taylor proposal', property_id: 'property-1',
+          updated_at: '2026-10-06T07:00:00Z' }], versions: [],
+      } }) })
+      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: {
+        proposal_version_id: 'version-1', version_number: 1,
+        package_updated_at: '2026-10-06T08:05:00Z', replayed: false,
+      } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        candidates: [{ id: 'proposal-1', title: 'Taylor proposal', property_id: 'property-1',
+          updated_at: '2026-10-06T07:00:00Z' }],
+        versions: [{ id: 'version-1', proposal_id: 'proposal-1', work_package_id: 'package-1',
+          estimate_run_id: 'run-1', version_number: 1, display_amount_minor: 18500, currency: 'USD',
+          pricing_basis: 'per_visit', content_sha256: 'a', rendered_sha256: 'b',
+          schema_version: 'crm_proposal_version.v1', created_at: '2026-10-06T08:05:00Z' }],
+      } }) });
+
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'Taylor home' });
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare proposal version' }));
+    expect(await screen.findByRole('heading', { name: 'Prepare proposal version' })).toBeInTheDocument();
+    expect(screen.getByText(/does not send, sign or accept/)).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: 'Taylor proposal' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare immutable version' }));
+    expect(await screen.findByText(/Version 1/)).toBeInTheDocument();
+    expect(screen.getByText(/not sent/)).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenNthCalledWith(4,
+      `/api/orgs/${ORG_ID}/crm/opportunities/opportunity-1/proposal-versions`,
+      expect.objectContaining({ method: 'POST', headers: expect.objectContaining({
+        'idempotency-key': expect.any(String),
+      }) }));
+    const publishBody = JSON.parse(fetchMock.mock.calls[3][1].body);
+    expect(publishBody).toEqual({ proposalId: 'proposal-1', propertyId: 'property-1',
+      estimateRunId: 'run-1', workPackageId: 'package-1',
+      expectedPackageUpdatedAt: '2026-10-06T08:00:00Z' });
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    fireEvent.click(screen.getByRole('button', { name: 'List' }));
+    expect(screen.getByRole('button', { name: 'Prepare proposal version' })).toHaveClass('min-h-11');
+  });
+
   it('blocks specialty estimates and makes non-scoping packages read-only',async()=>{
     fetchMock.mockResolvedValueOnce({ok:true,json:async()=>({data:ORG_ID})}).mockResolvedValueOnce({ok:true,json:async()=>({data:{
       organization_id:ORG_ID,caller_role:'owner',loss_reasons:[],viewer_price_redacted:false,

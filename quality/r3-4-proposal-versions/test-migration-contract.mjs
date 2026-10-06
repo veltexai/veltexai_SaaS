@@ -24,6 +24,7 @@ for (const marker of [
   'closed opportunity cannot publish a proposal version',
   'site work package changed',
   "'proposal.version_prepared'",
+  'create function public.read_crm_proposal_candidates',
   'create function public.read_crm_proposal_versions',
 ]) assert.ok(migration.includes(marker), `missing ${marker}`);
 
@@ -32,6 +33,7 @@ assert.equal((migration.match(/^commit;$/gm) ?? []).length, 1);
 assert.equal((migration.match(/grant execute on function public\.command_crm_publish_proposal_version_internal/g) ?? []).length, 1);
 assert.match(migration, /revoke all on public\.crm_proposal_versions,public\.crm_proposal_version_commands\s+from public,anon,authenticated,service_role/);
 assert.match(migration, /revoke all on function public\.command_crm_publish_proposal_version_internal[\s\S]*from public,anon,authenticated;[\s\S]*grant execute[\s\S]*to service_role;/);
+assert.match(migration, /revoke all on function public\.read_crm_proposal_candidates\(uuid,uuid\)[\s\S]*from public,anon,service_role;[\s\S]*grant execute[\s\S]*to authenticated;/);
 assert.doesNotMatch(migration, /grant\s+(insert|update|delete|truncate)[\s\S]*crm_proposal_versions/i);
 
 for (const forbidden of [
@@ -56,6 +58,9 @@ for (const marker of [
   'immutable version update accepted', 'immutable version delete accepted',
   'authenticated direct version insert accepted',
   'viewer received immutable version metadata',
+  'owner proposal candidate projection mismatch',
+  'assigned estimator proposal candidate read failed',
+  'viewer received proposal candidates',
   'nested private pricing key accepted', 'mismatched estimate amount accepted',
   'mismatched property context accepted',
   'closed opportunity proposal version accepted', 'closed-state exact replay failed',

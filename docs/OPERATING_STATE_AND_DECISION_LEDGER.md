@@ -2730,6 +2730,32 @@ After any material action, append or revise the relevant section with:
   the request schema is now strict and rejects that payload before any hosted
   client call. Board/List UI, full repository/build gates, independent review,
   isolated Preview and founder acceptance remain. No hosted state changed.
+- **R3-4 BOARD/LIST OPERATOR FLOW — LOCAL PASS / INDEPENDENT REVIEW NEXT:** A
+  shared `Prepare proposal version` action now appears in both Board and List
+  only for open residential/turnover opportunities with an exact selected
+  estimate and an absent or `estimated` package. The accessible dialog loads a
+  caller-scoped proposal candidate list and immutable history, preserves one
+  retry key across uncertain failures, submits only exact record IDs and the
+  package concurrency token, reconciles the returned package token, rotates
+  the key after success and states that preparation is not send, signature or
+  acceptance. Controls meet the 44 px minimum and wrap without forcing the
+  List action row wider at 390 px. Migration SHA-256 is now
+  `ed7fe28895b87f6927fad5321c4aec249e1605020c21f8bdf8b69302cc056ade`;
+  its new proposal-candidate reader returns metadata only and repeats the exact
+  owner/admin/assigned-estimator boundary. The authoritative full harness now
+  always runs the R3-4 matrix and two-session race. Its first fresh run stopped
+  because the two R3-4 metadata readers were absent from the explicit
+  client-executable definer allowlist; both caller-bound readers were added,
+  and a second fresh 69-migration PostgreSQL 16 run passed all R3-1 through
+  R3-4 matrices, the complete definer audit, owner/security assertions,
+  injection/dirty/rerun checks, R3-3 and R3-4 two-session races, the legacy
+  40-way race and `HARNESS COMPLETE`. Focused UI/API/composer coverage passes
+  42/42; full Jest passes 110 suites / 933 tests / five snapshots; TypeScript,
+  the R3-4 contract check, diff hygiene and the 85-page production build with
+  non-secret loopback placeholders pass. No send/accept/win path was enabled.
+  Independent database/security and operator/accessibility reviews, an exact
+  frozen packet, isolated Preview desktop/390 px evidence and founder
+  acceptance remain. No hosted state changed.
 - **R3-5 C0 ENTRY CONTRACT PREPARED / IMPLEMENTATION NOT STARTED:**
   `R3_5_C0_ACCEPTANCE_RECEIPT_CONTRACT.md` now freezes the bounded customer
   proposal room: hash-only purpose-bound expiring tokens, immutable

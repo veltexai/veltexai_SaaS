@@ -52,6 +52,8 @@ type WorkPackage = {
   status: 'scoping' | 'walkthrough_scheduled' | 'estimated' | 'proposed' | 'accepted' | 'declined';
   walkthrough_id?: string;
   proposal_id?: string;
+  proposal_version_id?: string;
+  estimate_run_id?: string;
   loss_reason_id?: string;
   updated_at: string;
 };
@@ -63,6 +65,11 @@ type Walkthrough = {
 };
 type EstimateSummary = { estimate_run_id: string; opportunity_id: string; work_package_id?: string;
   engine_version: string; selected_amount_minor: number; currency: string; pricing_basis: string;
+  created_at: string };
+type ProposalCandidate = { id: string; title: string; property_id: string; updated_at: string };
+type ProposalVersionSummary = { id: string; proposal_id: string; work_package_id?: string;
+  estimate_run_id: string; version_number: number; display_amount_minor: number; currency: string;
+  pricing_basis: string; content_sha256: string; rendered_sha256: string; schema_version: string;
   created_at: string };
 type Board = {
   organization_id: string;
@@ -108,6 +115,18 @@ function estimateHref(board: Board, opportunity: Opportunity, organizationId: st
     query: { organizationId, ...(workPackage ? { packageId: workPackage.id } : {}) } };
 }
 
+function proposalVersionPrerequisites(board: Board, opportunity: Opportunity) {
+  if (!opportunity.property_id || !['residential', 'turnover'].includes(opportunity.segment ?? '')
+      || ['won', 'lost', 'disqualified', 'handed_off'].includes(opportunity.category)) return null;
+  const workPackage = (board.work_packages ?? []).find((item) => item.opportunity_id === opportunity.id);
+  if (workPackage && workPackage.status !== 'estimated') return null;
+  const estimate = (board.estimate_summaries ?? []).find((item) =>
+    item.opportunity_id === opportunity.id
+      && (item.work_package_id ?? null) === (workPackage?.id ?? null));
+  if (!estimate) return null;
+  return { workPackage, estimate };
+}
+
 export function CrmBoard() {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [board, setBoard] = useState<Board | null>(null);
@@ -137,11 +156,21 @@ export function CrmBoard() {
   const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
   const [leadAction, setLeadAction] = useState<Lead['status']>('contacted');
   const [packageFor, setPackageFor] = useState<{ opportunity: Opportunity; item?: WorkPackage } | null>(null);
+  const [proposalVersionFor, setProposalVersionFor] = useState<{
+    opportunity: Opportunity;
+    workPackage?: WorkPackage;
+    estimate: EstimateSummary;
+    candidates: ProposalCandidate[];
+    versions: ProposalVersionSummary[];
+    selectedProposalId: string;
+    requestKey: string;
+    loading: boolean;
+  } | null>(null);
   const [followUpOnly, setFollowUpOnly] = useState(false);
   const [duplicateReview, setDuplicateReview] = useState<{
     candidates: DuplicateCandidate[]; draft: LeadDraft; key: string;
   } | null>(null);
-  const activeDialog = managingLead || convertingLead || packageFor || outcome || taskFor
+  const activeDialog = managingLead || convertingLead || packageFor || proposalVersionFor || outcome || taskFor
     || editingOpportunity || walkthroughFor || evidenceFor || assigningOpportunity || qualifyingOpportunity
     || duplicateReview;
 
@@ -157,6 +186,7 @@ export function CrmBoard() {
       if (event.key !== 'Escape') return;
       event.preventDefault();
       setManagingLead(null); setConvertingLead(null); setPackageFor(null); setOutcome(null);
+      setProposalVersionFor(null);
       setTaskFor(null); setEditingOpportunity(null); setWalkthroughFor(null);
       setEvidenceFor(null);
       setAssigningOpportunity(null); setQualifyingOpportunity(null);
@@ -203,6 +233,100 @@ export function CrmBoard() {
   const shownOpportunities = useMemo(() => board?.opportunities?.filter((opportunity) =>
     opportunity.pipeline_id === activePipeline?.id && (!followUpOnly || opportunity.needs_follow_up)) ?? [],
   [activePipeline?.id, board, followUpOnly]);
+
+  async function loadProposalVersionContext(
+    opportunity: Opportunity,
+    currentRequestKey = crypto.randomUUID(),
+    refreshed?: { workPackage?: WorkPackage; estimate: EstimateSummary },
+  ) {
+    if (!organizationId || !board) return;
+    const prerequisites = refreshed ?? proposalVersionPrerequisites(board, opportunity);
+    if (!prerequisites) return;
+    setProposalVersionFor({
+      opportunity,
+      ...prerequisites,
+      candidates: [],
+      versions: [],
+      selectedProposalId: '',
+      requestKey: currentRequestKey,
+      loading: true,
+    });
+    try {
+      const response = await fetch(
+        `/api/orgs/${organizationId}/crm/opportunities/${opportunity.id}/proposal-versions`,
+        { cache: 'no-store' },
+      );
+      const payload = await response.json() as {
+        data?: { candidates?: ProposalCandidate[]; versions?: ProposalVersionSummary[] };
+        error?: string;
+      };
+      if (!response.ok) throw new Error(payload.error ?? 'Unable to load proposal versions.');
+      const candidates = (payload.data?.candidates ?? []).filter((candidate) =>
+        !prerequisites.workPackage?.proposal_id
+          || candidate.id === prerequisites.workPackage.proposal_id);
+      setProposalVersionFor((current) => current?.opportunity.id === opportunity.id ? {
+        ...current,
+        candidates,
+        versions: payload.data?.versions ?? [],
+        selectedProposalId: candidates.some((candidate) => candidate.id === current.selectedProposalId)
+          ? current.selectedProposalId : candidates[0]?.id ?? '',
+        loading: false,
+      } : current);
+    } catch (caught) {
+      setProposalVersionFor((current) => current?.opportunity.id === opportunity.id
+        ? { ...current, loading: false } : current);
+      setNotice(caught instanceof Error ? caught.message : 'Unable to load proposal versions.');
+    }
+  }
+
+  async function prepareProposalVersion() {
+    if (!organizationId || !proposalVersionFor?.selectedProposalId) return;
+    setSaving(true);
+    setNotice('Preparing immutable proposal version…');
+    try {
+      const current = proposalVersionFor;
+      const response = await fetch(
+        `/api/orgs/${organizationId}/crm/opportunities/${current.opportunity.id}/proposal-versions`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'idempotency-key': current.requestKey },
+          body: JSON.stringify({
+            proposalId: current.selectedProposalId,
+            propertyId: current.opportunity.property_id,
+            estimateRunId: current.estimate.estimate_run_id,
+            workPackageId: current.workPackage?.id ?? null,
+            expectedPackageUpdatedAt: current.workPackage?.updated_at ?? null,
+          }),
+        },
+      );
+      const payload = await response.json() as {
+        data?: { proposal_version_id: string; version_number: number; package_updated_at?: string };
+        replayed?: boolean;
+        error?: string;
+      };
+      if (!response.ok) throw new Error(payload.error ?? 'Unable to prepare the proposal version.');
+      if (current.workPackage && payload.data?.package_updated_at) {
+        setBoard((existing) => existing ? { ...existing,
+          work_packages: (existing.work_packages ?? []).map((item) => item.id === current.workPackage?.id
+            ? { ...item, proposal_version_id: payload.data?.proposal_version_id,
+              updated_at: payload.data?.package_updated_at ?? item.updated_at } : item),
+        } : existing);
+      }
+      setNotice(`Proposal version ${payload.data?.version_number ?? ''} prepared. It has not been sent.`);
+      await loadProposalVersionContext(current.opportunity, crypto.randomUUID(), {
+        estimate: current.estimate,
+        workPackage: current.workPackage && payload.data?.package_updated_at ? {
+          ...current.workPackage,
+          proposal_version_id: payload.data.proposal_version_id,
+          updated_at: payload.data.package_updated_at,
+        } : current.workPackage,
+      });
+    } catch (caught) {
+      setNotice(caught instanceof Error ? caught.message : 'Unable to prepare the proposal version.');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function moveOpportunity(
     opportunity: Opportunity,
@@ -1097,6 +1221,59 @@ export function CrmBoard() {
           </form></CardContent>
         </Card>
       )}
+      {proposalVersionFor && (
+        <Card role="dialog" aria-labelledby="proposal-version-heading">
+          <CardHeader><CardTitle id="proposal-version-heading">Prepare proposal version</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-gray-700">
+              Review the existing customer-facing proposal for {proposalVersionFor.opportunity.name}.
+              Preparing a version makes an immutable record; it does not send, sign or accept the proposal.
+            </p>
+            {proposalVersionFor.loading ? <p role="status" className="text-sm text-gray-600">Loading proposal history…</p> : (
+              <>
+                {proposalVersionFor.candidates.length > 0 ? <div className="space-y-2">
+                  <Label htmlFor="proposal-version-source">Proposal working copy</Label>
+                  <select id="proposal-version-source" value={proposalVersionFor.selectedProposalId}
+                    onChange={(event) => setProposalVersionFor((current) => current
+                      ? { ...current, selectedProposalId: event.target.value, requestKey: crypto.randomUUID() }
+                      : current)}
+                    className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3">
+                    {proposalVersionFor.candidates.map((candidate) => (
+                      <option key={candidate.id} value={candidate.id}>{candidate.title}</option>
+                    ))}
+                  </select>
+                </div> : <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                  Link a customer-facing proposal working copy to this opportunity and property before preparing a version.
+                </p>}
+                <div aria-label="Prepared proposal versions" className="space-y-2">
+                  <h3 className="font-medium">Prepared history</h3>
+                  {proposalVersionFor.versions.length === 0
+                    ? <p className="text-sm text-gray-600">No immutable proposal versions have been prepared.</p>
+                    : <ul className="space-y-2">{proposalVersionFor.versions.map((version) => (
+                      <li key={version.id} className="rounded-md border p-3 text-sm">
+                        <span className="font-medium">Version {version.version_number}</span>
+                        {' · '}{new Intl.NumberFormat(undefined, { style: 'currency', currency: version.currency })
+                          .format(version.display_amount_minor / 100)}
+                        {' · '}{version.pricing_basis.replaceAll('_', ' ')}
+                        <span className="block text-xs text-gray-500">
+                          Prepared {new Date(version.created_at).toLocaleString()} · not sent
+                        </span>
+                      </li>
+                    ))}</ul>}
+                </div>
+              </>
+            )}
+            <div className="flex flex-wrap gap-3">
+              <Button type="button" className="min-h-11" disabled={saving || proposalVersionFor.loading
+                || !proposalVersionFor.selectedProposalId} onClick={() => void prepareProposalVersion()}>
+                {saving ? 'Preparing…' : 'Prepare immutable version'}
+              </Button>
+              <Button type="button" variant="outline" className="min-h-11"
+                onClick={() => setProposalVersionFor(null)}>Close</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       {duplicateReview && (
         <Card role="dialog" aria-labelledby="duplicate-heading">
           <CardHeader><CardTitle id="duplicate-heading">Review possible duplicate</CardTitle></CardHeader>
@@ -1197,6 +1374,9 @@ export function CrmBoard() {
                             ? 'Manage work package' : (board.work_packages ?? []).some((entry) => entry.opportunity_id === opportunity.id)
                               ? 'Review work package' : 'Add work package'}</Button>}
                         {estimateHref(board,opportunity,organizationId) && <Button asChild variant="outline" className="min-h-11 w-full"><Link href={estimateHref(board,opportunity,organizationId)!}>Estimate</Link></Button>}
+                        {proposalVersionPrerequisites(board, opportunity) && <Button type="button" variant="outline"
+                          className="min-h-11 w-full" onClick={() => void loadProposalVersionContext(opportunity)}>
+                          Prepare proposal version</Button>}
                         {!['residential','turnover'].includes(opportunity.segment ?? '')
                           && <p className="text-xs text-gray-600">Commercial and specialty estimating are not yet supported by the current pricing model.</p>}
                         {['owner', 'admin'].includes(board.caller_role) && (
@@ -1263,6 +1443,9 @@ export function CrmBoard() {
                         </Button>
                       )}
                       {estimateHref(board,opportunity,organizationId) && <Button asChild variant="outline" className="min-h-11"><Link href={estimateHref(board,opportunity,organizationId)!}>Estimate</Link></Button>}
+                      {proposalVersionPrerequisites(board, opportunity) && <Button type="button" variant="outline"
+                        className="min-h-11" onClick={() => void loadProposalVersionContext(opportunity)}>
+                        Prepare proposal version</Button>}
                       {!['residential','turnover'].includes(opportunity.segment ?? '')
                         && <p className="text-xs text-gray-600">Commercial and specialty estimating are not yet supported by the current pricing model.</p>}
                       {['owner', 'admin'].includes(board.caller_role) && (

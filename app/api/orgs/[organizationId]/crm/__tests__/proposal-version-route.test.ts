@@ -100,6 +100,28 @@ describe('R3-4 proposal-version route', () => {
     expect(JSON.stringify(rpc.mock.calls[0][1].p_content_snapshot)).not.toMatch(/margin|labor|access/i);
   });
 
+  it('returns only scoped proposal candidates and immutable history metadata', async () => {
+    clients();
+    const authRpc = jest.fn((name: string) => Promise.resolve(name === 'read_crm_proposal_candidates'
+      ? { data: [{ id: PROPOSAL, title: 'Residential proposal', property_id: PROPERTY }], error: null }
+      : { data: [{ id: '99999999-9999-4999-8999-999999999999', version_number: 1 }], error: null }));
+    createClient.mockResolvedValue({
+      auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: USER } }, error: null }) },
+      from: jest.fn().mockReturnValue(chain({ role: 'estimator' })),
+      rpc: authRpc,
+    });
+    const { GET } = await import('../opportunities/[opportunityId]/proposal-versions/route');
+    const response = await GET(request(), context);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ data: {
+      candidates: [{ id: PROPOSAL, title: 'Residential proposal', property_id: PROPERTY }],
+      versions: [{ id: '99999999-9999-4999-8999-999999999999', version_number: 1 }],
+    } });
+    expect(authRpc).toHaveBeenCalledWith('read_crm_proposal_candidates', {
+      p_organization: ORG, p_opportunity: OPP,
+    });
+  });
+
   it('does not accept browser-supplied content or prices', async () => {
     const rpc = clients();
     const { POST } = await import('../opportunities/[opportunityId]/proposal-versions/route');
@@ -143,4 +165,3 @@ describe('R3-4 proposal-version route', () => {
     expect(JSON.stringify(await response.json())).not.toContain('private database detail');
   });
 });
-

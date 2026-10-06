@@ -17,12 +17,23 @@ export async function GET(_request: NextRequest, { params }: Context) {
   if (!crmRoleHasPermission(context.role, 'crm:edit_assigned') || !UUID.test(opportunityId)) {
     return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
   }
-  const { data, error } = await context.supabase.rpc('read_crm_proposal_versions', {
-    p_organization: context.organizationId,
-    p_opportunity: opportunityId,
-  });
-  if (error) return NextResponse.json({ error: UNAVAILABLE }, { status: 503 });
-  return NextResponse.json({ data: data ?? [] });
+  const [versions, candidates] = await Promise.all([
+    context.supabase.rpc('read_crm_proposal_versions', {
+      p_organization: context.organizationId,
+      p_opportunity: opportunityId,
+    }),
+    context.supabase.rpc('read_crm_proposal_candidates', {
+      p_organization: context.organizationId,
+      p_opportunity: opportunityId,
+    }),
+  ]);
+  if (versions.error || candidates.error) {
+    return NextResponse.json({ error: UNAVAILABLE }, { status: 503 });
+  }
+  return NextResponse.json({ data: {
+    candidates: candidates.data ?? [],
+    versions: versions.data ?? [],
+  } });
 }
 
 export async function POST(request: NextRequest, { params }: Context) {
@@ -138,4 +149,3 @@ export async function POST(request: NextRequest, { params }: Context) {
     return NextResponse.json({ error: UNAVAILABLE }, { status: 503 });
   }
 }
-
