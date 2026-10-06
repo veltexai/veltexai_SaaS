@@ -22,6 +22,27 @@ set or invoice store.
   current webhook does not provide the central event inbox, ordering and
   terminal replay guarantees required for customer finance.
 
+## Current code reuse map
+
+- The accepted immutable proposal-version and later C0 receipt/package-set
+  chain is the source for agreement creation. Reuse its integer minor units,
+  hashes, version/request uniqueness, strict customer-safe schemas and
+  direct-DML denial; do not treat a proposal version as an agreement record.
+- Reuse caller-bound organization context/idempotency patterns in the CRM
+  shared route helpers, subject to separately decided finance permissions.
+- Reuse R2 transactional audit/outbox, monotonic event sequence and inbox
+  foundations. Extend them for provider account/object/event uniqueness,
+  ordering, retry, terminal dead letter and replay lineage.
+- Proposal agreement/payment-term renderers are display inputs only. Their
+  renewal, finance-charge and payment language is not an authoritative billing
+  schedule or counsel-approved agreement.
+
+The platform Stripe client, checkout route, Stripe webhook,
+`014_stripe_subscription_schema.sql` and `billing_history` are user-owned
+Veltex subscription billing. They are wrong-account, wrong-ownership and wrong-
+lifecycle primitives for customer finance. The existing visual proposal-
+acceptance component also cannot become agreement authority without C0.
+
 ## Dependencies
 
 1. Founder-accepted R2 tenancy, roles, organization entitlements, audit and
@@ -69,6 +90,10 @@ retry count, terminal dead-letter state and replay lineage.
   decisions.
 - A segment rollout mode of `external` or `none` does not satisfy or complete
   the founder-approved native invoicing/payments stage.
+- Freeze agreement/change-order semantics, package recurrence,
+  numbering/currency, tax authority, deposits/proration, finance roles,
+  connected-account/merchant model, PCI scope and provider event ordering/
+  reversal/refund/dispute/settlement rules before F0A/F1 coding.
 
 ### F0A — contract-boundary bridge (after F0B decisions)
 

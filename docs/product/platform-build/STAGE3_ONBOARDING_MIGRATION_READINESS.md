@@ -39,6 +39,29 @@ local-storage behavior is not durable organization-scoped save/resume. Current
 proposal PDF downloads and subscription cancellation are not organization data
 export, deletion or grace-period portability.
 
+## Current code reuse map
+
+- Reuse the question enums and validation shape in
+  `app/api/onboarding/qualification/route.ts`, but replace its user-profile
+  persistence and marketing-funnel event with organization-scoped onboarding
+  state and the accepted activation registry.
+- Reuse fields from `app/api/service-catalog/profile/route.ts` and
+  `app/api/company-profile/route.ts`, but add versioned organization ownership,
+  explicit confirmation and assumption provenance. Both current routes are
+  user-scoped.
+- Reuse canonical record validation in `features/crm/schemas/records.ts`,
+  `lead.ts` and `direct-opportunity.ts`. The R3-1 lead-conversion command is a
+  transaction/idempotency pattern, not an import engine.
+- Reuse organization RLS, composite foreign keys, command receipts,
+  identifier-only outbox and adversarial harness patterns from R2/R3.
+- Preserve legacy proposal bytes with reversible mapping records and nullable
+  links. Do not run historical rows through the current R3-4 composer.
+
+Current source enums need additive truthful import/legacy values. CSV or legacy
+rows must not be mislabeled `manual` merely to fit the existing schema. The
+local-storage onboarding banner is presentation-only, and the existing
+proposal export/download endpoints are not organization portability.
+
 ## Required delivery increments
 
 ### S3-1 — durable segment-aware organization onboarding
@@ -91,6 +114,10 @@ export, deletion or grace-period portability.
   public-link preserve/revoke/expiry policy recorded.
 - Imported consent without authoritative provenance is stored as unknown, never
   inferred as granted.
+- Freeze normalization/dedupe keys, preview TTL/resume, batch provenance/hash,
+  partial-failure and undo/finalization semantics before import coding.
+- Freeze legacy owner/grouping/orphan/status mapping and public-link
+  preserve/revoke/expiry policy before historical migration coding.
 
 ## Release gate
 

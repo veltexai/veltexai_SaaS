@@ -36,6 +36,30 @@ entries, location consent or labor variance. Stage 5 is not hidden elsewhere.
 - Existing migration and hosted-verification harness patterns.
 - Veltex subscription billing is not customer finance and is not reusable here.
 
+## Current code reuse map
+
+- Reuse R2 tenant/RBAC/composite-key, command-receipt, optimistic-token,
+  advisory-lock, audit/outbox/inbox and monotonic event-ordering patterns.
+- Reuse R3 walkthrough schemas/routes/commands only as examples of bounded
+  timezone capture, end-after-start validation, authorization, idempotency,
+  overlap refusal, safe errors and reschedule concurrency. A presale
+  walkthrough is not an operational visit.
+- Reference immutable R3-3 estimate snapshots as the estimated baseline.
+  `features/service-catalog/versions/v2` supplies deterministic planning-cost
+  inputs and calculations, but neither record may be rewritten or presented as
+  scheduled/actual cost.
+- Reuse existing route, pricing, migration-contract and adversarial SQL test
+  patterns for new service-plan/job/visit/workforce and actual-ledger borders.
+
+No current schema implements agreements, change orders, service plans,
+operational jobs/visits, workers, availability/time off, RRULE/blackouts,
+generation/detachment, field time/check-ins, checklist versions, time-boxed
+access-note reads, field evidence, actual costs, loaded-labor sources,
+reconciliation or variance. Proposal “service agreement” prose is not the
+Stage 4 agreement model. Current walkthrough timezones are bounded strings,
+not proof of IANA/RRULE/DST semantics, and bid-location inputs are not routing
+or worker geolocation.
+
 ## Delivery progression
 
 ### O0 — evidence and mode decision

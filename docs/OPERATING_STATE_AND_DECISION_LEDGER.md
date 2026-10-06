@@ -3436,3 +3436,17 @@ After any material action, append or revise the relevant section with:
   production mutations/gates and are not implied by broad roadmap approval.
   M0 founder choices and the absent Prompt 12 A0–A8 semantic source are product
   decisions, not permission requests; present them when the founder returns.
+- **STAGES 3–5 IMPLEMENTATION REUSE MAPS VERIFIED:** Fresh read-only code/schema
+  audits replaced generic reuse assumptions with exact current primitives.
+  Stage 3 can reuse CRM validators, caller-bound idempotent commands, tenant
+  constraints and immutable-byte proof, but current onboarding/profile/PDF
+  surfaces are user-scoped or presentation-only and source enums cannot label
+  imports truthfully. Stage 4 can reuse immutable-source, money/hash,
+  authorization and R2 ordered-event patterns, while platform Stripe,
+  `billing_history` and visual acceptance controls remain forbidden customer-
+  finance substitutes. Stage 5 can reuse tenancy/concurrency/event and
+  deterministic-estimate patterns, but presale walkthroughs, planning cost and
+  bid-location data are not operational visits, actuals or geolocation. The
+  readiness packets now name absent schemas and decisions so later work starts
+  additively from accepted predecessors rather than repurposing unsafe legacy
+  code. No implementation or hosted state changed.
