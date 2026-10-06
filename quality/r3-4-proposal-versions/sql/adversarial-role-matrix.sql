@@ -69,7 +69,8 @@ select set_config('r34.org',(select active_organization_id::text from public.pro
 
 set local role service_role;
 do $$
-declare org uuid:=current_setting('r34.org')::uuid; token timestamptz; estimate_result record;
+declare org uuid:=current_setting('r34.org')::uuid; token timestamptz;
+  estimate_result record; old_null_result record; new_null_result record;
   input jsonb:='{"catalogVersion":"2026-09-22.2","segment":"residential","jobType":"recurring_standard","frequency":"weekly"}'::jsonb;
   output jsonb:='{"version":"2026-09-22.2","unit":"per_visit","low":{"suggestedPrice":100},"base":{"suggestedPrice":125},"high":{"suggestedPrice":150}}'::jsonb;
 begin
@@ -81,13 +82,33 @@ begin
     '83000000-0000-4000-8000-000000000002','version-estimate-command','service_catalog',
     '2026-09-22.2',input,output,'base',12500,'USD','per_visit',token);
   perform set_config('r34.estimate',estimate_result.estimate_run_id::text,true);
+  select * into old_null_result from public.command_crm_estimate_run_internal(
+    '11111111-1111-4111-8111-111111111111',org,
+    '83000000-0000-4000-8000-000000000003',null,
+    '83000000-0000-4000-8000-000000000002','version-null-estimate-old','service_catalog',
+    '2026-09-22.2',input,output,'base',12500,'USD','per_visit',null);
+  select * into new_null_result from public.command_crm_estimate_run_internal(
+    '11111111-1111-4111-8111-111111111111',org,
+    '83000000-0000-4000-8000-000000000003',null,
+    '83000000-0000-4000-8000-000000000002','version-null-estimate-new','service_catalog',
+    '2026-09-22.2',input,output,'base',12500,'USD','per_visit',null);
+  perform set_config('r34.old_null_estimate',old_null_result.estimate_run_id::text,true);
+  perform set_config('r34.new_null_estimate',new_null_result.estimate_run_id::text,true);
 end $$;
+
+reset role;
+update public.crm_estimate_runs set created_at=clock_timestamp()-interval '2 minutes'
+  where id=current_setting('r34.old_null_estimate')::uuid;
+update public.crm_estimate_runs set created_at=clock_timestamp()-interval '1 minute'
+  where id=current_setting('r34.new_null_estimate')::uuid;
+set local role service_role;
 
 do $$
 declare org uuid:=current_setting('r34.org')::uuid;
   estimate_id uuid:=current_setting('r34.estimate')::uuid;
+  old_null_estimate uuid:=current_setting('r34.old_null_estimate')::uuid;
   token timestamptz; first_result record; replay_result record; second_result record;
-  snapshot jsonb; changed_snapshot jsonb; err text;
+  snapshot jsonb; changed_snapshot jsonb; null_package_snapshot jsonb; err text;
 begin
   snapshot:=jsonb_build_object(
     'schemaVersion','crm_proposal_version.v1','title','Prepared cleaning proposal',
@@ -106,6 +127,31 @@ begin
       'workPackageId','83000000-0000-4000-8000-000000000005',
       'estimateRunId',estimate_id::text));
   perform set_config('r34.snapshot',snapshot::text,true);
+  null_package_snapshot:=jsonb_set(
+    jsonb_set(snapshot,'{provenance,workPackageId}','null'::jsonb),
+    '{provenance,estimateRunId}',to_jsonb(old_null_estimate::text));
+  begin
+    perform public.read_crm_proposal_version_source_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      null,'83000000-0000-4000-8000-000000000002',old_null_estimate);
+    raise exception 'older package-less estimate source accepted';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version context unavailable' then raise; end if;
+  end;
+  begin
+    perform * from public.command_crm_publish_proposal_version_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      null,'83000000-0000-4000-8000-000000000002',old_null_estimate,
+      'version-publish-old-null-0000','crm_proposal_version.v1',null_package_snapshot,
+      public.crm_render_proposal_snapshot_v1(null_package_snapshot),null);
+    raise exception 'older package-less estimate published';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version context unavailable' then raise; end if;
+  end;
   select updated_at into token from public.crm_site_work_packages
     where id='83000000-0000-4000-8000-000000000005';
   perform set_config('r34.initial_token',token::text,true);
@@ -438,6 +484,17 @@ do $$ declare org uuid:=current_setting('r34.org')::uuid; begin
   if (select count(*) from public.read_crm_proposal_candidates(org,'83000000-0000-4000-8000-000000000003'))<>1
     then raise exception 'assigned estimator proposal candidate read failed'; end if;
 end $$;
+reset role;
+insert into public.proposals(id,organization_id,user_id,title,client_name,client_email,
+  contact_phone,service_location,facility_size,service_type,service_frequency,
+  generated_content,crm_opportunity_id,crm_customer_id,crm_property_id)
+select '83000000-0000-4000-8000-000000000010',active_organization_id,id,
+  'Inaccessible source proposal','Version Customer','version-customer@example.test',
+  '555-0110','1 Test Way',1000,'residential','weekly','Unversioned source',
+  '83000000-0000-4000-8000-000000000003','83000000-0000-4000-8000-000000000001',
+  '83000000-0000-4000-8000-000000000002'
+from public.profiles where id='11111111-1111-4111-8111-111111111111';
+set local role authenticated;
 select set_config('request.jwt.claim.sub','87777777-7777-4777-8777-777777777777',true);
 do $$ declare org uuid:=current_setting('r34.org')::uuid; err text; begin
   begin
@@ -458,6 +515,14 @@ do $$ declare org uuid:=current_setting('r34.org')::uuid; err text; begin
   values('83000000-0000-4000-8000-000000000008',org,auth.uid(),'Unbound proposal',
     'Version Customer','version-customer@example.test','555-0108','1 Test Way',1000,
     'residential','weekly','Allowed');
+  begin
+    update public.proposals set crm_opportunity_id=null,crm_customer_id=null,crm_property_id=null
+      where id='83000000-0000-4000-8000-000000000010';
+    raise exception 'unassigned estimator cleared inaccessible old proposal binding';
+  exception when insufficient_privilege then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal binding unavailable' then raise; end if;
+  end;
   begin
     update public.proposals set crm_opportunity_id='83000000-0000-4000-8000-000000000003',
       crm_customer_id='83000000-0000-4000-8000-000000000001',

@@ -92,6 +92,9 @@ for (const marker of [
   'nested private pricing key accepted', 'mismatched estimate amount accepted',
   'mismatched property context accepted',
   'same-org unassigned estimator published a proposal version',
+  'older package-less estimate source accepted',
+  'older package-less estimate published',
+  'unassigned estimator cleared inaccessible old proposal binding',
   'closed opportunity proposal version accepted', 'closed-state exact replay failed',
   'R3_4_ADVERSARIAL_ROLE_MATRIX_PASS',
 ]) assert.ok(matrix.includes(marker), `matrix missing ${marker}`);
