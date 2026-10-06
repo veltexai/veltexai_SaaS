@@ -3708,3 +3708,19 @@ After any material action, append or revise the relevant section with:
   changed hosted state. R3-4 is now `INDEPENDENT REVIEW PASS / ISOLATED PREVIEW
   REQUIRED`; it is not yet founder-accepted and does not yet unlock R3-4.1 or
   R3-5.
+- **R3-4 GUARDED ISOLATED-PREVIEW ARTIFACT — PREPARED / LOCALLY VERIFIED:**
+  `quality/r3-4-proposal-versions/build-preview-apply.mjs` deterministically
+  produces `/private/tmp/veltex-r3-4-preview-apply.sql`, SHA-256
+  `848411b6bca90bafef3b055353d219643a1fdf8a34d1fea7551e161c85d9ac40`.
+  The artifact binds exact migration SHA-256
+  `86f438fe3a4516093534faf45d74bff4020dc68e9e40014f912e7152685678a3`,
+  requires the exact 68-version pre-history, applies the 69th migration inside
+  one transaction and advisory lock, preserves existing CRM and proposal row
+  content, checks RLS/routines/triggers/privileges and records exactly one
+  migration-history row. Its deterministic contract test passed, and a fresh
+  disposable PostgreSQL replay of the first 68 migrations followed by the
+  generated artifact returned `R3_4_PREVIEW_APPLY_PASS` with history `69`, one
+  R3-4 history record and empty new version/receipt tables. The disposable
+  server was stopped. No hosted environment changed. Applying this exact file
+  to isolated project `ynzkwctwlssjcsjmahey` and advancing only the Vercel
+  Preview branch remain separately gated; Production is excluded.
