@@ -2647,17 +2647,20 @@ After any material action, append or revise the relevant section with:
   this failed candidate are superseded for release. Next is a bounded local
   correction, executable regression expansion and complete reproducible packet;
   an independent `PASS` is still required before Preview or deployment.
-- **R3-4 ENTRY CONTRACT PREPARED / IMPLEMENTATION NOT STARTED:** While the
-  R3-3 external-send gate waits, the next dependency was advanced without
-  crossing it. `R3_4_IMMUTABLE_PROPOSAL_VERSION_CONTRACT.md` freezes an
+- **R3-4 ENTRY GATE SATISFIED / LOCAL IMPLEMENTATION AUTHORIZED:** R3-3 now
+  has independent `PASS`, isolated-Preview desktop/390px acceptance and founder
+  acceptance on exact application commit `44ca80391bd570fa5dc717686163f999529fe432`.
+  `R3_4_IMMUTABLE_PROPOSAL_VERSION_CONTRACT.md` freezes an
   additive append-only child of the existing mutable Release 1 proposal,
   exact R3-3 estimate/package/opportunity/property binding, strict
   customer-visible privacy allowlist, canonical content/rendered hashes,
   concurrency/idempotency rules and the boundary that publishing is neither
   delivery nor acceptance. It preserves existing proposal/edit/send/tracking
-  paths and explicitly leaves C0 acceptance to R3-5. Status is `ENTRY CONTRACT
-  PREPARED / IMPLEMENTATION DEPENDENCY-BLOCKED`; no R3-4 migration, route, UI,
-  proposal bytes or hosted state were created.
+  paths and explicitly leaves C0 acceptance to R3-5. The dependency block has
+  therefore been removed for local work only. Begin with the additive schema,
+  private publish command and executable binding/privacy/concurrency matrices.
+  No R3-4 migration, route, UI, proposal bytes or hosted state existed at the
+  time of this gate transition; Preview and Production remain separately gated.
 - **R3-5 C0 ENTRY CONTRACT PREPARED / IMPLEMENTATION NOT STARTED:**
   `R3_5_C0_ACCEPTANCE_RECEIPT_CONTRACT.md` now freezes the bounded customer
   proposal room: hash-only purpose-bound expiring tokens, immutable

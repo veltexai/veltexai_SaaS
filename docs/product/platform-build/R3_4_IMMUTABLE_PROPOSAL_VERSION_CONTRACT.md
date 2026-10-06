@@ -1,11 +1,14 @@
 # R3-4 immutable proposal-version contract
 
-Status: **ENTRY CONTRACT PREPARED / IMPLEMENTATION DEPENDENCY-BLOCKED**
+Status: **ENTRY GATE SATISFIED / LOCAL IMPLEMENTATION AUTHORIZED**
 
-R3-4 may start only after R3-3 has an independent `PASS`, isolated-Preview
-acceptance and founder acceptance. This document freezes the smallest useful
-first-build boundary so implementation can begin without reopening accepted
-R2, R3-1, R3-2 or deterministic-estimate decisions.
+R3-4 could start only after R3-3 had an independent `PASS`, isolated-Preview
+acceptance and founder acceptance. Those prerequisites are now satisfied on
+exact accepted R3-3 application commit
+`44ca80391bd570fa5dc717686163f999529fe432`. This document freezes the
+smallest useful first-build boundary so local implementation can proceed
+without reopening accepted R2, R3-1, R3-2 or deterministic-estimate decisions.
+This status does not authorize Preview or Production mutation.
 
 ## 1. Outcome
 
@@ -215,6 +218,8 @@ contain a second proposal renderer or pricing engine.
 
 ## 10. Next action
 
-Do not implement this contract while R3-3 is awaiting independent re-review.
-After R3-3 `PASS`, isolated Preview acceptance and founder acceptance, recheck
-the accepted bytes and implement only this additive R3-4 boundary.
+Implement only this additive R3-4 boundary on top of the accepted R3-3 bytes.
+Begin with the append-only schema, private publish command, exact binding and
+privacy/concurrency/idempotency matrices. Application composition and operator
+UI follow only after that server contract is executable. Hosted Preview remains
+a separately reviewed and approved gate; Production remains excluded.
