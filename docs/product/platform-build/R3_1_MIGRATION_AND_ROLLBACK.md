@@ -1,8 +1,51 @@
 # R3-1 CRM migration and rollback
 
-Status: local candidate procedure. Do not run against a hosted target until the
-exact migration, application commit and evidence bundle pass independent review
-and receive the target-specific approval required by the operating ledger.
+Status: accepted procedure; rollback-only production proof independently
+reviewed. No production execution, migration, deployment, environment change or
+feature enable is authorized by this document.
+
+## Frozen release identities
+
+- Accepted application commit:
+  `0d765d7a9ae33c43f95e2721c661b651e7dbf76f`.
+- Migration `20261001000000` SHA-256:
+  `526b56f0bd32c542f77b89e61df79eed18304e7cccd4b06d5c458fa3273ea795`.
+- Migration `20261002000000` SHA-256:
+  `85fac17469510408ab777a04101c585850fd5774874e0fb01c663c8fddd3cf18`.
+- Fresh read-only Production capture SHA-256:
+  `d22b04c72c863cde6b2eaa04a61f0f322df11493968f4478afdacf5d7a97aa11`.
+- Independently reviewed rollback-only proof:
+  `/private/tmp/veltex-r3-1-production-rollback-proof-v2.sql`, 701,235
+  bytes, SHA-256
+  `2b81526cb8bb3db8ec5c5825ec900684ecc5e706a7b4fa38da65b097c152ddc1`.
+- Deterministic post-proof cleanup query:
+  `/private/tmp/veltex-r3-1-production-rollback-cleanup.sql`, 12,325
+  bytes, SHA-256
+  `3458a39249e7e4a49321feab315de6df21e9d32bacbd4efea92914d0a438f2c8`.
+
+Claude and Cursor both returned `PASS` for the exact proof packet. Those
+verdicts advance only the proof-execution gate; they do not authorize any
+hosted action.
+
+## Gate separation — do not collapse
+
+Execute each row only after its own prerequisite and action-specific approval.
+A later approval never retroactively approves an earlier row.
+
+| Gate | Exact action | Required evidence before advancing |
+|---|---|---|
+| P0 | Re-read project `iwoaaljitifloolszxlu` identity and recompute proof hash | Correct Production target; exact proof SHA |
+| P1 | Run the entire rollback-only proof once in one dedicated non-pooler `postgres` session during a low-traffic window | Complete prefixed `R3_1_ROLLBACK_PROOF:` `P0001`; no client continuation after error |
+| P2 | Close/roll back the aborted proof session; run the exact cleanup query in a new session | `cleanup_pass=true`, history `64`, planned history `0`, CRM relations `0` |
+| P3 | Independently reconcile P1/P2 evidence | Hashes and counts match; no persistence or unexplained drift |
+| E1 | Set Production-only server variable to exact lowercase `CRM_WORKSPACE_ENABLED=false`, read it back, redeploy | Exact literal confirmed; current Production remains CRM-disabled |
+| D1 | Generate and independently review a commit-capable atomic migration bundle from the fresh post-proof state | Exact bytes/hash, refusal checks and rollback procedure |
+| D2 | Apply the separately approved migration bundle | Both versions present and complete postflight passes |
+| A1 | Deploy exact application commit `0d765d7` while CRM remains disabled | Alias/commit identity, baseline proposal smoke checks and uniform CRM 404 |
+| F1 | Enable CRM with a separately approved Production setting change and redeploy | Authenticated synthetic smoke tests, monitoring and immediate disable path |
+
+Never deploy the integration branch for this release: it contains accepted
+later R3 work that is outside the R3-1 production artifact.
 
 ## Forward procedure
 

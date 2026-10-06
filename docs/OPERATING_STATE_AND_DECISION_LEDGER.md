@@ -221,6 +221,15 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
   public `crm_*` relation residue, a wrong PostgreSQL version or a non-`postgres`
   user, and reports only counts/hashes inside `BEGIN TRANSACTION READ ONLY` /
   `ROLLBACK`. No hosted state changed.
+- **R3-1 PRODUCTION GATES FROZEN SEPARATELY:**
+  `docs/product/platform-build/R3_1_MIGRATION_AND_ROLLBACK.md` now binds the
+  accepted app/migration/capture/proof/cleanup identities and explicitly
+  separates rollback-proof execution, cleanup reconciliation, Production
+  kill-switch configuration, commit-capable migration, exact app deployment
+  and feature enablement. Approval for one row does not authorize another, and
+  the integration branch is forbidden as the R3-1 production artifact because
+  it contains later accepted R3 work. This is release preparation only; no
+  hosted state changed.
 
 ## Current commercial workstream
 
