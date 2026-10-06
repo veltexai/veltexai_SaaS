@@ -87,7 +87,7 @@ do $$
 declare org uuid:=current_setting('r34.org')::uuid;
   estimate_id uuid:=current_setting('r34.estimate')::uuid;
   token timestamptz; first_result record; replay_result record; second_result record;
-  snapshot jsonb; err text;
+  snapshot jsonb; changed_snapshot jsonb; err text;
 begin
   snapshot:=jsonb_build_object(
     'schemaVersion','crm_proposal_version.v1','title','Prepared cleaning proposal',
@@ -129,15 +129,31 @@ begin
     public.crm_render_proposal_snapshot_v1(snapshot),token);
   if not replay_result.replayed or replay_result.proposal_version_id<>first_result.proposal_version_id
      or replay_result.version_number<>1 then raise exception 'exact version replay failed'; end if;
+  changed_snapshot:=jsonb_set(snapshot,'{introduction}','"Changed introduction"'::jsonb);
   begin
     perform * from public.command_crm_publish_proposal_version_internal(
       '11111111-1111-4111-8111-111111111111',org,
       '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
       '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
-      estimate_id,'version-publish-owner-0001','crm_proposal_version.v1',snapshot,
-      public.crm_render_proposal_snapshot_v1(snapshot)||' changed',token);
+      estimate_id,'version-publish-owner-0001','crm_proposal_version.v1',changed_snapshot,
+      public.crm_render_proposal_snapshot_v1(changed_snapshot),token);
     raise exception 'changed version replay accepted';
-  exception when check_violation then null; end;
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version key already used' then raise; end if;
+  end;
+  begin
+    perform * from public.command_crm_publish_proposal_version_internal(
+      '85555555-5555-4555-8555-555555555555',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
+      estimate_id,'version-publish-owner-0001','crm_proposal_version.v1',snapshot,
+      public.crm_render_proposal_snapshot_v1(snapshot),token);
+    raise exception 'actor-bound receipt reuse accepted';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version key already used' then raise; end if;
+  end;
   begin
     perform * from public.command_crm_publish_proposal_version_internal(
       '11111111-1111-4111-8111-111111111111',org,
@@ -172,15 +188,47 @@ begin
     raise exception 'nested private pricing key accepted';
   exception when check_violation then null; end;
   begin
+    changed_snapshot:=jsonb_set(snapshot,'{customer,email}','{"private":"object"}'::jsonb);
+    perform * from public.command_crm_publish_proposal_version_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
+      estimate_id,'version-publish-object-leaf-0005','crm_proposal_version.v1',changed_snapshot,
+      public.crm_render_proposal_snapshot_v1(changed_snapshot),
+      (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
+    raise exception 'object-valued customer email accepted';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version content unavailable' then raise; end if;
+  end;
+  begin
+    changed_snapshot:=jsonb_set(snapshot,'{pricing,amountMinor}','"12500"'::jsonb);
+    perform * from public.command_crm_publish_proposal_version_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
+      estimate_id,'version-publish-string-amount-0005','crm_proposal_version.v1',changed_snapshot,
+      public.crm_render_proposal_snapshot_v1(changed_snapshot),
+      (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
+    raise exception 'string-valued amountMinor accepted';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version content unavailable' then raise; end if;
+  end;
+  begin
     perform * from public.command_crm_publish_proposal_version_internal(
       '11111111-1111-4111-8111-111111111111',org,
       '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
       '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',
       estimate_id,'version-publish-amount-0005','crm_proposal_version.v1',
-      jsonb_set(snapshot,'{pricing,amountMinor}','12600'::jsonb),public.crm_render_proposal_snapshot_v1(snapshot),
+      jsonb_set(snapshot,'{pricing,amountMinor}','12600'::jsonb),
+      public.crm_render_proposal_snapshot_v1(jsonb_set(snapshot,'{pricing,amountMinor}','12600'::jsonb)),
       (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
     raise exception 'mismatched estimate amount accepted';
-  exception when check_violation then null; end;
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version content unavailable' then raise; end if;
+  end;
   begin
     perform * from public.command_crm_publish_proposal_version_internal(
       '11111111-1111-4111-8111-111111111111',org,
@@ -208,6 +256,42 @@ begin
       (select updated_at from public.crm_site_work_packages where id='83000000-0000-4000-8000-000000000005'));
     raise exception 'same-org unassigned estimator published a proposal version';
   exception when insufficient_privilege then null; end;
+end $$;
+
+do $$
+declare org uuid:=current_setting('r34.org')::uuid;
+  estimate_id uuid:=current_setting('r34.estimate')::uuid; err text;
+begin
+  begin
+    perform public.read_crm_proposal_version_source_internal(
+      '87777777-7777-4777-8777-777777777777',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',estimate_id);
+    raise exception 'unassigned estimator read proposal-version source';
+  exception when insufficient_privilege then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version unavailable' then raise; end if;
+  end;
+  begin
+    perform public.read_crm_proposal_version_source_internal(
+      '86666666-6666-4666-8666-666666666666',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',estimate_id);
+    raise exception 'viewer read proposal-version source';
+  exception when insufficient_privilege then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version unavailable' then raise; end if;
+  end;
+  begin
+    perform public.read_crm_proposal_version_source_internal(
+      '22222222-2222-4222-8222-222222222222',org,
+      '83000000-0000-4000-8000-000000000004','83000000-0000-4000-8000-000000000003',
+      '83000000-0000-4000-8000-000000000005','83000000-0000-4000-8000-000000000002',estimate_id);
+    raise exception 'cross-tenant actor read proposal-version source';
+  exception when insufficient_privilege then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version unavailable' then raise; end if;
+  end;
 end $$;
 
 do $$
@@ -280,10 +364,35 @@ do $$ begin
   begin truncate public.crm_proposal_versions cascade;
     raise exception 'immutable version truncate accepted';
   exception when sqlstate '55000' then null; end;
+  begin update public.crm_proposal_version_commands set payload_sha256=repeat('0',64);
+    raise exception 'immutable proposal-version receipt update accepted';
+  exception when sqlstate '55000' then null; end;
+  begin delete from public.crm_proposal_version_commands;
+    raise exception 'immutable proposal-version receipt delete accepted';
+  exception when sqlstate '55000' then null; end;
+  begin truncate public.crm_proposal_version_commands;
+    raise exception 'immutable proposal-version receipt truncate accepted';
+  exception when sqlstate '55000' then null; end;
   begin update public.crm_site_work_packages set proposal_version_id=null
       where id='83000000-0000-4000-8000-000000000005';
     raise exception 'direct package proposal-version pointer clear accepted';
   exception when sqlstate '55000' then null; end;
+  insert into public.crm_estimate_runs(id,organization_id,opportunity_id,work_package_id,
+    property_id,request_key,engine_key,engine_version,input_snapshot,output_snapshot,
+    selected_scenario,selected_amount_minor,currency,pricing_basis,input_sha256,output_sha256,
+    created_by,created_at)
+  select '83000000-0000-4000-8000-000000000009',organization_id,opportunity_id,work_package_id,
+    property_id,'version-reestimate-pointer-reset',engine_key,engine_version,input_snapshot,
+    output_snapshot,selected_scenario,selected_amount_minor,currency,pricing_basis,input_sha256,
+    output_sha256,created_by,clock_timestamp()
+  from public.crm_estimate_runs where id=current_setting('r34.estimate')::uuid;
+  update public.crm_site_work_packages
+    set estimate_run_id='83000000-0000-4000-8000-000000000009'
+    where id='83000000-0000-4000-8000-000000000005';
+  if exists(select 1 from public.crm_site_work_packages
+      where id='83000000-0000-4000-8000-000000000005' and proposal_version_id is not null) then
+    raise exception 're-estimation did not invalidate proposal-version pointer';
+  end if;
   begin update public.proposals set crm_property_id='83000000-0000-4000-8000-000000000006'
       where id='83000000-0000-4000-8000-000000000004';
     raise exception 'versioned proposal binding mutation accepted';
@@ -328,6 +437,37 @@ do $$ declare org uuid:=current_setting('r34.org')::uuid; begin
     then raise exception 'assigned estimator version history unavailable'; end if;
   if (select count(*) from public.read_crm_proposal_candidates(org,'83000000-0000-4000-8000-000000000003'))<>1
     then raise exception 'assigned estimator proposal candidate read failed'; end if;
+end $$;
+select set_config('request.jwt.claim.sub','87777777-7777-4777-8777-777777777777',true);
+do $$ declare org uuid:=current_setting('r34.org')::uuid; err text; begin
+  begin
+    insert into public.proposals(id,organization_id,user_id,title,client_name,client_email,
+      service_location,facility_size,service_type,service_frequency,generated_content,
+      crm_opportunity_id,crm_customer_id,crm_property_id)
+    values('83000000-0000-4000-8000-000000000007',org,auth.uid(),'Unauthorized bound proposal',
+      'Version Customer','version-customer@example.test','1 Test Way',1000,'residential','weekly','Blocked',
+      '83000000-0000-4000-8000-000000000003','83000000-0000-4000-8000-000000000001',
+      '83000000-0000-4000-8000-000000000002');
+    raise exception 'unassigned estimator inserted a bound proposal';
+  exception when insufficient_privilege then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal binding unavailable' then raise; end if;
+  end;
+  insert into public.proposals(id,organization_id,user_id,title,client_name,client_email,
+    contact_phone,service_location,facility_size,service_type,service_frequency,generated_content)
+  values('83000000-0000-4000-8000-000000000008',org,auth.uid(),'Unbound proposal',
+    'Version Customer','version-customer@example.test','555-0108','1 Test Way',1000,
+    'residential','weekly','Allowed');
+  begin
+    update public.proposals set crm_opportunity_id='83000000-0000-4000-8000-000000000003',
+      crm_customer_id='83000000-0000-4000-8000-000000000001',
+      crm_property_id='83000000-0000-4000-8000-000000000002'
+    where id='83000000-0000-4000-8000-000000000008';
+    raise exception 'unassigned estimator rebound an unversioned proposal';
+  exception when insufficient_privilege then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal binding unavailable' then raise; end if;
+  end;
 end $$;
 select set_config('request.jwt.claim.sub','86666666-6666-4666-8666-666666666666',true);
 do $$ declare org uuid:=current_setting('r34.org')::uuid; begin

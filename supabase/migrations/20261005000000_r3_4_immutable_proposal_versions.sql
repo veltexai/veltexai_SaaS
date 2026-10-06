@@ -284,16 +284,42 @@ create trigger guard_crm_proposal_version_immutable before update or delete
 create trigger guard_crm_proposal_version_truncate before truncate
   on public.crm_proposal_versions for each statement
   execute function public.guard_crm_proposal_version_immutable();
+create trigger guard_crm_proposal_version_command_immutable before update or delete
+  on public.crm_proposal_version_commands for each row
+  execute function public.guard_crm_proposal_version_immutable();
+create trigger guard_crm_proposal_version_command_truncate before truncate
+  on public.crm_proposal_version_commands for each statement
+  execute function public.guard_crm_proposal_version_immutable();
 
 create function public.guard_crm_proposal_binding()
 returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
 declare opportunity_row public.crm_opportunities%rowtype;
+  old_opportunity_row public.crm_opportunities%rowtype;
 begin
-  if (new.crm_opportunity_id,new.crm_customer_id,new.crm_property_id) is not distinct from
-     (old.crm_opportunity_id,old.crm_customer_id,old.crm_property_id) then return new; end if;
-  if exists(select 1 from public.crm_proposal_versions v
-      where v.organization_id=old.organization_id and v.proposal_id=old.id) then
-    raise exception 'versioned proposal binding is immutable' using errcode='55000';
+  if tg_op='UPDATE' then
+    if (new.crm_opportunity_id,new.crm_customer_id,new.crm_property_id) is not distinct from
+       (old.crm_opportunity_id,old.crm_customer_id,old.crm_property_id) then return new; end if;
+    if exists(select 1 from public.crm_proposal_versions v
+        where v.organization_id=old.organization_id and v.proposal_id=old.id) then
+      raise exception 'versioned proposal binding is immutable' using errcode='55000';
+    end if;
+    if auth.uid() is null then return new; end if;
+    if old.crm_opportunity_id is not null then
+      select o.* into old_opportunity_row from public.crm_opportunities o
+        where o.organization_id=old.organization_id and o.id=old.crm_opportunity_id
+          and o.deleted_at is null;
+      if old_opportunity_row.id is null
+         or not public.can_access_crm_opportunity(old_opportunity_row.id) then
+        raise exception 'proposal binding unavailable' using errcode='42501';
+      end if;
+    end if;
+  end if;
+  if auth.uid() is null then return new; end if;
+  if new.crm_opportunity_id is null then
+    if new.crm_customer_id is not null or new.crm_property_id is not null then
+      raise exception 'proposal binding unavailable' using errcode='42501';
+    end if;
+    return new;
   end if;
   if new.crm_opportunity_id is not null then
     select o.* into opportunity_row from public.crm_opportunities o
@@ -310,7 +336,7 @@ end;
 $$;
 revoke all on function public.guard_crm_proposal_binding()
   from public,anon,authenticated,service_role;
-create trigger guard_crm_proposal_binding before update of crm_opportunity_id,crm_customer_id,crm_property_id
+create trigger guard_crm_proposal_binding before insert or update of crm_opportunity_id,crm_customer_id,crm_property_id
   on public.proposals for each row execute function public.guard_crm_proposal_binding();
 
 create function public.guard_crm_package_proposal_version_pointer()

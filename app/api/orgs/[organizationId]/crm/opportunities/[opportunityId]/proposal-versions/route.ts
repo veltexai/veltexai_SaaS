@@ -38,24 +38,21 @@ export async function GET(request: NextRequest, { params }: Context) {
     return NextResponse.json({ error: UNAVAILABLE }, { status: 503 });
   }
   const serviceClient = createServiceClient() as any;
-  let hydratedCandidates;
-  try {
-    hydratedCandidates = await Promise.all((candidates.data ?? []).map(async (candidate: any) => {
+  const hydratedCandidates = (await Promise.all((candidates.data ?? []).map(async (candidate: any) => {
+    try {
       const sourceResult = await serviceClient.rpc('read_crm_proposal_version_source_internal', {
         p_actor: context.user.id, p_organization: context.organizationId,
         p_proposal: candidate.id, p_opportunity: opportunityId,
         p_package: workPackageId, p_property: propertyId, p_estimate_run: estimateRunId,
       });
-      if (sourceResult.error || !sourceResult.data) throw new Error('source unavailable');
+      if (sourceResult.error || !sourceResult.data) return null;
       const composed = composeProposalVersion({ ...sourceResult.data,
         opportunityId, propertyId, workPackageId });
       return { ...candidate, preview: { rendered_content: composed.renderedContent,
         scope_lines: composed.snapshot.scopeLines, amount_minor: composed.snapshot.pricing.amountMinor,
         currency: composed.snapshot.pricing.currency, pricing_basis: composed.snapshot.pricing.basis } };
-    }));
-  } catch {
-    return NextResponse.json({ error: UNAVAILABLE }, { status: 503 });
-  }
+    } catch { return null; }
+  }))).filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null);
   return NextResponse.json({ data: {
     candidates: hydratedCandidates,
     versions: versions.data ?? [],

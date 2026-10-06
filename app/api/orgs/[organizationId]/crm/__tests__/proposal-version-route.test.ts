@@ -133,6 +133,37 @@ describe('R3-4 proposal-version route', () => {
     });
   });
 
+  it('preserves history and omits candidates that fail source validation', async () => {
+    clients();
+    const invalidProposal = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const authRpc = jest.fn((name: string) => Promise.resolve(name === 'read_crm_proposal_candidates'
+      ? { data: [
+        { id: PROPOSAL, title: 'Residential proposal', property_id: PROPERTY },
+        { id: invalidProposal, title: 'Unrelated proposal', property_id: PROPERTY },
+      ], error: null }
+      : { data: [{ id: '99999999-9999-4999-8999-999999999999', version_number: 1 }], error: null }));
+    createClient.mockResolvedValue({
+      auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: USER } }, error: null }) },
+      from: jest.fn().mockReturnValue(chain({ role: 'estimator' })),
+      rpc: authRpc,
+    });
+    const source = {
+      proposal: rows.proposals, companyProfile: rows.company_profiles,
+      customer: rows.crm_customers, property: rows.crm_properties, estimate: rows.crm_estimate_runs,
+    };
+    createServiceClient.mockReturnValue({ rpc: jest.fn((_name: string, args: any) =>
+      Promise.resolve(args.p_proposal === invalidProposal
+        ? { data: null, error: { code: '23514' } }
+        : { data: source, error: null })) });
+    const { GET } = await import('../opportunities/[opportunityId]/proposal-versions/route');
+    const response = await GET(new NextRequest(`http://local/proposal-versions?estimateRunId=${ESTIMATE}&propertyId=${PROPERTY}&workPackageId=${PACKAGE}`), context);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ data: {
+      candidates: [expect.objectContaining({ id: PROPOSAL })],
+      versions: [{ id: '99999999-9999-4999-8999-999999999999', version_number: 1 }],
+    } });
+  });
+
   it('does not accept browser-supplied content or prices', async () => {
     const rpc = clients();
     const { POST } = await import('../opportunities/[opportunityId]/proposal-versions/route');

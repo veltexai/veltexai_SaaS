@@ -56,6 +56,10 @@ assert.match(migration, /p_rendered_content<>public\.crm_render_proposal_snapsho
 assert.match(migration, /'actor',p_actor,'proposal',p_proposal/);
 assert.match(migration, /new\.estimate_run_id is distinct from old\.estimate_run_id[\s\S]*new\.proposal_version_id:=null/);
 assert.match(migration, /versioned proposal binding is immutable/);
+assert.match(migration, /before insert or update of crm_opportunity_id,crm_customer_id,crm_property_id/);
+assert.match(migration, /auth\.uid\(\) is null then return new[\s\S]*old_opportunity_row\.id is null[\s\S]*can_access_crm_opportunity\(old_opportunity_row\.id\)/);
+assert.match(migration, /guard_crm_proposal_version_command_immutable before update or delete/);
+assert.match(migration, /guard_crm_proposal_version_command_truncate before truncate/);
 assert.match(migration, /set_config\('veltex\.proposal_version_command','1',true\)[\s\S]*set_config\('veltex\.proposal_version_command','',true\)/);
 
 for (const marker of [
@@ -68,6 +72,18 @@ for (const marker of [
   'immutable version truncate accepted',
   'direct package proposal-version pointer clear accepted',
   'versioned proposal binding mutation accepted',
+  'unassigned estimator inserted a bound proposal',
+  'unassigned estimator rebound an unversioned proposal',
+  'actor-bound receipt reuse accepted',
+  'object-valued customer email accepted',
+  'string-valued amountMinor accepted',
+  'immutable proposal-version receipt update accepted',
+  'immutable proposal-version receipt delete accepted',
+  'immutable proposal-version receipt truncate accepted',
+  're-estimation did not invalidate proposal-version pointer',
+  'unassigned estimator read proposal-version source',
+  'viewer read proposal-version source',
+  'cross-tenant actor read proposal-version source',
   'authenticated direct version insert accepted',
   'viewer received immutable version metadata',
   'owner proposal candidate projection mismatch',
