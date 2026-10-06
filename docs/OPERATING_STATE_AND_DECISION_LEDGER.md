@@ -3420,16 +3420,26 @@ After any material action, append or revise the relevant section with:
   mistaking a proper-subset acceptance for the full offered total. This is
   contract reconciliation only; R3-5/R3-6 implementation remains dependency-
   blocked and no hosted state changed.
-- **CURRENT ACTION-TIME QUEUE (HELD WHILE FOUNDER IS AWAY):** Ordinary local
-  planning, documentation, tests and evidence work may continue. The next
-  representational actions are the already drafted Claude database/security
-  and Cursor operator/accessibility re-review submissions for exact R3-4
-  packet
+- **R3-4 STRENGTHENED INDEPENDENT RE-REVIEWS SUBMITTED / PENDING (2026-10-06
+  Pacific):** Founder supplied action-time approval for both representational
+  submissions. The superseded plain-source Claude draft attachment was removed
+  and the exact strengthened complete-history packet
   `/private/tmp/veltex-r3-4-remediation-1883dbe-bundle-review.zip`, SHA-256
-  `930b4ed9e7c915434715367b68d2951e26f0f52fdfa891c95bfa993000d9a730`.
-  They remain held for action-time confirmation. The independent-review bundle
-  and contained complete-history Git bundle were reverified without drift.
-  Production R3-1 also remains held: its non-committing rollback proof has
+  `930b4ed9e7c915434715367b68d2951e26f0f52fdfa891c95bfa993000d9a730`,
+  was visibly attached and submitted once in the established Claude database/
+  security chat. The matching bounded Cursor operator/accessibility follow-up
+  was visibly submitted once against the same local packet. Both instructions
+  bind embedded Git bundle SHA-256
+  `7d1478ff2a9b1a9d81093a780fbc458bc8deb46363f86497bf1124029d39376d`,
+  bundle tip `1883dbea37235bae2d8e93c28ea2de1b73f1c00d`, remediation
+  implementation `cf5e1c3557cb05c74397279a51a751da5d3b1f96`, accepted R3-3
+  base `44ca80391bd570fa5dc717686163f999529fe432` and migration SHA-256
+  `eb55c73444aef2c930e7925991bedab980b44f1992e272cee500ce33b136d443`.
+  Claude visibly entered `Claude is responding`; Cursor visibly entered
+  `Planning next moves`. Verdicts are `PENDING`. Both assignments prohibit
+  edits, commits, pushes, deployments, credentials and hosted Preview or
+  Production access. No hosted state changed. Production R3-1 remains held:
+  its non-committing rollback proof has
   independent PASS, but literal Production-scoped
   `CRM_WORKSPACE_ENABLED=false`, provider readback, exact rollback-only proof
   execution, postflight reconciliation, commit-capable database artifact,
@@ -3456,17 +3466,19 @@ After any material action, append or revise the relevant section with:
   header was split by increment so A0–A8/R3-6 blocks R3-7 while accepted R3-5
   receipt events independently gate R3-8. No implementation or hosted state
   changed.
-- **LIVE REVIEW-SURFACE CHECK — HELD STATE CORRECTED:** A read-only UI
+- **LIVE REVIEW-SURFACE CHECK — HISTORICAL HELD STATE / SUPERSEDED BY
+  SUBMISSION:** A read-only UI
   inspection confirmed that Claude's existing chat still contains an unsent
   draft with the older plain source archive
   `veltex-r3-4-remediation-1883dbe-review.zip` and its SHA, while Cursor's R3-4
   follow-up field is empty after the original `FAIL` verdict. Neither review
-  request was sent. On founder return, the exact action-time sequence is to
-  replace the obsolete Claude draft attachment/prompt with the strengthened
-  bundle packet, compose the matching Cursor follow-up against that exact local
-  packet, and confirm immediately before each representational send. Removing
-  the old attachment, uploading the strengthened packet and sending remain UI
-  actions; no such action occurred during this read-only check.
+  request was sent at that time. The later founder-approved action-time
+  sequence replaced the obsolete Claude draft attachment/prompt with the
+  strengthened bundle packet, composed the matching Cursor follow-up against
+  that exact local packet and submitted both bounded re-reviews exactly once,
+  as recorded in
+  the current pending-review entry above. No Preview or Production mutation
+  occurred.
 - **STAGES 3–5 IMPLEMENTATION REUSE MAPS VERIFIED:** Fresh read-only code/schema
   audits replaced generic reuse assumptions with exact current primitives.
   Stage 3 can reuse CRM validators, caller-bound idempotent commands, tenant
