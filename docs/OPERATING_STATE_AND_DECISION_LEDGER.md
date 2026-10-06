@@ -3337,3 +3337,18 @@ After any material action, append or revise the relevant section with:
   next clean full run passed through `HARNESS COMPLETE`. Production and Preview
   were not accessed or changed. R3-4 remains `LOCAL REMEDIATION VERIFIED / INDEPENDENT RE-REVIEW
   REQUIRED`; it does not unlock R3-5 or authorize deployment.
+- **CRYPTOGRAPHIC RE-REVIEW HANDOFF PREPARED / NOT DISPATCHED:** The first
+  remediation source archive
+  `/private/tmp/veltex-r3-4-remediation-1883dbe-review.zip` remains valid with
+  SHA-256 `4db22ffdf4620fba3da28c61ef0283756c3055254c4cb1645008a7b86248d254`,
+  but a plain Git archive cannot independently prove the claimed commit graph.
+  The strengthened packet
+  `/private/tmp/veltex-r3-4-remediation-1883dbe-bundle-review.zip` is 87 MiB,
+  passes `unzip -t`, has SHA-256
+  `65423de327c927eeec9a9265a7d1c127fd070d1a1dcb893480822d9d2e2d213c`
+  and contains a complete-history Git bundle. `git bundle verify` proves exact
+  branch tip `1883dbea37235bae2d8e93c28ea2de1b73f1c00d`; bundle SHA-256 is
+  `7d1478ff2a9b1a9d81093a780fbc458bc8deb46363f86497bf1124029d39376d`.
+  Claude and Cursor follow-ups are fully drafted against this exact packet but
+  remain unsent pending the required action-time representational-message
+  confirmation. No hosted system, Preview or production state changed.
