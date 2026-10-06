@@ -3463,3 +3463,14 @@ After any material action, append or revise the relevant section with:
   legacy paths conflict with the bounded ordinary lanes; upholstery, tile/
   grout and typed post-construction packs are absent. No implementation or
   hosted state changed.
+- **STAGE 3 / STAGE 4 ENTRY DECISIONS PREPARED:** Two dependency-gated decision
+  records now convert the verified reuse maps into bounded recommended defaults.
+  Stage 3 freezes a UTF-8 CSV first build, 10,000-row/25-MiB limits, explicit
+  dedupe choices, unknown consent without provenance, reversible legacy mapping,
+  byte-preserving links, bounded undo and all-plan encrypted export. Stage 4
+  F0B freezes the recommended immutable C0-to-agreement boundary, one-currency
+  first build, organization numbering, operator/provider tax source,
+  separation-of-duty, external bridge before native invoices, connected hosted
+  payments and complete provider-event lineage. Every choice remains marked
+  `PENDING` until the predecessor and founder gates close; no implementation,
+  provider, credential, payment, Preview or production action occurred.
