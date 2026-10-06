@@ -3603,3 +3603,24 @@ After any material action, append or revise the relevant section with:
   `LOCAL SECOND REMEDIATION VERIFIED / CLAUDE DELTA RE-REVIEW AND CURSOR
   REGRESSION REQUIRED`. No Preview, Production, credential, deployment,
   customer-message, payment or campaign state changed.
+- **R3-4 SECOND-REMEDIATION REVIEWS SUBMITTED / PENDING (2026-10-06
+  Pacific):** Founder supplied action-time approval for both representational
+  submissions. The exact complete-history packet
+  `/private/tmp/veltex-r3-4-second-remediation-341ab97-bundle-review.zip`
+  passed `unzip -t`, has SHA-256
+  `5f988c9c7469c0ff840561b58e2fac790809f26b77ab85e02cfaaf4878723346`
+  and contains embedded bundle SHA-256
+  `cedc347dd01682e5589b2cc4b6c43b3ace6df976bcbed0a1e9bd843a8855fa87`.
+  `git bundle verify` reports complete history at exact branch tip
+  `341ab970c7fc29ade1340ce5011b4a3d9488b453`; a clean clone checked out that
+  exact tip. The packet binds second-remediation implementation
+  `aa48b5eabd03e3dd4babf313c7b473a9920467b1`, first remediation
+  `cf5e1c3557cb05c74397279a51a751da5d3b1f96`, original review state
+  `508170c27916130a1061012cc81ff841069ed127`, accepted R3-3 base
+  `44ca80391bd570fa5dc717686163f999529fe432` and migration SHA-256
+  `86f438fe3a4516093534faf45d74bff4020dc68e9e40014f912e7152685678a3`.
+  Claude visibly received the attached ZIP and entered `Claude is responding`
+  on the bounded M1-M3 delta review. Cursor visibly received the matching
+  bounded regression instructions and entered `Planning next moves`. Both
+  assignments prohibit edits, commits, pushes, deployments, credentials and
+  hosted Preview or Production access. No hosted state changed.
