@@ -3450,3 +3450,16 @@ After any material action, append or revise the relevant section with:
   readiness packets now name absent schemas and decisions so later work starts
   additively from accepted predecessors rather than repurposing unsafe legacy
   code. No implementation or hosted state changed.
+- **STAGES 6–7 IMPLEMENTATION REUSE MAPS VERIFIED:** Stage 6 may reuse accepted
+  tenant/audit/outbox, immutable-document, reduced-projection and adversarial
+  test patterns, but legacy plaintext tracking IDs, mutable proposal status,
+  browser interaction tracking, raw rendered HTML and owner-subscription-gated
+  downloads are not portal identity, C0 or QA evidence. The readiness packet
+  now records the missing C0/portal/inspection/corrective-action/re-service/
+  consent/rate-limit boundaries. Stage 7 may reuse the v2 catalog/schema/
+  pricing/frozen-snapshot architecture and both regression baselines, while
+  static taxonomy and legacy carpet/window/floor recognition remain explicitly
+  non-executable evidence. Current elevated-window and broad chemical-floor
+  legacy paths conflict with the bounded ordinary lanes; upholstery, tile/
+  grout and typed post-construction packs are absent. No implementation or
+  hosted state changed.

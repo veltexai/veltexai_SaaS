@@ -35,6 +35,37 @@ the narrow RPC and customer-safe projection patterns, but plaintext tracking
 IDs, mutable proposals and operator-set accepted status cannot be promoted into
 C0 acceptance evidence.
 
+## Current code reuse and safety map
+
+- Reuse accepted R2 organization/membership, caller-bound role helpers,
+  immutable audit and service-only outbox patterns for portal stakeholder and
+  QA records.
+- Reuse accepted R3-4 immutable proposal bindings, strict customer-safe
+  snapshots, deterministic rendering and direct-DML denial as the document
+  foundation. Its publisher remains service-only and is not a portal command.
+- Tracked-link revocation, reduced token projections and token-resolved routes
+  are narrow resolver/revocation patterns only. C0 must replace their plaintext
+  token, mutable proposal and missing purpose/expiry/key-rotation semantics.
+- The public proposal component may provide responsive card/download/error
+  building blocks only after its data boundary is replaced and any rendered
+  HTML receives a proven sanitization boundary.
+- Extend the R2/R3 adversarial role, migration, API, replay, concurrency and
+  cross-tenant harnesses rather than treating current link tests as portal
+  evidence.
+
+Existing tracking captures browser referrer/user-agent and broad interaction
+details, exposes anonymous RPCs around plaintext identifiers, reads mutable
+legacy proposal status/content, and ties downloads to the owner's Veltex
+subscription. It is not a portal identity, C0 receipt, QA audit or privacy-safe
+default. Future portal action/audit tables remain command-only and deny direct
+authenticated writes.
+
+No current schema implements the C0 token/response/receipt records, portal
+identity/stakeholder assignments, inspection templates/results, deficiencies,
+corrective actions, re-service, consent/suppression or attachment privacy.
+Privacy-bounded rate limiting and token-key management also require an explicit
+design; no current dependency proves those capabilities.
+
 ## Expanded portal C1–C7
 
 - Separate portal identity and customer-stakeholder assignments.

@@ -25,6 +25,29 @@ service engines.
   adapter. Legacy recognition is not specialty implementation.
 - Versioned location-pricing inputs after their own operator evidence passes.
 
+## Current code reuse and safety map
+
+- Reuse `features/service-catalog/versions/v2` for versioned records, strict
+  schemas, regulated-hazard refusal, deterministic low/base/high pricing,
+  frozen snapshots and read-only legacy adapters.
+- Reuse accepted service-catalog persistence, authenticated preview/profile
+  routes and location-pricing provenance only after each service's evidence
+  gate. Reuse catalog, remediation, legacy-golden, preview-route and location
+  tests as regression baselines.
+- `service-expansion-catalog.ts` is static discovery taxonomy only. Its IDs,
+  risk tier, units and required-input labels do not supply an executable pack.
+- Legacy carpet/window/floor selectors, schemas, add-ons and heuristic pricing
+  remain compatibility paths. They are unversioned and do not establish Stage
+  7 evidence, safety or operator acceptance.
+
+The legacy window path permits elevated/multi-story/lift work and therefore
+conflicts with the bounded ground/interior ordinary lane. The legacy floor path
+combines deep clean, strip/wax, refinish, seal and polish without the required
+separate chemistry/equipment review. Post-construction is marketing/scope text,
+not a typed pack. Upholstery and tile/grout have no executable independent
+packs. Pressure/soft washing and roof/gutter are not current ordinary candidates
+and remain outside the first six service gates.
+
 ## Deliverables required per ordinary service
 
 - Versioned service/catalog record and additive migration.
