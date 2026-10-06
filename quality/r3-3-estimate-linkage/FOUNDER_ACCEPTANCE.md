@@ -1,6 +1,6 @@
 # R3-3 founder acceptance — deterministic estimate linkage
 
-Status: **INDEPENDENT PASS / ISOLATED PREVIEW AND FOUNDER ACCEPTANCE PENDING**.
+Status: **INDEPENDENT PASS / ISOLATED PREVIEW ACCEPTANCE PASS / FOUNDER REVIEW PENDING**.
 
 This checklist does not authorize production deployment. Run it only after an
 independent `PASS`, on the approved isolated preview, using the exact reviewed
@@ -120,11 +120,35 @@ At exactly 390 CSS pixels, record `window.innerWidth` and
 - **Production exclusion — PASS:** no production database, deployment, alias,
   user or credential was selected or changed.
 
+## Preview operator acceptance after service-key rebind — 2026-10-05 Pacific
+
+- **Exact deployment — PASS:** only the branch-scoped Preview service-role
+  binding was replaced, without recording its value, and exact reviewed commit
+  `44ca80391bd570fa5dc717686163f999529fe432` was redeployed. Deployment
+  `7PMfguZPKCGjBLPPkxWS7Zi8XVKU` reached `Ready` at
+  `https://veltex-services-veliz-7h1r18zkj-veltex-ai.vercel.app`.
+- **Desktop save and persistence — PASS:** synthetic opportunity
+  `a2370d90-14e7-4b93-a538-7637f249e20f` saved Base exactly once at
+  `$280.00 / turn`; CRM displayed the internal planning estimate. Reload showed
+  exactly one prior-estimate row (`$280.00 · base · per turn · 10/5/2026,
+  11:33:44 PM`). No duplicate was created.
+- **Genuine 390 px — PASS:** `window.innerWidth` and
+  `document.documentElement.scrollWidth` both measured `390`; viewport height
+  was `844`. The workflow and prior history remained visible without horizontal
+  overflow. All three scenario controls and Save measured exactly 44 CSS pixels
+  high; their respective widths were 80, 81, 81 and 236 CSS pixels.
+- **Credential teardown after rebind — PASS:** the temporary password for only
+  the existing synthetic Preview user was replaced with a fresh unknown random
+  value. Supabase returned
+  `R3_3_PREVIEW_CREDENTIAL_RETIRED_AFTER_REBIND`; the editor was cleared to a
+  benign query and the app was signed out to `/auth/login`.
+- **Production exclusion — PASS:** production remained untouched throughout.
+
 ## Decision
 
-- Desktop result: **BLOCKED — PREVIEW SERVICE CREDENTIAL REBIND REQUIRED**
-- Genuine 390 px result: **PENDING**
-- Authorization/privacy/truthfulness result: **PARTIAL PASS; HOSTED SAVE PENDING**
+- Desktop result: **PASS**
+- Genuine 390 px result: **PASS**
+- Authorization/privacy/truthfulness result: **PASS FOR THE BOUNDED HOSTED WORKFLOW**
 - Founder decision: **PENDING**
 
 Acceptance closes only bounded R3-3. Later Bid-to-Won increments and all later

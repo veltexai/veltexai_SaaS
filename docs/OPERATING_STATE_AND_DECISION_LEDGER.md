@@ -2870,3 +2870,43 @@ After any material action, append or revise the relevant section with:
   commit, then repeat desktop save/replay and genuine-390px acceptance. This is
   a credential/configuration change and requires action-specific founder
   authorization. Production remains excluded and untouched.
+
+### R3-3 isolated Preview operator acceptance — PASS / PENDING FOUNDER REVIEW (2026-10-05 Pacific)
+
+- **PREVIEW SERVICE BINDING REMEDIATED:** Under the founder's exact approval,
+  only the branch-scoped Vercel Preview `SUPABASE_SERVICE_ROLE_KEY` for
+  `codex/r2-fresh-preview-guard` was replaced with the current secret from
+  isolated Supabase Preview `ynzkwctwlssjcsjmahey`. No secret value was
+  recorded. Exact reviewed commit
+  `44ca80391bd570fa5dc717686163f999529fe432` was redeployed only to Preview.
+  Deployment `7PMfguZPKCGjBLPPkxWS7Zi8XVKU` reached `Ready` at immutable URL
+  `https://veltex-services-veliz-7h1r18zkj-veltex-ai.vercel.app`; its branch
+  alias is
+  `https://veltex-services-veliz-git-codex-r2-fresh-previ-e45636-veltex-ai.vercel.app`.
+- **HOSTED DESKTOP SAVE — PASS:** The exact deployment loaded the authenticated
+  estimate workbench for synthetic opportunity `R3-3 Preview Acceptance
+  Estimate` (`a2370d90-14e7-4b93-a538-7637f249e20f`) in synthetic organization
+  `8ca5fd88-2eea-4a64-aeb4-33a01fcef152`. Base was selected at `$280.00 / turn`.
+  One Save produced a success redirect to CRM, whose residential/turnover card
+  displayed `Internal planning estimate: $280.00 · per turn`. Reloading the
+  estimate page displayed exactly one immutable prior-estimate row:
+  `$280.00 · base · per turn · 10/5/2026, 11:33:44 PM`. No second Save was
+  issued and no duplicate was created.
+- **GENUINE 390 PX — PASS:** Chrome's responsive viewport measured exactly
+  `window.innerWidth = 390`, `document.documentElement.scrollWidth = 390` and
+  `window.innerHeight = 844`, proving no horizontal overflow. The title,
+  selected price, inputs, scenario controls, Save action and prior-estimate
+  history remained visible. Low, Base and High controls measured 44 CSS pixels
+  high (widths 80, 81 and 81); the Save control measured 44 by 236 CSS pixels.
+- **SYNTHETIC CREDENTIAL RETIREMENT — PASS:** The temporary password for only
+  `r2-ui-signup-20260930@veltex.test` was immediately replaced with a fresh
+  unknown random value. Supabase returned
+  `R3_3_PREVIEW_CREDENTIAL_RETIRED_AFTER_REBIND`; the SQL editor was cleared to
+  a benign evidence query, and the Preview session was signed out and visibly
+  returned to `/auth/login`.
+- **STATUS / NEXT GATE:** The earlier Preview configuration blocker is
+  superseded. R3-3 is `INDEPENDENT PASS / PREVIEW DATABASE PASS / HOSTED
+  DESKTOP PASS / GENUINE-390PX PASS / CREDENTIAL TEARDOWN PASS / PENDING
+  FOUNDER REVIEW`. Production remained excluded and untouched. Founder
+  acceptance is the next unfinished R3-3 outcome; this evidence does not by
+  itself authorize production release or later roadmap increments.
