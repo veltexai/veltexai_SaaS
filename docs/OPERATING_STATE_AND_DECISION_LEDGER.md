@@ -3410,3 +3410,12 @@ After any material action, append or revise the relevant section with:
   malicious-file/prompt-injection/provider/cost threat controls. M0 remains
   `FOUNDER ACCEPTANCE PENDING`; no storage, provider, credential, upload, AI
   call, migration, Preview or production action occurred.
+- **C0/HANDOFF CONTRACTS RECONCILED WITH R3-4.1:** The R3-5 contract and
+  readiness memo now require accepted `crm_proposal_version.v2` package-set
+  commitments before `accept_proposal` issuance, use the frozen canonical
+  purpose vocabulary, show and receipt both full offered total and
+  deterministic selected subtotal, and preserve unselected packages. R3-6 now
+  consumes that exact selected-association chain and subtotal rather than
+  mistaking a proper-subset acceptance for the full offered total. This is
+  contract reconciliation only; R3-5/R3-6 implementation remains dependency-
+  blocked and no hosted state changed.

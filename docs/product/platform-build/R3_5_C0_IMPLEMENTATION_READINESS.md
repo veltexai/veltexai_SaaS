@@ -3,9 +3,10 @@
 Status: **PLANNING COMPLETE / IMPLEMENTATION DEPENDENCY-BLOCKED**
 
 R3-5 cannot begin until the exact R3-4 remediation receives independent Claude
-and Cursor `PASS`, isolated-Preview evidence and founder acceptance. This memo
-maps the current repository to the approved C0 contract so the implementation
-can begin without rediscovery or accidental scope reduction after that gate.
+and Cursor `PASS`, isolated-Preview evidence and founder acceptance, and the
+additive R3-4.1 package-set bridge is implemented and accepted. This memo maps
+the current repository to the approved C0 contract so implementation can begin
+without rediscovery or accidental scope reduction after those gates.
 
 ## Reusable authoritative primitives
 
@@ -68,12 +69,14 @@ proposal version to only one nullable work package and one estimate/price.
 Therefore a proposal version cannot yet prove the content, price and consent
 binding for an arbitrary package set.
 
-Before R3-5 coding, extend the immutable-source model with one reviewed,
-append-only proposal-version/package association that freezes every included
-package, selected estimate, displayed amount, pricing basis and relevant scope
-hash before token issuance. The association must be part of the rendered
-customer-visible total/scope and the version hash commitment. The acceptance
-command may accept only a non-empty subset of those frozen associations.
+Before R3-5 coding, implement the separately reviewed
+`R3_4_1_PACKAGE_SET_COMMITMENT_DECISION.md`: an append-only v2
+proposal-version/package association freezes every included package, selected
+estimate, displayed amount, pricing basis and relevant scope hash before token
+issuance. The association set is part of the rendered customer-visible
+total/scope and version hash commitment. The acceptance command may accept only
+a non-empty subset of those frozen associations and copies the deterministic
+selected subtotal into its receipt.
 
 Shipping an array parameter that currently permits only one package would be a
 smaller implementation, but it would not satisfy the approved multi-package
@@ -81,10 +84,8 @@ outcome and is rejected as a silent scope reduction.
 
 ## Required database shape after the gate
 
-One additive migration should provide:
+After R3-4.1 is accepted, an additive R3-5 migration should provide:
 
-- immutable proposal-version/package associations or the equivalent exact
-  frozen package-set commitment;
 - hashed action tokens, append-only responses and acceptance receipts;
 - additive proposal-version eligibility/revocation records rather than a
   mutable flag on `crm_proposal_versions`;
@@ -105,7 +106,8 @@ One additive migration should provide:
 - a new non-legacy customer review room using fragment exchange and the opaque
   cookie session;
 - separate review, question, change-request, decline and accept actions;
-- exact version/amount/scope/consent review before an unchecked confirmation;
+- exact per-package scopes/amounts, selected subtotal, full offered total and
+  consent review before an unchecked confirmation;
 - stable printable receipt and exact-retry recovery; and
 - minimal Board/List receipt/link metadata using the shared CRM surface.
 
@@ -116,7 +118,8 @@ matrix and true two-session double-submit race to the authoritative PostgreSQL
 harness. Tests must cover purpose, entropy, HMAC versioning, expiry, revocation,
 legacy-token refusal, raw-token absence, rate limiting, IDOR/cross-tenant and
 cross-version/package failures, designated-approver behavior, exact/changed
-retry, concurrent acceptance, atomic failure, multi-package outcomes,
+retry, concurrent acceptance, atomic failure, proper-subset/full-set outcomes,
+selected-subtotal correspondence, unselected-package preservation,
 immutable receipt/version/hash/consent binding, stage history, direct-DML
 denial, desktop/genuine-390 accessibility, truthful copy and receipt refresh.
 

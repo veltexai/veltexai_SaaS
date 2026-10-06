@@ -29,7 +29,9 @@ It copies only the operational fields needed to begin service:
 - customer and service-location display identity;
 - accepted package IDs, service type/frequency and customer-visible scope;
 - exclusions, assumptions and effective commercial terms;
-- accepted amount, currency and pricing basis;
+- accepted per-package amounts, deterministic selected subtotal, currency and
+  pricing basis (never the full offered total when the receipt accepted only a
+  proper subset);
 - proposal-version and acceptance-receipt identifiers/hashes; and
 - operator-entered internal kickoff notes that pass a dedicated privacy
   allowlist.
@@ -101,8 +103,9 @@ inputs produce identical bundle bytes and hash.
 opportunity, acceptance_receipt, request_key, source_hashes)`:
 
 1. authorizes owner/admin before receipt lookup;
-2. binds the accepted receipt, immutable proposal version, opportunity,
-   property and accepted packages;
+2. binds the accepted receipt, immutable proposal version and package-set hash,
+   opportunity, property, ordered selected associations, copied per-package
+   amounts and selected subtotal;
 3. rejects manual-win opportunities without C0 evidence, declined/unaccepted
    packages, stale source hashes and already-handed-off conflicting sources;
 4. reserves one package/version idempotently; and

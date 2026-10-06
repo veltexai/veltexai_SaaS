@@ -2,9 +2,10 @@
 
 Status: **ENTRY CONTRACT PREPARED / IMPLEMENTATION DEPENDENCY-BLOCKED**
 
-R3-5 begins only after R3-4 immutable proposal versions are independently
-accepted. This contract defines a narrow proposal-review and acceptance room;
-it does not create the later full customer portal.
+R3-5 begins only after R3-4 immutable proposal versions and the additive R3-4.1
+package-set commitment are independently accepted. This contract defines a
+narrow proposal-review and acceptance room; it does not create the later full
+customer portal.
 
 ## 1. Smallest truthful outcome
 
@@ -42,7 +43,7 @@ authorizes that language and workflow.
 
 - organization and immutable proposal-version IDs;
 - keyed token hash and key version;
-- purpose (`review`, `respond`, `accept`);
+- purpose (`review_proposal`, `respond_proposal`, `accept_proposal`);
 - optional normalized designated-approver email hash;
 - issued, expires, revoked and last-resolved timestamps;
 - created/revoked actor IDs and reason; and
@@ -69,6 +70,9 @@ must publish a new R3-4 version for revised terms.
 One immutable accepted receipt per proposal version:
 
 - organization, proposal version, opportunity and selected package IDs;
+- ordered selected proposal-version/package association IDs and hashes;
+- full offered amount and selected-package acceptance subtotal in integer
+  minor units, with one currency and the copied package-set hash;
 - signer-entered full name and normalized email;
 - optional designated-approver-match result;
 - consent text and consent-version identifier;
@@ -90,8 +94,9 @@ signer_email, consent_version, accepted_package_ids)` must:
    returning any object detail;
 2. lock the token, proposal version, opportunity and selected packages;
 3. require exact stored proposal-version hashes and approved consent version;
-4. require every selected package to belong to the same organization,
-   opportunity, property and proposal version;
+4. require a C0-eligible `crm_proposal_version.v2` and every selected package
+   to be a frozen association in that version's complete verified package set,
+   belonging to the same organization, opportunity and property;
 5. reject empty or unreasonably long identity fields and normalize email
    without presenting it as identity verification;
 6. create one canonical receipt and return it on an exact retry;
@@ -102,9 +107,11 @@ signer_email, consent_version, accepted_package_ids)` must:
 9. mark the parent opportunity `won` through the existing stage command only
    when at least one package is accepted, setting acceptance method to the C0
    receipt—not the legacy/manual path;
-10. emit identifier-only audit/outbox events for acceptance and the required
+10. copy the deterministic selected subtotal and ordered selected-association
+    commitment into the receipt; never trust a browser-provided total;
+11. emit identifier-only audit/outbox events for acceptance and the required
     operator notification; and
-11. revoke remaining accept-purpose tokens for that exact version after the
+12. revoke remaining accept-purpose tokens for that exact version after the
     receipt commits.
 
 The database owns atomic state movement. A browser route must not separately
@@ -116,7 +123,9 @@ The token resolver returns only:
 
 - organization customer-facing display identity;
 - immutable proposal-version customer-visible snapshot and rendered content;
-- version number, price, currency and pricing basis;
+- version number, ordered independently selectable packages, each frozen
+  customer-visible scope/price/basis, full offered total and current selected
+  subtotal;
 - expiry and allowed actions;
 - approved consent wording; and
 - receipt-safe result after acceptance.
@@ -130,8 +139,9 @@ other customers/properties and all other proposal versions.
 - Review, question, change request, decline and accept are visibly distinct.
 - Acceptance requires an unchecked confirmation control, signer name and
   email; no preselected consent.
-- The confirmation screen repeats the exact version number, amount, scope and
-  consent text before commit.
+- The confirmation screen repeats the exact version number, every selected
+  package scope/amount, selected subtotal, full offered total and consent text
+  before commit.
 - A successful result shows a stable receipt identifier, accepted timestamp,
   signer-entered identity, proposal-version hash summary and downloadable or
   printable receipt view.
@@ -173,7 +183,8 @@ must not claim an email or SMS was sent.
 - exact retry, changed retry, concurrent double-submit and partial-failure
   atomicity proof;
 - immutable version/hash/consent binding and direct-DML denial; and
-- multi-package acceptance with correct parent/package outcomes.
+- multi-package proper-subset and full-set acceptance with correct selected
+  subtotal, parent/package outcomes and unselected-package preservation.
 
 ### Product and truthfulness
 
