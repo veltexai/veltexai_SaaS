@@ -18,7 +18,7 @@ const captureBytes = readFileSync(capturePath);
 const capture = JSON.parse(captureBytes);
 const sha = (value) => createHash('sha256').update(value).digest('hex');
 const literal = (value) => `'${String(value).replaceAll("'", "''")}'`;
-const expectedCaptureSha = 'c573f62044b1bed9fc27947acb0e3fab701947d58786acbc0f2a93fd022a3cd5';
+const expectedCaptureSha = 'd22b04c72c863cde6b2eaa04a61f0f322df11493968f4478afdacf5d7a97aa11';
 const acceptedAppCommit = '0d765d7a9ae33c43f95e2721c661b651e7dbf76f';
 const steps = [
   ['20261001000000', '20261001000000_r3_1_crm_foundation.sql', '526b56f0bd32c542f77b89e61df79eed18304e7cccd4b06d5c458fa3273ea795'],

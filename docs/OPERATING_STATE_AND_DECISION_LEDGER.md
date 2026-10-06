@@ -2913,3 +2913,45 @@ After any material action, append or revise the relevant section with:
   Production remained excluded and untouched. This acceptance closes only
   bounded R3-3; it does not authorize production release or later roadmap
   increments.
+
+### R3-1 controlled production release refresh — READ-ONLY CAPTURE PASS / ROLLBACK PROOF REVIEW PENDING (2026-10-05 Pacific)
+
+- **FRESH ACTION-TIME PRODUCTION CAPTURE — PASS:** The generated contract-v3,
+  canonicalization-v2 hashes-only query ran in `BEGIN TRANSACTION READ ONLY`
+  with an explicit `ROLLBACK` against dashboard project
+  `iwoaaljitifloolszxlu`, visibly labeled `main PRODUCTION`. Evidence
+  `/private/tmp/veltex-r3-1-production-preflight-20261005.json` is 698,963
+  bytes with SHA-256
+  `d22b04c72c863cde6b2eaa04a61f0f322df11493968f4478afdacf5d7a97aa11`.
+  It reports PostgreSQL 17.6, history 64, catalog atoms 2,527, effective
+  privileges 1,323, the accepted contract bindings, unchanged protected row
+  counts and zero proposal/profile or tracking/proposal orphans. Production was
+  read only and no customer row content was selected.
+- **STALE CLASSIFIER REFUSAL PRESERVED:** The pre-R2 classifier refused this
+  capture with `production history drift` because it intentionally requires the
+  obsolete 29-version pre-R2 baseline. It was not weakened or used as evidence
+  against the accepted 64-version R2 state. The production-postflight
+  comparator confirms exact 64-version history and reviewed direct migration
+  ACL provenance but still reports the already documented generic-chain
+  semantic/privilege-shape variances; those are not silently treated as a new
+  PASS.
+- **NON-COMMITTING PROOF REFRESHED LOCALLY:** The deterministic R3-1 rollback
+  proof generator and refusal test are rebound to the fresh capture SHA while
+  retaining exact application commit
+  `0d765d7a9ae33c43f95e2721c661b651e7dbf76f` and migration SHA-256 values
+  `526b56f0...3ea795` and `85fac174...cf18`. Candidate
+  `/private/tmp/veltex-r3-1-production-rollback-proof-v2.sql` is 701,235 bytes,
+  SHA-256
+  `2b81526cb8bb3db8ec5c5825ec900684ecc5e706a7b4fa38da65b097c152ddc1`.
+  Its deterministic/static/refusal test passes; it has one `BEGIN`, zero
+  `COMMIT`, one terminal `ROLLBACK` and deliberate `P0001` evidence. It has not
+  been executed or externally reviewed.
+- **RELEASE BLOCKERS PRESERVED:** Before any production write, the exact proof
+  bytes require independent review and a separate rollback-only execution
+  authorization. The provider must independently show literal server-only
+  `CRM_WORKSPACE_ENABLED=false`; missing/unset is unsafe because the application
+  defaults the workspace to enabled. The application rollback target must also
+  be frozen: deployment `DEMzfxMLbYsrpiTYDQ4hSmQYsiDp` / commit `b144df3` is
+  the current accepted R2 release, while deployment `6557542919` / commit
+  `a4deb7c` remains the older disaster fallback. No production environment,
+  database, alias, deployment or feature flag changed.
