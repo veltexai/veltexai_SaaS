@@ -3162,3 +3162,66 @@ After any material action, append or revise the relevant section with:
   invalidate this exact proof. The verdict reconciliation gate is satisfied;
   a separate action-specific production rollback-proof execution authorization
   remains mandatory.
+
+### R3-4 immutable proposal versions — LOCAL CANDIDATE VERIFIED / INDEPENDENT REVIEW PENDING (2026-10-06 Pacific)
+
+- **DEPENDENCY AND SCOPE PRESERVED:** This additive candidate is based on the
+  accepted R3-3 application bytes at
+  `44ca80391bd570fa5dc717686163f999529fe432`. It implements only the bounded
+  immutable proposal-version boundary. It does not send a proposal, create a
+  customer acceptance, claim an e-signature, implement R3-5, or authorize a
+  hosted migration or deployment.
+- **SERVER-AUTHORITATIVE CREATION:** The browser may submit only the selected
+  proposal, property, estimate, optional package identifiers and the current
+  package token. Strict request parsing rejects unknown or forged rendered
+  content and prices. The server reloads the authoritative proposal, selected
+  R3-3 estimate, property, customer and company profile, then records an
+  allowlisted immutable snapshot using the existing customer-visible
+  `generated_content` bytes. Internal notes, access-adjacent data and internal
+  economics are excluded. The service-role command reauthorizes the caller,
+  and the database repeats organization, opportunity, property, estimate and
+  package bindings before allocating the next version under lock.
+- **OPERATOR FLOW:** Board and List expose the same `Prepare proposal version`
+  action only for eligible open residential/turnover opportunities with a
+  property, matching selected estimate and an absent or `estimated` package.
+  The dialog loads scoped proposal candidates and immutable history, explains
+  that preparation does not send, sign or accept anything, uses one stable
+  retry identifier across uncertain failures, rotates it after success or a
+  source change, and reconciles the returned package token. Viewer,
+  unsupported and later-state paths are excluded. Primary controls meet the
+  44 CSS-pixel target and action rows wrap at narrow widths.
+- **DATABASE ACCESS AND ADVERSARIAL EVIDENCE:** The unreleased 69th migration
+  adds immutable proposal-version storage, a caller-bound creation command and
+  a metadata-only proposal-candidate reader. Only owner/admin or the exact
+  assigned estimator may read candidates or versions for the scoped
+  opportunity; anonymous, viewer, cross-organization and unrelated-estimator
+  access is denied. Direct client mutation is denied. The committed role
+  matrix covers these paths, and the two-session race proves serialized,
+  gap-free version allocation and retry convergence. Migration SHA-256 is
+  `ed7fe28895b87f6927fad5321c4aec249e1605020c21f8bdf8b69302cc056ade`.
+- **LOCAL VERIFICATION — PASS:** Focused API/UI/composer coverage passes 42 of
+  42 tests. The full repository gate passes 110 suites / 933 tests / five
+  snapshots; TypeScript and the 85-route/page production build pass. A fresh
+  PostgreSQL 16 replay applied all 69 migrations and passed the R3-1, R3-2,
+  R3-3 and R3-4 role matrices, the explicit SECURITY DEFINER allowlist,
+  injection, dirty/rerun, both R3-3 and R3-4 two-session races and the legacy
+  40-way concurrency test. The first no-env build failed only at prerender
+  because public Supabase build values were absent; the first database harness
+  run correctly stopped when the new metadata reader was missing from the
+  explicit definer allowlist. Both context/contract failures were corrected
+  and the clean full reruns passed. The disposable database was stopped.
+- **EXACT REVIEW CANDIDATE:** Implementation commits are `a27aa16` and
+  `f355757`; independent-review instructions are frozen at `b22c69d`; the exact
+  packet commit is `6e3345ce01a93420c22679e247c18d4faf2da428`. Archive
+  `/private/tmp/veltex-r3-4-immutable-proposal-versions-6e3345c-review.zip`
+  has SHA-256
+  `1f6f4e7dd57ba6e47ca16ff9a93e1392ee93c6c485ede82f9b93e86c21aec24b`;
+  `unzip -t` passes. The Claude database/security and Cursor
+  operator/accessibility assignments are prepared but **not yet submitted**.
+  Their verdicts, isolated-Preview migration/application evidence, genuine
+  desktop and 390 px acceptance, and explicit founder acceptance remain
+  required before R3-4 may be `ACCEPTED` or unlock R3-5 implementation.
+- **SAFETY STATE:** Production and Preview were not queried or mutated for this
+  R3-4 work. No upload, external message, credential, environment value,
+  deployment, migration or feature flag changed. R3-5 remains dependency-
+  blocked until the R3-4 review and acceptance gates close.
