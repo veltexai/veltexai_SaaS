@@ -30,7 +30,7 @@ accounting, payroll, tax, legal or safety-certification system.
 |---|---|---|---|
 | R3-2 | Persisted text walkthrough evidence | **COMPLETE / VERIFIED / ACCEPTED** | Independent PASS, guarded Preview apply, desktop/390px flow and founder acceptance are recorded in the operating ledger |
 | R3-3 | Deterministic estimate/scenario linkage | **COMPLETE / VERIFIED / ACCEPTED** | Versioned snapshot, caller-bound command, engine parity, Preview/operator/independent PASS and founder acceptance are recorded in the operating ledger |
-| R3-4 | Immutable proposal versions | **LOCAL REMEDIATION VERIFIED / INDEPENDENT RE-REVIEW REQUIRED** | The remediated 69-migration packet must receive independent PASS, isolated-Preview proof and founder acceptance before R3-5 or M4 implementation |
+| R3-4 | Immutable proposal versions | **LOCAL SECOND REMEDIATION VERIFIED / CLAUDE DELTA + CURSOR REGRESSION ACTIVE** | Exact packet `341ab97` contains implementation `aa48b5e`; both bounded reviews must pass before isolated-Preview proof and founder acceptance can unlock R3-5 or M4 implementation |
 | M0 | Media privacy/product contract | Contract drafted in `M0_MEDIA_PRIVACY_AND_AI_OUTPUT_CONTRACT.md`; acceptance pending | Founder-approved retention, limits, consent, service packs, threat model and provider boundary |
 | M1 | Private photo evidence | Not started | Tenant-isolated storage, signed upload/read, deletion, audit, accessible mobile flow; no AI |
 | M2 | Reviewed photo intelligence | Not started | Structured observation suggestions, operator decisions, provenance, evals and cost cap |
@@ -40,9 +40,9 @@ accounting, payroll, tax, legal or safety-certification system.
 
 ## Immediate sequence
 
-1. Submit the strengthened exact R3-4 remediation packet for independent
-   Claude database/security and Cursor operator/accessibility re-review after
-   the required action-time confirmation.
+1. Collect and reconcile the active Claude database/security delta verdict and
+   Cursor operator/accessibility regression verdict for exact packet
+   `341ab97`; do not substitute the superseded first-remediation packet.
 2. If both reviews pass, apply only the exact reviewed R3-4 artifact to the
    isolated Preview and complete authenticated desktop/390px and founder
    acceptance. Production remains separately gated.
