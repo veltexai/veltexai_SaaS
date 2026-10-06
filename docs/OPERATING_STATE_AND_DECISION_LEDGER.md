@@ -3285,7 +3285,9 @@ After any material action, append or revise the relevant section with:
   unchanged and excluded.
 - **R3-4 COHERENT REMEDIATION — LOCAL GATES PASS / INDEPENDENT RE-REVIEW
   REQUIRED (2026-10-06 Pacific):** A clean branch from exact reviewed state
-  `508170c` replaces the revoked direct `service_role` estimate-table read with
+  `508170c`, sealed as implementation commit
+  `cf5e1c3557cb05c74397279a51a751da5d3b1f96`, replaces the revoked direct
+  `service_role` estimate-table read with
   one caller-bound source RPC that authorizes owner/admin/exact assigned
   estimator before resolving any proposal, estimate, customer, property or
   package row. Rendered proposal bytes are now deterministic output of the

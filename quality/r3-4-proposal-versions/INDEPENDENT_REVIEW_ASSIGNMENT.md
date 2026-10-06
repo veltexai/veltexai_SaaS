@@ -1,8 +1,11 @@
 # R3-4 immutable proposal versions — independent review assignment
 
-Status: **LOCAL CANDIDATE / INDEPENDENT PASS REQUIRED**
+Status: **LOCAL REMEDIATION VERIFIED / INDEPENDENT RE-REVIEW REQUIRED**
 
-Review the exact committed candidate named in `PACKET_MANIFEST.txt`. Do not
+Review the exact remediation range and candidate named in
+`PACKET_MANIFEST.txt`. Start from the prior Claude/Cursor FAIL findings in the
+authoritative ledger and verify each claimed fix rather than restarting a
+generic feature review. Do not
 edit repository files, commit, deploy, access Preview/Production, send customer
 messages or reinterpret proposal preparation as delivery or acceptance.
 
@@ -43,6 +46,13 @@ actually run and residual risks. Verify:
 7. the committed matrices and true two-session race genuinely prove their
    claims without vacuous catches or owner/service-role shortcuts.
 
+Specifically re-test every former Claude blocker: authorized source reads,
+rendered-byte/selected-estimate binding, authorization before lookup, immutable
+proposal bindings, command-managed package pointer invalidation, strict JSON
+leaf types, replay order, actor-bound receipts, latest package-less estimate
+selection and UPDATE/DELETE/TRUNCATE resistance. Confirm the transaction-local
+pointer flag cannot authorize a later direct statement.
+
 Reproduce at least the migration contract, focused Jest, TypeScript, and fresh
 PostgreSQL harness if the review environment supports them. Distinguish an
 environment limitation from a source failure.
@@ -66,6 +76,11 @@ actually run and residual risks. Do not duplicate the deep SQL audit. Verify:
    and
 7. existing Estimate/Board/List flows do not regress.
 
+Specifically re-test every former Cursor blocker: exact price/scope/rendered
+content review, stable 409 recovery, history/request-key preservation,
+deliberate new-version creation, and Board/List alignment to the package-bound
+estimate.
+
 Repository-only inspection is acceptable for an initial verdict, but do not
 claim genuine 390px perception without actually rendering and inspecting it.
 
@@ -77,4 +92,3 @@ claim genuine 390px perception without actually rendering and inspecting it.
 - Tests/checks actually executed and results.
 - Explicit confirmation that no hosted or production state changed.
 - Remaining Preview/founder gates even if the local verdict is `PASS`.
-

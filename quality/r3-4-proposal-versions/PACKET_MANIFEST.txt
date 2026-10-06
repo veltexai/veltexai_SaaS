@@ -1,21 +1,25 @@
-Veltex R3-4 immutable proposal-version independent review packet
+Veltex R3-4 immutable proposal-version remediation re-review packet
 
 Accepted R3-3 base: 44ca80391bd570fa5dc717686163f999529fe432
-R3-4 implementation candidate: f355757
-Review instructions commit: b22c69d
-Review range: 44ca80391bd570fa5dc717686163f999529fe432..HEAD
+Original R3-4 review state: 508170c
+R3-4 remediation candidate: cf5e1c3557cb05c74397279a51a751da5d3b1f96
+Review range: 508170c..cf5e1c3557cb05c74397279a51a751da5d3b1f96
 Migration: supabase/migrations/20261005000000_r3_4_immutable_proposal_versions.sql
-Migration SHA-256: ed7fe28895b87f6927fad5321c4aec249e1605020c21f8bdf8b69302cc056ade
+Migration SHA-256: eb55c73444aef2c930e7925991bedab980b44f1992e272cee500ce33b136d443
 
-Local evidence before packet freeze:
-- focused UI/API/composer: 42/42 PASS
-- full Jest: 110 suites / 933 tests / 5 snapshots PASS
+Final local evidence before remediation packet freeze:
+- focused CRM board: 29/29 PASS
+- full Jest: 110 suites / 934 tests / 5 snapshots PASS
 - TypeScript: PASS
 - production build: 85 pages PASS with non-secret loopback placeholders
 - fresh PostgreSQL 16: all 69 migrations, R3-1/R3-2/R3-3/R3-4 matrices,
   complete SECURITY DEFINER allowlist, owner/security/injection/dirty/rerun,
-  R3-3 concurrency, R3-4 concurrency, legacy 40-way concurrency and
-  HARNESS COMPLETE PASS
+  R3-3 concurrency, explicit-overlap R3-4 concurrency, legacy 40-way
+  concurrency and HARNESS COMPLETE PASS
+
+The prior Claude and Cursor FAIL findings are preserved in
+docs/OPERATING_STATE_AND_DECISION_LEDGER.md. This packet claims local
+remediation only. Independent PASS from both lanes is still required.
 
 No Preview, Production, credential, deployment, customer-message, payment or
 campaign state changed.
