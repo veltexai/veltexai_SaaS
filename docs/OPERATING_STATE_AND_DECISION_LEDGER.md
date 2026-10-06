@@ -3449,6 +3449,13 @@ After any material action, append or revise the relevant section with:
   represented as a checked-in file; and historical
   R3-4 “next action” headings are labeled superseded. The strengthened packet
   remains the sole review queue target; no external or hosted action occurred.
+- **CONSISTENCY RE-AUDIT — PASS:** Both independent read-only rechecks confirm
+  all seven findings are resolved, the strengthened packet path/hash and bundle
+  tip remain exact, historical R3-4 headings are unambiguous and no new scope,
+  dependency or authorization contradiction exists. The combined R3-7/R3-8
+  header was split by increment so A0–A8/R3-6 blocks R3-7 while accepted R3-5
+  receipt events independently gate R3-8. No implementation or hosted state
+  changed.
 - **STAGES 3–5 IMPLEMENTATION REUSE MAPS VERIFIED:** Fresh read-only code/schema
   audits replaced generic reuse assumptions with exact current primitives.
   Stage 3 can reuse CRM validators, caller-bound idempotent commands, tenant

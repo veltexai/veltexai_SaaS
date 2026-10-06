@@ -1,7 +1,7 @@
 # R3-7 activation registry and R3-8 operator notification contract
 
-Status: **ENTRY BOUNDARY PREPARED / A0–A8 SEMANTICS SOURCE REQUIRED /
-IMPLEMENTATION DEPENDENCY-BLOCKED**
+Status: **R3-7 A0–A8 SEMANTICS/R3-6 DEPENDENCY-BLOCKED; R3-8 R3-5
+DEPENDENCY-BLOCKED**
 
 R3-7 follows accepted R3-6. R3-8 consumes accepted R3-5 receipt events and may
 be implemented in parallel with R3-6/R3-7, but full R3 release acceptance still
