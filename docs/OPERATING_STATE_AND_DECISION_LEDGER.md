@@ -2986,3 +2986,11 @@ After any material action, append or revise the relevant section with:
   preserved. With placeholders supplied, all 84 static pages generated and the
   build exited 0. The runbook now freezes `b144df3` as primary rollback and
   `a4deb7c` as disaster-only fallback.
+- **KILL-SWITCH SEMANTICS TESTED:** The rollout unit gate now table-tests the
+  exact provider contract: only lowercase `false` disables CRM, while unset,
+  blank, `False`, `FALSE`, `0`, `true` and a representative typo remain
+  enabled. All eight rollout cases pass; the focused route suite separately
+  passes seven cases and proves an exact disable returns uniform 404 before
+  authentication or CRM database access. TypeScript passes with incremental
+  output disabled for this read-only worktree context. This test hardening does
+  not alter the already accepted application commit or authorize deployment.

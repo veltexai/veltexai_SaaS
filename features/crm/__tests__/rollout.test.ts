@@ -7,12 +7,24 @@ afterEach(() => {
   else process.env.CRM_WORKSPACE_ENABLED = original;
 });
 
-it('is enabled by default for the established workspace', () => {
-  delete process.env.CRM_WORKSPACE_ENABLED;
-  expect(isCrmWorkspaceEnabled()).toBe(true);
-});
+describe('CRM server-side rollout literal', () => {
+  it('supports the exact lowercase emergency-disable value', () => {
+    process.env.CRM_WORKSPACE_ENABLED = 'false';
+    expect(isCrmWorkspaceEnabled()).toBe(false);
+  });
 
-it('supports a server-side emergency disable without exposing a public flag', () => {
-  process.env.CRM_WORKSPACE_ENABLED = 'false';
-  expect(isCrmWorkspaceEnabled()).toBe(false);
+  it.each([
+    ['unset', undefined],
+    ['blank', ''],
+    ['mixed-case False', 'False'],
+    ['uppercase FALSE', 'FALSE'],
+    ['zero', '0'],
+    ['true', 'true'],
+    ['typo', 'flase'],
+  ])('does not mistake %s for the exact disable literal', (_label, value) => {
+    if (value === undefined) delete process.env.CRM_WORKSPACE_ENABLED;
+    else process.env.CRM_WORKSPACE_ENABLED = value;
+
+    expect(isCrmWorkspaceEnabled()).toBe(true);
+  });
 });
