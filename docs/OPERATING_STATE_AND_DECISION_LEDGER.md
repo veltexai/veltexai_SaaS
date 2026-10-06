@@ -3724,3 +3724,12 @@ After any material action, append or revise the relevant section with:
   server was stopped. No hosted environment changed. Applying this exact file
   to isolated project `ynzkwctwlssjcsjmahey` and advancing only the Vercel
   Preview branch remain separately gated; Production is excluded.
+- **R3-4 PREVIEW ACCEPTANCE CONTRACT — READY:**
+  `quality/r3-4-proposal-versions/PREVIEW_OPERATOR_RUNBOOK.md` now fixes the
+  isolated project, current remote base, exact reviewed application commit,
+  guarded SQL hashes, synthetic-data boundary, desktop and genuine 390px
+  checks, authorization probes, stop conditions and mandatory credential
+  teardown. `FOUNDER_ACCEPTANCE.md` is the exact evidence/disposition record.
+  The independent-review assignment status was reconciled to dual `PASS`.
+  These records prepare execution but do not authorize hosted mutation or
+  declare founder acceptance.

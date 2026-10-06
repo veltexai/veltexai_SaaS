@@ -1,6 +1,6 @@
 # R3-4 immutable proposal versions — independent review assignment
 
-Status: **LOCAL FINAL MATRIX REMEDIATION VERIFIED / CLAUDE MATRIX-DIFF CONFIRMATION REQUIRED**
+Status: **COMPLETE — INDEPENDENT CLAUDE AND CURSOR `PASS`**
 
 Review the exact remediation range and candidate named in
 `PACKET_MANIFEST.txt`. Start from the prior Claude/Cursor FAIL findings in the
