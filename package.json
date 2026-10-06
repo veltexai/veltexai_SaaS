@@ -28,6 +28,7 @@
     "r2:test-production-schema-compatibility": "node quality/r2-production-reconciliation/expected-state/test-production-schema-compatibility.mjs",
     "r2:test-authorized-production-bundle": "node quality/r2-production-reconciliation/test-authorized-production-bundle.mjs",
     "r3-1:test-production-rollback-proof": "node quality/r3-1-crm/test-production-rollback-proof.mjs",
+    "r3-1:test-production-rollback-cleanup": "node quality/r3-1-crm/test-production-rollback-cleanup.mjs",
     "r3-2:test-preview-artifact": "node quality/r3-2-walkthrough-evidence/test-preview-apply.mjs",
     "r3-3:test-preview-artifact": "node quality/r3-3-estimate-linkage/test-preview-apply.mjs",
     "brand:test-inventory": "node quality/brand-architecture/test-brand-inventory.mjs",

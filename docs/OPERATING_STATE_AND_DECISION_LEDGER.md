@@ -197,6 +197,30 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
   not imported by a production surface before B2 instrumentation and rollout
   approval. Focused tests pass 8/8, TypeScript and diff hygiene pass. No public
   copy or production behavior changed.
+- **R3-1 ROLLBACK-PROOF INDEPENDENT REVIEWS — PASS / EXECUTION STILL
+  GATED:** Claude and Cursor independently verified exact review archive
+  `/private/tmp/veltex-r3-1-production-rollback-proof-v2-review.zip`, SHA-256
+  `a78f5242c5f34197c76cc76d0004bf85459eff466e8d11d71f2b43b72f8d6492`,
+  and exact rollback-only SQL SHA-256
+  `2b81526cb8bb3db8ec5c5825ec900684ecc5e706a7b4fa38da65b097c152ddc1`.
+  Both verdicts are `PASS`. Execution conditions are one whole-text submission
+  in one dedicated non-pooler `postgres` session during a low-traffic window,
+  stop on first error, preserve the deliberate prefixed `P0001` evidence, then
+  close/roll back the aborted session. The proof has not been executed against
+  production; its temporary DDL and locks still require separate exact
+  action-specific authorization.
+- **R3-1 POST-PROOF CLEANUP QUERY — LOCAL VERIFIED / NOT RUN:** A deterministic
+  generator now binds a separate read-only cleanup query to fresh production
+  capture SHA-256
+  `d22b04c72c863cde6b2eaa04a61f0f322df11493968f4478afdacf5d7a97aa11`.
+  Generated artifact
+  `/private/tmp/veltex-r3-1-production-rollback-cleanup.sql` is 12,325 bytes,
+  SHA-256 `3458a39249e7e4a49321feab315de6df21e9d32bacbd4efea92914d0a438f2c8`;
+  the focused deterministic/refusal
+  test passes. It refuses history drift, either planned migration version, any
+  public `crm_*` relation residue, a wrong PostgreSQL version or a non-`postgres`
+  user, and reports only counts/hashes inside `BEGIN TRANSACTION READ ONLY` /
+  `ROLLBACK`. No hosted state changed.
 
 ## Current commercial workstream
 

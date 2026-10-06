@@ -26,6 +26,21 @@ unaccepted R3-2 work. Build the application from the exact accepted commit.
 Use `PRODUCTION_ROLLBACK_PROOF_VERDICT_RECONCILIATION.md` to reconcile the
 independent verdicts and preserve the separate execution-authorization gate.
 
+After the deliberate proof exception, close or explicitly roll back that
+dedicated session. Generate the separate read-only cleanup query from the same
+reviewed production capture and run it only in a fresh session:
+
+```sh
+node quality/r3-1-crm/build-production-rollback-cleanup.mjs \
+  /private/tmp/veltex-r3-1-production-preflight.json \
+  /private/tmp/veltex-r3-1-production-rollback-cleanup.sql
+npm run r3-1:test-production-rollback-cleanup
+```
+
+The cleanup refuses any migration-history or public CRM-relation residue and
+returns hashes-only evidence. It neither substitutes for proof authorization
+nor authorizes a migration, deployment, environment change or feature enable.
+
 `crm-performance-benchmark.sql` is a rollback-only PostgreSQL benchmark for the
 six query families required by the R3-1 release contract. It expects the fresh
 65-migration disposable catalog harness plus its synthetic `.test` fixtures.
