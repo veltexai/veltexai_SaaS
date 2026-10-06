@@ -91,11 +91,40 @@ At exactly 390 CSS pixels, record `window.innerWidth` and
 5. Return to CRM and inspect the current estimate plus immutable prior runs in
    both Board and List.
 
+## Preview operator evidence — 2026-10-05 Pacific
+
+- **Desktop scenario interaction — PARTIAL PASS:** the exact reviewed Preview
+  displayed the synthetic turnover opportunity, the internal-planning-only
+  truthfulness boundary and the Low/Base/High scenarios. Selecting each scenario
+  updated the sticky selected price, working price and Save label consistently:
+  Low `$235.00 / turn`, Base `$280.00 / turn`, High `$320.00 / turn`. The
+  operator returned to Base before attempting one save.
+- **Commercial truthfulness — PASS:** the hosted Board showed that commercial
+  and specialty estimating are not supported by the current pricing model and
+  exposed no commercial estimate-save path.
+- **Save/retry behavior — BLOCKED BY PREVIEW CONFIGURATION:** the first Base save
+  failed visibly with `CRM is unavailable. Please try again.` and retained the
+  form, selected scenario and retry action. A retry returned the same safe
+  failure. Vercel runtime evidence bound both requests to exact Preview
+  deployment `6DHkoJiBBhaVXyZ1ojJ6WB1Wq49A` and showed successful authenticated
+  calls to isolated project `ynzkwctwlssjcsjmahey`, followed by HTTP `401` only
+  from `POST /rest/v1/rpc/command_crm_estimate_run_internal`. The branch-scoped
+  `SUPABASE_SERVICE_ROLE_KEY` exists in Vercel but is stale or invalid. This is
+  not evidence of an application or migration failure, and no estimate row was
+  claimed as saved.
+- **Credential teardown — PASS:** the temporary password for the existing
+  synthetic Preview user was replaced with a fresh unknown random value;
+  Supabase returned `R3_3_PREVIEW_CREDENTIAL_RETIRED`. The SQL editor was
+  replaced with a benign evidence query, and the browser session was signed out
+  and visibly redirected to `/auth/login`.
+- **Production exclusion — PASS:** no production database, deployment, alias,
+  user or credential was selected or changed.
+
 ## Decision
 
-- Desktop result: **PENDING**
+- Desktop result: **BLOCKED — PREVIEW SERVICE CREDENTIAL REBIND REQUIRED**
 - Genuine 390 px result: **PENDING**
-- Authorization/privacy/truthfulness result: **PENDING**
+- Authorization/privacy/truthfulness result: **PARTIAL PASS; HOSTED SAVE PENDING**
 - Founder decision: **PENDING**
 
 Acceptance closes only bounded R3-3. Later Bid-to-Won increments and all later

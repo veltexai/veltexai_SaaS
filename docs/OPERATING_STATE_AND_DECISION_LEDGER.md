@@ -2835,3 +2835,38 @@ After any material action, append or revise the relevant section with:
   desktop and genuine-390px operator evidence plus explicit founder acceptance
   remain pending. No credential was installed or rotated, no production state
   changed and no customer data was used.
+
+### R3-3 isolated Preview operator run — PARTIAL PASS / CONFIGURATION BLOCKED (2026-10-05 Pacific)
+
+- **HOSTED DESKTOP INTERACTION — PARTIAL PASS:** using only the approved
+  synthetic Preview identity and fictitious records, the exact reviewed branch
+  displayed the turnover estimate workbench and its internal-planning-only
+  boundary. Low, Base and High selection updated the selected price, working
+  price and Save label consistently at `$235.00`, `$280.00` and `$320.00` per
+  turn. The hosted commercial board truthfully disabled the unsupported
+  commercial/specialty estimate path. No proposal-send, acceptance, billing,
+  attachment, photo or video controls appeared in the R3-3 workbench.
+- **REAL FAILURE/RETRY EVIDENCE — SAFE BUT NOT ACCEPTED:** one Base save and its
+  retry both returned the visible bounded error `CRM is unavailable. Please try
+  again.` while preserving the form, Base selection and retry control. Vercel
+  runtime logs bind both POSTs to exact Preview deployment
+  `6DHkoJiBBhaVXyZ1ojJ6WB1Wq49A`. Authentication and membership calls to
+  isolated Supabase `ynzkwctwlssjcsjmahey` succeeded, but the server-only
+  `command_crm_estimate_run_internal` REST RPC returned HTTP `401` twice. The
+  existing branch-scoped `SUPABASE_SERVICE_ROLE_KEY` is therefore stale or
+  invalid. This is a Preview environment binding blocker, not proof of an R3-3
+  source or migration defect. No estimate-save success or deduplication result
+  is claimed.
+- **SYNTHETIC CREDENTIAL TEARDOWN — VERIFIED:** after the operator attempt, the
+  existing synthetic user's temporary password was replaced with a new unknown
+  random value only in isolated Preview. Supabase returned
+  `R3_3_PREVIEW_CREDENTIAL_RETIRED`; the editor was cleared to a benign evidence
+  query, and the browser session was signed out and redirected to `/auth/login`.
+- **STATUS / REQUIRED DECISION:** R3-3 remains `INDEPENDENT PASS / PREVIEW
+  DATABASE PASS / PREVIEW DEPLOYMENT READY / OPERATOR ACCEPTANCE BLOCKED`.
+  The next consequential action is to bind a current isolated-Preview secret
+  API/service-role value only to Vercel Preview branch
+  `codex/r2-fresh-preview-guard`, redeploy the exact accepted application
+  commit, then repeat desktop save/replay and genuine-390px acceptance. This is
+  a credential/configuration change and requires action-specific founder
+  authorization. Production remains excluded and untouched.
