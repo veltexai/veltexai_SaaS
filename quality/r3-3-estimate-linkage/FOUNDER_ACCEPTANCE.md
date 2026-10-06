@@ -6,6 +6,8 @@ This checklist does not authorize production deployment. Run it only after an
 independent `PASS`, on the approved isolated preview, using the exact reviewed
 migration/application candidate. Use fictitious data only; never enter a real
 customer, address, scope, price, access instruction, photograph or attachment.
+The execution sequence, fixed synthetic inputs, evidence filenames and
+mandatory credential teardown are frozen in `PREVIEW_OPERATOR_RUNBOOK.md`.
 
 ## Bound identity
 
