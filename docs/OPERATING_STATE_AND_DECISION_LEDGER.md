@@ -161,6 +161,23 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
   exact Preview application deployment, authenticated desktop and genuine
   390px operator evidence, and founder acceptance remain. Production is
   unchanged and excluded.
+- **R3-3 GUARDED PREVIEW ARTIFACT FROZEN / HOSTED ACTION NOT YET RUN:** Local
+  preflight corrected a stale migration digest in the founder checklist, then
+  regenerated `/private/tmp/veltex-r3-3-preview-apply-final.sql` from the
+  reviewed migration bytes. The artifact is 25,342 bytes with SHA-256
+  `e42600592ac1b5f4f5d21031b2fba6951340373e8e7eadaea574dfe137983503`;
+  it binds migration SHA-256
+  `dcc93319ca0464beab2fb5020c6042753cd01dd06975797f706ae7fa1b91fda9`,
+  requires the exact 67-version predecessor set, preserves every existing CRM
+  table by canonical count/content hash, performs the R3-3 postflight inside
+  one transaction, and records history `68` only after all checks pass. Its
+  deterministic structural test passes. A read-only fetch proves isolated
+  branch `codex/r2-fresh-preview-guard` remains at
+  `a41acab275d509a6d59e67bc71571abe0fffa99c` and is an ancestor of exact
+  reviewed target `44ca80391bd570fa5dc717686163f999529fe432`, so the proposed
+  Preview-only update is a clean fast-forward. Neither the SQL artifact nor the
+  branch update has been executed; Preview database/app mutation remains an
+  action-specific gate, and production is excluded.
 - **B1 MESSAGE CONTRACT IMPLEMENTED LOCALLY:** `features/brand/messaging.ts`
   pins the `Veltex` master brand, retained `Veltex AI` operational identity,
   category, promise, operator-control/privacy/manual-fallback trust points,

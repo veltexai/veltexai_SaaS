@@ -17,8 +17,14 @@ customer, address, scope, price, access instruction, photograph or attachment.
 - Migration SHA-256:
   `dcc93319ca0464beab2fb5020c6042753cd01dd06975797f706ae7fa1b91fda9`
 - Expected PostgreSQL history after apply: `68`
-- Guarded SQL artifact path, SHA-256 and Preview deployment URL: record after
-  the independent verdict and before mutation.
+- Guarded SQL artifact: `/private/tmp/veltex-r3-3-preview-apply-final.sql`
+  (25,342 bytes), SHA-256
+  `e42600592ac1b5f4f5d21031b2fba6951340373e8e7eadaea574dfe137983503`.
+- Isolated Preview deployment branch: `codex/r2-fresh-preview-guard`.
+- Verified current Preview predecessor: `a41acab275d509a6d59e67bc71571abe0fffa99c`.
+- Exact reviewed Preview application target: `44ca80391bd570fa5dc717686163f999529fe432`.
+- The predecessor is an ancestor of the target, so the update is a clean
+  fast-forward. Record the immutable Vercel Preview URL after deployment.
 
 ## Synthetic workflow
 
