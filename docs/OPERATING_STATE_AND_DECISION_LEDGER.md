@@ -2997,3 +2997,15 @@ After any material action, append or revise the relevant section with:
   The complete repository regression after this addition passes 108 suites /
   918 tests / five snapshots, and migration validation passes 68 unique
   executable versions.
+- **PARALLEL EXTERNAL REVIEW SUBMITTED:** After the founder's explicit
+  action-time confirmation, the exact credential-free review packet
+  `/private/tmp/veltex-r3-1-production-rollback-proof-v2-review.zip`, SHA-256
+  `a78f5242c5f34197c76cc76d0004bf85459eff466e8d11d71f2b43b72f8d6492`,
+  was submitted to the established Claude review chat and referenced from the
+  established Cursor agent lane. Both assignments require exact hash
+  recomputation, the enclosed bounded review procedure, local disposable
+  resources only, and an initial `PASS` or `FAIL` verdict with independently
+  reproduced evidence. Both visibly entered active analysis. The assignments
+  prohibit hosted access, SQL execution, deployment, environment changes,
+  credentials and production mutation. Their verdicts are `PENDING`; submission
+  is not execution authorization.
