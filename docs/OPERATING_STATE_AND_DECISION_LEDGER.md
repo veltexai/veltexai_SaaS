@@ -3456,6 +3456,17 @@ After any material action, append or revise the relevant section with:
   header was split by increment so A0–A8/R3-6 blocks R3-7 while accepted R3-5
   receipt events independently gate R3-8. No implementation or hosted state
   changed.
+- **LIVE REVIEW-SURFACE CHECK — HELD STATE CORRECTED:** A read-only UI
+  inspection confirmed that Claude's existing chat still contains an unsent
+  draft with the older plain source archive
+  `veltex-r3-4-remediation-1883dbe-review.zip` and its SHA, while Cursor's R3-4
+  follow-up field is empty after the original `FAIL` verdict. Neither review
+  request was sent. On founder return, the exact action-time sequence is to
+  replace the obsolete Claude draft attachment/prompt with the strengthened
+  bundle packet, compose the matching Cursor follow-up against that exact local
+  packet, and confirm immediately before each representational send. Removing
+  the old attachment, uploading the strengthened packet and sending remain UI
+  actions; no such action occurred during this read-only check.
 - **STAGES 3–5 IMPLEMENTATION REUSE MAPS VERIFIED:** Fresh read-only code/schema
   audits replaced generic reuse assumptions with exact current primitives.
   Stage 3 can reuse CRM validators, caller-bound idempotent commands, tenant
