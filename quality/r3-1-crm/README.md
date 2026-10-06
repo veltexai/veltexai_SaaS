@@ -23,6 +23,8 @@ Running the generated SQL against production is a separately approved action.
 Its evidence must be independently matched before any commit-capable artifact
 is generated. Never deploy the current integration branch for R3-1; it contains
 unaccepted R3-2 work. Build the application from the exact accepted commit.
+Use `PRODUCTION_ROLLBACK_PROOF_VERDICT_RECONCILIATION.md` to reconcile the
+independent verdicts and preserve the separate execution-authorization gate.
 
 `crm-performance-benchmark.sql` is a rollback-only PostgreSQL benchmark for the
 six query families required by the R3-1 release contract. It expects the fresh
