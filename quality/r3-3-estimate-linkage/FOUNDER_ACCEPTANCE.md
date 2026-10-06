@@ -1,6 +1,6 @@
 # R3-3 founder acceptance — deterministic estimate linkage
 
-Status: **PENDING INDEPENDENT REVIEW AND ISOLATED PREVIEW**.
+Status: **INDEPENDENT PASS / ISOLATED PREVIEW AND FOUNDER ACCEPTANCE PENDING**.
 
 This checklist does not authorize production deployment. Run it only after an
 independent `PASS`, on the approved isolated preview, using the exact reviewed
@@ -10,8 +10,9 @@ customer, address, scope, price, access instruction, photograph or attachment.
 ## Bound identity
 
 - Preview project ref: `ynzkwctwlssjcsjmahey`
-- Reviewed application/database candidate: `631fdb4`
-- Review-instruction commit: `0a6e900`
+- Reviewed candidate: `44ca80391bd570fa5dc717686163f999529fe432`
+- Implementation/evidence commit: `fb31b3daeb12fd3865774398fb04e51cffcef5b0`
+- Independent packet SHA-256: `4389f7b673524eec39783b8c26307f70c78cba3181e0a137a8a8ec262a54f191`
 - Migration: `20261004000000_r3_3_estimate_scenario_linkage.sql`
 - Migration SHA-256:
   `f1c34282cb12094888215fcc029a213cc78eca2cbc28a2e3f152cba74c09b1a8`

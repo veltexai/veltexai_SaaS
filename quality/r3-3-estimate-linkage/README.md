@@ -1,6 +1,6 @@
 # R3-3 estimate-scenario linkage evidence
 
-Status: **LOCAL CANDIDATE — INDEPENDENT/HOSTED GATES PENDING**
+Status: **LOCAL COMPLETE / INDEPENDENT PASS — PREVIEW, OPERATOR AND FOUNDER GATES PENDING**
 
 The bounded R3-3 remediation candidate adds migration `20261004000000`, an append-only
 estimate snapshot/receipt boundary, one server-only command that independently
@@ -16,9 +16,7 @@ Local evidence:
 
 - migration validation: 68 unique executable versions;
 - focused Jest: CRM migration/API/Board/workbench suites pass;
-- full Jest: 108 suites, 906 tests and 5 snapshots pass before the final
-  entry-page source guard was added; that guard is also covered by the focused
-  CRM contract suite;
+- full Jest: 108 suites, 912 tests and 5 snapshots pass;
 - TypeScript passes;
 - fresh socket-only PostgreSQL 16 replay applies all 68 migrations and passes
   the R3-1, R3-2 and R3-3 adversarial matrices, the owner matrix, complete
@@ -37,13 +35,14 @@ Local evidence:
 - production build requires ordinary build-time Supabase public variables; no
   hosted database or production mutation is part of this local gate.
 
-The first two independent packets are rejected and superseded. The corrected
-candidate closes the workbench/route privacy-shape mismatch, specialty-segment
-disguise, later-state package demotion, selected-scenario display, replay-order,
-NULL-segment, fractional-cent and generic service-failure findings. Next: bind
-the corrected commit into a comprehensive exact independent-review packet. Only
-after exact-candidate PASS may a separately authorized guarded isolated-preview
-apply and genuine desktop/390px operator acceptance occur.
+All earlier independent packets are rejected and superseded. Claude returned
+`PASS` on exact archive `veltex-r3-3-final-evidence-44ca803-review.zip`, SHA-256
+`4389f7b673524eec39783b8c26307f70c78cba3181e0a137a8a8ec262a54f191`,
+candidate `44ca80391bd570fa5dc717686163f999529fe432`, with implementation/evidence
+commit `fb31b3daeb12fd3865774398fb04e51cffcef5b0`. The independent run reproduced
+the full local gates and closed both remaining pointer/lifecycle findings.
+Next: a separately authorized guarded isolated-preview apply and exact Preview
+application deployment, followed by genuine desktop/390px operator acceptance.
 
 The local preview gate is prepared but not authorized or applied:
 

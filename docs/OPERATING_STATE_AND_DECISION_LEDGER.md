@@ -138,6 +138,29 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
   missing executable regressions, and narrowly related recovery/copy fixes.
   Genuine 390 px Preview acceptance remains a later gate. R3-3 stays
   **INDEPENDENT FAIL / DO NOT DEPLOY**. No hosted state changed.
+- **R3-3 FINAL-EVIDENCE INDEPENDENT CLAUDE VERDICT — PASS / HOSTED GATES
+  REMAIN:** Claude verified exact archive
+  `/private/tmp/veltex-r3-3-final-evidence-44ca803-review.zip`, SHA-256
+  `4389f7b673524eec39783b8c26307f70c78cba3181e0a137a8a8ec262a54f191`,
+  candidate `44ca80391bd570fa5dc717686163f999529fe432` and implementation/evidence
+  commit `fb31b3daeb12fd3865774398fb04e51cffcef5b0`. Claude independently
+  reproduced the 68-version validator, TypeScript, full Jest (108 suites / 912
+  tests / 5 snapshots), and the fresh PostgreSQL 16 harness including all R3
+  matrices, privileged-function checks and the two-session R3-3 concurrency
+  proof. Both prior blocking findings are closed: a valid replacement proposal
+  reaches the exact package-pointer guard, and valid `proposed -> declined`
+  preserves the walkthrough/proposal/estimate pointer while lifecycle and
+  closed-opportunity errors remain distinct. Verdict is **PASS** with no
+  launch-blocking finding in the bounded local R3-3 scope. Three observations
+  are retained as nonblocking hardening: compare the exact estimate-run ID in
+  the declined-path test; convert remaining generic refusal catches to exact
+  message assertions; and consider a future atomic two-step walkthrough
+  repoint command. Per the founder's MVP direction, these do not reopen the
+  accepted candidate. R3-3 is now **LOCAL COMPLETE / INDEPENDENT PASS** but is
+  not yet accepted or deployable: guarded isolated-Preview PostgreSQL 17 apply,
+  exact Preview application deployment, authenticated desktop and genuine
+  390px operator evidence, and founder acceptance remain. Production is
+  unchanged and excluded.
 - **B1 MESSAGE CONTRACT IMPLEMENTED LOCALLY:** `features/brand/messaging.ts`
   pins the `Veltex` master brand, retained `Veltex AI` operational identity,
   category, promise, operator-control/privacy/manual-fallback trust points,
