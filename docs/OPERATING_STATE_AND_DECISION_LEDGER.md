@@ -178,6 +178,18 @@ Purpose: prevent repeated work, preserve decisions and failed attempts, and iden
   Preview-only update is a clean fast-forward. Neither the SQL artifact nor the
   branch update has been executed; Preview database/app mutation remains an
   action-specific gate, and production is excluded.
+- **R3-3 ISOLATED-PREVIEW READ-ONLY PREFLIGHT — PASS:** The authenticated
+  Supabase SQL editor visibly identified project `ynzkwctwlssjcsjmahey` as
+  `r2-fresh-verification-20260926` / `Preview`. A read-only exact-set query
+  reported PostgreSQL `17.6`, database `postgres`, exactly `67` migration
+  history rows, zero missing/extra versions against the reviewed predecessor
+  set and zero occurrences of `20261004000000`. The R3-3 estimate table,
+  receipt table and server command are absent, and
+  `crm_site_work_packages.estimate_run_id` is absent. This proves the hosted
+  target currently satisfies the guarded artifact's opening identity
+  predicate; it did not apply SQL, save a query or change hosted state. The
+  isolated Preview mutation and branch deployment remain action-specific
+  gates. Production was not opened or changed.
 - **B1 MESSAGE CONTRACT IMPLEMENTED LOCALLY:** `features/brand/messaging.ts`
   pins the `Veltex` master brand, retained `Veltex AI` operational identity,
   category, promise, operator-control/privacy/manual-fallback trust points,
