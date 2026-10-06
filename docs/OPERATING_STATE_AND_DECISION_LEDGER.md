@@ -2871,7 +2871,7 @@ After any material action, append or revise the relevant section with:
   a credential/configuration change and requires action-specific founder
   authorization. Production remains excluded and untouched.
 
-### R3-3 isolated Preview operator acceptance — PASS / PENDING FOUNDER REVIEW (2026-10-05 Pacific)
+### R3-3 isolated Preview operator acceptance — COMPLETE / VERIFIED / ACCEPTED (2026-10-05 Pacific)
 
 - **PREVIEW SERVICE BINDING REMEDIATED:** Under the founder's exact approval,
   only the branch-scoped Vercel Preview `SUPABASE_SERVICE_ROLE_KEY` for
@@ -2904,9 +2904,12 @@ After any material action, append or revise the relevant section with:
   `R3_3_PREVIEW_CREDENTIAL_RETIRED_AFTER_REBIND`; the SQL editor was cleared to
   a benign evidence query, and the Preview session was signed out and visibly
   returned to `/auth/login`.
-- **STATUS / NEXT GATE:** The earlier Preview configuration blocker is
-  superseded. R3-3 is `INDEPENDENT PASS / PREVIEW DATABASE PASS / HOSTED
-  DESKTOP PASS / GENUINE-390PX PASS / CREDENTIAL TEARDOWN PASS / PENDING
-  FOUNDER REVIEW`. Production remained excluded and untouched. Founder
-  acceptance is the next unfinished R3-3 outcome; this evidence does not by
-  itself authorize production release or later roadmap increments.
+- **FOUNDER ACCEPTANCE — ACCEPTED:** After reviewing the hosted result, the
+  founder described the milestone as impressive and explicitly identified it
+  as a good approval point. Bounded R3-3 is therefore `COMPLETE / VERIFIED /
+  ACCEPTED`, including independent review, isolated Preview database apply,
+  hosted desktop save/persistence, genuine-390px acceptance and credential
+  teardown. The earlier Preview configuration blocker is superseded.
+  Production remained excluded and untouched. This acceptance closes only
+  bounded R3-3; it does not authorize production release or later roadmap
+  increments.

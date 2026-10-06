@@ -1,6 +1,6 @@
 # R3-3 founder acceptance — deterministic estimate linkage
 
-Status: **INDEPENDENT PASS / ISOLATED PREVIEW ACCEPTANCE PASS / FOUNDER REVIEW PENDING**.
+Status: **COMPLETE / VERIFIED / ACCEPTED**.
 
 This checklist does not authorize production deployment. Run it only after an
 independent `PASS`, on the approved isolated preview, using the exact reviewed
@@ -149,7 +149,7 @@ At exactly 390 CSS pixels, record `window.innerWidth` and
 - Desktop result: **PASS**
 - Genuine 390 px result: **PASS**
 - Authorization/privacy/truthfulness result: **PASS FOR THE BOUNDED HOSTED WORKFLOW**
-- Founder decision: **PENDING**
+- Founder decision: **ACCEPTED — 2026-10-05 Pacific**
 
 Acceptance closes only bounded R3-3. Later Bid-to-Won increments and all later
 roadmap stages remain independently gated.
