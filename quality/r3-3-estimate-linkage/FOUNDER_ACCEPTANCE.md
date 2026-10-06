@@ -24,7 +24,18 @@ customer, address, scope, price, access instruction, photograph or attachment.
 - Verified current Preview predecessor: `a41acab275d509a6d59e67bc71571abe0fffa99c`.
 - Exact reviewed Preview application target: `44ca80391bd570fa5dc717686163f999529fe432`.
 - The predecessor is an ancestor of the target, so the update is a clean
-  fast-forward. Record the immutable Vercel Preview URL after deployment.
+  fast-forward.
+- Preview database apply: **PASS** (`R3_3_PREVIEW_APPLY_PASS`, history `68`,
+  estimate rows `0`, receipt rows `0`).
+- Primary immutable Vercel Preview URL:
+  `https://veltex-services-veliz-dg4gaeei5-veltex-ai.vercel.app`
+  (deployment `6DHkoJiBBhaVXyZ1ojJ6WB1Wq49A`, `Ready`).
+- Secondary linked immutable Vercel Preview URL:
+  `https://veltex-ai-100d-pilot-kdfzieko2-veltex-ai.vercel.app`
+  (deployment `D4LWvYGJHjabDwg3QpagJ3k3ydTE`, `Ready`).
+- Both Vercel records bind Environment `Preview`, branch
+  `codex/r2-fresh-preview-guard` and exact commit `44ca803`; production is
+  excluded.
 
 ## Synthetic workflow
 

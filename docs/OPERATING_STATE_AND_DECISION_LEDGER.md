@@ -2796,3 +2796,42 @@ After any material action, append or revise the relevant section with:
   packet `0e5d897f...fdf46e1`. The UI visibly shows the correct attachment,
   message, and `Claude is responding`; verdict is `PENDING`. This submission is
   not acceptance and authorizes no Preview or production action.
+
+### R3-3 isolated Preview database and application gate — PASS / OPERATOR ACCEPTANCE PENDING (2026-10-05 Pacific)
+
+- **EXACT PREVIEW DATABASE APPLY — PASS:** After exact founder authorization,
+  guarded artifact `/private/tmp/veltex-r3-3-preview-apply-final.sql` (25,342
+  bytes), SHA-256
+  `e42600592ac1b5f4f5d21031b2fba6951340373e8e7eadaea574dfe137983503`,
+  ran once and only against isolated Supabase Preview
+  `ynzkwctwlssjcsjmahey`. The transaction emitted
+  `R3_3_PREVIEW_APPLY_PASS`, history count `68`, estimate count `0` and receipt
+  count `0`. Its exact R3-3 migration source SHA-256 is
+  `dcc93319ca0464beab2fb5020c6042753cd01dd06975797f706ae7fa1b91fda9`.
+  The editor's destructive-operation warning and temporary-table-without-RLS
+  warning were accepted only for these already reviewed exact bytes; the
+  temporary table is transaction-local and `ON COMMIT DROP`.
+- **EXACT PREVIEW BRANCH FAST-FORWARD — PASS:** Remote branch
+  `codex/r2-fresh-preview-guard` advanced cleanly from reviewed predecessor
+  `a41acab275d509a6d59e67bc71571abe0fffa99c` to independently reviewed
+  candidate `44ca80391bd570fa5dc717686163f999529fe432`. A read-only remote check after
+  the push returned that exact target SHA. Production branches, aliases and
+  deployments were not selected.
+- **VERCEL PREVIEW DEPLOYMENTS — READY:** The branch push triggered only two
+  linked Vercel Preview projects. `veltex-services-veliz` deployment
+  `6DHkoJiBBhaVXyZ1ojJ6WB1Wq49A` reached `Ready` at immutable URL
+  `https://veltex-services-veliz-dg4gaeei5-veltex-ai.vercel.app`.
+  `veltex-ai-100d-pilot` deployment `D4LWvYGJHjabDwg3QpagJ3k3ydTE` also
+  completed successfully at immutable URL
+  `https://veltex-ai-100d-pilot-kdfzieko2-veltex-ai.vercel.app`. GitHub's
+  combined status for exact commit `44ca803` is `success` with both Vercel
+  contexts reporting `Deployment has completed`; both dashboard records bind
+  Environment `Preview`, branch `codex/r2-fresh-preview-guard` and commit
+  `44ca803`. Read-only route probes returned Vercel Authentication redirects,
+  confirming the deployments remain protected rather than publicly exposing
+  the CRM route.
+- **CURRENT STATUS / NEXT GATE:** R3-3 is now `INDEPENDENT PASS / ISOLATED
+  PREVIEW DATABASE PASS / PREVIEW DEPLOYMENTS READY`. Authenticated synthetic
+  desktop and genuine-390px operator evidence plus explicit founder acceptance
+  remain pending. No credential was installed or rotated, no production state
+  changed and no customer data was used.
