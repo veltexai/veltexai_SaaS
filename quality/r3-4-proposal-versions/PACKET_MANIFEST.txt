@@ -1,0 +1,21 @@
+Veltex R3-4 immutable proposal-version independent review packet
+
+Accepted R3-3 base: 44ca80391bd570fa5dc717686163f999529fe432
+R3-4 implementation candidate: f355757
+Review instructions commit: b22c69d
+Review range: 44ca80391bd570fa5dc717686163f999529fe432..HEAD
+Migration: supabase/migrations/20261005000000_r3_4_immutable_proposal_versions.sql
+Migration SHA-256: ed7fe28895b87f6927fad5321c4aec249e1605020c21f8bdf8b69302cc056ade
+
+Local evidence before packet freeze:
+- focused UI/API/composer: 42/42 PASS
+- full Jest: 110 suites / 933 tests / 5 snapshots PASS
+- TypeScript: PASS
+- production build: 85 pages PASS with non-secret loopback placeholders
+- fresh PostgreSQL 16: all 69 migrations, R3-1/R3-2/R3-3/R3-4 matrices,
+  complete SECURITY DEFINER allowlist, owner/security/injection/dirty/rerun,
+  R3-3 concurrency, R3-4 concurrency, legacy 40-way concurrency and
+  HARNESS COMPLETE PASS
+
+No Preview, Production, credential, deployment, customer-message, payment or
+campaign state changed.
