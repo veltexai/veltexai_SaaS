@@ -3238,3 +3238,48 @@ After any material action, append or revise the relevant section with:
   R3-4 work. No upload, external message, credential, environment value,
   deployment, migration or feature flag changed. R3-5 remains dependency-
   blocked until the R3-4 review and acceptance gates close.
+- **INDEPENDENT REVIEWS — FAIL / REMEDIATION REQUIRED:** Claude and Cursor both
+  recomputed the exact packet and migration hashes and returned `FAIL` on the
+  frozen `6e3345c` packet. R3-4 must not advance to Preview or unlock R3-5.
+  Claude found two launch-blocking High defects: the immutable rendered bytes
+  are copied from mutable Release 1 `proposals.generated_content` without
+  proving agreement with the selected R3-3 amount or the allowlisted snapshot,
+  and the POST route directly selects `crm_estimate_runs` through
+  `service_role` even though R3-3 explicitly revoked that role's table
+  privileges, making the real route return 503. Direct inspection of the
+  committed source and migration grant chain confirms both findings.
+- **SECURITY/CORRECTNESS REMEDIATION SCOPE:** Claude also identified API
+  authorization occurring after privileged record lookups, which exposes
+  differing 404/422 responses to an unassigned estimator; an unguarded package
+  proposal-version pointer that can become inconsistent after re-estimation;
+  mutable proposal/opportunity/customer/property bindings that R3-4 presently
+  treats as authoritative; and proof gaps around actual concurrency overlap,
+  exact loser SQLSTATE, real same-organization property mismatch, unassigned
+  estimator negatives, pointer protection, rendered/price correspondence and
+  authenticated UPDATE/DELETE denial. Lower hardening items include strict
+  database leaf types, exact replay before mutable-current-state revalidation,
+  actor-bound idempotency, the package-less latest-selection rule, TRUNCATE
+  immutability and explicit legacy-delete behavior.
+- **OPERATOR/ACCESSIBILITY REMEDIATION SCOPE:** Cursor found that the prepare
+  dialog does not display the customer-visible content, scope or selected
+  customer price before committing an immutable version; a `40001` stale-token
+  response tells the operator to reload but neither reloads the Board nor
+  refreshes the optimistic token; a failed post-success history refresh can
+  erase visible history and rotate the request key; a second click silently
+  appends a new version without distinguishing a retry from a deliberate new
+  version; and Board/List can show a different first opportunity estimate from
+  the package-bound estimate actually published. It also recorded missing
+  List-open, 409 recovery, viewer-payload, unsupported-segment, Escape/focus
+  and genuine authenticated 390 px coverage. Its reconstructed 390 px markup
+  did confirm 44 px R3-4 controls and no page-level overflow, but that is not a
+  hosted or authenticated acceptance result.
+- **NEXT UNFINISHED OUTCOME:** Implement one coherent local remediation that
+  moves authorization ahead of source reads, obtains estimate data only
+  through an authorized server boundary, composes or validates rendered bytes
+  from the exact immutable allowlisted snapshot and selected estimate, freezes
+  or guards all relied-upon bindings and package pointers, and provides a
+  truthful operator review/recovery/new-version experience in both Board and
+  List. Expand the PostgreSQL and UI proofs for every independently identified
+  gap, rerun the full local gates, then create a new exact delta packet for
+  independent Claude and Cursor re-review. Production and Preview remain
+  unchanged and excluded.
