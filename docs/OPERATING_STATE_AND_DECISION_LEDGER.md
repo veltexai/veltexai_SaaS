@@ -1937,7 +1937,7 @@ After any material action, append or revise the relevant section with:
 - **APPLICATION RELEASE — COMPLETE / VERIFIED:** the release branch was pushed through commit `b144df3b270370edf0b7af4927a16a0d9cca30c4` and promoted through the existing production Vercel project `veltex-services-veliz` (`prj_qvXFtdH78f4cfmhjkxlBVNHs0JNL`). Production deployment `DEmzfxMLbYsrpiTYDQ4hSmQYsiDp` reached `Ready` after a 2m56s configured-environment build. Its immutable URL is `https://veltex-services-veliz-ltjurh1ks-veltex-ai.vercel.app`; `https://www.veltexai.com` and the branch alias resolve to this deployment. The excluded pilot project was not changed.
 - **APPLICATION GATES:** the full Jest gate passed 86 suites / 721 tests / five snapshots. The isolated local `npm run build` compiled and type-checked successfully, then failed during prerender because that worktree did not contain the production Supabase URL/key; this was verified as a local configuration-context difference, not evidence of missing production configuration. The Vercel production build with its configured environment completed successfully. The earlier CLI deployment attempt failed before upload with `Not authorized` and made no external change; dashboard promotion was used instead.
 - **PRODUCTION SMOKE — VERIFIED:** browser checks against the custom domain and immutable deployment rendered the homepage and the `/auth/login`, `/auth/signup`, `/solutions`, `/resources`, and `/demo-proposal` routes without application/runtime errors. `/dashboard` returned the expected unauthenticated 307 redirect and rendered login. An invalid proposal-download probe returned the expected 401 denial and created no data. Vercel runtime logs for the deployment showed 41 HTTP 200 responses, one 304, the expected 307 and 401, zero 5xx responses, zero fatal events, and no uncaught/application/internal-server error. No user, proposal, payment, email, or other customer-visible record was created during smoke verification.
-- **FINAL R2 STATUS:** production database R2 and the corresponding application release are `COMPLETE` and `VERIFIED`. The recorded application rollback target remains deployment `6557542919` / commit `a4deb7c0d0f50ae03dfd1ff1981833fa5f996cd1` if a later critical regression requires founder-authorized rollback. No rollback was required for this release.
+- **FINAL R2 STATUS (HISTORICAL ROLLBACK WORDING SUPERSEDED):** production database R2 and the corresponding application release are `COMPLETE` and `VERIFIED`. The original note named deployment `6557542919` / commit `a4deb7c0d0f50ae03dfd1ff1981833fa5f996cd1` as the rollback target. That instruction is now `SUPERSEDED`: after the verified R2 release, deployment `DEMzfxMLbYsrpiTYDQ4hSmQYsiDp` / exact commit `b144df3b270370edf0b7af4927a16a0d9cca30c4` became the primary rollback target; `6557542919` / `a4deb7c` is retained only as the older disaster fallback. No rollback was required for this release.
 
 ### R3-1 CRM foundation started — LOCAL CANDIDATE / HOSTED UNCHANGED (2026-10-01 Pacific)
 
@@ -2955,3 +2955,34 @@ After any material action, append or revise the relevant section with:
   the current accepted R2 release, while deployment `6557542919` / commit
   `a4deb7c` remains the older disaster fallback. No production environment,
   database, alias, deployment or feature flag changed.
+- **INDEPENDENT EXACT-PACKET AUDIT — PASS:** A separate read-only audit matched
+  review ZIP SHA-256
+  `a78f5242c5f34197c76cc76d0004bf85459eff466e8d11d71f2b43b72f8d6492`,
+  both migration bodies, capture bindings, proof structure, accepted commit and
+  all recorded sizes/hashes. It found one `BEGIN`, zero `COMMIT`, one terminal
+  `ROLLBACK`, no customer row values and no external side-effect mechanism.
+  Operationally, an intentional `P0001` client must close or explicitly roll
+  back the aborted session to release locks. This is review evidence only; the
+  proof has not executed.
+- **PROVIDER FLAG READBACK — BLOCKED / NO MUTATION:** A read-only Vercel
+  Production-environment search returned no `CRM_WORKSPACE_ENABLED` variable.
+  Missing is unsafe because accepted code disables CRM only for the exact,
+  case-sensitive lowercase literal `false`; blank, mixed case, `0`, typos and
+  unset all enable it. No environment value was created or changed. Literal
+  Production-scoped `false`, provider readback and a redeployment remain a
+  mandatory pre-deploy gate.
+- **ROLLBACK TARGET RECONCILED:** Vercel still listed accepted R2 deployment
+  `DEMzfxMLbYsrpiTYDQ4hSmQYsiDp` / commit `b144df3b270370edf0b7af4927a16a0d9cca30c4`
+  as Ready/Production, but its direct detail route returned 404. Retention of a
+  clickable deployment record is therefore not trusted as the only rollback
+  mechanism. A clean `git archive` of exact `b144df3` (tree
+  `64f6cb2a874435c5af851c07ef63fab973ec6576`, source tar SHA-256
+  `3b6b5e8af7b0de2b59cbb80351802aa301c0934388a16568b238e67b213f37af`)
+  compiled and type-checked successfully with non-secret build placeholders;
+  its lockfile is byte-identical to the current reviewed dependency lock. The
+  first install check was refused because the package-manager registry signature
+  could not be fetched, and the first build compiled but failed prerender only
+  because Supabase build variables were absent; both context failures are
+  preserved. With placeholders supplied, all 84 static pages generated and the
+  build exited 0. The runbook now freezes `b144df3` as primary rollback and
+  `a4deb7c` as disaster-only fallback.

@@ -44,17 +44,31 @@ and receive the target-specific approval required by the operating ledger.
 
 R3-1 is additive. After CRM data exists, the safe rollback is application-first:
 
-1. Set the server-only `CRM_WORKSPACE_ENABLED=false` and redeploy the application.
-   This hides CRM navigation, redirects `/dashboard/crm` to `/dashboard`, and
-   makes CRM API context resolution return a uniform 404 while leaving the
-   existing proposal product available. This flag is an application kill switch,
-   not a schema rollback.
-2. Roll the application back to the recorded R2 production deployment.
-3. Preserve CRM tables, stage history, command receipts, organization audit rows
+1. Set the Production-scoped, server-only environment variable to the exact,
+   case-sensitive literal `CRM_WORKSPACE_ENABLED=false`, read it back from the
+   provider, and redeploy. In the accepted R3-1 bytes, only lowercase `false`
+   disables CRM; unset, blank, `False`, `FALSE`, `0`, `true`, and typos enable
+   it. Verify the production alias points to the redeployment, CRM navigation is
+   absent, `/dashboard/crm` redirects to `/dashboard`, and CRM API context
+   resolution returns a uniform 404 while the proposal product remains
+   available. This flag is an application kill switch, not a schema rollback.
+2. Promote the primary accepted R2 application rollback target: Vercel
+   deployment `DEMzfxMLbYsrpiTYDQ4hSmQYsiDp`, commit
+   `b144df3b270370edf0b7af4927a16a0d9cca30c4`, immutable URL
+   `https://veltex-services-veliz-ltjurh1ks-veltex-ai.vercel.app`. If the
+   retained deployment record is unavailable, rebuild and deploy that exact
+   commit from a clean checkout with the reviewed Production environment, then
+   verify the production alias and smoke checks.
+3. Use deployment `6557542919`, commit
+   `a4deb7c0d0f50ae03dfd1ff1981833fa5f996cd1`, immutable URL
+   `https://veltex-services-veliz-3068c22ex-veltex-ai.vercel.app`, only as the
+   disaster fallback when the primary R2 target is unavailable or invalid and
+   after a separate release decision.
+4. Preserve CRM tables, stage history, command receipts, organization audit rows
    and outbox rows for diagnosis and a forward fix.
-4. Do not remove the nullable CRM link columns from `proposals`; they do not
+5. Do not remove the nullable CRM link columns from `proposals`; they do not
    alter proposal content and may be referenced by preserved CRM records.
-5. Do not drop or rewrite CRM data in production. A destructive reversal is
+6. Do not drop or rewrite CRM data in production. A destructive reversal is
    allowed only in a disposable preview with no customer data.
 
 If a migration transaction fails, PostgreSQL must roll it back atomically and

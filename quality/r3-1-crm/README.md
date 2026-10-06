@@ -15,7 +15,7 @@ Generate and statically verify the reviewed candidate with:
 ```sh
 node quality/r3-1-crm/build-production-rollback-proof.mjs \
   /private/tmp/veltex-r3-1-production-preflight.json \
-  /private/tmp/veltex-r3-1-production-rollback-proof-v1.sql
+  /private/tmp/veltex-r3-1-production-rollback-proof-v2.sql
 npm run r3-1:test-production-rollback-proof
 ```
 
