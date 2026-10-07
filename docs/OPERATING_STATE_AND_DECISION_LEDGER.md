@@ -3970,7 +3970,15 @@ After any material action, append or revise the relevant section with:
   `/private/tmp/veltex-r3-4-1-review-7909b1a.zip`, SHA-256
   `7061214ab71bfb051f9c08ad4a12f4b04faf0764f9ca190a209f7105011bf89c`;
   archive integrity and the included Git bundle both verify. Independent Claude
-  and Cursor verdicts remain `PENDING`. No hosted or Production state changed.
+  and Cursor verdicts remain `PENDING`. On 2026-10-06 the founder approved all
+  required review-dispatch actions; immediately before submission Codex
+  recomputed the exact wrapper hash and re-ran archive integrity successfully.
+  The exact replacement packet was then visibly submitted to Claude with the
+  database/security/atomicity/privacy lane and to Cursor with the operator/
+  accessibility/regression lane. Claude displayed the exact ZIP attachment and
+  began reviewing; Cursor displayed the exact local path, hash, candidate and
+  bounded instructions and began reviewing. No verdict is inferred from an
+  in-progress response, and no hosted or Production state changed.
 - **R3-5 READINESS REBOUND TO THE CURRENT PACKAGE-SET CANDIDATE / IMPLEMENTATION
   STILL BLOCKED:** The C0 readiness memo now records R3-4 as accepted and maps
   the exact local R3-4.1 v2 parent, ordered append-only associations,
