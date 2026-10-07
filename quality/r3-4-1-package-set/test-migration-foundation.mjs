@@ -34,13 +34,29 @@ for (const marker of [
   'association_sha256 text not null',
   'guard_crm_proposal_version_package_immutable',
   'guard_crm_proposal_version_package_truncate',
+  'create function public.command_crm_publish_proposal_package_set_internal',
+  "'package_ids',to_jsonb(p_package_ids)",
+  "'expected_package_updated_ats',to_jsonb(p_expected_package_updated_ats)",
+  'order by p.id for update',
+  "'schema_version','crm_proposal_version.v2'",
+  "'proposal.version_prepared'",
 ]) assert.ok(migration.includes(marker), `missing ${marker}`);
 
 assert.equal((migration.match(/^begin;$/gm) ?? []).length, 1);
 assert.equal((migration.match(/^commit;$/gm) ?? []).length, 1);
 assert.match(migration, /revoke all on public\.crm_proposal_version_packages\s+from public,anon,authenticated,service_role/);
+assert.match(migration, /revoke all on function public\.command_crm_publish_proposal_package_set_internal[\s\S]*from public,anon,authenticated;[\s\S]*grant execute[\s\S]*to service_role;/);
 assert.doesNotMatch(migration, /alter table public\.crm_proposal_versions[\s\S]*drop column/i);
 assert.doesNotMatch(migration, /update\s+public\.crm_proposal_versions/i);
 assert.doesNotMatch(migration, /delete\s+from\s+public\.crm_proposal_versions/i);
+for (const privateKey of [
+  'laborRate', 'modeledCost', 'margin', 'overhead', 'payrollBurden',
+  'accessText', 'internalNotes', 'rawWalkthroughEvidence', 'overrideRationale',
+]) assert.ok(!migration.includes(`'${privateKey}'`), `private key emitted: ${privateKey}`);
+assert.ok(
+  migration.indexOf('select m.role into actor_role')
+    < migration.indexOf('select c.* into existing'),
+  'authorization must precede command receipt lookup',
+);
 
 console.log('R3-4.1 additive package-set migration foundation PASS');

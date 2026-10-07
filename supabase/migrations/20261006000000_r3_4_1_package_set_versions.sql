@@ -5,6 +5,7 @@ begin;
 -- append-only ordered package associations.
 alter table public.crm_proposal_versions
   alter column estimate_run_id drop not null,
+  alter column pricing_basis drop not null,
   add column package_count integer,
   add column package_set_sha256 text;
 
@@ -15,6 +16,7 @@ alter table public.crm_proposal_versions
     (
       schema_version='crm_proposal_version.v1'
       and estimate_run_id is not null
+      and pricing_basis is not null
       and package_count is null
       and package_set_sha256 is null
     )
@@ -23,6 +25,7 @@ alter table public.crm_proposal_versions
       schema_version='crm_proposal_version.v2'
       and work_package_id is null
       and estimate_run_id is null
+      and pricing_basis is null
       and package_count>0
       and package_set_sha256 ~ '^[a-f0-9]{64}$'
     )
@@ -102,5 +105,252 @@ create trigger guard_crm_proposal_version_package_immutable
 create trigger guard_crm_proposal_version_package_truncate
   before truncate on public.crm_proposal_version_packages
   for each statement execute function public.guard_crm_proposal_version_immutable();
+
+-- A v2 parent intentionally represents more than one package. Replace the v1
+-- package-shaped pointer FK with an organization/version FK; the command below
+-- creates every association before moving package pointers atomically.
+alter table public.crm_site_work_packages
+  drop constraint crm_site_work_packages_proposal_version_fk;
+alter table public.crm_site_work_packages
+  add constraint crm_site_work_packages_proposal_version_fk
+  foreign key(organization_id,proposal_version_id)
+  references public.crm_proposal_versions(organization_id,id)
+  on delete restrict;
+
+alter table public.crm_proposal_version_commands
+  add column resulting_package_updated_ats jsonb;
+
+create function public.command_crm_publish_proposal_package_set_internal(
+  p_actor uuid,p_organization uuid,p_proposal uuid,p_opportunity uuid,p_property uuid,
+  p_package_ids uuid[],p_expected_package_updated_ats timestamptz[],p_request_key text
+)
+returns table(proposal_version_id uuid,version_number integer,
+  package_updated_ats jsonb,replayed boolean)
+language plpgsql security definer set search_path=pg_catalog,public as $$
+declare opportunity_row public.crm_opportunities%rowtype;
+  proposal_row public.proposals%rowtype;
+  package_row public.crm_site_work_packages%rowtype;
+  estimate_row public.crm_estimate_runs%rowtype;
+  existing public.crm_proposal_version_commands%rowtype;
+  existing_version public.crm_proposal_versions%rowtype;
+  actor_role text; request_seed_hash text; payload_hash text;
+  content_hash text; rendered_hash text; package_set_hash text;
+  package_items jsonb:='[]'::jsonb; association_items jsonb:='[]'::jsonb;
+  scope_lines jsonb; scope_hash text; association_hash text; package_title text;
+  snapshot jsonb; rendered text; rendered_packages text:='';
+  total_amount bigint:=0; next_number integer; item_count integer;
+  new_version_id uuid:=gen_random_uuid(); changed_at timestamptz;
+  result_tokens jsonb:='[]'::jsonb; i integer;
+begin
+  item_count:=coalesce(cardinality(p_package_ids),0);
+  if p_actor is null or length(p_request_key) not between 8 and 200
+     or item_count<1 or item_count>100
+     or cardinality(p_expected_package_updated_ats)<>item_count
+     or exists(select 1 from unnest(p_package_ids) id group by id having count(*)>1)
+     or exists(select 1 from unnest(p_package_ids) id where id is null)
+     or exists(select 1 from unnest(p_expected_package_updated_ats) token where token is null) then
+    raise exception 'proposal package set unavailable' using errcode='42501';
+  end if;
+
+  select m.role into actor_role from public.organization_memberships m
+    where m.organization_id=p_organization and m.user_id=p_actor;
+  select o.* into opportunity_row from public.crm_opportunities o
+    where o.organization_id=p_organization and o.id=p_opportunity
+      and o.deleted_at is null for update;
+  if opportunity_row.id is null or not coalesce(actor_role in ('owner','admin')
+    or (actor_role='estimator' and opportunity_row.estimator_user_id=p_actor),false) then
+    raise exception 'proposal package set unavailable' using errcode='42501';
+  end if;
+
+  request_seed_hash:=public.crm_estimate_sha256(jsonb_build_object(
+    'actor',p_actor,'organization',p_organization,'proposal',p_proposal,
+    'opportunity',p_opportunity,'property',p_property,
+    'package_ids',to_jsonb(p_package_ids),
+    'expected_package_updated_ats',to_jsonb(p_expected_package_updated_ats),
+    'schema_version','crm_proposal_version.v2',
+    'renderer_version','release1-markdown.v2'));
+
+  select c.* into existing from public.crm_proposal_version_commands c
+    where c.organization_id=p_organization and c.command_key=p_request_key;
+  if existing.id is not null then
+    select v.* into existing_version from public.crm_proposal_versions v
+      where v.organization_id=p_organization and v.id=existing.proposal_version_id;
+    payload_hash:=public.crm_estimate_sha256(jsonb_build_object(
+      'request_seed_sha256',request_seed_hash,
+      'content_sha256',existing_version.content_sha256,
+      'rendered_sha256',existing_version.rendered_sha256,
+      'package_set_sha256',existing_version.package_set_sha256));
+    if existing_version.schema_version<>'crm_proposal_version.v2'
+       or existing.payload_sha256<>payload_hash then
+      raise exception 'proposal version key already used' using errcode='23514';
+    end if;
+    return query select existing_version.id,existing_version.version_number,
+      existing.resulting_package_updated_ats,true;
+    return;
+  end if;
+
+  select p.* into proposal_row from public.proposals p
+    where p.organization_id=p_organization and p.id=p_proposal for update;
+  if proposal_row.id is null or proposal_row.crm_opportunity_id is distinct from p_opportunity
+     or proposal_row.crm_customer_id is distinct from opportunity_row.customer_id
+     or proposal_row.crm_property_id is distinct from p_property
+     or opportunity_row.property_id is distinct from p_property then
+    raise exception 'proposal package set context unavailable' using errcode='23514';
+  end if;
+  if exists(select 1 from public.crm_pipeline_stages s
+      where s.organization_id=p_organization and s.id=opportunity_row.stage_id
+        and s.category in ('won','lost','disqualified','handed_off')) then
+    raise exception 'closed opportunity cannot publish a proposal package set' using errcode='23514';
+  end if;
+
+  -- Lock in UUID order, independent of customer-visible display order.
+  perform 1 from public.crm_site_work_packages p
+    where p.organization_id=p_organization and p.id=any(p_package_ids)
+    order by p.id for update;
+  if (select count(*) from public.crm_site_work_packages p
+      where p.organization_id=p_organization and p.id=any(p_package_ids))<>item_count then
+    raise exception 'proposal package set context unavailable' using errcode='23514';
+  end if;
+
+  scope_lines:=case
+    when jsonb_typeof(proposal_row.service_scope->'areas_included')='array'
+      and jsonb_array_length(proposal_row.service_scope->'areas_included')>0
+    then proposal_row.service_scope->'areas_included'
+    else jsonb_build_array('Scope to be confirmed') end;
+  if not public.crm_proposal_scope_lines_valid(scope_lines) then
+    raise exception 'proposal package set content unavailable' using errcode='23514';
+  end if;
+  scope_hash:=public.crm_estimate_sha256(scope_lines);
+
+  for i in 1..item_count loop
+    select p.* into package_row from public.crm_site_work_packages p
+      where p.organization_id=p_organization and p.id=p_package_ids[i];
+    select e.* into estimate_row from public.crm_estimate_runs e
+      where e.organization_id=p_organization and e.id=package_row.estimate_run_id;
+    if package_row.id is null or package_row.opportunity_id<>p_opportunity
+       or package_row.property_id<>p_property or package_row.proposal_id is distinct from p_proposal
+       or package_row.status<>'estimated' or package_row.estimate_run_id is null
+       or package_row.updated_at is distinct from p_expected_package_updated_ats[i]
+       or estimate_row.id is null or estimate_row.opportunity_id<>p_opportunity
+       or estimate_row.property_id<>p_property
+       or estimate_row.work_package_id is distinct from package_row.id then
+      raise exception 'site work package changed' using errcode='40001';
+    end if;
+    package_title:=proposal_row.title||case when item_count=1 then ''
+      else ' — Service option '||i::text end;
+    association_hash:=public.crm_estimate_sha256(jsonb_build_object(
+      'display_position',i,'work_package_id',package_row.id,
+      'estimate_run_id',estimate_row.id,'title',package_title,
+      'scope_sha256',scope_hash,'amount_minor',estimate_row.selected_amount_minor,
+      'currency',estimate_row.currency,'pricing_basis',estimate_row.pricing_basis,
+      'estimate_input_sha256',estimate_row.input_sha256,
+      'estimate_output_sha256',estimate_row.output_sha256));
+    association_items:=association_items||jsonb_build_array(jsonb_build_object(
+      'displayPosition',i,'workPackageId',package_row.id,'estimateRunId',estimate_row.id,
+      'associationSha256',association_hash));
+    package_items:=package_items||jsonb_build_array(jsonb_build_object(
+      'displayPosition',i,'workPackageId',package_row.id,'estimateRunId',estimate_row.id,
+      'title',package_title,'scopeLines',scope_lines,
+      'pricing',jsonb_build_object('amountMinor',estimate_row.selected_amount_minor,
+        'currency',estimate_row.currency,'basis',estimate_row.pricing_basis),
+      'estimateInputSha256',estimate_row.input_sha256,
+      'estimateOutputSha256',estimate_row.output_sha256,
+      'scopeSha256',scope_hash,'associationSha256',association_hash));
+    total_amount:=total_amount+estimate_row.selected_amount_minor;
+    rendered_packages:=rendered_packages||case when i=1 then '' else E'\n\n' end
+      ||'## '||package_title||E'\n'
+      ||coalesce((select string_agg('- '||(line#>>'{}'),E'\n' order by ordinality)
+          from jsonb_array_elements(scope_lines) with ordinality listed(line,ordinality)),
+        '- Scope to be confirmed')||E'\n'
+      ||'Price: '||estimate_row.currency||' '
+      ||to_char(estimate_row.selected_amount_minor/100.0,'FM999999999999990.00')||' '
+      ||replace(estimate_row.pricing_basis,'_',' ');
+  end loop;
+
+  package_set_hash:=public.crm_estimate_sha256(association_items);
+  snapshot:=jsonb_build_object(
+    'schemaVersion','crm_proposal_version.v2','title',proposal_row.title,
+    'customer',jsonb_build_object('name',proposal_row.client_name),
+    'serviceLocation',jsonb_build_object('address',proposal_row.service_location),
+    'packages',package_items,
+    'pricing',jsonb_build_object('amountMinor',total_amount,'currency','USD'),
+    'template',jsonb_build_object('id',coalesce(proposal_row.template_id::text,'default'),
+      'rendererVersion','release1-markdown.v2'),
+    'provenance',jsonb_build_object('proposalId',p_proposal,'opportunityId',p_opportunity,
+      'propertyId',p_property,'packageSetSha256',package_set_hash));
+  rendered:='# '||proposal_row.title||E'\n\nPrepared for: '||proposal_row.client_name
+    ||E'\nService location: '||proposal_row.service_location||E'\n\n'
+    ||rendered_packages||E'\n\nOffered total: USD '
+    ||to_char(total_amount/100.0,'FM999999999999990.00');
+  content_hash:=public.crm_estimate_sha256(snapshot);
+  rendered_hash:=public.crm_proposal_sha256(rendered);
+  payload_hash:=public.crm_estimate_sha256(jsonb_build_object(
+    'request_seed_sha256',request_seed_hash,'content_sha256',content_hash,
+    'rendered_sha256',rendered_hash,'package_set_sha256',package_set_hash));
+
+  select coalesce(max(v.version_number),0)+1 into next_number
+    from public.crm_proposal_versions v
+    where v.organization_id=p_organization and v.proposal_id=p_proposal;
+  insert into public.crm_proposal_versions(id,organization_id,proposal_id,opportunity_id,
+    property_id,work_package_id,estimate_run_id,version_number,request_key,content_snapshot,
+    rendered_content,display_amount_minor,currency,pricing_basis,content_sha256,rendered_sha256,
+    estimate_input_sha256,estimate_output_sha256,schema_version,package_count,
+    package_set_sha256,created_by)
+  values(new_version_id,p_organization,p_proposal,p_opportunity,p_property,null,null,
+    next_number,p_request_key,snapshot,rendered,total_amount,'USD',null,content_hash,
+    rendered_hash,public.crm_estimate_sha256(jsonb_build_object('packages',package_items)),
+    public.crm_estimate_sha256(jsonb_build_object('packages',association_items)),
+    'crm_proposal_version.v2',item_count,package_set_hash,p_actor);
+
+  for i in 1..item_count loop
+    select p.* into package_row from public.crm_site_work_packages p
+      where p.organization_id=p_organization and p.id=p_package_ids[i];
+    select e.* into estimate_row from public.crm_estimate_runs e
+      where e.organization_id=p_organization and e.id=package_row.estimate_run_id;
+    insert into public.crm_proposal_version_packages(
+      organization_id,proposal_version_id,opportunity_id,property_id,work_package_id,
+      estimate_run_id,display_position,customer_visible_title,customer_visible_scope,
+      amount_minor,currency,pricing_basis,estimate_input_sha256,estimate_output_sha256,
+      scope_sha256,association_sha256)
+    values(p_organization,new_version_id,p_opportunity,p_property,package_row.id,
+      estimate_row.id,i,package_items->(i-1)->>'title',package_items->(i-1)->'scopeLines',
+      estimate_row.selected_amount_minor,estimate_row.currency,estimate_row.pricing_basis,
+      estimate_row.input_sha256,estimate_row.output_sha256,scope_hash,
+      package_items->(i-1)->>'associationSha256');
+  end loop;
+
+  changed_at:=clock_timestamp();
+  perform set_config('veltex.proposal_version_command','1',true);
+  update public.crm_site_work_packages set proposal_version_id=new_version_id,
+    updated_by=p_actor,updated_at=changed_at
+  where organization_id=p_organization and id=any(p_package_ids);
+  perform set_config('veltex.proposal_version_command','',true);
+  select coalesce(jsonb_agg(jsonb_build_object('workPackageId',p.id,
+      'updatedAt',p.updated_at) order by position), '[]'::jsonb)
+    into result_tokens
+  from unnest(p_package_ids) with ordinality requested(id,position)
+  join public.crm_site_work_packages p
+    on p.organization_id=p_organization and p.id=requested.id;
+
+  insert into public.crm_proposal_version_commands(organization_id,proposal_version_id,
+    command_key,payload_sha256,resulting_package_updated_ats,actor_user_id)
+  values(p_organization,new_version_id,p_request_key,payload_hash,result_tokens,p_actor);
+  insert into public.organization_audit_log(organization_id,actor_user_id,action,
+    entity_type,entity_id,metadata)
+  values(p_organization,p_actor,'crm_proposal_versions.insert','crm_proposal_versions',
+    new_version_id::text,jsonb_build_object('operation','INSERT','schema_version','v2'));
+  insert into public.organization_event_outbox(organization_id,event_type,aggregate_type,
+    aggregate_id,payload)
+  values(p_organization,'proposal.version_prepared','crm_proposal_versions',
+    new_version_id::text,jsonb_build_object('record_id',new_version_id::text));
+  return query select new_version_id,next_number,result_tokens,false;
+end;
+$$;
+revoke all on function public.command_crm_publish_proposal_package_set_internal(
+  uuid,uuid,uuid,uuid,uuid,uuid[],timestamptz[],text
+) from public,anon,authenticated;
+grant execute on function public.command_crm_publish_proposal_package_set_internal(
+  uuid,uuid,uuid,uuid,uuid,uuid[],timestamptz[],text
+) to service_role;
 
 commit;

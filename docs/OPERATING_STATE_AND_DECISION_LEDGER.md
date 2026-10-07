@@ -3850,3 +3850,23 @@ After any material action, append or revise the relevant section with:
   publish command, adversarial role matrix, deterministic race, server/UI
   integration and every independent/Preview/founder gate remain required. No
   hosted or Production state changed.
+- **R3-4.1 CALLER-BOUND PACKAGE-SET COMMAND — LOCAL ADVERSARIAL `PASS`:** The
+  additive migration now provides a service-role-only, caller-bound v2 publish
+  command. It authorizes the actor before receipt lookup, accepts only ordered
+  package IDs plus matching optimistic tokens, locks packages in stable UUID
+  order, derives current estimate amounts/hashes and proposal scope server-side,
+  constructs the immutable v2 snapshot/rendered bytes, commits a canonical
+  ordered package-set hash, inserts parent/associations/receipt/audit/outbox and
+  advances every package pointer atomically. Replay reconstructs the actor-bound
+  payload hash from the immutable result, so exact retry succeeds after pointer
+  advancement while changed order or actor reuse fails. A rollback-only
+  PostgreSQL matrix proved a two-package `$325.00` total, two exact immutable
+  associations, both pointers, exact replay, changed-order rejection, viewer
+  denial, stale-token rejection and direct association update/delete denial.
+  The first matrix fixture lacked its synthetic owner and failed before command
+  execution; the next proof attempted revoked direct service-role reads after a
+  successful publish. Both harness defects were corrected without weakening
+  ACLs by adding the owner fixture and a temporary security-definer verifier;
+  the final matrix passed and rolled back. Deterministic two-session contention,
+  broader cross-tenant/substitution negatives, full application integration and
+  all external gates remain open. No hosted or Production state changed.

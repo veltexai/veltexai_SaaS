@@ -59,6 +59,16 @@ try {
     'direct_service_role_insert', has_table_privilege(
       'service_role','public.crm_proposal_version_packages','INSERT'
     ),
+    'service_role_command_execute', has_function_privilege(
+      'service_role',
+      'public.command_crm_publish_proposal_package_set_internal(uuid,uuid,uuid,uuid,uuid,uuid[],timestamptz[],text)',
+      'EXECUTE'
+    ),
+    'authenticated_command_execute', has_function_privilege(
+      'authenticated',
+      'public.command_crm_publish_proposal_package_set_internal(uuid,uuid,uuid,uuid,uuid,uuid[],timestamptz[],text)',
+      'EXECUTE'
+    ),
     'migration_count', ${migrations.length}
   )::text`]).trim());
 
@@ -68,9 +78,14 @@ try {
     association_rls: true,
     association_columns: 18,
     direct_service_role_insert: false,
+    service_role_command_execute: true,
+    authenticated_command_execute: false,
     migration_count: 70,
   });
-  console.log('R3-4.1 disposable PostgreSQL 70-migration foundation PASS');
+  const matrix = psql(['-f', resolve(root,
+    'quality/r3-4-1-package-set/sql/adversarial-role-matrix.sql')]);
+  assert.match(matrix, /R3_4_1_ADVERSARIAL_ROLE_MATRIX_PASS/);
+  console.log('R3-4.1 disposable PostgreSQL 70-migration foundation and adversarial matrix PASS');
 } finally {
   if (started) {
     try { run(resolve(pgBin, 'pg_ctl'), ['-D', data, 'stop', '-m', 'fast']); } catch {}
