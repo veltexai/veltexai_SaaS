@@ -4040,8 +4040,23 @@ After any material action, append or revise the relevant section with:
   existing Claude database/security review lane on 2026-10-06 with both
   wrapper and bundle hashes, snapshot `2dce395`, source candidate `a98ca78`,
   the four prior Medium findings, and an explicit read-only/no-hosted-state
-  boundary. Claude visibly entered its review run. Re-review is `PENDING`;
-  no Preview or Production state changed.
+  boundary. Claude recomputed both hashes, verified the standalone bundle in an
+  empty repository, matched all seven candidate-bound blobs, compared the 69
+  accepted migrations to its independently held history and returned `PASS`:
+  all four prior Medium findings are closed and no Critical, High or Medium
+  findings remain. Claude's residuals are Low: future packets should include
+  the migration-chain validator/assertion inputs or carry the actual candidate
+  commit; several negative cases are proven on preview plus publish code
+  inspection rather than on both paths; same-job-type/same-frequency options
+  can still look similar; and the previously documented history/rendering/GUC
+  limitations remain. These do not block the bounded R3-4.1 Preview gate.
+  Cursor's independent operator/accessibility lane is also `PASS`, and the
+  exact local candidate already passed the full 70-migration PostgreSQL harness
+  with `CHECK_DEFINERS=1`, Jest `941/941`, TypeScript and the production build.
+  R3-4.1 is therefore `VERIFIED` locally and independently, but not yet
+  `ACCEPTED`: guarded isolated-Preview migration, hosted authenticated desktop
+  and genuine 390px evidence, and founder acceptance remain. No Preview or
+  Production state changed.
 - **R3-5 READINESS REBOUND TO THE CURRENT PACKAGE-SET CANDIDATE / IMPLEMENTATION
   STILL BLOCKED:** The C0 readiness memo now records R3-4 as accepted and maps
   the exact local R3-4.1 v2 parent, ordered append-only associations,
