@@ -4161,7 +4161,11 @@ After any material action, append or revise the relevant section with:
   SHA-256 `f61db58c87fdfbcae062db37410d68ab3710da4bfb85eef4512bb46f88af6ee8`.
   The packet contains a verified complete-history Git bundle at SHA-256
   `f24ba9afd3bf4bcbb213497bbac32ae684b3d9d6d0f2592e9c1c05317a37f847`
-  and the exact bounded review assignment. It is prepared but not yet sent.
+  and the exact bounded review assignment. On 2026-10-06 the founder
+  explicitly authorized external submission. The exact packet and SHA were
+  sent to a new Claude independent-review chat and the existing Cursor R3-4
+  review lane; both visibly accepted the assignment and began working. No
+  packet bytes were changed between hash verification and dispatch.
   No hosted database or branch mutation has been made for this remediation.
 - **R3-5 C0 EXECUTION SEQUENCE PREPARED / IMPLEMENTATION STILL BLOCKED:**
   `R3_5_C0_EXECUTION_SEQUENCE.md` divides the full approved outcome into a
