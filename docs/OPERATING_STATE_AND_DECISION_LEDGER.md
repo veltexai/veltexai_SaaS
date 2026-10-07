@@ -3771,10 +3771,12 @@ After any material action, append or revise the relevant section with:
   did not expose the preparation action during the same acceptance session.
   Production remained excluded. This is meaningful Preview evidence but not
   final acceptance: stalled-response/retry evidence, genuine 390px evidence,
-  mandatory synthetic credential retirement/sign-out, and founder disposition
-  remain open. The credential-retirement SQL is staged in the visibly
-  identified Preview SQL editor and has not yet been executed; no teardown is
-  claimed.
+  genuine 390px evidence and founder disposition remain open. Mandatory
+  teardown then completed: the visibly identified isolated Preview SQL editor
+  returned `R3_4_PREVIEW_CREDENTIAL_RETIRED`, the retirement statement was
+  replaced with a benign evidence query, the synthetic application session was
+  signed out, and `/dashboard/crm` returned to `/auth/login`. The temporary
+  credential is no longer known or reusable. Production remained untouched.
 - **R3-4.1 EXECUTION CONTRACT HARDENED / IMPLEMENTATION STILL LOCKED:** The
   existing package-set decision now fixes the additive v1/v2 database shape,
   append-only association invariants, deterministic package-set hashing and

@@ -46,7 +46,10 @@ on isolated Preview `ynzkwctwlssjcsjmahey`. It is not Production approval.
 - 390px evidence paths:
 - Roles exercised: authenticated synthetic Preview operator `r2-ui-signup-20260930@veltex.test`; signed-out route guard.
 - Defects or deviations: None in the deployment/bootstrap or authenticated desktop checks. A signed-out request for `/dashboard/crm` redirected to `/auth/login` as required. Desktop Board and List both exposed the same eligible opportunity and proposal review. Version 1 (`$280.00 per turn`) survived reload; deliberate version 2 creation preserved version 1; both entries remained `not sent`. Stalled-response/retry, genuine 390px and final credential-retirement/sign-out evidence remain pending.
-- Teardown completed at:
+- Teardown completed at: 2026-10-06 Pacific. The isolated Preview SQL editor
+  returned `R3_4_PREVIEW_CREDENTIAL_RETIRED`; the retirement statement was
+  replaced with a benign evidence query; the synthetic application session was
+  signed out; and `/dashboard/crm` returned to `/auth/login`.
 
 ## Founder disposition
 
