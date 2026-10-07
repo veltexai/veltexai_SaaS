@@ -3980,3 +3980,13 @@ After any material action, append or revise the relevant section with:
   blocked on independent Claude/Cursor `PASS`, isolated Preview evidence and
   founder acceptance of R3-4.1. No R3-5 migration, token, public route,
   customer action or hosted state was created.
+- **R3-4.1 PREVIEW/FOUNDER GATE FROZEN / EXECUTION NOT AUTHORIZED:**
+  `quality/r3-4-1-package-set/FOUNDER_ACCEPTANCE.md` now binds the exact
+  predecessor, application candidate, packet hash, expected migration history
+  and isolated Preview project. It requires two-package server-preview parity,
+  v1 fallback, v2 immutable publication, exact/changed replay, a reachable
+  close/reopen late-response exercise, genuine `390x844` containment,
+  keyboard/focus/44 px/live-status evidence, production exclusion and complete
+  synthetic-credential teardown. Independent `PASS` verdicts remain the entry
+  gate; no guarded apply artifact was generated and no Preview or Production
+  state changed.
