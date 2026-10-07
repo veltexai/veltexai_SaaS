@@ -4536,6 +4536,27 @@ After any material action, append or revise the relevant section with:
   two-session/new negative variants remain non-blocking test-depth notes. No
   hosted system, Preview, production, credential or public customer state was
   accessed or changed by either review.
+- **R3-4.1 SCOPE-DIGEST FORWARD CORRECTION — LOCAL `PASS` / INDEPENDENT REVIEW
+  PENDING:** A new forward-only migration derives every future association
+  `scope_sha256` from its immutable `customer_visible_scope` in a `BEFORE
+  INSERT` trigger and adds a `NOT VALID` check constraint that enforces the
+  relationship for new rows without rewriting accepted immutable history. The
+  column comment explicitly marks pre-correction values as potentially repeated
+  R3-4.1 metadata and requires consumers to derive from
+  `customer_visible_scope`. C0.1 already follows that rule. This candidate does
+  not mutate existing association evidence and has not been applied to Preview
+  or production. Static foundation, exact 74-migration chain and diff hygiene
+  checks pass. The first disposable PostgreSQL run correctly rejected the
+  rollback-only test's attempt to manufacture a post-correction mismatched row;
+  the second attempt then reached PostgreSQL's pending-deferred-trigger guard
+  before its test-only constraint replacement. The fixture was corrected to
+  flush deferred constraints, temporarily recreate a pre-correction row inside
+  the enclosing rollback, restore the `NOT VALID` constraint, and separately
+  prove real publisher-path rows are derived correctly. The corrected
+  disposable 74-migration token harness passes, as does the full
+  `CHECK_DEFINERS=1` migration, role, assertion, injection and concurrency
+  harness. The isolated cluster was stopped. Independent review remains before
+  any Preview application or C0.2 consumption.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

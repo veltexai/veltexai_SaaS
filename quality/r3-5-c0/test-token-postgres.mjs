@@ -37,7 +37,7 @@ try {
   run(resolve(pgBin, 'createdb'), ['-h', work, '-p', String(port), 'veltex_r35']);
   psql(['-f', resolve(root, 'quality/service-catalog-round4/db-harness/sql/00_supabase_shim.sql')]);
   const migrations = readdirSync(migrationDir).filter((file) => file.endsWith('.sql')).sort();
-  assert.equal(migrations.length, 73, 'expected exact 73-migration chain');
+  assert.equal(migrations.length, 74, 'expected exact 74-migration chain');
   for (const migration of migrations) psql(['-f', resolve(migrationDir, migration)]);
 
   psql(['-f', resolve(root, 'quality/service-catalog-round4/db-harness/sql/10_fixtures.sql')]);
@@ -60,6 +60,20 @@ returns bigint language sql security definer set search_path=pg_catalog,public a
   where organization_id=p_org and proposal_version_id=p_version
     and state='disabled' and reason='token revoked'
 $$;
+do $$ begin
+  if exists(
+    select 1 from public.crm_proposal_version_packages a
+    where a.scope_sha256<>public.crm_estimate_sha256(a.customer_visible_scope)
+  ) then
+    raise exception 'forward scope digest derivation failed';
+  end if;
+end $$;
+-- Recreate one pre-correction immutable row inside this rollback-only proof.
+-- The forward NOT VALID constraint protects new rows but intentionally does
+-- not rewrite legacy R3-4.1 metadata.
+set constraints all immediate;
+alter table public.crm_proposal_version_packages
+  drop constraint crm_proposal_version_packages_scope_digest_check;
 set local session_replication_role=replica;
 with target as (
   select a.id,a.display_position,a.work_package_id,a.estimate_run_id,
@@ -81,6 +95,11 @@ update public.crm_proposal_version_packages a set
     'estimate_input_sha256',t.estimate_input_sha256,
     'estimate_output_sha256',t.estimate_output_sha256))
 from target t where a.id=t.id;
+alter table public.crm_proposal_version_packages
+  add constraint crm_proposal_version_packages_scope_digest_check
+  check (
+    scope_sha256=public.crm_estimate_sha256(customer_visible_scope)
+  ) not valid;
 update public.crm_proposal_versions v set package_set_sha256=(
   select public.crm_estimate_sha256(jsonb_agg(jsonb_build_object(
     'displayPosition',a.display_position,'workPackageId',a.work_package_id,
@@ -265,6 +284,16 @@ rollback;
       'anon','public.read_crm_customer_action_token_status(uuid,uuid)','EXECUTE'),
     'service_status_execute',has_function_privilege(
       'service_role','public.read_crm_customer_action_token_status(uuid,uuid)','EXECUTE'),
+    'scope_digest_trigger',exists(
+      select 1 from pg_trigger
+      where tgrelid='public.crm_proposal_version_packages'::regclass
+        and tgname='derive_crm_proposal_version_package_scope_sha256'
+        and not tgisinternal),
+    'scope_digest_constraint_not_valid',exists(
+      select 1 from pg_constraint
+      where conrelid='public.crm_proposal_version_packages'::regclass
+        and conname='crm_proposal_version_packages_scope_digest_check'
+        and not convalidated),
     'migration_count',${migrations.length}
   )::text`]).trim());
 
@@ -283,7 +312,9 @@ rollback;
     authenticated_status_execute: true,
     anon_status_execute: false,
     service_status_execute: false,
-    migration_count: 73,
+    scope_digest_trigger: true,
+    scope_digest_constraint_not_valid: true,
+    migration_count: 74,
   });
 
   const tokenColumns = psql(['-c', `select string_agg(column_name,',' order by ordinal_position)
@@ -291,7 +322,7 @@ rollback;
     where table_schema='public' and table_name='crm_customer_action_tokens'`]).trim();
   assert.doesNotMatch(tokenColumns, /raw|bearer|cookie|authorization|user_agent|ip_address/i);
 
-  console.log('R3-5 C0.1 disposable PostgreSQL 73-migration token foundation PASS');
+  console.log('R3-5 C0.1 disposable PostgreSQL 74-migration token foundation PASS');
 } finally {
   if (started) {
     try { run(resolve(pgBin, 'pg_ctl'), ['-D', data, 'stop', '-m', 'fast']); } catch {}

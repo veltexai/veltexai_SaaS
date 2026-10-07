@@ -7,6 +7,8 @@ import { resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '../..');
 const migration = readFileSync(resolve(root,
   'supabase/migrations/20261008000000_r3_5_c0_customer_action_tokens.sql'), 'utf8');
+const scopeCorrection = readFileSync(resolve(root,
+  'supabase/migrations/20261009000000_r3_4_1_scope_digest_correction.sql'), 'utf8');
 
 for (const marker of [
   'create table public.crm_proposal_action_eligibility_events',
@@ -55,5 +57,17 @@ assert.doesNotMatch(migration,
   /\b(raw_token|bearer_token|access_token)\s+(text|bytea|varchar|jsonb)\b/i,
   'migration must not define a raw bearer column or parameter');
 assert.doesNotMatch(migration, /grant\s+(select|insert|update|delete|all)[\s\S]*crm_customer_action_tokens[\s\S]*to\s+(anon|authenticated)/i);
+
+for (const marker of [
+  'derive_crm_proposal_version_package_scope_sha256',
+  'new.scope_sha256:=public.crm_estimate_sha256(new.customer_visible_scope)',
+  'crm_proposal_version_packages_scope_digest_check',
+  ') not valid',
+  'consumers must derive from customer_visible_scope',
+]) assert.ok(scopeCorrection.includes(marker), `missing scope correction ${marker}`);
+assert.equal((scopeCorrection.match(/^begin;$/gm) ?? []).length, 1);
+assert.equal((scopeCorrection.match(/^commit;$/gm) ?? []).length, 1);
+assert.match(scopeCorrection,
+  /revoke all on function public\.derive_crm_proposal_version_package_scope_sha256\(\)[\s\S]*from public,anon,authenticated,service_role/);
 
 console.log('R3-5 C0.1 private token foundation PASS');
