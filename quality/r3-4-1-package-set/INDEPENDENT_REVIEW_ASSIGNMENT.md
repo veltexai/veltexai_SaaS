@@ -68,8 +68,9 @@ Verify:
 4. one selected package preserves the accepted v1 request and multiple
    packages use strict v2 identity/token-only input;
 5. selection changes issue a fresh preview/idempotency key, stale 409 recovery
-   is explicit, every returned package token is reconciled, history is not
-   overwritten and copy remains prepared/not sent;
+   is explicit, late responses from superseded or closed/reopened dialogs
+   cannot overwrite the current preview, every returned package token is
+   reconciled, history is not overwritten and copy remains prepared/not sent;
 6. viewer and unsupported/closed paths remain unavailable, Board/List and
    Estimate flows do not regress, and browser payloads cannot contain price,
    scope, hashes, estimate identity or rendered bytes; and
