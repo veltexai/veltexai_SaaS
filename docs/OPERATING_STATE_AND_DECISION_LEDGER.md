@@ -3965,5 +3965,9 @@ After any material action, append or revise the relevant section with:
   The final close-and-reopen scenario exercises a reachable supersession path.
   Because this remediation changes application source after candidate
   `15da938`, packet `/private/tmp/veltex-r3-4-1-review-15da938.zip` is now
-  `SUPERSEDED` and must not be submitted. A replacement exact packet is pending
-  the complete regression gate. No hosted or Production state changed.
+  `SUPERSEDED` and must not be submitted. Replacement exact candidate range
+  `e2e21d6..7909b1a`, with packet metadata commit `f452d9d`, is frozen in
+  `/private/tmp/veltex-r3-4-1-review-7909b1a.zip`, SHA-256
+  `7061214ab71bfb051f9c08ad4a12f4b04faf0764f9ca190a209f7105011bf89c`;
+  archive integrity and the included Git bundle both verify. Independent Claude
+  and Cursor verdicts remain `PENDING`. No hosted or Production state changed.

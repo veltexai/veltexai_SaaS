@@ -3,6 +3,9 @@ Veltex R3-4.1 immutable package-set bridge independent-review packet
 Accepted R3-4 founder checkpoint: e2e21d6
 R3-4.1 review candidate: 7909b1a
 Review range: e2e21d6..7909b1a
+Packet metadata commit: f452d9d
+Frozen packet: /private/tmp/veltex-r3-4-1-review-7909b1a.zip
+Frozen packet SHA-256: 7061214ab71bfb051f9c08ad4a12f4b04faf0764f9ca190a209f7105011bf89c
 Accepted R3-4 migration SHA-256: 86f438fe3a4516093534faf45d74bff4020dc68e9e40014f912e7152685678a3
 R3-4.1 migration: supabase/migrations/20261006000000_r3_4_1_package_set_versions.sql
 
