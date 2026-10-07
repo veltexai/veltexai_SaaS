@@ -3733,6 +3733,28 @@ After any material action, append or revise the relevant section with:
   The independent-review assignment status was reconciled to dual `PASS`.
   These records prepare execution but do not authorize hosted mutation or
   declare founder acceptance.
+- **R3-4 GUARDED ISOLATED-PREVIEW DATABASE APPLY / APPLICATION PROMOTION —
+  `VERIFIED`; AUTHENTICATED ACCEPTANCE PENDING (2026-10-06 Pacific):** After exact
+  founder authorization, the guarded artifact
+  `/private/tmp/veltex-r3-4-preview-apply.sql` was recomputed as SHA-256
+  `848411b6bca90bafef3b055353d219643a1fdf8a34d1fea7551e161c85d9ac40`
+  and applied only in the visibly identified Supabase Preview project
+  `ynzkwctwlssjcsjmahey`. The transaction returned
+  `R3_4_PREVIEW_APPLY_PASS`, `history_count=69`, `version_count=0` and
+  `receipt_count=0`. The guarded remote update then advanced only
+  `codex/r2-fresh-preview-guard` from exact base
+  `44ca80391bd570fa5dc717686163f999529fe432` to reviewed application commit
+  `aa48b5eabd03e3dd4babf313c7b473a9920467b1`; a read-only remote check
+  confirmed the new exact tip. Vercel created Preview deployment
+  `4t2FPW4NDADoV4uK5HnLsVRqhW34` at
+  `https://veltex-services-veliz-9ox0rbzrx-veltex-ai.vercel.app/`, visibly
+  bound to commit `aa48b5e` and the Preview branch. The deployment reached
+  terminal status `Ready`; the build log reported `Build Completed in
+  /vercel/output`, the Preview root loaded successfully, and a signed-out
+  request for `/dashboard/crm` redirected to `/auth/login` as required. No Production database,
+  branch, deployment, alias, credential or customer data was accessed or
+  changed. R3-4 remains `ISOLATED PREVIEW DEPLOYED + BOOTSTRAP VERIFIED / AUTHENTICATED
+  DESKTOP + 390PX AND FOUNDER ACCEPTANCE REQUIRED`.
 - **R3-4.1 EXECUTION CONTRACT HARDENED / IMPLEMENTATION STILL LOCKED:** The
   existing package-set decision now fixes the additive v1/v2 database shape,
   append-only association invariants, deterministic package-set hashing and
