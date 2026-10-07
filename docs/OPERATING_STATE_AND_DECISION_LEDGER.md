@@ -4198,8 +4198,7 @@ After any material action, append or revise the relevant section with:
   from the first 70 migrations executed the exact 6,840-byte artifact and
   returned the required terminal evidence with history `71`. No hosted state
   has been changed.
-- **R3-4.1 CARDINALITY PREVIEW ARTIFACT REVIEW — INDEPENDENT REVIEWS IN
-  PROGRESS:**
+- **R3-4.1 CARDINALITY PREVIEW ARTIFACT REVIEW — `PASS` (CLAUDE + CURSOR):**
   Exact repository tip `209c68ba6b5594909f853a6e4213dc7e6656f14e` and the
   6,840-byte guarded SQL are frozen in
   `/private/tmp/veltex-r3-4-1-cardinality-preview-209c68b-review.zip`, SHA-256
@@ -4208,11 +4207,28 @@ After any material action, append or revise the relevant section with:
   assignment and a verified complete-history bundle SHA
   `8f04452d...f7601`. On 2026-10-06 the founder explicitly approved the exact
   packet submission. The ZIP attachment and bounded read-only instructions
-  were visibly submitted to Claude, which began responding, and the exact
-  local path, hashes, tip and instructions were visibly submitted to Cursor,
-  which began processing. Both reviewers are restricted from hosted access,
-  deployment, branch movement, credential changes and production. Verdicts
-  remain `PENDING`; no hosted state has changed.
+  were visibly submitted to Claude, and the exact local path, hashes, tip and
+  instructions were visibly submitted to Cursor. Both independent reviewers
+  returned `PASS` with no Critical, High or Medium findings. Claude verified
+  byte-identical regeneration, exact migration-71 embedding, complete-history
+  ancestry, transaction/rollback behavior, privilege boundaries and 18 local
+  PostgreSQL scenarios including concurrent runners. Cursor independently
+  verified every packet hash, exact predecessor/history refusals, guarded DDL
+  scope, deterministic regeneration and disposable PostgreSQL execution.
+  Claude retained three Low observations: lock timeout is configured after the
+  advisory-lock call, pre/post function checks are pattern-based rather than a
+  complete source/owner/settings pin, and the disposable test executes the
+  `/private/tmp` artifact without first hashing that path. Cursor retained one
+  Low observation: the checked-in PostgreSQL test covers the happy path while
+  negative refusal cases were independently exercised, and the postflight does
+  not separately reassert the PUBLIC privilege even though the exact body
+  revokes it. Claude also retained two informational notes about history-row
+  replay metadata and printing PASS before COMMIT. These observations do not
+  permit wrong-target execution, privilege expansion, partial application or
+  production access and are non-blocking for this bounded Preview artifact.
+  Both reviews explicitly excluded hosted execution, deployment, branch
+  movement, credential changes and production. The independent artifact-review
+  gate is satisfied; no hosted state has changed.
 - **R3-5 C0 EXECUTION SEQUENCE PREPARED / IMPLEMENTATION STILL BLOCKED:**
   `R3_5_C0_EXECUTION_SEQUENCE.md` divides the full approved outcome into a
   consent/cryptographic freeze, private issuance foundation, fragment-exchange
