@@ -3910,6 +3910,13 @@ After any material action, append or revise the relevant section with:
   pass 46/46. The disposable 70-migration PostgreSQL matrix also proves preview
   service-role privilege, authenticated denial, viewer denial, two-package
   `$325.00` output and exact preview/published-render byte parity before rolling
-  back. Deterministic two-session contention, broader tenant/substitution
+  back. The full repository Jest suite passes 110/110 suites and 940/940 tests
+  (with pre-existing non-fatal React `act` and debug-log noise). The first
+  production-build attempt failed in the sandbox because Google Fonts DNS was
+  unavailable; a network-enabled retry compiled but correctly failed because
+  required Supabase build variables were absent. The documented loopback-only
+  placeholder configuration then completed the optimized Next.js production
+  build; only the existing Supabase Edge-runtime compatibility warnings
+  remained. Deterministic two-session contention, broader tenant/substitution
   negatives, full-suite verification, independent review, isolated Preview and
   founder acceptance remain open. No hosted or Production state changed.
