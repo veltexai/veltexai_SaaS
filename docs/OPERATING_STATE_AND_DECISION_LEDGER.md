@@ -3918,5 +3918,24 @@ After any material action, append or revise the relevant section with:
   placeholder configuration then completed the optimized Next.js production
   build; only the existing Supabase Edge-runtime compatibility warnings
   remained. Deterministic two-session contention, broader tenant/substitution
-  negatives, full-suite verification, independent review, isolated Preview and
+  negatives, independent review, isolated Preview and
   founder acceptance remain open. No hosted or Production state changed.
+- **R3-4.1 TWO-SESSION ATOMICITY + SUBSTITUTION NEGATIVES — LOCAL `PASS`:** A
+  dedicated disposable-cluster race now starts two independent database
+  sessions with the same ordered two-package IDs and optimistic tokens but
+  different command keys. The sessions demonstrably overlap on a database
+  lock; exactly one commits, the loser follows the required `40001` stale-token
+  path, and final state contains exactly one v2 parent, two associations, two
+  synchronized package pointers, one receipt, one audit row and one outbox
+  event. The rollback-only adversarial matrix additionally rejects an opaque
+  foreign-package substitution for both preview and publication and rejects a
+  foreign-property preview substitution without leaking cross-context data.
+  Harness development preserved three superseded failures: the containment
+  guard initially assumed `/tmp` while macOS resolved a different temporary
+  root, its first correction still did not cover the runtime root, and the
+  synthetic JSON fixture was over-escaped. The final guard now checks the
+  generated harness-directory basename and verifies the live PostgreSQL
+  `data_directory` exactly; corrected JSON and the full 70-migration,
+  adversarial and concurrent proof pass. Independent review, isolated Preview,
+  responsive/operator acceptance and founder acceptance remain open. No hosted
+  or Production state changed.

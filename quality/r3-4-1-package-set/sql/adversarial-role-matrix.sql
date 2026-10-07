@@ -123,6 +123,39 @@ begin
      or preview->'packages'->0->>'expected_package_updated_at' is null then
     raise exception 'caller-bound package-set preview failed';
   end if;
+  begin
+    perform public.read_crm_proposal_package_set_preview_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '93000000-0000-4000-8000-000000000004','93000000-0000-4000-8000-000000000003',
+      '93000000-0000-4000-8000-000000000002',
+      array[ids[1],'99999999-9999-4999-8999-999999999999'::uuid]);
+    raise exception 'foreign package substitution preview accepted';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal package set context unavailable' then raise; end if;
+  end;
+  begin
+    perform * from public.command_crm_publish_proposal_package_set_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '93000000-0000-4000-8000-000000000004','93000000-0000-4000-8000-000000000003',
+      '93000000-0000-4000-8000-000000000002',
+      array[ids[1],'99999999-9999-4999-8999-999999999999'::uuid],tokens,
+      'r341-foreign-package-0000');
+    raise exception 'foreign package substitution publish accepted';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal package set context unavailable' then raise; end if;
+  end;
+  begin
+    perform public.read_crm_proposal_package_set_preview_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '93000000-0000-4000-8000-000000000004','93000000-0000-4000-8000-000000000003',
+      '99999999-9999-4999-8999-999999999999',ids);
+    raise exception 'foreign property substitution preview accepted';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal package set context unavailable' then raise; end if;
+  end;
   select * into result from public.command_crm_publish_proposal_package_set_internal(
     '11111111-1111-4111-8111-111111111111',org,
     '93000000-0000-4000-8000-000000000004','93000000-0000-4000-8000-000000000003',

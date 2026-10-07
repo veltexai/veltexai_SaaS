@@ -14,9 +14,10 @@ const pgBin = process.env.PG_BIN || dirname(
 const work = mkdtempSync(resolve(tmpdir(), 'veltex-r3-4-1-foundation-'));
 const data = resolve(work, 'data');
 const port = Number(process.env.R3_4_1_FOUNDATION_PGPORT || 56500 + (process.pid % 300));
-const run = (file, args) => execFileSync(file, args, {
+const run = (file, args, env = process.env) => execFileSync(file, args, {
   encoding: 'utf8',
   stdio: ['ignore', 'pipe', 'pipe'],
+  env,
 });
 const psql = (args) => run(resolve(pgBin, 'psql'), [
   '-X', '-A', '-t', '-q', '-v', 'ON_ERROR_STOP=1',
@@ -97,7 +98,17 @@ try {
   const matrix = psql(['-f', resolve(root,
     'quality/r3-4-1-package-set/sql/adversarial-role-matrix.sql')]);
   assert.match(matrix, /R3_4_1_ADVERSARIAL_ROLE_MATRIX_PASS/);
-  console.log('R3-4.1 disposable PostgreSQL 70-migration foundation and adversarial matrix PASS');
+  const concurrency = run('/bin/bash', [resolve(root,
+    'quality/r3-4-1-package-set/concurrency.sh')], {
+    ...process.env,
+    R3_4_1_PGDATA: data,
+    PGHOST: work,
+    PGPORT: String(port),
+    PGUSER: process.env.USER || 'postgres',
+    PGDATABASE: 'veltex_r341',
+  });
+  assert.match(concurrency, /R3_4_1_CONCURRENCY_PASS/);
+  console.log('R3-4.1 disposable PostgreSQL 70-migration foundation, adversarial matrix and concurrency PASS');
 } finally {
   if (started) {
     try { run(resolve(pgBin, 'pg_ctl'), ['-D', data, 'stop', '-m', 'fast']); } catch {}
