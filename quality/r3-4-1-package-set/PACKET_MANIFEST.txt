@@ -1,0 +1,44 @@
+Veltex R3-4.1 immutable package-set bridge independent-review packet
+
+Accepted R3-4 founder checkpoint: e2e21d6
+R3-4.1 review candidate: 15da938
+Review range: e2e21d6..15da938
+Frozen packet: /private/tmp/veltex-r3-4-1-review-15da938.zip
+Frozen packet SHA-256: f92f7092e0f029e4a0dcaafb08dd579a594c167d6d1b157e56fe8de55d9f0eeb
+Accepted R3-4 migration SHA-256: 86f438fe3a4516093534faf45d74bff4020dc68e9e40014f912e7152685678a3
+R3-4.1 migration: supabase/migrations/20261006000000_r3_4_1_package_set_versions.sql
+
+Candidate commits:
+- 40f1203 test(r3-4-1): freeze accepted proposal-version base
+- c98ad8b feat(r3-4-1): add package-set schema foundation
+- 39f0bcf test(r3-4-1): prove package-set schema on postgres
+- 9aa8132 feat(r3-4-1): publish immutable package sets
+- f56892c feat(r3-4-1): add package-set API boundary
+- 4054865 fix(r3-4-1): narrow package-set request contract
+- a10c14c feat(r3-4-1): add package-set preview workflow
+- 0ebf7f7 test(r3-4-1): record full regression and build gates
+- e89a237 test(r3-4-1): prove atomic package-set races
+- 15da938 docs(r3-4-1): define independent review lanes
+
+Final local evidence before packet freeze:
+- accepted R3-4 byte gate: PASS
+- R3-4.1 migration foundation: PASS
+- migration chain: 70 unique executable versions PASS
+- disposable PostgreSQL 16 exact 70-migration compile: PASS
+- service-role/authenticated privilege assertions: PASS
+- adversarial role/context/substitution/immutability matrix: PASS
+- two-package preview/published rendered-byte parity: PASS
+- genuine two-session lock overlap and atomic winner/stale-loser race: PASS
+- focused proposal route and Board tests: 46/46 PASS
+- TypeScript (`tsc --noEmit`): PASS
+- full Jest: 110/110 suites, 940/940 tests, 5/5 snapshots PASS
+- optimized Next.js build: 85 pages PASS using documented loopback-only
+  placeholder Supabase/app configuration
+
+Known non-blocking baseline output:
+- pre-existing React `act` warnings and debug logs in unrelated tests;
+- existing Supabase Edge-runtime compatibility build warnings.
+
+No Preview, Production, credential, deployment, customer-message, payment or
+campaign state changed. Independent Claude and Cursor verdicts remain pending;
+isolated Preview, responsive/operator and founder acceptance remain required.

@@ -3939,3 +3939,14 @@ After any material action, append or revise the relevant section with:
   adversarial and concurrent proof pass. Independent review, isolated Preview,
   responsive/operator acceptance and founder acceptance remain open. No hosted
   or Production state changed.
+- **R3-4.1 INDEPENDENT REVIEW PACKET — FROZEN / CLAUDE + CURSOR VERDICTS
+  `PENDING`:** Exact accepted-base-to-candidate range
+  `e2e21d6..15da938` is frozen in
+  `/private/tmp/veltex-r3-4-1-review-15da938.zip`, SHA-256
+  `f92f7092e0f029e4a0dcaafb08dd579a594c167d6d1b157e56fe8de55d9f0eeb`;
+  archive integrity passed. The packet includes an exact Git bundle, relevant
+  source/migrations/tests, authoritative ledger, manifest and complementary
+  review instructions. Claude is assigned database/security/replay/atomicity/
+  privacy; Cursor is assigned operator workflow/accessibility/truthfulness and
+  regression. Neither verdict is claimed yet. No hosted or Production state
+  changed.
