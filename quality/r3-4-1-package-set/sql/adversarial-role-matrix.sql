@@ -118,6 +118,65 @@ begin
     '2026-09-22.2',input,output,'base',30000,'USD','one_time',token);
 end $$;
 
+-- Exercise the installed summary function behavior, not only its source text.
+-- Preserve an older bound estimate and two unbound estimates so the assertion
+-- proves newest-per-package cardinality plus exactly one newest NULL group.
+reset role;
+insert into public.crm_estimate_runs(id,organization_id,opportunity_id,work_package_id,
+  property_id,request_key,engine_key,engine_version,input_snapshot,output_snapshot,
+  selected_scenario,selected_amount_minor,currency,pricing_basis,input_sha256,
+  output_sha256,created_by,created_at)
+select fixture.id,pr.active_organization_id,'93000000-0000-4000-8000-000000000003',
+  fixture.package_id,'93000000-0000-4000-8000-000000000002',fixture.request_key,
+  'service_catalog','2026-09-22.2','{}'::jsonb,'{}'::jsonb,'base',fixture.amount,
+  'USD','per_visit',repeat('1',64),repeat('2',64),pr.id,fixture.created_at
+from public.profiles pr cross join (values
+  ('93000000-0000-4000-8000-000000000009'::uuid,
+    '93000000-0000-4000-8000-000000000005'::uuid,'r341-summary-old-bound'::text,
+    9000::bigint,'2000-01-01 00:00:00+00'::timestamptz),
+  ('93000000-0000-4000-8000-000000000010'::uuid,
+    null::uuid,'r341-summary-old-unbound'::text,8000::bigint,
+    '2000-01-01 00:00:00+00'::timestamptz),
+  ('93000000-0000-4000-8000-000000000011'::uuid,
+    null::uuid,'r341-summary-new-unbound'::text,9500::bigint,
+    '2001-01-01 00:00:00+00'::timestamptz)
+) fixture(id,package_id,request_key,amount,created_at)
+where pr.id='11111111-1111-4111-8111-111111111111';
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+do $$
+declare org uuid:=current_setting('r341.org')::uuid; summary_count integer;
+begin
+  select count(*) into summary_count from public.read_crm_estimate_summaries(org);
+  if summary_count<>4 then
+    raise exception 'estimate summary did not return three packages plus one unbound row: %',summary_count;
+  end if;
+  if exists(select 1 from public.read_crm_estimate_summaries(org)
+      group by opportunity_id,work_package_id having count(*)<>1) then
+    raise exception 'estimate summary returned duplicate package cardinality';
+  end if;
+  if not exists(select 1 from public.read_crm_estimate_summaries(org) s
+      where s.work_package_id is null
+        and s.estimate_run_id='93000000-0000-4000-8000-000000000011')
+     or exists(select 1 from public.read_crm_estimate_summaries(org) s
+      where s.estimate_run_id in (
+        '93000000-0000-4000-8000-000000000009'::uuid,
+        '93000000-0000-4000-8000-000000000010'::uuid)) then
+    raise exception 'estimate summary newest bound/unbound selection failed';
+  end if;
+  if exists(select 1 from public.crm_site_work_packages p
+      where p.id in ('93000000-0000-4000-8000-000000000005'::uuid,
+                     '93000000-0000-4000-8000-000000000006'::uuid,
+                     '93000000-0000-4000-8000-000000000007'::uuid)
+        and not exists(select 1 from public.read_crm_estimate_summaries(org) s
+          where s.work_package_id=p.id and s.estimate_run_id=p.estimate_run_id)) then
+    raise exception 'estimate summary did not select the linked newest package estimate';
+  end if;
+end $$;
+
+reset role;
+set local role service_role;
 do $$
 declare org uuid:=current_setting('r341.org')::uuid;
   ids uuid[]:=array['93000000-0000-4000-8000-000000000005'::uuid,

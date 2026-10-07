@@ -4234,6 +4234,20 @@ After any material action, append or revise the relevant section with:
   Both reviews explicitly excluded hosted execution, deployment, branch
   movement, credential changes and production. The independent artifact-review
   gate is satisfied; no hosted state has changed.
+- **R3-4.1 CARDINALITY BEHAVIORAL REGRESSION — STRENGTHENED / `PASS`:** The
+  disposable PostgreSQL adversarial matrix now executes the installed
+  `read_crm_estimate_summaries(uuid)` function as an authenticated owner with
+  three estimated packages, a superseded bound estimate and two unbound
+  estimates. It requires exactly one newest row per package, exactly one newest
+  `NULL`-package row, rejection of both superseded rows and correspondence
+  between every package summary and the package's linked current estimate.
+  This closes the shared Claude/Cursor Low observation that the checked-in gate
+  previously inspected only function source. The first rerun was blocked by
+  sandbox System V shared-memory restrictions; the identical disposable test
+  passed outside that restriction, including the 71-migration foundation,
+  behavioral cardinality proof, adversarial matrix and concurrency harness.
+  The static migration-foundation test also passes. This is test-only evidence;
+  no application, migration, hosted system or production state changed.
 - **R3-5 C0 EXECUTION SEQUENCE PREPARED / IMPLEMENTATION STILL BLOCKED:**
   `R3_5_C0_EXECUTION_SEQUENCE.md` divides the full approved outcome into a
   consent/cryptographic freeze, private issuance foundation, fragment-exchange
