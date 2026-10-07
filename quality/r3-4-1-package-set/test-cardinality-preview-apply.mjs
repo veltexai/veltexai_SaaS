@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+
+import { createHash } from 'node:crypto';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
+
+const dir = mkdtempSync(join(tmpdir(), 'veltex-r341-cardinality-preview-'));
+const a = join(dir, 'a.sql'); const b = join(dir, 'b.sql');
+const run = (out) => spawnSync(process.execPath,
+  ['quality/r3-4-1-package-set/build-cardinality-preview-apply.mjs', out],
+  { encoding: 'utf8' });
+try {
+  const first = run(a); const second = run(b);
+  if (first.status || second.status) throw new Error(first.stderr || second.stderr);
+  const one = readFileSync(a); const two = readFileSync(b);
+  if (!one.equals(two)) throw new Error('cardinality Preview artifact is not deterministic');
+  const sql = one.toString('utf8');
+  for (const fragment of [
+    'R3_4_1_CARDINALITY_PREVIEW_APPLY_PASS',
+    'ynzkwctwlssjcsjmahey',
+    '99c76359610d152c60047ebd5fdecb2399e65d99',
+    'source_sha256:f69b9bf189b44d955b39610c82d4762e73b854825bc93a4c42c400701433076f',
+    'accepted opportunity-only estimate summary definition changed',
+    'per-package estimate summary postcondition failed',
+    'estimate summary privilege postcondition failed',
+  ]) if (!sql.includes(fragment)) throw new Error(`missing ${fragment}`);
+  if ((sql.match(/^begin;$/gmu) || []).length !== 1
+      || (sql.match(/^commit;$/gmu) || []).length !== 1) {
+    throw new Error('artifact must have one transaction');
+  }
+  if ((sql.match(/insert into supabase_migrations\.schema_migrations/g) || []).length !== 1) {
+    throw new Error('artifact must write one history row');
+  }
+  console.log(`R3-4.1 cardinality Preview artifact deterministic: ${one.length} bytes ${
+    createHash('sha256').update(one).digest('hex')}`);
+} finally { rmSync(dir, { recursive: true, force: true }); }

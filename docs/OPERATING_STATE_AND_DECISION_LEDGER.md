@@ -4167,6 +4167,37 @@ After any material action, append or revise the relevant section with:
   review lane; both visibly accepted the assignment and began working. No
   packet bytes were changed between hash verification and dispatch.
   No hosted database or branch mutation has been made for this remediation.
+- **R3-4.1 CARDINALITY INDEPENDENT REVIEWS — CLAUDE `PASS` / CURSOR `PASS`:**
+  Both reviewers independently recomputed exact packet SHA-256
+  `f61db58c87fdfbcae062db37410d68ab3710da4bfb85eef4512bb46f88af6ee8`,
+  verified complete-history bundle tip `99c7635`, reproduced the old one-row
+  defect and confirmed migration 71 returns the newest unbound row plus the
+  newest row per package without crossing tenant or estimator boundaries.
+  Both report no Critical, High or Medium finding. Shared Low evidence: the
+  checked-in regression gate inspects installed/source SQL rather than seeding
+  the full behavioral fixture; each reviewer independently ran that fixture
+  and observed the correct result. Claude additionally noted timestamp versus
+  package-link selection, the pre-existing lack of a deleted-opportunity filter
+  and a future indexing opportunity. Cursor additionally preserved the
+  pre-existing Board/List single-estimate display copy. These are non-blocking,
+  are not cross-tenant leaks or wrong-publication paths, and are deferred to
+  avoid expanding the bounded MVP remediation. Hosted acceptance remains
+  mandatory.
+- **R3-4.1 CARDINALITY GUARDED PREVIEW ARTIFACT — LOCAL `PASS` / HOSTED APPLY
+  PENDING:** `build-cardinality-preview-apply.mjs` deterministically emits
+  `/private/tmp/veltex-r3-4-1-cardinality-preview-apply.sql`, 6,840 bytes,
+  SHA-256 `45b75deb075b35d855189f657fd83a57c27c2b25124928a829cf7b415cc6c4bb`.
+  It binds reviewed packet tip `99c7635`, exact migration SHA-256
+  `f69b9bf189b44d955b39610c82d4762e73b854825bc93a4c42c400701433076f`,
+  isolated project `ynzkwctwlssjcsjmahey`, the exact 70-version predecessor,
+  old opportunity-only function shape and accepted privilege boundary. In one
+  transaction it applies only migration 71, writes one history row, asserts
+  the per-package deterministic definition, history 71 and unchanged function
+  privileges, then emits `R3_4_1_CARDINALITY_PREVIEW_APPLY_PASS`. Determinism
+  and structural refusal tests pass; a disposable PostgreSQL database built
+  from the first 70 migrations executed the exact 6,840-byte artifact and
+  returned the required terminal evidence with history `71`. No hosted state
+  has been changed.
 - **R3-5 C0 EXECUTION SEQUENCE PREPARED / IMPLEMENTATION STILL BLOCKED:**
   `R3_5_C0_EXECUTION_SEQUENCE.md` divides the full approved outcome into a
   consent/cryptographic freeze, private issuance foundation, fragment-exchange
