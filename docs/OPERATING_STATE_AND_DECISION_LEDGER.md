@@ -4353,3 +4353,35 @@ After any material action, append or revise the relevant section with:
   PostgreSQL execution pass. The first PostgreSQL attempt was blocked by sandbox
   shared-memory restrictions; the identical proof passed outside that
   restriction. The artifact has not been applied to Preview or production.
+
+## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
+
+- **COMPLETE — READ-ONLY DECISION PACKAGE:** Mohamed Chouati's 2026-10-05
+  `Onboarding Friction Audit.md` was reconciled against the exact audited commit
+  `a4deb7c0d0f50ae03dfd1ff1981833fa5f996cd1`, the preserved deployment record,
+  and later Release 1 correction evidence. The bounded report is
+  `/private/tmp/VELTEX_ONBOARDING_FRICTION_AUDIT_RECONCILIATION_2026-10-07.md`,
+  SHA-256
+  `f921adcc21bb06db8a083052811fce4ec5837d06fc8e020936594f1c4ffbb38b`.
+- **PRODUCTION-REF CONTRADICTION RESOLVED:** GitHub production deployment
+  `6557542919` for `veltex-services-veliz` records success from exact SHA
+  `a4deb7c`; Mohamed's observed `production/master=e02213e` was a stale/local
+  ref and is not authoritative for the serving deployment.
+- **VERDICT — `NO-GO` FOR THE AUDITED BRANCH AS-IS:** all four release-blocking
+  findings are supported at `a4deb7c`. Later descendant work through
+  `3f9ce76361e7893fdcbef458b6b997d4d04ad9a0` independently closes the broken
+  emailed-PDF and tracked-recipient defects, but that candidate is not proven
+  deployed and the paid Stripe `trialing`, duplicate funnel ownership,
+  signup-safety and remaining analytics findings are still open.
+- **RECOMMENDED PRODUCT POLICY — PENDING FOUNDER DECISION:** a real Stripe
+  subscription in `trialing` receives paid rights; the internal `free_trial`
+  receives a small server-enforced allowance of proposal sends/downloads with
+  explicit UI copy and abuse controls. This review does not implement the
+  policy.
+- **NEXT BOUNDED REMEDIATION:** HF-1 PDF/send, HF-2 entitlement/free-trial, and
+  HF-3 public-link authorization should be developed as three separately
+  reviewable commits in a fresh isolated worktree, then HF-4 funnel ownership,
+  HF-5 signup safety and HF-6 remaining correctness. No production deployment,
+  migration, merge, external human message, paid replay or credential action
+  was performed. The active R3-4.1 independent artifact-review gate remains a
+  separate workstream and resumes after this interruption.
