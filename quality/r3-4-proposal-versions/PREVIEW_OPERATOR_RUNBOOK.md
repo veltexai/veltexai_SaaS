@@ -1,16 +1,19 @@
 # R3-4 isolated Preview operator runbook
 
-Status: **READY / HOSTED APPLY NOT AUTHORIZED**.
+Status: **ISOLATED PREVIEW DEPLOYED / AUTHENTICATED ACCEPTANCE PENDING**.
 
 This runbook converts the independently reviewed R3-4 implementation into a
-bounded hosted acceptance exercise. It does not authorize a database apply,
-branch push, credential change, Production access, customer data or release.
+bounded hosted acceptance exercise. The exact guarded database apply and
+Preview-only branch promotion below completed successfully on 2026-10-06
+Pacific. This record does not authorize a credential change, Production access,
+customer data or release.
 
 ## Fixed evidence
 
 - Supabase: isolated Preview `ynzkwctwlssjcsjmahey`
 - Vercel branch: `codex/r2-fresh-preview-guard`
-- Current remote base: `44ca80391bd570fa5dc717686163f999529fe432`
+- Applied remote transition: `44ca80391bd570fa5dc717686163f999529fe432`
+  → `aa48b5eabd03e3dd4babf313c7b473a9920467b1`
 - Reviewed application commit: `aa48b5eabd03e3dd4babf313c7b473a9920467b1`
 - Guarded SQL: `/private/tmp/veltex-r3-4-preview-apply.sql`
 - Guarded SQL SHA-256:
@@ -19,12 +22,21 @@ branch push, credential change, Production access, customer data or release.
   `86f438fe3a4516093534faf45d74bff4020dc68e9e40014f912e7152685678a3`
 - Existing synthetic account: `r2-ui-signup-20260930@veltex.test`
 - Required database result: `R3_4_PREVIEW_APPLY_PASS`, history `69`
+- Ready deployment: `4t2FPW4NDADoV4uK5HnLsVRqhW34`
+- Ready deployment URL:
+  `https://veltex-services-veliz-9ox0rbzrx-veltex-ai.vercel.app/`
 
 Use only existing synthetic Preview data or records named with the prefix
 `R3-4 Preview Acceptance`. Never enter real customer, address, contact,
 credential, access instruction, photograph, attachment or price data.
 
 ## Guarded apply and deployment checks
+
+Completed: exact SQL hash matched; the isolated Preview apply returned
+`R3_4_PREVIEW_APPLY_PASS`, history `69`, version count `0` and receipt count
+`0`; the guarded branch reached exact commit `aa48b5e`; Vercel reached `Ready`
+in `Preview`; the root loaded; and signed-out `/dashboard/crm` redirected to
+`/auth/login`. Production remained excluded and unchanged.
 
 1. Confirm the Supabase project reference displayed in the UI is exactly
    `ynzkwctwlssjcsjmahey` and that the environment is isolated Preview.
