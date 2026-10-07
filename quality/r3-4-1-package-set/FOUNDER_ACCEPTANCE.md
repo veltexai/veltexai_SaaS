@@ -30,6 +30,12 @@ reference inside the artifact and require a terminal
 `R3_4_1_PREVIEW_APPLY_PASS` result. Do not reuse or edit an earlier-stage apply
 artifact.
 
+- Guarded SQL: `/private/tmp/veltex-r3-4-1-preview-apply.sql`
+- Size: `38,276` bytes
+- SHA-256: `0b78d9589c851d61eb77c37654fdec1d570a2ee418f01320cc250026eebcce9a`
+- Migration SHA-256:
+  `1f7f2943813111590e6de914f4de8f455113522079e0258015d56b90587a4eb1`
+
 ## Identity and safety gate
 
 - [x] Independent Claude database/security verdict is `PASS` for the frozen
@@ -38,7 +44,7 @@ artifact.
       packet and candidate.
 - [x] Packet SHA-256 and included Git bundle verify immediately before use.
 - [ ] Supabase project reference visibly equals `ynzkwctwlssjcsjmahey`.
-- [ ] Guarded SQL artifact hash is recomputed and matches this record.
+- [x] Guarded SQL artifact hash is recomputed and matches this record.
 - [ ] Preview branch is still at exact R3-4 predecessor `aa48b5e` before the
       fast-forward; any drift is investigated rather than overwritten.
 - [ ] Vercel deployment is visibly `Preview`, binds exact reviewed candidate

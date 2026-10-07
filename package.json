@@ -35,6 +35,7 @@
     "r3-4-1:test-accepted-base": "node quality/r3-4-1-package-set/test-accepted-base.mjs",
     "r3-4-1:test-migration-foundation": "node quality/r3-4-1-package-set/test-migration-foundation.mjs",
     "r3-4-1:test-postgres-foundation": "node quality/r3-4-1-package-set/test-postgres-foundation.mjs",
+    "r3-4-1:test-preview-artifact": "node quality/r3-4-1-package-set/test-preview-apply.mjs",
     "brand:test-inventory": "node quality/brand-architecture/test-brand-inventory.mjs",
     "100s:operator": "node 100X/100S/operator/cli.mjs",
     "test:100s": "jest 100X/100S/tests --runInBand"

@@ -4066,16 +4066,28 @@ After any material action, append or revise the relevant section with:
   blocked on independent Claude/Cursor `PASS`, isolated Preview evidence and
   founder acceptance of R3-4.1. No R3-5 migration, token, public route,
   customer action or hosted state was created.
-- **R3-4.1 PREVIEW/FOUNDER GATE FROZEN / EXECUTION NOT AUTHORIZED:**
+- **R3-4.1 GUARDED PREVIEW ARTIFACT — LOCAL `PASS` / HOSTED APPLY PENDING:**
   `quality/r3-4-1-package-set/FOUNDER_ACCEPTANCE.md` now binds the exact
   predecessor, application candidate, packet hash, expected migration history
   and isolated Preview project. It requires two-package server-preview parity,
   v1 fallback, v2 immutable publication, exact/changed replay, a reachable
   close/reopen late-response exercise, genuine `390x844` containment,
   keyboard/focus/44 px/live-status evidence, production exclusion and complete
-  synthetic-credential teardown. Independent `PASS` verdicts remain the entry
-  gate; no guarded apply artifact was generated and no Preview or Production
-  state changed.
+  synthetic-credential teardown. Both independent entry-gate verdicts are now
+  `PASS`. `quality/r3-4-1-package-set/build-preview-apply.mjs` deterministically
+  generated `/private/tmp/veltex-r3-4-1-preview-apply.sql` (38,276 bytes),
+  SHA-256 `0b78d9589c851d61eb77c37654fdec1d570a2ee418f01320cc250026eebcce9a`,
+  from exact migration SHA-256
+  `1f7f2943813111590e6de914f4de8f455113522079e0258015d56b90587a4eb1`.
+  The artifact fails closed unless isolated project `ynzkwctwlssjcsjmahey`
+  visibly has the exact 69-version R3-4 predecessor and no R3-4.1 schema; it
+  fingerprints all existing CRM/proposal rows, normalizing only the additive
+  columns, asserts history 70, empty v2 state, RLS, routines, triggers and
+  privileges, and emits `R3_4_1_PREVIEW_APPLY_PASS` before commit. Its
+  deterministic structural test passes, and the disposable 70-migration
+  PostgreSQL foundation, adversarial matrix and genuine concurrency harness
+  pass again. Hosted isolated-Preview apply and application fast-forward remain
+  pending; no Preview or Production state changed.
 - **R3-5 C0 EXECUTION SEQUENCE PREPARED / IMPLEMENTATION STILL BLOCKED:**
   `R3_5_C0_EXECUTION_SEQUENCE.md` divides the full approved outcome into a
   consent/cryptographic freeze, private issuance foundation, fragment-exchange
