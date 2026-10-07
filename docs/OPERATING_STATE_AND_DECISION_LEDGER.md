@@ -4023,6 +4023,21 @@ After any material action, append or revise the relevant section with:
   build variables before the documented loopback placeholders were supplied.
   Independent Claude re-review and a new standalone reproducible packet remain
   required. No Preview or Production state changed.
+- **R3-4.1 CLAUDE REMEDIATION PACKET — FROZEN / RE-REVIEW `PENDING`:** Exact
+  remediated source candidate `a98ca78f1d5527534a82f653edcd62e238951cac`
+  is frozen in `/private/tmp/veltex-r3-4-1-remediation-a98ca78-compact-review.zip`,
+  SHA-256 `623e51a35593737311d72d0777e2333bdf64430b59c1b2218426f7919f59ff5e`.
+  Archive integrity passes. Its 1.3 MB standalone snapshot bundle SHA-256 is
+  `ddac5c07c66e4a0c1de6f1fb6f726507eea916ba5ddc4d82724c652c1caa85c7`;
+  a new empty repository reports complete history, fetches snapshot `2dce395`
+  and contains all 70 migrations, R3-1 through R3-4.1 matrices, the complete
+  definer harness, R3-4.1 application boundary/tests, decision record and
+  ledger. The packet manifest binds every remediated file to its actual
+  `a98ca78` Git blob ID and records both migration hashes. The earlier 175 MB
+  full-repository/full-history packet was rejected before submission because
+  tracked media made it unnecessarily large; it is `SUPERSEDED` by this
+  bounded reproducible packet. Claude re-review is pending; no hosted state
+  changed.
 - **R3-5 READINESS REBOUND TO THE CURRENT PACKAGE-SET CANDIDATE / IMPLEMENTATION
   STILL BLOCKED:** The C0 readiness memo now records R3-4 as accepted and maps
   the exact local R3-4.1 v2 parent, ordered append-only associations,
