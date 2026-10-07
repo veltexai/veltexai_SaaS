@@ -3838,8 +3838,15 @@ After any material action, append or revise the relevant section with:
   public/anon/authenticated/service-role table access is revoked; update,
   delete and truncate reuse the immutable-version trigger boundary. The
   accepted-base test, additive migration-foundation test, prior R3-4 migration
-  contract and 70-version chain validator pass. This is only a schema
-  foundation candidate: PostgreSQL runtime compilation, the caller-bound v2
+  contract and 70-version chain validator pass. A disposable PostgreSQL 16
+  cluster then compiled the exact lexical 70-migration chain and proved the v2
+  shape constraint, 18-column association table, RLS and absence of direct
+  service-role `INSERT`; the cluster was stopped and removed. The first sandbox
+  attempt was rejected by local shared-memory restrictions before initialization.
+  The first unrestricted proof query incorrectly assumed direct replay creates
+  `schema_migrations`, and the next assertion expected 20 rather than the actual
+  18 declared columns; both harness defects were corrected and are superseded by
+  the final PASS. This is only a database-shape foundation: the caller-bound v2
   publish command, adversarial role matrix, deterministic race, server/UI
   integration and every independent/Preview/founder gate remain required. No
   hosted or Production state changed.
