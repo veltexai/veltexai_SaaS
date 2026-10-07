@@ -4156,6 +4156,12 @@ After any material action, append or revise the relevant section with:
   corrected before the passing run. The first build attempt was blocked by
   sandbox DNS and the second by absent worktree environment variables; the
   unchanged build passed using the repository's existing local environment.
+  Exact review tip `99c76359610d152c60047ebd5fdecb2399e65d99` is frozen in
+  `/private/tmp/veltex-r3-4-1-cardinality-remediation-99c7635-review.zip`,
+  SHA-256 `f61db58c87fdfbcae062db37410d68ab3710da4bfb85eef4512bb46f88af6ee8`.
+  The packet contains a verified complete-history Git bundle at SHA-256
+  `f24ba9afd3bf4bcbb213497bbac32ae684b3d9d6d0f2592e9c1c05317a37f847`
+  and the exact bounded review assignment. It is prepared but not yet sent.
   No hosted database or branch mutation has been made for this remediation.
 - **R3-5 C0 EXECUTION SEQUENCE PREPARED / IMPLEMENTATION STILL BLOCKED:**
   `R3_5_C0_EXECUTION_SEQUENCE.md` divides the full approved outcome into a
