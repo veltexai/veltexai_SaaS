@@ -4116,6 +4116,47 @@ After any material action, append or revise the relevant section with:
   URL serve the expected landing page. Production was not changed. R3-4.1 is
   not yet `ACCEPTED`: authenticated desktop and genuine `390x844` workflow
   evidence, synthetic-credential teardown, and founder acceptance remain.
+- **R3-4.1 AUTHENTICATED PREVIEW ATTEMPT — `BLOCKED`, DEFECT PRESERVED:** The
+  founder authorized a temporary rotation of only synthetic Preview user
+  `r2-ui-signup-20260930@veltex.test` in isolated project
+  `ynzkwctwlssjcsjmahey`. A bounded two-package fixture was created through the
+  existing command functions for opportunity
+  `a2370d90-14e7-4b93-a538-7637f249e20f`: packages
+  `250cef18-e476-433c-a80d-c763f4afdce0` and
+  `1e2c19af-0acc-4ce4-ae26-2f4d70c5c8da`, both with immutable linked estimate
+  runs. The hosted Board displayed only the newest package and opened the R3-4
+  v1 single-package dialog; no proposal version was published. Root cause is
+  the accepted R3-3 `read_crm_estimate_summaries` contract using
+  `distinct on(e.opportunity_id)`, which collapses every package-bound estimate
+  after the first. Mocked multi-package component data had hidden this hosted
+  contract mismatch. Desktop and `390x844` R3-4.1 acceptance remain
+  `BLOCKED`; the attempt is not a pass and R3-4.1 is not accepted.
+- **SYNTHETIC PREVIEW CREDENTIAL TEARDOWN — `COMPLETE` / `VERIFIED`:** After
+  stopping the publication path, the Preview session was signed out, the
+  synthetic user's password was replaced with a fresh unknown random value,
+  all sessions for that synthetic user were deleted and Supabase returned
+  `R3_4_1_SYNTHETIC_CREDENTIAL_RETIRED`. Every unsaved SQL-editor tab that had
+  held either temporary credential was discarded. The fixture remains only in
+  isolated Preview as reproducible acceptance evidence. No production
+  credential, data, schema, deployment or configuration changed.
+- **R3-4.1 PACKAGE-CARDINALITY REMEDIATION — LOCAL `PASS`, HOSTED APPLY NOT
+  STARTED:** Additive migration
+  `20261007000000_r3_4_1_estimate_summary_package_cardinality.sql` replaces the
+  read function without changing its signature or authorization boundary. It
+  returns the deterministic newest row per
+  `(opportunity_id, work_package_id)`, preserving the newest `NULL` package row
+  for the v1 workflow while exposing every package-bound estimate required by
+  v2. Static regression coverage rejects the prior opportunity-only shape; the
+  disposable PostgreSQL 71-migration chain, privilege/adversarial matrix and
+  genuine concurrency harness pass. Migration-chain validation reports 71
+  unique versions, all 110 Jest suites / 941 tests pass, and the environment-
+  configured production build passes. The first PostgreSQL attempt was blocked
+  by sandbox shared-memory restrictions and the first two function-definition
+  assertions were too whitespace-specific; both test-harness issues were
+  corrected before the passing run. The first build attempt was blocked by
+  sandbox DNS and the second by absent worktree environment variables; the
+  unchanged build passed using the repository's existing local environment.
+  No hosted database or branch mutation has been made for this remediation.
 - **R3-5 C0 EXECUTION SEQUENCE PREPARED / IMPLEMENTATION STILL BLOCKED:**
   `R3_5_C0_EXECUTION_SEQUENCE.md` divides the full approved outcome into a
   consent/cryptographic freeze, private issuance foundation, fragment-exchange

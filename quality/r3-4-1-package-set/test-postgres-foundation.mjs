@@ -39,7 +39,7 @@ try {
   ]);
   psql(['-f', resolve(root, 'quality/service-catalog-round4/db-harness/sql/00_supabase_shim.sql')]);
   const migrations = readdirSync(migrationDir).filter((file) => file.endsWith('.sql')).sort();
-  assert.equal(migrations.length, 70, 'expected exact 70-migration chain');
+  assert.equal(migrations.length, 71, 'expected exact 71-migration chain');
   for (const migration of migrations) psql(['-f', resolve(migrationDir, migration)]);
 
   const proof = JSON.parse(psql(['-c', `select jsonb_build_object(
@@ -93,8 +93,17 @@ try {
     authenticated_command_execute: false,
     service_role_preview_execute: true,
     authenticated_preview_execute: false,
-    migration_count: 70,
+    migration_count: 71,
   });
+  const summaryDefinition = psql(['-c', `select pg_get_functiondef(
+    'public.read_crm_estimate_summaries(uuid)'::regprocedure
+  )`]);
+  assert.match(summaryDefinition,
+    /DISTINCT ON\s*\(e\.opportunity_id,\s*e\.work_package_id\)/i,
+    'hosted board contract must preserve every package estimate');
+  assert.doesNotMatch(summaryDefinition,
+    /DISTINCT ON\s*\(e\.opportunity_id\)\s/i,
+    'opportunity-only summary cardinality must not return');
   const matrix = psql(['-f', resolve(root,
     'quality/r3-4-1-package-set/sql/adversarial-role-matrix.sql')]);
   assert.match(matrix, /R3_4_1_ADVERSARIAL_ROLE_MATRIX_PASS/);
@@ -108,7 +117,7 @@ try {
     PGDATABASE: 'veltex_r341',
   });
   assert.match(concurrency, /R3_4_1_CONCURRENCY_PASS/);
-  console.log('R3-4.1 disposable PostgreSQL 70-migration foundation, adversarial matrix and concurrency PASS');
+  console.log('R3-4.1 disposable PostgreSQL 71-migration foundation, package cardinality, adversarial matrix and concurrency PASS');
 } finally {
   if (started) {
     try { run(resolve(pgBin, 'pg_ctl'), ['-D', data, 'stop', '-m', 'fast']); } catch {}

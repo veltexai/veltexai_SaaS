@@ -10,6 +10,8 @@ const v1 = readFileSync(resolve(root,
   'supabase/migrations/20261005000000_r3_4_immutable_proposal_versions.sql'));
 const migration = readFileSync(resolve(root,
   'supabase/migrations/20261006000000_r3_4_1_package_set_versions.sql'), 'utf8');
+const cardinalityFix = readFileSync(resolve(root,
+  'supabase/migrations/20261007000000_r3_4_1_estimate_summary_package_cardinality.sql'), 'utf8');
 
 assert.equal(
   createHash('sha256').update(v1).digest('hex'),
@@ -64,5 +66,19 @@ assert.ok(
     < migration.indexOf('select c.* into existing'),
   'authorization must precede command receipt lookup',
 );
+
+assert.match(cardinalityFix,
+  /select distinct on\(e\.opportunity_id,e\.work_package_id\)/,
+  'estimate summaries must retain one newest row per package');
+assert.match(cardinalityFix,
+  /order by e\.opportunity_id,e\.work_package_id,e\.created_at desc,e\.id desc/,
+  'estimate summary selection must be deterministic per package');
+assert.doesNotMatch(cardinalityFix,
+  /select distinct on\(e\.opportunity_id\) /,
+  'opportunity-only cardinality collapses package sets');
+assert.match(cardinalityFix,
+  /revoke all on function public\.read_crm_estimate_summaries\(uuid\) from public,anon,service_role/);
+assert.match(cardinalityFix,
+  /grant execute on function public\.read_crm_estimate_summaries\(uuid\) to authenticated/);
 
 console.log('R3-4.1 additive package-set migration foundation PASS');
