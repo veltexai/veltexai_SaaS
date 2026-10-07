@@ -24,7 +24,7 @@ assert.equal(
   '86f438fe3a4516093534faf45d74bff4020dc68e9e40014f912e7152685678a3',
   'accepted R3-4 migration bytes changed; R3-4.1 must be additive',
 );
-assert.match(decision, /ENTRY GATE SATISFIED \/ BOUNDED IMPLEMENTATION AUTHORIZED/);
+assert.match(decision, /ENTRY GATE SATISFIED \/ ADDITIVE DATABASE FOUNDATION IN PROGRESS/);
 assert.match(decision, /Existing `crm_proposal_version\.v1` rows remain byte-for-byte unchanged/);
 assert.match(decision, /new migration after accepted R3-4/);
 assert.match(decision, /must not edit or replay/);

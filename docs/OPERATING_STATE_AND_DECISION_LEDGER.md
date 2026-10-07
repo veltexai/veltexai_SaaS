@@ -3827,3 +3827,19 @@ After any material action, append or revise the relevant section with:
   application behavior is claimed by this opening checkpoint; the next step is
   the additive database shape, contract tests, adversarial matrix and
   deterministic two-session race. No hosted or Production state changed.
+- **R3-4.1 ADDITIVE DATABASE SHAPE — LOCAL FOUNDATION CANDIDATE:** New migration
+  `20261006000000_r3_4_1_package_set_versions.sql` leaves the accepted R3-4
+  migration untouched, preserves the v1 singular shape and adds the explicit
+  v2 parent discriminator plus append-only ordered
+  `crm_proposal_version_packages` associations. The association binds exact
+  organization/version/opportunity/property/package/estimate context and
+  copies customer-visible title/scope, amount/currency/basis, estimate hashes,
+  scope hash and canonical association hash. RLS is enabled; all direct
+  public/anon/authenticated/service-role table access is revoked; update,
+  delete and truncate reuse the immutable-version trigger boundary. The
+  accepted-base test, additive migration-foundation test, prior R3-4 migration
+  contract and 70-version chain validator pass. This is only a schema
+  foundation candidate: PostgreSQL runtime compilation, the caller-bound v2
+  publish command, adversarial role matrix, deterministic race, server/UI
+  integration and every independent/Preview/founder gate remain required. No
+  hosted or Production state changed.

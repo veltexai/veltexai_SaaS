@@ -1,6 +1,6 @@
 # R3-4.1 immutable package-set commitment decision
 
-Status: **ENTRY GATE SATISFIED / BOUNDED IMPLEMENTATION AUTHORIZED**
+Status: **ENTRY GATE SATISFIED / ADDITIVE DATABASE FOUNDATION IN PROGRESS**
 
 ## Purpose
 
