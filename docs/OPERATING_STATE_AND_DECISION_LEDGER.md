@@ -3817,3 +3817,13 @@ After any material action, append or revise the relevant section with:
   founder gates are now satisfied, so bounded additive R3-4.1 implementation is
   authorized as the next unfinished outcome. No R3-4.1 code or migration had
   been started at the moment this gate opened.
+- **R3-4.1 IMPLEMENTATION LANE OPENED / ACCEPTED BASE FROZEN:** A dedicated
+  `codex/r3-4-1-package-set` branch now begins from R3-4 acceptance commit
+  `e2e21d6`. The first executable gate recomputes the accepted
+  `20261005000000_r3_4_immutable_proposal_versions.sql` bytes as SHA-256
+  `86f438fe3a4516093534faf45d74bff4020dc68e9e40014f912e7152685678a3`
+  and fails if they change. It also pins the accepted entry status and the
+  additive-only, byte-preserving v1 contract. No R3-4.1 migration or
+  application behavior is claimed by this opening checkpoint; the next step is
+  the additive database shape, contract tests, adversarial matrix and
+  deterministic two-session race. No hosted or Production state changed.

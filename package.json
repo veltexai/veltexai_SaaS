@@ -32,6 +32,7 @@
     "r3-2:test-preview-artifact": "node quality/r3-2-walkthrough-evidence/test-preview-apply.mjs",
     "r3-3:test-preview-artifact": "node quality/r3-3-estimate-linkage/test-preview-apply.mjs",
     "r3-4:test-migration-contract": "node quality/r3-4-proposal-versions/test-migration-contract.mjs",
+    "r3-4-1:test-accepted-base": "node quality/r3-4-1-package-set/test-accepted-base.mjs",
     "brand:test-inventory": "node quality/brand-architecture/test-brand-inventory.mjs",
     "100s:operator": "node 100X/100S/operator/cli.mjs",
     "test:100s": "jest 100X/100S/tests --runInBand"
