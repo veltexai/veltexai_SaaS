@@ -4094,14 +4094,28 @@ After any material action, append or revise the relevant section with:
   R3-4.1 row. `quality/r3-4-1-package-set/PREVIEW_OPERATOR_RUNBOOK.md` freezes
   the project, predecessor, reviewed commit, hashes, stop conditions,
   authenticated synthetic workflow, genuine 390px evidence and credential
-  teardown. Hosted isolated-Preview apply and application fast-forward remain
-  pending. A fresh read-only remote preflight confirms
-  `origin/codex/r2-fresh-preview-guard` is still exactly the accepted R3-4
-  predecessor `aa48b5eabd03e3dd4babf313c7b473a9920467b1`; the reviewed R3-4.1
-  source candidate resolves exactly to
-  `a98ca78f1d5527534a82f653edcd62e238951cac`. This removes branch drift as a
-  blocker but does not authorize the hosted mutation. No Preview or Production
-  state changed.
+  teardown.
+- **R3-4.1 ISOLATED PREVIEW APPLY + EXACT APPLICATION DEPLOYMENT — `PASS` /
+  AUTHENTICATED ACCEPTANCE PENDING:** On 2026-10-06 the founder authorized the
+  exact guarded apply and Preview-only fast-forward. Immediately before the
+  mutation, the artifact recomputed to SHA-256
+  `0b78d9589c851d61eb77c37654fdec1d570a2ee418f01320cc250026eebcce9a`,
+  `origin/codex/r2-fresh-preview-guard` resolved exactly to predecessor
+  `aa48b5eabd03e3dd4babf313c7b473a9920467b1`, and reviewed application commit
+  `a98ca78f1d5527534a82f653edcd62e238951cac` was a fast-forward descendant.
+  The exact artifact ran only in Supabase project
+  `ynzkwctwlssjcsjmahey`, visibly labeled
+  `r2-fresh-verification-20260926 PREVIEW`, and returned the terminal row
+  `R3_4_1_PREVIEW_APPLY_PASS|70|0|0`. The old unsaved SQL-editor tab was then
+  discarded, leaving a blank editor so the apply bytes were not retained as an
+  editable snippet. The Preview-only branch fast-forwarded `aa48b5e..a98ca78`
+  and triggered Vercel deployment `5jqEG1g8sLYHr3xN8oke4WDVETmi`; Vercel
+  reports `Ready`, environment `Preview`, source branch
+  `codex/r2-fresh-preview-guard`, exact source `a98ca78`, duration `2m 42s`, and
+  custom-domain assignment `Skipped`. The unique Preview URL and stable branch
+  URL serve the expected landing page. Production was not changed. R3-4.1 is
+  not yet `ACCEPTED`: authenticated desktop and genuine `390x844` workflow
+  evidence, synthetic-credential teardown, and founder acceptance remain.
 - **R3-5 C0 EXECUTION SEQUENCE PREPARED / IMPLEMENTATION STILL BLOCKED:**
   `R3_5_C0_EXECUTION_SEQUENCE.md` divides the full approved outcome into a
   consent/cryptographic freeze, private issuance foundation, fragment-exchange
