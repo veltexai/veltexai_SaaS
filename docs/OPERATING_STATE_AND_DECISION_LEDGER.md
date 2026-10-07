@@ -4370,6 +4370,29 @@ After any material action, append or revise the relevant section with:
   the key refusal paths. No hosted system was accessed. The artifact-review gate
   is complete; applying the exact bytes to isolated Preview
   `ynzkwctwlssjcsjmahey` remains a separately authorized consequential action.
+- **R3-4.1 HISTORY-METADATA ISOLATED PREVIEW APPLY + HOSTED ACCEPTANCE —
+  `PASS`:** On 2026-10-07, after explicit founder authorization, the exact
+  reviewed guarded SQL artifact
+  `/private/tmp/veltex-r3-4-1-history-metadata-preview-apply.sql` (7,188 bytes,
+  SHA-256
+  `bd50521ac9602db5eca0bb0372444a2e5c884430c466fe10ea30a062fe690c38`)
+  was applied only to isolated Supabase Preview project
+  `ynzkwctwlssjcsjmahey`. The operator visibly confirmed the project label
+  `r2-fresh-verification-20260926 PREVIEW` before execution. The guarded
+  transaction returned
+  `R3_4_1_HISTORY_METADATA_PREVIEW_APPLY_PASS | history_count=72`, proving the
+  expected predecessor, one-row migration-history advance and postflight
+  contract. No production project was opened or changed. Authenticated hosted
+  acceptance then passed on the existing Vercel Preview deployment: after a
+  full application refresh, immutable Version 3 displayed `$600.00 · 2 package
+  set`, while the selected package cards remained `$320.00 · per turn` and
+  `$280.00 · per turn`. The same result passed in genuine Chrome responsive
+  mode at `390x844`; both selected packages, the `$600.00` offered total, and
+  the `Version 3 · $600.00 · 2 package set` history entry remained available
+  with actionable controls. The briefly observed `0 package set` value was
+  preserved as stale pre-migration page state and disappeared after the full
+  refresh. R3-4.1 is now `VERIFIED` in isolated Preview; founder product
+  acceptance and any production-release decision remain separate gates.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
