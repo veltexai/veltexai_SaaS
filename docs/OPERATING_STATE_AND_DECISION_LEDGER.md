@@ -4323,3 +4323,33 @@ After any material action, append or revise the relevant section with:
   Both reviews are read-only and currently in progress. No hosted system or
   production state changed during dispatch; guarded isolated-Preview apply
   remains blocked until the corrected verdicts are reconciled.
+- **R3-4.1 HISTORY-METADATA ATOMIC RE-REVIEW — CLAUDE `PASS` / CURSOR
+  `PASS`:** Both independent lanes recomputed the corrected wrapper SHA-256
+  `06aa1c7fbe371732d537407b713db59c776bc05f1c540a2e22a6438571bcb74d`,
+  bundle SHA-256
+  `182d315773f2a5eae4b16e48e7a7f2ea7b933b1d368dc8346088bdfeb2158b9b`
+  and exact tip `e85a362ae476c99eb8518c5340bf18466e2e57d8`. Both report no
+  Critical, High or Medium finding and confirm the explicit transaction closes
+  the prior atomicity defect. Both also confirm the runtime ACL evidence keeps
+  execute for `authenticated` while denying `anon` and `service_role`.
+  Remaining Low notes concern additional behavioral-output assertions and
+  negative-source guards; they are test-depth opportunities rather than a
+  release blocker for this reader-only additive migration. No hosted system or
+  production state changed during either review.
+- **R3-4.1 HISTORY-METADATA GUARDED PREVIEW ARTIFACT — LOCAL `PASS` / HOSTED
+  APPLY PENDING:** Commit `692f637` adds a deterministic guarded artifact
+  builder and disposable PostgreSQL proof for migration `20261007010000`.
+  The builder accepts the migration's leading comments while still requiring
+  exactly one inner `begin;` and `commit;`, strips those boundaries, and wraps
+  the reviewed body in one outer transaction with an advisory lock. It refuses
+  any predecessor other than the exact 71-version chain, refuses a missing or
+  already-replaced reader, checks predecessor ACLs, writes exactly one migration
+  history row, and postflights the 72-version chain, persisted metadata fields,
+  `SECURITY DEFINER`, pinned search path and authenticated-only execute boundary.
+  `/private/tmp/veltex-r3-4-1-history-metadata-preview-apply.sql` is 7,188 bytes
+  with SHA-256
+  `bd50521ac9602db5eca0bb0372444a2e5c884430c466fe10ea30a062fe690c38`.
+  Determinism, static foundation, 72-version chain validation and disposable
+  PostgreSQL execution pass. The first PostgreSQL attempt was blocked by sandbox
+  shared-memory restrictions; the identical proof passed outside that
+  restriction. The artifact has not been applied to Preview or production.
