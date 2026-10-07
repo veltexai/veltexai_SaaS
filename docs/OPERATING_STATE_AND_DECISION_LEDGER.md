@@ -4308,3 +4308,18 @@ After any material action, append or revise the relevant section with:
   behavioral fixture, adversarial matrix and concurrency harness pass after
   the change. Because packet `41ad213` predates this fix, a new exact packet
   and independent re-review are required before hosted application.
+- **R3-4.1 HISTORY-METADATA ATOMIC RE-REVIEW — DISPATCHED / VERDICTS
+  PENDING:** The corrected read-only review packet is frozen at exact tip
+  `e85a362ae476c99eb8518c5340bf18466e2e57d8` as
+  `/private/tmp/veltex-r3-4-1-history-atomic-e85a362-review.zip`, SHA-256
+  `06aa1c7fbe371732d537407b713db59c776bc05f1c540a2e22a6438571bcb74d`.
+  Its complete-history bundle SHA-256 is
+  `182d315773f2a5eae4b16e48e7a7f2ea7b933b1d368dc8346088bdfeb2158b9b`.
+  On 2026-10-07 the founder approved submission, and the exact corrected
+  packet, hashes and tip were visibly submitted to Claude and to the existing
+  Cursor R3-4 independent-review lane. Both assignments require explicit
+  verification that the prior atomicity finding is closed and that the
+  strengthened runtime ACL assertions preserve authenticated-only execution.
+  Both reviews are read-only and currently in progress. No hosted system or
+  production state changed during dispatch; guarded isolated-Preview apply
+  remains blocked until the corrected verdicts are reconciled.
