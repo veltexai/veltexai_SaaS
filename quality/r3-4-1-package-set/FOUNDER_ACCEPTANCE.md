@@ -1,6 +1,6 @@
 # R3-4.1 immutable package-set bridge — founder acceptance
 
-Status: **INDEPENDENTLY VERIFIED / PREVIEW ARTIFACT PENDING**.
+Status: **HOSTED PREVIEW `PASS` / AUTHENTICATED ACCEPTANCE PENDING**.
 
 This checklist does not authorize a database apply, deployment, customer action
 or Production change. Execute it only after independent Claude and Cursor
@@ -43,20 +43,20 @@ artifact.
 - [x] Independent Cursor operator/accessibility verdict is `PASS` for the same
       packet and candidate.
 - [x] Packet SHA-256 and included Git bundle verify immediately before use.
-- [ ] Supabase project reference visibly equals `ynzkwctwlssjcsjmahey`.
+- [x] Supabase project reference visibly equals `ynzkwctwlssjcsjmahey`.
 - [x] Guarded SQL artifact hash is recomputed and matches this record.
-- [ ] Preview branch is still at exact R3-4 predecessor `aa48b5e` before the
+- [x] Preview branch is still at exact R3-4 predecessor `aa48b5e` before the
       fast-forward; any drift is investigated rather than overwritten.
-- [ ] Vercel deployment is visibly `Preview`, binds exact reviewed candidate
+- [x] Vercel deployment is visibly `Preview`, binds exact reviewed candidate
       `a98ca78f1d5527534a82f653edcd62e238951cac`, and reaches `Ready`
       without a Production alias change.
 - [ ] Only synthetic records containing no customer/private data are used.
 
 ## Database acceptance
 
-- [ ] Apply returns `R3_4_1_PREVIEW_APPLY_PASS` and history count `70`.
-- [ ] Existing R3-4 v1 rows and migration bytes remain unchanged.
-- [ ] New v2 parent and association tables begin empty before the synthetic
+- [x] Apply returns `R3_4_1_PREVIEW_APPLY_PASS` and history count `70`.
+- [x] Existing R3-4 v1 rows and migration bytes remain unchanged.
+- [x] New v2 parent and association tables begin empty before the synthetic
       workflow.
 - [ ] Authenticated direct association INSERT/UPDATE/DELETE/TRUNCATE is denied.
 - [ ] Viewer, unrelated estimator, anonymous and cross-tenant callers receive
@@ -115,7 +115,9 @@ At exactly `390x844`, record `window.innerWidth` and
 ## Evidence and teardown
 
 - Deployment URL/ID:
-- Database apply result/history count:
+  `https://veltex-services-veliz-longinit2-veltex-ai.vercel.app` /
+  `5jqEG1g8sLYHr3xN8oke4WDVETmi`
+- Database apply result/history count: `R3_4_1_PREVIEW_APPLY_PASS|70|0|0`
 - Synthetic opportunity/proposal/package identifiers:
 - Desktop evidence:
 - 390 px measurements and evidence:

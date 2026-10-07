@@ -1,6 +1,6 @@
 # R3-4.1 isolated Preview operator runbook
 
-Status: **ARTIFACT VERIFIED / HOSTED EXECUTION PENDING**.
+Status: **HOSTED PREVIEW `PASS` / AUTHENTICATED ACCEPTANCE PENDING**.
 
 This runbook is limited to isolated Supabase Preview `ynzkwctwlssjcsjmahey`
 and Vercel branch `codex/r2-fresh-preview-guard`. Production, customer data,
@@ -29,6 +29,16 @@ aliases, credentials and deployments are excluded.
    the reviewed commit. Confirm no Production alias changed.
 5. Verify signed-out `/dashboard/crm` redirects to `/auth/login` before any
    temporary synthetic credential window.
+
+Completed 2026-10-06:
+
+- Exact apply terminal row: `R3_4_1_PREVIEW_APPLY_PASS|70|0|0`.
+- Vercel deployment: `5jqEG1g8sLYHr3xN8oke4WDVETmi`.
+- Deployment state: `Ready`; environment: `Preview`; source: exact
+  `a98ca78f1d5527534a82f653edcd62e238951cac`; custom-domain assignment:
+  `Skipped`.
+- Signed-out stable-branch `/dashboard/crm` redirected to `/auth/login`.
+- Production was not changed.
 
 ## Authenticated synthetic acceptance
 
