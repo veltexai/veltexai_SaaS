@@ -3990,3 +3990,13 @@ After any material action, append or revise the relevant section with:
   synthetic-credential teardown. Independent `PASS` verdicts remain the entry
   gate; no guarded apply artifact was generated and no Preview or Production
   state changed.
+- **R3-5 C0 EXECUTION SEQUENCE PREPARED / IMPLEMENTATION STILL BLOCKED:**
+  `R3_5_C0_EXECUTION_SEQUENCE.md` divides the full approved outcome into a
+  consent/cryptographic freeze, private issuance foundation, fragment-exchange
+  review/respond room, atomic proper-subset acceptance/receipt and final
+  customer/operator UI. Each increment has explicit Claude/Cursor and evidence
+  exits, but no increment can claim R3-5 acceptance or unlock R3-6. The plan
+  forbids reuse of plaintext tracking IDs, raw-token persistence, mutable-term
+  recomposition and signature/payment/delivery claims. R3-4.1 acceptance is
+  still the implementation entry gate; no R3-5 code, migration, token, public
+  route, customer message or hosted state was created.
