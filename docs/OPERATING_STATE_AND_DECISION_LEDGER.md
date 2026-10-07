@@ -4260,3 +4260,25 @@ After any material action, append or revise the relevant section with:
   recomposition and signature/payment/delivery claims. R3-4.1 acceptance is
   still the implementation entry gate; no R3-5 code, migration, token, public
   route, customer message or hosted state was created.
+- **R3-4.1 HOSTED ACCEPTANCE — TWO-PACKAGE PREPARE PASS / HISTORY METADATA
+  DEFECT REMEDIATED LOCALLY:** On 2026-10-07 the authenticated isolated
+  Preview workflow for opportunity `a2370d90-14e7-4b93-a538-7637f249e20f`
+  exposed both package estimates, rendered the deterministic $320 + $280
+  package set and prepared immutable version 3 at the correct $600 total. The
+  resulting version remained explicitly `not sent`; no delivery, public link,
+  customer action or production contact occurred. Hosted evidence then exposed
+  a bounded display defect: history showed `0 package set` because the legacy
+  authenticated `read_crm_proposal_versions(uuid,uuid)` return shape omitted
+  the already-persisted `package_count` and `package_set_sha256`. Forward-only
+  migration `20261007010000_r3_4_1_proposal_history_package_metadata.sql`
+  recreates only that read function with the two additive columns while
+  preserving its authorization predicate, ordering, SECURITY DEFINER search
+  path and authenticated-only execution boundary. The 72-migration disposable
+  PostgreSQL foundation, package metadata definition assertions, behavioral
+  package-cardinality fixture, adversarial role matrix and concurrency harness
+  pass. The full application regression remains green at 110/110 suites,
+  941/941 tests and 5/5 snapshots. The first PostgreSQL attempt was blocked by
+  sandbox System V shared-memory restrictions; the identical harness passed
+  outside that restriction. The local remediation has not been applied to any
+  hosted database and R3-4.1 remains unaccepted pending independent review,
+  guarded Preview application and completion of desktop/390px acceptance.

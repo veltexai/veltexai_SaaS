@@ -39,7 +39,7 @@ try {
   ]);
   psql(['-f', resolve(root, 'quality/service-catalog-round4/db-harness/sql/00_supabase_shim.sql')]);
   const migrations = readdirSync(migrationDir).filter((file) => file.endsWith('.sql')).sort();
-  assert.equal(migrations.length, 71, 'expected exact 71-migration chain');
+  assert.equal(migrations.length, 72, 'expected exact 72-migration chain');
   for (const migration of migrations) psql(['-f', resolve(migrationDir, migration)]);
 
   const proof = JSON.parse(psql(['-c', `select jsonb_build_object(
@@ -93,8 +93,15 @@ try {
     authenticated_command_execute: false,
     service_role_preview_execute: true,
     authenticated_preview_execute: false,
-    migration_count: 71,
+    migration_count: 72,
   });
+  const proposalHistoryDefinition = psql(['-c', `select pg_get_functiondef(
+    'public.read_crm_proposal_versions(uuid,uuid)'::regprocedure
+  )`]);
+  assert.match(proposalHistoryDefinition, /v\.package_count/i,
+    'authenticated proposal history must expose package count');
+  assert.match(proposalHistoryDefinition, /v\.package_set_sha256/i,
+    'authenticated proposal history must expose package-set commitment');
   const summaryDefinition = psql(['-c', `select pg_get_functiondef(
     'public.read_crm_estimate_summaries(uuid)'::regprocedure
   )`]);
@@ -117,7 +124,7 @@ try {
     PGDATABASE: 'veltex_r341',
   });
   assert.match(concurrency, /R3_4_1_CONCURRENCY_PASS/);
-  console.log('R3-4.1 disposable PostgreSQL 71-migration foundation, package cardinality, adversarial matrix and concurrency PASS');
+  console.log('R3-4.1 disposable PostgreSQL 72-migration foundation, package history metadata, package cardinality, adversarial matrix and concurrency PASS');
 } finally {
   if (started) {
     try { run(resolve(pgBin, 'pg_ctl'), ['-D', data, 'stop', '-m', 'fast']); } catch {}

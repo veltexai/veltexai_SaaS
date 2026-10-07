@@ -12,6 +12,8 @@ const migration = readFileSync(resolve(root,
   'supabase/migrations/20261006000000_r3_4_1_package_set_versions.sql'), 'utf8');
 const cardinalityFix = readFileSync(resolve(root,
   'supabase/migrations/20261007000000_r3_4_1_estimate_summary_package_cardinality.sql'), 'utf8');
+const historyMetadataFix = readFileSync(resolve(root,
+  'supabase/migrations/20261007010000_r3_4_1_proposal_history_package_metadata.sql'), 'utf8');
 
 assert.equal(
   createHash('sha256').update(v1).digest('hex'),
@@ -54,6 +56,15 @@ assert.equal((migration.match(/^commit;$/gm) ?? []).length, 1);
 assert.match(migration, /revoke all on public\.crm_proposal_version_packages\s+from public,anon,authenticated,service_role/);
 assert.match(migration, /revoke all on function public\.command_crm_publish_proposal_package_set_internal[\s\S]*from public,anon,authenticated;[\s\S]*grant execute[\s\S]*to service_role;/);
 assert.match(migration, /revoke all on function public\.read_crm_proposal_package_set_preview_internal[\s\S]*from public,anon,authenticated;[\s\S]*grant execute[\s\S]*to service_role;/);
+assert.match(historyMetadataFix,
+  /returns table\([\s\S]*schema_version text,package_count integer,[\s\S]*package_set_sha256 text,created_at timestamptz\)/,
+  'authenticated proposal history exposes package-set metadata');
+assert.match(historyMetadataFix,
+  /v\.schema_version,v\.package_count,v\.package_set_sha256,v\.created_at/,
+  'history reader selects persisted package-set metadata');
+assert.match(historyMetadataFix,
+  /revoke all on function public\.read_crm_proposal_versions\(uuid,uuid\)[\s\S]*from public,anon,service_role;[\s\S]*grant execute[\s\S]*to authenticated;/,
+  'history reader preserves the authenticated-only execution boundary');
 assert.doesNotMatch(migration, /alter table public\.crm_proposal_versions[\s\S]*drop column/i);
 assert.doesNotMatch(migration, /update\s+public\.crm_proposal_versions/i);
 assert.doesNotMatch(migration, /delete\s+from\s+public\.crm_proposal_versions/i);
