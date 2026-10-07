@@ -3881,9 +3881,15 @@ After any material action, append or revise the relevant section with:
   are rejected. Focused route coverage passes 14/14, including v1 preservation,
   a two-package v2 command, duplicate-package rejection, forged-content
   rejection, permission/concurrency/error mapping and database-detail
-  non-disclosure. Two initial targeted-test invocations were harness-only
+  non-disclosure. TypeScript compilation, the accepted-base gate, additive
+  migration-foundation gate and 70-version migration-chain validator also
+  pass. Two initial targeted-test invocations were harness-only
   failures: zsh expanded the bracketed route path, then Jest treated the quoted
-  path as a pattern; `--runTestsByPath` corrected the invocation and passed.
+  path as a pattern; `--runTestsByPath` corrected the invocation and passed. A
+  later verification invocation referenced a nonexistent `typecheck` package
+  script; direct `tsc --noEmit` then exposed an initial union-narrowing defect,
+  which was corrected by discriminating on the v2-only `packages` field before
+  the final clean PASS.
   Customer-visible v2 preview/UI integration, race and broader negative
   matrices, full-suite verification, independent review, isolated Preview and
   founder acceptance remain open. No hosted or Production state changed.

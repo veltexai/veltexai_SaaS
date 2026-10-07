@@ -87,7 +87,7 @@ export async function POST(request: NextRequest, { params }: Context) {
     // These additive R3 tables are ahead of the generated Database interface.
     // Keep the escape hatch local until the next deliberate type regeneration.
     const serviceClient = createServiceClient() as any;
-    if ('schemaVersion' in value && value.schemaVersion === 'crm_proposal_version.v2') {
+    if ('packages' in value) {
       const { data, error } = await serviceClient.rpc(
         'command_crm_publish_proposal_package_set_internal',
         {
