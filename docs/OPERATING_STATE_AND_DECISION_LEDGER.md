@@ -3777,6 +3777,27 @@ After any material action, append or revise the relevant section with:
   replaced with a benign evidence query, the synthetic application session was
   signed out, and `/dashboard/crm` returned to `/auth/login`. The temporary
   credential is no longer known or reusable. Production remained untouched.
+- **R3-4 GENUINE 390PX PREVIEW ACCEPTANCE — CONTAINMENT/HISTORY `PASS`;
+  FOUNDER DISPOSITION PENDING (2026-10-06 Pacific):** Chrome's responsive
+  viewport was set to exactly `390x844` against the exact isolated Preview
+  application commit `aa48b5eabd03e3dd4babf313c7b473a9920467b1`.
+  `window.innerWidth` and `document.documentElement.scrollWidth` both returned
+  `390`, with no page-level horizontal overflow obscuring the Board proposal
+  review or its actions. The contained dialog displayed the server-derived
+  `$280.00 per turn` price, synthetic scope, exact proposal content and both
+  immutable history entries (version 2 and version 1), each truthfully marked
+  `not sent`; no third version was created. Afterward the isolated Preview SQL
+  editor returned `R3_4_PREVIEW_390_CREDENTIAL_RETIRED`, the retirement SQL was
+  replaced with a benign evidence query, in-memory temporary-password values
+  were cleared, the synthetic session signed out and `/dashboard/crm` visibly
+  returned to `/auth/login`. The temporary credential is unknown and cannot be
+  reused. Hosted stalled-response and the complete manual keyboard/focus and
+  negative-context matrix were not re-performed; committed automated coverage
+  remains supporting evidence and no hosted PASS is claimed for those unchecked
+  checklist rows. R3-4 is `ISOLATED PREVIEW DESKTOP/390PX VERIFIED / PENDING
+  FOUNDER REVIEW`; it is not Production-approved and does not unlock R3-4.1 or
+  R3-5 until the founder records an explicit disposition. Production remained
+  untouched.
 - **R3-4.1 EXECUTION CONTRACT HARDENED / IMPLEMENTATION STILL LOCKED:** The
   existing package-set decision now fixes the additive v1/v2 database shape,
   append-only association invariants, deterministic package-set hashing and
