@@ -4353,6 +4353,23 @@ After any material action, append or revise the relevant section with:
   PostgreSQL execution pass. The first PostgreSQL attempt was blocked by sandbox
   shared-memory restrictions; the identical proof passed outside that
   restriction. The artifact has not been applied to Preview or production.
+- **R3-4.1 HISTORY-METADATA GUARDED ARTIFACT REVIEW — CLAUDE `PASS` / CURSOR
+  `PASS`:** Both independent reviewers recomputed packet SHA-256
+  `eb72f90fa3a948f4ca20ac55fa1b387923dd488e0b15e9ca24d1121702747fb0`,
+  guarded SQL SHA-256
+  `bd50521ac9602db5eca0bb0372444a2e5c884430c466fe10ea30a062fe690c38`,
+  bundle SHA-256
+  `cec19ecc0cb4c9ef1c8be19c7f6965df8a3391f78354a8f7834466fd5ffb42b6`
+  and exact tip `1888f11c14e55c4dc91fe459ab337a3bc4902c5c`. Both report no
+  Critical, High or Medium finding and confirm byte-identical deterministic
+  regeneration, exact 71-version preflight, single transaction/advisory lock,
+  exact migration body, one history write, 72-version postflight, pinned
+  definer/search-path/ACL checks and rollback on refusal. Remaining Low notes
+  concern checked-in negative-test depth, an omitted explicit PUBLIC postflight
+  assertion and predecessor fingerprint breadth; Cursor independently exercised
+  the key refusal paths. No hosted system was accessed. The artifact-review gate
+  is complete; applying the exact bytes to isolated Preview
+  `ynzkwctwlssjcsjmahey` remains a separately authorized consequential action.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
