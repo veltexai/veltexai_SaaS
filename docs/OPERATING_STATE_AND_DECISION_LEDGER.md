@@ -4294,3 +4294,17 @@ After any material action, append or revise the relevant section with:
   assignment, and the exact local path, hashes, tip and assignment were
   visibly submitted to the existing Cursor R3-4 review lane. Both reviews are
   read-only and now in progress. No hosted state changed during dispatch.
+- **R3-4.1 HISTORY-METADATA CLAUDE REVIEW — `PASS`, LOW ATOMICITY FIXED
+  LOCALLY:** Claude recomputed the packet and bundle hashes, verified the
+  complete-history tip and confirmed no Critical, High or Medium finding. It
+  verified that the accepted reader is unchanged except for the two persisted
+  v2 metadata columns. Claude identified a valid Low availability gap because
+  the first draft did not wrap `DROP FUNCTION` and `CREATE FUNCTION` in one
+  explicit transaction, plus a Low request for stronger runtime evidence. The
+  migration now has exactly one `begin;` and one `commit;`; static assertions
+  require that shape. The disposable PostgreSQL proof now also asserts at
+  runtime that only `authenticated` retains execute while `anon` and
+  `service_role` do not. The static and complete 72-migration PostgreSQL gates,
+  behavioral fixture, adversarial matrix and concurrency harness pass after
+  the change. Because packet `41ad213` predates this fix, a new exact packet
+  and independent re-review are required before hosted application.

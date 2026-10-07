@@ -1,6 +1,8 @@
 -- R3-4.1 follow-up: expose immutable package-set metadata to the authenticated
 -- proposal history reader. The publisher already stores these columns.
 
+begin;
+
 drop function public.read_crm_proposal_versions(uuid,uuid);
 
 create function public.read_crm_proposal_versions(p_organization uuid,p_opportunity uuid)
@@ -24,3 +26,5 @@ $$;
 revoke all on function public.read_crm_proposal_versions(uuid,uuid)
   from public,anon,service_role;
 grant execute on function public.read_crm_proposal_versions(uuid,uuid) to authenticated;
+
+commit;

@@ -80,6 +80,15 @@ try {
       'public.read_crm_proposal_package_set_preview_internal(uuid,uuid,uuid,uuid,uuid,uuid[])',
       'EXECUTE'
     ),
+    'authenticated_history_execute', has_function_privilege(
+      'authenticated','public.read_crm_proposal_versions(uuid,uuid)','EXECUTE'
+    ),
+    'anon_history_execute', has_function_privilege(
+      'anon','public.read_crm_proposal_versions(uuid,uuid)','EXECUTE'
+    ),
+    'service_role_history_execute', has_function_privilege(
+      'service_role','public.read_crm_proposal_versions(uuid,uuid)','EXECUTE'
+    ),
     'migration_count', ${migrations.length}
   )::text`]).trim());
 
@@ -93,6 +102,9 @@ try {
     authenticated_command_execute: false,
     service_role_preview_execute: true,
     authenticated_preview_execute: false,
+    authenticated_history_execute: true,
+    anon_history_execute: false,
+    service_role_history_execute: false,
     migration_count: 72,
   });
   const proposalHistoryDefinition = psql(['-c', `select pg_get_functiondef(

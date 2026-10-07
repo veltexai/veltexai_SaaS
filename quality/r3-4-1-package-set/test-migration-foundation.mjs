@@ -65,6 +65,10 @@ assert.match(historyMetadataFix,
 assert.match(historyMetadataFix,
   /revoke all on function public\.read_crm_proposal_versions\(uuid,uuid\)[\s\S]*from public,anon,service_role;[\s\S]*grant execute[\s\S]*to authenticated;/,
   'history reader preserves the authenticated-only execution boundary');
+assert.equal((historyMetadataFix.match(/^begin;$/gm) ?? []).length, 1,
+  'history-reader replacement must be atomic');
+assert.equal((historyMetadataFix.match(/^commit;$/gm) ?? []).length, 1,
+  'history-reader replacement must commit atomically');
 assert.doesNotMatch(migration, /alter table public\.crm_proposal_versions[\s\S]*drop column/i);
 assert.doesNotMatch(migration, /update\s+public\.crm_proposal_versions/i);
 assert.doesNotMatch(migration, /delete\s+from\s+public\.crm_proposal_versions/i);
