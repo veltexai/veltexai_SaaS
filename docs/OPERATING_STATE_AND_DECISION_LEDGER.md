@@ -4247,7 +4247,9 @@ After any material action, append or revise the relevant section with:
   passed outside that restriction, including the 71-migration foundation,
   behavioral cardinality proof, adversarial matrix and concurrency harness.
   The static migration-foundation test also passes. This is test-only evidence;
-  no application, migration, hosted system or production state changed.
+  the complete application regression suite remains green at 110/110 suites,
+  941/941 tests and 5/5 snapshots. No application, migration, hosted system or
+  production state changed.
 - **R3-5 C0 EXECUTION SEQUENCE PREPARED / IMPLEMENTATION STILL BLOCKED:**
   `R3_5_C0_EXECUTION_SEQUENCE.md` divides the full approved outcome into a
   consent/cryptographic freeze, private issuance foundation, fragment-exchange
