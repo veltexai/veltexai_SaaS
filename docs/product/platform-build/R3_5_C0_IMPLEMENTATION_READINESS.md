@@ -2,11 +2,11 @@
 
 Status: **PLANNING COMPLETE / IMPLEMENTATION DEPENDENCY-BLOCKED**
 
-R3-5 cannot begin until the exact R3-4 remediation receives independent Claude
-and Cursor `PASS`, isolated-Preview evidence and founder acceptance, and the
-additive R3-4.1 package-set bridge is implemented and accepted. This memo maps
-the current repository to the approved C0 contract so implementation can begin
-without rediscovery or accidental scope reduction after those gates.
+R3-4 is accepted. R3-5 cannot begin until the additive R3-4.1 package-set
+bridge receives independent Claude and Cursor `PASS`, isolated-Preview evidence
+and founder acceptance. This memo maps the current repository to the approved
+C0 contract so implementation can begin without rediscovery or accidental
+scope reduction after that remaining gate.
 
 ## Reusable authoritative primitives
 
@@ -61,22 +61,33 @@ without rediscovery or accidental scope reduction after those gates.
 8. Operator surfacing uses a caller-scoped receipt-summary reader in the CRM;
    clients do not read audit/outbox tables.
 
-## Unresolved contract conflict — must not be narrowed silently
+## Package-set conflict resolved locally — acceptance gate remains
 
 The approved R3-5 command accepts `accepted_package_ids` and requires atomic
-multi-package acceptance. The accepted R3-4 model currently binds each
-proposal version to only one nullable work package and one estimate/price.
-Therefore a proposal version cannot yet prove the content, price and consent
-binding for an arbitrary package set.
+multi-package acceptance. Accepted R3-4 binds one package/estimate to a v1
+version, which could not prove an arbitrary package set. The local R3-4.1
+candidate resolves that shape without modifying v1 bytes:
 
-Before R3-5 coding, implement the separately reviewed
-`R3_4_1_PACKAGE_SET_COMMITMENT_DECISION.md`: an append-only v2
-proposal-version/package association freezes every included package, selected
-estimate, displayed amount, pricing basis and relevant scope hash before token
-issuance. The association set is part of the rendered customer-visible
-total/scope and version hash commitment. The acceptance command may accept only
-a non-empty subset of those frozen associations and copies the deterministic
-selected subtotal into its receipt.
+- a `crm_proposal_version.v2` parent commits `package_count`,
+  `package_set_sha256`, one currency, full offered `display_amount_minor`,
+  immutable content/rendered hashes and null single-package estimate identity;
+- append-only `crm_proposal_version_packages` rows commit ordered association
+  identity, work-package and estimate identity, customer-visible
+  title/scope/amount/basis and estimate input/output, scope and association
+  hashes;
+- `command_crm_publish_proposal_package_set_internal` publishes the parent,
+  every association, package pointers, receipt, audit and outbox atomically;
+  and
+- `read_crm_proposal_package_set_preview_internal` derives the exact ordered
+  customer-visible preview from server state before publication.
+
+R3-5 must consume only accepted v2 parents and association rows. Its command
+may accept only a non-empty subset of the exact frozen association set, retain
+the parent `package_set_sha256`, preserve association display order and compute
+the selected subtotal from stored association amounts. It must not re-read
+mutable estimates or reconstruct customer-visible terms during acceptance.
+Token issuance stays disabled until the R3-4.1 candidate is independently and
+operationally accepted.
 
 Shipping an array parameter that currently permits only one package would be a
 smaller implementation, but it would not satisfy the approved multi-package

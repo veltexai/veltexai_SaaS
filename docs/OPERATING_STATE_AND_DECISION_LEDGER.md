@@ -3971,3 +3971,12 @@ After any material action, append or revise the relevant section with:
   `7061214ab71bfb051f9c08ad4a12f4b04faf0764f9ca190a209f7105011bf89c`;
   archive integrity and the included Git bundle both verify. Independent Claude
   and Cursor verdicts remain `PENDING`. No hosted or Production state changed.
+- **R3-5 READINESS REBOUND TO THE CURRENT PACKAGE-SET CANDIDATE / IMPLEMENTATION
+  STILL BLOCKED:** The C0 readiness memo now records R3-4 as accepted and maps
+  the exact local R3-4.1 v2 parent, ordered append-only associations,
+  server-authoritative preview and atomic publish boundary into the future
+  acceptance command. The earlier package-set shape conflict is resolved by
+  the local candidate, but not yet accepted: R3-5 token issuance and code remain
+  blocked on independent Claude/Cursor `PASS`, isolated Preview evidence and
+  founder acceptance of R3-4.1. No R3-5 migration, token, public route,
+  customer action or hosted state was created.
