@@ -80,10 +80,13 @@ describe('R3-5 C0.1 operator customer-action routes', () => {
         p_proposal_version: VERSION,
         p_token_hmac_sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
         p_key_version: 1,
+        p_expires_in_days: 1,
         p_request_key: 'issue-key-1',
       }),
     );
     expect(JSON.stringify(commandRpc.mock.calls)).not.toContain(payload.data.fragmentToken);
+    expect(response.headers.get('cache-control')).toBe('no-store, max-age=0');
+    expect(response.headers.get('referrer-policy')).toBe('no-referrer');
   });
 
   it('does not fabricate a recoverable bearer value on exact replay', async () => {

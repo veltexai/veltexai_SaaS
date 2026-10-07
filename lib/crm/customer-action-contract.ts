@@ -70,12 +70,19 @@ export function createCustomerActionToken(): string {
 
 export function digestCustomerActionToken(rawToken: string, secret: string): string {
   const parsedToken = customerActionTokenSchema.parse(rawToken);
-  return digestCustomerActionValue(parsedToken, secret);
+  return digestCustomerActionValue(parsedToken, secret, 'token');
 }
 
-export function digestCustomerActionValue(value: string, secret: string): string {
+export function digestCustomerActionValue(
+  value: string,
+  secret: string,
+  domain: 'token' | 'approver-email',
+): string {
   if (Buffer.byteLength(secret, 'utf8') < 32) {
     throw new Error('Customer action token HMAC secret must be at least 32 bytes');
   }
-  return createHmac('sha256', secret).update(value, 'utf8').digest('hex');
+  return createHmac('sha256', secret)
+    .update(`veltex-c0:${domain}:`, 'utf8')
+    .update(value, 'utf8')
+    .digest('hex');
 }

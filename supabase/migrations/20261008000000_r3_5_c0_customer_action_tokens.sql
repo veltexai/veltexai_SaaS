@@ -159,7 +159,7 @@ create function public.command_crm_issue_customer_action_token_internal(
   p_token_hmac_sha256 text,
   p_key_version integer,
   p_designated_approver_email_hmac_sha256 text,
-  p_expires_at timestamptz,
+  p_expires_in_days integer,
   p_request_key text,
   p_request_sha256 text
 ) returns table(
@@ -187,12 +187,16 @@ begin
      or p_key_version<>1
      or (p_designated_approver_email_hmac_sha256 is not null
        and p_designated_approver_email_hmac_sha256 !~ '^[a-f0-9]{64}$')
-     or p_expires_at is null or p_expires_at<=now()
-     or p_expires_at>now()+interval '7 days'
+     or p_expires_in_days is null or p_expires_in_days not in (1,3,7)
      or p_request_key is null or length(p_request_key) not between 8 and 200
      or p_request_sha256 is null or p_request_sha256 !~ '^[a-f0-9]{64}$' then
     raise exception 'customer action token unavailable' using errcode='42501';
   end if;
+
+  perform pg_advisory_xact_lock(hashtextextended(concat_ws(':',
+    'veltex-r3-5-c0-token-set',p_organization::text,p_proposal_version::text),0));
+  perform pg_advisory_xact_lock(hashtextextended(concat_ws(':',
+    'veltex-r3-5-c0',p_organization::text,p_actor::text,'issue',p_request_key),0));
 
   select m.role into actor_role from public.organization_memberships m
     where m.organization_id=p_organization and m.user_id=p_actor;
@@ -214,6 +218,49 @@ begin
        from public.crm_proposal_version_packages a
        where a.organization_id=p_organization
          and a.proposal_version_id=p_proposal_version)
+     or (p_purpose='accept_proposal' and exists(
+       select 1
+       from public.crm_proposal_version_packages a
+       join public.crm_site_work_packages p
+         on p.organization_id=a.organization_id and p.id=a.work_package_id
+       join public.crm_estimate_runs e
+         on e.organization_id=a.organization_id and e.id=a.estimate_run_id
+       where a.organization_id=p_organization
+         and a.proposal_version_id=p_proposal_version
+         and (p.proposal_version_id is distinct from p_proposal_version
+           or p.status<>'estimated'
+           or p.estimate_run_id is distinct from a.estimate_run_id
+           or e.work_package_id is distinct from a.work_package_id
+           or e.opportunity_id is distinct from a.opportunity_id
+           or e.property_id is distinct from a.property_id
+           or e.selected_amount_minor is distinct from a.amount_minor
+           or e.currency is distinct from a.currency
+           or e.pricing_basis is distinct from a.pricing_basis
+           or e.input_sha256 is distinct from a.estimate_input_sha256
+           or e.output_sha256 is distinct from a.estimate_output_sha256
+           or a.association_sha256 is distinct from public.crm_estimate_sha256(
+             jsonb_build_object(
+               'display_position',a.display_position,
+               'work_package_id',a.work_package_id,
+               'estimate_run_id',a.estimate_run_id,
+               'title',a.customer_visible_title,
+               'scope_sha256',a.scope_sha256,
+               'amount_minor',a.amount_minor,
+               'currency',a.currency,
+               'pricing_basis',a.pricing_basis,
+               'estimate_input_sha256',a.estimate_input_sha256,
+               'estimate_output_sha256',a.estimate_output_sha256)))))
+     or (p_purpose='accept_proposal' and version_row.package_set_sha256
+       is distinct from (
+         select public.crm_estimate_sha256(coalesce(jsonb_agg(jsonb_build_object(
+           'displayPosition',a.display_position,
+           'workPackageId',a.work_package_id,
+           'estimateRunId',a.estimate_run_id,
+           'associationSha256',a.association_sha256)
+           order by a.display_position),'[]'::jsonb))
+         from public.crm_proposal_version_packages a
+         where a.organization_id=p_organization
+           and a.proposal_version_id=p_proposal_version))
      or exists(select 1 from public.crm_pipeline_stages s
        where s.organization_id=p_organization and s.id=opportunity_row.stage_id
          and s.category in ('won','lost','disqualified','handed_off')) then
@@ -250,7 +297,7 @@ begin
   ) values(
     p_organization,p_proposal_version,version_row.opportunity_id,p_purpose,
     p_token_hmac_sha256,p_key_version,p_designated_approver_email_hmac_sha256,
-    p_actor,p_expires_at
+    p_actor,now()+make_interval(days=>p_expires_in_days)
   ) returning * into created_token;
   insert into public.crm_customer_action_token_commands(
     organization_id,actor_user_id,command_kind,request_key,request_sha256,token_id
@@ -281,10 +328,10 @@ begin
 end;
 $$;
 revoke all on function public.command_crm_issue_customer_action_token_internal(
-  uuid,uuid,uuid,text,text,integer,text,timestamptz,text,text
+  uuid,uuid,uuid,text,text,integer,text,integer,text,text
 ) from public,anon,authenticated;
 grant execute on function public.command_crm_issue_customer_action_token_internal(
-  uuid,uuid,uuid,text,text,integer,text,timestamptz,text,text
+  uuid,uuid,uuid,text,text,integer,text,integer,text,text
 ) to service_role;
 
 create function public.command_crm_revoke_customer_action_token_internal(
@@ -311,6 +358,10 @@ begin
      or p_request_sha256 is null or p_request_sha256 !~ '^[a-f0-9]{64}$' then
     raise exception 'customer action token unavailable' using errcode='42501';
   end if;
+  perform pg_advisory_xact_lock(hashtextextended(concat_ws(':',
+    'veltex-r3-5-c0-token-set',p_organization::text,p_proposal_version::text),0));
+  perform pg_advisory_xact_lock(hashtextextended(concat_ws(':',
+    'veltex-r3-5-c0',p_organization::text,p_actor::text,'revoke',p_request_key),0));
   select m.role into actor_role from public.organization_memberships m
     where m.organization_id=p_organization and m.user_id=p_actor;
   select t.* into token_row from public.crm_customer_action_tokens t
@@ -318,12 +369,12 @@ begin
       and t.id=p_token;
   if token_row.id is not null then
     select o.* into opportunity_row from public.crm_opportunities o
-      where o.organization_id=p_organization and o.id=token_row.opportunity_id
-        and o.deleted_at is null;
+      where o.organization_id=p_organization and o.id=token_row.opportunity_id;
   end if;
   if token_row.id is null or opportunity_row.id is null
      or not coalesce(actor_role in ('owner','admin')
-       or (actor_role='estimator' and opportunity_row.estimator_user_id=p_actor),false) then
+       or (actor_role='estimator' and opportunity_row.deleted_at is null
+         and opportunity_row.estimator_user_id=p_actor),false) then
     raise exception 'customer action token unavailable' using errcode='42501';
   end if;
   select c.* into command_row from public.crm_customer_action_token_commands c
@@ -340,22 +391,35 @@ begin
     return query select p_token,revocation_row.revoked_at,true;
     return;
   end if;
-  insert into public.crm_customer_action_token_revocations(
-    organization_id,token_id,reason,revoked_by
-  ) values(p_organization,p_token,trim(p_reason),p_actor)
-  on conflict(organization_id,token_id) do nothing
-  returning * into revocation_row;
-  if revocation_row.id is null then
+  begin
+    insert into public.crm_customer_action_token_revocations(
+      organization_id,token_id,reason,revoked_by
+    ) values(p_organization,p_token,trim(p_reason),p_actor)
+    returning * into revocation_row;
+  exception when unique_violation then
     select r.* into revocation_row from public.crm_customer_action_token_revocations r
       where r.organization_id=p_organization and r.token_id=p_token;
-  end if;
+  end;
   insert into public.crm_customer_action_token_commands(
     organization_id,actor_user_id,command_kind,request_key,request_sha256,token_id
   ) values(p_organization,p_actor,'revoke',p_request_key,p_request_sha256,p_token);
-  insert into public.crm_proposal_action_eligibility_events(
-    organization_id,proposal_version_id,opportunity_id,state,reason,created_by
-  ) values(p_organization,token_row.proposal_version_id,token_row.opportunity_id,
-    'disabled','token revoked: '||trim(p_reason),p_actor);
+  if not exists (
+    select 1
+    from public.crm_customer_action_tokens sibling
+    left join public.crm_customer_action_token_revocations sibling_revocation
+      on sibling_revocation.organization_id=sibling.organization_id
+     and sibling_revocation.token_id=sibling.id
+    where sibling.organization_id=p_organization
+      and sibling.proposal_version_id=token_row.proposal_version_id
+      and sibling.id<>p_token
+      and sibling.expires_at>now()
+      and sibling_revocation.id is null
+  ) then
+    insert into public.crm_proposal_action_eligibility_events(
+      organization_id,proposal_version_id,opportunity_id,state,reason,created_by
+    ) values(p_organization,token_row.proposal_version_id,token_row.opportunity_id,
+      'disabled','token revoked',p_actor);
+  end if;
   insert into public.organization_audit_log(
     organization_id,actor_user_id,action,entity_type,entity_id,metadata
   ) values(p_organization,p_actor,'crm.customer_action_token.revoked',

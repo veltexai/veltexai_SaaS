@@ -4432,6 +4432,51 @@ After any material action, append or revise the relevant section with:
   public customer room was enabled, and no external message was sent. C0.1
   remains a local candidate pending independent security review and its later
   isolated-Preview gate.
+- **R3-5 C0.1 FIRST INDEPENDENT REVIEW — CLAUDE `FAIL` / CURSOR `FAIL`:**
+  Claude verified the raw-token containment, grants and truthful private-only
+  scope, but identified three blocking Medium findings: acceptance-capable
+  issuance did not revalidate the current immutable package-set pointers and
+  estimate hashes; the authenticated status reader was absent from the full
+  `SECURITY DEFINER` allowlist; and the packet did not contain runtime
+  adversarial PostgreSQL proof. Cursor independently identified two blocking
+  revocation-event defects: a 240-character operator reason overflowed the
+  240-character eligibility reason after prefixing, rolling back revocation,
+  and revoking one token incorrectly disabled the proposal version while a
+  sibling token remained active. Both verdicts apply to original candidate
+  `25a983c`; they are preserved and that candidate is superseded for review.
+- **R3-5 C0.1 REMEDIATION — LOCAL `PASS` / INDEPENDENT RE-REVIEW PENDING:**
+  The local remediation revalidates the current package-set pointer, package
+  status, estimate association, amount, pricing basis, input/output hashes,
+  association hash and aggregate package-set hash before issuing an acceptance
+  token. It adds the status reader to the full definer allowlist; moves expiry
+  calculation to the database with only 1/3/7-day inputs; domain-separates
+  token and designated-approver HMACs; applies private no-store/referrer/
+  content-type response headers; serializes issue/revoke commands and each
+  proposal-version token set; preserves owner/admin revocation after an
+  opportunity soft-delete; and removes the ambiguous revocation conflict
+  expression. Revocation now records the bounded eligibility reason exactly as
+  `token revoked`, retains the full operator reason only in the revocation row,
+  and emits `disabled` only after the last unexpired, unrevoked sibling token is
+  revoked. The strengthened adversarial database proof covers exact replay and
+  conflict, cross-version denial, viewer/unassigned-estimator denial,
+  designated-approver limits, invalid expiry, stale package pointers, a
+  240-character reason, sibling-token semantics, reader scoping and append-only
+  update/delete/truncate denial. Focused and broader CRM Jest pass 20 suites /
+  141 tests; TypeScript, diff hygiene, static foundation and the exact
+  73-migration chain pass; the dedicated adversarial PostgreSQL test and the
+  full migration/role/assertion/injection/concurrency harness with definer
+  checks pass. The first in-sandbox database attempt failed only because SysV
+  shared memory was prohibited; the identical disposable proof passed in the
+  approved local context. The package-manager wrapper also refused three
+  initially requested commands when registry signature verification could not
+  reach the registry; the already-installed exact local Jest/TypeScript
+  binaries and direct Node checks then passed without downloading or changing
+  dependencies. A production build compiled and type-checked, but local
+  prerender stopped because this checkout lacks Supabase URL/API-key values for
+  `/settings/pricing` and `/admin/templates`; this is recorded as environment
+  evidence, not a source-code pass. No hosted migration, Preview mutation,
+  public customer room or production change occurred. Independent Claude and
+  Cursor re-review remains required before C0.1 can advance.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

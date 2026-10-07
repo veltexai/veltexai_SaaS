@@ -53,8 +53,9 @@ describe('R3-5 C0 customer action boundary', () => {
       rawToken,
     })).toThrow();
     expect(() => digestCustomerActionToken(rawToken, 'too-short')).toThrow();
-    expect(digestCustomerActionValue('approver@example.test', SECRET))
+    expect(digestCustomerActionValue('approver@example.test', SECRET, 'approver-email'))
       .toMatch(/^[a-f0-9]{64}$/);
+    expect(digestCustomerActionValue(rawToken, SECRET, 'approver-email')).not.toBe(digest);
   });
 
   it('rejects raw secrets and browser telemetry from structured logs', () => {
