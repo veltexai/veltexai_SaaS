@@ -4509,6 +4509,33 @@ After any material action, append or revise the relevant section with:
   role, assertion, injection and concurrency harness passes. No hosted system,
   Preview or production state changed. The final complete-history Claude and
   Cursor re-review remains required.
+- **R3-5 C0.1 FINAL INDEPENDENT RE-REVIEW — CLAUDE `PASS WITH NON-BLOCKING
+  NOTES` / CURSOR `PASS WITH NON-BLOCKING NOTES`:** Both independent reviewers
+  recomputed packet SHA-256
+  `95656bc1f13222c8da46c56bb25bd4c7fc88120daf2f57bd706135f3aac39c73`,
+  verified the complete-history bundle and ancestry through review tip
+  `9ee0f3321613273800ad4f432e566314085ee3fb`, final remediation `bfb1d64`,
+  first remediation `cd523b6`, original candidate `25a983c` and accepted C0.0
+  predecessor `a5d7d47`. The submitted instruction accidentally omitted one
+  `8e` pair from the bundle digest; both the packet manifest and independent
+  recomputation establish the authoritative bundle SHA-256 as
+  `d784f893e010df9c6e4506ae22af8e8e8e3d3b06d67c78297bc8c80dfe9a8588`.
+  Both reviewers verified that mixed-scope acceptance now hashes each immutable
+  `customer_visible_scope`, already-revoked new-key retries truthfully replay
+  without duplicate eligibility/audit/outbox transitions, and the stale
+  pointer, estimate/hash, authorization, idempotency, expiry, cross-version,
+  append-only and private-response gates remain intact. C0.1 is therefore
+  `COMPLETE / VERIFIED / PENDING ISOLATED-PREVIEW AND FOUNDER ACCEPTANCE`; it is
+  not production-authorized. Both reviewers preserved a required follow-up
+  before C0.2: the accepted R3-4.1 publisher can persist the final loop's
+  `scope_sha256` on every association row in a mixed-scope set. C0.1 correctly
+  treats that metadata as untrusted, but a forward-only correction must repair
+  future publisher writes and define safe treatment of existing rows before
+  acceptance receipts consume the association chain. The synthetic
+  mixed-scope proof, remaining publish-versus-issue timing window and omitted
+  two-session/new negative variants remain non-blocking test-depth notes. No
+  hosted system, Preview, production, credential or public customer state was
+  accessed or changed by either review.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
