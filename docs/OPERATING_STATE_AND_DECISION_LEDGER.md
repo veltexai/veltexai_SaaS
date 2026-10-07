@@ -4087,7 +4087,13 @@ After any material action, append or revise the relevant section with:
   deterministic structural test passes, and the disposable 70-migration
   PostgreSQL foundation, adversarial matrix and genuine concurrency harness
   pass again. Hosted isolated-Preview apply and application fast-forward remain
-  pending; no Preview or Production state changed.
+  pending. A fresh read-only remote preflight confirms
+  `origin/codex/r2-fresh-preview-guard` is still exactly the accepted R3-4
+  predecessor `aa48b5eabd03e3dd4babf313c7b473a9920467b1`; the reviewed R3-4.1
+  source candidate resolves exactly to
+  `a98ca78f1d5527534a82f653edcd62e238951cac`. This removes branch drift as a
+  blocker but does not authorize the hosted mutation. No Preview or Production
+  state changed.
 - **R3-5 C0 EXECUTION SEQUENCE PREPARED / IMPLEMENTATION STILL BLOCKED:**
   `R3_5_C0_EXECUTION_SEQUENCE.md` divides the full approved outcome into a
   consent/cryptographic freeze, private issuance foundation, fragment-exchange
