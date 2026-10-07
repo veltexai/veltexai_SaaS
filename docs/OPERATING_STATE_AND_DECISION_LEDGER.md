@@ -4282,12 +4282,15 @@ After any material action, append or revise the relevant section with:
   outside that restriction. The local remediation has not been applied to any
   hosted database and R3-4.1 remains unaccepted pending independent review,
   guarded Preview application and completion of desktop/390px acceptance.
-- **R3-4.1 HISTORY-METADATA REVIEW PACKET — READY / NOT YET SENT:** Exact
+- **R3-4.1 HISTORY-METADATA REVIEW PACKET — SENT TO CLAUDE + CURSOR:** Exact
   review tip `41ad213ad7522b6ae546e430853621c97b423217` is frozen in
   `/private/tmp/veltex-r3-4-1-history-metadata-41ad213-review.zip`, SHA-256
   `3754be551daeb02c1c8502ddd4d5e00727b8ca4888c24b90549bb7c408921be5`.
   The packet contains the bounded assignment, migration, static and disposable
   PostgreSQL gates, this ledger and a complete branch-history Git bundle at
   SHA-256 `eaa79648de5461555e2eda45ccd326f3f151f59bf023b7817760d179d77d87c7`.
-  Archive integrity passes. Independent Claude and Cursor submission is the
-  next gate; no hosted state changed while the packet was assembled.
+  Archive integrity passes. On 2026-10-07 the founder approved submission;
+  the exact ZIP and hashes were visibly submitted to Claude with the bounded
+  assignment, and the exact local path, hashes, tip and assignment were
+  visibly submitted to the existing Cursor R3-4 review lane. Both reviews are
+  read-only and now in progress. No hosted state changed during dispatch.
