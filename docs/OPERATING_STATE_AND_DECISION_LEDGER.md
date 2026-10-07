@@ -4086,7 +4086,13 @@ After any material action, append or revise the relevant section with:
   privileges, and emits `R3_4_1_PREVIEW_APPLY_PASS` before commit. Its
   deterministic structural test passes, and the disposable 70-migration
   PostgreSQL foundation, adversarial matrix and genuine concurrency harness
-  pass again. Hosted isolated-Preview apply and application fast-forward remain
+  pass again. A separate disposable full-predecessor execution now applies the
+  exact 38,276-byte guarded artifact itself and returns the required terminal
+  row `R3_4_1_PREVIEW_APPLY_PASS|70|0|0`; history is exactly 70 with one
+  R3-4.1 row. `quality/r3-4-1-package-set/PREVIEW_OPERATOR_RUNBOOK.md` freezes
+  the project, predecessor, reviewed commit, hashes, stop conditions,
+  authenticated synthetic workflow, genuine 390px evidence and credential
+  teardown. Hosted isolated-Preview apply and application fast-forward remain
   pending. A fresh read-only remote preflight confirms
   `origin/codex/r2-fresh-preview-guard` is still exactly the accepted R3-4
   predecessor `aa48b5eabd03e3dd4babf313c7b473a9920467b1`; the reviewed R3-4.1
