@@ -66,13 +66,18 @@ type Walkthrough = {
 type EstimateSummary = { estimate_run_id: string; opportunity_id: string; work_package_id?: string;
   engine_version: string; selected_amount_minor: number; currency: string; pricing_basis: string;
   created_at: string };
+type ProposalPackagePreview = { display_position: number; work_package_id: string;
+  expected_package_updated_at: string; title: string; scope_lines: string[];
+  amount_minor: number; currency: string; pricing_basis: string };
 type ProposalCandidate = { id: string; title: string; property_id: string; updated_at: string;
   preview?: { rendered_content: string; scope_lines: string[]; amount_minor: number;
-    currency: string; pricing_basis: string } };
+    currency: string; pricing_basis: string };
+  package_set_preview?: { rendered_content: string; packages: ProposalPackagePreview[];
+    amount_minor: number; currency: string } };
 type ProposalVersionSummary = { id: string; proposal_id: string; work_package_id?: string;
-  estimate_run_id: string; version_number: number; display_amount_minor: number; currency: string;
-  pricing_basis: string; content_sha256: string; rendered_sha256: string; schema_version: string;
-  created_at: string };
+  estimate_run_id: string | null; version_number: number; display_amount_minor: number; currency: string;
+  pricing_basis: string | null; content_sha256: string; rendered_sha256: string; schema_version: string;
+  package_count?: number | null; package_set_sha256?: string | null; created_at: string };
 type Board = {
   organization_id: string;
   caller_role: 'owner' | 'admin' | 'estimator' | 'viewer';
@@ -120,13 +125,14 @@ function estimateHref(board: Board, opportunity: Opportunity, organizationId: st
 function proposalVersionPrerequisites(board: Board, opportunity: Opportunity) {
   if (!opportunity.property_id || !['residential', 'turnover'].includes(opportunity.segment ?? '')
       || ['won', 'lost', 'disqualified', 'handed_off'].includes(opportunity.category)) return null;
-  const workPackage = (board.work_packages ?? []).find((item) => item.opportunity_id === opportunity.id);
-  if (workPackage && workPackage.status !== 'estimated') return null;
-  const estimate = (board.estimate_summaries ?? []).find((item) =>
-    item.opportunity_id === opportunity.id
-      && (item.work_package_id ?? null) === (workPackage?.id ?? null));
-  if (!estimate) return null;
-  return { workPackage, estimate };
+  const packagePairs = (board.work_packages ?? [])
+    .filter((item) => item.opportunity_id === opportunity.id
+      && item.property_id === opportunity.property_id && item.status === 'estimated')
+    .map((workPackage) => ({ workPackage, estimate: (board.estimate_summaries ?? []).find((item) =>
+      item.opportunity_id === opportunity.id && item.work_package_id === workPackage.id) }))
+    .filter((item): item is { workPackage: WorkPackage; estimate: EstimateSummary } => Boolean(item.estimate));
+  if (packagePairs.length === 0) return null;
+  return { ...packagePairs[0], packagePairs };
 }
 
 export function CrmBoard() {
@@ -162,6 +168,8 @@ export function CrmBoard() {
     opportunity: Opportunity;
     workPackage?: WorkPackage;
     estimate: EstimateSummary;
+    packagePairs: { workPackage: WorkPackage; estimate: EstimateSummary }[];
+    selectedPackageIds: string[];
     candidates: ProposalCandidate[];
     versions: ProposalVersionSummary[];
     selectedProposalId: string;
@@ -241,22 +249,35 @@ export function CrmBoard() {
   async function loadProposalVersionContext(
     opportunity: Opportunity,
     currentRequestKey = crypto.randomUUID(),
-    refreshed?: { workPackage?: WorkPackage; estimate: EstimateSummary },
+    refreshed?: { workPackage?: WorkPackage; estimate: EstimateSummary;
+      packagePairs: { workPackage: WorkPackage; estimate: EstimateSummary }[] },
+    requestedPackageIds?: string[],
   ) {
     if (!organizationId || !board) return;
     const prerequisites = refreshed ?? proposalVersionPrerequisites(board, opportunity);
     if (!prerequisites) return;
+    const availableIds = prerequisites.packagePairs.map((item) => item.workPackage.id);
+    const selectedPackageIds = (requestedPackageIds ?? availableIds)
+      .filter((id, index, ids) => availableIds.includes(id) && ids.indexOf(id) === index);
+    if (selectedPackageIds.length === 0) return;
+    const selectedPairs = selectedPackageIds.map((id) => prerequisites.packagePairs.find((item) =>
+      item.workPackage.id === id)!).filter(Boolean);
+    const packageSetMode = selectedPairs.length > 1;
     setProposalVersionFor((current) => current?.opportunity.id === opportunity.id ? {
-      ...current, ...prerequisites, requestKey: currentRequestKey, loading: true,
+      ...current, ...prerequisites, selectedPackageIds, requestKey: currentRequestKey, loading: true,
     } : { opportunity, ...prerequisites, candidates: [], versions: [], selectedProposalId: '',
-      requestKey: currentRequestKey, loading: true });
+      selectedPackageIds, requestKey: currentRequestKey, loading: true });
     try {
+      const query = new URLSearchParams({ propertyId: opportunity.property_id ?? '' });
+      if (packageSetMode) {
+        query.set('mode', 'package_set');
+        selectedPackageIds.forEach((id) => query.append('packageId', id));
+      } else {
+        query.set('estimateRunId', selectedPairs[0].estimate.estimate_run_id);
+        query.set('workPackageId', selectedPairs[0].workPackage.id);
+      }
       const response = await fetch(
-        `/api/orgs/${organizationId}/crm/opportunities/${opportunity.id}/proposal-versions?${new URLSearchParams({
-          estimateRunId: prerequisites.estimate.estimate_run_id,
-          propertyId: opportunity.property_id ?? '',
-          ...(prerequisites.workPackage ? { workPackageId: prerequisites.workPackage.id } : {}),
-        })}`,
+        `/api/orgs/${organizationId}/crm/opportunities/${opportunity.id}/proposal-versions?${query}`,
         { cache: 'no-store' },
       );
       const payload = await response.json() as {
@@ -264,9 +285,10 @@ export function CrmBoard() {
         error?: string;
       };
       if (!response.ok) throw new Error(payload.error ?? 'Unable to load proposal versions.');
+      const linkedProposalIds = selectedPairs.map((item) => item.workPackage.proposal_id)
+        .filter((id): id is string => Boolean(id));
       const candidates = (payload.data?.candidates ?? []).filter((candidate) =>
-        !prerequisites.workPackage?.proposal_id
-          || candidate.id === prerequisites.workPackage.proposal_id);
+        linkedProposalIds.length === 0 || linkedProposalIds.every((id) => id === candidate.id));
       setProposalVersionFor((current) => current?.opportunity.id === opportunity.id ? {
         ...current,
         candidates,
@@ -289,22 +311,34 @@ export function CrmBoard() {
     setNotice('Preparing immutable proposal version…');
     try {
       const current = proposalVersionFor;
+      const selectedPairs = current.selectedPackageIds.map((id) => current.packagePairs.find((item) =>
+        item.workPackage.id === id)!).filter(Boolean);
+      const packageSetMode = selectedPairs.length > 1;
       const response = await fetch(
         `/api/orgs/${organizationId}/crm/opportunities/${current.opportunity.id}/proposal-versions`,
         {
           method: 'POST',
           headers: { 'content-type': 'application/json', 'idempotency-key': current.requestKey },
-          body: JSON.stringify({
+          body: JSON.stringify(packageSetMode ? {
+            schemaVersion: 'crm_proposal_version.v2',
             proposalId: current.selectedProposalId,
             propertyId: current.opportunity.property_id,
-            estimateRunId: current.estimate.estimate_run_id,
-            workPackageId: current.workPackage?.id ?? null,
-            expectedPackageUpdatedAt: current.workPackage?.updated_at ?? null,
+            packages: selectedPairs.map((item) => ({
+              workPackageId: item.workPackage.id,
+              expectedPackageUpdatedAt: item.workPackage.updated_at,
+            })),
+          } : {
+            proposalId: current.selectedProposalId,
+            propertyId: current.opportunity.property_id,
+            estimateRunId: selectedPairs[0].estimate.estimate_run_id,
+            workPackageId: selectedPairs[0].workPackage.id,
+            expectedPackageUpdatedAt: selectedPairs[0].workPackage.updated_at,
           }),
         },
       );
       const payload = await response.json() as {
-        data?: { proposal_version_id: string; version_number: number; package_updated_at?: string };
+        data?: { proposal_version_id: string; version_number: number; package_updated_at?: string;
+          package_updated_ats?: { workPackageId: string; updatedAt: string }[] };
         replayed?: boolean;
         error?: string;
       };
@@ -313,25 +347,32 @@ export function CrmBoard() {
         throw new Error('This package changed. Refresh proposal data before trying again.');
       }
       if (!response.ok) throw new Error(payload.error ?? 'Unable to prepare the proposal version.');
-      if (current.workPackage && payload.data?.package_updated_at) {
+      const updatedTokens = payload.data?.package_updated_ats ?? (payload.data?.package_updated_at
+        ? [{ workPackageId: selectedPairs[0].workPackage.id, updatedAt: payload.data.package_updated_at }]
+        : []);
+      if (updatedTokens.length > 0) {
         setBoard((existing) => existing ? { ...existing,
-          work_packages: (existing.work_packages ?? []).map((item) => item.id === current.workPackage?.id
+          work_packages: (existing.work_packages ?? []).map((item) => updatedTokens.some((token) =>
+            token.workPackageId === item.id)
             ? { ...item, proposal_version_id: payload.data?.proposal_version_id,
-              updated_at: payload.data?.package_updated_at ?? item.updated_at } : item),
+              updated_at: updatedTokens.find((token) => token.workPackageId === item.id)?.updatedAt
+                ?? item.updated_at } : item),
         } : existing);
       }
       setNotice(`Proposal version ${payload.data?.version_number ?? ''} prepared. It has not been sent.`);
       setProposalVersionFor((existing) => existing ? {
         ...existing, preparedVersionNumber: payload.data?.version_number,
       } : existing);
-      await loadProposalVersionContext(current.opportunity, current.requestKey, {
-        estimate: current.estimate,
-        workPackage: current.workPackage && payload.data?.package_updated_at ? {
-          ...current.workPackage,
-          proposal_version_id: payload.data.proposal_version_id,
-          updated_at: payload.data.package_updated_at,
-        } : current.workPackage,
+      const refreshedPairs = current.packagePairs.map((item) => {
+        const token = updatedTokens.find((candidate) => candidate.workPackageId === item.workPackage.id);
+        return token ? { ...item, workPackage: { ...item.workPackage,
+          proposal_version_id: payload.data?.proposal_version_id, updated_at: token.updatedAt } } : item;
       });
+      const refreshedFirst = refreshedPairs.find((item) => item.workPackage.id === current.workPackage?.id)
+        ?? refreshedPairs[0];
+      await loadProposalVersionContext(current.opportunity, current.requestKey, {
+        ...refreshedFirst, packagePairs: refreshedPairs,
+      }, current.selectedPackageIds);
     } catch (caught) {
       setNotice(caught instanceof Error ? caught.message : 'Unable to prepare the proposal version.');
     } finally {
@@ -1243,6 +1284,31 @@ export function CrmBoard() {
             {proposalVersionFor.loading ? <p role="status" className="text-sm text-gray-600">Loading proposal history…</p> : (
               <>
                 {proposalVersionFor.candidates.length > 0 ? <div className="space-y-2">
+                  {proposalVersionFor.packagePairs.length > 1 && <fieldset className="space-y-2 rounded-md border p-3">
+                    <legend className="px-1 font-medium">Packages included in this version</legend>
+                    <p className="text-sm text-gray-600">Choose at least one. Selecting multiple packages creates one immutable package-set version.</p>
+                    {proposalVersionFor.packagePairs.map(({ workPackage, estimate }, index) => (
+                      <label key={workPackage.id} className="flex min-h-11 items-center gap-3 text-sm">
+                        <input type="checkbox" checked={proposalVersionFor.selectedPackageIds.includes(workPackage.id)}
+                          onChange={(event) => {
+                            const nextIds = event.target.checked
+                              ? [...proposalVersionFor.selectedPackageIds, workPackage.id]
+                              : proposalVersionFor.selectedPackageIds.filter((id) => id !== workPackage.id);
+                            if (nextIds.length === 0) {
+                              setNotice('A proposal version must include at least one package.');
+                              return;
+                            }
+                            void loadProposalVersionContext(proposalVersionFor.opportunity,
+                              crypto.randomUUID(), {
+                                workPackage: proposalVersionFor.workPackage,
+                                estimate: proposalVersionFor.estimate,
+                                packagePairs: proposalVersionFor.packagePairs,
+                              }, nextIds);
+                          }} />
+                        <span>Service package {index + 1} · {estimateLabel(estimate)}</span>
+                      </label>
+                    ))}
+                  </fieldset>}
                   <Label htmlFor="proposal-version-source">Proposal working copy</Label>
                   <select id="proposal-version-source" value={proposalVersionFor.selectedProposalId}
                     onChange={(event) => setProposalVersionFor((current) => current
@@ -1254,10 +1320,30 @@ export function CrmBoard() {
                       <option key={candidate.id} value={candidate.id}>{candidate.title}</option>
                     ))}
                   </select>
-                  {proposalVersionFor.candidates.find((candidate) =>
-                    candidate.id === proposalVersionFor.selectedProposalId)?.preview && (() => {
-                    const preview = proposalVersionFor.candidates.find((candidate) =>
-                      candidate.id === proposalVersionFor.selectedProposalId)!.preview!;
+                  {(() => {
+                    const candidate = proposalVersionFor.candidates.find((item) =>
+                      item.id === proposalVersionFor.selectedProposalId);
+                    const packagePreview = candidate?.package_set_preview;
+                    if (packagePreview) return <section aria-label="Customer-visible proposal review"
+                      className="space-y-3 rounded-md border bg-gray-50 p-4">
+                      <div><h3 className="font-medium">Customer-visible package set</h3>
+                        <p>{packagePreview.packages.length} service packages · offered total{' '}
+                          {new Intl.NumberFormat(undefined, { style: 'currency', currency: packagePreview.currency })
+                            .format(packagePreview.amount_minor / 100)}</p></div>
+                      {packagePreview.packages.map((item) => <div key={item.work_package_id}
+                        className="rounded border bg-white p-3">
+                        <h4 className="font-medium">{item.title}</h4>
+                        <p>{new Intl.NumberFormat(undefined, { style: 'currency', currency: item.currency })
+                          .format(item.amount_minor / 100)} · {item.pricing_basis.replaceAll('_', ' ')}</p>
+                        <ul className="list-disc pl-5">{item.scope_lines.map((line) =>
+                          <li key={line}>{line}</li>)}</ul>
+                      </div>)}
+                      <div><h3 className="font-medium">Exact proposal content</h3>
+                        <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded border bg-white p-3 text-sm">
+                          {packagePreview.rendered_content}</pre></div>
+                    </section>;
+                    const preview = candidate?.preview;
+                    if (!preview) return null;
                     return <section aria-label="Customer-visible proposal review"
                       className="space-y-3 rounded-md border bg-gray-50 p-4">
                       <div><h3 className="font-medium">Customer-visible price</h3>
@@ -1284,7 +1370,8 @@ export function CrmBoard() {
                         <span className="font-medium">Version {version.version_number}</span>
                         {' · '}{new Intl.NumberFormat(undefined, { style: 'currency', currency: version.currency })
                           .format(version.display_amount_minor / 100)}
-                        {' · '}{version.pricing_basis.replaceAll('_', ' ')}
+                        {version.pricing_basis ? ` · ${version.pricing_basis.replaceAll('_', ' ')}`
+                          : ` · ${version.package_count ?? 0} package set`}
                         <span className="block text-xs text-gray-500">
                           Prepared {new Date(version.created_at).toLocaleString()} · not sent
                         </span>

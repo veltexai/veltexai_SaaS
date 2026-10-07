@@ -120,6 +120,104 @@ alter table public.crm_site_work_packages
 alter table public.crm_proposal_version_commands
   add column resulting_package_updated_ats jsonb;
 
+-- Read-only, caller-bound preview. It deliberately accepts package identities
+-- only and derives every customer-visible field from current database state.
+create function public.read_crm_proposal_package_set_preview_internal(
+  p_actor uuid,p_organization uuid,p_proposal uuid,p_opportunity uuid,
+  p_property uuid,p_package_ids uuid[]
+)
+returns jsonb language plpgsql security definer
+set search_path=pg_catalog,public as $$
+declare opportunity_row public.crm_opportunities%rowtype;
+  proposal_row public.proposals%rowtype;
+  package_row public.crm_site_work_packages%rowtype;
+  estimate_row public.crm_estimate_runs%rowtype;
+  actor_role text; item_count integer; i integer;
+  scope_lines jsonb; package_title text;
+  package_items jsonb:='[]'::jsonb; rendered_packages text:='';
+  total_amount bigint:=0;
+begin
+  item_count:=coalesce(cardinality(p_package_ids),0);
+  if p_actor is null or item_count<1 or item_count>100
+     or exists(select 1 from unnest(p_package_ids) id group by id having count(*)>1)
+     or exists(select 1 from unnest(p_package_ids) id where id is null) then
+    raise exception 'proposal package set unavailable' using errcode='42501';
+  end if;
+  select m.role into actor_role from public.organization_memberships m
+    where m.organization_id=p_organization and m.user_id=p_actor;
+  select o.* into opportunity_row from public.crm_opportunities o
+    where o.organization_id=p_organization and o.id=p_opportunity
+      and o.deleted_at is null;
+  if opportunity_row.id is null or not coalesce(actor_role in ('owner','admin')
+    or (actor_role='estimator' and opportunity_row.estimator_user_id=p_actor),false) then
+    raise exception 'proposal package set unavailable' using errcode='42501';
+  end if;
+  select p.* into proposal_row from public.proposals p
+    where p.organization_id=p_organization and p.id=p_proposal;
+  if proposal_row.id is null or proposal_row.crm_opportunity_id is distinct from p_opportunity
+     or proposal_row.crm_customer_id is distinct from opportunity_row.customer_id
+     or proposal_row.crm_property_id is distinct from p_property
+     or opportunity_row.property_id is distinct from p_property then
+    raise exception 'proposal package set context unavailable' using errcode='23514';
+  end if;
+  if exists(select 1 from public.crm_pipeline_stages s
+      where s.organization_id=p_organization and s.id=opportunity_row.stage_id
+        and s.category in ('won','lost','disqualified','handed_off')) then
+    raise exception 'closed opportunity cannot preview a proposal package set' using errcode='23514';
+  end if;
+  scope_lines:=case
+    when jsonb_typeof(proposal_row.service_scope->'areas_included')='array'
+      and jsonb_array_length(proposal_row.service_scope->'areas_included')>0
+    then proposal_row.service_scope->'areas_included'
+    else jsonb_build_array('Scope to be confirmed') end;
+  if not public.crm_proposal_scope_lines_valid(scope_lines) then
+    raise exception 'proposal package set content unavailable' using errcode='23514';
+  end if;
+  for i in 1..item_count loop
+    select p.* into package_row from public.crm_site_work_packages p
+      where p.organization_id=p_organization and p.id=p_package_ids[i];
+    select e.* into estimate_row from public.crm_estimate_runs e
+      where e.organization_id=p_organization and e.id=package_row.estimate_run_id;
+    if package_row.id is null or package_row.opportunity_id<>p_opportunity
+       or package_row.property_id<>p_property or package_row.proposal_id is distinct from p_proposal
+       or package_row.status<>'estimated' or package_row.estimate_run_id is null
+       or estimate_row.id is null or estimate_row.opportunity_id<>p_opportunity
+       or estimate_row.property_id<>p_property
+       or estimate_row.work_package_id is distinct from package_row.id then
+      raise exception 'proposal package set context unavailable' using errcode='23514';
+    end if;
+    package_title:=proposal_row.title||case when item_count=1 then ''
+      else ' — Service option '||i::text end;
+    package_items:=package_items||jsonb_build_array(jsonb_build_object(
+      'display_position',i,'work_package_id',package_row.id,
+      'expected_package_updated_at',package_row.updated_at,'title',package_title,
+      'scope_lines',scope_lines,'amount_minor',estimate_row.selected_amount_minor,
+      'currency',estimate_row.currency,'pricing_basis',estimate_row.pricing_basis));
+    total_amount:=total_amount+estimate_row.selected_amount_minor;
+    rendered_packages:=rendered_packages||case when i=1 then '' else E'\n\n' end
+      ||'## '||package_title||E'\n'
+      ||coalesce((select string_agg('- '||(line#>>'{}'),E'\n' order by ordinality)
+          from jsonb_array_elements(scope_lines) with ordinality listed(line,ordinality)),
+        '- Scope to be confirmed')||E'\n'
+      ||'Price: '||estimate_row.currency||' '
+      ||to_char(estimate_row.selected_amount_minor/100.0,'FM999999999999990.00')||' '
+      ||replace(estimate_row.pricing_basis,'_',' ');
+  end loop;
+  return jsonb_build_object(
+    'packages',package_items,'amount_minor',total_amount,'currency','USD',
+    'rendered_content','# '||proposal_row.title||E'\n\nPrepared for: '
+      ||proposal_row.client_name||E'\nService location: '||proposal_row.service_location
+      ||E'\n\n'||rendered_packages||E'\n\nOffered total: USD '
+      ||to_char(total_amount/100.0,'FM999999999999990.00'));
+end;
+$$;
+revoke all on function public.read_crm_proposal_package_set_preview_internal(
+  uuid,uuid,uuid,uuid,uuid,uuid[]
+) from public,anon,authenticated;
+grant execute on function public.read_crm_proposal_package_set_preview_internal(
+  uuid,uuid,uuid,uuid,uuid,uuid[]
+) to service_role;
+
 create function public.command_crm_publish_proposal_package_set_internal(
   p_actor uuid,p_organization uuid,p_proposal uuid,p_opportunity uuid,p_property uuid,
   p_package_ids uuid[],p_expected_package_updated_ats timestamptz[],p_request_key text

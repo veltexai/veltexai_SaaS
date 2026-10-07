@@ -165,6 +165,58 @@ describe('R3-4 proposal-version route', () => {
     } });
   });
 
+  it('hydrates a v2 preview from package identities without accepting estimate identity', async () => {
+    clients();
+    const authRpc = jest.fn((name: string) => Promise.resolve(name === 'read_crm_proposal_candidates'
+      ? { data: [{ id: PROPOSAL, title: 'Residential proposal', property_id: PROPERTY }], error: null }
+      : { data: [], error: null }));
+    createClient.mockResolvedValue({
+      auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: USER } }, error: null }) },
+      from: jest.fn().mockReturnValue(chain({ role: 'estimator' })),
+      rpc: authRpc,
+    });
+    const previewRpc = jest.fn().mockResolvedValue({ data: {
+      packages: [
+        { work_package_id: PACKAGE, expected_package_updated_at: '2026-10-06T06:00:00Z',
+          title: 'Option 1', scope_lines: ['Kitchen'], amount_minor: 18000,
+          currency: 'USD', pricing_basis: 'per_visit' },
+        { work_package_id: PACKAGE_2, expected_package_updated_at: '2026-10-06T06:01:00Z',
+          title: 'Option 2', scope_lines: ['Kitchen'], amount_minor: 14500,
+          currency: 'USD', pricing_basis: 'one_time' },
+      ], amount_minor: 32500, currency: 'USD', rendered_content: 'exact server preview',
+    }, error: null });
+    createServiceClient.mockReturnValue({ rpc: previewRpc });
+    const { GET } = await import('../opportunities/[opportunityId]/proposal-versions/route');
+    const url = new URL('http://local/proposal-versions');
+    url.searchParams.set('mode', 'package_set');
+    url.searchParams.set('propertyId', PROPERTY);
+    url.searchParams.append('packageId', PACKAGE);
+    url.searchParams.append('packageId', PACKAGE_2);
+    const response = await GET(new NextRequest(url), context);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ data: {
+      candidates: [expect.objectContaining({ id: PROPOSAL,
+        package_set_preview: expect.objectContaining({ amount_minor: 32500 }) })],
+      versions: [],
+    } });
+    expect(previewRpc).toHaveBeenCalledWith('read_crm_proposal_package_set_preview_internal', {
+      p_actor: USER, p_organization: ORG, p_proposal: PROPOSAL, p_opportunity: OPP,
+      p_property: PROPERTY, p_package_ids: [PACKAGE, PACKAGE_2],
+    });
+  });
+
+  it('rejects invalid or duplicate v2 preview package identities before service access', async () => {
+    const rpc = clients();
+    const { GET } = await import('../opportunities/[opportunityId]/proposal-versions/route');
+    const url = new URL('http://local/proposal-versions');
+    url.searchParams.set('mode', 'package_set');
+    url.searchParams.set('propertyId', PROPERTY);
+    url.searchParams.append('packageId', PACKAGE);
+    url.searchParams.append('packageId', PACKAGE);
+    expect((await GET(new NextRequest(url), context)).status).toBe(404);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
   it('does not accept browser-supplied content or prices', async () => {
     const rpc = clients();
     const { POST } = await import('../opportunities/[opportunityId]/proposal-versions/route');

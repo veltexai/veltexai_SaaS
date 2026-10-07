@@ -17,11 +17,17 @@ export async function GET(request: NextRequest, { params }: Context) {
   if (!crmRoleHasPermission(context.role, 'crm:edit_assigned') || !UUID.test(opportunityId)) {
     return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
   }
+  const mode = request.nextUrl.searchParams.get('mode');
   const estimateRunId = request.nextUrl.searchParams.get('estimateRunId');
   const propertyId = request.nextUrl.searchParams.get('propertyId');
   const workPackageId = request.nextUrl.searchParams.get('workPackageId');
-  if (!estimateRunId || !propertyId || !UUID.test(estimateRunId) || !UUID.test(propertyId)
-      || (workPackageId !== null && !UUID.test(workPackageId))) {
+  const packageIds = request.nextUrl.searchParams.getAll('packageId');
+  const packageSetMode = mode === 'package_set';
+  if (!propertyId || !UUID.test(propertyId)
+      || (packageSetMode && (packageIds.length < 1 || packageIds.length > 100
+        || packageIds.some((id) => !UUID.test(id)) || new Set(packageIds).size !== packageIds.length))
+      || (!packageSetMode && (!estimateRunId || !UUID.test(estimateRunId)
+        || (workPackageId !== null && !UUID.test(workPackageId))))) {
     return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
   }
   const [versions, candidates] = await Promise.all([
@@ -38,6 +44,24 @@ export async function GET(request: NextRequest, { params }: Context) {
     return NextResponse.json({ error: UNAVAILABLE }, { status: 503 });
   }
   const serviceClient = createServiceClient() as any;
+  if (packageSetMode) {
+    const hydratedCandidates = (await Promise.all((candidates.data ?? []).map(async (candidate: any) => {
+      const previewResult = await serviceClient.rpc(
+        'read_crm_proposal_package_set_preview_internal',
+        {
+          p_actor: context.user.id, p_organization: context.organizationId,
+          p_proposal: candidate.id, p_opportunity: opportunityId,
+          p_property: propertyId, p_package_ids: packageIds,
+        },
+      );
+      if (previewResult.error || !previewResult.data) return null;
+      return { ...candidate, package_set_preview: previewResult.data };
+    }))).filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null);
+    return NextResponse.json({ data: {
+      candidates: hydratedCandidates,
+      versions: versions.data ?? [],
+    } });
+  }
   const hydratedCandidates = (await Promise.all((candidates.data ?? []).map(async (candidate: any) => {
     try {
       const sourceResult = await serviceClient.rpc('read_crm_proposal_version_source_internal', {

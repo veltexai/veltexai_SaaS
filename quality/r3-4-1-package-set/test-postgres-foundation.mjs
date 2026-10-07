@@ -69,6 +69,16 @@ try {
       'public.command_crm_publish_proposal_package_set_internal(uuid,uuid,uuid,uuid,uuid,uuid[],timestamptz[],text)',
       'EXECUTE'
     ),
+    'service_role_preview_execute', has_function_privilege(
+      'service_role',
+      'public.read_crm_proposal_package_set_preview_internal(uuid,uuid,uuid,uuid,uuid,uuid[])',
+      'EXECUTE'
+    ),
+    'authenticated_preview_execute', has_function_privilege(
+      'authenticated',
+      'public.read_crm_proposal_package_set_preview_internal(uuid,uuid,uuid,uuid,uuid,uuid[])',
+      'EXECUTE'
+    ),
     'migration_count', ${migrations.length}
   )::text`]).trim());
 
@@ -80,6 +90,8 @@ try {
     direct_service_role_insert: false,
     service_role_command_execute: true,
     authenticated_command_execute: false,
+    service_role_preview_execute: true,
+    authenticated_preview_execute: false,
     migration_count: 70,
   });
   const matrix = psql(['-f', resolve(root,

@@ -152,6 +152,86 @@ describe('R3-1 CRM board', () => {
     expect(screen.getByRole('button', { name: 'Prepare proposal version' })).toHaveClass('min-h-11');
   });
 
+  it('reviews and publishes an immutable multi-package set without browser pricing inputs', async () => {
+    const packagePreview = {
+      rendered_content: '# Taylor proposal\n\n## Service option 1\nPrice: USD 185.00 per visit\n\n## Service option 2\nPrice: USD 140.00 one time\n\nOffered total: USD 325.00',
+      amount_minor: 32500, currency: 'USD', packages: [
+        { display_position: 1, work_package_id: 'package-1',
+          expected_package_updated_at: '2026-10-06T08:00:00Z', title: 'Service option 1',
+          scope_lines: ['Kitchen'], amount_minor: 18500, currency: 'USD', pricing_basis: 'per_visit' },
+        { display_position: 2, work_package_id: 'package-2',
+          expected_package_updated_at: '2026-10-06T08:01:00Z', title: 'Service option 2',
+          scope_lines: ['Bathrooms'], amount_minor: 14000, currency: 'USD', pricing_basis: 'one_time' },
+      ],
+    };
+    const board = {
+      organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], viewer_price_redacted: false,
+      pipelines: [{ id: 'pipeline-1', name: 'Residential', is_default: true,
+        stages: [{ id: 'stage-1', label: 'Quote', category: 'estimating', position: 40, hidden: false }] }],
+      opportunities: [{ id: 'opportunity-1', name: 'Taylor options', pipeline_id: 'pipeline-1',
+        stage_id: 'stage-1', category: 'estimating', segment: 'residential', property_id: 'property-1' }],
+      work_packages: [
+        { id: 'package-1', opportunity_id: 'opportunity-1', property_id: 'property-1',
+          status: 'estimated', proposal_id: 'proposal-1', estimate_run_id: 'run-1',
+          updated_at: '2026-10-06T08:00:00Z' },
+        { id: 'package-2', opportunity_id: 'opportunity-1', property_id: 'property-1',
+          status: 'estimated', proposal_id: 'proposal-1', estimate_run_id: 'run-2',
+          updated_at: '2026-10-06T08:01:00Z' },
+      ],
+      estimate_summaries: [
+        { estimate_run_id: 'run-1', opportunity_id: 'opportunity-1', work_package_id: 'package-1',
+          engine_version: 'v', selected_amount_minor: 18500, currency: 'USD', pricing_basis: 'per_visit',
+          created_at: '2026-10-06T08:00:00Z' },
+        { estimate_run_id: 'run-2', opportunity_id: 'opportunity-1', work_package_id: 'package-2',
+          engine_version: 'v', selected_amount_minor: 14000, currency: 'USD', pricing_basis: 'one_time',
+          created_at: '2026-10-06T08:01:00Z' },
+      ],
+    };
+    const context = { data: { candidates: [{ id: 'proposal-1', title: 'Taylor proposal',
+      property_id: 'property-1', updated_at: '2026-10-06T07:00:00Z',
+      package_set_preview: packagePreview }], versions: [] } };
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: board }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => context })
+      .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: {
+        proposal_version_id: 'version-2', version_number: 2, package_updated_ats: [
+          { workPackageId: 'package-1', updatedAt: '2026-10-06T08:05:00Z' },
+          { workPackageId: 'package-2', updatedAt: '2026-10-06T08:05:00Z' },
+        ], replayed: false,
+      } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: {
+        candidates: [{ ...context.data.candidates[0], package_set_preview: {
+          ...packagePreview,
+          packages: packagePreview.packages.map((item) => ({ ...item,
+            expected_package_updated_at: '2026-10-06T08:05:00Z' })),
+        } }],
+        versions: [{ id: 'version-2', proposal_id: 'proposal-1', estimate_run_id: null,
+          version_number: 2, display_amount_minor: 32500, currency: 'USD', pricing_basis: null,
+          content_sha256: 'a', rendered_sha256: 'b', schema_version: 'crm_proposal_version.v2',
+          package_count: 2, created_at: '2026-10-06T08:05:00Z' }],
+      } }) });
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'Taylor options' });
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare proposal version' }));
+    expect(await screen.findByRole('group', { name: 'Packages included in this version' }))
+      .toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Customer-visible proposal review' }))
+      .toHaveTextContent('Offered total: USD 325.00');
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare immutable version' }));
+    expect(await screen.findByText(/2 package set/)).toBeInTheDocument();
+    const getUrl = String(fetchMock.mock.calls[2][0]);
+    expect(getUrl).toContain('mode=package_set');
+    expect(getUrl).toContain('packageId=package-1');
+    expect(getUrl).toContain('packageId=package-2');
+    const body = JSON.parse(fetchMock.mock.calls[3][1].body);
+    expect(body).toEqual({ schemaVersion: 'crm_proposal_version.v2', proposalId: 'proposal-1',
+      propertyId: 'property-1', packages: [
+        { workPackageId: 'package-1', expectedPackageUpdatedAt: '2026-10-06T08:00:00Z' },
+        { workPackageId: 'package-2', expectedPackageUpdatedAt: '2026-10-06T08:01:00Z' },
+      ] });
+    expect(JSON.stringify(body)).not.toMatch(/amount|price|scope|estimate/i);
+  });
+
   it('recovers a stale package through an explicit board refresh', async () => {
     jest.spyOn(global.crypto, 'randomUUID').mockReturnValue('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
     const board = {

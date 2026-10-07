@@ -34,6 +34,7 @@ for (const marker of [
   'association_sha256 text not null',
   'guard_crm_proposal_version_package_immutable',
   'guard_crm_proposal_version_package_truncate',
+  'create function public.read_crm_proposal_package_set_preview_internal',
   'create function public.command_crm_publish_proposal_package_set_internal',
   "'package_ids',to_jsonb(p_package_ids)",
   "'expected_package_updated_ats',to_jsonb(p_expected_package_updated_ats)",
@@ -46,6 +47,7 @@ assert.equal((migration.match(/^begin;$/gm) ?? []).length, 1);
 assert.equal((migration.match(/^commit;$/gm) ?? []).length, 1);
 assert.match(migration, /revoke all on public\.crm_proposal_version_packages\s+from public,anon,authenticated,service_role/);
 assert.match(migration, /revoke all on function public\.command_crm_publish_proposal_package_set_internal[\s\S]*from public,anon,authenticated;[\s\S]*grant execute[\s\S]*to service_role;/);
+assert.match(migration, /revoke all on function public\.read_crm_proposal_package_set_preview_internal[\s\S]*from public,anon,authenticated;[\s\S]*grant execute[\s\S]*to service_role;/);
 assert.doesNotMatch(migration, /alter table public\.crm_proposal_versions[\s\S]*drop column/i);
 assert.doesNotMatch(migration, /update\s+public\.crm_proposal_versions/i);
 assert.doesNotMatch(migration, /delete\s+from\s+public\.crm_proposal_versions/i);

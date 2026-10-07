@@ -3893,3 +3893,23 @@ After any material action, append or revise the relevant section with:
   Customer-visible v2 preview/UI integration, race and broader negative
   matrices, full-suite verification, independent review, isolated Preview and
   founder acceptance remain open. No hosted or Production state changed.
+- **R3-4.1 SERVER-AUTHORITATIVE PREVIEW + BOARD/LIST PACKAGE SET — LOCAL
+  `PASS`:** A new service-role-only, caller-bound read function accepts only an
+  ordered unique package-ID list, authorizes the actor/opportunity, validates
+  exact proposal/customer/property/package/estimate bindings and derives the
+  same customer-visible titles, scopes, prices, ordering, total and rendered
+  content used by the publish command. Authenticated roles have no direct
+  execute grant. The proposal-version GET route exposes that read-only preview
+  without accepting estimate identity or customer-visible fields from the
+  browser. Board and List now discover all estimated packages for the
+  opportunity, let the operator choose one or more, show the exact server
+  preview, preserve the accepted v1 path for one package and send only ordered
+  IDs plus optimistic tokens for a multi-package v2 publication. Multi-package
+  result tokens update every local package pointer; history truthfully labels
+  v2 rows as package sets. TypeScript compilation and focused route/Board tests
+  pass 46/46. The disposable 70-migration PostgreSQL matrix also proves preview
+  service-role privilege, authenticated denial, viewer denial, two-package
+  `$325.00` output and exact preview/published-render byte parity before rolling
+  back. Deterministic two-session contention, broader tenant/substitution
+  negatives, full-suite verification, independent review, isolated Preview and
+  founder acceptance remain open. No hosted or Production state changed.
