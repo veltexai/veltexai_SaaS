@@ -4198,6 +4198,15 @@ After any material action, append or revise the relevant section with:
   from the first 70 migrations executed the exact 6,840-byte artifact and
   returned the required terminal evidence with history `71`. No hosted state
   has been changed.
+- **R3-4.1 CARDINALITY PREVIEW ARTIFACT REVIEW PACKET — PREPARED / NOT SENT:**
+  Exact repository tip `209c68ba6b5594909f853a6e4213dc7e6656f14e` and the
+  6,840-byte guarded SQL are frozen in
+  `/private/tmp/veltex-r3-4-1-cardinality-preview-209c68b-review.zip`, SHA-256
+  `1a9d82bddc3eda4f12aaaa63d1b36415df2c67e889e61582055a48cd91ab6235`.
+  The archive contains the exact SQL SHA `45b75deb...6c4bb`, bounded review
+  assignment and a verified complete-history bundle SHA
+  `8f04452d...f7601`. Submission remains an external-message action; the packet
+  has not been sent and no hosted state has changed.
 - **R3-5 C0 EXECUTION SEQUENCE PREPARED / IMPLEMENTATION STILL BLOCKED:**
   `R3_5_C0_EXECUTION_SEQUENCE.md` divides the full approved outcome into a
   consent/cryptographic freeze, private issuance foundation, fragment-exchange
