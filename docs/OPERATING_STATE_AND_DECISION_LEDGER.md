@@ -4183,8 +4183,8 @@ After any material action, append or revise the relevant section with:
   are not cross-tenant leaks or wrong-publication paths, and are deferred to
   avoid expanding the bounded MVP remediation. Hosted acceptance remains
   mandatory.
-- **R3-4.1 CARDINALITY GUARDED PREVIEW ARTIFACT — LOCAL `PASS` / HOSTED APPLY
-  PENDING:** `build-cardinality-preview-apply.mjs` deterministically emits
+- **R3-4.1 CARDINALITY GUARDED PREVIEW ARTIFACT — HOSTED PREVIEW `PASS`:**
+  `build-cardinality-preview-apply.mjs` deterministically emits
   `/private/tmp/veltex-r3-4-1-cardinality-preview-apply.sql`, 6,840 bytes,
   SHA-256 `45b75deb075b35d855189f657fd83a57c27c2b25124928a829cf7b415cc6c4bb`.
   It binds reviewed packet tip `99c7635`, exact migration SHA-256
@@ -4196,8 +4196,13 @@ After any material action, append or revise the relevant section with:
   privileges, then emits `R3_4_1_CARDINALITY_PREVIEW_APPLY_PASS`. Determinism
   and structural refusal tests pass; a disposable PostgreSQL database built
   from the first 70 migrations executed the exact 6,840-byte artifact and
-  returned the required terminal evidence with history `71`. No hosted state
-  has been changed.
+  returned the required terminal evidence with history `71`. After the
+  independent Claude and Cursor artifact-review gate passed, the founder
+  authorized proceeding. On 2026-10-06 the exact reviewed 6,840-byte artifact
+  was loaded into the Supabase SQL editor only for the visibly confirmed
+  isolated Preview project `ynzkwctwlssjcsjmahey`. Execution returned exactly
+  `R3_4_1_CARDINALITY_PREVIEW_APPLY_PASS` with `history_count = 71`; the single
+  transaction committed. Production was excluded and not contacted.
 - **R3-4.1 CARDINALITY PREVIEW ARTIFACT REVIEW — `PASS` (CLAUDE + CURSOR):**
   Exact repository tip `209c68ba6b5594909f853a6e4213dc7e6656f14e` and the
   6,840-byte guarded SQL are frozen in
