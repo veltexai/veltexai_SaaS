@@ -244,7 +244,7 @@ begin
                'work_package_id',a.work_package_id,
                'estimate_run_id',a.estimate_run_id,
                'title',a.customer_visible_title,
-               'scope_sha256',a.scope_sha256,
+               'scope_sha256',public.crm_estimate_sha256(a.customer_visible_scope),
                'amount_minor',a.amount_minor,
                'currency',a.currency,
                'pricing_basis',a.pricing_basis,
@@ -350,6 +350,7 @@ declare
   opportunity_row public.crm_opportunities%rowtype;
   command_row public.crm_customer_action_token_commands%rowtype;
   revocation_row public.crm_customer_action_token_revocations%rowtype;
+  revocation_created boolean:=false;
 begin
   if p_actor is null or p_organization is null or p_proposal_version is null
      or p_token is null
@@ -396,6 +397,7 @@ begin
       organization_id,token_id,reason,revoked_by
     ) values(p_organization,p_token,trim(p_reason),p_actor)
     returning * into revocation_row;
+    revocation_created:=true;
   exception when unique_violation then
     select r.* into revocation_row from public.crm_customer_action_token_revocations r
       where r.organization_id=p_organization and r.token_id=p_token;
@@ -403,6 +405,10 @@ begin
   insert into public.crm_customer_action_token_commands(
     organization_id,actor_user_id,command_kind,request_key,request_sha256,token_id
   ) values(p_organization,p_actor,'revoke',p_request_key,p_request_sha256,p_token);
+  if not revocation_created then
+    return query select p_token,revocation_row.revoked_at,true;
+    return;
+  end if;
   if not exists (
     select 1
     from public.crm_customer_action_tokens sibling

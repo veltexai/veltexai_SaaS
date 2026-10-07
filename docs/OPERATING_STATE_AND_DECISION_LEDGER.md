@@ -4477,6 +4477,38 @@ After any material action, append or revise the relevant section with:
   evidence, not a source-code pass. No hosted migration, Preview mutation,
   public customer room or production change occurred. Independent Claude and
   Cursor re-review remains required before C0.1 can advance.
+- **R3-5 C0.1 FIRST REMEDIATION REVIEW — CLAUDE `PASS WITH NON-BLOCKING NOTES`
+  / CURSOR `FAIL`:** Both reviewers recomputed packet SHA-256
+  `610bc6686f38c270713c85bb161de0a4650526e32f45f204eb4c7c17a01ada1a`,
+  complete-history bundle SHA-256
+  `375bdf5d351054a86ddaf5c0650222f90ea54488ef4ec7e2493e5d7f075c1c1c`
+  and tip `1bd536bbe439234c900780cd947607c2540916af`. Claude confirmed all three
+  original Claude blockers, both original Cursor blockers and Claude Low
+  findings L1-L5 closed. Cursor independently confirmed the original two
+  revocation blockers closed but found one new blocking compatibility defect:
+  acceptance issuance rebuilt each association digest using the stored
+  `scope_sha256`, while the accepted R3-4.1 publisher can persist the last
+  package's scope hash on every association row. A valid mixed-scope package
+  set could therefore be rejected. Claude also preserved two worthwhile
+  non-blocking notes: a narrow concurrent publish-versus-issuance timing window
+  and duplicate disable/audit/outbox events when an already-revoked last token
+  is revoked under a new command key. The first remediation is not accepted.
+- **R3-5 C0.1 SECOND REMEDIATION — LOCAL `PASS` / FINAL RE-REVIEW PENDING:**
+  Acceptance issuance now derives the association scope digest from each
+  immutable `customer_visible_scope`, matching the bytes used by the publisher
+  even when legacy `scope_sha256` metadata repeats across mixed-scope packages.
+  The adversarial PostgreSQL proof now creates that exact publisher-compatible
+  mixed-scope state and proves a valid acceptance token can be issued while the
+  existing stale pointer and estimate/hash gates remain active. Re-revoking an
+  already-revoked token under a new request key now records a truthful replay
+  receipt and returns the original revocation without duplicating eligibility,
+  audit or outbox transition events; the matrix pins the single disabled event.
+  CRM Jest again passes 20 suites / 141 tests; TypeScript, static foundation,
+  migration-chain and diff hygiene checks pass; the strengthened disposable
+  73-migration token harness passes; and the full definer-enabled migration,
+  role, assertion, injection and concurrency harness passes. No hosted system,
+  Preview or production state changed. The final complete-history Claude and
+  Cursor re-review remains required.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

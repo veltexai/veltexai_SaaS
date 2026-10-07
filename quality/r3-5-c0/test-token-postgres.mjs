@@ -60,6 +60,36 @@ returns bigint language sql security definer set search_path=pg_catalog,public a
   where organization_id=p_org and proposal_version_id=p_version
     and state='disabled' and reason='token revoked'
 $$;
+set local session_replication_role=replica;
+with target as (
+  select a.id,a.display_position,a.work_package_id,a.estimate_run_id,
+    a.customer_visible_title,a.amount_minor,a.currency,a.pricing_basis,
+    a.estimate_input_sha256,a.estimate_output_sha256,
+    jsonb_build_array('Service: post construction','Frequency: once') as new_scope
+  from public.crm_proposal_version_packages a
+  where a.proposal_version_id=current_setting('r35.version')::uuid
+  order by a.display_position limit 1
+)
+update public.crm_proposal_version_packages a set
+  customer_visible_scope=t.new_scope,
+  association_sha256=public.crm_estimate_sha256(jsonb_build_object(
+    'display_position',t.display_position,'work_package_id',t.work_package_id,
+    'estimate_run_id',t.estimate_run_id,'title',t.customer_visible_title,
+    'scope_sha256',public.crm_estimate_sha256(t.new_scope),
+    'amount_minor',t.amount_minor,'currency',t.currency,
+    'pricing_basis',t.pricing_basis,
+    'estimate_input_sha256',t.estimate_input_sha256,
+    'estimate_output_sha256',t.estimate_output_sha256))
+from target t where a.id=t.id;
+update public.crm_proposal_versions v set package_set_sha256=(
+  select public.crm_estimate_sha256(jsonb_agg(jsonb_build_object(
+    'displayPosition',a.display_position,'workPackageId',a.work_package_id,
+    'estimateRunId',a.estimate_run_id,'associationSha256',a.association_sha256)
+    order by a.display_position))
+  from public.crm_proposal_version_packages a
+  where a.proposal_version_id=v.id)
+where v.id=current_setting('r35.version')::uuid;
+set local session_replication_role=origin;
 set local role service_role;
 do $$
 declare org uuid:=current_setting('r341.org')::uuid;
@@ -154,6 +184,13 @@ begin
   if replayed.replayed then raise exception 'initial sibling revoke marked replay'; end if;
   if pg_temp.r35_disabled_count(org,version_id)<>1 then
     raise exception 'last active token did not create one bounded disabled event';
+  end if;
+  select * into replayed from public.command_crm_revoke_customer_action_token_internal(
+    '11111111-1111-4111-8111-111111111111',org,version_id,sibling_token_id,
+    'already revoked','r35-revoke-sibling-0002',repeat('4',64));
+  if not replayed.replayed then raise exception 'already-revoked token was treated as new'; end if;
+  if pg_temp.r35_disabled_count(org,version_id)<>1 then
+    raise exception 're-revoking last token duplicated disabled event';
   end if;
 end $$;
 
