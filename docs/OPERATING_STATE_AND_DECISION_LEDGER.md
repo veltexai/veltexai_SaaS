@@ -3755,6 +3755,26 @@ After any material action, append or revise the relevant section with:
   branch, deployment, alias, credential or customer data was accessed or
   changed. R3-4 remains `ISOLATED PREVIEW DEPLOYED + BOOTSTRAP VERIFIED / AUTHENTICATED
   DESKTOP + 390PX AND FOUNDER ACCEPTANCE REQUIRED`.
+- **R3-4 AUTHENTICATED DESKTOP ACCEPTANCE — CORE WORKFLOW `PASS`; FINAL
+  TEARDOWN + 390PX PENDING (2026-10-06 Pacific):** The existing synthetic
+  Preview operator was used only against isolated project
+  `ynzkwctwlssjcsjmahey` and exact Preview application commit
+  `aa48b5eabd03e3dd4babf313c7b473a9920467b1`. A bounded synthetic proposal
+  linked to the accepted R3-3 residential estimate displayed the
+  server-derived `$280.00 per turn` price and synthetic scope as read-only
+  customer-facing content. Board preparation created version 1 with the
+  explicit notice `Proposal version 1 prepared. It has not been sent.`;
+  reload preserved version 1; deliberate second preparation created version 2
+  while version 1 remained unchanged; both history entries remained `not
+  sent`. List view exposed the same eligible opportunity, estimate value and
+  preparation action. Commercial unsupported and closed residential contexts
+  did not expose the preparation action during the same acceptance session.
+  Production remained excluded. This is meaningful Preview evidence but not
+  final acceptance: stalled-response/retry evidence, genuine 390px evidence,
+  mandatory synthetic credential retirement/sign-out, and founder disposition
+  remain open. The credential-retirement SQL is staged in the visibly
+  identified Preview SQL editor and has not yet been executed; no teardown is
+  claimed.
 - **R3-4.1 EXECUTION CONTRACT HARDENED / IMPLEMENTATION STILL LOCKED:** The
   existing package-set decision now fixes the additive v1/v2 database shape,
   append-only association invariants, deterministic package-set hashing and
