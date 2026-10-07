@@ -232,6 +232,60 @@ describe('R3-1 CRM board', () => {
     expect(JSON.stringify(body)).not.toMatch(/amount|price|scope|estimate/i);
   });
 
+  it('ignores an older package-selection preview that resolves after the current request', async () => {
+    const board = {
+      organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], viewer_price_redacted: false,
+      pipelines: [{ id: 'pipeline-1', name: 'Residential', is_default: true,
+        stages: [{ id: 'stage-1', label: 'Quote', category: 'estimating', position: 40, hidden: false }] }],
+      opportunities: [{ id: 'opportunity-1', name: 'Preview race', pipeline_id: 'pipeline-1',
+        stage_id: 'stage-1', category: 'estimating', segment: 'residential', property_id: 'property-1' }],
+      work_packages: [1, 2].map((number) => ({ id: `package-${number}`,
+        opportunity_id: 'opportunity-1', property_id: 'property-1', status: 'estimated',
+        proposal_id: 'proposal-1', estimate_run_id: `run-${number}`,
+        updated_at: `2026-10-06T08:0${number}:00Z` })),
+      estimate_summaries: [1, 2].map((number) => ({ estimate_run_id: `run-${number}`,
+        opportunity_id: 'opportunity-1', work_package_id: `package-${number}`, engine_version: 'v',
+        selected_amount_minor: number * 10000, currency: 'USD', pricing_basis: 'one_time',
+        created_at: `2026-10-06T08:0${number}:00Z` })),
+    };
+    const packageContext = (rendered: string) => ({ ok: true, json: async () => ({ data: {
+      candidates: [{ id: 'proposal-1', title: 'Proposal', property_id: 'property-1',
+        package_set_preview: { rendered_content: rendered, amount_minor: 30000, currency: 'USD',
+          packages: [1, 2].map((number) => ({ display_position: number,
+            work_package_id: `package-${number}`,
+            expected_package_updated_at: `2026-10-06T08:0${number}:00Z`,
+            title: `Option ${number}`, scope_lines: ['Scope'], amount_minor: number * 10000,
+            currency: 'USD', pricing_basis: 'one_time' })) } }], versions: [],
+    } }) });
+    let resolveOld!: (value: any) => void;
+    let resolveCurrent!: (value: any) => void;
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ data: ORG_ID }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: board }) })
+      .mockResolvedValueOnce(packageContext('initial package set'))
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveOld = resolve; }))
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveCurrent = resolve; }));
+    render(<CrmBoard />);
+    await screen.findByRole('heading', { name: 'Preview race' });
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare proposal version' }));
+    await screen.findByText('initial package set');
+    fireEvent.click(screen.getByRole('checkbox', { name: /Service package 2/ }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Prepare proposal version' }))
+      .not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare proposal version' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(5));
+    await act(async () => { resolveCurrent(packageContext('current package set')); });
+    expect(await screen.findByText('current package set')).toBeInTheDocument();
+    await act(async () => { resolveOld({ ok: true, json: async () => ({ data: {
+      candidates: [{ id: 'proposal-1', title: 'Proposal', property_id: 'property-1', preview: {
+        rendered_content: 'stale one-package preview', scope_lines: ['Old'], amount_minor: 10000,
+        currency: 'USD', pricing_basis: 'one_time' } }], versions: [],
+    } }) }); });
+    expect(screen.getByText('current package set')).toBeInTheDocument();
+    expect(screen.queryByText('stale one-package preview')).not.toBeInTheDocument();
+  });
+
   it('recovers a stale package through an explicit board refresh', async () => {
     jest.spyOn(global.crypto, 'randomUUID').mockReturnValue('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
     const board = {

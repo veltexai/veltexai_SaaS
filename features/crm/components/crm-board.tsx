@@ -289,7 +289,8 @@ export function CrmBoard() {
         .filter((id): id is string => Boolean(id));
       const candidates = (payload.data?.candidates ?? []).filter((candidate) =>
         linkedProposalIds.length === 0 || linkedProposalIds.every((id) => id === candidate.id));
-      setProposalVersionFor((current) => current?.opportunity.id === opportunity.id ? {
+      setProposalVersionFor((current) => current?.opportunity.id === opportunity.id
+        && current.requestKey === currentRequestKey ? {
         ...current,
         candidates,
         versions: payload.data?.versions ?? [],
@@ -300,6 +301,7 @@ export function CrmBoard() {
       } : current);
     } catch (caught) {
       setProposalVersionFor((current) => current?.opportunity.id === opportunity.id
+        && current.requestKey === currentRequestKey
         ? { ...current, loading: false } : current);
       setNotice(caught instanceof Error ? caught.message : 'Unable to load proposal versions.');
     }

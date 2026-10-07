@@ -3950,3 +3950,20 @@ After any material action, append or revise the relevant section with:
   privacy; Cursor is assigned operator workflow/accessibility/truthfulness and
   regression. Neither verdict is claimed yet. No hosted or Production state
   changed.
+- **R3-4.1 PREVIEW RESPONSE ORDERING — LOCAL REMEDIATION `PASS` / PRIOR PACKET
+  `SUPERSEDED`:** The proposal dialog now applies a package preview response
+  only when its opportunity and immutable request key still match the active
+  dialog state. A real close-and-reopen regression proves that an older pending
+  single-package response cannot overwrite the current package-set preview.
+  Focused Board coverage passes `31/31`, proposal-version route coverage passes
+  `16/16`, TypeScript passes, and the full regression passes `110/110` suites,
+  `941/941` tests and `5/5` snapshots. Two rejected test approaches are preserved:
+  the first tried to resolve a second promise before the second request existed
+  and leaked its unresolved promise after the assertion failed; the correction
+  then proved the package checkboxes are intentionally hidden while a preview
+  is loading, so a second checkbox click is not a reachable operator action.
+  The final close-and-reopen scenario exercises a reachable supersession path.
+  Because this remediation changes application source after candidate
+  `15da938`, packet `/private/tmp/veltex-r3-4-1-review-15da938.zip` is now
+  `SUPERSEDED` and must not be submitted. A replacement exact packet is pending
+  the complete regression gate. No hosted or Production state changed.
