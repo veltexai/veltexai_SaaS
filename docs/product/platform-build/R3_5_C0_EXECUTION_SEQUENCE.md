@@ -1,11 +1,12 @@
 # R3-5 C0 execution sequence
 
-Status: **PREPARED / R3-4.1 ACCEPTANCE-BLOCKED**
+Status: **C0.0 IN PROGRESS / R3-4.1 ACCEPTED**
 
 This sequence turns the approved C0 contract into small reviewable increments
-without shrinking the required customer outcome. No R3-5 implementation,
-public link, token, customer message or hosted action begins until R3-4.1 is
-`COMPLETE / VERIFIED / ACCEPTED`.
+without shrinking the required customer outcome. R3-4.1 is now
+`COMPLETE / VERIFIED / ACCEPTED`. C0.0 may freeze and test server-side
+constants and strict data-shape boundaries, but no migration, public link,
+customer message or hosted action begins before its exit gate closes.
 
 ## Operating rules
 

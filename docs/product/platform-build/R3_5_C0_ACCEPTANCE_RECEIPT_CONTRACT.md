@@ -1,9 +1,10 @@
 # R3-5 C0 customer acceptance and receipt contract
 
-Status: **ENTRY CONTRACT PREPARED / IMPLEMENTATION DEPENDENCY-BLOCKED**
+Status: **ENTRY CONTRACT ACTIVE / C0.0 IN PROGRESS**
 
 R3-5 begins only after R3-4 immutable proposal versions and the additive R3-4.1
-package-set commitment are independently accepted. This contract defines a
+package-set commitment are independently accepted. That gate is now complete.
+This contract defines a
 narrow proposal-review and acceptance room; it does not create the later full
 customer portal.
 
@@ -209,7 +210,7 @@ must not claim an email or SMS was sent.
 
 ## 10. Next action
 
-Do not implement R3-5 until the current R3-4 remediation and the additive
-R3-4.1 package-set bridge are independently accepted. Preserve this contract as
-the technical and truthfulness boundary; resolve final consent copy before
-enabling any public acceptance action.
+Implement R3-5 only in the bounded C0.0–C0.4 sequence from the accepted R3-4.1
+base. Preserve this contract as the technical and truthfulness boundary;
+resolve final consent copy before C0.1 migration work and before enabling any
+public acceptance action.

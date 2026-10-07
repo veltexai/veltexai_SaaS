@@ -4391,8 +4391,27 @@ After any material action, append or revise the relevant section with:
   the `Version 3 · $600.00 · 2 package set` history entry remained available
   with actionable controls. The briefly observed `0 package set` value was
   preserved as stale pre-migration page state and disappeared after the full
-  refresh. R3-4.1 is now `VERIFIED` in isolated Preview; founder product
-  acceptance and any production-release decision remain separate gates.
+  refresh. On 2026-10-07 the founder explicitly stated **“R3-4.1 is
+  ACCEPTED.”** R3-4.1 is therefore `COMPLETE / VERIFIED / ACCEPTED`, and the
+  bounded R3-5 C0 entry sequence is unlocked from exact accepted application
+  base `1888f11c14e55c4dc91fe459ab337a3bc4902c5c`. This acceptance does not
+  authorize a production deployment; production remains a separate gate.
+- **R3-5 C0.0 TECHNICAL SECURITY BOUNDARY — LOCAL `PASS` / CONSENT
+  DISPOSITION PENDING:** From accepted application base
+  `1888f11c14e55c4dc91fe459ab337a3bc4902c5c`,
+  `lib/crm/customer-action-contract.ts` freezes 32-byte unpadded-base64url
+  CSPRNG tokens, HMAC-SHA-256 key version `1`, server secret name
+  `VELTEX_C0_ACTION_TOKEN_HMAC_KEY_V1`, strict hash-only database input,
+  secret/identity/telemetry-free structured logs, 1/3/7-day expiries, a
+  15-minute `__Host-` secure session cookie and no-store/no-referrer response
+  controls. The exact candidate non-signature consent is versioned as
+  `veltex-c0-acceptance-v1` and preserved in
+  `R3_5_C0_0_SECURITY_BOUNDARY.md`. Focused Jest passes 1 suite / 6 tests;
+  TypeScript and diff hygiene pass. No migration, public route, token record,
+  customer message, hosted environment or production state changed. C0.0
+  cannot close and C0.1 migration work cannot begin until the founder explicitly
+  retains this non-signature wording pending counsel or counsel supplies an
+  approved replacement.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

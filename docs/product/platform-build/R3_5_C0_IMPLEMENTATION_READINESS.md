@@ -1,12 +1,12 @@
 # R3-5 C0 implementation readiness
 
-Status: **PLANNING COMPLETE / IMPLEMENTATION DEPENDENCY-BLOCKED**
+Status: **ENTRY GATE OPEN / C0.0 IN PROGRESS**
 
-R3-4 is accepted, and the additive R3-4.1 package-set bridge has received
-independent Claude and Cursor `PASS`. R3-5 cannot begin until R3-4.1 receives
-isolated-Preview evidence and founder acceptance. This memo maps the current repository to the approved
-C0 contract so implementation can begin without rediscovery or accidental
-scope reduction after that remaining gate.
+R3-4 and additive R3-4.1 are `COMPLETE / VERIFIED / ACCEPTED`; the latter has
+independent Claude and Cursor `PASS`, isolated-Preview evidence and explicit
+founder acceptance. This memo maps the current repository to the approved C0
+contract so implementation can proceed without rediscovery or accidental scope
+reduction.
 
 ## Reusable authoritative primitives
 
@@ -61,7 +61,7 @@ scope reduction after that remaining gate.
 8. Operator surfacing uses a caller-scoped receipt-summary reader in the CRM;
    clients do not read audit/outbox tables.
 
-## Package-set conflict resolved locally — acceptance gate remains
+## Package-set conflict resolved and accepted
 
 The approved R3-5 command accepts `accepted_package_ids` and requires atomic
 multi-package acceptance. Accepted R3-4 binds one package/estimate to a v1
@@ -86,8 +86,9 @@ may accept only a non-empty subset of the exact frozen association set, retain
 the parent `package_set_sha256`, preserve association display order and compute
 the selected subtotal from stored association amounts. It must not re-read
 mutable estimates or reconstruct customer-visible terms during acceptance.
-Token issuance stays disabled until the independently verified R3-4.1
-candidate is operationally accepted in isolated Preview and by the founder.
+Token issuance remains disabled through C0.0 and until C0.1 independently
+passes its database/security gate. The required R3-4.1 operational and founder
+acceptance evidence is now complete.
 
 Shipping an array parameter that currently permits only one package would be a
 smaller implementation, but it would not satisfy the approved multi-package
@@ -134,5 +135,6 @@ selected-subtotal correspondence, unselected-package preservation,
 immutable receipt/version/hash/consent binding, stage history, direct-DML
 denial, desktop/genuine-390 accessibility, truthful copy and receipt refresh.
 
-No code, migration, public link, acceptance, customer message or hosted change
-is authorized by this planning memo.
+The accepted dependency gate authorizes bounded R3-5 implementation in the
+recorded C0.0–C0.4 sequence. Each consequential hosted action and public
+enablement remains separately gated.
