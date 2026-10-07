@@ -4036,8 +4036,12 @@ After any material action, append or revise the relevant section with:
   `a98ca78` Git blob ID and records both migration hashes. The earlier 175 MB
   full-repository/full-history packet was rejected before submission because
   tracked media made it unnecessarily large; it is `SUPERSEDED` by this
-  bounded reproducible packet. Claude re-review is pending; no hosted state
-  changed.
+  bounded reproducible packet. The exact compact packet was submitted to the
+  existing Claude database/security review lane on 2026-10-06 with both
+  wrapper and bundle hashes, snapshot `2dce395`, source candidate `a98ca78`,
+  the four prior Medium findings, and an explicit read-only/no-hosted-state
+  boundary. Claude visibly entered its review run. Re-review is `PENDING`;
+  no Preview or Production state changed.
 - **R3-5 READINESS REBOUND TO THE CURRENT PACKAGE-SET CANDIDATE / IMPLEMENTATION
   STILL BLOCKED:** The C0 readiness memo now records R3-4 as accepted and maps
   the exact local R3-4.1 v2 parent, ordered append-only associations,
