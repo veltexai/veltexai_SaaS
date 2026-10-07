@@ -3870,3 +3870,20 @@ After any material action, append or revise the relevant section with:
   the final matrix passed and rolled back. Deterministic two-session contention,
   broader cross-tenant/substitution negatives, full application integration and
   all external gates remain open. No hosted or Production state changed.
+- **R3-4.1 APPLICATION COMMAND BOUNDARY — LOCAL ROUTE `PASS`:** The existing
+  strict, unversioned R3-4 v1 request remains byte-for-byte compatible and is
+  not reinterpreted. A separately discriminated strict
+  `crm_proposal_version.v2` request now accepts only proposal/property identity
+  plus an ordered, unique list of package IDs and optimistic `updated_at`
+  tokens. The route forwards only those identities/tokens and its authenticated
+  actor/organization/opportunity/idempotency context to the caller-bound
+  database command; browser-supplied prices, scopes, hashes and estimate IDs
+  are rejected. Focused route coverage passes 14/14, including v1 preservation,
+  a two-package v2 command, duplicate-package rejection, forged-content
+  rejection, permission/concurrency/error mapping and database-detail
+  non-disclosure. Two initial targeted-test invocations were harness-only
+  failures: zsh expanded the bracketed route path, then Jest treated the quoted
+  path as a pattern; `--runTestsByPath` corrected the invocation and passed.
+  Customer-visible v2 preview/UI integration, race and broader negative
+  matrices, full-suite verification, independent review, isolated Preview and
+  founder acceptance remain open. No hosted or Production state changed.

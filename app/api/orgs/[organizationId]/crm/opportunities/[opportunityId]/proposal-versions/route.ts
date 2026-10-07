@@ -87,6 +87,35 @@ export async function POST(request: NextRequest, { params }: Context) {
     // These additive R3 tables are ahead of the generated Database interface.
     // Keep the escape hatch local until the next deliberate type regeneration.
     const serviceClient = createServiceClient() as any;
+    if ('schemaVersion' in value && value.schemaVersion === 'crm_proposal_version.v2') {
+      const { data, error } = await serviceClient.rpc(
+        'command_crm_publish_proposal_package_set_internal',
+        {
+          p_actor: context.user.id,
+          p_organization: context.organizationId,
+          p_proposal: value.proposalId,
+          p_opportunity: opportunityId,
+          p_property: value.propertyId,
+          p_package_ids: value.packages.map((item) => item.workPackageId),
+          p_expected_package_updated_ats: value.packages.map((item) =>
+            item.expectedPackageUpdatedAt),
+          p_request_key: key,
+        },
+      );
+      if (error?.code === '42501') return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
+      if (error?.code === '40001') {
+        return NextResponse.json({ error: 'A selected package changed. Reload and try again.' }, { status: 409 });
+      }
+      if (error?.code === '23514' || error?.code === '22P02' || error?.code === '55000') {
+        return NextResponse.json({ error: 'That proposal package set cannot be prepared.' }, { status: 422 });
+      }
+      if (error) return NextResponse.json({ error: UNAVAILABLE }, { status: 503 });
+      const result = Array.isArray(data) ? data[0] : data;
+      if (!result) return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
+      return NextResponse.json({ data: result, replayed: result.replayed === true }, {
+        status: result.replayed ? 200 : 201,
+      });
+    }
     const { data: sourceData, error: sourceError } = await serviceClient
       .rpc('read_crm_proposal_version_source_internal', {
         p_actor: context.user.id,

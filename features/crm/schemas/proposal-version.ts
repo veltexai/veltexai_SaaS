@@ -3,7 +3,7 @@ import { z } from 'zod';
 const uuid = z.string().uuid();
 const optionalDisplay = z.string().trim().max(500).optional();
 
-export const proposalVersionRequestSchema = z.object({
+const proposalVersionV1RequestSchema = z.object({
   proposalId: uuid,
   propertyId: uuid,
   estimateRunId: uuid,
@@ -25,6 +25,34 @@ export const proposalVersionRequestSchema = z.object({
     });
   }
 });
+
+const proposalPackageReferenceSchema = z.object({
+  workPackageId: uuid,
+  expectedPackageUpdatedAt: z.string().datetime({ offset: true }),
+}).strict();
+
+const proposalVersionV2RequestSchema = z.object({
+  schemaVersion: z.literal('crm_proposal_version.v2'),
+  proposalId: uuid,
+  propertyId: uuid,
+  packages: z.array(proposalPackageReferenceSchema).min(1).max(100),
+}).strict().superRefine((value, context) => {
+  const packageIds = value.packages.map((item) => item.workPackageId);
+  if (new Set(packageIds).size !== packageIds.length) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['packages'],
+      message: 'Each package may be included only once.',
+    });
+  }
+});
+
+// The unversioned v1 request remains exact and strict. R3-4.1 adds a separately
+// discriminated v2 request so legacy bytes can never be reinterpreted.
+export const proposalVersionRequestSchema = z.union([
+  proposalVersionV1RequestSchema,
+  proposalVersionV2RequestSchema,
+]);
 
 const displayIdentitySchema = z.object({
   displayName: z.string().trim().min(1).max(200),

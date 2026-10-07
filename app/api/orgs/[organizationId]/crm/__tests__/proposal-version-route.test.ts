@@ -12,6 +12,7 @@ const CUSTOMER = '55555555-5555-4555-8555-555555555555';
 const PROPERTY = '66666666-6666-4666-8666-666666666666';
 const ESTIMATE = '77777777-7777-4777-8777-777777777777';
 const PACKAGE = '88888888-8888-4888-8888-888888888888';
+const PACKAGE_2 = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
 const rows: Record<string, unknown> = {
   proposals: {
@@ -170,6 +171,52 @@ describe('R3-4 proposal-version route', () => {
     const body = JSON.parse(await request().text());
     const response = await POST(request({ ...body, renderedContent: 'forged', amountMinor: 1 }), context);
     expect(response.status).toBe(400);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('publishes v2 package sets using only package identities and concurrency tokens', async () => {
+    const rpc = clients();
+    const { POST } = await import('../opportunities/[opportunityId]/proposal-versions/route');
+    const response = await POST(request({
+      schemaVersion: 'crm_proposal_version.v2',
+      proposalId: PROPOSAL,
+      propertyId: PROPERTY,
+      packages: [
+        { workPackageId: PACKAGE, expectedPackageUpdatedAt: '2026-10-06T06:00:00.000Z' },
+        { workPackageId: PACKAGE_2, expectedPackageUpdatedAt: '2026-10-06T06:01:00.000Z' },
+      ],
+    }), context);
+    expect(response.status).toBe(201);
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rpc).toHaveBeenCalledWith('command_crm_publish_proposal_package_set_internal', {
+      p_actor: USER,
+      p_organization: ORG,
+      p_proposal: PROPOSAL,
+      p_opportunity: OPP,
+      p_property: PROPERTY,
+      p_package_ids: [PACKAGE, PACKAGE_2],
+      p_expected_package_updated_ats: [
+        '2026-10-06T06:00:00.000Z', '2026-10-06T06:01:00.000Z',
+      ],
+      p_request_key: 'proposal-version-key-1',
+    });
+  });
+
+  it('rejects duplicate v2 packages and all browser-supplied package content', async () => {
+    const rpc = clients();
+    const { POST } = await import('../opportunities/[opportunityId]/proposal-versions/route');
+    const packageReference = {
+      workPackageId: PACKAGE,
+      expectedPackageUpdatedAt: '2026-10-06T06:00:00.000Z',
+    };
+    expect((await POST(request({
+      schemaVersion: 'crm_proposal_version.v2', proposalId: PROPOSAL, propertyId: PROPERTY,
+      packages: [packageReference, packageReference],
+    }), context)).status).toBe(400);
+    expect((await POST(request({
+      schemaVersion: 'crm_proposal_version.v2', proposalId: PROPOSAL, propertyId: PROPERTY,
+      packages: [{ ...packageReference, amountMinor: 1 }],
+    }), context)).status).toBe(400);
     expect(rpc).not.toHaveBeenCalled();
   });
 
