@@ -12,6 +12,7 @@ import {
   customerActionTokenDigestSchema,
   customerActionTokenSchema,
   databaseTokenReferenceSchema,
+  digestCustomerActionValue,
   digestCustomerActionToken,
   safeCustomerActionLogSchema,
 } from '../customer-action-contract';
@@ -52,6 +53,8 @@ describe('R3-5 C0 customer action boundary', () => {
       rawToken,
     })).toThrow();
     expect(() => digestCustomerActionToken(rawToken, 'too-short')).toThrow();
+    expect(digestCustomerActionValue('approver@example.test', SECRET))
+      .toMatch(/^[a-f0-9]{64}$/);
   });
 
   it('rejects raw secrets and browser telemetry from structured logs', () => {
@@ -91,4 +94,3 @@ describe('R3-5 C0 customer action boundary', () => {
     expect(Math.max(...C0_ACTION_TOKEN_LIFETIME_DAYS)).toBe(7);
   });
 });
-

@@ -1,6 +1,6 @@
 # R3-5 C0 implementation readiness
 
-Status: **ENTRY GATE OPEN / C0.0 IN PROGRESS**
+Status: **ENTRY GATE OPEN / C0.0 COMPLETE / C0.1 IN PROGRESS**
 
 R3-4 and additive R3-4.1 are `COMPLETE / VERIFIED / ACCEPTED`; the latter has
 independent Claude and Cursor `PASS`, isolated-Preview evidence and explicit

@@ -1,6 +1,6 @@
 # R3-5 C0.0 consent and cryptographic boundary
 
-Status: **TECHNICAL BOUNDARY FROZEN / CONSENT DISPOSITION PENDING**
+Status: **COMPLETE / VERIFIED / FOUNDER APPROVED**
 
 This decision record implements the first bounded R3-5 entry increment without
 creating a migration, public link, customer room, acceptance mutation or hosted
@@ -12,7 +12,7 @@ change. It inherits exact accepted R3-4.1 application base
 | Control | Frozen value |
 |---|---|
 | Consent version | `veltex-c0-acceptance-v1` |
-| Candidate consent text | “I have reviewed this proposal version and the selected service packages. By selecting Accept proposal, I confirm my acceptance of those selected packages. I understand that Veltex records the name and email I enter, the proposal version, selected packages, and acceptance time. This is not an electronic-signature process.” |
+| Approved consent text | “I have reviewed this proposal version and the selected service packages. By selecting Accept proposal, I confirm my acceptance of those selected packages. I understand that Veltex records the name and email I enter, the proposal version, selected packages, and acceptance time. This is not an electronic-signature process.” |
 | Raw token | 32 CSPRNG bytes, unpadded base64url (43 characters) |
 | Key version | positive integer `1` |
 | Server secret name | `VELTEX_C0_ACTION_TOKEN_HMAC_KEY_V1` |
@@ -31,17 +31,18 @@ schema. Database-facing inputs reject unknown fields, including raw tokens.
 
 ## Truthfulness boundary
 
-The candidate wording uses **Accept proposal** and explicitly says that the
+The approved wording uses **Accept proposal** and explicitly says that the
 flow is not an electronic-signature process. The product must not claim a
 signature, signed contract, identity verification, guaranteed enforceability,
 payment, delivery, scheduling or handoff. Name and email are signer-entered
 receipt fields, not verified identity.
 
-Public enablement remains disabled until either counsel approves replacement
-copy or the founder explicitly retains the candidate non-signature wording
-pending counsel. That disposition may change the allowlisted text/version
-before C0.1, but it cannot weaken the cryptographic, transport, privacy or
-truthfulness controls above.
+On 2026-10-07 the founder explicitly approved retaining this non-signature
+wording as `veltex-c0-acceptance-v1` pending counsel review. That closes the
+C0.0 consent-disposition gate and permits bounded C0.1 implementation. Counsel
+may later require a new allowlisted text/version, but that cannot weaken the
+cryptographic, transport, privacy or truthfulness controls above. Public or
+production enablement remains separately gated.
 
 ## Executable evidence
 

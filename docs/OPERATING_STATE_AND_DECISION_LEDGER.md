@@ -4396,8 +4396,8 @@ After any material action, append or revise the relevant section with:
   bounded R3-5 C0 entry sequence is unlocked from exact accepted application
   base `1888f11c14e55c4dc91fe459ab337a3bc4902c5c`. This acceptance does not
   authorize a production deployment; production remains a separate gate.
-- **R3-5 C0.0 TECHNICAL SECURITY BOUNDARY — LOCAL `PASS` / CONSENT
-  DISPOSITION PENDING:** From accepted application base
+- **R3-5 C0.0 TECHNICAL SECURITY BOUNDARY — `COMPLETE / VERIFIED / FOUNDER
+  APPROVED`:** From accepted application base
   `1888f11c14e55c4dc91fe459ab337a3bc4902c5c`,
   `lib/crm/customer-action-contract.ts` freezes 32-byte unpadded-base64url
   CSPRNG tokens, HMAC-SHA-256 key version `1`, server secret name
@@ -4408,10 +4408,30 @@ After any material action, append or revise the relevant section with:
   `veltex-c0-acceptance-v1` and preserved in
   `R3_5_C0_0_SECURITY_BOUNDARY.md`. Focused Jest passes 1 suite / 6 tests;
   TypeScript and diff hygiene pass. No migration, public route, token record,
-  customer message, hosted environment or production state changed. C0.0
-  cannot close and C0.1 migration work cannot begin until the founder explicitly
-  retains this non-signature wording pending counsel or counsel supplies an
-  approved replacement.
+  customer message, hosted environment or production state changed. On
+  2026-10-07 the founder explicitly approved retaining the exact
+  `veltex-c0-acceptance-v1` non-signature wording pending counsel review. C0.0
+  is closed and bounded C0.1 implementation is authorized. Counsel may later
+  require a newly versioned replacement; public and production enablement
+  remain separate gates.
+- **R3-5 C0.1 PRIVATE TOKEN FOUNDATION — LOCAL CANDIDATE `PASS` / INDEPENDENT
+  REVIEW PENDING:** The bounded candidate adds hash-only customer-action token
+  persistence, separate append-only revocations and eligibility history,
+  idempotent issue/revoke command receipts, private rate-bucket storage,
+  service-role-only mutation functions, an authenticated caller-scoped status
+  reader, and authenticated operator issue/status/revoke routes. Raw bearer
+  tokens are generated as 32-byte unpadded base64url values and returned only
+  on first issue; PostgreSQL receives only versioned HMAC digests. Revocation
+  now binds organization, exact proposal version and token ID, closing the
+  cross-version object-reference path. Focused Jest passes 2 suites / 11 tests;
+  TypeScript, diff hygiene, static foundation checks and the exact 73-migration
+  chain pass. The disposable PostgreSQL 73-migration harness initially could
+  not allocate shared memory in the restricted sandbox; the same exact harness
+  passed in the approved local execution context, including RLS and function
+  privilege assertions. No migration was applied to Preview or production, no
+  public customer room was enabled, and no external message was sent. C0.1
+  remains a local candidate pending independent security review and its later
+  isolated-Preview gate.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

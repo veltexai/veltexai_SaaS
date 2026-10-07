@@ -1,6 +1,6 @@
 # R3-5 C0 execution sequence
 
-Status: **C0.0 IN PROGRESS / R3-4.1 ACCEPTED**
+Status: **C0.0 COMPLETE / C0.1 IN PROGRESS / R3-4.1 ACCEPTED**
 
 This sequence turns the approved C0 contract into small reviewable increments
 without shrinking the required customer outcome. R3-4.1 is now
