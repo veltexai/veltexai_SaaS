@@ -30,7 +30,7 @@ accounting, payroll, tax, legal or safety-certification system.
 |---|---|---|---|
 | R3-2 | Persisted text walkthrough evidence | **COMPLETE / VERIFIED / ACCEPTED** | Independent PASS, guarded Preview apply, desktop/390px flow and founder acceptance are recorded in the operating ledger |
 | R3-3 | Deterministic estimate/scenario linkage | **COMPLETE / VERIFIED / ACCEPTED** | Versioned snapshot, caller-bound command, engine parity, Preview/operator/independent PASS and founder acceptance are recorded in the operating ledger |
-| R3-4 | Immutable proposal versions | **INDEPENDENT DUAL PASS / ISOLATED PREVIEW REQUIRED** | Implementation `aa48b5e` plus test-only matrix remediation `ecfa68a` passed Claude and Cursor confirmation. Guarded isolated-Preview proof and founder acceptance remain before R3-4.1, R3-5 or M4 implementation unlocks |
+| R3-4 | Immutable proposal versions | **COMPLETE / VERIFIED / ACCEPTED** | Implementation `aa48b5e` plus test-only matrix remediation `ecfa68a` passed Claude and Cursor, guarded isolated Preview, desktop/390px and explicit founder acceptance. The bounded R3-4.1 package-set bridge is now the next gate; R3-5 remains blocked until R3-4.1 acceptance |
 | M0 | Media privacy/product contract | Contract drafted in `M0_MEDIA_PRIVACY_AND_AI_OUTPUT_CONTRACT.md`; acceptance pending | Founder-approved retention, limits, consent, service packs, threat model and provider boundary |
 | M1 | Private photo evidence | Not started | Tenant-isolated storage, signed upload/read, deletion, audit, accessible mobile flow; no AI |
 | M2 | Reviewed photo intelligence | Not started | Structured observation suggestions, operator decisions, provenance, evals and cost cap |
@@ -40,14 +40,11 @@ accounting, payroll, tax, legal or safety-certification system.
 
 ## Immediate sequence
 
-1. Prepare and verify the guarded isolated-Preview artifact for the exact
-   reviewed R3-4 migration bytes; both independent confirmations are `PASS`.
-2. Apply only the exact reviewed R3-4 artifact to the
-   isolated Preview and complete authenticated desktop/390px and founder
-   acceptance. Production remains separately gated.
-3. Resolve the R3-5 package-set commitment without reducing the approved
-   selected-package array to a single package, then implement C0 only from the
-   accepted R3-4 base.
+1. Preserve the accepted R3-4 application and migration bytes; Production
+   remains separately gated.
+2. Implement and independently accept the bounded additive R3-4.1 package-set
+   bridge without reducing the approved selected-package array to one package.
+3. Implement C0 only from the accepted R3-4.1 base.
 4. Complete and accept M0 before creating storage buckets, upload credentials,
    provider jobs or media migrations. M1 remains photo-only and has no AI.
 

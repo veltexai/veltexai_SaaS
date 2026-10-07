@@ -3798,11 +3798,22 @@ After any material action, append or revise the relevant section with:
   FOUNDER REVIEW`; it is not Production-approved and does not unlock R3-4.1 or
   R3-5 until the founder records an explicit disposition. Production remained
   untouched.
+- **R3-4 FOUNDER ACCEPTANCE — `COMPLETE / VERIFIED / ACCEPTED` (2026-10-06
+  Pacific):** After reviewing the exact independent dual-`PASS`, guarded
+  isolated-Preview database/application, authenticated desktop, genuine-390px,
+  immutable-history and credential-teardown evidence above, the founder
+  explicitly stated `R3-4 is ACCEPTED.` R3-4 is accepted within its bounded v1
+  one-package/one-estimate immutable proposal-version scope. This acceptance
+  satisfies the entry gate for the additive R3-4.1 package-set bridge; it does
+  not authorize R3-5 before R3-4.1 acceptance, and it does not authorize any
+  Production deployment or mutation.
 - **R3-4.1 EXECUTION CONTRACT HARDENED / IMPLEMENTATION STILL LOCKED:** The
   existing package-set decision now fixes the additive v1/v2 database shape,
   append-only association invariants, deterministic package-set hashing and
   lock order, caller-bound publication/replay contract, server-authoritative
   application boundary, Board/List review semantics and exact entry/exit
   sequence. It expressly preserves every v1 row and byte and refuses the
-  smaller one-package substitute. No R3-4.1 code or migration was started;
-  R3-4 isolated-Preview and founder acceptance remain its entry gate.
+  smaller one-package substitute. The R3-4 independent, isolated-Preview and
+  founder gates are now satisfied, so bounded additive R3-4.1 implementation is
+  authorized as the next unfinished outcome. No R3-4.1 code or migration had
+  been started at the moment this gate opened.

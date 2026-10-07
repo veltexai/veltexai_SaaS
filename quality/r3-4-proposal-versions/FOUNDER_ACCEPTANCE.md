@@ -1,6 +1,6 @@
 # R3-4 immutable proposal versions — founder acceptance
 
-Status: **ISOLATED-PREVIEW DESKTOP/390PX VERIFIED; PENDING FOUNDER REVIEW**.
+Status: **COMPLETE / VERIFIED / ACCEPTED**.
 
 This record may be completed only for the exact reviewed R3-4 application
 commit `aa48b5eabd03e3dd4babf313c7b473a9920467b1` and guarded migration artifact
@@ -70,10 +70,12 @@ on isolated Preview `ynzkwctwlssjcsjmahey`. It is not Production approval.
 
 Choose exactly one after reviewing the evidence:
 
-- [ ] **ACCEPTED** — R3-4 may be recorded `COMPLETE / VERIFIED / ACCEPTED` and
+- [x] **ACCEPTED** — R3-4 may be recorded `COMPLETE / VERIFIED / ACCEPTED` and
       the next dependency gate may open. Production remains separately gated.
 - [ ] **REJECTED** — record the defect and required remediation below.
 
-Founder name/date:
+Founder name/date: Founder / 2026-10-06 Pacific
 
-Notes:
+Notes: Founder explicitly stated `R3-4 is ACCEPTED.` The unchecked hosted-manual
+rows above remain truthfully recorded as test-backed limitations; they do not
+change the accepted bounded R3-4 outcome or authorize Production.

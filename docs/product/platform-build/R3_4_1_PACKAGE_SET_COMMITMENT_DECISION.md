@@ -1,6 +1,6 @@
 # R3-4.1 immutable package-set commitment decision
 
-Status: **DECISION PACKET PREPARED / IMPLEMENTATION DEPENDENCY-BLOCKED**
+Status: **ENTRY GATE SATISFIED / BOUNDED IMPLEMENTATION AUTHORIZED**
 
 ## Purpose
 
@@ -10,9 +10,10 @@ the packages offered by one exact version. Restricting
 `accepted_package_ids` to one package would reduce the approved contract and is
 rejected.
 
-R3-4.1 is the smallest truthful bridge. It starts only after the current R3-4
-remediation receives independent PASS, isolated-Preview proof and founder
-acceptance. It must not change the frozen R3-4 re-review artifact.
+R3-4.1 is the smallest truthful bridge. R3-4 received independent dual `PASS`,
+isolated-Preview database/application desktop and genuine-390px proof, and
+explicit founder acceptance on 2026-10-06 Pacific. The entry gate is therefore
+satisfied. R3-4.1 must not change the frozen R3-4 accepted bytes or evidence.
 
 ## Frozen design
 
