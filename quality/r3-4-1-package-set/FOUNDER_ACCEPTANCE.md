@@ -1,6 +1,6 @@
 # R3-4.1 immutable package-set bridge — founder acceptance
 
-Status: **PENDING INDEPENDENT REVIEW / NOT PREVIEW-AUTHORIZED**.
+Status: **INDEPENDENTLY VERIFIED / PREVIEW ARTIFACT PENDING**.
 
 This checklist does not authorize a database apply, deployment, customer action
 or Production change. Execute it only after independent Claude and Cursor
@@ -11,11 +11,14 @@ Preview `ynzkwctwlssjcsjmahey`.
 
 - Accepted predecessor: R3-4 application commit
   `aa48b5eabd03e3dd4babf313c7b473a9920467b1`.
-- R3-4.1 application candidate: `7909b1a`.
-- Review range: `e2e21d6..7909b1a`.
-- Frozen packet: `/private/tmp/veltex-r3-4-1-review-7909b1a.zip`.
+- R3-4.1 remediated source candidate:
+  `a98ca78f1d5527534a82f653edcd62e238951cac`.
+- Frozen packet:
+  `/private/tmp/veltex-r3-4-1-remediation-a98ca78-compact-review.zip`.
 - Packet SHA-256:
-  `7061214ab71bfb051f9c08ad4a12f4b04faf0764f9ca190a209f7105011bf89c`.
+  `623e51a35593737311d72d0777e2333bdf64430b59c1b2218426f7919f59ff5e`.
+- Standalone bundle SHA-256:
+  `ddac5c07c66e4a0c1de6f1fb6f726507eea916ba5ddc4d82724c652c1caa85c7`.
 - Migration: `20261006000000_r3_4_1_package_set_versions.sql`.
 - Expected migration history after apply: `70`.
 - Preview branch: `codex/r2-fresh-preview-guard`.
@@ -29,17 +32,18 @@ artifact.
 
 ## Identity and safety gate
 
-- [ ] Independent Claude database/security verdict is `PASS` for the frozen
+- [x] Independent Claude database/security verdict is `PASS` for the frozen
       packet and exact candidate.
-- [ ] Independent Cursor operator/accessibility verdict is `PASS` for the same
+- [x] Independent Cursor operator/accessibility verdict is `PASS` for the same
       packet and candidate.
-- [ ] Packet SHA-256 and included Git bundle verify immediately before use.
+- [x] Packet SHA-256 and included Git bundle verify immediately before use.
 - [ ] Supabase project reference visibly equals `ynzkwctwlssjcsjmahey`.
 - [ ] Guarded SQL artifact hash is recomputed and matches this record.
 - [ ] Preview branch is still at exact R3-4 predecessor `aa48b5e` before the
       fast-forward; any drift is investigated rather than overwritten.
 - [ ] Vercel deployment is visibly `Preview`, binds exact reviewed candidate
-      `7909b1a`, and reaches `Ready` without a Production alias change.
+      `a98ca78f1d5527534a82f653edcd62e238951cac`, and reaches `Ready`
+      without a Production alias change.
 - [ ] Only synthetic records containing no customer/private data are used.
 
 ## Database acceptance
