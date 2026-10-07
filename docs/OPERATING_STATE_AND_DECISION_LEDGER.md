@@ -4021,9 +4021,10 @@ After any material action, append or revise the relevant section with:
   create shared memory until rerun in the approved local context; the first
   build could not resolve Google Fonts, and the next lacked required Supabase
   build variables before the documented loopback placeholders were supplied.
-  Independent Claude re-review and a new standalone reproducible packet remain
-  required. No Preview or Production state changed.
-- **R3-4.1 CLAUDE REMEDIATION PACKET — FROZEN / RE-REVIEW `PENDING`:** Exact
+  Independent Claude re-review and a standalone reproducible packet were the
+  next required gates and are satisfied by the immediately following record.
+  No Preview or Production state changed.
+- **R3-4.1 CLAUDE REMEDIATION PACKET — FROZEN / RE-REVIEW `PASS`:** Exact
   remediated source candidate `a98ca78f1d5527534a82f653edcd62e238951cac`
   is frozen in `/private/tmp/veltex-r3-4-1-remediation-a98ca78-compact-review.zip`,
   SHA-256 `623e51a35593737311d72d0777e2333bdf64430b59c1b2218426f7919f59ff5e`.
@@ -4063,8 +4064,9 @@ After any material action, append or revise the relevant section with:
   server-authoritative preview and atomic publish boundary into the future
   acceptance command. The earlier package-set shape conflict is resolved by
   the local candidate, but not yet accepted: R3-5 token issuance and code remain
-  blocked on independent Claude/Cursor `PASS`, isolated Preview evidence and
-  founder acceptance of R3-4.1. No R3-5 migration, token, public route,
+  blocked only on isolated Preview evidence and founder acceptance of R3-4.1;
+  the independent Claude/Cursor `PASS` gate is satisfied. No R3-5 migration,
+  token, public route,
   customer action or hosted state was created.
 - **R3-4.1 GUARDED PREVIEW ARTIFACT — LOCAL `PASS` / HOSTED APPLY PENDING:**
   `quality/r3-4-1-package-set/FOUNDER_ACCEPTANCE.md` now binds the exact

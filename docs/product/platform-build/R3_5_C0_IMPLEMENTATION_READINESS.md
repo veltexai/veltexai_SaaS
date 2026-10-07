@@ -2,9 +2,9 @@
 
 Status: **PLANNING COMPLETE / IMPLEMENTATION DEPENDENCY-BLOCKED**
 
-R3-4 is accepted. R3-5 cannot begin until the additive R3-4.1 package-set
-bridge receives independent Claude and Cursor `PASS`, isolated-Preview evidence
-and founder acceptance. This memo maps the current repository to the approved
+R3-4 is accepted, and the additive R3-4.1 package-set bridge has received
+independent Claude and Cursor `PASS`. R3-5 cannot begin until R3-4.1 receives
+isolated-Preview evidence and founder acceptance. This memo maps the current repository to the approved
 C0 contract so implementation can begin without rediscovery or accidental
 scope reduction after that remaining gate.
 
@@ -86,8 +86,8 @@ may accept only a non-empty subset of the exact frozen association set, retain
 the parent `package_set_sha256`, preserve association display order and compute
 the selected subtotal from stored association amounts. It must not re-read
 mutable estimates or reconstruct customer-visible terms during acceptance.
-Token issuance stays disabled until the R3-4.1 candidate is independently and
-operationally accepted.
+Token issuance stays disabled until the independently verified R3-4.1
+candidate is operationally accepted in isolated Preview and by the founder.
 
 Shipping an array parameter that currently permits only one package would be a
 smaller implementation, but it would not satisfy the approved multi-package
