@@ -27,8 +27,12 @@ satisfied. R3-4.1 must not change the frozen R3-4 accepted bytes or evidence.
    display order, customer-visible title and scope, amount, currency, pricing
    basis, estimate hashes, scope hash and canonical association hash.
 4. The parent display amount equals the sum of all association amounts; every
-   currency matches; `content_snapshot.packages[]`, rendered bytes and the
-   ordered association set must agree exactly.
+   currency and pricing basis matches; mixed-basis package sets are refused
+   rather than summarized as one misleading total. Each package title and
+   scope is derived from that package's selected estimate inputs, so differing
+   service types or frequencies cannot render as indistinguishable options.
+   `content_snapshot.packages[]`, rendered bytes and the ordered association
+   set must agree exactly.
 5. A caller-bound publish command authorizes before lookup, locks the
    opportunity, proposal and packages in deterministic order, validates every
    current R3-3 binding, and inserts parent, associations, pointers, receipt,
@@ -96,6 +100,9 @@ R3-4.1 must be a new migration after accepted R3-4. It must not edit or replay
    association identities and hashes, not database row serialization or locale
    text. Parent count, total and snapshot `packages[]` must equal the complete
    association set inside the same transaction.
+   A deferred database assertion must independently enforce parent count,
+   parent amount, complete associations and association-to-package pointers;
+   replacing the v1 composite pointer FK must not reduce the v1 guarantee.
 7. Extend only caller-scoped metadata readers to return v1/v2 history and v2
    package summaries. Rendered content remains behind the server boundary.
    Existing v1 reader results and rows remain valid and byte-identical.

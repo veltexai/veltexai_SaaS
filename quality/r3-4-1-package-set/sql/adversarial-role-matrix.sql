@@ -4,6 +4,7 @@ alter table public.profiles disable trigger profiles_protect_entitlements;
 insert into auth.users(id,email) values
   ('11111111-1111-4111-8111-111111111111','r341-owner@example.test'),
   ('94444444-4444-4444-8444-444444444444','r341-estimator@example.test'),
+  ('96666666-6666-4666-8666-666666666666','r341-unassigned@example.test'),
   ('95555555-5555-4555-8555-555555555555','r341-viewer@example.test')
 on conflict(id) do nothing;
 alter table public.profiles enable trigger profiles_protect_entitlements;
@@ -15,6 +16,7 @@ insert into public.organization_memberships(organization_id,user_id,role)
 select p.active_organization_id,v.user_id,v.role
 from public.profiles p cross join (values
   ('94444444-4444-4444-8444-444444444444'::uuid,'estimator'::text),
+  ('96666666-6666-4666-8666-666666666666'::uuid,'estimator'::text),
   ('95555555-5555-4555-8555-555555555555'::uuid,'viewer'::text)
 ) v(user_id,role)
 where p.id='11111111-1111-4111-8111-111111111111';
@@ -58,7 +60,9 @@ select package_id,active_organization_id,'93000000-0000-4000-8000-000000000003',
   command_key,id
 from public.profiles cross join (values
   ('93000000-0000-4000-8000-000000000005'::uuid,'r341-fixture-package-a'::text),
-  ('93000000-0000-4000-8000-000000000006'::uuid,'r341-fixture-package-b'::text)
+  ('93000000-0000-4000-8000-000000000006'::uuid,'r341-fixture-package-b'::text),
+  ('93000000-0000-4000-8000-000000000007'::uuid,'r341-fixture-package-one-time'::text),
+  ('93000000-0000-4000-8000-000000000008'::uuid,'r341-fixture-package-unestimated'::text)
 ) fixture(package_id,command_key)
 where id='11111111-1111-4111-8111-111111111111';
 select set_config('r341.org',(select active_organization_id::text from public.profiles
@@ -103,6 +107,15 @@ begin
       '93000000-0000-4000-8000-000000000002',command_key,'service_catalog',
       '2026-09-22.2',input,output,'base',amount,'USD','per_visit',token);
   end loop;
+  package_id:='93000000-0000-4000-8000-000000000007';
+  select updated_at into token from public.crm_site_work_packages where id=package_id;
+  input:='{"catalogVersion":"2026-09-22.2","segment":"residential","jobType":"deep_clean","frequency":"one-time"}'::jsonb;
+  output:='{"version":"2026-09-22.2","unit":"per_visit","low":{"suggestedPrice":250},"base":{"suggestedPrice":300},"high":{"suggestedPrice":350}}'::jsonb;
+  select * into estimate_result from public.command_crm_estimate_run_internal(
+    '11111111-1111-4111-8111-111111111111',org,
+    '93000000-0000-4000-8000-000000000003',package_id,
+    '93000000-0000-4000-8000-000000000002','r341-estimate-one-time','service_catalog',
+    '2026-09-22.2',input,output,'base',30000,'USD','one_time',token);
 end $$;
 
 do $$
@@ -119,7 +132,9 @@ begin
     '93000000-0000-4000-8000-000000000004','93000000-0000-4000-8000-000000000003',
     '93000000-0000-4000-8000-000000000002',ids);
   if preview->>'amount_minor'<>'32500' or jsonb_array_length(preview->'packages')<>2
-     or preview->>'rendered_content' not like '%Offered total: USD 325.00%'
+     or preview->>'rendered_content' not like '%Offered total (per visit): USD 325.00%'
+     or preview->'packages'->0->>'title' not like '%Recurring Standard%'
+     or preview->'packages'->0->'scope_lines'->>0<>'Service: recurring standard'
      or preview->'packages'->0->>'expected_package_updated_at' is null then
     raise exception 'caller-bound package-set preview failed';
   end if;
@@ -133,6 +148,48 @@ begin
   exception when check_violation then
     get stacked diagnostics err=message_text;
     if err<>'proposal package set context unavailable' then raise; end if;
+  end;
+  begin
+    perform public.read_crm_proposal_package_set_preview_internal(
+      '96666666-6666-4666-8666-666666666666',org,
+      '93000000-0000-4000-8000-000000000004','93000000-0000-4000-8000-000000000003',
+      '93000000-0000-4000-8000-000000000002',ids);
+    raise exception 'unassigned estimator preview accepted';
+  exception when insufficient_privilege then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal package set unavailable' then raise; end if;
+  end;
+  begin
+    perform public.read_crm_proposal_package_set_preview_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '93000000-0000-4000-8000-000000000004','99999999-9999-4999-8999-999999999999',
+      '93000000-0000-4000-8000-000000000002',ids);
+    raise exception 'unknown opportunity preview accepted';
+  exception when insufficient_privilege then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal package set unavailable' then raise; end if;
+  end;
+  begin
+    perform public.read_crm_proposal_package_set_preview_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '93000000-0000-4000-8000-000000000004','93000000-0000-4000-8000-000000000003',
+      '93000000-0000-4000-8000-000000000002',
+      array[ids[1],'93000000-0000-4000-8000-000000000008'::uuid]);
+    raise exception 'non-estimated package preview accepted';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal package set context unavailable' then raise; end if;
+  end;
+  begin
+    perform public.read_crm_proposal_package_set_preview_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '93000000-0000-4000-8000-000000000004','93000000-0000-4000-8000-000000000003',
+      '93000000-0000-4000-8000-000000000002',
+      array[ids[1],'93000000-0000-4000-8000-000000000007'::uuid]);
+    raise exception 'mixed pricing bases preview accepted';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal package set pricing basis must match' then raise; end if;
   end;
   begin
     perform * from public.command_crm_publish_proposal_package_set_internal(
@@ -175,6 +232,27 @@ begin
     raise exception 'exact package-set replay failed';
   end if;
   begin
+    perform * from public.command_crm_publish_proposal_package_set_internal(
+      '94444444-4444-4444-8444-444444444444',org,
+      '93000000-0000-4000-8000-000000000004','93000000-0000-4000-8000-000000000003',
+      '93000000-0000-4000-8000-000000000002',ids,tokens,'r341-publish-owner-0001');
+    raise exception 'changed-actor replay accepted';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version key already used' then raise; end if;
+  end;
+  begin
+    perform * from public.command_crm_publish_proposal_package_set_internal(
+      '11111111-1111-4111-8111-111111111111',org,
+      '93000000-0000-4000-8000-000000000004','93000000-0000-4000-8000-000000000003',
+      '93000000-0000-4000-8000-000000000002',ids,
+      array[clock_timestamp(),clock_timestamp()],'r341-publish-owner-0001');
+    raise exception 'changed-token replay accepted';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version key already used' then raise; end if;
+  end;
+  begin
     perform public.read_crm_proposal_package_set_preview_internal(
       '95555555-5555-4555-8555-555555555555',org,
       '93000000-0000-4000-8000-000000000004','93000000-0000-4000-8000-000000000003',
@@ -216,7 +294,20 @@ end $$;
 
 reset role;
 do $$
+declare version_id uuid; err text;
 begin
+  select id into version_id from public.crm_proposal_versions
+    where proposal_id='93000000-0000-4000-8000-000000000004'
+      and schema_version='crm_proposal_version.v2';
+  begin
+    perform set_config('veltex.proposal_version_command','1',true);
+    update public.crm_site_work_packages set proposal_version_id=version_id
+      where id='93000000-0000-4000-8000-000000000008';
+    raise exception 'unassociated package pointer accepted';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal version pointer is not bound to package' then raise; end if;
+  end;
   begin
     update public.crm_proposal_version_packages set customer_visible_title='Changed';
     raise exception 'immutable package association update accepted';
@@ -226,6 +317,25 @@ begin
   begin
     delete from public.crm_proposal_version_packages;
     raise exception 'immutable package association delete accepted';
+  exception when others then
+    if sqlstate not in ('42501','55000') then raise; end if;
+  end;
+  begin
+    set constraints all immediate;
+    truncate public.crm_proposal_version_packages;
+    raise exception 'immutable package association truncate accepted';
+  exception when others then
+    if sqlstate not in ('42501','55000') then raise; end if;
+  end;
+  begin
+    update public.crm_proposal_versions set package_count=99 where id=version_id;
+    raise exception 'immutable v2 parent update accepted';
+  exception when others then
+    if sqlstate not in ('42501','55000') then raise; end if;
+  end;
+  begin
+    delete from public.crm_proposal_versions where id=version_id;
+    raise exception 'immutable v2 parent delete accepted';
   exception when others then
     if sqlstate not in ('42501','55000') then raise; end if;
   end;

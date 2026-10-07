@@ -106,6 +106,87 @@ create trigger guard_crm_proposal_version_package_truncate
   before truncate on public.crm_proposal_version_packages
   for each statement execute function public.guard_crm_proposal_version_immutable();
 
+-- Preserve the accepted v1 pointer guarantee while allowing a v2 parent to
+-- represent an ordered set. The association must exist before a pointer can
+-- move, so setting the private command GUC never bypasses relational binding.
+create function public.guard_crm_package_proposal_version_binding()
+returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
+begin
+  if new.proposal_version_id is null then return new; end if;
+  if not exists(
+    select 1 from public.crm_proposal_versions v
+    where v.organization_id=new.organization_id and v.id=new.proposal_version_id
+      and (
+        (v.schema_version='crm_proposal_version.v1' and v.work_package_id=new.id)
+        or
+        (v.schema_version='crm_proposal_version.v2' and exists(
+          select 1 from public.crm_proposal_version_packages a
+          where a.organization_id=new.organization_id
+            and a.proposal_version_id=v.id and a.work_package_id=new.id
+        ))
+      )
+  ) then
+    raise exception 'proposal version pointer is not bound to package'
+      using errcode='23514';
+  end if;
+  return new;
+end;
+$$;
+revoke all on function public.guard_crm_package_proposal_version_binding()
+  from public,anon,authenticated,service_role;
+create trigger guard_crm_package_proposal_version_binding
+  before insert or update of proposal_version_id on public.crm_site_work_packages
+  for each row execute function public.guard_crm_package_proposal_version_binding();
+
+-- A deferred assertion sees the complete atomic statement/transaction rather
+-- than a partially inserted set. It protects the parent count/amount and every
+-- association-to-pointer correspondence even for privileged direct SQL.
+create function public.assert_crm_proposal_package_set_consistent()
+returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
+declare version_id uuid; org_id uuid;
+  parent public.crm_proposal_versions%rowtype;
+begin
+  if tg_table_name='crm_proposal_versions' then
+    version_id:=new.id; org_id:=new.organization_id;
+  elsif tg_op='DELETE' then
+    version_id:=old.proposal_version_id; org_id:=old.organization_id;
+  else
+    version_id:=new.proposal_version_id; org_id:=new.organization_id;
+  end if;
+  select v.* into parent from public.crm_proposal_versions v
+    where v.organization_id=org_id and v.id=version_id;
+  if parent.id is null or parent.schema_version<>'crm_proposal_version.v2' then
+    return coalesce(new,old);
+  end if;
+  if (select count(*) from public.crm_proposal_version_packages a
+      where a.organization_id=org_id and a.proposal_version_id=version_id)
+       <>parent.package_count
+     or (select coalesce(sum(a.amount_minor),0)
+         from public.crm_proposal_version_packages a
+         where a.organization_id=org_id and a.proposal_version_id=version_id)
+       <>parent.display_amount_minor
+     or exists(
+       select 1 from public.crm_proposal_version_packages a
+       left join public.crm_site_work_packages p
+         on p.organization_id=a.organization_id and p.id=a.work_package_id
+       where a.organization_id=org_id and a.proposal_version_id=version_id
+         and p.proposal_version_id is distinct from version_id
+     ) then
+    raise exception 'proposal package set invariant failed' using errcode='23514';
+  end if;
+  return coalesce(new,old);
+end;
+$$;
+revoke all on function public.assert_crm_proposal_package_set_consistent()
+  from public,anon,authenticated,service_role;
+create constraint trigger assert_crm_proposal_package_set_parent
+  after insert on public.crm_proposal_versions deferrable initially deferred
+  for each row execute function public.assert_crm_proposal_package_set_consistent();
+create constraint trigger assert_crm_proposal_package_set_association
+  after insert or update or delete on public.crm_proposal_version_packages
+  deferrable initially deferred for each row
+  execute function public.assert_crm_proposal_package_set_consistent();
+
 -- A v2 parent intentionally represents more than one package. Replace the v1
 -- package-shaped pointer FK with an organization/version FK; the command below
 -- creates every association before moving package pointers atomically.
@@ -133,7 +214,7 @@ declare opportunity_row public.crm_opportunities%rowtype;
   package_row public.crm_site_work_packages%rowtype;
   estimate_row public.crm_estimate_runs%rowtype;
   actor_role text; item_count integer; i integer;
-  scope_lines jsonb; package_title text;
+  scope_lines jsonb; package_title text; basis_count integer;
   package_items jsonb:='[]'::jsonb; rendered_packages text:='';
   total_amount bigint:=0;
 begin
@@ -165,13 +246,12 @@ begin
         and s.category in ('won','lost','disqualified','handed_off')) then
     raise exception 'closed opportunity cannot preview a proposal package set' using errcode='23514';
   end if;
-  scope_lines:=case
-    when jsonb_typeof(proposal_row.service_scope->'areas_included')='array'
-      and jsonb_array_length(proposal_row.service_scope->'areas_included')>0
-    then proposal_row.service_scope->'areas_included'
-    else jsonb_build_array('Scope to be confirmed') end;
-  if not public.crm_proposal_scope_lines_valid(scope_lines) then
-    raise exception 'proposal package set content unavailable' using errcode='23514';
+  select count(distinct e.pricing_basis) into basis_count
+  from public.crm_site_work_packages p join public.crm_estimate_runs e
+    on e.organization_id=p.organization_id and e.id=p.estimate_run_id
+  where p.organization_id=p_organization and p.id=any(p_package_ids);
+  if basis_count<>1 then
+    raise exception 'proposal package set pricing basis must match' using errcode='23514';
   end if;
   for i in 1..item_count loop
     select p.* into package_row from public.crm_site_work_packages p
@@ -186,8 +266,20 @@ begin
        or estimate_row.work_package_id is distinct from package_row.id then
       raise exception 'proposal package set context unavailable' using errcode='23514';
     end if;
-    package_title:=proposal_row.title||case when item_count=1 then ''
-      else ' — Service option '||i::text end;
+    package_title:=proposal_row.title||' — '
+      ||initcap(replace(left(estimate_row.input_snapshot->>'jobType',80),'_',' '))
+      ||' — '||initcap(replace(left(estimate_row.input_snapshot->>'frequency',80),'-',' '));
+    scope_lines:=jsonb_build_array(
+      'Service: '||replace(estimate_row.input_snapshot->>'jobType','_',' '),
+      'Frequency: '||replace(estimate_row.input_snapshot->>'frequency','-',' ')
+    )||case
+      when jsonb_typeof(proposal_row.service_scope->'areas_included')='array'
+        and jsonb_array_length(proposal_row.service_scope->'areas_included')>0
+      then proposal_row.service_scope->'areas_included'
+      else '[]'::jsonb end;
+    if not public.crm_proposal_scope_lines_valid(scope_lines) then
+      raise exception 'proposal package set content unavailable' using errcode='23514';
+    end if;
     package_items:=package_items||jsonb_build_array(jsonb_build_object(
       'display_position',i,'work_package_id',package_row.id,
       'expected_package_updated_at',package_row.updated_at,'title',package_title,
@@ -207,7 +299,8 @@ begin
     'packages',package_items,'amount_minor',total_amount,'currency','USD',
     'rendered_content','# '||proposal_row.title||E'\n\nPrepared for: '
       ||proposal_row.client_name||E'\nService location: '||proposal_row.service_location
-      ||E'\n\n'||rendered_packages||E'\n\nOffered total: USD '
+      ||E'\n\n'||rendered_packages||E'\n\nOffered total ('
+      ||replace((package_items->0->>'pricing_basis'),'_',' ')||'): USD '
       ||to_char(total_amount/100.0,'FM999999999999990.00'));
 end;
 $$;
@@ -235,6 +328,7 @@ declare opportunity_row public.crm_opportunities%rowtype;
   content_hash text; rendered_hash text; package_set_hash text;
   package_items jsonb:='[]'::jsonb; association_items jsonb:='[]'::jsonb;
   scope_lines jsonb; scope_hash text; association_hash text; package_title text;
+  common_basis text; basis_count integer;
   snapshot jsonb; rendered text; rendered_packages text:='';
   total_amount bigint:=0; next_number integer; item_count integer;
   new_version_id uuid:=gen_random_uuid(); changed_at timestamptz;
@@ -264,7 +358,10 @@ begin
     'actor',p_actor,'organization',p_organization,'proposal',p_proposal,
     'opportunity',p_opportunity,'property',p_property,
     'package_ids',to_jsonb(p_package_ids),
-    'expected_package_updated_ats',to_jsonb(p_expected_package_updated_ats),
+    'expected_package_updated_ats',(
+      select jsonb_agg(extract(epoch from token)::numeric order by ordinality)
+      from unnest(p_expected_package_updated_ats) with ordinality expected(token,ordinality)
+    ),
     'schema_version','crm_proposal_version.v2',
     'renderer_version','release1-markdown.v2'));
 
@@ -309,16 +406,14 @@ begin
       where p.organization_id=p_organization and p.id=any(p_package_ids))<>item_count then
     raise exception 'proposal package set context unavailable' using errcode='23514';
   end if;
-
-  scope_lines:=case
-    when jsonb_typeof(proposal_row.service_scope->'areas_included')='array'
-      and jsonb_array_length(proposal_row.service_scope->'areas_included')>0
-    then proposal_row.service_scope->'areas_included'
-    else jsonb_build_array('Scope to be confirmed') end;
-  if not public.crm_proposal_scope_lines_valid(scope_lines) then
-    raise exception 'proposal package set content unavailable' using errcode='23514';
+  select count(distinct e.pricing_basis),min(e.pricing_basis)
+    into basis_count,common_basis
+  from public.crm_site_work_packages p join public.crm_estimate_runs e
+    on e.organization_id=p.organization_id and e.id=p.estimate_run_id
+  where p.organization_id=p_organization and p.id=any(p_package_ids);
+  if basis_count<>1 then
+    raise exception 'proposal package set pricing basis must match' using errcode='23514';
   end if;
-  scope_hash:=public.crm_estimate_sha256(scope_lines);
 
   for i in 1..item_count loop
     select p.* into package_row from public.crm_site_work_packages p
@@ -334,8 +429,21 @@ begin
        or estimate_row.work_package_id is distinct from package_row.id then
       raise exception 'site work package changed' using errcode='40001';
     end if;
-    package_title:=proposal_row.title||case when item_count=1 then ''
-      else ' — Service option '||i::text end;
+    package_title:=proposal_row.title||' — '
+      ||initcap(replace(left(estimate_row.input_snapshot->>'jobType',80),'_',' '))
+      ||' — '||initcap(replace(left(estimate_row.input_snapshot->>'frequency',80),'-',' '));
+    scope_lines:=jsonb_build_array(
+      'Service: '||replace(estimate_row.input_snapshot->>'jobType','_',' '),
+      'Frequency: '||replace(estimate_row.input_snapshot->>'frequency','-',' ')
+    )||case
+      when jsonb_typeof(proposal_row.service_scope->'areas_included')='array'
+        and jsonb_array_length(proposal_row.service_scope->'areas_included')>0
+      then proposal_row.service_scope->'areas_included'
+      else '[]'::jsonb end;
+    if not public.crm_proposal_scope_lines_valid(scope_lines) then
+      raise exception 'proposal package set content unavailable' using errcode='23514';
+    end if;
+    scope_hash:=public.crm_estimate_sha256(scope_lines);
     association_hash:=public.crm_estimate_sha256(jsonb_build_object(
       'display_position',i,'work_package_id',package_row.id,
       'estimate_run_id',estimate_row.id,'title',package_title,
@@ -378,7 +486,7 @@ begin
       'propertyId',p_property,'packageSetSha256',package_set_hash));
   rendered:='# '||proposal_row.title||E'\n\nPrepared for: '||proposal_row.client_name
     ||E'\nService location: '||proposal_row.service_location||E'\n\n'
-    ||rendered_packages||E'\n\nOffered total: USD '
+    ||rendered_packages||E'\n\nOffered total ('||replace(common_basis,'_',' ')||'): USD '
     ||to_char(total_amount/100.0,'FM999999999999990.00');
   content_hash:=public.crm_estimate_sha256(snapshot);
   rendered_hash:=public.crm_proposal_sha256(rendered);

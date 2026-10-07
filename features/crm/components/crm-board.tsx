@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -178,6 +178,8 @@ export function CrmBoard() {
     preparedVersionNumber?: number;
     stale?: boolean;
   } | null>(null);
+  const proposalVersionForRef = useRef(proposalVersionFor);
+  useEffect(() => { proposalVersionForRef.current = proposalVersionFor; }, [proposalVersionFor]);
   const [followUpOnly, setFollowUpOnly] = useState(false);
   const [duplicateReview, setDuplicateReview] = useState<{
     candidates: DuplicateCandidate[]; draft: LeadDraft; key: string;
@@ -300,6 +302,9 @@ export function CrmBoard() {
         stale: false,
       } : current);
     } catch (caught) {
+      const activeRequest = proposalVersionForRef.current;
+      if (activeRequest?.opportunity.id !== opportunity.id
+          || activeRequest.requestKey !== currentRequestKey) return;
       setProposalVersionFor((current) => current?.opportunity.id === opportunity.id
         && current.requestKey === currentRequestKey
         ? { ...current, loading: false } : current);

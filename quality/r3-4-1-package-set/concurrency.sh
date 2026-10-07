@@ -70,7 +70,9 @@ wait "$A"; SA=$?
 wait "$B"; SB=$?
 set -e
 if ! { [ "$SA" -eq 0 ] && [ "$SB" -ne 0 ]; } && ! { [ "$SB" -eq 0 ] && [ "$SA" -ne 0 ]; }; then
-  echo "R3-4.1 concurrency failed: statuses $SA/$SB" >&2; exit 1
+  echo "R3-4.1 concurrency failed: statuses $SA/$SB" >&2
+  cat "$R3_4_1_PGDATA/r341-race-a.err" "$R3_4_1_PGDATA/r341-race-b.err" >&2
+  exit 1
 fi
 LOSER_LOG="$R3_4_1_PGDATA/r341-race-a.err"; [ "$SB" -ne 0 ] && LOSER_LOG="$R3_4_1_PGDATA/r341-race-b.err"
 grep -q 'site work package changed' "$LOSER_LOG" || { echo 'R3-4.1 loser did not use 40001 stale-token path' >&2; exit 1; }

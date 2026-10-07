@@ -3979,6 +3979,50 @@ After any material action, append or revise the relevant section with:
   began reviewing; Cursor displayed the exact local path, hash, candidate and
   bounded instructions and began reviewing. No verdict is inferred from an
   in-progress response, and no hosted or Production state changed.
+- **R3-4.1 CLAUDE INDEPENDENT REVIEW — `FAIL` / LOCAL REMEDIATION OPEN:**
+  Claude recomputed the exact wrapper hash successfully and confirmed that the
+  core authorization order, exact bindings, lock order, actor/order-bound
+  replay, atomic command and association immutability are sound. Four Medium
+  findings block acceptance: the thin review bundle is not independently
+  reproducible; replacing the accepted v1 composite pointer FK removed a
+  database-enforced package/version invariant; package-set customer bytes used
+  generic shared scope and could add incompatible pricing bases; and the
+  adversarial/v1 regression proof set is incomplete. Low observations include
+  time-zone-sensitive token hashing and thin v2 history projection. Status is
+  `FAIL`, not `PASS`; the packet remains superseded for remediation and no
+  Preview or Production action is authorized. Codex opened a local remediation
+  lane while the independent Cursor verdict remains `PENDING`.
+- **R3-4.1 CURSOR INDEPENDENT REVIEW — `PASS`:** Cursor independently matched
+  wrapper SHA-256 `7061214ab71bfb051f9c08ad4a12f4b04faf0764f9ca190a209f7105011bf89c`,
+  resolved candidate `7909b1a` against accepted base `e2e21d6`, and returned no
+  Critical, High or Medium findings for Board/List eligibility, package
+  selection, server preview, strict v1/v2 payloads, stale recovery, truthful
+  unsent copy, keyboard/focus and contained package dialog rendering at 390px.
+  Cursor reported four Low observations: Board/List show one internal estimate
+  rather than the offered-set total; a superseded preview error could replace
+  the notice; the pre-existing List table requires horizontal scrolling at
+  390px; and the visible checkbox glyph is smaller than its 44px label target.
+  The stale-error notice defect was corrected locally; the remaining Lows do
+  not override Claude's controlling `FAIL`. No hosted state changed.
+- **R3-4.1 CLAUDE REMEDIATION — LOCAL DATABASE/APPLICATION GATES `PASS`:** The
+  additive migration now restores database-enforced v1/v2 package-pointer
+  correspondence and adds deferred parent-count, parent-total, association and
+  pointer consistency assertions. Customer-visible package titles/scopes are
+  derived per selected estimate; mixed pricing bases are refused; request token
+  hashing uses epoch values. The adversarial matrix now covers an unassigned
+  estimator, unknown opportunity, non-estimated package, mixed basis, changed
+  actor/token replay, unassociated pointer, association TRUNCATE and v2 parent
+  UPDATE/DELETE. The disposable 70-migration R3-4.1 matrix and genuine
+  two-session race pass, as do the full R3-1 through R3-4 adversarial suite,
+  owner matrix, `CHECK_DEFINERS=1`, injection/dirty-data/rerun and concurrency
+  harness. Full Jest passes `110/110` suites, `941/941` tests and `5/5`
+  snapshots; TypeScript and the loopback-placeholder production build pass.
+  Preserved environment-only failures: sandboxed PostgreSQL first failed to
+  create shared memory until rerun in the approved local context; the first
+  build could not resolve Google Fonts, and the next lacked required Supabase
+  build variables before the documented loopback placeholders were supplied.
+  Independent Claude re-review and a new standalone reproducible packet remain
+  required. No Preview or Production state changed.
 - **R3-5 READINESS REBOUND TO THE CURRENT PACKAGE-SET CANDIDATE / IMPLEMENTATION
   STILL BLOCKED:** The C0 readiness memo now records R3-4 as accepted and maps
   the exact local R3-4.1 v2 parent, ordered append-only associations,
