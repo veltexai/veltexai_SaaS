@@ -4557,6 +4557,31 @@ After any material action, append or revise the relevant section with:
   `CHECK_DEFINERS=1` migration, role, assertion, injection and concurrency
   harness. The isolated cluster was stopped. Independent review remains before
   any Preview application or C0.2 consumption.
+- **R3-4.1 SCOPE-DIGEST FORWARD CORRECTION — INDEPENDENT `PASS WITH
+  NON-BLOCKING NOTES` (CLAUDE + CURSOR):** Claude and Cursor independently
+  recomputed packet SHA-256
+  `44646d860d5afe7cda9acce6298b9f6950098c13b5c1f806453cd40eadfbae85`
+  and bundle SHA-256
+  `f4ff3f551ccf671db903d9a8a655e7c2728b476929b24778d1b516af754dc39d`,
+  verified the complete-history bundle at review tip
+  `e89c2648238f5f0428a3f7197fc75040f53e087e`, and confirmed implementation
+  `80e300b` is forward-only, leaves legacy rows untouched, tightly revokes the
+  trigger function, and remains compatible with accepted C0.1 consumers.
+  Neither review authorized Preview or production. Both identified the same
+  non-blocking proof weakness: the existing publisher-path fixture used two
+  identical scopes and therefore could not detect an absent trigger.
+- **R3-4.1 REAL MIXED-SCOPE PUBLISHER PROOF — LOCAL `PASS`:** The real
+  R3-4.1 publisher fixture now estimates two same-basis recurring packages
+  with different frequencies (`weekly` and `monthly`), publishes them through
+  `command_crm_publish_proposal_package_set_internal`, and requires two
+  distinct frozen scope objects and two distinct derived `scope_sha256`
+  values. The C0.1 foundation and exact 74-version migration-chain checks pass.
+  The first disposable PostgreSQL attempt was blocked by the sandbox's SysV
+  shared-memory restriction; rerunning the same local-only harness in its
+  permitted execution context passed. This closes the reviewers' shared N1
+  proof note without modifying the accepted publisher migration or any hosted
+  state. C0.1 is now `COMPLETE / VERIFIED`; C0.2 is the next bounded local
+  implementation lane. Production and Preview remain unchanged.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

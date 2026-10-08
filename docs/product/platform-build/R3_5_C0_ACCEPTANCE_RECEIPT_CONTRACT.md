@@ -1,6 +1,6 @@
 # R3-5 C0 customer acceptance and receipt contract
 
-Status: **ENTRY CONTRACT ACTIVE / C0.0 COMPLETE / C0.1 IN PROGRESS**
+Status: **ENTRY CONTRACT ACTIVE / C0.0 COMPLETE / C0.1 COMPLETE + VERIFIED / C0.2 IN PROGRESS**
 
 R3-5 begins only after R3-4 immutable proposal versions and the additive R3-4.1
 package-set commitment are independently accepted. That gate is now complete.

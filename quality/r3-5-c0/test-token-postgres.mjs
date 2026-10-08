@@ -67,6 +67,14 @@ do $$ begin
   ) then
     raise exception 'forward scope digest derivation failed';
   end if;
+  if (select count(distinct a.customer_visible_scope)
+      from public.crm_proposal_version_packages a
+      where a.proposal_version_id=current_setting('r35.version')::uuid)<>2
+     or (select count(distinct a.scope_sha256)
+         from public.crm_proposal_version_packages a
+         where a.proposal_version_id=current_setting('r35.version')::uuid)<>2 then
+    raise exception 'real publisher mixed-scope trigger proof was not exercised';
+  end if;
 end $$;
 -- Recreate one pre-correction immutable row inside this rollback-only proof.
 -- The forward NOT VALID constraint protects new rows but intentionally does

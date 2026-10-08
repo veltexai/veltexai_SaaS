@@ -96,6 +96,15 @@ begin
     ('93000000-0000-4000-8000-000000000005'::uuid,'r341-estimate-a'::text,12500::bigint,125::numeric),
     ('93000000-0000-4000-8000-000000000006'::uuid,'r341-estimate-b'::text,20000::bigint,200::numeric)
   ) fixture loop
+    input:=jsonb_build_object(
+      'catalogVersion','2026-09-22.2',
+      'segment','residential',
+      'jobType','recurring_standard',
+      'frequency',case
+        when package_id='93000000-0000-4000-8000-000000000005'::uuid then 'weekly'
+        else 'monthly'
+      end
+    );
     output:=jsonb_build_object('version','2026-09-22.2','unit','per_visit',
       'low',jsonb_build_object('suggestedPrice',price-25),
       'base',jsonb_build_object('suggestedPrice',price),
