@@ -4664,6 +4664,20 @@ After any material action, append or revise the relevant section with:
   transaction-local `SECURITY DEFINER` inspection helper before switching role
   and uses it only inside the disposable rollback harness. No product grant was
   weakened and no hosted state changed.
+- **C0.2 REPLACEMENT PACKET SUBMITTED TO CLAUDE — INDEPENDENT REVIEW
+  `PENDING`:** After explicit action-time founder authorization, exact archive
+  `/private/tmp/veltex-r3-5-c0-2-3d49cc5-review.zip` (SHA-256
+  `ed650c224917031d9bd342de2c3dd62cdcaaa1dbebbebbd540eba4499bde6386`)
+  was attached to the existing Claude database/security review task. Its
+  complete-history bundle has SHA-256
+  `cec0943f91bb6c47e2215bbd9afef2c2178d83d1f351208b714fafb6f677cf9e`
+  and binds review tip `3d49cc56fe897e634eb13ed289ac242999994827`.
+  Claude was instructed to follow the included bounded assignment, verify the
+  hashes/history, scrutinize durable HMAC-only rate consumption for malformed,
+  unknown and known-but-denied exchanges, and return `PASS`, `PASS WITH
+  NON-BLOCKING NOTES` or `FAIL`. The submission forbids Preview, production,
+  credentials, customer data and edits; Claude visibly entered active review.
+  The `1fc2d79` and `26ae07d` packet candidates remain `SUPERSEDED / NOT SENT`.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
