@@ -4935,6 +4935,25 @@ After any material action, append or revise the relevant section with:
   the authorized local rerun passed. No hosted state changed. The previously
   submitted `37ad60d` re-review packet is now `SUPERSEDED` by this remediation;
   a new exact packet and independent verdicts are required.
+- **C0.3 `37ad60d` CLAUDE RE-REVIEW — `PASS WITH NON-BLOCKING NOTES /
+  SUPERSEDED`:** Claude independently verified the complete-history packet and
+  found no source-level blocker in that tip. The verdict is preserved, but it
+  cannot close the gate because Cursor subsequently found the two blockers
+  above and the reviewed tip is no longer current.
+- **C0.3 FINAL ADVERSARIAL PACKET — `SUBMITTED / PENDING VERDICTS`:** Codex
+  committed the token-revocation and proposal-supersession remediation at exact
+  tip `ab9de9439cf7cbb418171fc59e1fb59f5edb411a`, created and independently
+  materialized the complete-history bundle
+  `/private/tmp/veltex-r3-5-c0-3-ab9de94-complete.bundle` (SHA-256
+  `5709de6edbc36a509bd00396452a0e254613ea98eeaa539c79abec082f2a99d2`),
+  and sealed `/private/tmp/veltex-r3-5-c0-3-ab9de94-adversarial-review.zip`
+  (SHA-256
+  `13ba67f1f7f77ce11e331b372f20ffd8cee01b6e6867839417cad2d32485e4f7`).
+  The exact packet was submitted to fresh Claude and Cursor read-only review
+  lanes under the standing bounded-review authorization. Both were instructed
+  to challenge the shared token-set revocation boundary and same-proposal
+  supersession rejection and to perform no edits or hosted actions. C0.3 remains
+  local and C0.4 implementation remains gated pending both current verdicts.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
