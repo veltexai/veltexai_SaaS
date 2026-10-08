@@ -4822,6 +4822,23 @@ After any material action, append or revise the relevant section with:
   immutable receipt correspondence and full application regression evidence
   still must be added and independently reviewed. No Preview, production,
   credential or customer-data state changed.
+- **C0.3 ADVERSARIAL ACCEPTANCE EVIDENCE — LOCAL `PASS`:** The disposable
+  PostgreSQL harness now exercises both full-set and proper-subset acceptance,
+  exact replay after success-time token revocation, changed replay refusal,
+  a real two-process/two-session race with exactly one committed receipt,
+  unselected-package preservation, receipt-bound won history, identifier-only
+  outbox payloads, all-version accept-token revocation, forced late outbox
+  failure with zero partial receipt/package/opportunity state, append-only
+  receipt UPDATE/DELETE/TRUNCATE refusal, ordered association/work-package hash
+  correspondence and independent canonical receipt-hash recomputation. The
+  harness exposed and Codex corrected three defects before packet freeze: the
+  won-stage ordering column was named `position`, the accepted R3-3 lifecycle
+  guard required an explicit receipt-bound estimated-to-accepted exception,
+  and rollback verification had to reset from `service_role` because direct
+  receipt SELECT is intentionally denied. The final adversarial harness passes
+  against a fresh 76-migration replay. C0.3 remains local and public acceptance
+  remains disabled pending final regression, exact packet freeze and
+  independent Claude/Cursor review.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

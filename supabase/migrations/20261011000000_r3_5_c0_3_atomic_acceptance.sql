@@ -92,6 +92,35 @@ create trigger guard_crm_site_work_package_scope before insert or update of
   opportunity_id,property_id,status on public.crm_site_work_packages
   for each row execute function public.guard_crm_site_work_package_acceptance_scope();
 
+create or replace function public.guard_crm_estimate_selection()
+returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
+declare receipt_id uuid; receipt_bound boolean:=false;
+begin
+  if tg_op='UPDATE' and new.status='accepted' then
+    begin receipt_id:=nullif(current_setting('veltex.acceptance_receipt_id',true),'')::uuid; exception when others then receipt_id:=null; end;
+    receipt_bound:=receipt_id is not null and exists(
+      select 1 from public.crm_proposal_acceptance_receipts r
+      where r.id=receipt_id and r.organization_id=new.organization_id
+        and r.proposal_version_id=new.proposal_version_id
+        and new.id=any(r.selected_work_package_ids));
+  end if;
+  if tg_op='UPDATE' and (
+    (old.status='estimated' and new.status not in ('estimated','proposed','declined') and not receipt_bound)
+    or (old.status='proposed' and new.status not in ('proposed','accepted','declined'))
+    or (old.status in ('accepted','declined') and new.status<>old.status)
+  ) then raise exception 'package lifecycle cannot be regressed' using errcode='23514'; end if;
+  if tg_op='UPDATE' and (old.status<>'scoping' or new.status<>'scoping') and (
+    (old.walkthrough_id is not null and new.walkthrough_id is distinct from old.walkthrough_id)
+    or (old.proposal_id is not null and new.proposal_id is distinct from old.proposal_id)
+  ) then raise exception 'package evidence pointer cannot be changed' using errcode='23514'; end if;
+  if new.status='estimated' and (new.estimate_run_id is null
+    or (tg_op='UPDATE' and old.status<>'estimated' and old.estimate_run_id is not distinct from new.estimate_run_id)) then
+    raise exception 'estimated package requires a newly selected estimate' using errcode='23514';
+  end if;
+  return new;
+end;
+$$;
+
 -- Preserve the accepted manual-win contract. The only additional won path is
 -- a receipt-bound customer acceptance in the same transaction.
 create or replace function public.validate_crm_opportunity_stage()
@@ -115,6 +144,7 @@ begin
     if new.stage_id is not distinct from old.stage_id then raise exception 'same-stage transitions are not commands' using errcode='23514'; end if;
     if source_category in ('won','lost','disqualified','handed_off') then raise exception 'terminal opportunities require the reactivation workflow' using errcode='23514'; end if;
     if not (source_category=target_category
+      or (target_category='won' and new.acceptance_method='customer_acceptance')
       or (source_category='new' and target_category in ('qualifying','lost','disqualified','nurture'))
       or (source_category='qualifying' and target_category in ('walkthrough','estimating','lost','disqualified','nurture'))
       or (source_category='walkthrough' and target_category in ('estimating','lost','disqualified','nurture'))
@@ -241,11 +271,11 @@ begin
      or selected_count<>cardinality(p_selected_association_ids) or offered_count<>v.package_count or full_total<>v.display_amount_minor
      or exists(select 1 from public.crm_proposal_version_packages a join public.crm_site_work_packages p on p.organization_id=a.organization_id and p.id=a.work_package_id
        where a.organization_id=t.organization_id and a.proposal_version_id=t.proposal_version_id and a.id=any(selected_ids)
-         and (p.opportunity_id<>v.opportunity_id or p.property_id<>v.property_id or p.proposal_version_id is distinct from v.id or p.status<>'proposed'))
+         and (p.opportunity_id<>v.opportunity_id or p.property_id<>v.property_id or p.proposal_version_id is distinct from v.id or p.status not in ('estimated','proposed')))
      or exists(select 1 from public.crm_proposal_acceptance_receipts r where r.organization_id=t.organization_id and r.proposal_version_id=v.id) then
     raise exception 'proposal acceptance unavailable' using errcode='42501';
   end if;
-  select ps.id into won_stage from public.crm_pipeline_stages ps where ps.organization_id=o.organization_id and ps.pipeline_id=o.pipeline_id and ps.category='won' and not ps.hidden order by ps.sort_order,ps.id limit 1 for share;
+  select ps.id into won_stage from public.crm_pipeline_stages ps where ps.organization_id=o.organization_id and ps.pipeline_id=o.pipeline_id and ps.category='won' and not ps.hidden order by ps.position,ps.id limit 1 for share;
   if won_stage is null then raise exception 'proposal acceptance unavailable' using errcode='42501'; end if;
   canonical_hash:=public.crm_estimate_sha256(jsonb_build_object('organization_id',t.organization_id,'proposal_version_id',v.id,'opportunity_id',o.id,
     'token_id',t.id,'session_id',s.id,'request_sha256',request_hash,'signer_entered_name',trim(p_signer_entered_name),

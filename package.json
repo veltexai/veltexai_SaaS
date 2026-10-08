@@ -45,6 +45,7 @@
     "r3-5:test-token-postgres": "node quality/r3-5-c0/test-token-postgres.mjs",
     "r3-5:test-proposal-room-foundation": "node quality/r3-5-c0/test-proposal-room-foundation.mjs",
     "r3-5:test-atomic-acceptance-foundation": "node quality/r3-5-c0/test-atomic-acceptance-foundation.mjs",
+    "r3-5:test-atomic-acceptance-postgres": "node quality/r3-5-c0/test-atomic-acceptance-postgres.mjs",
     "brand:test-inventory": "node quality/brand-architecture/test-brand-inventory.mjs",
     "100s:operator": "node 100X/100S/operator/cli.mjs",
     "test:100s": "jest 100X/100S/tests --runInBand"
