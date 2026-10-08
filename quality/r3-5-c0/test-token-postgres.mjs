@@ -66,6 +66,17 @@ returns bigint language sql security definer set search_path=pg_catalog,public a
   from public.crm_customer_action_exchange_rate_buckets
   where key_version=1 and token_hmac_sha256=p_digest
 $$;
+create function pg_temp.r35_seed_global_exchange_ceiling()
+returns void language sql security definer set search_path=pg_catalog,public as $$
+  insert into public.crm_customer_action_exchange_rate_buckets(
+    key_version,token_hmac_sha256,window_started_at,attempt_count
+  ) values(1,repeat('0',64),date_trunc('minute',now()),600)
+  on conflict(key_version,token_hmac_sha256,window_started_at) do update
+    set attempt_count=600,updated_at=now()
+$$;
+insert into public.crm_customer_action_exchange_rate_buckets(
+  key_version,token_hmac_sha256,window_started_at,attempt_count
+) values(1,repeat('e',64),date_trunc('minute',now())-interval '10 minutes',1);
 do $$ begin
   if exists(
     select 1 from public.crm_proposal_version_packages a
@@ -144,6 +155,9 @@ begin
   end loop;
   if pg_temp.r35_exchange_count(repeat('f',64))<>13 then
     raise exception 'denied exchange attempts did not persist for rate limiting';
+  end if;
+  if pg_temp.r35_exchange_count(repeat('e',64))<>0 then
+    raise exception 'expired exchange rate bucket retention cleanup failed';
   end if;
   exchange_result:=public.exchange_crm_customer_action_token_internal(
     repeat('a',64),1,repeat('c',64));
@@ -268,6 +282,12 @@ begin
   if not replayed.replayed then raise exception 'already-revoked token was treated as new'; end if;
   if pg_temp.r35_disabled_count(org,version_id)<>1 then
     raise exception 're-revoking last token duplicated disabled event';
+  end if;
+  perform pg_temp.r35_seed_global_exchange_ceiling();
+  denied:=public.exchange_crm_customer_action_token_internal(
+    repeat('b',64),1,repeat('6',64));
+  if denied is not null or pg_temp.r35_exchange_count(repeat('b',64))<>0 then
+    raise exception 'global exchange ceiling did not bound new digest rows';
   end if;
 end $$;
 

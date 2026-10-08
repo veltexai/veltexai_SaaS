@@ -7,6 +7,18 @@ jest.mock('../config', () => ({ isSentryEnabled: true, sentryConfig: { dsn: 'htt
 it('initializes client error monitoring before analytics can throw', () => {
   jest.mocked(posthog.init).mockImplementation(() => { throw new Error('Analytics unavailable'); });
   expect(() => jest.requireActual('../../../instrumentation-client')).toThrow('Analytics unavailable');
-  expect(Sentry.init).toHaveBeenCalledWith({ dsn: 'https://key@example.com/1', environment: 'develop', tracesSampleRate: 1, sendDefaultPii: false, debug: false });
+  expect(Sentry.init).toHaveBeenCalledWith(expect.objectContaining({
+    dsn: 'https://key@example.com/1', environment: 'develop', tracesSampleRate: 1,
+    sendDefaultPii: false, debug: false,
+    beforeBreadcrumb: expect.any(Function), beforeSend: expect.any(Function),
+    beforeSendTransaction: expect.any(Function),
+  }));
+  const options = jest.mocked(Sentry.init).mock.calls[0][0];
+  const bearer = 'A'.repeat(43);
+  expect(options.beforeBreadcrumb?.({ category: 'navigation', data: {
+    from: `/proposal-room#${bearer}`, to: '/proposal-room',
+  } }, {} as never)).toEqual(expect.objectContaining({ data: expect.objectContaining({
+    from: '/proposal-room#[redacted]',
+  }) }));
   expect(jest.mocked(Sentry.init).mock.invocationCallOrder[0]).toBeLessThan(jest.mocked(posthog.init).mock.invocationCallOrder[0]);
 });

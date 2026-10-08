@@ -4694,6 +4694,26 @@ After any material action, append or revise the relevant section with:
   proof, response throttling and duplicate React keys. C0.2 remains
   `IN PROGRESS / NOT PREVIEW-AUTHORIZED`; remediation proceeds locally without
   changing hosted state.
+- **C0.2 CLAUDE-FAIL REMEDIATION — LOCAL `PASS`:** The raw fragment is now
+  validated, handed through one-time `sessionStorage`, and removed by an inline
+  root-head guard before application hydration; the proposal-room component no
+  longer reads `location.hash`. Sentry also applies recursive bearer-fragment
+  redaction to breadcrumbs, errors and transactions as defense in depth. The
+  response UI retains one idempotency UUID for the same exact draft across an
+  ambiguous retry and rotates it only after confirmed success or a payload
+  change. Rate buckets now have an indexed five-minute retention sweep, a
+  privacy-preserving 600/minute global ceiling that prevents unbounded unknown
+  digest-row creation, and capped per-token increments that preserve the
+  thirteen-attempt denial proof. Review-only response copy and duplicate React
+  keys were corrected. The disposable full 75-migration PostgreSQL harness,
+  complete 113-suite / 957-test Jest regression, focused monitoring and public
+  route suites, TypeScript, static C0.2 contract, migration-chain validation,
+  diff hygiene and placeholder-only 89-page production build all pass. The
+  first build retry failed only because the sandbox denied the existing Google
+  Font fetch; the same build passed with outbound font access. No real secret,
+  hosted database, Preview or production state was used or changed. A new exact
+  independent re-review packet is the next gate; C0.2 remains `IN PROGRESS /
+  NOT PREVIEW-AUTHORIZED` until that review passes.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

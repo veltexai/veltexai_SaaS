@@ -30,6 +30,8 @@ create table public.crm_customer_action_exchange_rate_buckets (
   updated_at timestamptz not null default now(),
   primary key(key_version,token_hmac_sha256,window_started_at)
 );
+create index crm_customer_action_exchange_rate_buckets_retention_idx
+  on public.crm_customer_action_exchange_rate_buckets(window_started_at);
 
 create table public.crm_proposal_responses (
   id uuid primary key default gen_random_uuid(),
@@ -89,11 +91,29 @@ begin
      or p_session_hmac_sha256 !~ '^[a-f0-9]{64}$' then
     return null;
   end if;
+  delete from public.crm_customer_action_exchange_rate_buckets
+    where window_started_at<date_trunc('minute',now())-interval '5 minutes';
+  -- A privacy-preserving global ceiling bounds attacker-created HMAC rows even
+  -- before a deployment-level WAF rule is available. The sentinel cannot be a
+  -- real token digest in practice and is never used for token lookup.
+  insert into public.crm_customer_action_exchange_rate_buckets(
+    key_version,token_hmac_sha256,window_started_at,attempt_count
+  ) values(p_key_version,repeat('0',64),date_trunc('minute',now()),1)
+  on conflict(key_version,token_hmac_sha256,window_started_at) do update
+    set attempt_count=least(
+        public.crm_customer_action_exchange_rate_buckets.attempt_count+1,601),
+      updated_at=now();
+  if (select attempt_count from public.crm_customer_action_exchange_rate_buckets
+      where key_version=p_key_version and token_hmac_sha256=repeat('0',64)
+        and window_started_at=date_trunc('minute',now()))>600 then
+    return null;
+  end if;
   insert into public.crm_customer_action_exchange_rate_buckets(
     key_version,token_hmac_sha256,window_started_at,attempt_count
   ) values(p_key_version,p_token_hmac_sha256,date_trunc('minute',now()),1)
   on conflict(key_version,token_hmac_sha256,window_started_at) do update
-    set attempt_count=public.crm_customer_action_exchange_rate_buckets.attempt_count+1,
+    set attempt_count=least(
+        public.crm_customer_action_exchange_rate_buckets.attempt_count+1,13),
       updated_at=now();
   if (select attempt_count from public.crm_customer_action_exchange_rate_buckets
       where key_version=p_key_version and token_hmac_sha256=p_token_hmac_sha256

@@ -42,6 +42,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <script id="proposal-room-fragment-guard" dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            if (window.location.pathname !== '/proposal-room' || !window.location.hash) return;
+            var token = window.location.hash.slice(1);
+            try {
+              if (/^[A-Za-z0-9_-]{43}$/.test(token)) {
+                window.sessionStorage.setItem('veltex:c0:proposal-fragment', token);
+              }
+            } catch (_) {}
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          })();
+        ` }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", name: SITE_NAME, url: SITE_URL, sameAs: SOCIAL_PROFILE_URLS }) }} />
         {/* Preconnect to Typekit so the DNS + TLS handshake is done early */}
         <link rel="preconnect" href="https://use.typekit.net" crossOrigin="" />

@@ -3,12 +3,27 @@ import * as Sentry from "@sentry/nextjs";
 import { isPostHogEnabled, postHogConfig } from "@/lib/analytics/config";
 import { isSentryEnabled, sentryConfig } from "@/lib/monitoring/config";
 
+const bearerFragment = /#[A-Za-z0-9_-]{43}(?=$|[?&/\s])/g;
+
+function redactBearerFragments<T>(value: T): T {
+  if (typeof value === "string") return value.replace(bearerFragment, "#[redacted]") as T;
+  if (Array.isArray(value)) return value.map(redactBearerFragments) as T;
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) =>
+      [key, redactBearerFragments(entry)])) as T;
+  }
+  return value;
+}
+
 // Initialize error monitoring before analytics so analytics cannot block it.
 if (isSentryEnabled) {
   Sentry.init({
     ...sentryConfig,
     sendDefaultPii: false,
     debug: false,
+    beforeBreadcrumb: (breadcrumb) => redactBearerFragments(breadcrumb),
+    beforeSend: (event) => redactBearerFragments(event),
+    beforeSendTransaction: (event) => redactBearerFragments(event),
   });
 }
 

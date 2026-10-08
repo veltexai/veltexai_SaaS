@@ -6,6 +6,9 @@ import { resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '../..');
 const sql = readFileSync(resolve(root,
   'supabase/migrations/20261010000000_r3_5_c0_2_proposal_room.sql'), 'utf8');
+const layout = readFileSync(resolve(root, 'app/layout.tsx'), 'utf8');
+const roomPage = readFileSync(resolve(root, 'app/proposal-room/page.tsx'), 'utf8');
+const instrumentation = readFileSync(resolve(root, 'instrumentation-client.ts'), 'utf8');
 
 for (const fragment of [
   'create table public.crm_customer_action_sessions',
@@ -27,7 +30,13 @@ assert.doesNotMatch(sql, /grant execute[\s\S]*to anon/);
 assert.doesNotMatch(sql, /accept_crm|acceptance_receipt|update public\.crm_site_work_packages/);
 assert.doesNotMatch(sql, /user_agent|browser_fingerprint|ip_address|raw_token/i);
 assert.match(sql, /insert into public\.crm_customer_action_exchange_rate_buckets[\s\S]*on conflict\(key_version,token_hmac_sha256,window_started_at\) do update/);
+assert.match(sql, /delete from public\.crm_customer_action_exchange_rate_buckets[\s\S]*interval '5 minutes'/);
+assert.match(sql, /token_hmac_sha256,window_started_at,attempt_count[\s\S]*repeat\('0',64\)[\s\S]*>600/);
 assert.match(sql, /if token_row\.id is null then\s+return null/);
+assert.match(layout, /proposal-room-fragment-guard[\s\S]*sessionStorage\.setItem\('veltex:c0:proposal-fragment'[\s\S]*history\.replaceState/);
+assert.doesNotMatch(roomPage, /location\.hash/);
+assert.match(roomPage, /requestFingerprint[\s\S]*idempotency-key': requestKey\.current/);
+assert.match(instrumentation, /beforeBreadcrumb:[\s\S]*beforeSend:[\s\S]*beforeSendTransaction:/);
 
 for (const table of ['crm_customer_action_sessions', 'crm_proposal_responses']) {
   assert.ok(sql.includes(`guard_${table}_append_only`));

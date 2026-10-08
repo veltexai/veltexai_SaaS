@@ -23,23 +23,28 @@ the packet and bundle SHA-256 values against `MANIFEST.txt`.
 Return exactly `PASS`, `PASS WITH NON-BLOCKING NOTES`, or `FAIL`, with findings
 ordered by severity and exact file/line evidence.
 
-1. Raw bearer handling: the browser reads only `location.hash`, immediately
-   scrubs it, and no raw bearer/session reaches PostgreSQL, structured logs,
-   rendered output, URLs or referrers.
+1. Raw bearer handling: the earliest root-head guard validates and scrubs
+   `location.hash` before hydration, hands the value through one-time
+   `sessionStorage`, and the page never reads the fragment directly. Confirm
+   Sentry breadcrumb/event/transaction sanitizers provide defense in depth and
+   no raw bearer/session reaches PostgreSQL, structured logs, rendered output,
+   URLs or referrers.
 2. Exchange/session security: versioned domain-separated HMAC, 15-minute
    opaque `__Host-` HttpOnly + Secure + SameSite=Strict cookie, expiry,
    revocation, eligibility, v2 and designated-approver fail-closed checks,
    bounded rate behavior and uniform unavailable responses. Specifically verify
-   that malformed/unknown and known-but-denied exchanges consume a durable
-   HMAC-only rate bucket even when no token row is found, and that denial does
-   not roll the increment back.
+   that well-formed unknown and known-but-denied exchanges consume a durable
+   HMAC-only rate bucket even when no token row is found, that denial does not
+   roll the increment back, expired buckets have bounded retention, and the
+   global ceiling prevents unbounded attacker-created digest rows.
 3. Projection privacy: only immutable v2 parent and ordered associations feed
    the room; costs, wages, margins, overhead, notes, walkthrough evidence,
    estimator identity, audit rows and unrelated tenant/version data cannot
    appear. Rendered proposal bytes are displayed as text, not executable HTML.
 4. Response safety: question/change-request/decline only; bounded strict input;
    session/purpose validation; append-only records; exact idempotent replay;
-   changed-replay refusal; identifier-only outbox evidence.
+   changed-replay refusal; one retained UI idempotency key across ambiguous
+   retries of an unchanged draft; identifier-only outbox evidence.
 5. Authorization/grants: no anonymous/authenticated direct table or definer
    access; service-role-only private commands; RLS and append-only guards;
    fixed search paths and no new client-executable definer allowlist gap.
@@ -50,9 +55,10 @@ ordered by severity and exact file/line evidence.
    overflow, recoverable message text on network failure.
 8. Evidence: 75-migration replay, PostgreSQL exchange/projection/response
    proofs (including thirteen unknown-token attempts followed by a persisted
-   bucket assertion), focused tests, full Jest regression (113 suites / 957
-   tests / 5 snapshots), TypeScript, production build and recorded failed
-   environment attempts support their stated scope.
+   bucket assertion, retention cleanup and global-row cap), focused tests, full
+   Jest regression (113 suites / 957 tests / 5 snapshots), TypeScript,
+   production build and recorded failed environment attempts support their
+   stated scope.
 
 The earlier `26ae07d` and `1fc2d79` packet candidates were superseded before
 external transmission. Do not review or rely on them.

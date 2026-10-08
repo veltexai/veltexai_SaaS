@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 type Package = {
   associationId: string;
@@ -43,13 +43,17 @@ export default function ProposalRoomPage() {
   const [displayName, setDisplayName] = useState('');
   const [notice, setNotice] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const requestKey = useRef<string | null>(null);
+  const requestFingerprint = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const fragment = window.location.hash.startsWith('#')
-        ? window.location.hash.slice(1) : '';
-      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+      let fragment = '';
+      try {
+        fragment = window.sessionStorage.getItem('veltex:c0:proposal-fragment') ?? '';
+        window.sessionStorage.removeItem('veltex:c0:proposal-fragment');
+      } catch { /* fail closed to an existing session cookie */ }
       try {
         if (fragment) {
           const exchange = await fetch('/api/public/proposal-room/session', {
@@ -75,15 +79,23 @@ export default function ProposalRoomPage() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!canRespond || !message.trim() || submitting) return;
+    const payload = { kind, message: message.trim(), displayName: displayName.trim() || null };
+    const fingerprint = JSON.stringify(payload);
+    if (!requestKey.current || requestFingerprint.current !== fingerprint) {
+      requestKey.current = crypto.randomUUID();
+      requestFingerprint.current = fingerprint;
+    }
     setSubmitting(true); setNotice('Sending your response…');
     try {
       const response = await fetch('/api/public/proposal-room/responses', {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() },
-        body: JSON.stringify({ kind, message, displayName: displayName.trim() || null }),
+        headers: { 'content-type': 'application/json', 'idempotency-key': requestKey.current },
+        body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error('response');
       setMessage('');
+      requestKey.current = null;
+      requestFingerprint.current = null;
       setNotice(kind === 'declined' ? 'Your decline was recorded.' : 'Your response was sent.');
     } catch {
       setNotice('We could not send that response. Your text is still here so you can try again.');
@@ -118,7 +130,7 @@ export default function ProposalRoomPage() {
           <p className="shrink-0 font-semibold text-slate-950">{money(item.amountMinor, item.currency)} <span className="font-normal text-slate-600">{basis(item.pricingBasis)}</span></p>
         </div>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">
-          {item.scope.map((line) => <li key={line}>{line}</li>)}
+          {item.scope.map((line, index) => <li key={`${index}:${line}`}>{line}</li>)}
         </ul>
       </article>)}
       <div className="flex items-center justify-between border-t border-slate-300 pt-4 text-lg font-semibold">
@@ -151,7 +163,7 @@ export default function ProposalRoomPage() {
 
     <section className="border-t border-slate-200 py-6" aria-labelledby="accept-heading">
       <h2 id="accept-heading" className="text-xl font-semibold text-slate-950">Accept proposal</h2>
-      <p className="mt-2 text-sm text-slate-700">Online acceptance is not enabled for this review yet. You can ask a question, request changes, or decline above.</p>
+      <p className="mt-2 text-sm text-slate-700">Online acceptance is not enabled for this review yet. {room.allowedActions.length > 0 ? 'You can respond above.' : 'Contact the sender if you need help or want to request changes.'}</p>
       <button disabled className="mt-4 min-h-11 rounded-lg bg-slate-300 px-4 py-2 font-medium text-slate-600">Accept proposal — unavailable</button>
     </section>
   </main>;
