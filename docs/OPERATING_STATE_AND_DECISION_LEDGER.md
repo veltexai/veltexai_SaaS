@@ -4841,6 +4841,22 @@ After any material action, append or revise the relevant section with:
   regression, TypeScript, static contract, migration-chain validation and diff
   hygiene also pass; only exact packet freeze and independent Claude/Cursor
   review remain.
+- **C0.3 EXACT ADVERSARIAL REVIEW — `SUBMITTED / PENDING VERDICTS`:** The
+  prerequisite-bound review tip is
+  `b18a49b5a2b30532f16a3b441078c9e9008048a6` on exact base
+  `b09e26d13d8988b80ab0597b0e174db3aba3761c`. The verified packet
+  `/private/tmp/veltex-r3-5-c0-3-b18a49b-review.zip` has SHA-256
+  `c59c716ef11a7c3c935c43fb819e4ecb87306dcf1094220b5748c7f700adc942`;
+  its exact Git bundle has SHA-256
+  `b19e32df0e64af85a9eb583b69f08891dc1714a4c0ec1ba15f13779ee0b81c99`.
+  The packet contains the assignment, manifest, test evidence, implementation
+  audit, ledger and bundle, with no secrets or customer data. On 2026-10-07
+  Pacific, the same bounded read-only assignment and exact packet identity were
+  visibly submitted to Claude and Cursor. Both reviews are active and forbid
+  edits, hosted access, deployment, credentials, paid actions, publication and
+  external messages. C0.3 remains local, public acceptance remains disabled,
+  and its status is not accepted until both independent verdicts are collected
+  and reconciled.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
