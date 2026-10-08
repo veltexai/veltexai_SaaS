@@ -11,6 +11,9 @@ const page = readFileSync(new URL('../../app/proposal-room/page.tsx', import.met
 const boardRoute = readFileSync(new URL(
   '../../app/api/orgs/[organizationId]/crm/opportunities/route.ts', import.meta.url,
 ), 'utf8');
+const definerAssertions = readFileSync(new URL(
+  '../service-catalog-round4/db-harness/sql/30_assertions.sql', import.meta.url,
+), 'utf8');
 
 for (const fragment of [
   'create or replace function public.read_crm_customer_proposal_room_internal',
@@ -41,5 +44,7 @@ assert.match(page, /acceptanceRequestKey/);
 assert.match(page, /min-h-11/);
 assert.match(boardRoute, /read_crm_acceptance_summaries/);
 assert.match(boardRoute, /!Array\.isArray\(acceptances\.data\)/);
+assert.match(definerAssertions, /'read_crm_acceptance_summaries\(uuid\)'/,
+  'authenticated acceptance summary reader must be explicitly definer-allowlisted');
 
 console.log('C0.4 acceptance surfaces static contract passes');

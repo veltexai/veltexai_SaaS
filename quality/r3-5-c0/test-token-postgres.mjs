@@ -168,7 +168,8 @@ begin
   end if;
   room:=public.read_crm_customer_proposal_room_internal(repeat('c',64));
   if room->>'proposalVersionId'<>version_id::text
-     or room->>'acceptanceEnabled'<>'false'
+     or room->>'acceptanceEnabled'<>'true'
+     or room->'receipt'<>'null'::jsonb
      or jsonb_array_length(room->'packages')<>2
      or room ?| array['cost','margin','wage','estimator','audit'] then
     raise exception 'customer-safe proposal-room projection failed';

@@ -158,6 +158,15 @@ gate and founder acceptance are complete.
 - The first disposable PostgreSQL attempt was blocked by sandbox SysV shared
   memory. The authorized local rerun passed; this is preserved as an execution
   context failure, not treated as a product defect.
+- After the first exact packet was frozen, the broader C0.1/C0.2 token/session
+  PostgreSQL matrix found that `read_crm_acceptance_summaries(uuid)` was not in
+  the repository-wide client-executable SECURITY DEFINER allowlist. The gate
+  correctly failed before its behavioral matrix. The function was added to the
+  explicit allowlist, the C0.4 static contract now asserts that entry, and the
+  legacy room assertion was advanced from the deliberate pre-C0.4 disabled
+  state to the eligible C0.4 state. The complete 77-migration token/session
+  matrix then passed. The first `5071bf7` packet is superseded and must not be
+  reviewed or deployed.
 - Remaining C0.4 exit evidence: exact independent Claude/Cursor review and a
   separately authorized isolated-Preview desktop plus genuine 390px run. No
   hosted database, credential, deployment or production state changed here.

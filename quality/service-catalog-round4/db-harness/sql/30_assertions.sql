@@ -268,6 +268,9 @@ do $$ declare bad text; begin
       -- R3-5 C0 metadata-only token status remains caller-bound to the
       -- current auth.uid() membership and opportunity assignment.
       'read_crm_customer_action_token_status(uuid,uuid)',
+      -- C0.4 caller-bound receipt metadata follows the same CRM opportunity
+      -- visibility rules and redacts all price fields from viewers.
+      'read_crm_acceptance_summaries(uuid)',
       'save_crm_contact_record(uuid,uuid,timestamp with time zone,text,text,text,text,text,text,boolean,text)',
       'save_crm_customer_record(uuid,uuid,timestamp with time zone,text,text)',
       'save_crm_property_record(uuid,uuid,timestamp with time zone,uuid,text,text,text,text,text,text,text,text,text)',

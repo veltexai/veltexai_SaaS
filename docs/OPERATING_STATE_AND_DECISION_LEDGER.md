@@ -5017,6 +5017,19 @@ After any material action, append or revise the relevant section with:
   hosted access, deployment, production, paid actions, publication and
   external-human contact. External Claude/Cursor submission has not yet been
   claimed; both exact independent verdicts remain pending.
+- **C0.4 FIRST PACKET — `SUPERSEDED BEFORE SUBMISSION`:** A post-freeze replay
+  of the broader C0.1/C0.2 token/session PostgreSQL matrix correctly failed
+  because the new authenticated `read_crm_acceptance_summaries(uuid)` SECURITY
+  DEFINER was missing from the repository-wide explicit client-definer
+  allowlist. This was a release-gate defect, not a hosted failure. Codex added
+  the exact allowlist entry, made the C0.4 static test require it, and updated
+  the legacy proposal-room assertion to expect the now-eligible C0.4 acceptance
+  state rather than the pre-C0.4 disabled placeholder. The fresh 77-migration
+  token/session matrix then passed. Packet SHA
+  `94ea7db64018160b6f3bc2d4a4d338a02d1a48825da39fdf18bec67d4f39ac30`
+  at tip `5071bf7` is `SUPERSEDED` and must not be reviewed, applied or
+  deployed. A new exact candidate and packet are required. No external packet
+  submission or hosted mutation occurred.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
