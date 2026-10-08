@@ -19,4 +19,8 @@ assert.match(sql,/before truncate on public\.crm_proposal_acceptance_receipts/);
 assert.ok(!/grant (?:select|insert|update|delete|truncate|all)[\s\S]*crm_proposal_acceptance_receipts[\s\S]*to (?:anon|authenticated|service_role)/i.test(sql));
 assert.ok(sql.indexOf('if existing.id is not null then')<sql.indexOf('or latest_state is distinct from'),
   'exact replay must be checked before success-time revocation and eligibility changes');
+assert.ok(sql.indexOf("if selected_count<>cardinality(p_selected_association_ids) then")<sql.indexOf('if existing.id is not null then'),
+  'the complete caller identifier set must be validated before exact replay');
+assert.match(sql,/'accepted_at_utc',to_char\(accepted_time at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS\.US"Z"'\)/,
+  'receipt time must have a timezone-independent canonical representation');
 console.log('C0.3 atomic acceptance static contract passes');

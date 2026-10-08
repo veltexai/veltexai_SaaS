@@ -1,6 +1,6 @@
 # R3-5 C0.3 implementation audit
 
-Status: **PREPARED / C0.2 INDEPENDENT PASS REQUIRED BEFORE IMPLEMENTATION TIP**
+Status: **IMPLEMENTED / FIRST INDEPENDENT FAIL REMEDIATED LOCALLY**
 
 This audit maps the accepted C0 contract to the current schema so C0.3 can
 start without reopening or bypassing accepted R3-1 through R3-4.1 behavior.
@@ -69,6 +69,35 @@ gate.
   simultaneous sessions converge on one receipt.
 - Any exception rolls back receipt, package, opportunity, history, revocation,
   audit and outbox writes together.
+
+## First-review remediation
+
+The first Claude review found no source-level release blocker in the recovered
+tree, but correctly failed the gate because the prerequisite-bound bundle could
+not be materialized in its environment and the executable evidence omitted
+required negative cases. It also identified two correctness issues that must be
+closed before C0.4:
+
+- the command now proves the complete caller-supplied association-ID set before
+  computing or returning exact replay, so an extra unknown or foreign ID cannot
+  be filtered away and misclassified as the original request; and
+- the canonical receipt hash now commits a fixed UTC microsecond string rather
+  than a session-time-zone-sensitive `timestamptz` JSON representation.
+
+The PostgreSQL harness now pins wrong-purpose, revoked, expired-token,
+expired-session, designated-approver, disabled-eligibility, mixed unknown-ID,
+real cross-version association, stale-package, soft-deleted-opportunity,
+terminal-opportunity and unbound
+service-role customer-acceptance refusals. Its two acceptance processes are
+held behind the exact version advisory lock, observed simultaneously waiting
+in `pg_stat_activity`, and the losing process must carry the expected uniform
+acceptance-refusal message. Expired fixture timestamps are arranged only in the
+disposable database with triggers temporarily disabled; the product remains
+append-only.
+
+The re-review packet must use a complete-history bundle so an independent
+reviewer can materialize the exact tip without possessing an unstated prior
+base.
 
 ## Required executable evidence
 

@@ -47,6 +47,39 @@ try{
   )::text`]).trim());
   assert.equal(context.associations.length,2);
 
+  // Create a second immutable v2/association only inside the disposable proof
+  // database so the command can be challenged with a real, well-formed
+  // cross-version association rather than only a random UUID.
+  psqlText(`
+set session_replication_role=replica;
+insert into public.crm_proposal_versions(
+ id,organization_id,proposal_id,opportunity_id,property_id,work_package_id,
+ estimate_run_id,version_number,request_key,content_snapshot,rendered_content,
+ display_amount_minor,currency,pricing_basis,content_sha256,rendered_sha256,
+ estimate_input_sha256,estimate_output_sha256,schema_version,created_by,
+ created_at,package_count,package_set_sha256)
+select 'a3000000-0000-4000-8000-000000000001',organization_id,proposal_id,
+ opportunity_id,property_id,null,null,version_number+100,'c03-foreign-version',
+ content_snapshot,rendered_content,display_amount_minor,currency,null,
+ content_sha256,rendered_sha256,estimate_input_sha256,estimate_output_sha256,
+ schema_version,created_by,created_at,package_count,package_set_sha256
+from public.crm_proposal_versions where id='${context.version}';
+insert into public.crm_proposal_version_packages(
+ id,organization_id,proposal_version_id,opportunity_id,property_id,
+ work_package_id,estimate_run_id,display_position,customer_visible_title,
+ customer_visible_scope,amount_minor,currency,pricing_basis,
+ estimate_input_sha256,estimate_output_sha256,scope_sha256,
+ association_sha256,created_at)
+select 'a3000000-0000-4000-8000-000000000002',organization_id,
+ 'a3000000-0000-4000-8000-000000000001',opportunity_id,property_id,
+ work_package_id,estimate_run_id,display_position,customer_visible_title,
+ customer_visible_scope,amount_minor,currency,pricing_basis,
+ estimate_input_sha256,estimate_output_sha256,scope_sha256,
+ association_sha256,created_at
+from public.crm_proposal_version_packages where id='${context.associations[0]}';
+set session_replication_role=origin;
+`,'cross-version-fixture.sql');
+
   const fullSetOutput=psqlText(`
 begin;
 set local role service_role;
@@ -71,6 +104,81 @@ select 'C0_3_FULL_SET_PASS';
 rollback;
 `,'full-set.sql');
   assert.match(fullSetOutput,/C0_3_FULL_SET_PASS/);
+
+  const expectUnavailable=({label,digit,session,purpose='accept_proposal',designated='null',setup='',ids=`array['${context.associations[0]}'::uuid]`})=>{
+    const output=psqlText(`
+begin;
+set local role service_role;
+select * from public.command_crm_issue_customer_action_token_internal(
+ '11111111-1111-4111-8111-111111111111','${context.org}','${context.version}','${purpose}',repeat('${digit}',64),1,${designated},1,'c03-${label}-token',repeat('${digit}',64));
+select public.exchange_crm_customer_action_token_internal(repeat('${digit}',64),1,repeat('${session}',64));
+reset role;
+${setup}
+set local role service_role;
+do $$ declare err text; begin
+  begin
+    perform public.command_crm_accept_proposal_version_internal(repeat('${session}',64),${ids},'Negative Signer','negative@example.test','c03-${label}-accept');
+    raise exception 'negative ${label} accepted';
+  exception when insufficient_privilege then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal acceptance unavailable' then raise; end if;
+  end;
+end $$;
+rollback;
+select 'C0_3_${label.toUpperCase().replaceAll('-','_')}_PASS';
+`,`${label}.sql`);
+    assert.match(output,new RegExp(`C0_3_${label.toUpperCase().replaceAll('-','_')}_PASS`));
+  };
+
+  expectUnavailable({label:'wrong-purpose',digit:'4',session:'d',purpose:'respond_proposal'});
+  expectUnavailable({label:'revoked',digit:'5',session:'e',setup:`
+insert into public.crm_customer_action_token_revocations(organization_id,token_id,reason,revoked_by)
+select organization_id,id,'negative proof','11111111-1111-4111-8111-111111111111'
+from public.crm_customer_action_tokens where token_hmac_sha256=repeat('5',64);`});
+  expectUnavailable({label:'expired-token',digit:'6',session:'f',setup:`
+set local session_replication_role=replica;
+update public.crm_customer_action_tokens set issued_at=now()-interval '2 days',expires_at=now()-interval '1 day'
+where token_hmac_sha256=repeat('6',64);
+set local session_replication_role=origin;`});
+  expectUnavailable({label:'expired-session',digit:'7',session:'1',setup:`
+set local session_replication_role=replica;
+update public.crm_customer_action_sessions set created_at=now()-interval '20 minutes',expires_at=now()-interval '5 minutes'
+where session_hmac_sha256=repeat('1',64);
+set local session_replication_role=origin;`});
+  expectUnavailable({label:'designated',digit:'8',session:'2',designated:"repeat('d',64)"});
+  expectUnavailable({label:'disabled',digit:'9',session:'3',setup:`
+insert into public.crm_proposal_action_eligibility_events(organization_id,proposal_version_id,opportunity_id,state,reason,created_by,created_at)
+values('${context.org}','${context.version}','93000000-0000-4000-8000-000000000003','disabled','negative proof','11111111-1111-4111-8111-111111111111',clock_timestamp()+interval '1 second');`});
+  expectUnavailable({label:'unknown-association',digit:'a',session:'4',ids:`array['${context.associations[0]}'::uuid,'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid]`});
+  expectUnavailable({label:'cross-version-association',digit:'e',session:'8',ids:`array['${context.associations[0]}'::uuid,'a3000000-0000-4000-8000-000000000002'::uuid]`});
+  expectUnavailable({label:'stale-package',digit:'b',session:'5',setup:`
+update public.crm_site_work_packages set status='declined' where id='93000000-0000-4000-8000-000000000005';`});
+  expectUnavailable({label:'soft-deleted-opportunity',digit:'c',session:'6',setup:`
+update public.crm_opportunities set deleted_at=now() where id='93000000-0000-4000-8000-000000000003';`});
+  expectUnavailable({label:'terminal-opportunity',digit:'d',session:'7',setup:`
+set local session_replication_role=replica;
+update public.crm_opportunities set stage_id=(select id from public.crm_pipeline_stages where organization_id='${context.org}' and pipeline_id=(select pipeline_id from public.crm_opportunities where id='93000000-0000-4000-8000-000000000003') and category='lost' order by position,id limit 1) where id='93000000-0000-4000-8000-000000000003';
+set local session_replication_role=origin;`});
+
+  const receiptBindingOutput=psqlText(`
+begin;
+set local role service_role;
+do $$ declare err text; begin
+  begin
+    update public.crm_opportunities set
+      stage_id=(select id from public.crm_pipeline_stages where organization_id='${context.org}' and pipeline_id=crm_opportunities.pipeline_id and category='won' order by position,id limit 1),
+      acceptance_method='customer_acceptance',manual_win_reason=null
+    where id='93000000-0000-4000-8000-000000000003';
+    raise exception 'unbound customer acceptance transition succeeded';
+  exception when check_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'customer acceptance requires a receipt-bound transition' then raise; end if;
+  end;
+end $$;
+rollback;
+select 'C0_3_RECEIPT_BINDING_NEGATIVE_PASS';
+`,'receipt-binding-negative.sql');
+  assert.match(receiptBindingOutput,/C0_3_RECEIPT_BINDING_NEGATIVE_PASS/);
 
   const seed=(digit,session,key)=>psqlText(`
 begin; set local role service_role;
@@ -104,13 +212,27 @@ select 'C0_3_LATE_ROLLBACK_PASS';
 `,'rollback.sql');
   assert.match(rollbackOutput,/C0_3_LATE_ROLLBACK_PASS/);
 
-  const call=(session,key)=>`set role service_role; select public.command_crm_accept_proposal_version_internal(repeat('${session}',64),array['${context.associations[0]}'::uuid],'Race Signer','race@example.test','${key}')::text;`;
-  const race=await Promise.allSettled([
-    execFileAsync(resolve(pgBin,'psql'),[...baseArgs,'-c',call('b','c03-race-accept-0001')],{encoding:'utf8'}),
-    execFileAsync(resolve(pgBin,'psql'),[...baseArgs,'-c',call('c','c03-race-accept-0002')],{encoding:'utf8'}),
-  ]);
+  const call=(session,key,appName='c03-replay')=>`set application_name='${appName}'; set role service_role; select public.command_crm_accept_proposal_version_internal(repeat('${session}',64),array['${context.associations[0]}'::uuid],'Race Signer','race@example.test','${key}')::text;`;
+  const blocker=execFileAsync(resolve(pgBin,'psql'),[...baseArgs,'-c',`set application_name='c03-blocker'; begin; select pg_advisory_xact_lock(hashtextextended('veltex-c0-accept:${context.version}',0)); select pg_sleep(2); commit;`],{encoding:'utf8'});
+  await new Promise(resolveDelay=>setTimeout(resolveDelay,150));
+  const racers=[
+    execFileAsync(resolve(pgBin,'psql'),[...baseArgs,'-c',call('b','c03-race-accept-0001','c03-racer-1')],{encoding:'utf8'}),
+    execFileAsync(resolve(pgBin,'psql'),[...baseArgs,'-c',call('c','c03-race-accept-0002','c03-racer-2')],{encoding:'utf8'}),
+  ];
+  let overlap=false;
+  for(let attempt=0;attempt<30 && !overlap;attempt++){
+    const waiting=Number(psql(['-c',`select count(*) from pg_stat_activity where application_name in ('c03-racer-1','c03-racer-2') and wait_event_type='Lock'`]).trim());
+    overlap=waiting===2;
+    if(!overlap) await new Promise(resolveDelay=>setTimeout(resolveDelay,50));
+  }
+  assert.equal(overlap,true,'both acceptance sessions must visibly overlap on the version advisory lock');
+  await blocker;
+  const race=await Promise.allSettled(racers);
   const winners=race.map((item,index)=>({item,index})).filter(({item})=>item.status==='fulfilled');
   assert.equal(winners.length,1,'exactly one concurrent acceptance must commit');
+  const losers=race.filter(item=>item.status==='rejected');
+  assert.equal(losers.length,1);
+  assert.match(String(losers[0].reason?.stderr||losers[0].reason),/proposal acceptance unavailable/);
   const winner=winners[0].index===0?{session:'b',key:'c03-race-accept-0001'}:{session:'c',key:'c03-race-accept-0002'};
   assert.match(winners[0].item.value.stdout,/"replayed": false/);
 
@@ -134,7 +256,8 @@ select 'C0_3_LATE_ROLLBACK_PASS';
       'consent_version',r.consent_version,'consent_text',r.consent_text,'selected_association_ids',to_jsonb(r.selected_association_ids),
       'selected_association_sha256s',to_jsonb(r.selected_association_sha256s),'selected_work_package_ids',to_jsonb(r.selected_work_package_ids),
       'full_offered_total_minor',r.full_offered_total_minor,'selected_subtotal_minor',r.selected_subtotal_minor,'currency',r.currency,
-      'package_set_sha256',r.package_set_sha256,'content_sha256',r.content_sha256,'rendered_sha256',r.rendered_sha256,'accepted_at',r.accepted_at))
+      'package_set_sha256',r.package_set_sha256,'content_sha256',r.content_sha256,'rendered_sha256',r.rendered_sha256,
+      'accepted_at_utc',to_char(r.accepted_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"')))
       from public.crm_proposal_acceptance_receipts r),
     'unrevoked_accept_tokens',(select count(*) from public.crm_customer_action_tokens t where t.proposal_version_id='${context.version}' and t.purpose='accept_proposal' and not exists(select 1 from public.crm_customer_action_token_revocations r where r.organization_id=t.organization_id and r.token_id=t.id))
   )::text`]).trim());

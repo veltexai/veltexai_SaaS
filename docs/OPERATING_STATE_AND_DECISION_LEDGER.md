@@ -4857,6 +4857,33 @@ After any material action, append or revise the relevant section with:
   external messages. C0.3 remains local, public acceptance remains disabled,
   and its status is not accepted until both independent verdicts are collected
   and reconciled.
+- **C0.3 FIRST CLAUDE REVIEW — `FAIL / REMEDIATION VERIFIED LOCALLY`:** Claude
+  matched the packet and bundle hashes and found no source-level release
+  blocker in the objects it could recover, but failed the gate because the
+  thin bundle depended on `b09e26d` which its last verified history did not
+  contain, the proof omitted required negative cases, and the race did not
+  prove overlap or pin the loser. Claude also found that an exact retry with an
+  extra unknown association ID could be misclassified after filtering and
+  that the canonical receipt timestamp serialization depended on the database
+  session time zone. Codex now validates the complete caller identifier set
+  before replay and hashes a fixed UTC microsecond timestamp. The disposable
+  PostgreSQL proof now pins wrong-purpose, revoked, expired-token,
+  expired-session, designated-approver, disabled-eligibility, unknown-ID,
+  real cross-version-association, stale-package, soft-deleted-opportunity,
+  terminal-opportunity and unbound
+  service-role transition negatives. It holds both racers behind the exact
+  advisory lock, observes both waiting in `pg_stat_activity`, and pins the
+  loser's uniform refusal. The first expanded-harness run failed because the
+  proof attempted to UPDATE the append-only token row to manufacture expiry;
+  the proof was corrected to arrange its disposable historical timestamps
+  with triggers disabled, then the complete harness passed. The
+  post-remediation 113-suite / 957-test / five-snapshot regression, static
+  contract, TypeScript, 76-version migration validation and diff hygiene pass.
+  A local production build first failed on sandbox DNS for Google Fonts, then without
+  build placeholders for Supabase; the documented non-secret local build
+  environment completed all 89 pages. No hosted or customer state changed.
+  Re-review requires a complete-history bundle; Cursor's first verdict remains
+  pending.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

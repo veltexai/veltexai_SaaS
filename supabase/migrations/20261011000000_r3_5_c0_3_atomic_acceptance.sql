@@ -243,6 +243,13 @@ begin
   from public.crm_proposal_version_packages a
   where a.organization_id=t.organization_id and a.proposal_version_id=t.proposal_version_id
     and a.id=any(p_selected_association_ids);
+  -- Validate the caller's complete identifier set before computing replay
+  -- identity. Otherwise an exact retry plus an unknown/foreign identifier
+  -- could collapse to the same filtered selection and be misclassified as an
+  -- exact replay.
+  if selected_count<>cardinality(p_selected_association_ids) then
+    raise exception 'proposal acceptance unavailable' using errcode='42501';
+  end if;
   request_hash:=public.crm_estimate_sha256(jsonb_build_object('session_id',s.id,'proposal_version_id',t.proposal_version_id,
     'selected_association_ids',to_jsonb(selected_ids),'signer_entered_name',trim(p_signer_entered_name),
     'signer_entered_email_normalized',normalized_email,'consent_version','veltex-c0-acceptance-v1','consent_text',consent_constant));
@@ -267,8 +274,11 @@ begin
     where p.organization_id=t.organization_id and p.id=any(selected_packages)
     order by p.id for update;
   select count(*),coalesce(sum(a.amount_minor),0) into offered_count,full_total from public.crm_proposal_version_packages a where a.organization_id=t.organization_id and a.proposal_version_id=t.proposal_version_id;
+  select ps.category into latest_state from public.crm_pipeline_stages ps
+    where ps.organization_id=o.organization_id and ps.id=o.stage_id;
   if v.id is null or o.id is null or v.opportunity_id<>o.id or s.organization_id<>t.organization_id
-     or selected_count<>cardinality(p_selected_association_ids) or offered_count<>v.package_count or full_total<>v.display_amount_minor
+     or latest_state in ('won','lost','disqualified','handed_off')
+     or offered_count<>v.package_count or full_total<>v.display_amount_minor
      or exists(select 1 from public.crm_proposal_version_packages a join public.crm_site_work_packages p on p.organization_id=a.organization_id and p.id=a.work_package_id
        where a.organization_id=t.organization_id and a.proposal_version_id=t.proposal_version_id and a.id=any(selected_ids)
          and (p.opportunity_id<>v.opportunity_id or p.property_id<>v.property_id or p.proposal_version_id is distinct from v.id or p.status not in ('estimated','proposed')))
@@ -282,7 +292,8 @@ begin
     'signer_entered_email_normalized',normalized_email,'consent_version','veltex-c0-acceptance-v1','consent_text',consent_constant,
     'selected_association_ids',to_jsonb(selected_ids),'selected_association_sha256s',to_jsonb(selected_hashes),'selected_work_package_ids',to_jsonb(selected_packages),
     'full_offered_total_minor',full_total,'selected_subtotal_minor',selected_total,'currency',v.currency,'package_set_sha256',v.package_set_sha256,
-    'content_sha256',v.content_sha256,'rendered_sha256',v.rendered_sha256,'accepted_at',accepted_time));
+    'content_sha256',v.content_sha256,'rendered_sha256',v.rendered_sha256,
+    'accepted_at_utc',to_char(accepted_time at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"')));
   insert into public.crm_proposal_acceptance_receipts(organization_id,proposal_version_id,opportunity_id,token_id,session_id,request_key,request_sha256,
     signer_entered_name,signer_entered_email_normalized,consent_version,consent_text,selected_association_ids,selected_association_sha256s,
     selected_work_package_ids,full_offered_total_minor,selected_subtotal_minor,currency,package_set_sha256,content_sha256,rendered_sha256,accepted_at,receipt_sha256)
