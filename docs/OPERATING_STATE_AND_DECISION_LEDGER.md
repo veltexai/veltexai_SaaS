@@ -4635,6 +4635,12 @@ After any material action, append or revise the relevant section with:
   loaded and no Supabase, Preview or production request was made. These two
   failed attempts are environment evidence, not proof that configuration is
   absent or that a hosted credential should be recreated.
+- **R3-5 C0.2 FULL APPLICATION REGRESSION — `PASS`:** The complete repository
+  Jest run passes 113 suites / 957 tests / 5 snapshots. Existing
+  `CatalogWorkbench` async `act(...)` console warnings and historical debug
+  logging remain non-failing test-hygiene observations; no C0.2 failure or new
+  regression appeared. This evidence is local only and does not replace the
+  independent or isolated-Preview gates.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

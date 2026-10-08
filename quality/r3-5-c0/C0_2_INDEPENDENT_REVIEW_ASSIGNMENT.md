@@ -46,8 +46,9 @@ ordered by severity and exact file/line evidence.
    controls, focus/readability, aria-live results, 44px targets, no horizontal
    overflow, recoverable message text on network failure.
 8. Evidence: 75-migration replay, PostgreSQL exchange/projection/response
-   proofs, focused tests, TypeScript, production build and recorded failed
-   environment attempts support their stated scope.
+   proofs, focused tests, full Jest regression (113 suites / 957 tests / 5
+   snapshots), TypeScript, production build and recorded failed environment
+   attempts support their stated scope.
 
 Call out any release blocker separately from test-depth or future C0.3/C0.4
 work. This review does not authorize Preview or production deployment.
