@@ -63,9 +63,11 @@ export default function ProposalRoomPage() {
   const requestFingerprint = useRef<string | null>(null);
   const acceptanceRequestKey = useRef<string | null>(null);
   const acceptanceFingerprint = useRef<string | null>(null);
+  const finalReviewHeading = useRef<HTMLHeadingElement | null>(null);
   const [selectedAssociationIds, setSelectedAssociationIds] = useState<string[]>([]);
   const [signerEnteredName, setSignerEnteredName] = useState('');
   const [signerEnteredEmail, setSignerEnteredEmail] = useState('');
+  const [signerEmailValid, setSignerEmailValid] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
   const [reviewingAcceptance, setReviewingAcceptance] = useState(false);
   const [accepting, setAccepting] = useState(false);
@@ -106,6 +108,10 @@ export default function ProposalRoomPage() {
   const selectedSubtotalMinor = useMemo(() => selectedPackages.reduce((total, item) =>
     total + item.amountMinor, 0), [selectedPackages]);
 
+  useEffect(() => {
+    if (reviewingAcceptance) finalReviewHeading.current?.focus();
+  }, [reviewingAcceptance]);
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!canRespond || !message.trim() || submitting) return;
@@ -135,7 +141,7 @@ export default function ProposalRoomPage() {
   async function submitAcceptance() {
     if (!room?.acceptanceEnabled || accepting || !consentChecked
         || selectedAssociationIds.length === 0 || !signerEnteredName.trim()
-        || !signerEnteredEmail.trim()) return;
+        || !signerEnteredEmail.trim() || !signerEmailValid) return;
     const orderedIds = room.packages.filter((item) => selectedAssociationIds.includes(item.associationId))
       .map((item) => item.associationId);
     const payload = { selectedAssociationIds: orderedIds,
@@ -262,16 +268,20 @@ export default function ProposalRoomPage() {
           <label className="block text-sm font-medium text-slate-800">Name you enter
             <input value={signerEnteredName} maxLength={160} autoComplete="name" onChange={(event) => { setSignerEnteredName(event.target.value); setReviewingAcceptance(false); }} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3" /></label>
           <label className="block text-sm font-medium text-slate-800">Email you enter
-            <input value={signerEnteredEmail} maxLength={320} type="email" autoComplete="email" onChange={(event) => { setSignerEnteredEmail(event.target.value); setReviewingAcceptance(false); }} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3" /></label>
+            <input value={signerEnteredEmail} maxLength={320} type="email" autoComplete="email" onChange={(event) => {
+              setSignerEnteredEmail(event.target.value);
+              setSignerEmailValid(event.currentTarget.validity.valid && Boolean(event.target.value.trim()));
+              setReviewingAcceptance(false);
+            }} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3" /></label>
           <p className="text-xs text-slate-600">The name and email are entered by you. Veltex does not verify your identity, and this is not an electronic-signature process.</p>
           <label className="flex min-h-11 items-start gap-3 rounded-lg border border-slate-300 p-3 text-sm text-slate-800">
             <input type="checkbox" className="mt-1" checked={consentChecked} onChange={(event) => { setConsentChecked(event.target.checked); setReviewingAcceptance(false); }} />
             <span>{room.consent.text}</span>
           </label>
-          <button type="button" disabled={!consentChecked || selectedAssociationIds.length===0 || !signerEnteredName.trim() || !signerEnteredEmail.trim()}
+          <button type="button" disabled={!consentChecked || selectedAssociationIds.length===0 || !signerEnteredName.trim() || !signerEmailValid}
             onClick={() => setReviewingAcceptance(true)} className="min-h-11 w-full rounded-lg bg-slate-950 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">Review acceptance</button>
         </> : <div className="rounded-xl border border-slate-300 p-4" aria-labelledby="final-review-heading">
-          <h3 id="final-review-heading" className="font-semibold text-slate-950">Final review</h3>
+          <h3 ref={finalReviewHeading} id="final-review-heading" tabIndex={-1} className="font-semibold text-slate-950 outline-none focus-visible:ring-2 focus-visible:ring-slate-600">Final review</h3>
           <p className="mt-2 text-sm text-slate-700">You are accepting {selectedPackages.length} selected package{selectedPackages.length===1?'':'s'} for {money(selectedSubtotalMinor,room.currency)} from a full offered total of {money(room.fullOfferedTotalMinor,room.currency)}.</p>
           <ul className="mt-3 space-y-1 text-sm text-slate-700">{selectedPackages.map((item) => <li key={item.associationId}>
             {item.title} — {money(item.amountMinor,item.currency)} · {basis(item.pricingBasis)}

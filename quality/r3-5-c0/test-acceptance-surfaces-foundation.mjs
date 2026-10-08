@@ -44,6 +44,10 @@ assert.match(page, /This records proposal\/package acceptance only/);
 assert.match(page, /Accepted package details/);
 assert.match(page, /Receipt SHA-256[\s\S]*break-all font-mono text-xs/,
   'receipt identifiers must wrap within the genuine 390px viewport');
+assert.match(page, /finalReviewHeading\.current\?\.focus\(\)/,
+  'final review must receive focus when it replaces the invoking control');
+assert.match(page, /event\.currentTarget\.validity\.valid/,
+  'client must not advance an invalid email to final review');
 assert.match(page, /acceptanceRequestKey/);
 assert.match(page, /min-h-11/);
 assert.match(boardRoute, /read_crm_acceptance_summaries/);

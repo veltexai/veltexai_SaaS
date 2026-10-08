@@ -5067,6 +5067,28 @@ After any material action, append or revise the relevant section with:
   `365d359` complementary verdict remains in progress and will be reconciled
   before any replacement packet or isolated-Preview action. No hosted state
   changed.
+- **C0.4 CURSOR VERDICT — `FAIL` AT EXACT TIP `365d359`; SOLE BLOCKER
+  REMEDIATED LOCALLY:** Cursor independently verified the corrected packet and
+  found no remaining authorization, privacy, atomicity, idempotency or receipt
+  integrity defect, but measured genuine 390px horizontal overflow: the
+  unbroken 64-character receipt SHA exceeded the viewport and was clipped.
+  Descendant commit `5968034` closes that blocker with explicit `min-w-0` and
+  `break-all` receipt identifier containment, while also closing Claude's
+  strict-boolean and selected-package presentation notes. The subsequent local
+  delta moves focus to the replacement Final review heading and prevents an
+  invalid email from advancing to final review. Focused Jest now passes four
+  tests; the static C0.4 contract, TypeScript and diff hygiene pass. The exact
+  `365d359` packet remains failed and must not be applied or deployed. A fresh
+  checksum-bound descendant packet and exact Claude/Cursor re-review are
+  required before isolated Preview. No hosted state changed.
+- **ROUTINE INDEPENDENT REVIEW SUBMISSION — `STANDING AUTHORIZATION`:** The
+  founder reaffirmed that exact, locally verified, secret-free, read-only build
+  packets may be submitted to Claude and Cursor without a repeated permission
+  prompt when the assignment forbids edits, hosted access, deployments,
+  credentials, paid actions, publication and external-customer contact. This
+  authorization does not extend to Preview or production mutations,
+  deployment, credential changes, paid actions, publication or messages to
+  external humans.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

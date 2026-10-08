@@ -52,7 +52,7 @@ describe('R3-5 C0.4 customer acceptance surface', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'I accept the selected packages.' }));
     expect(review).toBeEnabled();
     fireEvent.click(review);
-    expect(screen.getByRole('heading', { name: 'Final review' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Final review' })).toHaveFocus();
     expect(screen.getByText(/2 selected packages for \$325\.00/)).toBeInTheDocument();
     expect(screen.getByText('Kitchen service — $185.00 · per visit')).toBeInTheDocument();
     expect(screen.getByText('Bathroom service — $140.00 · one time')).toBeInTheDocument();
@@ -69,6 +69,17 @@ describe('R3-5 C0.4 customer acceptance surface', () => {
     expect(payload).toEqual({ selectedAssociationIds: [firstAssociation, secondAssociation],
       signerEnteredName: 'Taylor Customer', signerEnteredEmail: 'taylor@example.com' });
     expect(screen.getByText(/not an electronic signature/)).toBeInTheDocument();
+  });
+
+  it('keeps final review unavailable until the entered email is valid', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ data: room }) });
+    render(<ProposalRoomPage />);
+    await screen.findByRole('heading', { name: 'Proposal review' });
+    fireEvent.click(screen.getByRole('checkbox', { name: /Kitchen service/ }));
+    fireEvent.change(screen.getByLabelText('Name you enter'), { target: { value: 'Taylor Customer' } });
+    fireEvent.change(screen.getByLabelText('Email you enter'), { target: { value: 'not-an-email' } });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'I accept the selected packages.' }));
+    expect(screen.getByRole('button', { name: 'Review acceptance' })).toBeDisabled();
   });
 
   it('preserves the draft and reuses the same request key after an uncertain failure', async () => {
