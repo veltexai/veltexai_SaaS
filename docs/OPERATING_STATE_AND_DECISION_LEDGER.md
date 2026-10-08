@@ -4970,6 +4970,22 @@ After any material action, append or revise the relevant section with:
   access compiled, type-checked and generated all 89 static pages successfully.
   The existing Supabase Edge Runtime warnings remain non-blocking. No hosted
   state, secret or deployment was used.
+- **C0.3 FINAL CURSOR VERDICT — `PASS`:** Cursor recomputed the exact packet
+  and bundle hashes, materialized `ab9de94` from the complete-history bundle,
+  verified the prerequisite ancestry, and independently reran the disposable
+  PostgreSQL harness against that tip. The fresh 76-migration replay, negative
+  matrix, real revocation/acceptance overlap, same-proposal supersession,
+  two-session acceptance race, rollback and canonical-hash proof all passed.
+  Cursor found no remaining atomicity, authorization, privacy,
+  immutable-source, idempotency or receipt-integrity defect.
+- **C0.3 EXIT — `VERIFIED / COMPLETE`; C0.4 — `OPEN`:** Exact code tip
+  `ab9de9439cf7cbb418171fc59e1fb59f5edb411a` now has Claude `PASS WITH
+  NON-BLOCKING NOTES`, Cursor `PASS`, full local regression and production
+  build evidence. The bounded C0.4 acceptance UI/operator-surfacing dependency
+  gate is satisfied. C0.4 implementation may proceed from this descendant;
+  public acceptance remains disabled in all hosted environments until the
+  combined C0.0–C0.4 candidate clears its own exact review and isolated-Preview
+  gate.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
