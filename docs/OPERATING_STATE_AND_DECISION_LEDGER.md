@@ -4714,6 +4714,16 @@ After any material action, append or revise the relevant section with:
   hosted database, Preview or production state was used or changed. A new exact
   independent re-review packet is the next gate; C0.2 remains `IN PROGRESS /
   NOT PREVIEW-AUTHORIZED` until that review passes.
+- **C0.2 REMEDIATION RE-REVIEW PACKET — `VERIFIED / PENDING SUBMISSION`:**
+  Exact archive `/private/tmp/veltex-r3-5-c0-2-5f16c50-rereview.zip` has
+  SHA-256 `4c7dc8ab03db66eb786cef4a4d786f2fc33be6a99e50f45cd59b66d88f75f18d`.
+  Its complete-history bundle has SHA-256
+  `9e18dbd3dc82828b120bc1567df533da3c4fefdc4fe6cf78d02964a9ac30a9a8`
+  and binds exact review tip
+  `5f16c5070918cc05234d57ff6b3db975dd2bad91`. Bundle verification, archive
+  integrity and byte identity of the loose ledger and bounded assignment all
+  pass. The packet is read-only and excludes hosted access, credentials,
+  customer data, Preview and production changes.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
