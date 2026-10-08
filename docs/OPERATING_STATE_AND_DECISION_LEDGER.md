@@ -5030,6 +5030,17 @@ After any material action, append or revise the relevant section with:
   at tip `5071bf7` is `SUPERSEDED` and must not be reviewed, applied or
   deployed. A new exact candidate and packet are required. No external packet
   submission or hosted mutation occurred.
+- **C0.4 CORRECTED REVIEW PACKET — `PREPARED / SUBMISSION PENDING`:** The
+  allowlist-remediated exact tip is
+  `365d35944f4b5953bac24fcb767f43c04bf111a8`. Its complete-history bundle is
+  `/private/tmp/veltex-r3-5-c0-4-365d359-complete.bundle`, SHA-256
+  `b8b6f6ff31dd8c7e1067ee35e71012f6149e714ddd1fb33abe22e86514973c31`,
+  and `git bundle verify` confirms complete history. The corrected packet is
+  `/private/tmp/veltex-r3-5-c0-4-365d359-adversarial-review.zip`, SHA-256
+  `675312e99f889569413a4ae7959d79e0aacf68b0908a9f76164f576b927fcf37`;
+  archive integrity passes. The packet contains no credentials or customer data
+  and restricts review to read-only local verification. Claude/Cursor submission
+  and both exact verdicts remain pending. No hosted or production state changed.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
