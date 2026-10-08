@@ -4884,6 +4884,25 @@ After any material action, append or revise the relevant section with:
   environment completed all 89 pages. No hosted or customer state changed.
   Re-review requires a complete-history bundle; Cursor's first verdict remains
   pending.
+- **C0.3 REMEDIATED ADVERSARIAL RE-REVIEW — `SUBMITTED / PENDING VERDICTS`:**
+  Codex froze exact remediated tip
+  `37ad60d98b1087aec49b61d3d814ff42fac88c7f` into the complete-history packet
+  `/private/tmp/veltex-r3-5-c0-3-37ad60d-adversarial-review.zip`, SHA-256
+  `be99a6ec981cb9e694d61bb3dfdf0f6e24f529492938bea2a01cd62d7d77fa9f`.
+  Its complete-history bundle has SHA-256
+  `0269d3bcada6ac26a98cc73748718ac8b2f77f94c220e84789e3f82fdcb425e9`.
+  `git bundle verify` reports complete history, and an empty-repository fetch
+  independently recovered both exact tip `37ad60d` and prerequisite base
+  `b09e26d`. The packet contains the updated assignment, implementation audit,
+  ledger, test evidence and complete bundle; archive integrity and the embedded
+  bundle hash were reverified. The exact bounded read-only packet and hashes
+  were visibly submitted to Claude and to a fresh Cursor review lane on
+  2026-10-07 Pacific. Both assignments require adversarial verification of the
+  first-review remediation and forbid edits, hosted access, deployment,
+  credentials, paid actions, publication and customer contact. The original
+  Cursor lane remained visibly active, so it was not treated as a verdict and
+  was not allowed to delay the stronger independent gate. C0.3 remains local
+  and `PENDING` until both new verdicts are collected and reconciled.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
