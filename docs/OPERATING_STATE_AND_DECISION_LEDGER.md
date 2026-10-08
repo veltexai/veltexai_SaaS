@@ -4813,7 +4813,9 @@ After any material action, append or revise the relevant section with:
   customer-acceptance path requires the current transaction's just-created
   receipt. Public acceptance UI remains disabled. Static contract checks,
   TypeScript, 76-version migration-chain validation and the disposable full
-  PostgreSQL replay pass. The first PostgreSQL attempt failed only because the
+  PostgreSQL replay and complete 113-suite / 957-test / 5-snapshot Jest
+  regression pass. Existing React `act(...)` and diagnostic console output
+  remain non-failing test-hygiene observations. The first PostgreSQL attempt failed only because the
   sandbox prohibited SysV shared-memory creation; the authorized disposable
   local rerun passed. This is not yet the C0.3 exit: proper-subset/full-set,
   exact/changed replay, true two-session concurrency, forced late rollback,
