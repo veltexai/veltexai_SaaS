@@ -4582,6 +4582,21 @@ After any material action, append or revise the relevant section with:
   proof note without modifying the accepted publisher migration or any hosted
   state. C0.1 is now `COMPLETE / VERIFIED`; C0.2 is the next bounded local
   implementation lane. Production and Preview remain unchanged.
+- **R3-5 C0.2 FRAGMENT/SESSION APPLICATION BOUNDARY — LOCAL FOUNDATION
+  `PASS`:** The new non-legacy `/api/public/proposal-room` route family now has
+  a bounded fragment-token exchange, customer-safe room reader and append-only
+  question/change-request/decline response boundary. The server validates the
+  43-character fragment bearer, transmits only its domain-separated HMAC to
+  PostgreSQL, creates an independent 32-byte opaque session, stores that value
+  only in a `__Host-` HttpOnly + Secure + SameSite=Strict 15-minute cookie, and
+  sends only the session HMAC across later database calls. Uniform unavailable
+  responses and no-store/no-referrer/nosniff headers prevent token-state
+  enumeration and caching. Response writes require bounded strict input plus
+  an idempotency key. Focused contract and route suites pass (11 tests),
+  TypeScript passes, and diff hygiene is clean. This is application-boundary
+  foundation only: the private session/response migration, resolver projection,
+  browser fragment scrub, read/respond UI and full adversarial evidence remain
+  `IN PROGRESS`. No hosted system or production state was changed.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

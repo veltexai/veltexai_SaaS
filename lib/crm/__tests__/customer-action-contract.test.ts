@@ -9,6 +9,7 @@ import {
   C0_SESSION_COOKIE_NAME,
   C0_SESSION_COOKIE_OPTIONS,
   createCustomerActionToken,
+  createCustomerActionSession,
   customerActionTokenDigestSchema,
   customerActionTokenSchema,
   databaseTokenReferenceSchema,
@@ -37,6 +38,16 @@ describe('R3-5 C0 customer action boundary', () => {
     expect(customerActionTokenSchema.parse(first)).toBe(first);
     expect(first).toHaveLength(43);
     expect(first).not.toMatch(/[+/=]/);
+  });
+
+  it('creates an independent opaque session secret with a separate HMAC domain', () => {
+    const session = createCustomerActionSession();
+    const token = createCustomerActionToken();
+    expect(session).toHaveLength(43);
+    expect(session).not.toMatch(/[+/=]/);
+    expect(digestCustomerActionValue(session, SECRET, 'session')).toMatch(/^[a-f0-9]{64}$/);
+    expect(digestCustomerActionValue(token, SECRET, 'session'))
+      .not.toBe(digestCustomerActionToken(token, SECRET));
   });
 
   it('uses a versioned keyed digest and never accepts raw token fields at the database boundary', () => {

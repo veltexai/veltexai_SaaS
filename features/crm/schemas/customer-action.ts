@@ -10,3 +10,12 @@ export const customerActionRevokeSchema = z.object({
   reason: z.string().trim().min(1).max(240),
 }).strict();
 
+export const customerActionExchangeSchema = z.object({
+  token: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+}).strict();
+
+export const customerProposalResponseSchema = z.object({
+  kind: z.enum(['question', 'change_requested', 'declined']),
+  message: z.string().trim().min(1).max(2000),
+  displayName: z.string().trim().min(1).max(160).nullable().optional(),
+}).strict();

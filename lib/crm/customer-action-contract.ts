@@ -14,6 +14,7 @@ export const C0_ACTION_TOKEN_LIFETIME_DAYS = [1, 3, 7] as const;
 export const C0_ACTION_TOKEN_MAX_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
 export const C0_SESSION_COOKIE_NAME = '__Host-veltex_c0_session' as const;
 export const C0_SESSION_MAX_AGE_SECONDS = 15 * 60;
+export const C0_SESSION_TOKEN_BYTES = 32 as const;
 
 export const customerActionPurposeSchema = z.enum([
   'review_proposal',
@@ -68,6 +69,10 @@ export function createCustomerActionToken(): string {
   return randomBytes(C0_ACTION_TOKEN_BYTES).toString('base64url');
 }
 
+export function createCustomerActionSession(): string {
+  return randomBytes(C0_SESSION_TOKEN_BYTES).toString('base64url');
+}
+
 export function digestCustomerActionToken(rawToken: string, secret: string): string {
   const parsedToken = customerActionTokenSchema.parse(rawToken);
   return digestCustomerActionValue(parsedToken, secret, 'token');
@@ -76,7 +81,7 @@ export function digestCustomerActionToken(rawToken: string, secret: string): str
 export function digestCustomerActionValue(
   value: string,
   secret: string,
-  domain: 'token' | 'approver-email',
+  domain: 'token' | 'approver-email' | 'session' | 'network-bucket',
 ): string {
   if (Buffer.byteLength(secret, 'utf8') < 32) {
     throw new Error('Customer action token HMAC secret must be at least 32 bytes');
