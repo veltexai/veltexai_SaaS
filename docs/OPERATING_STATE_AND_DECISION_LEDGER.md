@@ -4724,7 +4724,7 @@ After any material action, append or revise the relevant section with:
   integrity and byte identity of the loose ledger and bounded assignment all
   pass. The packet is read-only and excludes hosted access, credentials,
   customer data, Preview and production changes.
-- **C0.2 RE-REVIEW SUBMISSION — `CLAUDE + CURSOR ACTIVE`:** The first
+- **C0.2 RE-REVIEW SUBMISSION — `CLAUDE COMPLETE / CURSOR ACTIVE`:** The first
   transmission attempt of the verified 92 MB full-history archive was rejected
   by Claude's UI as `Too large to send`; it was removed and not submitted.
   Codex produced a prerequisite-bound remediation delta from previously
@@ -4739,6 +4739,24 @@ After any material action, append or revise the relevant section with:
   to the existing Claude security-review chat and a fresh Cursor review lane;
   both entered active review. No hosted system, credential, customer data,
   Preview or production state was accessed or changed.
+- **C0.2 CLAUDE REMEDIATION RE-REVIEW — `PASS WITH NON-BLOCKING NOTES`:**
+  Claude recomputed the exact delta packet and bundle hashes, verified the
+  prerequisite base `3d49cc56fe897e634eb13ed289ac242999994827` and exact tip
+  `5f16c5070918cc05234d57ff6b3db975dd2bad91`, and confirmed that the prior
+  High fragment-capture blocker plus both Medium retention/idempotency findings
+  are closed. Claude found no remaining Critical, High or Medium release
+  blocker in the local candidate. Before hosted/public enablement, Claude
+  requires two operational hardening items: supplement the shared 600/minute
+  global exchange ceiling with a platform/WAF per-source or trusted-proxy
+  network bucket, and prove from rendered build/browser evidence that the
+  fragment guard precedes every external script while either sanitizing
+  PostHog or skipping telemetry on `/proposal-room`. Lower-severity hardening
+  notes cover broader Sentry token-boundary matching plus cycle protection,
+  same-origin/sessionStorage exposure and failure persistence, terminal/deleted
+  opportunity checks, deeper denial/privacy/cross-session browser proof and
+  response throttling. Cursor's independent operator/accessibility/regression
+  verdict remains `PENDING`. C0.2 therefore remains `IN PROGRESS / NOT
+  PREVIEW-AUTHORIZED`; no hosted state changed.
 - **FOUNDER STANDING REVIEW-PACKET AUTHORIZATION — `APPROVED`:** Routine
   read-only Veltex build-review packets may be sent to Claude and Cursor without
   another founder approval when the exact packet is locally verified, excludes
