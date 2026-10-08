@@ -4754,9 +4754,31 @@ After any material action, append or revise the relevant section with:
   notes cover broader Sentry token-boundary matching plus cycle protection,
   same-origin/sessionStorage exposure and failure persistence, terminal/deleted
   opportunity checks, deeper denial/privacy/cross-session browser proof and
-  response throttling. Cursor's independent operator/accessibility/regression
-  verdict remains `PENDING`. C0.2 therefore remains `IN PROGRESS / NOT
-  PREVIEW-AUTHORIZED`; no hosted state changed.
+  response throttling. At the time of this verdict Cursor's independent
+  operator/accessibility/regression review was still pending; its later verdict
+  is recorded immediately below. No hosted state changed.
+- **C0.2 CURSOR REMEDIATION RE-REVIEW — `PASS WITH NON-BLOCKING NOTES`:**
+  Cursor independently recomputed packet SHA-256
+  `65b4207d9751f8d37a00c0c1908bb97b26d3ec93c0120b857fba5533dfd904d1`
+  and bundle SHA-256
+  `ea37208d18f522c91e3f75dea13d26c673868c12df0a9fd311aa8c7f2f253594`,
+  verified prerequisite base `3d49cc56fe897e634eb13ed289ac242999994827`,
+  exact tip `5f16c5070918cc05234d57ff6b3db975dd2bad91`, clean delta hygiene and
+  byte-identical loose assignment/ledger evidence. Cursor found the prior High
+  and Medium blockers closed and no new release blocker. Its independent
+  390px exercise found no horizontal overflow and at least 44px controls.
+  Cursor retained four Low notes: the shared 600/minute ceiling temporarily
+  denies legitimate exchange traffic after exhaustion; redaction/test coverage
+  is narrower than every possible token context; removing the session token
+  before exchange completion makes an exchange network failure terminal for
+  that link; and disabled acceptance consent copy remains present in the data
+  projection but is not rendered. Cursor did not re-execute the PostgreSQL or
+  Jest harnesses and explicitly relied on the packet's recorded passing
+  evidence for those checks. The independent Claude/Cursor C0.2 review gate is
+  now satisfied. This records review completion only: C0.2 remains local and
+  `NOT PREVIEW-AUTHORIZED`, with Claude's pre-public hardening conditions still
+  binding and no hosted state changed. The dependency gate on bounded local
+  C0.3 implementation is open.
 - **FOUNDER STANDING REVIEW-PACKET AUTHORIZATION — `APPROVED`:** Routine
   read-only Veltex build-review packets may be sent to Claude and Cursor without
   another founder approval when the exact packet is locally verified, excludes
