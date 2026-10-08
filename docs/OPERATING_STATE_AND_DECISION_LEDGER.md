@@ -4913,6 +4913,28 @@ After any material action, append or revise the relevant section with:
   not enable public acceptance, modify a hosted database or authorize a
   deployment. Product implementation remains gated on independent C0.3 exit
   verdicts, so the exact reviewed C0.3 code tip is unchanged.
+- **C0.3 FIRST CURSOR REVIEW — `FAIL / TWO BLOCKERS REMEDIATED LOCALLY`:**
+  Cursor verified the original packet/bundle hashes, prerequisite and exact
+  `b18a49b` tip, then found two source-level release blockers: acceptance did
+  not share the issue/revoke token-set advisory lock, leaving an overlapping
+  revocation race; and it did not reject a higher immutable version number for
+  the same proposal. Codex added the shared organization/version token-set lock
+  before live eligibility/revocation reads, matched the publisher's
+  opportunity-then-proposal lock boundary, and rejects any newer version for
+  that proposal. The disposable PostgreSQL proof now holds a real revoke
+  transaction open, observes acceptance waiting on its lock, commits the
+  revocation and pins the uniform loser; it also installs a rollback-only
+  superseding v2 version and pins refusal. The real cross-version association
+  fixture now belongs to a separate proposal so it exercises the intended
+  identifier boundary rather than the supersession check. The expanded C0.3
+  static contract and fresh 76-migration PostgreSQL harness pass. The full
+  repository regression suite also passes at 113 suites / 957 tests / 5
+  snapshots, TypeScript passes with no emit, migration validation reports 76
+  unique executable versions and `git diff --check` is clean. The first
+  sandboxed harness attempt failed only because SysV shared memory was denied;
+  the authorized local rerun passed. No hosted state changed. The previously
+  submitted `37ad60d` re-review packet is now `SUPERSEDED` by this remediation;
+  a new exact packet and independent verdicts are required.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

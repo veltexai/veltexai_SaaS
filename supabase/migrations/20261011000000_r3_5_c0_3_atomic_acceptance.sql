@@ -231,6 +231,12 @@ begin
      or t.proposal_version_id<>s.proposal_version_id then
     raise exception 'proposal acceptance unavailable' using errcode='42501';
   end if;
+  -- Serialize against issue/revoke for this version before reading current
+  -- eligibility. A token row SHARE lock does not conflict with a revocation
+  -- insert, so the shared token-set advisory lock is the actual revocation
+  -- boundary.
+  perform pg_advisory_xact_lock(hashtextextended(concat_ws(':',
+    'veltex-r3-5-c0-token-set',t.organization_id::text,t.proposal_version_id::text),0));
   perform pg_advisory_xact_lock(hashtextextended('veltex-c0-accept:'||t.proposal_version_id::text,0));
   select r.* into existing from public.crm_proposal_acceptance_receipts r where r.session_id=s.id and r.request_key=p_request_key;
   perform a.id from public.crm_proposal_version_packages a
@@ -270,6 +276,11 @@ begin
   end if;
   select x.* into v from public.crm_proposal_versions x where x.organization_id=t.organization_id and x.id=t.proposal_version_id and x.schema_version='crm_proposal_version.v2' for update;
   select x.* into o from public.crm_opportunities x where x.organization_id=t.organization_id and x.id=t.opportunity_id and x.deleted_at is null for update;
+  -- Publishing takes opportunity then proposal locks. Match that order so a
+  -- concurrent publisher either commits first and is observed as superseding,
+  -- or waits until this acceptance makes the opportunity terminal.
+  perform 1 from public.proposals p
+    where p.organization_id=t.organization_id and p.id=v.proposal_id for update;
   perform p.id from public.crm_site_work_packages p
     where p.organization_id=t.organization_id and p.id=any(selected_packages)
     order by p.id for update;
@@ -278,6 +289,9 @@ begin
     where ps.organization_id=o.organization_id and ps.id=o.stage_id;
   if v.id is null or o.id is null or v.opportunity_id<>o.id or s.organization_id<>t.organization_id
      or latest_state in ('won','lost','disqualified','handed_off')
+     or exists(select 1 from public.crm_proposal_versions newer
+       where newer.organization_id=v.organization_id and newer.proposal_id=v.proposal_id
+         and newer.version_number>v.version_number)
      or offered_count<>v.package_count or full_total<>v.display_amount_minor
      or exists(select 1 from public.crm_proposal_version_packages a join public.crm_site_work_packages p on p.organization_id=a.organization_id and p.id=a.work_package_id
        where a.organization_id=t.organization_id and a.proposal_version_id=t.proposal_version_id and a.id=any(selected_ids)

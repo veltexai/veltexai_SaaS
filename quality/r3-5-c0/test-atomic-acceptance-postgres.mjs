@@ -52,13 +52,22 @@ try{
   // cross-version association rather than only a random UUID.
   psqlText(`
 set session_replication_role=replica;
+insert into public.proposals(id,organization_id,user_id,title,client_name,client_email,
+  contact_phone,service_location,facility_size,service_type,service_frequency,
+  generated_content,service_scope,crm_opportunity_id,crm_customer_id,crm_property_id)
+select 'a3000000-0000-4000-8000-000000000003',organization_id,user_id,
+  title||' foreign',client_name,client_email,contact_phone,service_location,
+  facility_size,service_type,service_frequency,generated_content,service_scope,
+  crm_opportunity_id,crm_customer_id,crm_property_id
+from public.proposals where id='93000000-0000-4000-8000-000000000004';
 insert into public.crm_proposal_versions(
  id,organization_id,proposal_id,opportunity_id,property_id,work_package_id,
  estimate_run_id,version_number,request_key,content_snapshot,rendered_content,
  display_amount_minor,currency,pricing_basis,content_sha256,rendered_sha256,
  estimate_input_sha256,estimate_output_sha256,schema_version,created_by,
  created_at,package_count,package_set_sha256)
-select 'a3000000-0000-4000-8000-000000000001',organization_id,proposal_id,
+select 'a3000000-0000-4000-8000-000000000001',organization_id,
+ 'a3000000-0000-4000-8000-000000000003',
  opportunity_id,property_id,null,null,version_number+100,'c03-foreign-version',
  content_snapshot,rendered_content,display_amount_minor,currency,null,
  content_sha256,rendered_sha256,estimate_input_sha256,estimate_output_sha256,
@@ -151,6 +160,22 @@ insert into public.crm_proposal_action_eligibility_events(organization_id,propos
 values('${context.org}','${context.version}','93000000-0000-4000-8000-000000000003','disabled','negative proof','11111111-1111-4111-8111-111111111111',clock_timestamp()+interval '1 second');`});
   expectUnavailable({label:'unknown-association',digit:'a',session:'4',ids:`array['${context.associations[0]}'::uuid,'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid]`});
   expectUnavailable({label:'cross-version-association',digit:'e',session:'8',ids:`array['${context.associations[0]}'::uuid,'a3000000-0000-4000-8000-000000000002'::uuid]`});
+  expectUnavailable({label:'superseded-version',digit:'f',session:'9',setup:`
+set local session_replication_role=replica;
+insert into public.crm_proposal_versions(
+ id,organization_id,proposal_id,opportunity_id,property_id,work_package_id,
+ estimate_run_id,version_number,request_key,content_snapshot,rendered_content,
+ display_amount_minor,currency,pricing_basis,content_sha256,rendered_sha256,
+ estimate_input_sha256,estimate_output_sha256,schema_version,created_by,
+ created_at,package_count,package_set_sha256)
+select 'a4000000-0000-4000-8000-000000000001',organization_id,proposal_id,
+ opportunity_id,property_id,null,null,version_number+200,'c03-superseding-version',
+ content_snapshot,rendered_content,display_amount_minor,currency,null,
+ content_sha256,rendered_sha256,estimate_input_sha256,estimate_output_sha256,
+ schema_version,created_by,clock_timestamp()+interval '1 second',package_count,
+ package_set_sha256
+from public.crm_proposal_versions where id='${context.version}';
+set local session_replication_role=origin;`});
   expectUnavailable({label:'stale-package',digit:'b',session:'5',setup:`
 update public.crm_site_work_packages set status='declined' where id='93000000-0000-4000-8000-000000000005';`});
   expectUnavailable({label:'soft-deleted-opportunity',digit:'c',session:'6',setup:`
@@ -186,6 +211,34 @@ select * from public.command_crm_issue_customer_action_token_internal(
  '11111111-1111-4111-8111-111111111111','${context.org}','${context.version}','accept_proposal',repeat('${digit}',64),1,null,1,'${key}',repeat('${digit}',64));
 select public.exchange_crm_customer_action_token_internal(repeat('${digit}',64),1,repeat('${session}',64));
 commit;`);
+  seed('f','9','c03-revoke-race-token');
+  const revokeToken=psql(['-c',`select id from public.crm_customer_action_tokens where token_hmac_sha256=repeat('f',64)`]).trim();
+  const revokeBlocker=execFileAsync(resolve(pgBin,'psql'),[...baseArgs,'-c',`
+set application_name='c03-revoke-blocker'; begin; set local role service_role;
+select * from public.command_crm_revoke_customer_action_token_internal(
+ '11111111-1111-4111-8111-111111111111','${context.org}','${context.version}',
+ '${revokeToken}','overlap revocation proof','c03-revoke-race-request',repeat('f',64));
+select pg_sleep(2); commit;`],{encoding:'utf8'});
+  await new Promise(resolveDelay=>setTimeout(resolveDelay,150));
+  const racedAccept=execFileAsync(resolve(pgBin,'psql'),[...baseArgs,'-c',
+    `set application_name='c03-revocation-racer'; set role service_role;
+select public.command_crm_accept_proposal_version_internal(repeat('9',64),array['${context.associations[0]}'::uuid],
+ 'Revocation Race','revoke-race@example.test','c03-revoke-race-accept')::text;`],{encoding:'utf8'});
+  let revocationOverlap=false;
+  for(let attempt=0;attempt<30 && !revocationOverlap;attempt++){
+    revocationOverlap=Number(psql(['-c',`select count(*) from pg_stat_activity where application_name='c03-revocation-racer' and wait_event_type='Lock'`]).trim())===1;
+    if(!revocationOverlap) await new Promise(resolveDelay=>setTimeout(resolveDelay,50));
+  }
+  assert.equal(revocationOverlap,true,'acceptance must visibly wait on the token-set lock while revocation is uncommitted');
+  await revokeBlocker;
+  const racedAcceptResult=await Promise.allSettled([racedAccept]);
+  assert.equal(racedAcceptResult[0].status,'rejected','acceptance must fail after the overlapping revocation commits');
+  assert.match(String(racedAcceptResult[0].reason?.stderr||racedAcceptResult[0].reason),/proposal acceptance unavailable/);
+  psqlText(`insert into public.crm_proposal_action_eligibility_events(
+    organization_id,proposal_version_id,opportunity_id,state,reason,created_by)
+  values('${context.org}','${context.version}','93000000-0000-4000-8000-000000000003',
+    'enabled','restore after disposable overlap proof','11111111-1111-4111-8111-111111111111');
+  select 'C0_3_REVOCATION_OVERLAP_PASS';`,'revocation-overlap-restore.sql');
   seed('2','b','c03-race-token-0001');
   seed('3','c','c03-race-token-0002');
 

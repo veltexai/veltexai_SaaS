@@ -21,6 +21,10 @@ assert.ok(sql.indexOf('if existing.id is not null then')<sql.indexOf('or latest_
   'exact replay must be checked before success-time revocation and eligibility changes');
 assert.ok(sql.indexOf("if selected_count<>cardinality(p_selected_association_ids) then")<sql.indexOf('if existing.id is not null then'),
   'the complete caller identifier set must be validated before exact replay');
+assert.ok(sql.indexOf("'veltex-r3-5-c0-token-set',t.organization_id::text,t.proposal_version_id::text")<sql.indexOf("latest_state is distinct from 'enabled'"),
+  'acceptance must serialize with token issue/revocation before live eligibility is checked');
+assert.match(sql,/perform 1 from public\.proposals p[\s\S]*for update;[\s\S]*newer\.version_number>v\.version_number/,
+  'acceptance must lock the proposal and reject any superseding version');
 assert.match(sql,/'accepted_at_utc',to_char\(accepted_time at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS\.US"Z"'\)/,
   'receipt time must have a timezone-independent canonical representation');
 console.log('C0.3 atomic acceptance static contract passes');

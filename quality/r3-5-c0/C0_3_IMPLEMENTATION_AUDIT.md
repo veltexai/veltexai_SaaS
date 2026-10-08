@@ -99,6 +99,29 @@ The re-review packet must use a complete-history bundle so an independent
 reviewer can materialize the exact tip without possessing an unstated prior
 base.
 
+## Cursor first-review remediation
+
+Cursor independently found two release-blocking concurrency/state gaps that
+were not identified in the first Claude pass:
+
+- acceptance took only a token-row `FOR SHARE` lock, which does not conflict
+  with a revocation insert, so an overlapping revocation could commit after the
+  command's live check but before its acceptance commit; and
+- the command verified the selected immutable version but did not reject a
+  higher version number for the same proposal, allowing a superseded version
+  with still-pointing packages to win the opportunity.
+
+Acceptance now takes the same organization/version token-set advisory lock as
+issue/revoke before reading eligibility or revocation state. A disposable
+two-process proof holds that lock inside a real revoke command, observes the
+acceptance process waiting, commits revocation, and pins the acceptance
+process's uniform refusal. Acceptance also matches the publish lock order by
+locking the opportunity and proposal, then rejects any higher version number
+for that proposal. The proof installs a rollback-only higher v2 version and
+pins its refusal. A separate-proposal v2 fixture preserves the real
+cross-version-association negative without accidentally superseding the target
+version.
+
 ## Required executable evidence
 
 - Fresh full migration replay plus owner-matrix/definer/grant assertions.
