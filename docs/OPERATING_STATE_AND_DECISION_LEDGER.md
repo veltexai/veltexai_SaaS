@@ -4678,6 +4678,22 @@ After any material action, append or revise the relevant section with:
   NON-BLOCKING NOTES` or `FAIL`. The submission forbids Preview, production,
   credentials, customer data and edits; Claude visibly entered active review.
   The `1fc2d79` and `26ae07d` packet candidates remain `SUPERSEDED / NOT SENT`.
+- **C0.2 CLAUDE INDEPENDENT REVIEW — `FAIL` / REMEDIATION REQUIRED:** Claude
+  verified packet SHA-256 `ed650c22…bde6386`, bundle SHA-256
+  `cec0943f…b6f677cf9e`, complete history and exact tip `3d49cc5`. The database
+  exchange boundary passed: unknown and known-but-denied exchanges consume a
+  durable HMAC-only bucket, denial returns `null` without rollback, private
+  projection/response/grant boundaries hold, the real mixed-scope proof closes
+  N1 and acceptance remains absent. One High release blocker remains: client
+  Sentry initializes before the React effect scrubs `location.hash`, so its
+  history instrumentation may capture the raw bearer in a navigation
+  breadcrumb or later event. Medium findings require bounded rate-bucket
+  retention/platform throttling before public exposure and reuse of one
+  idempotency key across ambiguous UI retries. Low notes cover terminal/deleted
+  opportunity rechecks, review-only wording, deeper privacy/cross-session
+  proof, response throttling and duplicate React keys. C0.2 remains
+  `IN PROGRESS / NOT PREVIEW-AUTHORIZED`; remediation proceeds locally without
+  changing hosted state.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
