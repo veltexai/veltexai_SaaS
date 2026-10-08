@@ -5004,6 +5004,19 @@ After any material action, append or revise the relevant section with:
   build pass. No hosted state changed. Exact review packet freeze and
   independent Claude/Cursor review remain before any separately authorized
   isolated-Preview desktop/390px acceptance gate; production remains excluded.
+- **C0.4 EXACT REVIEW PACKET — `PREPARED / SUBMISSION PENDING`:** Codex froze
+  exact tip `5071bf7e7a7208f8eaca44e971d1986897e091b4` into complete-history bundle
+  `/private/tmp/veltex-r3-5-c0-4-5071bf7-complete.bundle`, SHA-256
+  `bb835de0df1014d8b216844df74814f0f3f73201594674645be1126895eacb08`.
+  `git bundle verify` reports complete history. The bounded packet
+  `/private/tmp/veltex-r3-5-c0-4-5071bf7-adversarial-review.zip`, SHA-256
+  `94ea7db64018160b6f3bc2d4a4d338a02d1a48825da39fdf18bec67d4f39ac30`,
+  passed archive integrity validation and contains the review assignment,
+  implementation audit, test evidence, ledger, manifest and exact bundle.
+  It contains no credentials or customer data and explicitly forbids edits,
+  hosted access, deployment, production, paid actions, publication and
+  external-human contact. External Claude/Cursor submission has not yet been
+  claimed; both exact independent verdicts remain pending.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
