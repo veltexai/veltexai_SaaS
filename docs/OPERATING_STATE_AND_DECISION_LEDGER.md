@@ -4724,6 +4724,16 @@ After any material action, append or revise the relevant section with:
   integrity and byte identity of the loose ledger and bounded assignment all
   pass. The packet is read-only and excludes hosted access, credentials,
   customer data, Preview and production changes.
+- **C0.3 DEPENDENCY AUDIT — `PREPARED / IMPLEMENTATION GATED`:** While the
+  C0.2 packet awaits external re-review submission, the next local increment
+  was mapped in `quality/r3-5-c0/C0_3_IMPLEMENTATION_AUDIT.md`. The audit binds
+  atomic acceptance to the private session HMAC and immutable v2 association
+  rows, identifies the accepted R3-1 manual-win trigger as requiring a narrow
+  receipt-bound private transition rather than a weakened public stage path,
+  freezes the additive append-only receipt/locking/idempotency/outbox shape and
+  enumerates proper-subset, concurrency and rollback evidence. It does not add
+  acceptance code, expose a route or change hosted state. C0.3 implementation
+  remains gated on independent Claude and Cursor C0.2 exit verdicts.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
