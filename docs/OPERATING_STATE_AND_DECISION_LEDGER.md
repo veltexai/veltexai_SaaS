@@ -4733,7 +4733,12 @@ After any material action, append or revise the relevant section with:
   freezes the additive append-only receipt/locking/idempotency/outbox shape and
   enumerates proper-subset, concurrency and rollback evidence. It does not add
   acceptance code, expose a route or change hosted state. C0.3 implementation
-  remains gated on independent Claude and Cursor C0.2 exit verdicts.
+  remains gated on independent Claude and Cursor C0.2 exit verdicts. A bounded
+  future review template now fixes the private authority, immutable-subset,
+  canonical-receipt, one-transaction, receipt-bound stage transition, true
+  concurrency, append-only/privacy and truthfulness verdict criteria before
+  implementation; it explicitly cannot be reviewed until an exact packet
+  manifest supplies an implementation tip.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
