@@ -5049,6 +5049,24 @@ After any material action, append or revise the relevant section with:
   retry, Board/List equivalence, viewer-redaction and privacy checks. Both exact
   verdicts remain pending. No Preview, deployment, hosted-data or production
   state changed.
+- **C0.4 CLAUDE VERDICT — `PASS WITH NON-BLOCKING NOTES`; DESCENDANT
+  HARDENING VERIFIED LOCALLY:** Claude independently recomputed packet SHA-256
+  `675312e99f889569413a4ae7959d79e0aacf68b0908a9f76164f576b927fcf37`,
+  bundle SHA-256
+  `b8b6f6ff31dd8c7e1067ee35e71012f6149e714ddd1fb33abe22e86514973c31`,
+  verified complete history, accepted C0.3 ancestry and exact tip `365d359`,
+  then returned `PASS WITH NON-BLOCKING NOTES`. It found no C0.4 defect in
+  authorization, privacy, atomicity, idempotency or receipt integrity. Codex
+  nevertheless closed its actionable presentation notes on descendant commit
+  `5968034`: `acceptanceEnabled` now coalesces to a strict boolean; final review
+  and printable receipt identify selected packages in stored order; and the
+  receipt UUID/SHA use explicit anywhere wrapping for 390px safety. The full
+  regression passes 114 suites / 964 tests / five snapshots; focused tests,
+  TypeScript, static contract, 77-version migration validation, both disposable
+  PostgreSQL matrices, production build and diff hygiene pass. Cursor's exact
+  `365d359` complementary verdict remains in progress and will be reconciled
+  before any replacement packet or isolated-Preview action. No hosted state
+  changed.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
