@@ -19,6 +19,7 @@ for (const fragment of [
   'create or replace function public.read_crm_customer_proposal_room_internal',
   'create or replace function public.read_crm_acceptance_summaries',
   "'acceptanceEnabled',acceptance_enabled",
+  "acceptance_enabled:=coalesce(token_row.purpose='accept_proposal'",
   "'receipt',case when receipt_row.id is null then null",
   "c.role in ('owner','admin','viewer')",
   "c.role='estimator'",
@@ -40,6 +41,9 @@ assert.match(route, /p_session_hmac_sha256: digestCustomerActionValue/);
 assert.doesNotMatch(route, /console\.(?:log|warn|error)/);
 assert.match(page, /Nothing is selected automatically/);
 assert.match(page, /This records proposal\/package acceptance only/);
+assert.match(page, /Accepted package details/);
+assert.match(page, /Receipt SHA-256[\s\S]*break-all font-mono text-xs/,
+  'receipt identifiers must wrap within the genuine 390px viewport');
 assert.match(page, /acceptanceRequestKey/);
 assert.match(page, /min-h-11/);
 assert.match(boardRoute, /read_crm_acceptance_summaries/);

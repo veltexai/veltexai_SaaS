@@ -51,13 +51,13 @@ begin
         on ps.organization_id=o.organization_id and ps.id=o.stage_id
       where o.organization_id=token_row.organization_id
         and o.id=token_row.opportunity_id and o.deleted_at is null;
-    acceptance_enabled:=token_row.purpose='accept_proposal'
+    acceptance_enabled:=coalesce(token_row.purpose='accept_proposal'
       and latest_eligibility='enabled'
       and stage_category not in ('won','lost','disqualified','handed_off')
       and not exists(select 1 from public.crm_proposal_versions newer
         where newer.organization_id=version_row.organization_id
           and newer.proposal_id=version_row.proposal_id
-          and newer.version_number>version_row.version_number);
+          and newer.version_number>version_row.version_number),false);
   end if;
 
   select o.name into org_name from public.organizations o

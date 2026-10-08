@@ -54,9 +54,13 @@ describe('R3-5 C0.4 customer acceptance surface', () => {
     fireEvent.click(review);
     expect(screen.getByRole('heading', { name: 'Final review' })).toBeInTheDocument();
     expect(screen.getByText(/2 selected packages for \$325\.00/)).toBeInTheDocument();
+    expect(screen.getByText('Kitchen service — $185.00 · per visit')).toBeInTheDocument();
+    expect(screen.getByText('Bathroom service — $140.00 · one time')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Accept selected packages' }));
     expect(await screen.findByRole('article', { name: 'Proposal acceptance receipt' }))
       .toBeInTheDocument();
+    expect(screen.getByText('Kitchen service — $185.00 · per visit')).toBeInTheDocument();
+    expect(screen.getByText('Bathroom service — $140.00 · one time')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/public/proposal-room/acceptance',
       expect.objectContaining({ method: 'POST', headers: expect.objectContaining({
         'idempotency-key': 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',

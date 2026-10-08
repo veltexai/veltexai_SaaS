@@ -101,6 +101,8 @@ export default function ProposalRoomPage() {
   const canRespond = useMemo(() => room?.allowedActions.includes(kind) ?? false, [room, kind]);
   const selectedPackages = useMemo(() => room?.packages.filter((item) =>
     selectedAssociationIds.includes(item.associationId)) ?? [], [room, selectedAssociationIds]);
+  const receiptPackages = useMemo(() => !room?.receipt ? [] : room.packages.filter((item) =>
+    room.receipt?.selectedAssociationIds.includes(item.associationId)), [room]);
   const selectedSubtotalMinor = useMemo(() => selectedPackages.reduce((total, item) =>
     total + item.amountMinor, 0), [selectedPackages]);
 
@@ -230,11 +232,16 @@ export default function ProposalRoomPage() {
           <div><dt className="font-medium">Accepted</dt><dd>{new Date(room.receipt.acceptedAt).toLocaleString()}</dd></div>
           <div><dt className="font-medium">Proposal version</dt><dd>{room.versionNumber}</dd></div>
           <div><dt className="font-medium">Selected packages</dt><dd>{room.receipt.selectedAssociationIds.length}</dd></div>
+          <div className="sm:col-span-2"><dt className="font-medium">Accepted package details</dt><dd>
+            <ul className="mt-1 space-y-1">{receiptPackages.map((item) => <li key={item.associationId}>
+              {item.title} — {money(item.amountMinor,item.currency)} · {basis(item.pricingBasis)}
+            </li>)}</ul>
+          </dd></div>
           <div><dt className="font-medium">Selected subtotal</dt><dd>{money(room.receipt.selectedSubtotalMinor,room.receipt.currency)}</dd></div>
           <div><dt className="font-medium">Full offered total</dt><dd>{money(room.receipt.fullOfferedTotalMinor,room.receipt.currency)}</dd></div>
           <div><dt className="font-medium">Consent version</dt><dd>{room.receipt.consentVersion ?? room.consent.version}</dd></div>
-          <div className="sm:col-span-2"><dt className="font-medium">Receipt reference</dt><dd className="font-mono text-xs">{room.receipt.receiptId}</dd></div>
-          <div className="sm:col-span-2"><dt className="font-medium">Receipt SHA-256</dt><dd className="font-mono text-xs">{room.receipt.receiptSha256}</dd></div>
+          <div className="min-w-0 sm:col-span-2"><dt className="font-medium">Receipt reference</dt><dd className="break-all font-mono text-xs">{room.receipt.receiptId}</dd></div>
+          <div className="min-w-0 sm:col-span-2"><dt className="font-medium">Receipt SHA-256</dt><dd className="break-all font-mono text-xs">{room.receipt.receiptSha256}</dd></div>
         </dl>
         <p className="mt-3 text-xs text-emerald-900">This records proposal/package acceptance only. It is not an electronic signature, identity verification, payment, scheduling, or service-delivery confirmation.</p>
         <button type="button" onClick={() => window.print()} className="mt-4 min-h-11 rounded-lg border border-emerald-800 bg-white px-4 py-2 font-medium text-emerald-950 print:hidden">Print receipt</button>
@@ -266,6 +273,9 @@ export default function ProposalRoomPage() {
         </> : <div className="rounded-xl border border-slate-300 p-4" aria-labelledby="final-review-heading">
           <h3 id="final-review-heading" className="font-semibold text-slate-950">Final review</h3>
           <p className="mt-2 text-sm text-slate-700">You are accepting {selectedPackages.length} selected package{selectedPackages.length===1?'':'s'} for {money(selectedSubtotalMinor,room.currency)} from a full offered total of {money(room.fullOfferedTotalMinor,room.currency)}.</p>
+          <ul className="mt-3 space-y-1 text-sm text-slate-700">{selectedPackages.map((item) => <li key={item.associationId}>
+            {item.title} — {money(item.amountMinor,item.currency)} · {basis(item.pricingBasis)}
+          </li>)}</ul>
           <p className="mt-2 text-sm text-slate-700">This records proposal/package acceptance only. It does not create an electronic signature, verify identity, take payment, schedule work, or confirm service delivery.</p>
           <div className="mt-4 flex flex-wrap gap-3"><button type="button" onClick={() => setReviewingAcceptance(false)} className="min-h-11 rounded-lg border border-slate-400 px-4 py-2 font-medium">Back</button>
             <button type="button" disabled={accepting} onClick={() => void submitAcceptance()} className="min-h-11 rounded-lg bg-slate-950 px-4 py-2 font-medium text-white disabled:opacity-50">{accepting?'Recording…':'Accept selected packages'}</button></div>
