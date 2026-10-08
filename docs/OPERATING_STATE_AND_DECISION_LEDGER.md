@@ -4783,7 +4783,10 @@ After any material action, append or revise the relevant section with:
   read-only Veltex build-review packets may be sent to Claude and Cursor without
   another founder approval when the exact packet is locally verified, excludes
   secrets and customer data, and the assignment forbids edits and hosted
-  actions. This does not authorize deployments, hosted mutations, credentials,
+  actions. These routine independent-review gates must not be paused awaiting a
+  repeated approval; the coordinator should submit the verified packet and keep
+  non-conflicting local work moving. This does not authorize deployments,
+  hosted mutations, credentials,
   paid actions, publication, production changes, or customer/external-human
   communication. The active coordination monitor now preserves this rule.
 - **C0.3 DEPENDENCY AUDIT — `PREPARED / IMPLEMENTATION GATED`:** While the
@@ -5030,7 +5033,7 @@ After any material action, append or revise the relevant section with:
   at tip `5071bf7` is `SUPERSEDED` and must not be reviewed, applied or
   deployed. A new exact candidate and packet are required. No external packet
   submission or hosted mutation occurred.
-- **C0.4 CORRECTED REVIEW PACKET — `PREPARED / SUBMISSION PENDING`:** The
+- **C0.4 CORRECTED REVIEW PACKET — `SUBMITTED / VERDICTS PENDING`:** The
   allowlist-remediated exact tip is
   `365d35944f4b5953bac24fcb767f43c04bf111a8`. Its complete-history bundle is
   `/private/tmp/veltex-r3-5-c0-4-365d359-complete.bundle`, SHA-256
@@ -5039,8 +5042,13 @@ After any material action, append or revise the relevant section with:
   `/private/tmp/veltex-r3-5-c0-4-365d359-adversarial-review.zip`, SHA-256
   `675312e99f889569413a4ae7959d79e0aacf68b0908a9f76164f576b927fcf37`;
   archive integrity passes. The packet contains no credentials or customer data
-  and restricts review to read-only local verification. Claude/Cursor submission
-  and both exact verdicts remain pending. No hosted or production state changed.
+  and restricts review to read-only local verification. On 2026-10-07 Pacific,
+  the exact packet and checksum-bound assignment were visibly submitted to
+  Claude and Cursor. Claude entered active review; Cursor opened the
+  complementary accessibility/customer-flow review, including desktop/390px,
+  retry, Board/List equivalence, viewer-redaction and privacy checks. Both exact
+  verdicts remain pending. No Preview, deployment, hosted-data or production
+  state changed.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
