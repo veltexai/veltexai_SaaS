@@ -4624,6 +4624,17 @@ After any material action, append or revise the relevant section with:
   no-overflow layout and 44px controls, and truthfully shows online acceptance
   as unavailable until C0.3. Desktop/genuine-390 runtime evidence and
   independent review remain required; no Preview or production action occurred.
+- **R3-5 C0.2 PRODUCTION BUILD — LOCAL `PASS` AFTER ENVIRONMENT
+  DISAMBIGUATION:** The first build compiled and type-checked, then correctly
+  stopped during unrelated pricing-page prerender because the isolated shell
+  did not expose public Supabase build variables. A retry with explicit
+  non-secret local placeholders then reached the repository's Google Font
+  fetch and failed because the sandbox denied DNS. The same placeholder-only
+  build was rerun with outbound font access and completed all 89 static pages,
+  including `/proposal-room` plus its three API routes. No real credential was
+  loaded and no Supabase, Preview or production request was made. These two
+  failed attempts are environment evidence, not proof that configuration is
+  absent or that a hosted credential should be recreated.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
