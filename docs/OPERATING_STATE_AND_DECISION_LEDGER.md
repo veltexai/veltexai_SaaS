@@ -4724,6 +4724,28 @@ After any material action, append or revise the relevant section with:
   integrity and byte identity of the loose ledger and bounded assignment all
   pass. The packet is read-only and excludes hosted access, credentials,
   customer data, Preview and production changes.
+- **C0.2 RE-REVIEW SUBMISSION — `CLAUDE + CURSOR ACTIVE`:** The first
+  transmission attempt of the verified 92 MB full-history archive was rejected
+  by Claude's UI as `Too large to send`; it was removed and not submitted.
+  Codex produced a prerequisite-bound remediation delta from previously
+  reviewed base `3d49cc56fe897e634eb13ed289ac242999994827` to exact tip
+  `5f16c5070918cc05234d57ff6b3db975dd2bad91`. The replacement archive is
+  `/private/tmp/veltex-r3-5-c0-2-5f16c50-rereview-delta.zip`, SHA-256
+  `65b4207d9751f8d37a00c0c1908bb97b26d3ec93c0120b857fba5533dfd904d1`;
+  its prerequisite-bound bundle SHA-256 is
+  `ea37208d18f522c91e3f75dea13d26c673868c12df0a9fd311aa8c7f2f253594`.
+  Bundle ref/tip and prerequisite verification plus archive integrity passed.
+  The exact delta packet and bounded read-only instructions were visibly sent
+  to the existing Claude security-review chat and a fresh Cursor review lane;
+  both entered active review. No hosted system, credential, customer data,
+  Preview or production state was accessed or changed.
+- **FOUNDER STANDING REVIEW-PACKET AUTHORIZATION — `APPROVED`:** Routine
+  read-only Veltex build-review packets may be sent to Claude and Cursor without
+  another founder approval when the exact packet is locally verified, excludes
+  secrets and customer data, and the assignment forbids edits and hosted
+  actions. This does not authorize deployments, hosted mutations, credentials,
+  paid actions, publication, production changes, or customer/external-human
+  communication. The active coordination monitor now preserves this rule.
 - **C0.3 DEPENDENCY AUDIT — `PREPARED / IMPLEMENTATION GATED`:** While the
   C0.2 packet awaits external re-review submission, the next local increment
   was mapped in `quality/r3-5-c0/C0_3_IMPLEMENTATION_AUDIT.md`. The audit binds
