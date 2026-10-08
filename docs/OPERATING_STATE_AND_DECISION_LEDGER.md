@@ -4597,6 +4597,33 @@ After any material action, append or revise the relevant section with:
   foundation only: the private session/response migration, resolver projection,
   browser fragment scrub, read/respond UI and full adversarial evidence remain
   `IN PROGRESS`. No hosted system or production state was changed.
+- **R3-5 C0.2 PRIVATE SESSION/RESPONSE DATABASE FOUNDATION — LOCAL `PASS`:**
+  Forward-only migration `20261010000000_r3_5_c0_2_proposal_room.sql` adds
+  keyed-hash-only 15-minute sessions and append-only proposal responses, with
+  RLS, direct-table denial, UPDATE/DELETE/TRUNCATE guards and service-role-only
+  exchange/read/respond definers. Exchange rechecks expiry, revocation,
+  eligibility, v2 shape and the deliberately disabled designated-approver
+  policy; a bounded per-token minute bucket returns the same unavailable
+  condition. The room projection is rebuilt only from immutable v2 parent and
+  ordered association rows and returns organization display identity, version,
+  packages, scopes, amounts, bases, totals, hashes, allowed actions and approved
+  consent. It excludes operational tables and keeps `acceptanceEnabled=false`.
+  Response commands permit only question/change-request/decline, bind an
+  idempotency digest, return the original row on exact retry, reject changed
+  reuse, and emit identifier-only outbox evidence. The disposable full
+  75-migration PostgreSQL harness passes exchange, two-package projection,
+  first response, exact replay and changed-replay refusal. Static migration,
+  migration-chain, focused route/contract, TypeScript and diff checks pass.
+- **R3-5 C0.2 CUSTOMER REVIEW/RESPOND ROOM — LOCAL CANDIDATE:** New
+  `/proposal-room` reads a bearer only from `location.hash`, immediately removes
+  the fragment with `history.replaceState`, exchanges it for the hardened
+  session cookie, then reads the immutable projection. It renders ordered
+  package scopes and transparent totals as text (never executable proposal
+  markup), provides keyboard-native question/change/decline controls with
+  preserved text on network failure and an aria-live result, uses responsive
+  no-overflow layout and 44px controls, and truthfully shows online acceptance
+  as unavailable until C0.3. Desktop/genuine-390 runtime evidence and
+  independent review remain required; no Preview or production action occurred.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

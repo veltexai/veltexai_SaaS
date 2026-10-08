@@ -37,7 +37,7 @@ try {
   run(resolve(pgBin, 'createdb'), ['-h', work, '-p', String(port), 'veltex_r35']);
   psql(['-f', resolve(root, 'quality/service-catalog-round4/db-harness/sql/00_supabase_shim.sql')]);
   const migrations = readdirSync(migrationDir).filter((file) => file.endsWith('.sql')).sort();
-  assert.equal(migrations.length, 74, 'expected exact 74-migration chain');
+  assert.equal(migrations.length, 75, 'expected exact 75-migration chain');
   for (const migration of migrations) psql(['-f', resolve(migrationDir, migration)]);
 
   psql(['-f', resolve(root, 'quality/service-catalog-round4/db-harness/sql/10_fixtures.sql')]);
@@ -122,6 +122,7 @@ do $$
 declare org uuid:=current_setting('r341.org')::uuid;
   version_id uuid:=current_setting('r35.version')::uuid;
   issued record; replayed record; token_id uuid; sibling_token_id uuid; err text;
+  exchange_result jsonb; room jsonb; response_row record;
 begin
   select * into issued from public.command_crm_issue_customer_action_token_internal(
     '11111111-1111-4111-8111-111111111111',org,version_id,'accept_proposal',
@@ -130,6 +131,41 @@ begin
     raise exception 'initial token issue did not return first-use metadata';
   end if;
   token_id:=issued.token_id;
+  exchange_result:=public.exchange_crm_customer_action_token_internal(
+    repeat('a',64),1,repeat('c',64));
+  if exchange_result->>'versionId'<>version_id::text
+     or exchange_result->'allowedActions'<>jsonb_build_array(
+       'question','change_requested','declined') then
+    raise exception 'fragment exchange returned an unsafe or incomplete result';
+  end if;
+  room:=public.read_crm_customer_proposal_room_internal(repeat('c',64));
+  if room->>'proposalVersionId'<>version_id::text
+     or room->>'acceptanceEnabled'<>'false'
+     or jsonb_array_length(room->'packages')<>2
+     or room ?| array['cost','margin','wage','estimator','audit'] then
+    raise exception 'customer-safe proposal-room projection failed';
+  end if;
+  select * into response_row
+  from public.command_crm_customer_proposal_response_internal(
+    repeat('c',64),'question','Does this include supplies?',null,
+    'r35-response-0001',repeat('d',64));
+  if response_row.replayed then raise exception 'initial customer response replayed'; end if;
+  select * into replayed
+  from public.command_crm_customer_proposal_response_internal(
+    repeat('c',64),'question','Does this include supplies?',null,
+    'r35-response-0001',repeat('d',64));
+  if not replayed.replayed or replayed.response_id<>response_row.response_id then
+    raise exception 'exact customer response replay failed';
+  end if;
+  begin
+    perform public.command_crm_customer_proposal_response_internal(
+      repeat('c',64),'declined','Different payload',null,
+      'r35-response-0001',repeat('e',64));
+    raise exception 'changed customer response replay accepted';
+  exception when unique_violation then
+    get stacked diagnostics err=message_text;
+    if err<>'proposal response conflict' then raise; end if;
+  end;
   select * into issued from public.command_crm_issue_customer_action_token_internal(
     '11111111-1111-4111-8111-111111111111',org,version_id,'review_proposal',
     repeat('e',64),1,null,3,'r35-issue-sibling-0001',repeat('f',64));
@@ -322,7 +358,7 @@ rollback;
     service_status_execute: false,
     scope_digest_trigger: true,
     scope_digest_constraint_not_valid: true,
-    migration_count: 74,
+    migration_count: 75,
   });
 
   const tokenColumns = psql(['-c', `select string_agg(column_name,',' order by ordinal_position)
@@ -330,7 +366,7 @@ rollback;
     where table_schema='public' and table_name='crm_customer_action_tokens'`]).trim();
   assert.doesNotMatch(tokenColumns, /raw|bearer|cookie|authorization|user_agent|ip_address/i);
 
-  console.log('R3-5 C0.1 disposable PostgreSQL 74-migration token foundation PASS');
+  console.log('R3-5 C0.1/C0.2 disposable PostgreSQL 75-migration foundation PASS');
 } finally {
   if (started) {
     try { run(resolve(pgBin, 'pg_ctl'), ['-D', data, 'stop', '-m', 'fast']); } catch {}
