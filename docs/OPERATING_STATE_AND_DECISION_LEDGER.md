@@ -4801,6 +4801,25 @@ After any material action, append or revise the relevant section with:
   concurrency, append-only/privacy and truthfulness verdict criteria before
   implementation; it explicitly cannot be reviewed until an exact packet
   manifest supplies an implementation tip.
+- **C0.3 ATOMIC ACCEPTANCE FOUNDATION — LOCAL `IN PROGRESS / INITIAL PASS`:**
+  After the independent Claude/Cursor C0.2 gate passed, Codex added migration
+  `20261011000000_r3_5_c0_3_atomic_acceptance.sql`. It introduces an RLS-
+  enabled, direct-DML-denied, append-only acceptance receipt; a service-role-
+  only fixed-search-path command taking only the private session HMAC; stored-
+  association-derived ordered selections, totals and hashes; exact replay;
+  receipt-bound package acceptance and won transition; accept-token revocation;
+  and identifier-only `proposal.acceptance_received` outbox evidence in one
+  transaction. The accepted R3-1 manual-win path remains caller-bound; the new
+  customer-acceptance path requires the current transaction's just-created
+  receipt. Public acceptance UI remains disabled. Static contract checks,
+  TypeScript, 76-version migration-chain validation and the disposable full
+  PostgreSQL replay pass. The first PostgreSQL attempt failed only because the
+  sandbox prohibited SysV shared-memory creation; the authorized disposable
+  local rerun passed. This is not yet the C0.3 exit: proper-subset/full-set,
+  exact/changed replay, true two-session concurrency, forced late rollback,
+  immutable receipt correspondence and full application regression evidence
+  still must be added and independently reviewed. No Preview, production,
+  credential or customer-data state changed.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
