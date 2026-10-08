@@ -60,6 +60,12 @@ returns bigint language sql security definer set search_path=pg_catalog,public a
   where organization_id=p_org and proposal_version_id=p_version
     and state='disabled' and reason='token revoked'
 $$;
+create function pg_temp.r35_exchange_count(p_digest text)
+returns bigint language sql security definer set search_path=pg_catalog,public as $$
+  select coalesce(sum(attempt_count),0)
+  from public.crm_customer_action_exchange_rate_buckets
+  where key_version=1 and token_hmac_sha256=p_digest
+$$;
 do $$ begin
   if exists(
     select 1 from public.crm_proposal_version_packages a
@@ -122,7 +128,7 @@ do $$
 declare org uuid:=current_setting('r341.org')::uuid;
   version_id uuid:=current_setting('r35.version')::uuid;
   issued record; replayed record; token_id uuid; sibling_token_id uuid; err text;
-  exchange_result jsonb; room jsonb; response_row record;
+  exchange_result jsonb; room jsonb; response_row record; denied jsonb; i integer;
 begin
   select * into issued from public.command_crm_issue_customer_action_token_internal(
     '11111111-1111-4111-8111-111111111111',org,version_id,'accept_proposal',
@@ -131,6 +137,14 @@ begin
     raise exception 'initial token issue did not return first-use metadata';
   end if;
   token_id:=issued.token_id;
+  for i in 1..13 loop
+    denied:=public.exchange_crm_customer_action_token_internal(
+      repeat('f',64),1,repeat('0',62)||lpad(i::text,2,'0'));
+    if denied is not null then raise exception 'unknown token exchange accepted'; end if;
+  end loop;
+  if pg_temp.r35_exchange_count(repeat('f',64))<>13 then
+    raise exception 'denied exchange attempts did not persist for rate limiting';
+  end if;
   exchange_result:=public.exchange_crm_customer_action_token_internal(
     repeat('a',64),1,repeat('c',64));
   if exchange_result->>'versionId'<>version_id::text

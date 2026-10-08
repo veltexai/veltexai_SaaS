@@ -4641,6 +4641,29 @@ After any material action, append or revise the relevant section with:
   logging remain non-failing test-hygiene observations; no C0.2 failure or new
   regression appeared. This evidence is local only and does not replace the
   independent or isolated-Preview gates.
+- **C0.2 DENIED-EXCHANGE RATE-LIMIT SELF-AUDIT — DEFECT FOUND AND REMEDIATED
+  LOCALLY:** Before either prepared C0.2 packet was transmitted, Codex found
+  that the original token-FK rate bucket was incremented inside an exchange
+  function that then raised on denial. PostgreSQL rolled the entire statement
+  back, so denied known-token attempts did not persist, while unknown tokens
+  had no bucket at all. Packet candidates at review tips `1fc2d79` and
+  `26ae07d` are therefore `SUPERSEDED / NOT SENT` and must not be reviewed.
+  The migration now consumes a separate RLS-protected, HMAC-only minute bucket
+  before token lookup and returns the same null/unavailable result for every
+  denial, allowing the bucket to commit without creating an unknown-token
+  record elsewhere. The full disposable 75-migration PostgreSQL harness now
+  proves thirteen unknown-token attempts leave a durable bucket; exchange,
+  projection, exact replay and changed-replay proofs still pass. Static C0.2
+  checks, migration validation, TypeScript, two focused suites / 11 tests and
+  diff hygiene pass.
+- **PRESERVED REMEDIATION-HARNESS FAILURES:** The first new assertion used the
+  nonexistent helper `crm_estimate_sha256(text)`; the second used
+  `crm_proposal_sha256(text)` after switching to `service_role`, which is
+  correctly denied; the third directly selected the private rate table as
+  `service_role`, which is also correctly denied. The final proof creates a
+  transaction-local `SECURITY DEFINER` inspection helper before switching role
+  and uses it only inside the disposable rollback harness. No product grant was
+  weakened and no hosted state changed.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

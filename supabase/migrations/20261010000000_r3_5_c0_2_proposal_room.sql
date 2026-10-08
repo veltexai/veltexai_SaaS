@@ -22,6 +22,15 @@ create table public.crm_customer_action_sessions (
 create index crm_customer_action_sessions_lookup_idx
   on public.crm_customer_action_sessions(session_hmac_sha256,expires_at);
 
+create table public.crm_customer_action_exchange_rate_buckets (
+  key_version integer not null check(key_version>0),
+  token_hmac_sha256 text not null check(token_hmac_sha256 ~ '^[a-f0-9]{64}$'),
+  window_started_at timestamptz not null,
+  attempt_count integer not null default 0 check(attempt_count between 0 and 1000),
+  updated_at timestamptz not null default now(),
+  primary key(key_version,token_hmac_sha256,window_started_at)
+);
+
 create table public.crm_proposal_responses (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete restrict,
@@ -47,8 +56,10 @@ create index crm_proposal_responses_version_idx
   on public.crm_proposal_responses(organization_id,proposal_version_id,created_at,id);
 
 alter table public.crm_customer_action_sessions enable row level security;
+alter table public.crm_customer_action_exchange_rate_buckets enable row level security;
 alter table public.crm_proposal_responses enable row level security;
-revoke all on public.crm_customer_action_sessions,public.crm_proposal_responses
+revoke all on public.crm_customer_action_sessions,
+  public.crm_customer_action_exchange_rate_buckets,public.crm_proposal_responses
   from public,anon,authenticated,service_role;
 
 create trigger guard_crm_customer_action_sessions_append_only
@@ -76,26 +87,27 @@ declare token_row public.crm_customer_action_tokens%rowtype;
 begin
   if p_token_hmac_sha256 !~ '^[a-f0-9]{64}$' or p_key_version<>1
      or p_session_hmac_sha256 !~ '^[a-f0-9]{64}$' then
-    raise exception 'proposal room unavailable' using errcode='42501';
+    return null;
+  end if;
+  insert into public.crm_customer_action_exchange_rate_buckets(
+    key_version,token_hmac_sha256,window_started_at,attempt_count
+  ) values(p_key_version,p_token_hmac_sha256,date_trunc('minute',now()),1)
+  on conflict(key_version,token_hmac_sha256,window_started_at) do update
+    set attempt_count=public.crm_customer_action_exchange_rate_buckets.attempt_count+1,
+      updated_at=now();
+  if (select attempt_count from public.crm_customer_action_exchange_rate_buckets
+      where key_version=p_key_version and token_hmac_sha256=p_token_hmac_sha256
+        and window_started_at=date_trunc('minute',now()))>12 then
+    return null;
   end if;
   select t.* into token_row from public.crm_customer_action_tokens t
     where t.key_version=p_key_version and t.token_hmac_sha256=p_token_hmac_sha256
     for share;
   if token_row.id is null then
-    raise exception 'proposal room unavailable' using errcode='42501';
+    return null;
   end if;
   perform pg_advisory_xact_lock(hashtextextended(concat_ws(':',
     'veltex-r3-5-c0-exchange',token_row.id::text),0));
-  insert into public.crm_customer_action_rate_buckets(
-    token_id,organization_id,window_started_at,attempt_count
-  ) values(token_row.id,token_row.organization_id,date_trunc('minute',now()),1)
-  on conflict(token_id,window_started_at) do update
-    set attempt_count=public.crm_customer_action_rate_buckets.attempt_count+1,
-      updated_at=now();
-  if (select attempt_count from public.crm_customer_action_rate_buckets
-      where token_id=token_row.id and window_started_at=date_trunc('minute',now()))>12 then
-    raise exception 'proposal room unavailable' using errcode='42501';
-  end if;
   select e.state into latest_state from public.crm_proposal_action_eligibility_events e
     where e.organization_id=token_row.organization_id
       and e.proposal_version_id=token_row.proposal_version_id
@@ -109,7 +121,7 @@ begin
        where v.organization_id=token_row.organization_id
          and v.id=token_row.proposal_version_id
          and v.schema_version='crm_proposal_version.v2') then
-    raise exception 'proposal room unavailable' using errcode='42501';
+    return null;
   end if;
   insert into public.crm_customer_action_sessions(
     organization_id,token_id,proposal_version_id,session_hmac_sha256
@@ -122,8 +134,6 @@ begin
       when 'review_proposal' then '[]'::jsonb
       else '["question","change_requested","declined"]'::jsonb end
   );
-exception when unique_violation or check_violation then
-  raise exception 'proposal room unavailable' using errcode='42501';
 end;
 $$;
 revoke all on function public.exchange_crm_customer_action_token_internal(text,integer,text)
