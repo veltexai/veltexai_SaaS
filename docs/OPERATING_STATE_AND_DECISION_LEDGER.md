@@ -4903,6 +4903,16 @@ After any material action, append or revise the relevant section with:
   Cursor lane remained visibly active, so it was not treated as a verdict and
   was not allowed to delay the stronger independent gate. C0.3 remains local
   and `PENDING` until both new verdicts are collected and reconciled.
+- **C0.4 DEPENDENCY AUDIT — `PREPARED / IMPLEMENTATION GATED`:** While the
+  exact C0.3 re-review lanes run, Codex mapped the bounded acceptance UI,
+  durable receipt-refresh projection, uniform private acceptance route and
+  caller-scoped CRM Board/List acceptance summary in
+  `quality/r3-5-c0/C0_4_IMPLEMENTATION_AUDIT.md`. The audit pins the existing
+  source boundary, exact non-signature consent/truthfulness constraints,
+  access/privacy requirements and desktop/genuine-390 evidence matrix. It does
+  not enable public acceptance, modify a hosted database or authorize a
+  deployment. Product implementation remains gated on independent C0.3 exit
+  verdicts, so the exact reviewed C0.3 code tip is unchanged.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
