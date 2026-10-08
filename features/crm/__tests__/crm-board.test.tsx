@@ -85,6 +85,23 @@ describe('R3-1 CRM board', () => {
     expect(screen.getByRole('link',{name:'Estimate'})).toBeInTheDocument();
   });
 
+  it('shows the same caller-scoped acceptance summary on Board and List with viewer price redaction', async () => {
+    fetchMock.mockResolvedValueOnce({ok:true,json:async()=>({data:ORG_ID})}).mockResolvedValueOnce({ok:true,json:async()=>({data:{
+      organization_id:ORG_ID,caller_role:'viewer',loss_reasons:[],viewer_price_redacted:true,
+      pipelines:[{id:'pipeline-1',name:'Residential',is_default:true,stages:[{id:'stage-1',label:'Accepted',category:'won',position:60,hidden:false}]}],
+      opportunities:[{id:'opportunity-1',name:'Accepted turnover',pipeline_id:'pipeline-1',stage_id:'stage-1',category:'won',segment:'turnover'}],
+      acceptance_summaries:[{receipt_id:'abcdef12-3456-4789-8123-456789abcdef',opportunity_id:'opportunity-1',proposal_version_id:'version-1',accepted_at:'2026-10-08T01:00:00Z',selected_count:2,receipt_sha256:'c'.repeat(64)}],
+    }})});
+    render(<CrmBoard/>);
+    await screen.findByRole('heading',{name:'Accepted turnover'});
+    expect(screen.getByText(/Proposal acceptance received/)).toBeInTheDocument();
+    expect(screen.getByText(/2 packages · receipt abcdef12/)).toBeInTheDocument();
+    expect(screen.queryByText(/\$325\.00/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button',{name:'List'}));
+    expect(screen.getByRole('table')).toHaveTextContent('2 packages · receipt abcdef12');
+    expect(screen.getByRole('table')).not.toHaveTextContent('$325.00');
+  });
+
   it('prepares the same immutable proposal-version workflow from Board and List', async () => {
     const board = {
       organization_id: ORG_ID, caller_role: 'estimator', loss_reasons: [], viewer_price_redacted: false,

@@ -1,6 +1,6 @@
 # R3-5 C0.4 acceptance UI and operator surfacing — implementation audit
 
-Status: **PREPARED / IMPLEMENTATION GATED ON C0.3 INDEPENDENT PASS**
+Status: **IMPLEMENTED LOCALLY / INDEPENDENT REVIEW AND ISOLATED PREVIEW PENDING**
 
 This audit maps the smallest complete C0.4 increment from the accepted R3-5
 contract and execution sequence. It does not enable public acceptance, alter a
@@ -13,6 +13,11 @@ independent Claude and Cursor `PASS` or `PASS WITH NON-BLOCKING NOTES` with no
 release blocker. The atomic database command remains the sole acceptance
 authority. The browser must never write receipt, package, opportunity, history,
 revocation, audit, or outbox state separately.
+
+The dependency gate is satisfied at exact C0.3 tip
+`ab9de9439cf7cbb418171fc59e1fb59f5edb411a`: Claude returned `PASS WITH
+NON-BLOCKING NOTES` and Cursor returned `PASS` after independently replaying
+the disposable PostgreSQL harness.
 
 ## Current source boundary
 
@@ -125,3 +130,34 @@ Replace the disabled placeholder only when `acceptanceEnabled` is true:
 Only the combined C0.0–C0.4 candidate may then enter the separately authorized
 isolated-Preview gate. Production remains excluded until the full R3-5 release
 gate and founder acceptance are complete.
+
+## Local implementation evidence — 2026-10-07 Pacific
+
+- Added forward-only migration
+  `20261012000000_r3_5_c0_4_acceptance_surfaces.sql`; the migration-chain
+  validator reports 77 unique executable versions.
+- The public acceptance route makes exactly one private atomic command call,
+  hashes the opaque session server-side, preserves normalized retry keys and
+  returns one uniform unavailable response.
+- The customer surface starts with no packages or consent selected, requires a
+  final review, preserves draft plus request key across uncertain failure,
+  rotates the key after a normalized payload change, renders a printable
+  server-derived receipt and uses separate response/acceptance live regions.
+- CRM Board and List load the same caller-scoped receipt summary. Viewer price
+  redaction and the identifier-only in-app notice are covered in component
+  tests.
+- A fresh socket-only PostgreSQL replay proves all 77 migrations install and
+  verifies durable receipt refresh after token revocation, owner and assigned
+  estimator visibility, viewer total/currency redaction, an empty result for
+  an unassigned estimator, and no signer name/email in either projection.
+- Full application regression passes at 114 suites / 963 tests / five
+  snapshots. TypeScript, static C0.4 contract, migration validation,
+  `git diff --check`, and the 90-page production build with non-secret
+  loopback placeholder values pass. Existing Supabase Edge Runtime warnings
+  remain non-blocking.
+- The first disposable PostgreSQL attempt was blocked by sandbox SysV shared
+  memory. The authorized local rerun passed; this is preserved as an execution
+  context failure, not treated as a product defect.
+- Remaining C0.4 exit evidence: exact independent Claude/Cursor review and a
+  separately authorized isolated-Preview desktop plus genuine 390px run. No
+  hosted database, credential, deployment or production state changed here.

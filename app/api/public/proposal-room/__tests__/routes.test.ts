@@ -85,4 +85,52 @@ describe('R3-5 C0.2 public proposal-room routes', () => {
     expect(rejected.status).toBe(404);
     expect(await malformed.json()).toEqual(await rejected.json());
   });
+
+  it('accepts through one atomic command using only a session digest and ordered package identifiers', async () => {
+    rpc.mockResolvedValue({ data: [{ receipt_id: '11111111-1111-4111-8111-111111111111',
+      accepted_at: '2026-10-08T01:00:00Z', replayed: false }], error: null });
+    const { POST } = await import('../acceptance/route');
+    const response = await POST(new NextRequest('https://preview.example/api/public/proposal-room/acceptance', {
+      method: 'POST',
+      headers: { cookie: `${COOKIE}=${TOKEN}`, 'content-type': 'application/json',
+        'idempotency-key': 'acceptance-0001' },
+      body: JSON.stringify({ selectedAssociationIds: [
+        '22222222-2222-4222-8222-222222222222',
+        '33333333-3333-4333-8333-333333333333',
+      ], signerEnteredName: 'Taylor Customer', signerEnteredEmail: 'taylor@example.com' }),
+    }));
+    expect(response.status).toBe(201);
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rpc).toHaveBeenCalledWith('command_crm_accept_proposal_version_internal',
+      expect.objectContaining({
+        p_session_hmac_sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+        p_selected_association_ids: [
+          '22222222-2222-4222-8222-222222222222',
+          '33333333-3333-4333-8333-333333333333',
+        ],
+        p_signer_entered_name: 'Taylor Customer',
+        p_signer_entered_email: 'taylor@example.com',
+        p_request_key: 'acceptance-0001',
+      }));
+    expect(JSON.stringify(rpc.mock.calls)).not.toContain(TOKEN);
+  });
+
+  it('returns one uniform response for malformed and database-rejected acceptance', async () => {
+    const { POST } = await import('../acceptance/route');
+    const malformed = await POST(new NextRequest('https://preview.example/api/public/proposal-room/acceptance', {
+      method: 'POST', headers: { cookie: `${COOKIE}=${TOKEN}`, 'content-type': 'application/json',
+        'idempotency-key': 'acceptance-0001' },
+      body: JSON.stringify({ selectedAssociationIds: [], signerEnteredName: '', signerEnteredEmail: 'bad' }),
+    }));
+    rpc.mockResolvedValue({ data: null, error: { code: '42501' } });
+    const rejected = await POST(new NextRequest('https://preview.example/api/public/proposal-room/acceptance', {
+      method: 'POST', headers: { cookie: `${COOKIE}=${TOKEN}`, 'content-type': 'application/json',
+        'idempotency-key': 'acceptance-0001' },
+      body: JSON.stringify({ selectedAssociationIds: ['22222222-2222-4222-8222-222222222222'],
+        signerEnteredName: 'Taylor Customer', signerEnteredEmail: 'taylor@example.com' }),
+    }));
+    expect(malformed.status).toBe(404);
+    expect(rejected.status).toBe(404);
+    expect(await malformed.json()).toEqual(await rejected.json());
+  });
 });

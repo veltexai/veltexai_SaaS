@@ -4986,6 +4986,24 @@ After any material action, append or revise the relevant section with:
   public acceptance remains disabled in all hosted environments until the
   combined C0.0–C0.4 candidate clears its own exact review and isolated-Preview
   gate.
+- **C0.4 LOCAL IMPLEMENTATION — `VERIFIED LOCALLY / INDEPENDENT REVIEW
+  PENDING`:** From the accepted C0.3 base, Codex implemented the additive
+  acceptance projection, uniform opaque-session acceptance route, explicit
+  customer package/consent/final-review flow, durable printable receipt, and
+  caller-scoped CRM Board/List acceptance summaries. New evidence covers
+  stable retry after an uncertain failure, new idempotency after payload
+  change, unchecked defaults, viewer price redaction, Board/List equivalence,
+  and distinct live regions for response versus acceptance status. A fresh
+  socket-only PostgreSQL replay installs all 77 migrations and proves receipt
+  refresh after token revocation, owner/assigned-estimator visibility, viewer
+  redaction, no unassigned-estimator oracle, and no signer identity in either
+  projection. The first PostgreSQL attempt failed only because sandbox SysV
+  shared memory was unavailable; the authorized local rerun passed. Static
+  contract, migration validation, TypeScript, diff hygiene, 114 Jest suites /
+  963 tests / five snapshots, and the 90-page placeholder-only production
+  build pass. No hosted state changed. Exact review packet freeze and
+  independent Claude/Cursor review remain before any separately authorized
+  isolated-Preview desktop/390px acceptance gate; production remains excluded.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 

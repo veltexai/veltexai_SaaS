@@ -37,7 +37,7 @@ try {
   run(resolve(pgBin, 'createdb'), ['-h', work, '-p', String(port), 'veltex_r35']);
   psql(['-f', resolve(root, 'quality/service-catalog-round4/db-harness/sql/00_supabase_shim.sql')]);
   const migrations = readdirSync(migrationDir).filter((file) => file.endsWith('.sql')).sort();
-  assert.equal(migrations.length, 76, 'expected exact 76-migration chain');
+  assert.equal(migrations.length, 77, 'expected exact 77-migration chain');
   for (const migration of migrations) psql(['-f', resolve(migrationDir, migration)]);
 
   psql(['-f', resolve(root, 'quality/service-catalog-round4/db-harness/sql/10_fixtures.sql')]);
@@ -392,7 +392,7 @@ rollback;
     service_status_execute: false,
     scope_digest_trigger: true,
     scope_digest_constraint_not_valid: true,
-    migration_count: 76,
+    migration_count: 77,
   });
 
   const tokenColumns = psql(['-c', `select string_agg(column_name,',' order by ordinal_position)
@@ -400,7 +400,7 @@ rollback;
     where table_schema='public' and table_name='crm_customer_action_tokens'`]).trim();
   assert.doesNotMatch(tokenColumns, /raw|bearer|cookie|authorization|user_agent|ip_address/i);
 
-  console.log('R3-5 C0.1/C0.2/C0.3 disposable PostgreSQL 76-migration foundation PASS');
+  console.log('R3-5 C0.1/C0.2/C0.3 disposable PostgreSQL 77-migration foundation PASS');
 } finally {
   if (started) {
     try { run(resolve(pgBin, 'pg_ctl'), ['-D', data, 'stop', '-m', 'fast']); } catch {}

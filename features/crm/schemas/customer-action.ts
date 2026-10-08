@@ -19,3 +19,14 @@ export const customerProposalResponseSchema = z.object({
   message: z.string().trim().min(1).max(2000),
   displayName: z.string().trim().min(1).max(160).nullable().optional(),
 }).strict();
+
+export const customerProposalAcceptanceSchema = z.object({
+  selectedAssociationIds: z.array(z.string().uuid()).min(1).max(100),
+  signerEnteredName: z.string().trim().min(1).max(160),
+  signerEnteredEmail: z.string().trim().email().max(320),
+}).strict().superRefine((value, context) => {
+  if (new Set(value.selectedAssociationIds).size !== value.selectedAssociationIds.length) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['selectedAssociationIds'],
+      message: 'Association IDs must be unique.' });
+  }
+});

@@ -22,6 +22,7 @@ function client(options: {
   links?: { lead_id: string; contact_id: string }[];
   walkthroughs?: unknown[];
   estimates?: unknown[];
+  acceptances?: unknown[];
   rpcError?: unknown;
 }) {
   const membership = membershipQuery({
@@ -38,6 +39,9 @@ function client(options: {
     }
     if (name === 'read_crm_estimate_summaries') {
       return { data: options.estimates ?? [], error: options.rpcError ?? null };
+    }
+    if (name === 'read_crm_acceptance_summaries') {
+      return { data: options.acceptances ?? [], error: options.rpcError ?? null };
     }
     return { data: options.board ?? null, error: options.rpcError ?? null };
   });
@@ -100,7 +104,7 @@ describe('R3-1 pipeline board route', () => {
     expect(state.rpc).toHaveBeenCalledWith('read_crm_pipeline_board', {
       target_organization: ORG_ID,
     });
-    await expect(response.json()).resolves.toEqual({ data: { ...board, walkthroughs: [], estimate_summaries: [] } });
+    await expect(response.json()).resolves.toEqual({ data: { ...board, walkthroughs: [], estimate_summaries: [], acceptance_summaries: [] } });
   });
 
   it('projects an operator-reviewed contact link without exposing the stored hint', async () => {
@@ -109,8 +113,24 @@ describe('R3-1 pipeline board route', () => {
     const { GET } = await import('../opportunities/route');
     const response = await GET(new Request('http://local'), routeContext);
     await expect(response.json()).resolves.toEqual({ data: {
-      ...board, leads: [{ id: 'lead-1', existing_contact_id: 'contact-1' }], walkthroughs: [], estimate_summaries: [],
+      ...board, leads: [{ id: 'lead-1', existing_contact_id: 'contact-1' }], walkthroughs: [], estimate_summaries: [], acceptance_summaries: [],
     } });
+  });
+
+  it('adds only the caller-scoped acceptance summary projection', async () => {
+    const board = { organization_id: ORG_ID, pipelines: [], opportunities: [] };
+    const acceptance = { opportunity_id: 'opportunity-1', receipt_id: 'receipt-1',
+      accepted_at: '2026-10-08T01:00:00Z', package_count: 2, total_amount_minor: 32500,
+      currency: 'USD' };
+    const state = client({ role: 'owner', board, acceptances: [acceptance] });
+    const { GET } = await import('../opportunities/route');
+    const response = await GET(new Request('http://local'), routeContext);
+    expect(response.status).toBe(200);
+    expect(state.rpc).toHaveBeenCalledWith('read_crm_acceptance_summaries', {
+      target_organization: ORG_ID,
+    });
+    await expect(response.json()).resolves.toEqual({ data: { ...board, walkthroughs: [],
+      estimate_summaries: [], acceptance_summaries: [acceptance] } });
   });
 
   it('serves the already-redacted viewer projection without adding price fields', async () => {

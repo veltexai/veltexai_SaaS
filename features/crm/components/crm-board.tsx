@@ -78,6 +78,9 @@ type ProposalVersionSummary = { id: string; proposal_id: string; work_package_id
   estimate_run_id: string | null; version_number: number; display_amount_minor: number; currency: string;
   pricing_basis: string | null; content_sha256: string; rendered_sha256: string; schema_version: string;
   package_count?: number | null; package_set_sha256?: string | null; created_at: string };
+type AcceptanceSummary = { receipt_id: string; opportunity_id: string; proposal_version_id: string;
+  accepted_at: string; selected_count: number; selected_subtotal_minor?: number;
+  full_offered_total_minor?: number; currency?: string; receipt_sha256: string };
 type Board = {
   organization_id: string;
   caller_role: 'owner' | 'admin' | 'estimator' | 'viewer';
@@ -87,6 +90,7 @@ type Board = {
   work_packages?: WorkPackage[];
   walkthroughs?: Walkthrough[];
   estimate_summaries?: EstimateSummary[];
+  acceptance_summaries?: AcceptanceSummary[];
   customers?: { id: string; name: string }[];
   properties?: { id: string; customer_id?: string; name: string }[];
   loss_reasons: { id: string; label: string; applies_to: 'lost' | 'disqualified' | 'both' }[];
@@ -110,6 +114,23 @@ function estimateLabel(summary?: EstimateSummary) {
   if (!summary) return null;
   return `${new Intl.NumberFormat(undefined, { style: 'currency', currency: summary.currency })
     .format(summary.selected_amount_minor / 100)} · ${summary.pricing_basis.replaceAll('_', ' ')}`;
+}
+
+function acceptanceSummary(board: Board, opportunityId: string) {
+  return (board.acceptance_summaries ?? []).find((item) => item.opportunity_id === opportunityId);
+}
+
+function acceptanceLabel(summary: AcceptanceSummary, redacted: boolean) {
+  const when = new Date(summary.accepted_at).toLocaleString();
+  if (redacted || summary.selected_subtotal_minor === undefined || !summary.currency) {
+    return `Accepted ${when} · ${summary.selected_count} package${summary.selected_count===1?'':'s'} · receipt ${summary.receipt_id.slice(0,8)}`;
+  }
+  const selected = new Intl.NumberFormat(undefined,{ style:'currency',currency:summary.currency })
+    .format(summary.selected_subtotal_minor/100);
+  const full = summary.full_offered_total_minor === undefined ? null
+    : new Intl.NumberFormat(undefined,{ style:'currency',currency:summary.currency })
+      .format(summary.full_offered_total_minor/100);
+  return `Accepted ${when} · ${summary.selected_count} package${summary.selected_count===1?'':'s'} · ${selected} selected${full?` / ${full} offered`:''} · receipt ${summary.receipt_id.slice(0,8)}`;
 }
 
 function estimateHref(board: Board, opportunity: Opportunity, organizationId: string | null) {
@@ -986,6 +1007,10 @@ export function CrmBoard() {
         </Card>
       )}
       <p role="status" aria-live="polite" className="min-h-5 text-sm text-blue-800">{notice ?? ''}</p>
+      {(board.acceptance_summaries ?? []).length > 0 && <div role="status" aria-live="polite"
+        className="rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-950">
+        Proposal acceptance received. The accepted opportunity and immutable receipt reference are shown in both Board and List views. No email or SMS claim is implied.
+      </div>}
       {managingLead && (
         <Card role="dialog" aria-labelledby="lead-action-heading">
           <CardHeader><CardTitle id="lead-action-heading">Manage lead</CardTitle></CardHeader>
@@ -1472,6 +1497,9 @@ export function CrmBoard() {
                   {opportunities.map((opportunity) => (
                     <article key={opportunity.id} className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
                       <h3 className="font-medium text-gray-900">{opportunity.name}</h3>
+                      {acceptanceSummary(board,opportunity.id) && <p className="mt-2 break-words rounded-md bg-emerald-50 p-2 text-xs font-medium text-emerald-900">
+                        {acceptanceLabel(acceptanceSummary(board,opportunity.id)!,board.viewer_price_redacted)}
+                      </p>}
                       {valueLabel(opportunity) && <p className="mt-2 text-sm text-gray-600">{valueLabel(opportunity)}</p>}
                       {estimateLabel((board.estimate_summaries ?? []).find((entry) => entry.opportunity_id === opportunity.id))
                         && <p className="mt-2 text-sm font-medium">Internal planning estimate: {estimateLabel(proposalVersionPrerequisites(board, opportunity)?.estimate)}</p>}
@@ -1533,6 +1561,7 @@ export function CrmBoard() {
               <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Opportunity</th>
               <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Stage</th>
               <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Value</th>
+              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Acceptance</th>
               <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Move</th>
             </tr></thead>
             <tbody className="divide-y divide-gray-200 bg-white">
@@ -1542,6 +1571,8 @@ export function CrmBoard() {
                   <td className="px-4 py-3 text-sm">{activePipeline.stages.find((stage) => stage.id === opportunity.stage_id)?.label}</td>
                   <td className="px-4 py-3 text-sm"><p>{valueLabel(opportunity) ?? '—'}</p>{estimateLabel((board.estimate_summaries ?? []).find((entry) => entry.opportunity_id === opportunity.id))
                     && <p className="mt-1 font-medium">Internal estimate: {estimateLabel(proposalVersionPrerequisites(board, opportunity)?.estimate)}</p>}</td>
+                  <td className="max-w-xs break-words px-4 py-3 text-xs text-emerald-900">{acceptanceSummary(board,opportunity.id)
+                    ? acceptanceLabel(acceptanceSummary(board,opportunity.id)!,board.viewer_price_redacted) : '—'}</td>
                   <td className="px-4 py-3">{board.caller_role === 'viewer' ? 'Read only' : (
                     <div>{stageMove(opportunity)}<div className="mt-2 flex flex-wrap gap-2">
                       <Button type="button" variant="outline" className="min-h-11"

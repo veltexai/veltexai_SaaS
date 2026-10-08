@@ -12,6 +12,19 @@ type Package = {
   pricingBasis: 'per_visit' | 'per_turn' | 'one_time';
 };
 
+type Receipt = {
+  receiptId: string;
+  proposalVersionId: string;
+  acceptedAt: string;
+  selectedAssociationIds: string[];
+  selectedSubtotalMinor: number;
+  fullOfferedTotalMinor: number;
+  currency: string;
+  consentVersion?: string;
+  receiptSha256: string;
+  replayed?: boolean;
+};
+
 type Room = {
   organization: { displayName: string };
   proposalVersionId: string;
@@ -21,7 +34,9 @@ type Room = {
   fullOfferedTotalMinor: number;
   currency: string;
   allowedActions: Array<'question' | 'change_requested' | 'declined'>;
-  acceptanceEnabled: false;
+  consent: { version: 'veltex-c0-acceptance-v1'; text: string };
+  acceptanceEnabled: boolean;
+  receipt: Receipt | null;
   expiresAt: string;
 };
 
@@ -41,10 +56,19 @@ export default function ProposalRoomPage() {
   const [kind, setKind] = useState<'question' | 'change_requested' | 'declined'>('question');
   const [message, setMessage] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [notice, setNotice] = useState('');
+  const [responseNotice, setResponseNotice] = useState('');
+  const [acceptanceNotice, setAcceptanceNotice] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const requestKey = useRef<string | null>(null);
   const requestFingerprint = useRef<string | null>(null);
+  const acceptanceRequestKey = useRef<string | null>(null);
+  const acceptanceFingerprint = useRef<string | null>(null);
+  const [selectedAssociationIds, setSelectedAssociationIds] = useState<string[]>([]);
+  const [signerEnteredName, setSignerEnteredName] = useState('');
+  const [signerEnteredEmail, setSignerEnteredEmail] = useState('');
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [reviewingAcceptance, setReviewingAcceptance] = useState(false);
+  const [accepting, setAccepting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,6 +99,10 @@ export default function ProposalRoomPage() {
   }, []);
 
   const canRespond = useMemo(() => room?.allowedActions.includes(kind) ?? false, [room, kind]);
+  const selectedPackages = useMemo(() => room?.packages.filter((item) =>
+    selectedAssociationIds.includes(item.associationId)) ?? [], [room, selectedAssociationIds]);
+  const selectedSubtotalMinor = useMemo(() => selectedPackages.reduce((total, item) =>
+    total + item.amountMinor, 0), [selectedPackages]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -85,7 +113,7 @@ export default function ProposalRoomPage() {
       requestKey.current = crypto.randomUUID();
       requestFingerprint.current = fingerprint;
     }
-    setSubmitting(true); setNotice('Sending your response…');
+    setSubmitting(true); setResponseNotice('Sending your response…');
     try {
       const response = await fetch('/api/public/proposal-room/responses', {
         method: 'POST',
@@ -96,10 +124,43 @@ export default function ProposalRoomPage() {
       setMessage('');
       requestKey.current = null;
       requestFingerprint.current = null;
-      setNotice(kind === 'declined' ? 'Your decline was recorded.' : 'Your response was sent.');
+      setResponseNotice(kind === 'declined' ? 'Your decline was recorded.' : 'Your response was sent.');
     } catch {
-      setNotice('We could not send that response. Your text is still here so you can try again.');
+      setResponseNotice('We could not send that response. Your text is still here so you can try again.');
     } finally { setSubmitting(false); }
+  }
+
+  async function submitAcceptance() {
+    if (!room?.acceptanceEnabled || accepting || !consentChecked
+        || selectedAssociationIds.length === 0 || !signerEnteredName.trim()
+        || !signerEnteredEmail.trim()) return;
+    const orderedIds = room.packages.filter((item) => selectedAssociationIds.includes(item.associationId))
+      .map((item) => item.associationId);
+    const payload = { selectedAssociationIds: orderedIds,
+      signerEnteredName: signerEnteredName.trim(), signerEnteredEmail: signerEnteredEmail.trim() };
+    const fingerprint = JSON.stringify(payload);
+    if (!acceptanceRequestKey.current || acceptanceFingerprint.current !== fingerprint) {
+      acceptanceRequestKey.current = crypto.randomUUID();
+      acceptanceFingerprint.current = fingerprint;
+    }
+    setAccepting(true); setAcceptanceNotice('Recording your proposal acceptance…');
+    try {
+      const response = await fetch('/api/public/proposal-room/acceptance', {
+        method: 'POST', headers: { 'content-type': 'application/json',
+          'idempotency-key': acceptanceRequestKey.current }, body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error('acceptance');
+      const result = await response.json() as { data: Receipt };
+      setRoom((current) => current ? { ...current, acceptanceEnabled: false,
+        allowedActions: [], receipt: { ...result.data,
+          consentVersion: current.consent.version } } : current);
+      setAcceptanceNotice(result.data.replayed
+        ? 'Your existing acceptance receipt is shown below.'
+        : 'Your proposal acceptance was recorded.');
+      setReviewingAcceptance(false);
+    } catch {
+      setAcceptanceNotice('We could not confirm acceptance. Your selections are still here; try again safely.');
+    } finally { setAccepting(false); }
   }
 
   if (state === 'loading') return <main className="mx-auto min-h-screen max-w-3xl p-6" aria-busy="true">
@@ -157,14 +218,61 @@ export default function ProposalRoomPage() {
           <textarea required value={message} maxLength={2000} onChange={(e) => setMessage(e.target.value)} rows={5} className="mt-1 w-full rounded-lg border border-slate-300 p-3" />
         </label>
         <button disabled={submitting || !message.trim()} className="min-h-11 w-full rounded-lg bg-slate-950 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">{submitting ? 'Sending…' : 'Send response'}</button>
-        <p aria-live="polite" className="text-sm text-slate-700">{notice}</p>
+        <p aria-live="polite" className="text-sm text-slate-700">{responseNotice}</p>
       </form>
     </section>}
 
-    <section className="border-t border-slate-200 py-6" aria-labelledby="accept-heading">
+    <section className="border-t border-slate-200 py-6 print:border-0" aria-labelledby="accept-heading">
       <h2 id="accept-heading" className="text-xl font-semibold text-slate-950">Accept proposal</h2>
-      <p className="mt-2 text-sm text-slate-700">Online acceptance is not enabled for this review yet. {room.allowedActions.length > 0 ? 'You can respond above.' : 'Contact the sender if you need help or want to request changes.'}</p>
-      <button disabled className="mt-4 min-h-11 rounded-lg bg-slate-300 px-4 py-2 font-medium text-slate-600">Accept proposal — unavailable</button>
+      {room.receipt ? <article className="mt-4 break-words rounded-xl border border-emerald-300 bg-emerald-50 p-4" aria-label="Proposal acceptance receipt">
+        <h3 className="font-semibold text-emerald-950">Acceptance receipt</h3>
+        <dl className="mt-3 grid gap-2 text-sm text-emerald-950 sm:grid-cols-2">
+          <div><dt className="font-medium">Accepted</dt><dd>{new Date(room.receipt.acceptedAt).toLocaleString()}</dd></div>
+          <div><dt className="font-medium">Proposal version</dt><dd>{room.versionNumber}</dd></div>
+          <div><dt className="font-medium">Selected packages</dt><dd>{room.receipt.selectedAssociationIds.length}</dd></div>
+          <div><dt className="font-medium">Selected subtotal</dt><dd>{money(room.receipt.selectedSubtotalMinor,room.receipt.currency)}</dd></div>
+          <div><dt className="font-medium">Full offered total</dt><dd>{money(room.receipt.fullOfferedTotalMinor,room.receipt.currency)}</dd></div>
+          <div><dt className="font-medium">Consent version</dt><dd>{room.receipt.consentVersion ?? room.consent.version}</dd></div>
+          <div className="sm:col-span-2"><dt className="font-medium">Receipt reference</dt><dd className="font-mono text-xs">{room.receipt.receiptId}</dd></div>
+          <div className="sm:col-span-2"><dt className="font-medium">Receipt SHA-256</dt><dd className="font-mono text-xs">{room.receipt.receiptSha256}</dd></div>
+        </dl>
+        <p className="mt-3 text-xs text-emerald-900">This records proposal/package acceptance only. It is not an electronic signature, identity verification, payment, scheduling, or service-delivery confirmation.</p>
+        <button type="button" onClick={() => window.print()} className="mt-4 min-h-11 rounded-lg border border-emerald-800 bg-white px-4 py-2 font-medium text-emerald-950 print:hidden">Print receipt</button>
+      </article> : room.acceptanceEnabled ? <div className="mt-4 space-y-4">
+        {!reviewingAcceptance ? <>
+          <fieldset className="space-y-3"><legend className="font-medium text-slate-900">Select packages to accept</legend>
+            <p className="text-sm text-slate-600">Nothing is selected automatically. Select at least one package.</p>
+            {room.packages.map((item) => <label key={item.associationId} className="flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border border-slate-300 p-3">
+              <input type="checkbox" className="mt-1" checked={selectedAssociationIds.includes(item.associationId)}
+                onChange={(event) => { setReviewingAcceptance(false); setSelectedAssociationIds((current) => event.target.checked
+                  ? [...current,item.associationId] : current.filter((id) => id!==item.associationId)); }} />
+              <span className="min-w-0 flex-1"><span className="font-medium text-slate-950">{item.title}</span>
+                <span className="block text-sm text-slate-600">{money(item.amountMinor,item.currency)} · {basis(item.pricingBasis)}</span></span>
+            </label>)}
+          </fieldset>
+          <div className="rounded-lg bg-slate-50 p-3 text-sm"><p>Selected subtotal: <strong>{money(selectedSubtotalMinor,room.currency)}</strong></p>
+            <p>Full offered total: <strong>{money(room.fullOfferedTotalMinor,room.currency)}</strong></p></div>
+          <label className="block text-sm font-medium text-slate-800">Name you enter
+            <input value={signerEnteredName} maxLength={160} autoComplete="name" onChange={(event) => { setSignerEnteredName(event.target.value); setReviewingAcceptance(false); }} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3" /></label>
+          <label className="block text-sm font-medium text-slate-800">Email you enter
+            <input value={signerEnteredEmail} maxLength={320} type="email" autoComplete="email" onChange={(event) => { setSignerEnteredEmail(event.target.value); setReviewingAcceptance(false); }} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3" /></label>
+          <p className="text-xs text-slate-600">The name and email are entered by you. Veltex does not verify your identity, and this is not an electronic-signature process.</p>
+          <label className="flex min-h-11 items-start gap-3 rounded-lg border border-slate-300 p-3 text-sm text-slate-800">
+            <input type="checkbox" className="mt-1" checked={consentChecked} onChange={(event) => { setConsentChecked(event.target.checked); setReviewingAcceptance(false); }} />
+            <span>{room.consent.text}</span>
+          </label>
+          <button type="button" disabled={!consentChecked || selectedAssociationIds.length===0 || !signerEnteredName.trim() || !signerEnteredEmail.trim()}
+            onClick={() => setReviewingAcceptance(true)} className="min-h-11 w-full rounded-lg bg-slate-950 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">Review acceptance</button>
+        </> : <div className="rounded-xl border border-slate-300 p-4" aria-labelledby="final-review-heading">
+          <h3 id="final-review-heading" className="font-semibold text-slate-950">Final review</h3>
+          <p className="mt-2 text-sm text-slate-700">You are accepting {selectedPackages.length} selected package{selectedPackages.length===1?'':'s'} for {money(selectedSubtotalMinor,room.currency)} from a full offered total of {money(room.fullOfferedTotalMinor,room.currency)}.</p>
+          <p className="mt-2 text-sm text-slate-700">This records proposal/package acceptance only. It does not create an electronic signature, verify identity, take payment, schedule work, or confirm service delivery.</p>
+          <div className="mt-4 flex flex-wrap gap-3"><button type="button" onClick={() => setReviewingAcceptance(false)} className="min-h-11 rounded-lg border border-slate-400 px-4 py-2 font-medium">Back</button>
+            <button type="button" disabled={accepting} onClick={() => void submitAcceptance()} className="min-h-11 rounded-lg bg-slate-950 px-4 py-2 font-medium text-white disabled:opacity-50">{accepting?'Recording…':'Accept selected packages'}</button></div>
+        </div>}
+      </div> : <><p className="mt-2 text-sm text-slate-700">Online acceptance is not enabled for this review. {room.allowedActions.length > 0 ? 'You can respond above.' : 'Contact the sender if you need help or want to request changes.'}</p>
+        <button disabled className="mt-4 min-h-11 rounded-lg bg-slate-300 px-4 py-2 font-medium text-slate-600">Accept proposal — unavailable</button></>}
+      <p aria-live="polite" className="mt-3 text-sm text-slate-700">{acceptanceNotice}</p>
     </section>
   </main>;
 }

@@ -27,7 +27,7 @@ try{
   run(resolve(pgBin,'createdb'),['-h',work,'-p',String(port),'veltex_r35_accept']);
   psql(['-f',resolve(root,'quality/service-catalog-round4/db-harness/sql/00_supabase_shim.sql')]);
   const migrations=readdirSync(migrationDir).filter(file=>file.endsWith('.sql')).sort();
-  assert.equal(migrations.length,76);
+  assert.equal(migrations.length,77);
   for(const migration of migrations) psql(['-f',resolve(migrationDir,migration)]);
   psql(['-f',resolve(root,'quality/service-catalog-round4/db-harness/sql/10_fixtures.sql')]);
 
@@ -322,13 +322,45 @@ select 'C0_3_LATE_ROLLBACK_PASS';
   assert.equal(replay.selectedSubtotalMinor,12500);
   assert.equal(replay.fullOfferedTotalMinor,32500);
 
+  const refreshedRoom=JSON.parse(psql(['-c',`set role service_role;
+    select public.read_crm_customer_proposal_room_internal(repeat('${winner.session}',64))::text;`]).trim());
+  assert.equal(refreshedRoom.acceptanceEnabled,false);
+  assert.deepEqual(refreshedRoom.allowedActions,[]);
+  assert.equal(refreshedRoom.receipt.receiptId,replay.receiptId);
+  assert.equal(refreshedRoom.receipt.selectedSubtotalMinor,12500);
+  assert.equal(refreshedRoom.receipt.fullOfferedTotalMinor,32500);
+  assert.equal(JSON.stringify(refreshedRoom).includes('Race Signer'),false,
+    'customer refresh projection must not expose signer-entered name');
+  assert.equal(JSON.stringify(refreshedRoom).includes('race@example.test'),false,
+    'customer refresh projection must not expose signer-entered email');
+
+  const summaryFor=(user)=>JSON.parse(psql(['-c',`set role authenticated;
+    with identity as (select set_config('request.jwt.claim.sub','${user}',true) value)
+    select public.read_crm_acceptance_summaries('${context.org}')::text from identity;`]).trim());
+  const ownerSummary=summaryFor('11111111-1111-4111-8111-111111111111');
+  assert.equal(ownerSummary.length,1);
+  assert.equal(ownerSummary[0].selected_subtotal_minor,12500);
+  assert.equal(ownerSummary[0].full_offered_total_minor,32500);
+  assert.equal(JSON.stringify(ownerSummary).includes('Race Signer'),false);
+  assert.equal(JSON.stringify(ownerSummary).includes('race@example.test'),false);
+  const viewerSummary=summaryFor('95555555-5555-4555-8555-555555555555');
+  assert.equal(viewerSummary.length,1);
+  assert.equal(viewerSummary[0].selected_subtotal_minor,undefined);
+  assert.equal(viewerSummary[0].full_offered_total_minor,undefined);
+  assert.equal(viewerSummary[0].currency,undefined);
+  assert.equal(typeof viewerSummary[0].receipt_sha256,'string');
+  assert.equal(summaryFor('94444444-4444-4444-8444-444444444444').length,1,
+    'assigned estimator must see the acceptance summary');
+  assert.deepEqual(summaryFor('96666666-6666-4666-8666-666666666666'),[],
+    'unassigned estimator must receive no acceptance oracle');
+
   const immutableOutput=psqlText(`do $$ begin
     begin update public.crm_proposal_acceptance_receipts set signer_entered_name='Changed'; raise exception 'receipt update accepted'; exception when insufficient_privilege then null; end;
     begin delete from public.crm_proposal_acceptance_receipts; raise exception 'receipt delete accepted'; exception when insufficient_privilege then null; end;
     begin truncate public.crm_proposal_acceptance_receipts; raise exception 'receipt truncate accepted'; exception when insufficient_privilege then null; end;
   end $$; select 'C0_3_IMMUTABLE_PASS';`,'immutable.sql');
   assert.match(immutableOutput,/C0_3_IMMUTABLE_PASS/);
-  console.log('R3-5 C0.3 atomic acceptance adversarial PostgreSQL PASS');
+  console.log('R3-5 C0.3/C0.4 acceptance and projection adversarial PostgreSQL PASS');
 }finally{
   if(started){try{run(resolve(pgBin,'pg_ctl'),['-D',data,'stop','-m','fast']);}catch{}}
   rmSync(work,{recursive:true,force:true});
