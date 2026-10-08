@@ -4954,6 +4954,22 @@ After any material action, append or revise the relevant section with:
   to challenge the shared token-set revocation boundary and same-proposal
   supersession rejection and to perform no edits or hosted actions. C0.3 remains
   local and C0.4 implementation remains gated pending both current verdicts.
+- **C0.3 FINAL CLAUDE VERDICT — `PASS WITH NON-BLOCKING NOTES`:** Claude
+  recomputed both exact hashes, materialized the complete-history bundle in an
+  empty repository, verified `ab9de94` and its prerequisite ancestry, and found
+  both the shared token-set revocation boundary and same-proposal supersession
+  rejection correct and non-vacuously proven. Claude found no source defect in
+  atomicity, authorization, privacy, immutable-source handling, idempotency or
+  receipt integrity. Its carried notes remain evidence-depth/attribution items
+  for C0.4/R3-6 rather than C0.3 release blockers. Cursor's current exact-tip
+  verdict remains pending, so C0.3 is not yet closed.
+- **C0.3 PRODUCTION BUILD — LOCAL `PASS`:** The first network-restricted build
+  attempt failed on Google Fonts DNS, and the subsequent build without required
+  Supabase variables reached prerendering before failing closed. The authorized
+  rerun with non-secret placeholder Supabase build variables and existing font
+  access compiled, type-checked and generated all 89 static pages successfully.
+  The existing Supabase Edge Runtime warnings remain non-blocking. No hosted
+  state, secret or deployment was used.
 
 ## Mohamed onboarding-friction audit reconciliation — 2026-10-07 Pacific
 
